@@ -72,8 +72,8 @@ module android.app{
         }
     }
 
-    class Root extends Activity{
-    }
+    class Root extends Activity{}
+
     (<any> document).registerElement("android-root", Root);
     (<any> document).registerElement("android-activity", Activity);
 

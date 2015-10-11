@@ -2,3 +2,4 @@ node_modules
 test
 .idea
 .DS_Store
+.outjs
