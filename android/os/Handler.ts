@@ -103,11 +103,16 @@ module android.os {
             msg.target = this;
 
             //send delay
-            let id = setTimeout(()=> {
+            let func = ()=> {
                 this.dispatchMessage(msg);
                 this.mQueue.recycleMessage(this, msg);
 
-            }, delayMillis);
+            };
+            if(delayMillis<=20){
+                var id = requestAnimationFrame(func);
+            }else{
+                var id = setTimeout(func, delayMillis);
+            }
             this.mQueue.addMessage(this, msg, id);
             return true;
         }

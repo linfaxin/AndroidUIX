@@ -3,11 +3,15 @@
  */
 ///<reference path="ViewParent.ts"/>
 ///<reference path="View.ts"/>
+///<reference path="Surface.ts"/>
+///<reference path="../util/Log.ts"/>
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../os/Handler.ts"/>
+///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Point.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
+///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
 module android.view {
@@ -16,15 +20,18 @@ module android.view {
     import Resources = android.content.res.Resources;
     import Rect = android.graphics.Rect;
     import Point = android.graphics.Point;
+    import Canvas = android.graphics.Canvas;
     import Handler = android.os.Handler;
+    import SystemClock = android.os.SystemClock;
     import Runnable = java.lang.Runnable;
     import System = java.lang.System;
     import Log = android.util.Log;
+    import Surface = android.view.Surface;
 
     export class ViewRootImpl implements ViewParent {
         static TAG = "ViewRootImpl";
         private static DBG = Log.View_DBG;
-        static LOCAL_LOGV = true;
+        static LOCAL_LOGV = ViewRootImpl.DBG;
         static DEBUG_DRAW = false || ViewRootImpl.LOCAL_LOGV;
         static DEBUG_LAYOUT = false || ViewRootImpl.LOCAL_LOGV;
         static DEBUG_INPUT_RESIZE = false || ViewRootImpl.LOCAL_LOGV;
@@ -36,6 +43,7 @@ module android.view {
         private mViewVisibility:number = 0;
         private mWidth:number = -1;
         private mHeight:number = -1;
+        private mDirty = new Rect();
         private mAttachInfo:View.AttachInfo;
         private mTempRect:Rect = new Rect();
         private mVisRect:Rect = new Rect();
@@ -55,9 +63,20 @@ module android.view {
         private mHandler = new Handler();
 
 
+        // Variables to track frames per second, enabled via DEBUG_FPS flag
+        private mFpsStartTime = -1;
+        private mFpsPrevTime = -1;
+        private mFpsNumFrames = 0;
+
+        private mSurface : Surface;
+
         constructor() {
             this.mAttachInfo = new View.AttachInfo(this, this.mHandler);
             this.mTraversalRunnable = new TraversalRunnable(this);
+        }
+
+        initSurface(canvasElement:HTMLCanvasElement){
+            this.mSurface = new Surface(canvasElement);
         }
 
         setView(view:View) {
@@ -254,6 +273,10 @@ module android.view {
                         desiredWindowWidth = packageMetrics.widthPixels;
                         desiredWindowHeight = packageMetrics.heightPixels;
                     }
+
+                    // Ask host how big it wants to be
+                    windowSizeMayChange = windowSizeMayChange || this.measureHierarchy(host, lp,
+                        desiredWindowWidth, desiredWindowHeight);
                 }
 
                 // Ask host how big it wants to be
@@ -493,6 +516,29 @@ module android.view {
             }
         }
 
+        trackFPS() {
+            // Tracks frames per second drawn. First value in a series of draws may be bogus
+            // because it down not account for the intervening idle time
+            let nowTime = System.currentTimeMillis();
+            if (this.mFpsStartTime < 0) {
+                this.mFpsStartTime = this.mFpsPrevTime = nowTime;
+                this.mFpsNumFrames = 0;
+            } else {
+                this.mFpsNumFrames++;
+                //let thisHash = Integer.toHexString(System.identityHashCode(this));
+                let frameTime = nowTime - this.mFpsPrevTime;
+                let totalTime = nowTime - this.mFpsStartTime;
+                Log.v(ViewRootImpl.TAG, "Frame time:\t" + frameTime);
+                this.mFpsPrevTime = nowTime;
+                if (totalTime > 1000) {
+                    let fps = this.mFpsNumFrames * 1000 / totalTime;
+                    Log.v(ViewRootImpl.TAG, "FPS:\t" + fps);
+                    this.mFpsStartTime = nowTime;
+                    this.mFpsNumFrames = 0;
+                }
+            }
+        }
+
         private performDraw() {
             let fullRedrawNeeded = this.mFullRedrawNeeded;
             this.mFullRedrawNeeded = false;
@@ -506,6 +552,47 @@ module android.view {
 
         private draw(fullRedrawNeeded:boolean) {
 
+            if (ViewRootImpl.DEBUG_FPS) {
+                this.trackFPS();
+            }
+
+
+            let attachInfo = this.mAttachInfo;
+            if (attachInfo.mViewScrollChanged) {
+                attachInfo.mViewScrollChanged = false;
+                attachInfo.mTreeObserver.dispatchOnScrollChanged();
+            }
+
+            if (fullRedrawNeeded) {
+                //attachInfo.mIgnoreDirtyState = true;
+                this.mDirty.set(0, 0, this.mWidth, this.mHeight);
+            }
+
+            if (ViewRootImpl.DEBUG_ORIENTATION || ViewRootImpl.DEBUG_DRAW) {
+                Log.v(ViewRootImpl.TAG, "Draw " + this.mView + ", width=" + this.mWidth + ", height=" + this.mHeight);
+            }
+
+            attachInfo.mTreeObserver.dispatchOnDraw();
+
+            this.drawSoftware();
+        }
+
+        private drawSoftware(){
+            let canvas = this.mSurface.lockCanvas(this.mDirty);
+            this.mDirty.setEmpty();
+            let attachInfo = this.mAttachInfo;
+
+            attachInfo.mDrawingTime = SystemClock.uptimeMillis();
+            this.mView.mPrivateFlags |= View.PFLAG_DRAWN;
+
+            this.mView.draw(canvas);
+
+
+            this.mSurface.unlockCanvasAndPost(canvas);
+
+            if (ViewRootImpl.LOCAL_LOGV) {
+                Log.v(ViewRootImpl.TAG, "Surface unlockCanvasAndPost");
+            }
         }
 
         isLayoutRequested():boolean {

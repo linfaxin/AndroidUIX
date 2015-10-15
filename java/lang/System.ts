@@ -11,6 +11,10 @@ module java.lang{
             print(any){
                 console.log(any);
             }
+        };
+
+        static currentTimeMillis():number {
+            return new Date().getTime();
         }
     }
 }

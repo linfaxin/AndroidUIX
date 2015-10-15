@@ -4,9 +4,12 @@
 ///<reference path="ViewRootImpl.ts"/>
 ///<reference path="View.ts"/>
 ///<reference path="ViewParent.ts"/>
+///<reference path="../graphics/Canvas.ts"/>
 
 
 module android.view {
+    import Canvas = android.graphics.Canvas;
+
     export class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN = 0x1;
         static FLAG_CLIP_TO_PADDING = 0x2;
@@ -479,6 +482,8 @@ module android.view {
             return MeasureSpec.makeMeasureSpec(resultSize, resultMode);
         }
 
+
+
         dispatchAttachedToWindow(info:View.AttachInfo, visibility:number) {
             this.mGroupFlags |= ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;
             super.dispatchAttachedToWindow(info, visibility);
@@ -520,6 +525,92 @@ module android.view {
             this.mChildren.forEach((child)=>child.dispatchDetachedFromWindow());
             super.dispatchDetachedFromWindow();
         }
+
+        dispatchDraw(canvas:Canvas) {
+            let count = this.mChildrenCount;
+            let children = this.mChildren;
+            let flags = this.mGroupFlags;
+
+            //if ((flags & FLAG_RUN_ANIMATION) != 0) {//TODO when animation ok
+            //    let cache = (mGroupFlags & FLAG_ANIMATION_CACHE) == FLAG_ANIMATION_CACHE;
+            //
+            //    let buildCache = !isHardwareAccelerated();
+            //    for (let i = 0; i < count; i++) {
+            //        let child = children[i];
+            //        if ((child.mViewFlags & VISIBILITY_MASK) == VISIBLE) {
+            //            let params = child.getLayoutParams();
+            //            if (cache) {
+            //                child.setDrawingCacheEnabled(true);
+            //                if (buildCache) {
+            //                    child.buildDrawingCache(true);
+            //                }
+            //            }
+            //        }
+            //    }
+            //
+            //    mGroupFlags &= ~FLAG_RUN_ANIMATION;
+            //    mGroupFlags &= ~FLAG_ANIMATION_DONE;
+            //
+            //    if (cache) {
+            //        mGroupFlags |= FLAG_CHILDREN_DRAWN_WITH_CACHE;
+            //    }
+            //}
+
+            let saveCount = 0;
+            let clipToPadding = (flags & ViewGroup.CLIP_TO_PADDING_MASK) == ViewGroup.CLIP_TO_PADDING_MASK;
+            if (clipToPadding) {
+                saveCount = canvas.save();
+                canvas.clipRect(this.mScrollX + this.mPaddingLeft, this.mScrollY + this.mPaddingTop,
+                    this.mScrollX + this.mRight - this.mLeft - this.mPaddingRight,
+                    this.mScrollY + this.mBottom - this.mTop - this.mPaddingBottom);
+
+            }
+
+            // We will draw our child's animation, let's reset the flag
+            this.mPrivateFlags &= ~ViewGroup.PFLAG_DRAW_ANIMATION;
+            this.mGroupFlags &= ~ViewGroup.FLAG_INVALIDATE_REQUIRED;
+
+            let more = false;
+            let drawingTime = this.getDrawingTime();
+
+            for (let i = 0; i < count; i++) {
+                let child = children[i];
+                if ((child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE
+                    //|| child.getAnimation() != null
+                ) {
+                    more = more || this.drawChild(canvas, child, drawingTime);
+                }
+            }
+
+            if (clipToPadding) {
+                canvas.restoreToCount(saveCount);
+            }
+
+            // mGroupFlags might have been updated by drawChild()
+            flags = this.mGroupFlags;
+
+            if ((flags & ViewGroup.FLAG_INVALIDATE_REQUIRED) == ViewGroup.FLAG_INVALIDATE_REQUIRED) {
+                this.invalidate(true);
+            }
+        }
+
+        drawChild(canvas:Canvas, child:View , drawingTime:number):boolean {
+            return child.drawFromParent(canvas, this, drawingTime);
+        }
+
+        getClipChildren():boolean {
+            return ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) != 0);
+        }
+        setClipChildren(clipChildren:boolean) {
+            let previousValue = (this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == ViewGroup.FLAG_CLIP_CHILDREN;
+            if (clipChildren != previousValue) {
+                this.setBooleanFlag(ViewGroup.FLAG_CLIP_CHILDREN, clipChildren);
+            }
+        }
+        setClipToPadding(clipToPadding:boolean) {
+            this.setBooleanFlag(ViewGroup.FLAG_CLIP_TO_PADDING, clipToPadding);
+        }
+
 
         requestTransparentRegion(child:android.view.View) {
         }

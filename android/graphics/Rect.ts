@@ -104,7 +104,7 @@ module android.graphics{
             if (args.length === 1) {
                 let rect : Rect = args[0];
                 [this.left, this.top, this.right, this.bottom] = [rect.left, rect.top, rect.right, rect.bottom];
-            }else if (args.length === 4) {
+            }else {
                 let [left = 0, top = 0, right = 0, bottom = 0] = args;
                 this.left = left;
                 this.top = top;
@@ -163,15 +163,27 @@ module android.graphics{
                 let rect : Rect = args[0];
                 return this.intersect(rect.left, rect.top, rect.right, rect.bottom);
             }else{
-                let [left = 0, top = 0, right = 0, bottom = 0] = args;
-                if (this.left < right && left < this.right && this.top < bottom && top < this.bottom) {
+                let [left = 0, t = 0, right = 0, bottom = 0] = args;
+                if (this.left < right && left < this.right && this.top < bottom && t < this.bottom) {
                     if (this.left < left) this.left = left;
-                    if (this.top < top) this.top = top;
+                    if (this.top < t) this.top = t;
                     if (this.right > right) this.right = right;
                     if (this.bottom > bottom) this.bottom = bottom;
                     return true;
                 }
                 return false;
+            }
+        }
+
+        intersects(rect : Rect) : boolean;
+        intersects(left : number, top : number, right : number, bottom : number) : boolean;
+        intersects(...args) : boolean{
+            if(args.length===1){
+                let rect : Rect = args[0];
+                return this.intersects(rect.left, rect.top, rect.right, rect.bottom);
+            }else{
+                let [left = 0, t = 0, right = 0, bottom = 0] = args;
+                return this.left < right && left < this.right && this.top < bottom && t < this.bottom;
             }
         }
         union(rect : Rect);

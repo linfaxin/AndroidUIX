@@ -13,7 +13,10 @@ module android.view {
         private mOnWindowAttachListeners:CopyOnWriteArrayList<ViewTreeObserver.OnWindowAttachListener>;
 
         private mOnGlobalLayoutListeners:CopyOnWriteArray<ViewTreeObserver.OnGlobalLayoutListener>;
+        private mOnScrollChangedListeners:CopyOnWriteArray<ViewTreeObserver.OnScrollChangedListener>;
         private mOnPreDrawListeners:CopyOnWriteArray<ViewTreeObserver.OnPreDrawListener>;
+
+        private mOnDrawListeners:CopyOnWriteArrayList<ViewTreeObserver.OnDrawListener>;
 
         dispatchOnWindowAttachedChange(attached:boolean) {
             // NOTE: because of the use of CopyOnWriteArrayList, we *must* use an iterator to
@@ -63,6 +66,29 @@ module android.view {
             }
             return cancelDraw;
         }
+
+        dispatchOnScrollChanged():void {
+            let listeners = this.mOnScrollChangedListeners;
+            if (listeners != null && listeners.size() > 0) {
+                let access = listeners.start();
+                try {
+                    let count = access.length;
+                    for (let i = 0; i < count; i++) {
+                        access[i].onScrollChanged();
+                    }
+                } finally {
+                    listeners.end();
+                }
+            }
+        }
+
+        dispatchOnDraw():void {
+            if (this.mOnDrawListeners != null) {
+                for (let listener of this.mOnDrawListeners) {
+                    listener.onDraw();
+                }
+            }
+        }
     }
 
     export module ViewTreeObserver {
@@ -75,6 +101,12 @@ module android.view {
         }
         export interface OnPreDrawListener {
             onPreDraw():boolean;
+        }
+        export interface OnDrawListener {
+            onDraw();
+        }
+        export interface OnScrollChangedListener {
+            onScrollChanged();
         }
     }
 }

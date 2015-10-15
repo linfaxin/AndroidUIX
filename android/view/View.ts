@@ -14,6 +14,7 @@
 ///<reference path="MotionEvent.ts"/>
 ///<reference path="../os/Handler.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
+///<reference path="../graphics/Canvas.ts"/>
 
 module android.view {
     import SparseArray = android.util.SparseArray;
@@ -24,6 +25,7 @@ module android.view {
     import Handler = android.os.Handler;
     import Log = android.util.Log;
     import Rect = android.graphics.Rect;
+    import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import OnAttachStateChangeListener = View.OnAttachStateChangeListener;
 
@@ -64,6 +66,8 @@ module android.view {
         static PFLAG_PIVOT_EXPLICITLY_SET          = 0x20000000;//TODO may not need
         static PFLAG_ACTIVATED                     = 0x40000000;
         static PFLAG_INVALIDATED                   = 0x80000000;
+
+        static PFLAG2_VIEW_QUICK_REJECTED = 0x10000000;
 
         static PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x1;
         static PFLAG3_VIEW_IS_ANIMATING_ALPHA = 0x2;
@@ -113,6 +117,8 @@ module android.view {
         private mOverlay:ViewOverlay;
         private mWindowAttachCount=0;
         private mListenerInfo:View.ListenerInfo;
+
+        private mClipBounds:Rect;
 
         mLeft = 0;
         mRight = 0;
@@ -623,6 +629,179 @@ module android.view {
             //TODO impl when draw impl
         }
 
+        setClipBounds(clipBounds:Rect) {
+            if (clipBounds != null) {
+                if (clipBounds.equals(this.mClipBounds)) {
+                    return;
+                }
+                if (this.mClipBounds == null) {
+                    this.invalidate();
+                    this.mClipBounds = new Rect(clipBounds);
+                } else {
+                    this.invalidate(Math.min(this.mClipBounds.left, clipBounds.left),
+                        Math.min(this.mClipBounds.top, clipBounds.top),
+                        Math.max(this.mClipBounds.right, clipBounds.right),
+                        Math.max(this.mClipBounds.bottom, clipBounds.bottom));
+                    this.mClipBounds.set(clipBounds);
+                }
+            } else {
+                if (this.mClipBounds != null) {
+                    this.invalidate();
+                    this.mClipBounds = null;
+                }
+            }
+        }
+        getClipBounds():Rect {
+            return (this.mClipBounds != null) ? new Rect(this.mClipBounds) : null;
+        }
+
+
+        getDrawingTime() {
+            return this.mAttachInfo != null ? this.mAttachInfo.mDrawingTime : 0;
+        }
+
+        drawFromParent(canvas:Canvas, parent:ViewGroup, drawingTime:number):boolean {
+            let useDisplayListProperties = false;
+            let more = false;
+            let childHasIdentityMatrix = true;//TODO when transform ok
+            let flags = parent.mGroupFlags;
+            let scalingRequired = false;
+            let concatMatrix = false;
+            let caching = false;
+            //let hardwareAccelerated = false;
+            if ((flags & ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) != 0 ||
+                (flags & ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) != 0) {
+                caching = true;
+            } else {
+                caching = false;
+            }
+
+            concatMatrix ==  concatMatrix || !childHasIdentityMatrix;
+            this.mPrivateFlags |= View.PFLAG_DRAWN;
+
+            if (!concatMatrix &&
+                (flags & (ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
+                ViewGroup.FLAG_CLIP_CHILDREN)) == ViewGroup.FLAG_CLIP_CHILDREN &&
+                canvas.quickReject(this.mLeft, this.mTop, this.mRight, this.mBottom) &&
+                (this.mPrivateFlags & View.PFLAG_DRAW_ANIMATION) == 0) {
+                this.mPrivateFlags2 |= View.PFLAG2_VIEW_QUICK_REJECTED;
+                return more;
+            }
+            this.mPrivateFlags2 &= ~View.PFLAG2_VIEW_QUICK_REJECTED;
+
+            let cache:Canvas = null;
+            if (caching) {
+                //this.buildDrawingCache(true);//TODO when cache impl
+                //cache = this.getDrawingCache(true);
+            }
+
+            let sx = this.mScrollX;
+            let sy = this.mScrollY;
+            this.computeScroll();
+
+            let hasNoCache = cache == null;
+            let offsetForScroll = cache == null;
+            let restoreTo = canvas.save();
+            if (offsetForScroll) {
+                canvas.translate(this.mLeft - sx, this.mTop - sy);
+            }
+
+            //TODO deal alpha
+            let alpha = 1;
+
+            if ((flags & ViewGroup.FLAG_CLIP_CHILDREN) == ViewGroup.FLAG_CLIP_CHILDREN &&
+                !useDisplayListProperties && cache == null) {
+                if (offsetForScroll) {
+                    canvas.clipRect(sx, sy, sx + (this.mRight - this.mLeft), sy + (this.mBottom - this.mTop));
+                } else {
+                    if (!scalingRequired || cache == null) {
+                        canvas.clipRect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                    } else {
+                        canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight());
+                    }
+                }
+            }
+
+            if (hasNoCache) {
+                // Fast path for layouts with no backgrounds
+                if ((this.mPrivateFlags & View.PFLAG_SKIP_DRAW) == View.PFLAG_SKIP_DRAW) {
+                    this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
+                    this.dispatchDraw(canvas);
+                } else {
+                    this.draw(canvas);
+                }
+            } else if (cache != null) {
+                this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
+                if (alpha < 1) {
+                    //cachePaint.setAlpha((int) (alpha * 255));
+                    parent.mGroupFlags |= ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+
+                } else if  ((flags & ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE) != 0) {
+                    //cachePaint.setAlpha(255);
+                    parent.mGroupFlags &= ~ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                }
+                canvas.drawCanvas(cache, 0, 0);
+            }
+
+
+            if (restoreTo >= 0) {
+                canvas.restoreToCount(restoreTo);
+            }
+
+            return more;
+        }
+
+        draw(canvas:Canvas){
+            if (this.mClipBounds != null) {
+                canvas.clipRect(this.mClipBounds);
+            }
+            let privateFlags = this.mPrivateFlags;
+            //let dirtyOpaque = (privateFlags & View.PFLAG_DIRTY_MASK) == View.PFLAG_DIRTY_OPAQUE &&
+            //    (this.mAttachInfo == null || !this.mAttachInfo.mIgnoreDirtyState);
+            this.mPrivateFlags = (privateFlags & ~View.PFLAG_DIRTY_MASK) | View.PFLAG_DRAWN;
+
+            // draw the background, if needed
+            let background = this.mBackground;
+            if (background != null) {
+                let scrollX = this.mScrollX;
+                let scrollY = this.mScrollY;
+
+                if (this.mBackgroundSizeChanged) {
+                    background.setBounds(0, 0,  this.mRight - this.mLeft, this.mBottom - this.mTop);
+                    this.mBackgroundSizeChanged = false;
+                }
+
+                if ((scrollX | scrollY) == 0) {
+                    background.draw(canvas);
+                } else {
+                    canvas.translate(scrollX, scrollY);
+                    background.draw(canvas);
+                    canvas.translate(-scrollX, -scrollY);
+                }
+            }
+            // draw the content
+            this.onDraw(canvas);
+
+            // draw the children
+            this.dispatchDraw(canvas);
+
+
+            if (this.mOverlay != null && !this.mOverlay.isEmpty()) {
+                this.mOverlay.getOverlayView().dispatchDraw(canvas);
+            }
+
+        }
+        onDraw(canvas:Canvas) {
+        }
+        dispatchDraw(canvas:Canvas) {
+        }
+
+
+
+        computeScroll() {
+        }
+
+
         jumpDrawablesToCurrentState() {
             if (this.mBackground != null) {
                 this.mBackground.jumpToCurrentState();
@@ -640,12 +819,12 @@ module android.view {
         }
         refreshDrawableState() {
             this.mPrivateFlags |= View.PFLAG_DRAWABLE_STATE_DIRTY;
-            //drawableStateChanged();//TODO when impl drawable
-            //
-            //ViewParent parent = mParent;
-            //if (parent != null) {
-            //    parent.childDrawableStateChanged(this);
-            //}
+            this.drawableStateChanged();
+
+            let parent = this.mParent;
+            if (parent != null) {
+                parent.childDrawableStateChanged(this);
+            }
         }
         getDrawableState():Array<number> {
             return [];
@@ -892,7 +1071,7 @@ module android.view {
         export class AttachInfo {
             mRootView:View;
             mDrawingTime=0;
-            mCanvas : CanvasRenderingContext2D;
+            //mCanvas : Canvas;
             mViewRootImpl : ViewRootImpl;
             mHandler : Handler;
             mTmpInvalRect = new Rect();

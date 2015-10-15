@@ -14,9 +14,15 @@ module android.app{
     class RootLayout extends FrameLayout{
     }
 
+    if (typeof HTMLDivElement !== 'function'){
+        var _HTMLDivElement = function(){};
+        _HTMLDivElement.prototype = HTMLDivElement.prototype;
+        HTMLDivElement = <any>_HTMLDivElement;
+    }
     export class Activity extends HTMLDivElement{
         viewRootImpl:ViewRootImpl;
         content:RootLayout;
+        canvas:HTMLCanvasElement;
         createdCallback():void{
             this.viewRootImpl = new ViewRootImpl();
             this.content = new RootLayout();
@@ -27,7 +33,6 @@ module android.app{
                 }
             });
             this.innerHTML = '';
-            this.viewRootImpl.setView(this.content);
 
 
             if(!this.style.position){
@@ -38,21 +43,28 @@ module android.app{
             }
 
 
-            let canvas = document.createElement("canvas");
+            this.canvas = document.createElement("canvas");
+            let canvas = this.canvas;
             this.appendChild(canvas);
             canvas.style.position = "absolute";
             canvas.style.left = '0px';
             canvas.style.top = '0px';
             canvas.style.right = '0px';
             canvas.style.bottom = '0px';
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
+            //canvas.style.width = '100%';
+            //canvas.style.height = '100%';
 
             this.appendChild(this.content.bindElement);
+
+
+            this.viewRootImpl.setView(this.content);
+            this.viewRootImpl.initSurface(canvas);
 
         }
         attachedCallback():void {
             this.viewRootImpl.mWinFrame.set(0, 0, this.offsetWidth, this.offsetHeight);
+            this.canvas.width = this.offsetWidth;
+            this.canvas.height = this.offsetHeight;
             this.viewRootImpl.requestLayout();
         }
         detachedCallback():void {
@@ -74,7 +86,7 @@ module android.app{
 
     class Root extends Activity{}
 
-    (<any> document).registerElement("android-root", Root);
+    (<any> document).registerElement("android-rootview", Root);
     (<any> document).registerElement("android-activity", Activity);
 
 }

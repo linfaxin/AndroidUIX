@@ -57,6 +57,7 @@ module android.os {
             let oldId = this.messages.get(message);
             if (oldId !== undefined) {
                 clearTimeout(oldId);
+                cancelAnimationFrame(oldId);
                 this.messages.delete(message);
             }
         }
