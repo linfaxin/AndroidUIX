@@ -17,7 +17,7 @@ module android.content.res{
             displayMetrics.heightPixels = window.innerHeight;
             displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT ;
             displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
-            displayMetrics.density = window.devicePixelRatio;
+            displayMetrics.density = 1;//window.devicePixelRatio;
             displayMetrics.densityDpi = displayMetrics.density * DisplayMetrics.DENSITY_DEFAULT;
             displayMetrics.scaledDensity = displayMetrics.density;
 

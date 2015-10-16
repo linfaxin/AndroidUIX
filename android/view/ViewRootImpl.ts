@@ -284,6 +284,10 @@ module android.view {
                     desiredWindowWidth, desiredWindowHeight);
             }
 
+            if (this.mFirst || attachInfo.mViewVisibilityChanged) {
+                attachInfo.mViewVisibilityChanged = false;
+            }
+
             if (layoutRequested) {
                 // Clear this now, so that if anything requests a layout in the
                 // rest of this function we will catch it and re-run a full

@@ -3,12 +3,17 @@
  */
 ///<reference path="ViewRootImpl.ts"/>
 ///<reference path="View.ts"/>
+///<reference path="MotionEvent.ts"/>
 ///<reference path="ViewParent.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
+///<reference path="../graphics/Point.ts"/>
+///<reference path="../os/SystemClock.ts"/>
 
 
 module android.view {
     import Canvas = android.graphics.Canvas;
+    import Point = android.graphics.Point;
+    import SystemClock = android.os.SystemClock;
 
     export class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN = 0x1;
@@ -44,6 +49,12 @@ module android.view {
         static CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
 
         mOnHierarchyChangeListener:ViewGroup.OnHierarchyChangeListener;
+        mFirstTouchTarget:TouchTarget;
+        // For debugging only.  You can see these in hierarchyviewer.
+        private mLastTouchDownTime = 0;
+        private mLastTouchDownIndex = -1;
+        private mLastTouchDownX = 0;
+        private mLastTouchDownY = 0;
         mGroupFlags=0;
         mLayoutMode = ViewGroup.LAYOUT_MODE_UNDEFINED;
         mChildren:Array<View> = [];
@@ -365,6 +376,381 @@ module android.view {
                 this.mGroupFlags &= ~flag;
             }
         }
+        onInterceptTouchEvent(ev:MotionEvent) {
+            return false;
+        }
+        dispatchTouchEvent(ev:MotionEvent):boolean {
+            let handled = false;
+            if (this.onFilterTouchEventForSecurity(ev)) {
+                let action = ev.getAction();
+                let actionMasked = action & MotionEvent.ACTION_MASK;
+
+                // Handle an initial down.
+                if (actionMasked == MotionEvent.ACTION_DOWN) {
+                    // Throw away all previous state when starting a new touch gesture.
+                    // The framework may have dropped the up or cancel event for the previous gesture
+                    // due to an app switch, ANR, or some other state change.
+                    this.cancelAndClearTouchTargets(ev);
+                    this.resetTouchState();
+                }
+
+                // Check for interception.
+                let intercepted;
+                if (actionMasked == MotionEvent.ACTION_DOWN
+                    || this.mFirstTouchTarget != null) {
+                    let disallowIntercept = (this.mGroupFlags & ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0;
+                    if (!disallowIntercept) {
+                        intercepted = this.onInterceptTouchEvent(ev);
+                        ev.setAction(action); // restore action in case it was changed
+                    } else {
+                        intercepted = false;
+                    }
+                } else {
+                    // There are no touch targets and this action is not an initial down
+                    // so this view group continues to intercept touches.
+                    intercepted = true;
+                }
+
+                // Check for cancelation.
+                let canceled = ViewGroup.resetCancelNextUpFlag(this)
+                    || actionMasked == MotionEvent.ACTION_CANCEL;
+
+                // Update list of touch targets for pointer down, if needed.
+                let split = (this.mGroupFlags & ViewGroup.FLAG_SPLIT_MOTION_EVENTS) != 0;
+                let newTouchTarget:TouchTarget = null;
+                let alreadyDispatchedToNewTouchTarget = false;
+                if (!canceled && !intercepted) {
+                    if (actionMasked == MotionEvent.ACTION_DOWN
+                        || (split && actionMasked == MotionEvent.ACTION_POINTER_DOWN)
+                        || actionMasked == MotionEvent.ACTION_HOVER_MOVE) {
+                        let actionIndex = ev.getActionIndex(); // always 0 for down
+                        let idBitsToAssign = split ? 1 << ev.getPointerId(actionIndex)
+                            : TouchTarget.ALL_POINTER_IDS;
+
+                        // Clean up earlier touch targets for this pointer id in case they
+                        // have become out of sync.
+                        this.removePointersFromTouchTargets(idBitsToAssign);
+
+                        let childrenCount = this.mChildrenCount;
+                        if (newTouchTarget == null && childrenCount != 0) {
+                            let x = ev.getX(actionIndex);
+                            let y = ev.getY(actionIndex);
+                            // Find a child that can receive the event.
+                            // Scan children from front to back.
+                            let children = this.mChildren;
+
+                            let customOrder = this.isChildrenDrawingOrderEnabled();
+                            for (let i = childrenCount - 1; i >= 0; i--) {
+                                let childIndex = customOrder ? this.getChildDrawingOrder(childrenCount, i) : i;
+                                let child = children[childIndex];
+                                if (!ViewGroup.canViewReceivePointerEvents(child)
+                                    || !this.isTransformedTouchPointInView(x, y, child, null)) {
+                                    continue;
+                                }
+
+                                newTouchTarget = this.getTouchTarget(child);
+                                if (newTouchTarget != null) {
+                                    // Child is already receiving touch within its bounds.
+                                    // Give it the new pointer in addition to the ones it is handling.
+                                    newTouchTarget.pointerIdBits |= idBitsToAssign;
+                                    break;
+                                }
+
+                                ViewGroup.resetCancelNextUpFlag(child);
+                                if (this.dispatchTransformedTouchEvent(ev, false, child, idBitsToAssign)) {
+                                    // Child wants to receive touch within its bounds.
+                                    this.mLastTouchDownTime = ev.getDownTime();
+                                    this.mLastTouchDownIndex = childIndex;
+                                    this.mLastTouchDownX = ev.getX();
+                                    this.mLastTouchDownY = ev.getY();
+                                    newTouchTarget = this.addTouchTarget(child, idBitsToAssign);
+                                    alreadyDispatchedToNewTouchTarget = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (newTouchTarget == null && this.mFirstTouchTarget != null) {
+                            // Did not find a child to receive the event.
+                            // Assign the pointer to the least recently added target.
+                            newTouchTarget = this.mFirstTouchTarget;
+                            while (newTouchTarget.next != null) {
+                                newTouchTarget = newTouchTarget.next;
+                            }
+                            newTouchTarget.pointerIdBits |= idBitsToAssign;
+                        }
+                    }
+                }
+
+                // Dispatch to touch targets.
+                if (this.mFirstTouchTarget == null) {
+                    // No touch targets so treat this as an ordinary view.
+                    handled = this.dispatchTransformedTouchEvent(ev, canceled, null,
+                        TouchTarget.ALL_POINTER_IDS);
+                } else {
+                    // Dispatch to touch targets, excluding the new touch target if we already
+                    // dispatched to it.  Cancel touch targets if necessary.
+                    let predecessor:TouchTarget = null;
+                    let target:TouchTarget = this.mFirstTouchTarget;
+                    while (target != null) {
+                        const next:TouchTarget = target.next;
+                        if (alreadyDispatchedToNewTouchTarget && target == newTouchTarget) {
+                            handled = true;
+                        } else {
+                            let cancelChild = ViewGroup.resetCancelNextUpFlag(target.child)
+                                || intercepted;
+                            if (this.dispatchTransformedTouchEvent(ev, cancelChild,
+                                    target.child, target.pointerIdBits)) {
+                                handled = true;
+                            }
+                            if (cancelChild) {
+                                if (predecessor == null) {
+                                    this.mFirstTouchTarget = next;
+                                } else {
+                                    predecessor.next = next;
+                                }
+                                target.recycle();
+                                target = next;
+                                continue;
+                            }
+                        }
+                        predecessor = target;
+                        target = next;
+                    }
+                }
+
+                // Update list of touch targets for pointer up or cancel, if needed.
+                if (canceled
+                    || actionMasked == MotionEvent.ACTION_UP
+                    || actionMasked == MotionEvent.ACTION_HOVER_MOVE) {
+                    this.resetTouchState();
+                } else if (split && actionMasked == MotionEvent.ACTION_POINTER_UP) {
+                    let actionIndex = ev.getActionIndex();
+                    let idBitsToRemove = 1 << ev.getPointerId(actionIndex);
+                    this.removePointersFromTouchTargets(idBitsToRemove);
+                }
+            }
+            return handled;
+        }
+        private resetTouchState() {
+            this.clearTouchTargets();
+            ViewGroup.resetCancelNextUpFlag(this);
+            this.mGroupFlags &= ~ViewGroup.FLAG_DISALLOW_INTERCEPT;
+        }
+        private static resetCancelNextUpFlag(view:View):boolean {
+            if ((view.mPrivateFlags & View.PFLAG_CANCEL_NEXT_UP_EVENT) != 0) {
+                view.mPrivateFlags &= ~View.PFLAG_CANCEL_NEXT_UP_EVENT;
+                return true;
+            }
+            return false;
+        }
+        private clearTouchTargets() {
+            let target = this.mFirstTouchTarget;
+            if (target != null) {
+                do {
+                    let next = target.next;
+                    target.recycle();
+                    target = next;
+                } while (target != null);
+                this.mFirstTouchTarget = null;
+            }
+        }
+
+        private cancelAndClearTouchTargets(event:MotionEvent) {
+            if (this.mFirstTouchTarget != null) {
+                let syntheticEvent = false;
+                if (event == null) {
+                    let now = SystemClock.uptimeMillis();
+                    event = MotionEvent.obtainWithAction(now, now, MotionEvent.ACTION_CANCEL, 0, 0);
+                    //event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+                    syntheticEvent = true;
+                }
+
+                for (let target = this.mFirstTouchTarget; target != null; target = target.next) {
+                    ViewGroup.resetCancelNextUpFlag(target.child);
+                    this.dispatchTransformedTouchEvent(event, true, target.child, target.pointerIdBits);
+                }
+                this.clearTouchTargets();
+
+                if (syntheticEvent) {
+                    event.recycle();
+                }
+            }
+        }
+
+        private getTouchTarget(child:View):TouchTarget {
+            for (let target = this.mFirstTouchTarget; target != null; target = target.next) {
+                if (target.child == child) {
+                    return target;
+                }
+            }
+            return null;
+        }
+
+        private addTouchTarget(child:View, pointerIdBits:number):TouchTarget {
+            let target = TouchTarget.obtain(child, pointerIdBits);
+            target.next = this.mFirstTouchTarget;
+            this.mFirstTouchTarget = target;
+            return target;
+        }
+
+        private removePointersFromTouchTargets(pointerIdBits:number) {
+            let predecessor:TouchTarget = null;
+            let target = this.mFirstTouchTarget;
+            while (target != null) {
+                let next = target.next;
+                if ((target.pointerIdBits & pointerIdBits) != 0) {
+                    target.pointerIdBits &= ~pointerIdBits;
+                    if (target.pointerIdBits == 0) {
+                        if (predecessor == null) {
+                            this.mFirstTouchTarget = next;
+                        } else {
+                            predecessor.next = next;
+                        }
+                        target.recycle();
+                        target = next;
+                        continue;
+                    }
+                }
+                predecessor = target;
+                target = next;
+            }
+        }
+
+        private cancelTouchTarget(view:View) {
+            let predecessor:TouchTarget = null;
+            let target = this.mFirstTouchTarget;
+            while (target != null) {
+                let next = target.next;
+                if (target.child == view) {
+                    if (predecessor == null) {
+                        this.mFirstTouchTarget = next;
+                    } else {
+                        predecessor.next = next;
+                    }
+                    target.recycle();
+
+                    let now = SystemClock.uptimeMillis();
+                    let event = MotionEvent.obtainWithAction(now, now, MotionEvent.ACTION_CANCEL, 0, 0);
+                    //event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+                    view.dispatchTouchEvent(event);
+                    event.recycle();
+                    return;
+                }
+                predecessor = target;
+                target = next;
+            }
+        }
+
+        private static canViewReceivePointerEvents(child:View):boolean {
+            return (child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE
+                    //|| child.getAnimation() != null //TODO when animation impl
+                ;
+        }
+
+        isTransformedTouchPointInView(x:number, y:number, child:View, outLocalPoint:Point):boolean {
+            let localX = x + this.mScrollX - child.mLeft;
+            let localY = y + this.mScrollY - child.mTop;
+
+            //if (! child.hasIdentityMatrix() && mAttachInfo != null) { //TODO when view transform ok
+            //    final float[] localXY = mAttachInfo.mTmpTransformLocation;
+            //    localXY[0] = localX;
+            //    localXY[1] = localY;
+            //    child.getInverseMatrix().mapPoints(localXY);
+            //    localX = localXY[0];
+            //    localY = localXY[1];
+            //}
+
+            let isInView = child.pointInView(localX, localY);
+            if (isInView && outLocalPoint != null) {
+                outLocalPoint.set(localX, localY);
+            }
+            return isInView;
+        }
+
+        private dispatchTransformedTouchEvent(event:MotionEvent, cancel:boolean,
+                                              child:View, desiredPointerIdBits:number):boolean {
+            let handled:boolean;
+
+            // Canceling motions is a special case.  We don't need to perform any transformations
+            // or filtering.  The important part is the action, not the contents.
+            const oldAction = event.getAction();
+            if (cancel || oldAction == MotionEvent.ACTION_CANCEL) {
+                event.setAction(MotionEvent.ACTION_CANCEL);
+                if (child == null) {
+                    handled = super.dispatchTouchEvent(event);
+                } else {
+                    handled = child.dispatchTouchEvent(event);
+                }
+                event.setAction(oldAction);
+                return handled;
+            }
+
+
+            // Calculate the number of pointers to deliver.
+            const oldPointerIdBits = event.getPointerIdBits();
+            const newPointerIdBits = oldPointerIdBits & desiredPointerIdBits;
+
+            // If for some reason we ended up in an inconsistent state where it looks like we
+            // might produce a motion event with no pointers in it, then drop the event.
+            if (newPointerIdBits == 0) {
+                return false;
+            }
+
+            // If the number of pointers is the same and we don't need to perform any fancy
+            // irreversible transformations, then we can reuse the motion event for this
+            // dispatch as long as we are careful to revert any changes we make.
+            // Otherwise we need to make a copy.
+            let transformedEvent:MotionEvent;
+            if (newPointerIdBits == oldPointerIdBits) {
+                if (child == null || child.hasIdentityMatrix()) {
+                    if (child == null) {
+                        handled = super.dispatchTouchEvent(event);
+                    } else {
+                        let offsetX = this.mScrollX - child.mLeft;
+                        let offsetY = this.mScrollY - child.mTop;
+                        event.offsetLocation(offsetX, offsetY);
+
+                        handled = child.dispatchTouchEvent(event);
+
+                        event.offsetLocation(-offsetX, -offsetY);
+                    }
+                    return handled;
+                }
+                transformedEvent = MotionEvent.obtain(event);
+            } else {
+                transformedEvent = event.split(newPointerIdBits);
+            }
+
+            // Perform any necessary transformations and dispatch.
+            if (child == null) {
+                handled = super.dispatchTouchEvent(transformedEvent);
+            } else {
+                let offsetX = this.mScrollX - child.mLeft;
+                let offsetY = this.mScrollY - child.mTop;
+                transformedEvent.offsetLocation(offsetX, offsetY);
+                //if (! child.hasIdentityMatrix()) {//TODO when view transform ok
+                //    transformedEvent.transform(child.getInverseMatrix());
+                //}
+
+                handled = child.dispatchTouchEvent(transformedEvent);
+            }
+
+            // Done.
+            transformedEvent.recycle();
+            return handled;
+        }
+
+
+        isChildrenDrawingOrderEnabled():boolean {
+            return (this.mGroupFlags & ViewGroup.FLAG_USE_CHILD_DRAWING_ORDER) == ViewGroup.FLAG_USE_CHILD_DRAWING_ORDER;
+        }
+        setChildrenDrawingOrderEnabled(enabled:boolean) {
+            this.setBooleanFlag(ViewGroup.FLAG_USE_CHILD_DRAWING_ORDER, enabled);
+        }
+        getChildDrawingOrder(childCount:number , i:number):number {
+            return i;
+        }
 
         generateLayoutParams(p:ViewGroup.LayoutParams):ViewGroup.LayoutParams {
             return p;
@@ -526,6 +912,15 @@ module android.view {
             super.dispatchDetachedFromWindow();
         }
 
+        dispatchVisibilityChanged(changedView:View, visibility:number) {
+            super.dispatchVisibilityChanged(changedView, visibility);
+            const count = this.mChildrenCount;
+            let children = this.mChildren;
+            for (let i = 0; i < count; i++) {
+                children[i].dispatchVisibilityChanged(changedView, visibility);
+            }
+        }
+
         dispatchDraw(canvas:Canvas) {
             let count = this.mChildrenCount;
             let children = this.mChildren;
@@ -573,8 +968,9 @@ module android.view {
             let more = false;
             let drawingTime = this.getDrawingTime();
 
+            let customOrder = this.isChildrenDrawingOrderEnabled();
             for (let i = 0; i < count; i++) {
-                let child = children[i];
+                let child = children[customOrder ? this.getChildDrawingOrder(count, i) : i];
                 if ((child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE
                     //|| child.getAnimation() != null
                 ) {
@@ -646,6 +1042,21 @@ module android.view {
         }
 
         requestDisallowInterceptTouchEvent(disallowIntercept:boolean) {
+            if (disallowIntercept == ((this.mGroupFlags & ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0)) {
+                // We're already in this state, assume our ancestors are too
+                return;
+            }
+
+            if (disallowIntercept) {
+                this.mGroupFlags |= ViewGroup.FLAG_DISALLOW_INTERCEPT;
+            } else {
+                this.mGroupFlags &= ~ViewGroup.FLAG_DISALLOW_INTERCEPT;
+            }
+
+            // Pass it up to our parent
+            if (this.mParent != null) {
+                this.mParent.requestDisallowInterceptTouchEvent(disallowIntercept);
+            }
         }
 
         requestChildRectangleOnScreen(child:android.view.View, rectangle:android.graphics.Rect, immediate:boolean):boolean {
@@ -723,4 +1134,42 @@ module android.view {
             onChildViewRemoved(parent:View, child:View);
         }
     }
+
+    class TouchTarget{
+        private static MAX_RECYCLED = 32;
+        private static sRecycleBin:TouchTarget;
+        private static sRecycledCount=0;
+        static ALL_POINTER_IDS = -1; // all ones
+
+        child:View;
+        pointerIdBits:number;
+        next:TouchTarget;
+
+        static obtain(child:View , pointerIdBits:number ) {
+            let target:TouchTarget;
+            if (TouchTarget.sRecycleBin == null) {
+                target = new TouchTarget();
+            } else {
+                target = TouchTarget.sRecycleBin;
+                TouchTarget.sRecycleBin = target.next;
+                TouchTarget.sRecycledCount--;
+                target.next = null;
+            }
+            target.child = child;
+            target.pointerIdBits = pointerIdBits;
+            return target;
+        }
+
+        public recycle() {
+            if (TouchTarget.sRecycledCount < TouchTarget.MAX_RECYCLED) {
+                this.next = TouchTarget.sRecycleBin;
+                TouchTarget.sRecycleBin = this;
+                TouchTarget.sRecycledCount += 1;
+            } else {
+                this.next = null;
+            }
+            this.child = null;
+        }
+    }
+
 }

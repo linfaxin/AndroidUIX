@@ -5,6 +5,7 @@
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../graphics/drawable/Drawable.ts"/>
 ///<reference path="../../java/lang/StringBuilder.ts"/>
+///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
 ///<reference path="ViewRootImpl.ts"/>
 ///<reference path="ViewParent.ts"/>
@@ -12,6 +13,7 @@
 ///<reference path="ViewOverlay.ts"/>
 ///<reference path="ViewTreeObserver.ts"/>
 ///<reference path="MotionEvent.ts"/>
+///<reference path="TouchDelegate.ts"/>
 ///<reference path="../os/Handler.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
@@ -20,6 +22,7 @@ module android.view {
     import SparseArray = android.util.SparseArray;
     import Drawable = android.graphics.drawable.Drawable;
     import StringBuilder = java.lang.StringBuilder;
+    import Runnable = java.lang.Runnable;
     //import ViewRootImpl = android.view.ViewRootImpl;
     import ViewParent = android.view.ViewParent;
     import Handler = android.os.Handler;
@@ -28,6 +31,7 @@ module android.view {
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import OnAttachStateChangeListener = View.OnAttachStateChangeListener;
+
 
     export class View{
         private static DBG = Log.View_DBG;
@@ -75,6 +79,13 @@ module android.view {
         static PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT = 0x8;
         static PFLAG3_CALLED_SUPER = 0x10;
 
+        private static NOT_FOCUSABLE = 0x00000000;
+        private static FOCUSABLE = 0x00000001;
+        private static FOCUSABLE_MASK = 0x00000001;
+
+
+
+
         static OVER_SCROLL_ALWAYS = 0;
         static OVER_SCROLL_IF_CONTENT_SCROLLS = 1;
         static OVER_SCROLL_NEVER = 2;
@@ -95,6 +106,10 @@ module android.view {
         static WILL_NOT_DRAW = 0x00000080;
         static DRAW_MASK = 0x00000080;
 
+        static CLICKABLE = 0x00004000;
+        static DRAWING_CACHE_ENABLED = 0x00008000;
+        static WILL_NOT_CACHE_DRAWING = 0x000020000;
+        private static FOCUSABLE_IN_TOUCH_MODE = 0x00040000;
         static LONG_CLICKABLE = 0x00200000;
         static DUPLICATE_PARENT_STATE = 0x00400000;
 
@@ -107,8 +122,16 @@ module android.view {
         private mMeasuredHeight = 0;
         private mBackground:Drawable;//TODO Drawable impl
         private mBackgroundSizeChanged=false;
+
+        private mPendingCheckForLongPress:CheckForLongPress;
+        private mPendingCheckForTap:CheckForTap;
+        private mPerformClick:PerformClick;
+        private mUnsetPressedState:UnsetPressedState;
+        private mHasPerformedLongPress = false;
         private mMinWidth = 0;
         private mMinHeight = 0;
+        private mTouchDelegate : TouchDelegate;
+        private mTouchSlop = 0;
         mParent:ViewParent;
         private mMeasureCache:SparseArray<number>;
         mAttachInfo:View.AttachInfo;
@@ -131,6 +154,10 @@ module android.view {
         mPaddingRight = 0;
         mPaddingTop = 0;
         mPaddingBottom = 0;
+
+        constructor(){
+            this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
+        }
 
         getWidth():number {
             return this.mRight - this.mLeft;
@@ -244,7 +271,15 @@ module android.view {
                 this.mBackgroundSizeChanged = true;
             }
         }
+        hasIdentityMatrix(){
+            //TODO transform
+            return true;
+        }
 
+        pointInView(localX:number, localY:number, slop=0):boolean {
+            return localX >= -slop && localY >= -slop && localX < ((this.mRight - this.mLeft) + slop) &&
+            localY < ((this.mBottom - this.mTop) + slop);
+        }
 
         getHandler():Handler {
             let attachInfo = this.mAttachInfo;
@@ -259,11 +294,185 @@ module android.view {
             }
             return null;
         }
+        post(action:Runnable):boolean {
+            let attachInfo = this.mAttachInfo;
+            if (attachInfo != null) {
+                return attachInfo.mHandler.post(action);
+            }
+            // Assume that post will succeed later
+            ViewRootImpl.getRunQueue().post(action);
+            return true;
+        }
+        postDelayed(action:Runnable, delayMillis:number):boolean {
+            let attachInfo = this.mAttachInfo;
+            if (attachInfo != null) {
+                return attachInfo.mHandler.postDelayed(action, delayMillis);
+            }
+            // Assume that post will succeed later
+            ViewRootImpl.getRunQueue().postDelayed(action, delayMillis);
+            return true;
+        }
+        postOnAnimation(action:Runnable):boolean {
+            return this.post(action);
+        }
+        postOnAnimationDelayed(action:Runnable, delayMillis:number):boolean {
+            return this.postDelayed(action, delayMillis);
+        }
+        removeCallbacks(action:Runnable):boolean {
+            if (action != null) {
+                let attachInfo = this.mAttachInfo;
+                if (attachInfo != null) {
+                    attachInfo.mHandler.removeCallbacks(action);
+                } else {
+                    // Assume that post will succeed later
+                    ViewRootImpl.getRunQueue().removeCallbacks(action);
+                }
+            }
+            return true;
+        }
         getParent():ViewParent {
             return this.mParent;
         }
         setFlags(flags:number , mask:number){
-            //TODO
+            let old = this.mViewFlags;
+            this.mViewFlags = (this.mViewFlags & ~mask) | (flags & mask);
+
+            let changed = this.mViewFlags ^ old;
+            if (changed == 0) {
+                return;
+            }
+            let privateFlags = this.mPrivateFlags;
+
+            /* TODO Check if the FOCUSABLE bit has changed */
+            //if (((changed & FOCUSABLE_MASK) != 0) &&
+            //    ((privateFlags & PFLAG_HAS_BOUNDS) !=0)) {
+            //    if (((old & FOCUSABLE_MASK) == FOCUSABLE)
+            //        && ((privateFlags & PFLAG_FOCUSED) != 0)) {
+            //        /* Give up focus if we are no longer focusable */
+            //        clearFocus();
+            //    } else if (((old & FOCUSABLE_MASK) == NOT_FOCUSABLE)
+            //        && ((privateFlags & PFLAG_FOCUSED) == 0)) {
+            //        /*
+            //         * Tell the view system that we are now available to take focus
+            //         * if no one else already has it.
+            //         */
+            //        if (mParent != null) mParent.focusableViewAvailable(this);
+            //    }
+            //}
+
+            const newVisibility = flags & View.VISIBILITY_MASK;
+            if (newVisibility == View.VISIBLE) {
+                if ((changed & View.VISIBILITY_MASK) != 0) {
+                    /*
+                     * If this view is becoming visible, invalidate it in case it changed while
+                     * it was not visible. Marking it drawn ensures that the invalidation will
+                     * go through.
+                     */
+                    this.mPrivateFlags |= View.PFLAG_DRAWN;
+                    this.invalidate(true);
+
+                    //needGlobalAttributesUpdate(true);
+
+                    // a view becoming visible is worth notifying the parent
+                    // about in case nothing has focus.  even if this specific view
+                    // isn't focusable, it may contain something that is, so let
+                    // the root view try to give this focus if nothing else does.
+                    if ((this.mParent != null) && (this.mBottom > this.mTop) && (this.mRight > this.mLeft)) {
+                        this.mParent.focusableViewAvailable(this);
+                    }
+                }
+            }
+
+            /* Check if the GONE bit has changed */
+            if ((changed & View.GONE) != 0) {
+                //needGlobalAttributesUpdate(false);
+                this.requestLayout();
+
+                if (((this.mViewFlags & View.VISIBILITY_MASK) == View.GONE)) {
+                    if (this.hasFocus()) this.clearFocus();
+                    this.destroyDrawingCache();
+                    if (this.mParent instanceof View) {
+                        // GONE views noop invalidation, so invalidate the parent
+                        (<any> this.mParent).invalidate(true);
+                    }
+                    // Mark the view drawn to ensure that it gets invalidated properly the next
+                    // time it is visible and gets invalidated
+                    this.mPrivateFlags |= View.PFLAG_DRAWN;
+                }
+                if (this.mAttachInfo != null) {
+                    this.mAttachInfo.mViewVisibilityChanged = true;
+                }
+            }
+
+
+            /* Check if the VISIBLE bit has changed */
+            if ((changed & View.INVISIBLE) != 0) {
+                //needGlobalAttributesUpdate(false);
+                /*
+                 * If this view is becoming invisible, set the DRAWN flag so that
+                 * the next invalidate() will not be skipped.
+                 */
+                this.mPrivateFlags |= View.PFLAG_DRAWN;
+
+                if (((this.mViewFlags & View.VISIBILITY_MASK) == View.INVISIBLE)) {
+                    // root view becoming invisible shouldn't clear focus and accessibility focus
+                    if (this.getRootView() != this) {
+                        if (this.hasFocus()) this.clearFocus();
+                    }
+                }
+                if (this.mAttachInfo != null) {
+                    this.mAttachInfo.mViewVisibilityChanged = true;
+                }
+            }
+            if ((changed & View.VISIBILITY_MASK) != 0) {
+                // If the view is invisible, cleanup its display list to free up resources
+                if (newVisibility != View.VISIBLE) {
+                    this.cleanupDraw();
+                }
+
+                if (this.mParent instanceof ViewGroup) {
+                    (<any>this.mParent).onChildVisibilityChanged(this,
+                        (changed & View.VISIBILITY_MASK), newVisibility);
+                    (<any>this.mParent).invalidate(true);
+                } else if (this.mParent != null) {
+                    this.mParent.invalidateChild(this, null);
+                }
+                this.dispatchVisibilityChanged(this, newVisibility);
+            }
+
+            if ((changed & View.WILL_NOT_CACHE_DRAWING) != 0) {
+                this.destroyDrawingCache();
+            }
+
+
+            if ((changed & View.DRAWING_CACHE_ENABLED) != 0) {
+                this.destroyDrawingCache();
+                this.mPrivateFlags &= ~View.PFLAG_DRAWING_CACHE_VALID;
+                this.invalidateParentCaches();
+            }
+
+            //if ((changed & DRAWING_CACHE_QUALITY_MASK) != 0) {
+            //    destroyDrawingCache();
+            //    mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
+            //}
+
+
+            if ((changed & View.DRAW_MASK) != 0) {
+                if ((this.mViewFlags & View.WILL_NOT_DRAW) != 0) {
+                    if (this.mBackground != null) {
+                        this.mPrivateFlags &= ~View.PFLAG_SKIP_DRAW;
+                        this.mPrivateFlags |= View.PFLAG_ONLY_DRAWS_BACKGROUND;
+                    } else {
+                        this.mPrivateFlags |= View.PFLAG_SKIP_DRAW;
+                    }
+                } else {
+                    this.mPrivateFlags &= ~View.PFLAG_SKIP_DRAW;
+                }
+                this.requestLayout();
+                this.invalidate(true);
+            }
+
+
         }
         bringToFront() {
             if (this.mParent != null) {
@@ -281,7 +490,28 @@ module android.view {
         onSizeChanged(w:number, h:number, oldw:number, oldh:number) {
 
         }
-
+        getListenerInfo() {
+            if (this.mListenerInfo != null) {
+                return this.mListenerInfo;
+            }
+            this.mListenerInfo = new View.ListenerInfo();
+            return this.mListenerInfo;
+        }
+        isFocusable():boolean {
+            return View.FOCUSABLE == (this.mViewFlags & View.FOCUSABLE_MASK);
+        }
+        isFocusableInTouchMode():boolean {
+            return View.FOCUSABLE_IN_TOUCH_MODE == (this.mViewFlags & View.FOCUSABLE_IN_TOUCH_MODE);
+        }
+        hasFocus():boolean{
+            return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
+        }
+        hasFocusable():boolean {
+            return (this.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE && this.isFocusable();
+        }
+        clearFocus() {
+            //TODO impl focus
+        }
 
         getVisibility():number {
             return this.mViewFlags & View.VISIBILITY_MASK;
@@ -290,28 +520,310 @@ module android.view {
             this.setFlags(visibility, View.VISIBILITY_MASK);
             if (this.mBackground != null) this.mBackground.setVisible(visibility == View.VISIBLE, false);
         }
+        dispatchVisibilityChanged(changedView:View, visibility:number) {
+            this.onVisibilityChanged(changedView, visibility);
+        }
+        onVisibilityChanged(changedView:View, visibility:number) {
+            if (visibility == View.VISIBLE) {
+                if (this.mAttachInfo != null) {
+                    //this.initialAwakenScrollBars();
+                } else {
+                    this.mPrivateFlags |= View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH;
+                }
+            }
+        }
+
         isEnabled():boolean {
             return (this.mViewFlags & View.ENABLED_MASK) == View.ENABLED;
         }
         setEnabled(enabled:boolean) {
-        if (enabled == this.isEnabled()) return;
+            if (enabled == this.isEnabled()) return;
 
-        this.setFlags(enabled ? View.ENABLED : View.DISABLED, View.ENABLED_MASK);
+            this.setFlags(enabled ? View.ENABLED : View.DISABLED, View.ENABLED_MASK);
 
-        /*
-         * The View most likely has to change its appearance, so refresh
-         * the drawable state.
-         */
-        this.refreshDrawableState();
+            /*
+             * The View most likely has to change its appearance, so refresh
+             * the drawable state.
+             */
+            this.refreshDrawableState();
 
-        // Invalidate too, since the default behavior for views is to be
-        // be drawn at 50% alpha rather than to change the drawable.
-        this.invalidate(true);
+            // Invalidate too, since the default behavior for views is to be
+            // be drawn at 50% alpha rather than to change the drawable.
+            this.invalidate(true);
 
-        //if (!enabled) {
-        //    cancelPendingInputEvents();
-        //}
-}
+            //if (!enabled) {
+            //    cancelPendingInputEvents();
+            //}
+        }
+        resetPressedState() {
+            if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
+                return;
+            }
+
+            if (this.isPressed()) {
+                this.setPressed(false);
+
+                if (!this.mHasPerformedLongPress) {
+                    this.removeLongPressCallback();
+                }
+            }
+        }
+
+        dispatchTouchEvent(event:MotionEvent):boolean {
+            if (this.onFilterTouchEventForSecurity(event)) {
+                let li = this.mListenerInfo;
+                if (li != null && li.mOnTouchListener != null && (this.mViewFlags & View.ENABLED_MASK) == View.ENABLED
+                    && li.mOnTouchListener.onTouch(this, event)) {
+                    return true;
+                }
+
+                if (this.onTouchEvent(event)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        onFilterTouchEventForSecurity(event:MotionEvent):boolean {
+            return true;
+        }
+
+        onTouchEvent(event:MotionEvent):boolean {
+            let viewFlags = this.mViewFlags;
+
+            if ((viewFlags & View.ENABLED_MASK) == View.DISABLED) {
+                if (event.getAction() == MotionEvent.ACTION_UP && (this.mPrivateFlags & View.PFLAG_PRESSED) != 0) {
+                    this.setPressed(false);
+                }
+                // A disabled view that is clickable still consumes the touch
+                // events, it just doesn't respond to them.
+                return (((viewFlags & View.CLICKABLE) == View.CLICKABLE ||
+                (viewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE));
+            }
+
+            if (this.mTouchDelegate != null) {
+                if (this.mTouchDelegate.onTouchEvent(event)) {
+                    return true;
+                }
+            }
+
+            if (((viewFlags & View.CLICKABLE) == View.CLICKABLE ||
+                (viewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE)) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_UP:
+                        let prepressed = (this.mPrivateFlags & View.PFLAG_PREPRESSED) != 0;
+                        if ((this.mPrivateFlags & View.PFLAG_PRESSED) != 0 || prepressed) {
+                            // take focus if we don't have it already and we should in
+                            // touch mode.
+                            let focusTaken = false;
+                            //if (isFocusable() && isFocusableInTouchMode() && !isFocused()) {//TODO when focus ok
+                            //    focusTaken = requestFocus();
+                            //}
+
+                            if (prepressed) {
+                                // The button is being released before we actually
+                                // showed it as pressed.  Make it show the pressed
+                                // state now (before scheduling the click) to ensure
+                                // the user sees it.
+                                this.setPressed(true);
+                            }
+
+                            if (!this.mHasPerformedLongPress) {
+                                // This is a tap, so remove the longpress check
+                                this.removeLongPressCallback();
+
+                                // Only perform take click actions if we were in the pressed state
+                                if (!focusTaken) {
+                                    // Use a Runnable and post this rather than calling
+                                    // performClick directly. This lets other visual state
+                                    // of the view update before click actions start.
+                                    if (this.mPerformClick == null) {
+                                        this.mPerformClick = new PerformClick(this);
+                                    }
+                                    if (!this.post(this.mPerformClick)) {
+                                        this.performClick();
+                                    }
+                                }
+                            }
+
+                            if (this.mUnsetPressedState == null) {
+                                this.mUnsetPressedState = new UnsetPressedState(this);
+                            }
+
+                            if (prepressed) {
+                                this.postDelayed(this.mUnsetPressedState,
+                                    ViewConfiguration.getPressedStateDuration());
+                            } else if (!this.post(this.mUnsetPressedState)) {
+                                // If the post failed, unpress right now
+                                this.mUnsetPressedState.run();
+                            }
+                            this.removeTapCallback();
+                        }
+                        break;
+
+                    case MotionEvent.ACTION_DOWN:
+                        this.mHasPerformedLongPress = false;
+
+
+                        // Walk up the hierarchy to determine if we're inside a scrolling container.
+                        let isInScrollingContainer = this.isInScrollingContainer();
+
+                        // For views inside a scrolling container, delay the pressed feedback for
+                        // a short period in case this is a scroll.
+                        if (isInScrollingContainer) {
+                            this.mPrivateFlags |= View.PFLAG_PREPRESSED;
+                            if (this.mPendingCheckForTap == null) {
+                                this.mPendingCheckForTap = new CheckForTap(this);
+                            }
+                            this.postDelayed(this.mPendingCheckForTap, ViewConfiguration.getTapTimeout());
+                        } else {
+                            // Not inside a scrolling container, so show the feedback right away
+                            this.setPressed(true);
+                            this.checkForLongClick(0);
+                        }
+                        break;
+
+                    case MotionEvent.ACTION_CANCEL:
+                        this.setPressed(false);
+                        this.removeTapCallback();
+                        this.removeLongPressCallback();
+                        break;
+
+                    case MotionEvent.ACTION_MOVE:
+                        const x = event.getX();
+                        const y = event.getY();
+
+                        // Be lenient about moving outside of buttons
+                        if (!this.pointInView(x, y, this.mTouchSlop)) {
+                            // Outside button
+                            this.removeTapCallback();
+                            if ((this.mPrivateFlags & View.PFLAG_PRESSED) != 0) {
+                                // Remove any future long press/tap checks
+                                this.removeLongPressCallback();
+
+                                this.setPressed(false);
+                            }
+                        }
+                        break;
+                }
+                return true;
+            }
+
+            return false;
+        }
+        isInScrollingContainer():boolean {
+            let p = this.getParent();
+            while (p != null && p instanceof ViewGroup) {
+                if ((<ViewGroup> p).shouldDelayChildPressedState()) {
+                    return true;
+                }
+                p = p.getParent();
+            }
+            return false;
+        }
+        private removeLongPressCallback() {
+            if (this.mPendingCheckForLongPress != null) {
+                this.removeCallbacks(this.mPendingCheckForLongPress);
+            }
+        }
+        private removePerformClickCallback() {
+            if (this.mPerformClick != null) {
+                this.removeCallbacks(this.mPerformClick);
+            }
+        }
+        private removeUnsetPressCallback() {
+            if ((this.mPrivateFlags & View.PFLAG_PRESSED) != 0 && this.mUnsetPressedState != null) {
+                this.setPressed(false);
+                this.removeCallbacks(this.mUnsetPressedState);
+            }
+        }
+        private removeTapCallback() {
+            if (this.mPendingCheckForTap != null) {
+                this.mPrivateFlags &= ~View.PFLAG_PREPRESSED;
+                this.removeCallbacks(this.mPendingCheckForTap);
+            }
+        }
+        cancelLongPress() {
+            this.removeLongPressCallback();
+
+            /*
+             * The prepressed state handled by the tap callback is a display
+             * construct, but the tap callback will post a long press callback
+             * less its own timeout. Remove it here.
+             */
+            this.removeTapCallback();
+        }
+        setTouchDelegate(delegate:TouchDelegate) {
+            this.mTouchDelegate = delegate;
+        }
+        getTouchDelegate() {
+            return this.mTouchDelegate;
+        }
+        setOnLongClickListener(l:View.OnLongClickListener) {
+            if (!this.isLongClickable()) {
+                this.setLongClickable(true);
+            }
+            this.getListenerInfo().mOnLongClickListener = l;
+        }
+        performClick():boolean {
+            let li = this.mListenerInfo;
+            if (li != null && li.mOnClickListener != null) {
+                li.mOnClickListener.onClick(this);
+                return true;
+            }
+
+            return false;
+        }
+        callOnClick():boolean {
+            let li = this.mListenerInfo;
+            if (li != null && li.mOnClickListener != null) {
+                li.mOnClickListener.onClick(this);
+                return true;
+            }
+
+            return false;
+        }
+        performLongClick():boolean {
+            let handled = false;
+            let li = this.mListenerInfo;
+            if (li != null && li.mOnLongClickListener != null) {
+                handled = li.mOnLongClickListener.onLongClick(this);
+            }
+            return handled;
+        }
+
+        private checkForLongClick(delayOffset=0) {
+            if ((this.mViewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE) {
+                this.mHasPerformedLongPress = false;
+
+                if (this.mPendingCheckForLongPress == null) {
+                    this.mPendingCheckForLongPress = new CheckForLongPress(this);
+                }
+                this.mPendingCheckForLongPress.rememberWindowAttachCount();
+                this.postDelayed(this.mPendingCheckForLongPress,
+                    ViewConfiguration.getLongPressTimeout() - delayOffset);
+            }
+        }
+        setOnTouchListener(l:View.OnTouchListener) {
+            this.getListenerInfo().mOnTouchListener = l;
+        }
+        isClickable() {
+            return (this.mViewFlags & View.CLICKABLE) == View.CLICKABLE;
+        }
+        setClickable(clickable:boolean) {
+            this.setFlags(clickable ? View.CLICKABLE : 0, View.CLICKABLE);
+        }
+        isLongClickable():boolean {
+            return (this.mViewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE;
+        }
+        setLongClickable(longClickable:boolean) {
+            this.setFlags(longClickable ? View.LONG_CLICKABLE : 0, View.LONG_CLICKABLE);
+        }
+        setPressed(pressed:boolean){
+            //TODO refresh drawable & dispath
+        }
+        isPressed():boolean {
+            return (this.mPrivateFlags & View.PFLAG_PRESSED) == View.PFLAG_PRESSED;
+        }
 
         isLayoutRequested():boolean {
             return (this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT;
@@ -628,6 +1140,11 @@ module android.view {
         invalidate(...args){
             //TODO impl when draw impl
         }
+        invalidateParentCaches(){
+            if (this.mParent instanceof View) {
+                (<any> this.mParent).mPrivateFlags |= View.PFLAG_INVALIDATED;
+            }
+        }
 
         setClipBounds(clipBounds:Rect) {
             if (clipBounds != null) {
@@ -795,7 +1312,9 @@ module android.view {
         }
         dispatchDraw(canvas:Canvas) {
         }
-
+        destroyDrawingCache() {
+            //TODO impl draw cache
+        }
 
 
         computeScroll() {
@@ -937,16 +1456,21 @@ module android.view {
             this.mPrivateFlags &= ~View.PFLAG_CANCEL_NEXT_UP_EVENT;
             this.mPrivateFlags3 &= ~View.PFLAG3_IS_LAID_OUT;
 
-            //this.removeUnsetPressCallback();//TODO when impl
-            //this.removeLongPressCallback();
-            //this.removePerformClickCallback();
-            //
-            //this.destroyDrawingCache();
+            this.removeUnsetPressCallback();
+            this.removeLongPressCallback();
+            this.removePerformClickCallback();
+
+            //this.destroyDrawingCache();//TODO when impl
             //this.destroyLayer(false);
             //
             //this.cleanupDraw();
             //
             //this.mCurrentAnimation = null;
+        }
+        cleanupDraw() {
+            if (this.mAttachInfo != null) {
+                //this.mAttachInfo.mViewRootImpl.cancelInvalidate(this);//TODO when impl
+            }
         }
 
         debug(depth=0){
@@ -958,6 +1482,26 @@ module android.view {
 
         toString():String{
             return this.tagName();
+        }
+        getRootView():View {
+            if (this.mAttachInfo != null) {
+                let v = this.mAttachInfo.mRootView;
+                if (v != null) {
+                    return v;
+                }
+            }
+
+            let parent = this;
+
+            while (parent.mParent != null && parent.mParent instanceof View) {
+                parent = <any>parent.mParent;
+            }
+
+            return parent;
+        }
+        findViewById(id:string):View{
+            let bindEle = this.bindElement.querySelector('#'+id);
+            return bindEle ? bindEle['bindView'] : null;
         }
 
         bindElement: HTMLElement = document.createElement(this.tagName());//bind Element show the layout and other info
@@ -973,11 +1517,6 @@ module android.view {
         }
         tagName() : string{
             return "ANDROID-"+this.constructor.name;
-        }
-
-        findViewById(id:string):View{
-            let bindEle = this.bindElement.querySelector('#'+id);
-            return bindEle ? bindEle['bindView'] : null;
         }
 
         static inflate(xml:HTMLElement):View{
@@ -1080,6 +1619,7 @@ module android.view {
             mViewScrollChanged = false;
             mTreeObserver = new ViewTreeObserver();
             mViewRequestingLayout:View;
+            mViewVisibilityChanged = false;
 
             constructor(mViewRootImpl:ViewRootImpl, mHandler:Handler) {
                 this.mViewRootImpl = mViewRootImpl;
@@ -1090,6 +1630,10 @@ module android.view {
         export class ListenerInfo{
             mOnAttachStateChangeListeners:CopyOnWriteArrayList<OnAttachStateChangeListener>;
             mOnLayoutChangeListeners:Array<OnLayoutChangeListener>;
+            mOnClickListener:OnClickListener;
+            mOnLongClickListener:OnLongClickListener;
+            mOnTouchListener:OnTouchListener;
+
         }
 
         export interface OnAttachStateChangeListener{
@@ -1111,4 +1655,55 @@ module android.view {
         }
     }
 
+
+    class CheckForLongPress implements Runnable{
+        private View_this : any;//don't check private
+        private mOriginalWindowAttachCount = 0;
+
+        constructor(View_this:View) {
+            this.View_this = View_this;
+        }
+
+        run() {
+            if (this.View_this.isPressed() && (this.View_this.mParent != null)
+                && this.mOriginalWindowAttachCount == this.View_this.mWindowAttachCount) {
+                if (this.View_this.performLongClick()) {
+                    this.View_this.mHasPerformedLongPress = true;
+                }
+            }
+        }
+
+        rememberWindowAttachCount() {
+            this.mOriginalWindowAttachCount = this.View_this.mWindowAttachCount;
+        }
+    }
+    class CheckForTap implements Runnable {
+        private View_this : any;
+        constructor(View_this:View) {
+            this.View_this = View_this;
+        }
+        run() {
+            this.View_this.mPrivateFlags &= ~View.PFLAG_PREPRESSED;
+            this.View_this.setPressed(true);
+            this.View_this.checkForLongClick(ViewConfiguration.getTapTimeout());
+        }
+    }
+    class PerformClick implements Runnable {
+        private View_this : any;
+        constructor(View_this:View) {
+            this.View_this = View_this;
+        }
+        run() {
+            this.View_this.performClick();
+        }
+    }
+    class UnsetPressedState implements Runnable {
+        private View_this : any;
+        constructor(View_this:View) {
+            this.View_this = View_this;
+        }
+        run() {
+            this.View_this.setPressed(false);
+        }
+    }
 }

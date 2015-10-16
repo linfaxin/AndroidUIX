@@ -88,7 +88,7 @@ module android.widget {
         }
 
         setForeground(drawable:Drawable) {
-            //if (this.mForeground != drawable) {
+            //if (this.mForeground != drawable) {//TODO do when drawable ok
             //    if (this.mForeground != null) {
             //        this.mForeground.setCallback(null);
             //        this.unscheduleDrawable(this.mForeground);
