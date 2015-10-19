@@ -20,14 +20,21 @@ module android.view{
          * create a off-screen canvas to draw
          */
         lockCanvas(dirty:Rect):Canvas{
+            let fullWidth = this.mCanvasElement.offsetWidth;
+            let fullHeight = this.mCanvasElement.offsetHeight;
             let rect = new Rect(dirty);
             if(dirty.isEmpty()){
-                rect.set(0, 0, this.mCanvasElement.offsetWidth, this.mCanvasElement.offsetHeight);
+                rect.set(0, 0, fullWidth, fullHeight);
             }
             let width = rect.width();
             let height = rect.height();
-            let canvas = Canvas.obtain(width, height);
+            let canvas = Canvas.obtain(fullWidth, fullHeight);
+            canvas.clipRect(dirty);
+
             this.mLockedCanvasMap.set(canvas, rect);
+
+            let mCanvasContent = this.mCanvasElement.getContext('2d');
+            mCanvasContent.clearRect(rect.left, rect.top, width, height);
             return canvas;
         }
 
@@ -36,11 +43,12 @@ module android.view{
          * @param canvas
          */
         unlockCanvasAndPost(canvas:Canvas):void {
-            let rect = this.mLockedCanvasMap.get(canvas);
+            let rect:Rect = this.mLockedCanvasMap.get(canvas);
             if(rect){
+                //canvas.translate(rect.left, rect.top);
                 let mCanvasContent = this.mCanvasElement.getContext('2d');
-                mCanvasContent.clearRect(rect.left, rect.top, canvas.getWidth(), canvas.getHeight());
-                mCanvasContent.drawImage(canvas.canvasElement, rect.left, rect.top);
+                //mCanvasContent.clearRect(rect.left, rect.top, canvas.getWidth(), canvas.getHeight());
+                mCanvasContent.drawImage(canvas.canvasElement, 0, 0);
             }
             canvas.recycle();
         }

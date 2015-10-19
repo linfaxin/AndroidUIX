@@ -642,7 +642,7 @@ module android.widget {
             let childWidthMeasureSpec;
             let childHeightMeasureSpec;
 
-            childWidthMeasureSpec = ScrollView.getChildMeasureSpec(parentWidthMeasureSpec, this.mPaddingLeft
+            childWidthMeasureSpec = ViewGroup.getChildMeasureSpec(parentWidthMeasureSpec, this.mPaddingLeft
                 + this.mPaddingRight, lp.width);
 
             childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);

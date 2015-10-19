@@ -575,7 +575,7 @@ module android.view {
             }
 
             if (ViewRootImpl.DEBUG_ORIENTATION || ViewRootImpl.DEBUG_DRAW) {
-                Log.v(ViewRootImpl.TAG, "Draw " + this.mView + ", width=" + this.mWidth + ", height=" + this.mHeight);
+                Log.v(ViewRootImpl.TAG, "Draw " + this.mView + ", width=" + this.mWidth + ", height=" + this.mHeight + ", dirty="+this.mDirty);
             }
 
             attachInfo.mTreeObserver.dispatchOnDraw();
@@ -592,6 +592,7 @@ module android.view {
             this.mView.mPrivateFlags |= View.PFLAG_DRAWN;
 
             attachInfo.mSetIgnoreDirtyState = false;
+
             this.mView.draw(canvas);
 
 

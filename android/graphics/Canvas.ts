@@ -15,7 +15,7 @@ module android.graphics {
         private mCanvasElement:HTMLCanvasElement;
         private _mCanvasContent:CanvasRenderingContext2D;
         private _saveCount = 0;
-        private mCurrentClip:Rect;
+        mCurrentClip:Rect;
         private shouldDoRectBeforeRestoreMap = new Map<number, Array<Rect>>();
         private mClipStateMap = new Map<number, Rect>();
 
@@ -83,16 +83,19 @@ module android.graphics {
 
 
         translate(dx:number, dy:number):void {
+            if(this.mCurrentClip) this.mCurrentClip.offset(-dx, -dy);
             this._mCanvasContent.translate(dx, dy);
         }
 
         scale(sx:number, sy:number, px?:number, py?:number):void {
+            //TODO effect mCurrentClip
             if (px && py) this.translate(px, py);
             this._mCanvasContent.scale(sx, sy);
             if (px && py) this.translate(-px, -py);
         }
 
         rotate(degrees:number, px?:number, py?:number) {
+            //TODO effect mCurrentClip
             if (px && py) this.translate(px, py);
             this._mCanvasContent.rotate(degrees);
             if (px && py) this.translate(-px, -py);
@@ -165,16 +168,19 @@ module android.graphics {
         clipRect(rect:Rect):boolean;
         clipRect(left:number, top:number, right:number, bottom:number):boolean;
         clipRect(...args):boolean {
-            if (!this.mCurrentClip) this.mCurrentClip = new Rect();
+            if (!this.mCurrentClip) this.mCurrentClip = new Rect(0, 0, this.getWidth(), this.getHeight());
             let rect = this.mCurrentClip;
 
             if (args.length === 1) {
-                rect.set(args[0]);
+                let clipRect:Rect = args[0];
+                rect.intersect(clipRect);
+                this._mCanvasContent.rect(Math.floor(clipRect.left), Math.floor(clipRect.top),
+                    Math.ceil(clipRect.width()), Math.ceil(clipRect.height()));
             } else {
                 let [left=0, top=0, right=0, bottom=0] = args;
-                rect.set(left, top, right, bottom);
+                rect.intersect(left, top, right, bottom);
+                this._mCanvasContent.rect(Math.floor(left), Math.floor(top), Math.ceil(right-left), Math.ceil(bottom-top));
             }
-            this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
             this.fullRectForClip();
             this._mCanvasContent.clip('evenodd');
 
