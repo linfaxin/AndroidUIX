@@ -7,6 +7,7 @@
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../os/Handler.ts"/>
+///<reference path="../os/Message.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Point.ts"/>
@@ -22,6 +23,7 @@ module android.view {
     import Point = android.graphics.Point;
     import Canvas = android.graphics.Canvas;
     import Handler = android.os.Handler;
+    import Message = android.os.Message;
     import SystemClock = android.os.SystemClock;
     import Runnable = java.lang.Runnable;
     import System = java.lang.System;
@@ -60,7 +62,7 @@ module android.view {
         private mLayoutRequesters : Array<View> = [];
         private mHandlingLayoutInLayoutRequest:boolean;
         private mRemoved:boolean;
-        private mHandler = new Handler();
+        private mHandler = new ViewRootHandler();
 
 
         // Variables to track frames per second, enabled via DEBUG_FPS flag
@@ -568,7 +570,7 @@ module android.view {
             }
 
             if (fullRedrawNeeded) {
-                //attachInfo.mIgnoreDirtyState = true;
+                attachInfo.mIgnoreDirtyState = true;
                 this.mDirty.set(0, 0, this.mWidth, this.mHeight);
             }
 
@@ -589,8 +591,14 @@ module android.view {
             attachInfo.mDrawingTime = SystemClock.uptimeMillis();
             this.mView.mPrivateFlags |= View.PFLAG_DRAWN;
 
+            attachInfo.mSetIgnoreDirtyState = false;
             this.mView.draw(canvas);
 
+
+            if (!attachInfo.mSetIgnoreDirtyState) {
+                // Only clear the flag if it was not set during the mView.draw() call
+                attachInfo.mIgnoreDirtyState = false;
+            }
 
             this.mSurface.unlockCanvasAndPost(canvas);
 
@@ -601,6 +609,33 @@ module android.view {
 
         isLayoutRequested():boolean {
             return this.mLayoutRequested;
+        }
+
+
+        mInvalidateOnAnimationRunnable = new InvalidateOnAnimationRunnable(this.mHandler);
+
+        dispatchInvalidateDelayed(view:View, delayMilliseconds:number):void {
+            let msg = this.mHandler.obtainMessage(ViewRootHandler.MSG_INVALIDATE, view);
+            this.mHandler.sendMessageDelayed(msg, delayMilliseconds);
+        }
+
+        dispatchInvalidateRectDelayed(info:View.AttachInfo.InvalidateInfo, delayMilliseconds:number):void {
+            let msg = this.mHandler.obtainMessage(ViewRootHandler.MSG_INVALIDATE_RECT, info);
+            this.mHandler.sendMessageDelayed(msg, delayMilliseconds);
+        }
+
+        dispatchInvalidateOnAnimation(view:View):void {
+            this.mInvalidateOnAnimationRunnable.addView(view);
+        }
+        dispatchInvalidateRectOnAnimation(info:View.AttachInfo.InvalidateInfo):void{
+            this.mInvalidateOnAnimationRunnable.addViewRect(info);
+        }
+        cancelInvalidate(view:View){
+            this.mHandler.removeMessages(ViewRootHandler.MSG_INVALIDATE, view);
+            // fixme: might leak the AttachInfo.InvalidateInfo objects instead of returning
+            // them to the pool
+            this.mHandler.removeMessages(ViewRootHandler.MSG_INVALIDATE_RECT, view);
+            this.mInvalidateOnAnimationRunnable.removeView(view);
         }
 
         getParent():ViewParent {
@@ -614,11 +649,61 @@ module android.view {
             }
         }
 
-        invalidateChild(child:View, r:Rect) {
+        invalidate() {
+            this.mDirty.set(0, 0, this.mWidth, this.mHeight);
+            this.scheduleTraversals();
+        }
+        invalidateWorld(view:View) {
+            view.invalidate();
+            if (view instanceof ViewGroup) {
+                let parent = <ViewGroup> view;
+                for (let i = 0; i < parent.getChildCount(); i++) {
+                    this.invalidateWorld(parent.getChildAt(i));
+                }
+            }
         }
 
-        invalidateChildInParent(location:Array<number>, r:Rect):ViewParent {
-            return undefined;
+        invalidateChild(child:View, dirty:Rect) {
+            this.invalidateChildInParent(null, dirty);
+        }
+
+        invalidateChildInParent(location:Array<number>, dirty:Rect):ViewParent {
+            if (ViewRootImpl.DEBUG_DRAW) Log.v(ViewRootImpl.TAG, "Invalidate child: " + dirty);
+
+            if (dirty == null) {
+                this.invalidate();
+                return null;
+            } else if (dirty.isEmpty()) {
+                return null;
+            }
+
+            //if (mCurScrollY != 0) {//no need
+            //    mTempRect.set(dirty);
+            //    dirty = mTempRect;
+            //    if (mCurScrollY != 0) {
+            //        dirty.offset(0, -mCurScrollY);
+            //    }
+            //}
+
+            const localDirty = this.mDirty;
+            if (!localDirty.isEmpty() && !localDirty.contains(dirty)) {
+                this.mAttachInfo.mSetIgnoreDirtyState = true;
+                this.mAttachInfo.mIgnoreDirtyState = true;
+            }
+
+            // Add the new dirty rect to the current one
+            localDirty.union(dirty.left, dirty.top, dirty.right, dirty.bottom);
+            // Intersect with the bounds of the window to skip
+            // updates that lie outside of the visible region
+            const intersected = localDirty.intersect(0, 0, this.mWidth, this.mHeight);
+            if (!intersected) {
+                localDirty.setEmpty();
+            }
+            if (!this.mWillDrawSoon && (intersected)) {
+                this.scheduleTraversals();
+            }
+
+            return null;
         }
 
         requestChildFocus(child:View, focused:View) {
@@ -727,6 +812,75 @@ module android.view {
 
         run() {
             this.ViewRootImpl_this.doTraversal();
+        }
+    }
+
+    class InvalidateOnAnimationRunnable implements Runnable {
+        mHandler:Handler;
+        mPosted = false;
+        mViews = new Set<View>();
+        mViewRects = new Map<View, View.AttachInfo.InvalidateInfo>();
+
+        constructor(handler:Handler) {
+            this.mHandler = handler;
+        }
+
+        addView(view:View){
+            this.mViews.add(view);
+            this.postIfNeededLocked();
+        }
+        addViewRect(info:View.AttachInfo.InvalidateInfo){
+            this.mViewRects.set(info.target, info);
+            this.postIfNeededLocked();
+        }
+        removeView(view:View){
+            this.mViews.delete(view);
+            this.mViewRects.delete(view);
+
+            if (this.mPosted && this.mViews.size===0 && this.mViewRects.size===0) {
+                this.mHandler.removeCallbacks(this);
+                this.mPosted = false;
+            }
+        }
+        run() {
+            this.mPosted = false;
+
+            for(let view of this.mViews){
+                view.invalidate();
+            }
+            this.mViews.clear();
+
+            for(let info of this.mViewRects.values()){
+                info.target.invalidate(info.left, info.top, info.right, info.bottom);
+                info.recycle();
+            }
+            this.mViewRects.clear();
+        }
+
+        postIfNeededLocked() {
+            if (!this.mPosted) {
+                this.mHandler.post(this);
+                this.mPosted = true;
+            }
+        }
+    }
+
+    class ViewRootHandler extends Handler{
+        static MSG_INVALIDATE = 1;
+        static MSG_INVALIDATE_RECT = 2;
+
+
+        handleMessage(msg:Message):void {
+            switch (msg.what) {
+                case ViewRootHandler.MSG_INVALIDATE:
+                    (<View>msg.obj).invalidate();
+                    break;
+                case ViewRootHandler.MSG_INVALIDATE_RECT:
+                    const info = <View.AttachInfo.InvalidateInfo> msg.obj;
+                    info.target.invalidate(info.left, info.top, info.right, info.bottom);
+                    info.recycle();
+                    break;
+            }
         }
     }
 }

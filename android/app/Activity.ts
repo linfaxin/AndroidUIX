@@ -44,6 +44,7 @@ module android.app{
             if(!this.style.display){
                 this.style.display = "inline-block";
             }
+            this.style.overflow = 'hidden';
 
 
             this.canvas = document.createElement("canvas");

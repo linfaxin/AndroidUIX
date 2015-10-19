@@ -24,6 +24,9 @@ module android.view {
         clientY: number;
         pageX: number;
         pageY: number;
+
+        //add as history
+        mEventTime?:number;
     }
 
     export class MotionEvent {
@@ -137,6 +140,7 @@ module android.view {
                 case MotionEvent.ACTION_MOVE:
                     let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
                     if (moveHistory){
+                        activeTouch.mEventTime = e.timeStamp;
                         moveHistory.push(activeTouch);
                         if(moveHistory.length>MotionEvent.HistoryMaxSize) moveHistory.shift();
                     }
@@ -256,6 +260,10 @@ module android.view {
         getHistoricalY(pointerIndex:number, pos:number):number {
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
             return moveHistory[pos].pageY + this.mYOffset;
+        }
+        getHistoricalEventTime(pos:number):number{
+            let moveHistory = MotionEvent.TouchMoveRecord.get(this.mActivePointerId);
+            return moveHistory[pos].mEventTime;
         }
 
         setAction(action:number) {

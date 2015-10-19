@@ -17,7 +17,7 @@ module android.os {
             this.mCallback = mCallback;
         }
 
-        handleMessage(msg:Message) {
+        handleMessage(msg:Message):void {
         }
 
         dispatchMessage(msg:Message) {

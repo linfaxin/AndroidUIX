@@ -3,7 +3,8 @@
  */
 module android.util {
     export class Log {
-        static View_DBG = true;
+        static View_DBG = false;
+        static VelocityTracker_DBG = false;
 
         /**
          * Priority constant for the getLogMsg method; use Log.v.

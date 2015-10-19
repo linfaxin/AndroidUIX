@@ -174,7 +174,8 @@ module android.graphics.drawable {
         }
 
         //abstract
-        getOpacity() {
+        getOpacity():number {
+            return PixelFormat.OPAQUE;
         }
 
         static resolveOpacity(op1:number, op2:number) {
@@ -238,9 +239,9 @@ module android.graphics.drawable {
 
     export module Drawable{
         export interface Callback{
-            invalidateDrawable(who : Drawable);
-            scheduleDrawable(who : Drawable, what:Runnable, when:number);
-            unscheduleDrawable(who: Drawable, what:Runnable);
+            invalidateDrawable(who : Drawable):void;
+            scheduleDrawable(who : Drawable, what:Runnable, when:number):void;
+            unscheduleDrawable(who: Drawable, what:Runnable):void;
         }
         export interface ConstantState{
             newDrawable(res);

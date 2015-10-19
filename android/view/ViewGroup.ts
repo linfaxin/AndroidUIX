@@ -7,12 +7,16 @@
 ///<reference path="ViewParent.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../graphics/Point.ts"/>
+///<reference path="../graphics/Matrix.ts"/>
+///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 
 
 module android.view {
     import Canvas = android.graphics.Canvas;
     import Point = android.graphics.Point;
+    import Rect = android.graphics.Rect;
+    import Matrix = android.graphics.Matrix;
     import SystemClock = android.os.SystemClock;
 
     export class ViewGroup extends View implements ViewParent {
@@ -58,9 +62,13 @@ module android.view {
         mGroupFlags=0;
         mLayoutMode = ViewGroup.LAYOUT_MODE_UNDEFINED;
         mChildren:Array<View> = [];
+
         get mChildrenCount() {
             return this.mChildren.length;
         }
+
+        mSuppressLayout = false;
+        private mLayoutCalledWhileSuppressed = false;
 
         constructor() {
             super();
@@ -89,6 +97,7 @@ module android.view {
         addView(view:View, params:ViewGroup.LayoutParams);
         addView(view:View, index:number, params:ViewGroup.LayoutParams);
         addView(view:View, width:number, height:number);
+        addView(...args);
         addView(...args) {
             let child:View = args[0];
             let params = child.getLayoutParams();
@@ -900,13 +909,13 @@ module android.view {
             // child to avoid dispatching events to it after the window is torn
             // down. To make sure we keep the child in a consistent state, we
             // first send it an ACTION_CANCEL motion event.
-            //this.cancelAndClearTouchTargets(null);//TODO impl when touch impl
+            this.cancelAndClearTouchTargets(null);
 
             // Similarly, set ACTION_EXIT to all hover targets and clear them.
             //this.exitHoverTargets();
 
             // In case view is detached while transition is running
-            //this.mLayoutCalledWhileSuppressed = false;
+            this.mLayoutCalledWhileSuppressed = false;
 
             this.mChildren.forEach((child)=>child.dispatchDetachedFromWindow());
             super.dispatchDetachedFromWindow();
@@ -920,6 +929,135 @@ module android.view {
                 children[i].dispatchVisibilityChanged(changedView, visibility);
             }
         }
+        offsetDescendantRectToMyCoords(descendant:View, rect:Rect){
+            this.offsetRectBetweenParentAndChild(descendant, rect, true, false);
+        }
+        offsetRectIntoDescendantCoords(descendant:View, rect:Rect) {
+            this.offsetRectBetweenParentAndChild(descendant, rect, false, false);
+        }
+        offsetRectBetweenParentAndChild(descendant:View, rect:Rect, offsetFromChildToParent:boolean, clipToBounds:boolean){
+            // already in the same coord system :)
+            if (descendant == this) {
+                return;
+            }
+
+            let theParent = descendant.mParent;
+
+            // search and offset up to the parent
+            while ((theParent != null)
+            && (theParent instanceof View)
+            && (theParent != this)) {
+
+                if (offsetFromChildToParent) {
+                    rect.offset(descendant.mLeft - descendant.mScrollX,
+                        descendant.mTop - descendant.mScrollY);
+                    if (clipToBounds) {
+                        let p = <View><any>theParent;
+                        rect.intersect(0, 0, p.mRight - p.mLeft, p.mBottom - p.mTop);
+                    }
+                } else {
+                    if (clipToBounds) {
+                        let p = <View><any>theParent;
+                        rect.intersect(0, 0, p.mRight - p.mLeft, p.mBottom - p.mTop);
+                    }
+                    rect.offset(descendant.mScrollX - descendant.mLeft,
+                        descendant.mScrollY - descendant.mTop);
+                }
+
+                descendant = <View><any>theParent;
+                theParent = descendant.mParent;
+            }
+
+            // now that we are up to this view, need to offset one more time
+            // to get into our coordinate space
+            if (theParent == this) {
+                if (offsetFromChildToParent) {
+                    rect.offset(descendant.mLeft - descendant.mScrollX,
+                        descendant.mTop - descendant.mScrollY);
+                } else {
+                    rect.offset(descendant.mScrollX - descendant.mLeft,
+                        descendant.mScrollY - descendant.mTop);
+                }
+            } else {
+                throw new Error("parameter must be a descendant of this view");
+            }
+        }
+        offsetChildrenTopAndBottom(offset:number) {
+            const count = this.mChildrenCount;
+            const children = this.mChildren;
+
+            for (let i = 0; i < count; i++) {
+                const v = children[i];
+                v.mTop += offset;
+                v.mBottom += offset;
+            }
+
+            this.invalidateViewProperty(false, false);
+        }
+
+        suppressLayout(suppress:boolean) {
+            this.mSuppressLayout = suppress;
+            if (!suppress) {
+                if (this.mLayoutCalledWhileSuppressed) {
+                    this.requestLayout();
+                    this.mLayoutCalledWhileSuppressed = false;
+                }
+            }
+        }
+        isLayoutSuppressed() {
+            return this.mSuppressLayout;
+        }
+
+
+        layout(l:number, t:number, r:number, b:number):void {
+            if (!this.mSuppressLayout) {
+                super.layout(l, t, r, b);
+            } else {
+                // record the fact that we noop'd it; request layout when transition finishes
+                this.mLayoutCalledWhileSuppressed = true;
+            }
+        }
+
+        getChildVisibleRect(child:View, r:Rect, offset:Point):boolean{
+            // It doesn't make a whole lot of sense to call this on a view that isn't attached,
+            // but for some simple tests it can be useful. If we don't have attach info this
+            // will allocate memory.
+            const rect = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformRect : new Rect();
+            rect.set(r);
+
+            //if (!child.hasIdentityMatrix()) {//TODO view transform
+            //    child.getMatrix().mapRect(rect);
+            //}
+
+            let dx = child.mLeft - this.mScrollX;
+            let dy = child.mTop - this.mScrollY;
+
+            rect.offset(dx, dy);
+
+            if (offset != null) {
+                //if (!child.hasIdentityMatrix()) {//TODO view transform
+                //    let position = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformLocation
+                //        : new Array<number>(2);
+                //    position[0] = offset.x;
+                //    position[1] = offset.y;
+                //    child.getMatrix().mapPoints(position);
+                //    offset.x = (int) (position[0] + 0.5);
+                //    offset.y = (int) (position[1] + 0.5);
+                //}
+                offset.x += dx;
+                offset.y += dy;
+            }
+
+            if (rect.intersect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop)) {
+                if (this.mParent == null) return true;
+                r.set(rect);
+                return this.mParent.getChildVisibleRect(this, r, offset);
+            }
+
+            return false;
+        }
+
+
 
         dispatchDraw(canvas:Canvas) {
             let count = this.mChildrenCount;
@@ -1008,14 +1146,219 @@ module android.view {
         }
 
 
+
+        invalidateChild(child:View, dirty:Rect) {
+            let parent = this;
+
+            const attachInfo = this.mAttachInfo;
+            if (attachInfo != null) {
+                // If the child is drawing an animation, we want to copy this flag onto
+                // ourselves and the parent to make sure the invalidate request goes
+                // through
+                const drawAnimation = (child.mPrivateFlags & View.PFLAG_DRAW_ANIMATION)
+                    == View.PFLAG_DRAW_ANIMATION;
+
+                // Check whether the child that requests the invalidate is fully opaque
+                // Views being animated or transformed are not considered opaque because we may
+                // be invalidating their old position and need the parent to paint behind them.
+                let childMatrix = child.getMatrix();
+                const isOpaque = child.isOpaque() && !drawAnimation &&
+                    child.getAnimation() == null && childMatrix.isIdentity();
+                // Mark the child as dirty, using the appropriate flag
+                // Make sure we do not set both flags at the same time
+                let opaqueFlag = isOpaque ? View.PFLAG_DIRTY_OPAQUE : View.PFLAG_DIRTY;
+
+                if (child.mLayerType != View.LAYER_TYPE_NONE) {
+                    this.mPrivateFlags |= View.PFLAG_INVALIDATED;
+                    this.mPrivateFlags &= ~View.PFLAG_DRAWING_CACHE_VALID;
+                    //child.mLocalDirtyRect.union(dirty);
+                }
+
+                const location = attachInfo.mInvalidateChildLocation;
+                location[0] = child.mLeft;
+                location[1] = child.mTop;
+                //if (!childMatrix.isIdentity() ||//TODO when Matrix & Transformation ok
+                //    (this.mGroupFlags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+                //    let boundingRect = attachInfo.mTmpTransformRect;
+                //    boundingRect.set(dirty);
+                //    let transformMatrix:Matrix;
+                //    if ((this.mGroupFlags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+                //        let t = attachInfo.mTmpTransformation;
+                //        let transformed = this.getChildStaticTransformation(child, t);
+                //        if (transformed) {
+                //            transformMatrix = attachInfo.mTmpMatrix;
+                //            transformMatrix.set(t.getMatrix());
+                //            if (!childMatrix.isIdentity()) {
+                //                transformMatrix.preConcat(childMatrix);
+                //            }
+                //        } else {
+                //            transformMatrix = childMatrix;
+                //        }
+                //    } else {
+                //        transformMatrix = childMatrix;
+                //    }
+                //    transformMatrix.mapRect(boundingRect);
+                //    dirty.set(boundingRect);
+                //}
+
+                do {
+                    let view:View = null;
+                    if (parent instanceof View) {
+                        view = <View> parent;
+                    }
+
+                    //if (drawAnimation) {//TODO when animation ok
+                    //    if (view != null) {
+                    //        view.mPrivateFlags |= ViewGroup.PFLAG_DRAW_ANIMATION;
+                    //    } else if (parent instanceof ViewRootImpl) {
+                    //        (<ViewRootImpl> parent).mIsAnimating = true;
+                    //    }
+                    //}
+
+                    // If the parent is dirty opaque or not dirty, mark it dirty with the opaque
+                    // flag coming from the child that initiated the invalidate
+                    if (view != null) {
+                        //if ((view.mViewFlags & ViewGroup.FADING_EDGE_MASK) != 0 &&//TODO when fade edge effect ok
+                        //    view.getSolidColor() == 0) {
+                            opaqueFlag = View.PFLAG_DIRTY;
+                        //}
+                        if ((view.mPrivateFlags & View.PFLAG_DIRTY_MASK) != View.PFLAG_DIRTY) {
+                            view.mPrivateFlags = (view.mPrivateFlags & ~View.PFLAG_DIRTY_MASK) | opaqueFlag;
+                        }
+                    }
+
+                    parent = <any>parent.invalidateChildInParent(location, dirty);
+                    if (view != null) {
+                        // Account for transform on current parent
+                        let m = view.getMatrix();
+                        if (!m.isIdentity()) {
+                            let boundingRect = attachInfo.mTmpTransformRect;
+                            boundingRect.set(dirty);
+                            m.mapRect(boundingRect);
+                            dirty.set(boundingRect);
+                        }
+                    }
+                } while (parent != null);
+            }
+        }
+
+        invalidateChildInParent(location:Array<number>, dirty:Rect):ViewParent {
+            if ((this.mPrivateFlags & View.PFLAG_DRAWN) == View.PFLAG_DRAWN ||
+                (this.mPrivateFlags & View.PFLAG_DRAWING_CACHE_VALID) == View.PFLAG_DRAWING_CACHE_VALID) {
+                if ((this.mGroupFlags & (ViewGroup.FLAG_OPTIMIZE_INVALIDATE | ViewGroup.FLAG_ANIMATION_DONE)) !=
+                    ViewGroup.FLAG_OPTIMIZE_INVALIDATE) {
+                    dirty.offset(location[0] - this.mScrollX, location[1] - this.mScrollY);
+                    if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == 0) {
+                        dirty.union(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                    }
+
+                    const left = this.mLeft;
+                    const top = this.mTop;
+
+                    if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == ViewGroup.FLAG_CLIP_CHILDREN) {
+                        if (!dirty.intersect(0, 0, this.mRight - left, this.mBottom - top)) {
+                            dirty.setEmpty();
+                        }
+                    }
+                    this.mPrivateFlags &= ~View.PFLAG_DRAWING_CACHE_VALID;
+
+                    location[0] = left;
+                    location[1] = top;
+
+                    if (this.mLayerType != View.LAYER_TYPE_NONE) {
+                        this.mPrivateFlags |= View.PFLAG_INVALIDATED;
+                    //    this.mLocalDirtyRect.union(dirty);
+                    }
+
+                    return this.mParent;
+
+                } else {
+                    this.mPrivateFlags &= ~View.PFLAG_DRAWN & ~View.PFLAG_DRAWING_CACHE_VALID;
+
+                    location[0] = this.mLeft;
+                    location[1] = this.mTop;
+                    if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == ViewGroup.FLAG_CLIP_CHILDREN) {
+                        dirty.set(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                    } else {
+                        // in case the dirty rect extends outside the bounds of this container
+                        dirty.union(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                    }
+
+                    if (this.mLayerType != View.LAYER_TYPE_NONE) {
+                        this.mPrivateFlags |= View.PFLAG_INVALIDATED;
+                        //mLocalDirtyRect.union(dirty);
+                    }
+
+                    return this.mParent;
+                }
+            }
+
+            return null;
+        }
+        invalidateChildFast(child:View, dirty:Rect):void{
+            let parent:ViewParent = this;
+
+            const attachInfo = this.mAttachInfo;
+            if (attachInfo != null) {
+                //if (child.mLayerType != LAYER_TYPE_NONE) {
+                //    child.mLocalDirtyRect.union(dirty);
+                //}
+
+                let left = child.mLeft;
+                let top = child.mTop;
+                if (!child.getMatrix().isIdentity()) {
+                    child.transformRect(dirty);
+                }
+
+                do {
+                    if (parent instanceof ViewGroup) {
+                        let parentVG = <ViewGroup> parent;
+                        if (parentVG.mLayerType != View.LAYER_TYPE_NONE) {
+                            // Layered parents should be recreated, not just re-issued
+                            parentVG.invalidate();
+                            parent = null;
+                        } else {
+                            parent = parentVG.invalidateChildInParentFast(left, top, dirty);
+                            left = parentVG.mLeft;
+                            top = parentVG.mTop;
+                        }
+                    } else {
+                        // Reached the top; this calls into the usual invalidate method in
+                        // ViewRootImpl, which schedules a traversal
+                        const location = attachInfo.mInvalidateChildLocation;
+                        location[0] = left;
+                        location[1] = top;
+                        parent = parent.invalidateChildInParent(location, dirty);
+                    }
+                } while (parent != null);
+            }
+        }
+        invalidateChildInParentFast(left:number, top:number, dirty:Rect):ViewParent{
+            if ((this.mPrivateFlags & View.PFLAG_DRAWN) == View.PFLAG_DRAWN ||
+                (this.mPrivateFlags & View.PFLAG_DRAWING_CACHE_VALID) == View.PFLAG_DRAWING_CACHE_VALID) {
+                dirty.offset(left - this.mScrollX, top - this.mScrollY);
+                if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == 0) {
+                    dirty.union(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                }
+
+                if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == 0 ||
+                    dirty.intersect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop)) {
+
+                    if (this.mLayerType != View.LAYER_TYPE_NONE) {
+                        //mLocalDirtyRect.union(dirty);
+                    }
+                    if (!this.getMatrix().isIdentity()) {
+                        this.transformRect(dirty);
+                    }
+
+                    return this.mParent;
+                }
+            }
+
+            return null;
+        }
+
         requestTransparentRegion(child:android.view.View) {
-        }
-
-        invalidateChild(child:android.view.View, r:android.graphics.Rect) {
-        }
-
-        invalidateChildInParent(location:Array<number>, r:android.graphics.Rect):android.view.ViewParent {
-            return undefined;
         }
 
         requestChildFocus(child:android.view.View, focused:android.view.View) {
@@ -1025,10 +1368,6 @@ module android.view {
         }
 
         clearChildFocus(child:android.view.View) {
-        }
-
-        getChildVisibleRect(child:android.view.View, r:android.graphics.Rect, offset:android.graphics.Point):boolean {
-            return undefined;
         }
 
         focusSearch(v:android.view.View, direction:number):android.view.View {
