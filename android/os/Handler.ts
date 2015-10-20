@@ -108,8 +108,8 @@ module android.os {
                 this.mQueue.recycleMessage(this, msg);
 
             };
-            if(delayMillis<=20){
-                var id = requestAnimationFrame(func);
+            if(delayMillis<=17){
+                var id = -requestAnimationFrame(func);
             }else{
                 var id = setTimeout(func, delayMillis);
             }
