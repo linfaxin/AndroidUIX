@@ -58,7 +58,7 @@ module android.view{
         }
 
         addMovement(ev:MotionEvent) {
-            const historySize = ev.getHistorySize();
+            let historySize = ev.getHistorySize();
             const pointerCount = ev.getPointerCount();
             const lastTouchIndex = this.mLastTouchIndex;
             const nextTouchIndex = (lastTouchIndex + 1) % VelocityTracker.NUM_PAST;
@@ -120,11 +120,12 @@ module android.view{
                 const pastY = pointer.pastY;
                 const pastTime = pointer.pastTime;
 
+                historySize = ev.getHistorySize(pointerId);
                 for (let j = 0; j < historySize; j++) {
                     const touchIndex = (nextTouchIndex + j) % VelocityTracker.NUM_PAST;
                     pastX[touchIndex] = ev.getHistoricalX(i, j);
                     pastY[touchIndex] = ev.getHistoricalY(i, j);
-                    pastTime[touchIndex] = ev.getHistoricalEventTime(j);
+                    pastTime[touchIndex] = ev.getHistoricalEventTime(i, j);
                 }
                 pastX[finalTouchIndex] = ev.getX(i);
                 pastY[finalTouchIndex] = ev.getY(i);

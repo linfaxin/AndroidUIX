@@ -46,7 +46,7 @@ module android.view {
         static ACTION_POINTER_INDEX_MASK = 0xff00;
         static ACTION_POINTER_INDEX_SHIFT = 8;
 
-        static HistoryMaxSize = 100;
+        static HistoryMaxSize = 10;
 
         private static TouchMoveRecord = new Map<number, Array<Touch>>();// (id, [])
 
@@ -107,28 +107,12 @@ module android.view {
                     break;
                 }
             }
-            if (actionIndex < 0 && baseAction === MotionEvent.ACTION_UP) {
+            if (actionIndex < 0 && (baseAction === MotionEvent.ACTION_UP||baseAction === MotionEvent.ACTION_CANCEL)) {
                 //if action is touchend, use last index (because it is not exist in webkit event.touches)
                 actionIndex = MotionEvent.IdIndexCache.get(activePointerId);
             }
             if (actionIndex < 0) throw Error('not find action index');
 
-
-            //check if ACTION_POINTER_UP/ACTION_POINTER_DOWN
-            if (actionIndex > 0) {
-                //the event is not the first event on screen
-                switch (action) {
-                    case MotionEvent.ACTION_DOWN:
-                        action = MotionEvent.ACTION_POINTER_DOWN;
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        action = MotionEvent.ACTION_POINTER_UP;
-                        break;
-                }
-            }
-
-            // index & id to action
-            action = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
 
 
             //touch move record
@@ -148,8 +132,29 @@ module android.view {
             }
 
 
-            let lastAction = this.mAction;
-            this.mAction = action;
+            this.mTouchingPointers = Array.from(e.touches);
+            if(baseAction === MotionEvent.ACTION_UP){//add the touch end to touching list
+                this.mTouchingPointers.splice(actionIndex, 0, activeTouch);
+            }
+
+
+            //check if ACTION_POINTER_UP/ACTION_POINTER_DOWN
+            if (this.mTouchingPointers.length>1) {
+                //the event is not the first event on screen
+                switch (action) {
+                    case MotionEvent.ACTION_DOWN:
+                        action = MotionEvent.ACTION_POINTER_DOWN;
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        action = MotionEvent.ACTION_POINTER_UP;
+                        break;
+                }
+            }
+
+
+            //let lastAction = this.mAction;
+            // index & id to action
+            this.mAction = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
             //this.mActiveActionIndex = actionIndex;
             this.mActivePointerId = activePointerId;
 
@@ -157,14 +162,9 @@ module android.view {
                 this.mDownTime = e.timeStamp;
             }
             this.mEventTime = e.timeStamp;
-            this.mTouchingPointers = Array.from(e.touches);
-            if(baseAction === MotionEvent.ACTION_UP){//add the touch end to touching list
-                this.mTouchingPointers.splice(actionIndex, 0, activeTouch);
-            }
             this.mXOffset = -windowXOffset;
             this.mYOffset = -windowYOffset;
 
-            //TODO
         }
 
 
@@ -247,8 +247,8 @@ module android.view {
             return this.mTouchingPointers[0].pageY;
         }
 
-        getHistorySize():number {
-            let moveHistory = MotionEvent.TouchMoveRecord.get(this.mActivePointerId);
+        getHistorySize(id=this.mActivePointerId):number {
+            let moveHistory = MotionEvent.TouchMoveRecord.get(id);
             return moveHistory ? moveHistory.length : 0;
         }
 
@@ -261,8 +261,19 @@ module android.view {
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
             return moveHistory[pos].pageY + this.mYOffset;
         }
-        getHistoricalEventTime(pos:number):number{
-            let moveHistory = MotionEvent.TouchMoveRecord.get(this.mActivePointerId);
+
+        getHistoricalEventTime(pos:number):number;
+        getHistoricalEventTime(pointerIndex:number, pos:number):number;
+        getHistoricalEventTime(...args):number{
+            let pos, activePointerId;
+            if(args.length===1){
+                pos = args[0];
+                activePointerId = this.mActivePointerId;
+            }else{
+                pos = args[1];
+                activePointerId = this.getPointerId(args[0]);
+            }
+            let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
             return moveHistory[pos].mEventTime;
         }
 
@@ -293,6 +304,9 @@ module android.view {
             let ev = MotionEvent.obtain(this);
 
             let oldPointerCount = this.getPointerCount();
+            const oldAction = this.getAction();
+            const oldActionMasked = oldAction & MotionEvent.ACTION_MASK;
+
             let newPointerIds = [];
             for (let i = 0; i < oldPointerCount; i++) {
                 let pointerId = this.getPointerId(i);
@@ -301,6 +315,28 @@ module android.view {
                     newPointerIds.push(pointerId);
                 }
             }
+
+            let newActionPointerIndex = newPointerIds.indexOf(this.mActivePointerId);
+            let newPointerCount = newPointerIds.length;
+            let newAction;
+            if (oldActionMasked == MotionEvent.ACTION_POINTER_DOWN || oldActionMasked == MotionEvent.ACTION_POINTER_UP) {
+                if (newActionPointerIndex < 0) {
+                    // An unrelated pointer changed.
+                    newAction = MotionEvent.ACTION_MOVE;
+                } else if (newPointerCount == 1) {
+                    // The first/last pointer went down/up.
+                    newAction = oldActionMasked == MotionEvent.ACTION_POINTER_DOWN
+                        ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP;
+                } else {
+                    // A secondary pointer went down/up.
+                    newAction = oldActionMasked | (newActionPointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+                }
+            } else {
+                // Simple up/down/cancel/move or other motion action.
+                newAction = oldAction;
+            }
+
+            ev.mAction = newAction;
             ev.mTouchingPointers = this.mTouchingPointers.filter((item:Touch)=> {
                 return newPointerIds.indexOf(item.identifier) >= 0;
             });
