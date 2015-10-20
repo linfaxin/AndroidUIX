@@ -22,10 +22,16 @@ module android.app{
         _HTMLDivElement.prototype = HTMLDivElement.prototype;
         HTMLDivElement = <any>_HTMLDivElement;
     }
+
+
     export class Activity extends HTMLDivElement{
         viewRootImpl:ViewRootImpl;
         rootLayout:RootLayout;
         canvas:HTMLCanvasElement;
+
+        onCreate():void{
+        }
+
         createdCallback():void{
             this.viewRootImpl = new ViewRootImpl();
             this.rootLayout = new RootLayout();
@@ -65,6 +71,9 @@ module android.app{
             this.viewRootImpl.initSurface(canvas);
 
             this.initTouch();
+            this.initStyle();
+
+            this.onCreate();
         }
         attachedCallback():void {
             this.viewRootImpl.mWinFrame.set(0, 0, this.offsetWidth, this.offsetHeight);
@@ -112,6 +121,22 @@ module android.app{
             }, true);
         }
 
+        private initStyle(){
+            let style = document.createElement("style");
+            this.insertBefore(style, this.children[0]);
+            let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
+            if(iOS){
+                style.innerText += "android-ScrollView::-webkit-scrollbar {"+
+                    "-webkit-appearance: none;"+
+                    "width: 4px;"+
+                    "}"+
+                    "android-ScrollView::-webkit-scrollbar-thumb {"+
+                    "border-radius: 2px;"+
+                    "background-color: rgba(0,0,0,.3);"+
+                    "}";
+            }
+        }
+
         setContentView(view:View){
             this.rootLayout.removeAllViews();
             this.rootLayout.addView(view);
@@ -124,9 +149,6 @@ module android.app{
         }
     }
 
-    class Root extends Activity{}
-
-    (<any> document).registerElement("android-rootview", Root);
     (<any> document).registerElement("android-activity", Activity);
 
 

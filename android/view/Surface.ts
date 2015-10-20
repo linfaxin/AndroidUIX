@@ -29,7 +29,7 @@ module android.view{
             let width = rect.width();
             let height = rect.height();
             let canvas = Canvas.obtain(fullWidth, fullHeight);
-            canvas.clipRect(dirty);
+            canvas.clipRect(rect);
 
             this.mLockedCanvasMap.set(canvas, rect);
 
@@ -49,6 +49,7 @@ module android.view{
                 let mCanvasContent = this.mCanvasElement.getContext('2d');
                 //mCanvasContent.clearRect(rect.left, rect.top, canvas.getWidth(), canvas.getHeight());
                 mCanvasContent.drawImage(canvas.canvasElement, 0, 0);
+                //mCanvasContent.putImageData(canvas.canvasElement.getContext('2d').getImageData(rect.left, rect.top, rect.width(), rect.height()), rect.left, rect.top);
             }
             canvas.recycle();
         }

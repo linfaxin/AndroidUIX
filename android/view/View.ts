@@ -184,9 +184,11 @@ module android.view {
         public set mScrollX(value:number) {
             this._mScrollX = value;
             Array.from(this.bindElement.children).forEach((item:HTMLElement)=>{
+                if(item==this.bindScrollContent) return;
                 if(value!=0) item.style.marginLeft = -value+'px';
                 else item.style.marginLeft = "";
             });
+            this.bindElement.scrollLeft = value;
         }
         public get mScrollY():number {
             return this._mScrollY;
@@ -194,9 +196,11 @@ module android.view {
         public set mScrollY(value:number) {
             this._mScrollY = value;
             Array.from(this.bindElement.children).forEach((item:HTMLElement)=>{
+                if(item==this.bindScrollContent) return;
                 if(value!=0) item.style.marginTop = -value+'px';
                 else item.style.marginTop = "";
             });
+            this.bindElement.scrollTop = value;
         }
 
         mPaddingLeft = 0;
@@ -206,6 +210,7 @@ module android.view {
 
         constructor(){
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
+            this.initBindElement();
         }
 
         getWidth():number {
@@ -1517,6 +1522,8 @@ module android.view {
             let restoreTo = canvas.save();
             if (offsetForScroll) {
                 canvas.translate(this.mLeft - sx, this.mTop - sy);
+            }else{
+                canvas.translate(this.mLeft, this.mTop);
             }
 
             //TODO deal alpha
@@ -1756,11 +1763,15 @@ module android.view {
             const overScrollVertical = overScrollMode == View.OVER_SCROLL_ALWAYS ||
                 (overScrollMode == View.OVER_SCROLL_IF_CONTENT_SCROLLS && canScrollVertical);
 
-            if( (deltaX<0 && scrollX<=0) || (deltaX>0 && scrollX>=scrollRangeX) ){
-                deltaX /= 2;
-            }
-            if( (deltaY<0 && scrollY<=0) || (deltaY>0 && scrollY>=scrollRangeY) ){
-                deltaY /= 2;
+
+            //over drag
+            if(isTouchEvent) {
+                if ((deltaX < 0 && scrollX <= 0) || (deltaX > 0 && scrollX >= scrollRangeX)) {
+                    deltaX /= 2;
+                }
+                if ((deltaY < 0 && scrollY <= 0) || (deltaY > 0 && scrollY >= scrollRangeY)) {
+                    deltaY /= 2;
+                }
             }
 
 
@@ -1847,7 +1858,14 @@ module android.view {
         }
 
         awakenScrollBars(startDelay=ViewConfiguration.getScrollDefaultDelay(), invalidate=true):boolean{
-            //TODO when scroll bar impl
+            //FIXME dom's scrollbar not show on some browser. (draw scrollbar on canvas?)
+            if(!this.bindScrollContent.parentNode){
+                this.bindElement.appendChild(this.bindScrollContent);
+                this.bindElement.style.overflow = "scroll";
+            }
+            this.bindScrollContent.style.height = this.computeVerticalScrollRange() + "px";
+            this.bindScrollContent.style.width = this.computeHorizontalScrollRange() + "px";
+
             return false;
         }
         getVerticalFadingEdgeLength():number{
@@ -2018,8 +2036,18 @@ module android.view {
             return bindEle ? bindEle['bindView'] : null;
         }
 
-        bindElement: HTMLElement = document.createElement(this.tagName());//bind Element show the layout and other info
-        bindView = (this.bindElement['bindView']=this);
+
+        //bind Element show the layout and other info
+        bindElement: HTMLElement;
+        bindScrollContent: HTMLElement;//use to show scroll bar
+
+        initBindElement():void{
+            this.bindElement = document.createElement(this.tagName());//bind Element show the layout and other info
+            this.bindElement['bindView']=this;
+            this.bindScrollContent = document.createElement('div');
+            //this.bindScrollContent.style.cssText += '';
+        }
+
         syncBoundToElement(){
             let bind = this.bindElement;
             bind.style.position = 'absolute';

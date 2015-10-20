@@ -7,6 +7,11 @@ module java.lang.util.concurrent {
         private mData:Array<T> = [];
         private isDataNew = true;
 
+        iterator(){
+            this.isDataNew = false;
+            return this.mData;
+        }
+
         [Symbol.iterator](){
             this.isDataNew = false;
             return this.mData[Symbol.iterator]();

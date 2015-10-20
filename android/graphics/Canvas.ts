@@ -12,6 +12,7 @@ module android.graphics {
     import Color = android.graphics.Color;
 
     export class Canvas {
+        private static FullRect = new Rect(-10000, -10000, 10000, 10000);
         private mCanvasElement:HTMLCanvasElement;
         private _mCanvasContent:CanvasRenderingContext2D;
         private _saveCount = 0;
@@ -31,7 +32,7 @@ module android.graphics {
             this.mCanvasElement.width = width;
             this.mCanvasElement.height = height;
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
-            this.mCurrentClip = null;
+            this.mCurrentClip = new Rect(0, 0, width, height);
             this._saveCount = 0;
 
             //let content = this._mCanvasContent;
@@ -103,12 +104,12 @@ module android.graphics {
 
         drawRGB(r:number, g:number, b:number) {
             this._mCanvasContent.fillStyle = `rgb(${r},${g},${b})`;
-            this._mCanvasContent.fillRect(0, 0, this.getWidth(), this.getHeight());
+            this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
         }
 
         drawARGB(a:number, r:number, g:number, b:number) {
             this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a})`;
-            this._mCanvasContent.fillRect(0, 0, this.getWidth(), this.getHeight());
+            this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
         }
 
         drawColor(color:number){
@@ -116,7 +117,8 @@ module android.graphics {
         }
 
         clearColor(){
-            this._mCanvasContent.clearRect(0, 0, this.getWidth(), this.getHeight());
+            //this._mCanvasContent.clearRect(0, 0, this.getWidth(), this.getHeight());
+            this._mCanvasContent.clearRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
         }
 
 
@@ -162,25 +164,24 @@ module android.graphics {
         }
 
         private fullRectForClip(){
-            this._mCanvasContent.rect(-1, -1, this.getWidth()+1, this.getHeight()+1);
+            this._mCanvasContent.rect(Canvas.FullRect.left, Canvas.FullRect.top, Canvas.FullRect.width(), Canvas.FullRect.height());
         }
 
         clipRect(rect:Rect):boolean;
         clipRect(left:number, top:number, right:number, bottom:number):boolean;
         clipRect(...args):boolean {
-            if (!this.mCurrentClip) this.mCurrentClip = new Rect(0, 0, this.getWidth(), this.getHeight());
-            let rect = this.mCurrentClip;
+            let rect = new Rect();
 
             if (args.length === 1) {
-                let clipRect:Rect = args[0];
-                rect.intersect(clipRect);
-                this._mCanvasContent.rect(Math.floor(clipRect.left), Math.floor(clipRect.top),
-                    Math.ceil(clipRect.width()), Math.ceil(clipRect.height()));
+                rect.set(args[0]);
+
             } else {
                 let [left=0, top=0, right=0, bottom=0] = args;
-                rect.intersect(left, top, right, bottom);
-                this._mCanvasContent.rect(Math.floor(left), Math.floor(top), Math.ceil(right-left), Math.ceil(bottom-top));
+                rect.set(left, top, right, bottom);
             }
+
+            this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top),
+                Math.ceil(rect.width()), Math.ceil(rect.height()));
             this.fullRectForClip();
             this._mCanvasContent.clip('evenodd');
 
@@ -189,7 +190,9 @@ module android.graphics {
                 doRects = [];
                 this.shouldDoRectBeforeRestoreMap.set(this._saveCount, doRects);
             }
-            doRects.push(new Rect(rect));
+            doRects.push(rect);
+
+            this.mCurrentClip.intersect(rect);
 
             return rect.isEmpty();
         }
