@@ -7,22 +7,28 @@ module android.content.res{
 
     export class Resources{
         private static displayMetrics;
+        private static density = 1;
 
+        //FIXME not static, may about to one context
         static getDisplayMetrics():DisplayMetrics {
+            if(Resources.displayMetrics) return Resources.displayMetrics;
+            Resources.displayMetrics = new DisplayMetrics();
             let displayMetrics = Resources.displayMetrics;
-            if(displayMetrics) return displayMetrics;
-            displayMetrics = new DisplayMetrics();
 
-            displayMetrics.widthPixels = window.innerWidth;
+            displayMetrics.widthPixels = window.innerWidth;//FIXME view root height
             displayMetrics.heightPixels = window.innerHeight;
             displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT ;
             displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
-            displayMetrics.density = 1;//window.devicePixelRatio;
+            displayMetrics.density = Resources.density;//window.devicePixelRatio;
             displayMetrics.densityDpi = displayMetrics.density * DisplayMetrics.DENSITY_DEFAULT;
             displayMetrics.scaledDensity = displayMetrics.density;
 
-            Resources.displayMetrics = displayMetrics;
             return displayMetrics;
+        }
+
+        static setDensity(density:number):void{
+            Resources.density = density;
+            Resources.displayMetrics = null;
         }
     }
 }

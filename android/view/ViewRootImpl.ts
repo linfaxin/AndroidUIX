@@ -39,7 +39,7 @@ module android.view {
         static DEBUG_INPUT_RESIZE = false || ViewRootImpl.LOCAL_LOGV;
         static DEBUG_ORIENTATION = false || ViewRootImpl.LOCAL_LOGV;
         static DEBUG_CONFIGURATION = false || ViewRootImpl.LOCAL_LOGV;
-        static DEBUG_FPS = false || ViewRootImpl.LOCAL_LOGV;
+        static DEBUG_FPS = true || ViewRootImpl.LOCAL_LOGV;
 
         private mView:View;
         private mViewVisibility:number = 0;
@@ -215,7 +215,7 @@ module android.view {
                 this.mLayoutRequested = true;
 
                 let packageMetrics = Resources.getDisplayMetrics();
-                desiredWindowWidth = packageMetrics.widthPixels;
+                desiredWindowWidth = packageMetrics.widthPixels;//FIXME
                 desiredWindowHeight = packageMetrics.heightPixels;
 
                 viewVisibilityChanged = false;

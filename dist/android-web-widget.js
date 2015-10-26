@@ -836,223 +836,6 @@ var android;
 })(android || (android = {}));
 var android;
 (function (android) {
-    var view;
-    (function (view) {
-        class MotionEvent {
-            constructor(e, action) {
-                this.mAction = 0;
-                this.mDownTime = 0;
-                this.mEventTime = 0;
-                this.mActivePointerId = 0;
-                this.mXOffset = 0;
-                this.mYOffset = 0;
-                this.mAction = action;
-                if (e)
-                    this.init(e, action);
-            }
-            static obtainWithTouchEvent(e, action) {
-                return new MotionEvent(e, action);
-            }
-            static obtain(event) {
-                let newEv = new MotionEvent(null, 0);
-                Object.assign(newEv, event);
-                return newEv;
-            }
-            static obtainWithAction(downTime, eventTime, action, x, y) {
-                let newEv = new MotionEvent(null, action);
-                newEv.mDownTime = downTime;
-                newEv.mEventTime = eventTime;
-                let touch = {
-                    identifier: 0,
-                    target: null,
-                    screenX: 0,
-                    screenY: 0,
-                    clientX: 0,
-                    clientY: 0,
-                    pageX: 0,
-                    pageY: 0
-                };
-                newEv.mTouchingPointers = [touch];
-                return newEv;
-            }
-            init(e, baseAction, windowXOffset = 0, windowYOffset = 0) {
-                let action = baseAction;
-                let actionIndex = -1;
-                let activeTouch = e.changedTouches[0];
-                let activePointerId = activeTouch.identifier;
-                for (let i = 0, length = e.touches.length; i < length; i++) {
-                    if (e.touches[i].identifier === activePointerId) {
-                        actionIndex = i;
-                        MotionEvent.IdIndexCache.set(activePointerId, i);
-                        break;
-                    }
-                }
-                if (actionIndex < 0 && baseAction === MotionEvent.ACTION_UP) {
-                    actionIndex = MotionEvent.IdIndexCache.get(activePointerId);
-                }
-                if (actionIndex < 0)
-                    throw Error('not find action index');
-                if (actionIndex > 0) {
-                    switch (action) {
-                        case MotionEvent.ACTION_DOWN:
-                            action = MotionEvent.ACTION_POINTER_DOWN;
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            action = MotionEvent.ACTION_POINTER_UP;
-                            break;
-                    }
-                }
-                action = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
-                switch (baseAction) {
-                    case MotionEvent.ACTION_DOWN:
-                    case MotionEvent.ACTION_UP:
-                        MotionEvent.TouchMoveRecord.set(activePointerId, []);
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
-                        if (moveHistory) {
-                            activeTouch.mEventTime = e.timeStamp;
-                            moveHistory.push(activeTouch);
-                            if (moveHistory.length > MotionEvent.HistoryMaxSize)
-                                moveHistory.shift();
-                        }
-                        break;
-                }
-                let lastAction = this.mAction;
-                this.mAction = action;
-                this.mActivePointerId = activePointerId;
-                if (activePointerId === 0 && action == MotionEvent.ACTION_DOWN) {
-                    this.mDownTime = e.timeStamp;
-                }
-                this.mEventTime = e.timeStamp;
-                this.mTouchingPointers = Array.from(e.touches);
-                if (baseAction === MotionEvent.ACTION_UP) {
-                    this.mTouchingPointers.splice(actionIndex, 0, activeTouch);
-                }
-                this.mXOffset = -windowXOffset;
-                this.mYOffset = -windowYOffset;
-            }
-            recycle() {
-            }
-            getAction() {
-                return this.mAction;
-            }
-            getActionMasked() {
-                return this.mAction & MotionEvent.ACTION_MASK;
-            }
-            getActionIndex() {
-                return (this.mAction & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-            }
-            getDownTime() {
-                return this.mDownTime;
-            }
-            getEventTime() {
-                return this.mEventTime;
-            }
-            getX(pointerIndex = 0) {
-                return this.mTouchingPointers[pointerIndex].pageX + this.mXOffset;
-            }
-            getY(pointerIndex = 0) {
-                return this.mTouchingPointers[pointerIndex].pageY + this.mYOffset;
-            }
-            getPointerCount() {
-                return this.mTouchingPointers.length;
-            }
-            getPointerId(pointerIndex) {
-                return this.mTouchingPointers[pointerIndex].identifier;
-            }
-            findPointerIndex(pointerId) {
-                for (let i = 0, length = this.mTouchingPointers.length; i < length; i++) {
-                    if (this.mTouchingPointers[i].identifier === pointerId) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-            getRawX() {
-                return this.mTouchingPointers[0].pageX;
-            }
-            getRawY() {
-                return this.mTouchingPointers[0].pageY;
-            }
-            getHistorySize() {
-                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mActivePointerId);
-                return moveHistory ? moveHistory.length : 0;
-            }
-            getHistoricalX(pointerIndex, pos) {
-                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-                return moveHistory[pos].pageX + this.mXOffset;
-            }
-            getHistoricalY(pointerIndex, pos) {
-                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-                return moveHistory[pos].pageY + this.mYOffset;
-            }
-            getHistoricalEventTime(pos) {
-                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mActivePointerId);
-                return moveHistory[pos].mEventTime;
-            }
-            setAction(action) {
-                this.mAction = action;
-            }
-            offsetLocation(deltaX, deltaY) {
-                this.mXOffset += deltaX;
-                this.mYOffset += deltaY;
-            }
-            setLocation(x, y) {
-                this.mXOffset = x - this.getRawX();
-                this.mYOffset = y - this.getRawY();
-            }
-            getPointerIdBits() {
-                let idBits = 0;
-                let pointerCount = this.getPointerCount();
-                for (let i = 0; i < pointerCount; i++) {
-                    idBits |= 1 << this.getPointerId(i);
-                }
-                return idBits;
-            }
-            split(idBits) {
-                let ev = MotionEvent.obtain(this);
-                let oldPointerCount = this.getPointerCount();
-                let newPointerIds = [];
-                for (let i = 0; i < oldPointerCount; i++) {
-                    let pointerId = this.getPointerId(i);
-                    let idBit = 1 << pointerId;
-                    if ((idBit & idBits) != 0) {
-                        newPointerIds.push(pointerId);
-                    }
-                }
-                ev.mTouchingPointers = this.mTouchingPointers.filter((item) => {
-                    return newPointerIds.indexOf(item.identifier) >= 0;
-                });
-                return ev;
-            }
-            toString() {
-                return "MotionEvent{action=" + this.getAction() + " x=" + this.getX()
-                    + " y=" + this.getY() + "}";
-            }
-        }
-        MotionEvent.ACTION_MASK = 0xff;
-        MotionEvent.ACTION_DOWN = 0;
-        MotionEvent.ACTION_UP = 1;
-        MotionEvent.ACTION_MOVE = 2;
-        MotionEvent.ACTION_CANCEL = 3;
-        MotionEvent.ACTION_OUTSIDE = 4;
-        MotionEvent.ACTION_POINTER_DOWN = 5;
-        MotionEvent.ACTION_POINTER_UP = 6;
-        MotionEvent.ACTION_HOVER_MOVE = 7;
-        MotionEvent.ACTION_SCROLL = 8;
-        MotionEvent.ACTION_HOVER_ENTER = 9;
-        MotionEvent.ACTION_HOVER_EXIT = 10;
-        MotionEvent.ACTION_POINTER_INDEX_MASK = 0xff00;
-        MotionEvent.ACTION_POINTER_INDEX_SHIFT = 8;
-        MotionEvent.HistoryMaxSize = 100;
-        MotionEvent.TouchMoveRecord = new Map();
-        MotionEvent.IdIndexCache = new Map();
-        view.MotionEvent = MotionEvent;
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
-var android;
-(function (android) {
     var util;
     (function (util) {
         class DisplayMetrics {
@@ -1077,24 +860,281 @@ var android;
             var DisplayMetrics = android.util.DisplayMetrics;
             class Resources {
                 static getDisplayMetrics() {
+                    if (Resources.displayMetrics)
+                        return Resources.displayMetrics;
+                    Resources.displayMetrics = new DisplayMetrics();
                     let displayMetrics = Resources.displayMetrics;
-                    if (displayMetrics)
-                        return displayMetrics;
-                    displayMetrics = new DisplayMetrics();
                     displayMetrics.widthPixels = window.innerWidth;
                     displayMetrics.heightPixels = window.innerHeight;
                     displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
-                    displayMetrics.density = 1;
+                    displayMetrics.density = Resources.density;
                     displayMetrics.densityDpi = displayMetrics.density * DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.scaledDensity = displayMetrics.density;
-                    Resources.displayMetrics = displayMetrics;
                     return displayMetrics;
                 }
+                static setDensity(density) {
+                    Resources.density = density;
+                    Resources.displayMetrics = null;
+                }
             }
+            Resources.density = 1;
             res.Resources = Resources;
         })(res = content.res || (content.res = {}));
     })(content = android.content || (android.content = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/6.
+ */
+///<reference path="../content/res/Resources.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var Resources = android.content.res.Resources;
+        let density = Resources.getDisplayMetrics().density;
+        class MotionEvent {
+            constructor(e, action) {
+                this.mAction = 0;
+                this.mDownTime = 0;
+                this.mEventTime = 0;
+                this.mActivePointerId = 0;
+                this.mXOffset = 0;
+                this.mYOffset = 0;
+                this.mViewRootTop = 0;
+                this.mViewRootLeft = 0;
+                this.mAction = action;
+                if (e)
+                    this.init(e, action);
+            }
+            static obtainWithTouchEvent(e, action) {
+                return new MotionEvent(e, action);
+            }
+            static obtain(event) {
+                let newEv = new MotionEvent(null, 0);
+                Object.assign(newEv, event);
+                return newEv;
+            }
+            static obtainWithAction(downTime, eventTime, action, x, y) {
+                let newEv = new MotionEvent(null, action);
+                newEv.mDownTime = downTime;
+                newEv.mEventTime = eventTime;
+                let touch = {
+                    identifier: 0,
+                    target: null,
+                    screenX: x,
+                    screenY: y,
+                    clientX: x,
+                    clientY: y,
+                    pageX: x,
+                    pageY: y
+                };
+                newEv.mTouchingPointers = [touch];
+                return newEv;
+            }
+            init(e, baseAction, windowXOffset = 0, windowYOffset = 0) {
+                let action = baseAction;
+                let actionIndex = -1;
+                let activeTouch = e.changedTouches[0];
+                let activePointerId = activeTouch.identifier;
+                for (let i = 0, length = e.touches.length; i < length; i++) {
+                    if (e.touches[i].identifier === activePointerId) {
+                        actionIndex = i;
+                        MotionEvent.IdIndexCache.set(activePointerId, i);
+                        break;
+                    }
+                }
+                if (actionIndex < 0 && (baseAction === MotionEvent.ACTION_UP || baseAction === MotionEvent.ACTION_CANCEL)) {
+                    actionIndex = MotionEvent.IdIndexCache.get(activePointerId);
+                }
+                if (actionIndex < 0)
+                    throw Error('not find action index');
+                switch (baseAction) {
+                    case MotionEvent.ACTION_DOWN:
+                    case MotionEvent.ACTION_UP:
+                        MotionEvent.TouchMoveRecord.set(activePointerId, []);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
+                        if (moveHistory) {
+                            activeTouch.mEventTime = e.timeStamp;
+                            moveHistory.push(activeTouch);
+                            if (moveHistory.length > MotionEvent.HistoryMaxSize)
+                                moveHistory.shift();
+                        }
+                        break;
+                }
+                this.mTouchingPointers = Array.from(e.touches);
+                if (baseAction === MotionEvent.ACTION_UP) {
+                    this.mTouchingPointers.splice(actionIndex, 0, activeTouch);
+                }
+                if (this.mTouchingPointers.length > 1) {
+                    switch (action) {
+                        case MotionEvent.ACTION_DOWN:
+                            action = MotionEvent.ACTION_POINTER_DOWN;
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            action = MotionEvent.ACTION_POINTER_UP;
+                            break;
+                    }
+                }
+                this.mAction = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
+                this.mActivePointerId = activePointerId;
+                if (activePointerId === 0 && action == MotionEvent.ACTION_DOWN) {
+                    this.mDownTime = e.timeStamp;
+                }
+                this.mEventTime = e.timeStamp;
+                this.mViewRootLeft = windowXOffset;
+                this.mViewRootTop = windowYOffset;
+            }
+            recycle() {
+            }
+            getAction() {
+                return this.mAction;
+            }
+            getActionMasked() {
+                return this.mAction & MotionEvent.ACTION_MASK;
+            }
+            getActionIndex() {
+                return (this.mAction & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+            }
+            getDownTime() {
+                return this.mDownTime;
+            }
+            getEventTime() {
+                return this.mEventTime;
+            }
+            getX(pointerIndex = 0) {
+                return (this.mTouchingPointers[pointerIndex].pageX - this.mViewRootLeft) * density + this.mXOffset;
+            }
+            getY(pointerIndex = 0) {
+                return (this.mTouchingPointers[pointerIndex].pageY - this.mViewRootTop) * density + this.mYOffset;
+            }
+            getPointerCount() {
+                return this.mTouchingPointers.length;
+            }
+            getPointerId(pointerIndex) {
+                return this.mTouchingPointers[pointerIndex].identifier;
+            }
+            findPointerIndex(pointerId) {
+                for (let i = 0, length = this.mTouchingPointers.length; i < length; i++) {
+                    if (this.mTouchingPointers[i].identifier === pointerId) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            getRawX() {
+                return (this.mTouchingPointers[0].pageX - this.mViewRootLeft) * density;
+            }
+            getRawY() {
+                return (this.mTouchingPointers[0].pageY - this.mViewRootTop) * density;
+            }
+            getHistorySize(id = this.mActivePointerId) {
+                let moveHistory = MotionEvent.TouchMoveRecord.get(id);
+                return moveHistory ? moveHistory.length : 0;
+            }
+            getHistoricalX(pointerIndex, pos) {
+                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
+                return (moveHistory[pos].pageX - this.mViewRootLeft) * density + this.mXOffset;
+            }
+            getHistoricalY(pointerIndex, pos) {
+                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
+                return (moveHistory[pos].pageY - this.mViewRootTop) * density + this.mYOffset;
+            }
+            getHistoricalEventTime(...args) {
+                let pos, activePointerId;
+                if (args.length === 1) {
+                    pos = args[0];
+                    activePointerId = this.mActivePointerId;
+                }
+                else {
+                    pos = args[1];
+                    activePointerId = this.getPointerId(args[0]);
+                }
+                let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
+                return moveHistory[pos].mEventTime;
+            }
+            setAction(action) {
+                this.mAction = action;
+            }
+            offsetLocation(deltaX, deltaY) {
+                this.mXOffset += deltaX;
+                this.mYOffset += deltaY;
+            }
+            setLocation(x, y) {
+                this.mXOffset = x - this.getRawX();
+                this.mYOffset = y - this.getRawY();
+            }
+            getPointerIdBits() {
+                let idBits = 0;
+                let pointerCount = this.getPointerCount();
+                for (let i = 0; i < pointerCount; i++) {
+                    idBits |= 1 << this.getPointerId(i);
+                }
+                return idBits;
+            }
+            split(idBits) {
+                let ev = MotionEvent.obtain(this);
+                let oldPointerCount = this.getPointerCount();
+                const oldAction = this.getAction();
+                const oldActionMasked = oldAction & MotionEvent.ACTION_MASK;
+                let newPointerIds = [];
+                for (let i = 0; i < oldPointerCount; i++) {
+                    let pointerId = this.getPointerId(i);
+                    let idBit = 1 << pointerId;
+                    if ((idBit & idBits) != 0) {
+                        newPointerIds.push(pointerId);
+                    }
+                }
+                let newActionPointerIndex = newPointerIds.indexOf(this.mActivePointerId);
+                let newPointerCount = newPointerIds.length;
+                let newAction;
+                if (oldActionMasked == MotionEvent.ACTION_POINTER_DOWN || oldActionMasked == MotionEvent.ACTION_POINTER_UP) {
+                    if (newActionPointerIndex < 0) {
+                        newAction = MotionEvent.ACTION_MOVE;
+                    }
+                    else if (newPointerCount == 1) {
+                        newAction = oldActionMasked == MotionEvent.ACTION_POINTER_DOWN
+                            ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP;
+                    }
+                    else {
+                        newAction = oldActionMasked | (newActionPointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+                    }
+                }
+                else {
+                    newAction = oldAction;
+                }
+                ev.mAction = newAction;
+                ev.mTouchingPointers = this.mTouchingPointers.filter((item) => {
+                    return newPointerIds.indexOf(item.identifier) >= 0;
+                });
+                return ev;
+            }
+            toString() {
+                return "MotionEvent{action=" + this.getAction() + " x=" + this.getX()
+                    + " y=" + this.getY() + "}";
+            }
+        }
+        MotionEvent.ACTION_MASK = 0xff;
+        MotionEvent.ACTION_DOWN = 0;
+        MotionEvent.ACTION_UP = 1;
+        MotionEvent.ACTION_MOVE = 2;
+        MotionEvent.ACTION_CANCEL = 3;
+        MotionEvent.ACTION_OUTSIDE = 4;
+        MotionEvent.ACTION_POINTER_DOWN = 5;
+        MotionEvent.ACTION_POINTER_UP = 6;
+        MotionEvent.ACTION_HOVER_MOVE = 7;
+        MotionEvent.ACTION_SCROLL = 8;
+        MotionEvent.ACTION_HOVER_ENTER = 9;
+        MotionEvent.ACTION_HOVER_EXIT = 10;
+        MotionEvent.ACTION_POINTER_INDEX_MASK = 0xff00;
+        MotionEvent.ACTION_POINTER_INDEX_SHIFT = 8;
+        MotionEvent.HistoryMaxSize = 10;
+        MotionEvent.TouchMoveRecord = new Map();
+        MotionEvent.IdIndexCache = new Map();
+        view.MotionEvent = MotionEvent;
+    })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/5.
@@ -1218,8 +1258,8 @@ var android;
         ViewConfiguration.MINIMUM_FLING_VELOCITY = 50;
         ViewConfiguration.MAXIMUM_FLING_VELOCITY = 8000;
         ViewConfiguration.SCROLL_FRICTION = 0.015;
-        ViewConfiguration.OVERSCROLL_DISTANCE = metrics.heightPixels;
-        ViewConfiguration.OVERFLING_DISTANCE = metrics.heightPixels / 2;
+        ViewConfiguration.OVERSCROLL_DISTANCE = 800;
+        ViewConfiguration.OVERFLING_DISTANCE = 400;
         view.ViewConfiguration = ViewConfiguration;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
@@ -1494,8 +1534,10 @@ var android;
                 }
                 let oldId = this.messages.get(message);
                 if (oldId !== undefined) {
-                    clearTimeout(oldId);
-                    cancelAnimationFrame(oldId);
+                    if (oldId > 0)
+                        clearTimeout(oldId);
+                    else if (oldId < 0)
+                        cancelAnimationFrame(-oldId);
                     this.messages.delete(message);
                 }
             }
@@ -1607,8 +1649,8 @@ var android;
                     this.dispatchMessage(msg);
                     this.mQueue.recycleMessage(this, msg);
                 };
-                if (delayMillis <= 20) {
-                    var id = requestAnimationFrame(func);
+                if (delayMillis <= 17) {
+                    var id = -requestAnimationFrame(func);
                 }
                 else {
                     var id = setTimeout(func, delayMillis);
@@ -1740,33 +1782,28 @@ var android;
         var Rect = android.graphics.Rect;
         var Color = android.graphics.Color;
         class Canvas {
-            constructor(width, height) {
+            constructor(...args) {
                 this._saveCount = 0;
                 this.shouldDoRectBeforeRestoreMap = new Map();
                 this.mClipStateMap = new Map();
-                this.mCanvasElement = document.createElement("canvas");
-                this.init(width, height);
+                this.mCanvasElement = args.length === 1 ? args[0] : document.createElement("canvas");
+                if (args.length === 1) {
+                    this.mCanvasElement = args[0];
+                }
+                else if (args.length === 2) {
+                    this.mCanvasElement = document.createElement("canvas");
+                    this.mCanvasElement.width = args[0];
+                    this.mCanvasElement.height = args[1];
+                }
+                this.init();
             }
-            init(width, height) {
-                this.mCanvasElement.width = width;
-                this.mCanvasElement.height = height;
+            init() {
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                this.mCurrentClip = new Rect(0, 0, width, height);
+                this.mCurrentClip = new Rect(0, 0, this.mCanvasElement.width, this.mCanvasElement.height);
                 this._saveCount = 0;
                 this.fullRectForClip();
                 this._mCanvasContent.clip();
-                this._mCanvasContent.save();
-            }
-            static obtain(width, height) {
-                let canvas;
-                if (!canvas)
-                    canvas = new Canvas(width, height);
-                else {
-                    canvas.init(width, height);
-                }
-                return canvas;
-            }
-            recycle() {
+                this.save();
             }
             get canvasElement() {
                 return this.mCanvasElement;
@@ -1837,8 +1874,8 @@ var android;
                 }
             }
             restoreToCount(saveCount) {
-                if (saveCount < 0)
-                    throw Error('saveCount can\'t < 0');
+                if (saveCount <= 0)
+                    throw Error('saveCount can\'t <= 0');
                 while (saveCount <= this._saveCount) {
                     this.restore();
                 }
@@ -3742,6 +3779,7 @@ var android;
  */
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
+///<reference path="../graphics/Canvas.ts"/>
 var android;
 (function (android) {
     var view;
@@ -3754,16 +3792,19 @@ var android;
                 this.mCanvasElement = canvasElement;
             }
             lockCanvas(dirty) {
-                let fullWidth = this.mCanvasElement.offsetWidth;
-                let fullHeight = this.mCanvasElement.offsetHeight;
-                let rect = new Rect(dirty);
+                let fullWidth = this.mCanvasElement.width;
+                let fullHeight = this.mCanvasElement.height;
+                let rect;
                 if (dirty.isEmpty()) {
-                    rect.set(0, 0, fullWidth, fullHeight);
+                    rect = new Rect(0, 0, fullWidth, fullHeight);
+                }
+                else {
+                    rect = new Rect(Math.floor(dirty.left - 1), Math.floor(dirty.top - 1), Math.ceil(dirty.right + 1), Math.ceil(dirty.bottom + 1));
                 }
                 let width = rect.width();
                 let height = rect.height();
-                let canvas = Canvas.obtain(fullWidth, fullHeight);
-                canvas.clipRect(rect);
+                let canvas = new Canvas(width, height);
+                canvas.translate(-rect.left, -rect.top);
                 this.mLockedCanvasMap.set(canvas, rect);
                 let mCanvasContent = this.mCanvasElement.getContext('2d');
                 mCanvasContent.clearRect(rect.left, rect.top, width, height);
@@ -3773,9 +3814,8 @@ var android;
                 let rect = this.mLockedCanvasMap.get(canvas);
                 if (rect) {
                     let mCanvasContent = this.mCanvasElement.getContext('2d');
-                    mCanvasContent.drawImage(canvas.canvasElement, 0, 0);
+                    mCanvasContent.drawImage(canvas.canvasElement, rect.left, rect.top);
                 }
-                canvas.recycle();
             }
         }
         view.Surface = Surface;
@@ -4345,7 +4385,7 @@ var android;
         ViewRootImpl.DEBUG_INPUT_RESIZE = false || ViewRootImpl.LOCAL_LOGV;
         ViewRootImpl.DEBUG_ORIENTATION = false || ViewRootImpl.LOCAL_LOGV;
         ViewRootImpl.DEBUG_CONFIGURATION = false || ViewRootImpl.LOCAL_LOGV;
-        ViewRootImpl.DEBUG_FPS = false || ViewRootImpl.LOCAL_LOGV;
+        ViewRootImpl.DEBUG_FPS = true || ViewRootImpl.LOCAL_LOGV;
         view_1.ViewRootImpl = ViewRootImpl;
         (function (ViewRootImpl) {
             class RunQueue {
@@ -6418,7 +6458,7 @@ var android;
                 this.mLastTouchIndex = 0;
             }
             addMovement(ev) {
-                const historySize = ev.getHistorySize();
+                let historySize = ev.getHistorySize();
                 const pointerCount = ev.getPointerCount();
                 const lastTouchIndex = this.mLastTouchIndex;
                 const nextTouchIndex = (lastTouchIndex + 1) % VelocityTracker.NUM_PAST;
@@ -6466,11 +6506,12 @@ var android;
                     const pastX = pointer.pastX;
                     const pastY = pointer.pastY;
                     const pastTime = pointer.pastTime;
+                    historySize = ev.getHistorySize(pointerId);
                     for (let j = 0; j < historySize; j++) {
                         const touchIndex = (nextTouchIndex + j) % VelocityTracker.NUM_PAST;
                         pastX[touchIndex] = ev.getHistoricalX(i, j);
                         pastY[touchIndex] = ev.getHistoricalY(i, j);
-                        pastTime[touchIndex] = ev.getHistoricalEventTime(j);
+                        pastTime[touchIndex] = ev.getHistoricalEventTime(i, j);
                     }
                     pastX[finalTouchIndex] = ev.getX(i);
                     pastY[finalTouchIndex] = ev.getY(i);
@@ -7317,22 +7358,178 @@ var android;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/10/23.
+ */
+///<reference path="../android/view/View.ts"/>
+///<reference path="../android/view/ViewRootImpl.ts"/>
+///<reference path="../android/widget/FrameLayout.ts"/>
+///<reference path="../android/view/MotionEvent.ts"/>
+var runtime;
+(function (runtime) {
+    var View = android.view.View;
+    var ViewRootImpl = android.view.ViewRootImpl;
+    var FrameLayout = android.widget.FrameLayout;
+    var MotionEvent = android.view.MotionEvent;
+    class AndroidUI {
+        constructor(element) {
+            this.element = element;
+            if (element['AndroidUI']) {
+                throw Error('already init a AndroidUI with this element');
+            }
+            element['AndroidUI'] = this;
+            this.init();
+        }
+        init() {
+            this.viewRootImpl = new ViewRootImpl();
+            this.rootLayout = new RootLayout();
+            this.canvas = document.createElement("canvas");
+            this.initInflateView();
+            this.initRootElementStyle();
+            this.initCanvasStyle();
+            this.initBindElementStyle();
+            this.element.innerHTML = '';
+            this.element.appendChild(this.rootStyleElement);
+            this.element.appendChild(this.canvas);
+            this.element.appendChild(this.rootLayout.bindElement);
+            this.viewRootImpl.setView(this.rootLayout);
+            this.viewRootImpl.initSurface(this.canvas);
+            this.initTouch();
+            this.tryStartLayoutAfterInit();
+        }
+        initInflateView() {
+            Array.from(this.element.children).forEach((item) => {
+                if (item instanceof HTMLStyleElement) {
+                    this.rootStyleElement = item;
+                    return;
+                }
+                if (item instanceof HTMLElement) {
+                    let view = View.inflate(item);
+                    if (view)
+                        this.rootLayout.addView(view);
+                }
+            });
+        }
+        initRootElementStyle() {
+            if (!this.element.style.position) {
+                this.element.style.position = "relative";
+            }
+            if (!this.element.style.display) {
+                this.element.style.display = "inline-block";
+            }
+            this.element.style.overflow = 'hidden';
+        }
+        initCanvasStyle() {
+            let canvas = this.canvas;
+            canvas.style.position = "absolute";
+            canvas.style.left = '0px';
+            canvas.style.top = '0px';
+        }
+        initTouch() {
+            let motionEvent;
+            let windowXOffset = 0, windowYOffset = 0;
+            this.element.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                let rootViewBound = this.element.getBoundingClientRect();
+                windowXOffset = rootViewBound.left;
+                windowYOffset = rootViewBound.top;
+                if (!motionEvent)
+                    motionEvent = MotionEvent.obtainWithTouchEvent(e, MotionEvent.ACTION_DOWN);
+                else
+                    motionEvent.init(e, MotionEvent.ACTION_DOWN, windowXOffset, windowYOffset);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                motionEvent.init(e, MotionEvent.ACTION_MOVE, windowXOffset, windowYOffset);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                motionEvent.init(e, MotionEvent.ACTION_UP);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowXOffset, windowYOffset);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+        }
+        initBindElementStyle() {
+            if (!this.rootStyleElement)
+                this.rootStyleElement = document.createElement("style");
+            this.rootStyleElement.setAttribute("scoped", '');
+            let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
+            if (iOS) {
+                this.rootStyleElement.innerHTML += `
+                    android-ScrollView::-webkit-scrollbar {
+                        -webkit-appearance: none;
+                        width: 4px;
+                    }
+                    android-ScrollView::-webkit-scrollbar-thumb {
+                        border-radius: 2px;
+                        background-color: rgba(0,0,0,.3);
+                    }
+                `;
+            }
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            if (density != 1) {
+                this.rootStyleElement.innerHTML += `
+                android-RootLayout {
+                    transform:scale(${1 / density},${1 / density});
+                    -webkit-transform:scale(${1 / density},${1 / density});
+                    transform-origin:0 0;
+                    -webkit-transform-origin:0 0;
+                }
+                `;
+            }
+        }
+        tryStartLayoutAfterInit() {
+            let width = this.element.offsetWidth;
+            let height = this.element.offsetHeight;
+            if (width > 0 && height > 0)
+                this.notifySizeChange(width, height);
+        }
+        notifySizeChange(width, height) {
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            this.viewRootImpl.mWinFrame.set(0, 0, width * density, height * density);
+            this.canvas.width = width * density;
+            this.canvas.height = height * density;
+            this.canvas.style.width = width + "px";
+            this.canvas.style.height = height + "px";
+            this.viewRootImpl.requestLayout();
+        }
+        setContentView(view) {
+            this.rootLayout.removeAllViews();
+            this.rootLayout.addView(view);
+        }
+        addContentView(view) {
+            this.rootLayout.addView(view);
+        }
+        findViewById(id) {
+            return this.rootLayout.findViewById(id);
+        }
+    }
+    runtime.AndroidUI = AndroidUI;
+    class RootLayout extends FrameLayout {
+    }
+})(runtime || (runtime = {}));
+/**
  * Created by linfaxin on 15/10/11.
  */
 ///<reference path="../view/View.ts"/>
 ///<reference path="../view/ViewRootImpl.ts"/>
 ///<reference path="../widget/FrameLayout.ts"/>
 ///<reference path="../view/MotionEvent.ts"/>
+///<reference path="../../runtime/AndroidUI.ts"/>
 var android;
 (function (android) {
     var app;
     (function (app) {
-        var View = android.view.View;
-        var ViewRootImpl = android.view.ViewRootImpl;
-        var FrameLayout = android.widget.FrameLayout;
-        var MotionEvent = android.view.MotionEvent;
-        class RootLayout extends FrameLayout {
-        }
+        var AndroidUI = runtime.AndroidUI;
         if (typeof HTMLDivElement !== 'function') {
             var _HTMLDivElement = function () { };
             _HTMLDivElement.prototype = HTMLDivElement.prototype;
@@ -7342,110 +7539,27 @@ var android;
             onCreate() {
             }
             createdCallback() {
-                this.viewRootImpl = new ViewRootImpl();
-                this.rootLayout = new RootLayout();
-                Array.from(this.children).forEach((item) => {
-                    if (item instanceof HTMLElement) {
-                        let view = View.inflate(item);
-                        if (view)
-                            this.addContentView(view);
-                    }
-                });
-                this.innerHTML = '';
-                if (!this.style.position) {
-                    this.style.position = "relative";
-                }
-                if (!this.style.display) {
-                    this.style.display = "inline-block";
-                }
-                this.style.overflow = 'hidden';
-                this.canvas = document.createElement("canvas");
-                let canvas = this.canvas;
-                this.appendChild(canvas);
-                canvas.style.position = "absolute";
-                canvas.style.left = '0px';
-                canvas.style.top = '0px';
-                canvas.style.right = '0px';
-                canvas.style.bottom = '0px';
-                this.appendChild(this.rootLayout.bindElement);
-                this.viewRootImpl.setView(this.rootLayout);
-                this.viewRootImpl.initSurface(canvas);
-                this.initTouch();
-                this.initStyle();
+                this.androidUI = new AndroidUI(this);
                 this.onCreate();
             }
             attachedCallback() {
-                this.viewRootImpl.mWinFrame.set(0, 0, this.offsetWidth, this.offsetHeight);
-                this.canvas.width = this.offsetWidth;
-                this.canvas.height = this.offsetHeight;
-                this.viewRootImpl.requestLayout();
+                this.androidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
             }
             detachedCallback() {
             }
             attributeChangedCallback(attributeName, oldVal, newVal) {
             }
-            initTouch() {
-                let motionEvent;
-                let windowXOffset = 0, windowYOffset = 0;
-                this.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    let rootViewBound = this.getBoundingClientRect();
-                    windowXOffset = rootViewBound.left;
-                    windowYOffset = rootViewBound.top;
-                    if (!motionEvent)
-                        motionEvent = MotionEvent.obtainWithTouchEvent(e, MotionEvent.ACTION_DOWN);
-                    else
-                        motionEvent.init(e, MotionEvent.ACTION_DOWN, windowXOffset, windowYOffset);
-                    this.rootLayout.dispatchTouchEvent(motionEvent);
-                }, true);
-                this.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    motionEvent.init(e, MotionEvent.ACTION_MOVE, windowXOffset, windowYOffset);
-                    this.rootLayout.dispatchTouchEvent(motionEvent);
-                }, true);
-                this.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    motionEvent.init(e, MotionEvent.ACTION_UP);
-                    this.rootLayout.dispatchTouchEvent(motionEvent);
-                }, true);
-                this.addEventListener('touchcancel', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowXOffset, windowYOffset);
-                    this.rootLayout.dispatchTouchEvent(motionEvent);
-                }, true);
-            }
-            initStyle() {
-                let style = document.createElement("style");
-                this.insertBefore(style, this.children[0]);
-                let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
-                if (iOS) {
-                    style.innerText += "android-ScrollView::-webkit-scrollbar {" +
-                        "-webkit-appearance: none;" +
-                        "width: 4px;" +
-                        "}" +
-                        "android-ScrollView::-webkit-scrollbar-thumb {" +
-                        "border-radius: 2px;" +
-                        "background-color: rgba(0,0,0,.3);" +
-                        "}";
-                }
-            }
             setContentView(view) {
-                this.rootLayout.removeAllViews();
-                this.rootLayout.addView(view);
+                this.androidUI.setContentView(view);
             }
             addContentView(view) {
-                this.rootLayout.addView(view);
+                this.androidUI.addContentView(view);
             }
             findViewById(id) {
-                return this.rootLayout.findViewById(id);
+                return this.androidUI.findViewById(id);
             }
         }
         app.Activity = Activity;
-        document.registerElement("android-activity", Activity);
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
 /**
@@ -7456,5 +7570,7 @@ var android;
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
 ///<reference path="android/app/Activity.ts"/>
+///<reference path="runtime/AndroidUI.ts"/>
 window[`android`] = android;
 window[`java`] = java;
+window[`runtime`] = runtime;

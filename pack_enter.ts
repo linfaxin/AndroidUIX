@@ -6,6 +6,8 @@
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
 ///<reference path="android/app/Activity.ts"/>
+///<reference path="runtime/AndroidUI.ts"/>
 
 window[`android`] = android;
 window[`java`] = java;
+window[`runtime`] = runtime;

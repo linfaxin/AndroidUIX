@@ -1,7 +1,10 @@
 /**
  * Created by linfaxin on 15/10/6.
  */
+///<reference path="../content/res/Resources.ts"/>
+
 module android.view {
+    import Resources = android.content.res.Resources;
 
     interface TouchEvent extends UIEvent {
         touches: TouchList;
@@ -29,6 +32,7 @@ module android.view {
         mEventTime?:number;
     }
 
+    let density = Resources.getDisplayMetrics().density;
     export class MotionEvent {
         static ACTION_MASK = 0xff;
         static ACTION_DOWN = 0;
@@ -58,6 +62,8 @@ module android.view {
         mTouchingPointers:Array<Touch>;
         mXOffset = 0;
         mYOffset = 0;
+        mViewRootTop = 0;
+        mViewRootLeft = 0;
 
         constructor(e:TouchEvent, action:number) {
             this.mAction = action;
@@ -80,12 +86,12 @@ module android.view {
             let touch:Touch = {
                 identifier: 0,
                 target: null,
-                screenX: 0,
-                screenY: 0,
-                clientX: 0,
-                clientY: 0,
-                pageX: 0,
-                pageY: 0
+                screenX: x,
+                screenY: y,
+                clientX: x,
+                clientY: y,
+                pageX: x,
+                pageY: y
             };
             newEv.mTouchingPointers = [touch];
             return newEv;
@@ -162,8 +168,8 @@ module android.view {
                 this.mDownTime = e.timeStamp;
             }
             this.mEventTime = e.timeStamp;
-            this.mXOffset = -windowXOffset;
-            this.mYOffset = -windowYOffset;
+            this.mViewRootLeft = windowXOffset;
+            this.mViewRootTop = windowYOffset;
 
         }
 
@@ -214,11 +220,11 @@ module android.view {
         }
 
         getX(pointerIndex = 0):number {
-            return this.mTouchingPointers[pointerIndex].pageX + this.mXOffset;
+            return (this.mTouchingPointers[pointerIndex].pageX - this.mViewRootLeft) * density + this.mXOffset;
         }
 
         getY(pointerIndex = 0):number {
-            return this.mTouchingPointers[pointerIndex].pageY + this.mYOffset;
+            return (this.mTouchingPointers[pointerIndex].pageY - this.mViewRootTop) * density + this.mYOffset;
         }
 
         getPointerCount():number {
@@ -240,11 +246,11 @@ module android.view {
         }
 
         getRawX():number {
-            return this.mTouchingPointers[0].pageX;
+            return (this.mTouchingPointers[0].pageX - this.mViewRootLeft) * density;
         }
 
         getRawY():number {
-            return this.mTouchingPointers[0].pageY;
+            return (this.mTouchingPointers[0].pageY - this.mViewRootTop) * density;
         }
 
         getHistorySize(id=this.mActivePointerId):number {
@@ -254,12 +260,12 @@ module android.view {
 
         getHistoricalX(pointerIndex:number, pos:number):number {
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-            return moveHistory[pos].pageX + this.mXOffset;
+            return (moveHistory[pos].pageX - this.mViewRootLeft) * density + this.mXOffset;
         }
 
         getHistoricalY(pointerIndex:number, pos:number):number {
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-            return moveHistory[pos].pageY + this.mYOffset;
+            return (moveHistory[pos].pageY - this.mViewRootTop) * density + this.mYOffset;
         }
 
         getHistoricalEventTime(pos:number):number;

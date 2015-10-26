@@ -23,16 +23,24 @@ module android.graphics {
 
         private static sPool = new Pools.SynchronizedPool<Canvas>(10);
 
-        constructor(width:number, height:number) {
-            this.mCanvasElement = document.createElement("canvas");
-            this.init(width, height);
+        constructor(canvasElement:HTMLCanvasElement);
+        constructor(width:number, height:number);
+        constructor(...args) {
+            this.mCanvasElement = args.length===1 ? args[0] : document.createElement("canvas");
+            if(args.length===1){
+                this.mCanvasElement = args[0];
+
+            }else if(args.length===2){
+                this.mCanvasElement = document.createElement("canvas");
+                this.mCanvasElement.width = args[0];
+                this.mCanvasElement.height = args[1];
+            }
+            this.init();
         }
 
-        private init(width:number, height:number) {
-            this.mCanvasElement.width = width;
-            this.mCanvasElement.height = height;
+        private init() {
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
-            this.mCurrentClip = new Rect(0, 0, width, height);
+            this.mCurrentClip = new Rect(0, 0, this.mCanvasElement.width, this.mCanvasElement.height);
             this._saveCount = 0;
 
             //let content = this._mCanvasContent;
@@ -52,22 +60,7 @@ module android.graphics {
 
             this.fullRectForClip();//ready for clip bound
             this._mCanvasContent.clip();
-            this._mCanvasContent.save();
-        }
-
-        public static obtain(width:number, height:number):Canvas {
-            let canvas;// = Canvas.sPool.acquire();//FIXME no cache
-            if (!canvas) canvas = new Canvas(width, height);
-            else {
-                canvas.init(width, height);
-            }
-            return canvas;
-        }
-
-        recycle() {
-            //this.mCanvasElement.width = 0;
-            //this.mCanvasElement.height = 0;
-            //Canvas.sPool.release(this);
+            this.save();
         }
 
         public get canvasElement():HTMLCanvasElement {
@@ -153,7 +146,7 @@ module android.graphics {
         }
 
         restoreToCount(saveCount:number) {
-            if (saveCount < 0) throw Error('saveCount can\'t < 0');
+            if (saveCount <= 0) throw Error('saveCount can\'t <= 0');
             while (saveCount <= this._saveCount) {
                 this.restore();
             }

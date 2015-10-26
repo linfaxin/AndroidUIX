@@ -3,6 +3,7 @@
  */
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
+///<reference path="../graphics/Canvas.ts"/>
 
 module android.view{
     import Rect = android.graphics.Rect;
@@ -12,6 +13,7 @@ module android.view{
         private mCanvasElement:HTMLCanvasElement;
         private mLockedCanvasMap = new WeakMap<Canvas, Rect>();
 
+
         constructor(canvasElement:HTMLCanvasElement) {
             this.mCanvasElement = canvasElement;
         }
@@ -20,8 +22,8 @@ module android.view{
          * create a off-screen canvas to draw
          */
         lockCanvas(dirty:Rect):Canvas{
-            let fullWidth = this.mCanvasElement.offsetWidth;
-            let fullHeight = this.mCanvasElement.offsetHeight;
+            let fullWidth = this.mCanvasElement.width;
+            let fullHeight = this.mCanvasElement.height;
             let rect:Rect;
             if(dirty.isEmpty()){
                 rect = new Rect(0, 0, fullWidth, fullHeight);
@@ -31,7 +33,10 @@ module android.view{
             }
             let width = rect.width();
             let height = rect.height();
-            let canvas = Canvas.obtain(width, height);
+            //this.mCanvas.clipRect(rect.left, rect.top, width, height);
+            //this.mLockedCanvas.clipRect(rect.left, rect.top, width, height);
+
+            let canvas = new Canvas(width, height);
             canvas.translate(-rect.left, -rect.top);
 
             this.mLockedCanvasMap.set(canvas, rect);
@@ -48,13 +53,10 @@ module android.view{
         unlockCanvasAndPost(canvas:Canvas):void {
             let rect:Rect = this.mLockedCanvasMap.get(canvas);
             if(rect){
-                //canvas.translate(rect.left, rect.top);
-                let mCanvasContent = this.mCanvasElement.getContext('2d');
-                //mCanvasContent.clearRect(rect.left, rect.top, canvas.getWidth(), canvas.getHeight());
+                let mCanvasContent:CanvasRenderingContext2D = this.mCanvasElement.getContext('2d');
                 mCanvasContent.drawImage(canvas.canvasElement, rect.left, rect.top);
                 //mCanvasContent.putImageData(canvas.canvasElement.getContext('2d').getImageData(rect.left, rect.top, rect.width(), rect.height()), rect.left, rect.top);
             }
-            canvas.recycle();
         }
     }
 }
