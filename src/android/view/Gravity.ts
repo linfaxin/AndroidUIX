@@ -64,7 +64,7 @@ module android.view{
         /** Raw bit controlling whether the layout direction is relative or not (Gravity.START/Gravity.END instead of
          * absolute Gravity.LEFT/Gravity.RIGHT).
          */
-        static RELATIVE_LAYOUT_DIRECTION = 0x00800000;
+        //static RELATIVE_LAYOUT_DIRECTION = 0x00800000;
 
         /**
          * Binary mask to get the absolute horizontal gravity of a gravity.
@@ -92,15 +92,15 @@ module android.view{
         static DISPLAY_CLIP_HORIZONTAL = 0x01000000;
 
         /** Push object to x-axis position at the start of its container, not changing its size. */
-        static START = Gravity.RELATIVE_LAYOUT_DIRECTION | Gravity.LEFT;
+        //static START = Gravity.RELATIVE_LAYOUT_DIRECTION | Gravity.LEFT;
 
         /** Push object to x-axis position at the end of its container, not changing its size. */
-        static END = Gravity.RELATIVE_LAYOUT_DIRECTION | Gravity.RIGHT;
+        //static END = Gravity.RELATIVE_LAYOUT_DIRECTION | Gravity.RIGHT;
 
         /**
          * Binary mask for the horizontal gravity and script specific direction bit.
          */
-        static RELATIVE_HORIZONTAL_GRAVITY_MASK = Gravity.START | Gravity.END;
+        //static RELATIVE_HORIZONTAL_GRAVITY_MASK = Gravity.START | Gravity.END;
         
     }
 }

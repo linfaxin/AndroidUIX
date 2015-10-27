@@ -149,8 +149,8 @@ module android.view {
         private mPerformClick:PerformClick;
         private mUnsetPressedState:UnsetPressedState;
         private mHasPerformedLongPress = false;
-        private mMinWidth = 0;
-        private mMinHeight = 0;
+        mMinWidth = 0;
+        mMinHeight = 0;
         private mTouchDelegate : TouchDelegate;
         mTouchSlop = 0;
         private mVerticalScrollFactor = 0;
@@ -210,7 +210,6 @@ module android.view {
 
         constructor(){
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
-            this.initBindElement();
         }
 
         getWidth():number {
@@ -325,6 +324,42 @@ module android.view {
                 this.mBackgroundSizeChanged = true;
             }
         }
+        getPaddingLeft():number{
+            return this.mPaddingLeft;
+        }
+        getPaddingTop():number{
+            return this.mPaddingTop;
+        }
+        getPaddingRight():number{
+            return this.mPaddingRight;
+        }
+        getPaddingBottom():number{
+            return this.mPaddingBottom;
+        }
+        setPadding(left:number, top:number, right:number, bottom:number){
+            let changed = false;
+
+            if (this.mPaddingLeft != left) {
+                changed = true;
+                this.mPaddingLeft = left;
+            }
+            if (this.mPaddingTop != top) {
+                changed = true;
+                this.mPaddingTop = top;
+            }
+            if (this.mPaddingRight != right) {
+                changed = true;
+                this.mPaddingRight = right;
+            }
+            if (this.mPaddingBottom != bottom) {
+                changed = true;
+                this.mPaddingBottom = bottom;
+            }
+            if (changed) {
+                this.requestLayout();
+            }
+        }
+
         setScrollX(value:number) {
             this.scrollTo(value, this.mScrollY);
         }
@@ -1992,21 +2027,21 @@ module android.view {
             this.removeLongPressCallback();
             this.removePerformClickCallback();
 
-            //this.destroyDrawingCache();//TODO when impl
+            this.destroyDrawingCache();
             //this.destroyLayer(false);
             //
-            //this.cleanupDraw();
+            this.cleanupDraw();
             //
             //this.mCurrentAnimation = null;
         }
         cleanupDraw() {
             if (this.mAttachInfo != null) {
-                //this.mAttachInfo.mViewRootImpl.cancelInvalidate(this);//TODO when impl
+                this.mAttachInfo.mViewRootImpl.cancelInvalidate(this);
             }
         }
 
         debug(depth=0){
-            //custom impl
+            //custom impl:
             let originProto = Object.getPrototypeOf(this);
             console.dir(Object.assign(Object.create(originProto), this));
         }
@@ -2037,14 +2072,22 @@ module android.view {
         }
 
 
-        //bind Element show the layout and other info
-        bindElement: HTMLElement;
-        bindScrollContent: HTMLElement;//use to show scroll bar
+        //bind Element show the layout and extra info
+        _bindElement: HTMLElement;
+        get bindElement():HTMLElement{
+            if(!this._bindElement) this.initBindElement();
+            return this._bindElement;
+        }
+        _bindScrollContent: HTMLElement;//use to show scroll bar
+        get bindScrollContent():HTMLElement {
+            if(!this._bindScrollContent) this._bindScrollContent = document.createElement('div');
+            return this._bindScrollContent;
+        }
 
-        initBindElement():void{
-            this.bindElement = document.createElement(this.tagName());//bind Element show the layout and other info
-            this.bindElement['bindView']=this;
-            this.bindScrollContent = document.createElement('div');
+        initBindElement(bindElement?:HTMLElement):void{
+            this._bindElement = bindElement || document.createElement(this.tagName());
+            this._bindElement['bindView']=this;
+            //this.bindScrollContent = document.createElement('div');
             //this.bindScrollContent.style.cssText += '';
         }
 
@@ -2056,50 +2099,54 @@ module android.view {
             bind.style.top = this.mTop + 'px';
             bind.style.width = this.getWidth() + 'px';
             bind.style.height = this.getHeight() + 'px';
+            //bind.style.paddingLeft = this.mPaddingLeft + 'px';
+            //bind.style.paddingTop = this.mPaddingTop + 'px';
+            //bind.style.paddingRight = this.mPaddingRight + 'px';
+            //bind.style.paddingBottom = this.mPaddingBottom + 'px';
         }
         tagName() : string{
             return "ANDROID-"+this.constructor.name;
         }
 
-        static inflate(xml:HTMLElement):View{
-            let className = xml.tagName.toUpperCase();
+        static inflate(domtree:HTMLElement):View{
+            let className = domtree.tagName;
             if(className.startsWith('ANDROID-')){
                 className = className.substring('ANDROID-'.length);
             }
-            let rootView:View;
+            let rootViewClass;
             for(let key in android['view']){
-                if(key.toUpperCase()==className){
-                    rootView = new android.view[key]();
+                if(key.toUpperCase()==className.toUpperCase()){
+                    rootViewClass = android.view[key];
                     break;
                 }
             }
-            if(!rootView){
+            if(!rootViewClass){
                 for(let key in android['widget']){
-                    if(key.toUpperCase()==className){
-                        rootView = new android['widget'][key]();
+                    if(key.toUpperCase()==className.toUpperCase()){
+                        rootViewClass = android['widget'][key];
                         break;
                     }
                 }
             }
-            if(!rootView){
+            if(!rootViewClass){
                 //full class name view
                 try {
-                    rootView = (<any>window).eval(className);
+                    rootViewClass = (<any>window).eval(className);
                 } catch (e) {
                 }
             }
-            if(!rootView) return null;
+            if(!rootViewClass) return null;
+            let rootView:View = new rootViewClass();
+            rootView.initBindElement(domtree);
 
             if(rootView instanceof ViewGroup){
-                Array.from(xml.children).forEach((item)=>{
+                Array.from(domtree.children).forEach((item)=>{
                     if(item instanceof HTMLElement){
-                        rootView.addView(View.inflate(item));
+                        let view = View.inflate(item);
+                        if(view) rootView.addView(view);
                     }
                 });
             }
-            Array.from(xml.attributes).forEach((attr)=>{
-                rootView.bindElement.setAttribute(attr.name, attr.value);
-            });
 
             rootView.onFinishInflate();
             return rootView;

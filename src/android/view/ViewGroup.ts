@@ -53,7 +53,7 @@ module android.view {
         static CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
 
         mOnHierarchyChangeListener:ViewGroup.OnHierarchyChangeListener;
-        mFirstTouchTarget:TouchTarget;
+        private mFirstTouchTarget:TouchTarget;
         // For debugging only.  You can see these in hierarchyviewer.
         private mLastTouchDownTime = 0;
         private mLastTouchDownIndex = -1;
@@ -219,17 +219,33 @@ module android.view {
         }
 
         private addInArray(child:View, index:number) {
+
+
             let count = this.mChildrenCount;
             if (index == count) {
                 this.mChildren.push(child);
-                this.bindElement.appendChild(child.bindElement);//append to dom
+
+                this.addToBindElement(child.bindElement, null);
 
             } else if (index < count) {
+                let refChild = this.getChildAt(index);
                 this.mChildren.splice(index, 0, child);
-                this.bindElement.insertBefore(child.bindElement, this.getChildAt(index).bindElement);//insert to dom
+
+                this.addToBindElement(child.bindElement, refChild.bindElement);
 
             } else {
                 throw new Error("index=" + index + " count=" + count);
+            }
+        }
+        private addToBindElement(childElement:HTMLElement, insertBeforeElement:HTMLElement){
+            if(childElement.parentElement){
+                if(childElement.parentElement == this.bindElement) return;
+                childElement.parentElement.removeChild(childElement);
+            }
+            if (insertBeforeElement) {
+                this.bindElement.appendChild(childElement);//append to dom
+            }else{
+                this.bindElement.insertBefore(childElement, insertBeforeElement);//insert to dom
             }
         }
 

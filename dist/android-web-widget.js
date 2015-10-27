@@ -932,7 +932,8 @@ var android;
                 newEv.mTouchingPointers = [touch];
                 return newEv;
             }
-            init(e, baseAction, windowXOffset = 0, windowYOffset = 0) {
+            init(event, baseAction, windowXOffset = 0, windowYOffset = 0) {
+                let e = event;
                 let action = baseAction;
                 let actionIndex = -1;
                 let activeTouch = e.changedTouches[0];
@@ -1961,7 +1962,7 @@ var android;
 var android;
 (function (android) {
     var view;
-    (function (view) {
+    (function (view_1) {
         var SparseArray = android.util.SparseArray;
         var PixelFormat = android.graphics.PixelFormat;
         var Matrix = android.graphics.Matrix;
@@ -2001,8 +2002,7 @@ var android;
                 this.mPaddingRight = 0;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
-                this.mTouchSlop = view.ViewConfiguration.get().getScaledTouchSlop();
-                this.initBindElement();
+                this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
             }
             get mScrollX() {
                 return this._mScrollX;
@@ -2134,6 +2134,40 @@ var android;
                     this.mBackgroundSizeChanged = true;
                 }
             }
+            getPaddingLeft() {
+                return this.mPaddingLeft;
+            }
+            getPaddingTop() {
+                return this.mPaddingTop;
+            }
+            getPaddingRight() {
+                return this.mPaddingRight;
+            }
+            getPaddingBottom() {
+                return this.mPaddingBottom;
+            }
+            setPadding(left, top, right, bottom) {
+                let changed = false;
+                if (this.mPaddingLeft != left) {
+                    changed = true;
+                    this.mPaddingLeft = left;
+                }
+                if (this.mPaddingTop != top) {
+                    changed = true;
+                    this.mPaddingTop = top;
+                }
+                if (this.mPaddingRight != right) {
+                    changed = true;
+                    this.mPaddingRight = right;
+                }
+                if (this.mPaddingBottom != bottom) {
+                    changed = true;
+                    this.mPaddingBottom = bottom;
+                }
+                if (changed) {
+                    this.requestLayout();
+                }
+            }
             setScrollX(value) {
                 this.scrollTo(value, this.mScrollY);
             }
@@ -2185,7 +2219,7 @@ var android;
                 if (attachInfo != null) {
                     return attachInfo.mHandler.post(action);
                 }
-                view.ViewRootImpl.getRunQueue().post(action);
+                view_1.ViewRootImpl.getRunQueue().post(action);
                 return true;
             }
             postDelayed(action, delayMillis) {
@@ -2193,7 +2227,7 @@ var android;
                 if (attachInfo != null) {
                     return attachInfo.mHandler.postDelayed(action, delayMillis);
                 }
-                view.ViewRootImpl.getRunQueue().postDelayed(action, delayMillis);
+                view_1.ViewRootImpl.getRunQueue().postDelayed(action, delayMillis);
                 return true;
             }
             postOnAnimation(action) {
@@ -2209,7 +2243,7 @@ var android;
                         attachInfo.mHandler.removeCallbacks(action);
                     }
                     else {
-                        view.ViewRootImpl.getRunQueue().removeCallbacks(action);
+                        view_1.ViewRootImpl.getRunQueue().removeCallbacks(action);
                     }
                 }
                 return true;
@@ -2266,7 +2300,7 @@ var android;
                     if (newVisibility != View.VISIBLE) {
                         this.cleanupDraw();
                     }
-                    if (this.mParent instanceof view.ViewGroup) {
+                    if (this.mParent instanceof view_1.ViewGroup) {
                         this.mParent.onChildVisibilityChanged(this, (changed & View.VISIBILITY_MASK), newVisibility);
                         this.mParent.invalidate(true);
                     }
@@ -2401,7 +2435,7 @@ var android;
             onTouchEvent(event) {
                 let viewFlags = this.mViewFlags;
                 if ((viewFlags & View.ENABLED_MASK) == View.DISABLED) {
-                    if (event.getAction() == view.MotionEvent.ACTION_UP && (this.mPrivateFlags & View.PFLAG_PRESSED) != 0) {
+                    if (event.getAction() == view_1.MotionEvent.ACTION_UP && (this.mPrivateFlags & View.PFLAG_PRESSED) != 0) {
                         this.setPressed(false);
                     }
                     return (((viewFlags & View.CLICKABLE) == View.CLICKABLE ||
@@ -2415,7 +2449,7 @@ var android;
                 if (((viewFlags & View.CLICKABLE) == View.CLICKABLE ||
                     (viewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE)) {
                     switch (event.getAction()) {
-                        case view.MotionEvent.ACTION_UP:
+                        case view_1.MotionEvent.ACTION_UP:
                             let prepressed = (this.mPrivateFlags & View.PFLAG_PREPRESSED) != 0;
                             if ((this.mPrivateFlags & View.PFLAG_PRESSED) != 0 || prepressed) {
                                 let focusTaken = false;
@@ -2437,7 +2471,7 @@ var android;
                                     this.mUnsetPressedState = new UnsetPressedState(this);
                                 }
                                 if (prepressed) {
-                                    this.postDelayed(this.mUnsetPressedState, view.ViewConfiguration.getPressedStateDuration());
+                                    this.postDelayed(this.mUnsetPressedState, view_1.ViewConfiguration.getPressedStateDuration());
                                 }
                                 else if (!this.post(this.mUnsetPressedState)) {
                                     this.mUnsetPressedState.run();
@@ -2445,7 +2479,7 @@ var android;
                                 this.removeTapCallback();
                             }
                             break;
-                        case view.MotionEvent.ACTION_DOWN:
+                        case view_1.MotionEvent.ACTION_DOWN:
                             this.mHasPerformedLongPress = false;
                             let isInScrollingContainer = this.isInScrollingContainer();
                             if (isInScrollingContainer) {
@@ -2453,19 +2487,19 @@ var android;
                                 if (this.mPendingCheckForTap == null) {
                                     this.mPendingCheckForTap = new CheckForTap(this);
                                 }
-                                this.postDelayed(this.mPendingCheckForTap, view.ViewConfiguration.getTapTimeout());
+                                this.postDelayed(this.mPendingCheckForTap, view_1.ViewConfiguration.getTapTimeout());
                             }
                             else {
                                 this.setPressed(true);
                                 this.checkForLongClick(0);
                             }
                             break;
-                        case view.MotionEvent.ACTION_CANCEL:
+                        case view_1.MotionEvent.ACTION_CANCEL:
                             this.setPressed(false);
                             this.removeTapCallback();
                             this.removeLongPressCallback();
                             break;
-                        case view.MotionEvent.ACTION_MOVE:
+                        case view_1.MotionEvent.ACTION_MOVE:
                             const x = event.getX();
                             const y = event.getY();
                             if (!this.pointInView(x, y, this.mTouchSlop)) {
@@ -2483,7 +2517,7 @@ var android;
             }
             isInScrollingContainer() {
                 let p = this.getParent();
-                while (p != null && p instanceof view.ViewGroup) {
+                while (p != null && p instanceof view_1.ViewGroup) {
                     if (p.shouldDelayChildPressedState()) {
                         return true;
                     }
@@ -2560,7 +2594,7 @@ var android;
                         this.mPendingCheckForLongPress = new CheckForLongPress(this);
                     }
                     this.mPendingCheckForLongPress.rememberWindowAttachCount();
-                    this.postDelayed(this.mPendingCheckForLongPress, view.ViewConfiguration.getLongPressTimeout() - delayOffset);
+                    this.postDelayed(this.mPendingCheckForLongPress, view_1.ViewConfiguration.getLongPressTimeout() - delayOffset);
                 }
             }
             setOnTouchListener(l) {
@@ -2595,7 +2629,7 @@ var android;
                 }
                 this.mLayoutParams = params;
                 let p = this.mParent;
-                if (p instanceof view.ViewGroup) {
+                if (p instanceof view_1.ViewGroup) {
                     p.onSetLayoutParams(this, params);
                 }
                 this.requestLayout();
@@ -2897,7 +2931,7 @@ var android;
                     if (p != null && ai != null) {
                         const r = ai.mTmpInvalRect;
                         r.set(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
-                        if (this.mParent instanceof view.ViewGroup) {
+                        if (this.mParent instanceof view_1.ViewGroup) {
                             this.mParent.invalidateChildFast(this, r);
                         }
                         else {
@@ -3008,8 +3042,8 @@ var android;
                 let concatMatrix = false;
                 let caching = false;
                 let layerType = this.getLayerType();
-                if ((flags & view.ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) != 0 ||
-                    (flags & view.ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) != 0) {
+                if ((flags & view_1.ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) != 0 ||
+                    (flags & view_1.ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) != 0) {
                     caching = true;
                 }
                 else {
@@ -3018,8 +3052,8 @@ var android;
                 concatMatrix == concatMatrix || !childHasIdentityMatrix;
                 this.mPrivateFlags |= View.PFLAG_DRAWN;
                 if (!concatMatrix &&
-                    (flags & (view.ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
-                        view.ViewGroup.FLAG_CLIP_CHILDREN)) == view.ViewGroup.FLAG_CLIP_CHILDREN &&
+                    (flags & (view_1.ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
+                        view_1.ViewGroup.FLAG_CLIP_CHILDREN)) == view_1.ViewGroup.FLAG_CLIP_CHILDREN &&
                     canvas.quickReject(this.mLeft, this.mTop, this.mRight, this.mBottom) &&
                     (this.mPrivateFlags & View.PFLAG_DRAW_ANIMATION) == 0) {
                     this.mPrivateFlags2 |= View.PFLAG2_VIEW_QUICK_REJECTED;
@@ -3045,7 +3079,7 @@ var android;
                     canvas.translate(this.mLeft, this.mTop);
                 }
                 let alpha = 1;
-                if ((flags & view.ViewGroup.FLAG_CLIP_CHILDREN) == view.ViewGroup.FLAG_CLIP_CHILDREN &&
+                if ((flags & view_1.ViewGroup.FLAG_CLIP_CHILDREN) == view_1.ViewGroup.FLAG_CLIP_CHILDREN &&
                     !useDisplayListProperties && cache == null) {
                     if (offsetForScroll) {
                         canvas.clipRect(sx, sy, sx + (this.mRight - this.mLeft), sy + (this.mBottom - this.mTop));
@@ -3071,10 +3105,10 @@ var android;
                 else if (cache != null) {
                     this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
                     if (alpha < 1) {
-                        parent.mGroupFlags |= view.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                        parent.mGroupFlags |= view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
                     }
-                    else if ((flags & view.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE) != 0) {
-                        parent.mGroupFlags &= ~view.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                    else if ((flags & view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE) != 0) {
+                        parent.mGroupFlags &= ~view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
                     }
                     canvas.drawCanvas(cache, 0, 0);
                 }
@@ -3155,7 +3189,7 @@ var android;
                         this.mAttachInfo.mHandler.postAtTime(what, who, when);
                     }
                     else {
-                        view.ViewRootImpl.getRunQueue().postDelayed(what, delay);
+                        view_1.ViewRootImpl.getRunQueue().postDelayed(what, delay);
                     }
                 }
             }
@@ -3165,7 +3199,7 @@ var android;
                         this.mAttachInfo.mHandler.removeCallbacks(what, who);
                     }
                     else {
-                        view.ViewRootImpl.getRunQueue().removeCallbacks(what);
+                        view_1.ViewRootImpl.getRunQueue().removeCallbacks(what);
                     }
                 }
                 else if (what === null) {
@@ -3328,7 +3362,7 @@ var android;
             scrollBy(x, y) {
                 this.scrollTo(this.mScrollX + x, this.mScrollY + y);
             }
-            awakenScrollBars(startDelay = view.ViewConfiguration.getScrollDefaultDelay(), invalidate = true) {
+            awakenScrollBars(startDelay = view_1.ViewConfiguration.getScrollDefaultDelay(), invalidate = true) {
                 if (!this.bindScrollContent.parentNode) {
                     this.bindElement.appendChild(this.bindScrollContent);
                     this.bindElement.style.overflow = "scroll";
@@ -3419,9 +3453,12 @@ var android;
                 this.removeUnsetPressCallback();
                 this.removeLongPressCallback();
                 this.removePerformClickCallback();
+                this.destroyDrawingCache();
+                this.cleanupDraw();
             }
             cleanupDraw() {
                 if (this.mAttachInfo != null) {
+                    this.mAttachInfo.mViewRootImpl.cancelInvalidate(this);
                 }
             }
             debug(depth = 0) {
@@ -3448,10 +3485,19 @@ var android;
                 let bindEle = this.bindElement.querySelector('#' + id);
                 return bindEle ? bindEle['bindView'] : null;
             }
-            initBindElement() {
-                this.bindElement = document.createElement(this.tagName());
-                this.bindElement['bindView'] = this;
-                this.bindScrollContent = document.createElement('div');
+            get bindElement() {
+                if (!this._bindElement)
+                    this.initBindElement();
+                return this._bindElement;
+            }
+            get bindScrollContent() {
+                if (!this._bindScrollContent)
+                    this._bindScrollContent = document.createElement('div');
+                return this._bindScrollContent;
+            }
+            initBindElement(bindElement) {
+                this._bindElement = bindElement || document.createElement(this.tagName());
+                this._bindElement['bindView'] = this;
             }
             syncBoundToElement() {
                 let bind = this.bindElement;
@@ -3465,45 +3511,46 @@ var android;
             tagName() {
                 return "ANDROID-" + this.constructor.name;
             }
-            static inflate(xml) {
-                let className = xml.tagName.toUpperCase();
+            static inflate(domtree) {
+                let className = domtree.tagName;
                 if (className.startsWith('ANDROID-')) {
                     className = className.substring('ANDROID-'.length);
                 }
-                let rootView;
+                let rootViewClass;
                 for (let key in android['view']) {
-                    if (key.toUpperCase() == className) {
-                        rootView = new android.view[key]();
+                    if (key.toUpperCase() == className.toUpperCase()) {
+                        rootViewClass = android.view[key];
                         break;
                     }
                 }
-                if (!rootView) {
+                if (!rootViewClass) {
                     for (let key in android['widget']) {
-                        if (key.toUpperCase() == className) {
-                            rootView = new android['widget'][key]();
+                        if (key.toUpperCase() == className.toUpperCase()) {
+                            rootViewClass = android['widget'][key];
                             break;
                         }
                     }
                 }
-                if (!rootView) {
+                if (!rootViewClass) {
                     try {
-                        rootView = window.eval(className);
+                        rootViewClass = window.eval(className);
                     }
                     catch (e) {
                     }
                 }
-                if (!rootView)
+                if (!rootViewClass)
                     return null;
-                if (rootView instanceof view.ViewGroup) {
-                    Array.from(xml.children).forEach((item) => {
+                let rootView = new rootViewClass();
+                rootView.initBindElement(domtree);
+                if (rootView instanceof view_1.ViewGroup) {
+                    Array.from(domtree.children).forEach((item) => {
                         if (item instanceof HTMLElement) {
-                            rootView.addView(View.inflate(item));
+                            let view = View.inflate(item);
+                            if (view)
+                                rootView.addView(view);
                         }
                     });
                 }
-                Array.from(xml.attributes).forEach((attr) => {
-                    rootView.bindElement.setAttribute(attr.name, attr.value);
-                });
                 rootView.onFinishInflate();
                 return rootView;
             }
@@ -3584,7 +3631,7 @@ var android;
         View.DUPLICATE_PARENT_STATE = 0x00400000;
         View.LAYER_TYPE_NONE = 0;
         View.LAYER_TYPE_SOFTWARE = 1;
-        view.View = View;
+        view_1.View = View;
         (function (View) {
             class MeasureSpec {
                 static makeMeasureSpec(size, mode) {
@@ -3628,7 +3675,7 @@ var android;
                     this.mTmpTransformRect = new Rect();
                     this.mScrollContainers = new Set();
                     this.mViewScrollChanged = false;
-                    this.mTreeObserver = new view.ViewTreeObserver();
+                    this.mTreeObserver = new view_1.ViewTreeObserver();
                     this.mViewVisibilityChanged = false;
                     this.mInvalidateChildLocation = new Array(2);
                     this.mIgnoreDirtyState = false;
@@ -3641,7 +3688,7 @@ var android;
             class ListenerInfo {
             }
             View.ListenerInfo = ListenerInfo;
-        })(View = view.View || (view.View = {}));
+        })(View = view_1.View || (view_1.View = {}));
         (function (View) {
             var AttachInfo;
             (function (AttachInfo) {
@@ -3665,7 +3712,7 @@ var android;
                 InvalidateInfo.sPool = new Pools.SynchronizedPool(InvalidateInfo.POOL_LIMIT);
                 AttachInfo.InvalidateInfo = InvalidateInfo;
             })(AttachInfo = View.AttachInfo || (View.AttachInfo = {}));
-        })(View = view.View || (view.View = {}));
+        })(View = view_1.View || (view_1.View = {}));
         class CheckForLongPress {
             constructor(View_this) {
                 this.mOriginalWindowAttachCount = 0;
@@ -3690,7 +3737,7 @@ var android;
             run() {
                 this.View_this.mPrivateFlags &= ~View.PFLAG_PREPRESSED;
                 this.View_this.setPressed(true);
-                this.View_this.checkForLongClick(view.ViewConfiguration.getTapTimeout());
+                this.View_this.checkForLongClick(view_1.ViewConfiguration.getTapTimeout());
             }
         }
         class PerformClick {
@@ -3859,7 +3906,7 @@ var java;
 var android;
 (function (android) {
     var view;
-    (function (view_1) {
+    (function (view_2) {
         var View = android.view.View;
         var Resources = android.content.res.Resources;
         var Rect = android.graphics.Rect;
@@ -3952,10 +3999,10 @@ var android;
                 let MeasureSpec = View.MeasureSpec;
                 let measureSpec;
                 switch (rootDimension) {
-                    case view_1.ViewGroup.LayoutParams.MATCH_PARENT:
+                    case view_2.ViewGroup.LayoutParams.MATCH_PARENT:
                         measureSpec = MeasureSpec.makeMeasureSpec(windowSize, MeasureSpec.EXACTLY);
                         break;
-                    case view_1.ViewGroup.LayoutParams.WRAP_CONTENT:
+                    case view_2.ViewGroup.LayoutParams.WRAP_CONTENT:
                         measureSpec = MeasureSpec.makeMeasureSpec(windowSize, MeasureSpec.AT_MOST);
                         break;
                     default:
@@ -3978,7 +4025,7 @@ var android;
                 let windowSizeMayChange = false;
                 let newSurface = false;
                 let surfaceChanged = false;
-                let lp = new view_1.ViewGroup.LayoutParams(view_1.ViewGroup.LayoutParams.MATCH_PARENT, view_1.ViewGroup.LayoutParams.MATCH_PARENT);
+                let lp = new view_2.ViewGroup.LayoutParams(view_2.ViewGroup.LayoutParams.MATCH_PARENT, view_2.ViewGroup.LayoutParams.MATCH_PARENT);
                 let desiredWindowWidth;
                 let desiredWindowHeight;
                 let attachInfo = this.mAttachInfo;
@@ -4014,8 +4061,8 @@ var android;
                     if (this.mFirst) {
                     }
                     else {
-                        if (lp.width == view_1.ViewGroup.LayoutParams.WRAP_CONTENT
-                            || lp.height == view_1.ViewGroup.LayoutParams.WRAP_CONTENT) {
+                        if (lp.width == view_2.ViewGroup.LayoutParams.WRAP_CONTENT
+                            || lp.height == view_2.ViewGroup.LayoutParams.WRAP_CONTENT) {
                             windowSizeMayChange = true;
                             let packageMetrics = Resources.getDisplayMetrics();
                             desiredWindowWidth = packageMetrics.widthPixels;
@@ -4033,9 +4080,9 @@ var android;
                 }
                 let windowShouldResize = layoutRequested && windowSizeMayChange
                     && ((this.mWidth != host.getMeasuredWidth() || this.mHeight != host.getMeasuredHeight())
-                        || (lp.width == view_1.ViewGroup.LayoutParams.WRAP_CONTENT &&
+                        || (lp.width == view_2.ViewGroup.LayoutParams.WRAP_CONTENT &&
                             frame.width() < desiredWindowWidth && frame.width() != this.mWidth)
-                        || (lp.height == view_1.ViewGroup.LayoutParams.WRAP_CONTENT &&
+                        || (lp.height == view_2.ViewGroup.LayoutParams.WRAP_CONTENT &&
                             frame.height() < desiredWindowHeight && frame.height() != this.mHeight));
                 if (this.mFirst || windowShouldResize || viewVisibilityChanged) {
                     if (ViewRootImpl.DEBUG_LAYOUT) {
@@ -4308,7 +4355,7 @@ var android;
             }
             invalidateWorld(view) {
                 view.invalidate();
-                if (view instanceof view_1.ViewGroup) {
+                if (view instanceof view_2.ViewGroup) {
                     let parent = view;
                     for (let i = 0; i < parent.getChildCount(); i++) {
                         this.invalidateWorld(parent.getChildAt(i));
@@ -4385,8 +4432,8 @@ var android;
         ViewRootImpl.DEBUG_INPUT_RESIZE = false || ViewRootImpl.LOCAL_LOGV;
         ViewRootImpl.DEBUG_ORIENTATION = false || ViewRootImpl.LOCAL_LOGV;
         ViewRootImpl.DEBUG_CONFIGURATION = false || ViewRootImpl.LOCAL_LOGV;
-        ViewRootImpl.DEBUG_FPS = true || ViewRootImpl.LOCAL_LOGV;
-        view_1.ViewRootImpl = ViewRootImpl;
+        ViewRootImpl.DEBUG_FPS = false || ViewRootImpl.LOCAL_LOGV;
+        view_2.ViewRootImpl = ViewRootImpl;
         (function (ViewRootImpl) {
             class RunQueue {
                 constructor() {
@@ -4415,7 +4462,7 @@ var android;
                 }
             }
             ViewRootImpl.RunQueue = RunQueue;
-        })(ViewRootImpl = view_1.ViewRootImpl || (view_1.ViewRootImpl = {}));
+        })(ViewRootImpl = view_2.ViewRootImpl || (view_2.ViewRootImpl = {}));
         class RunQueueForNoViewRoot extends ViewRootImpl.RunQueue {
             postDelayed(action, delayMillis) {
                 RunQueueForNoViewRoot.Handler.postDelayed(action, delayMillis);
@@ -4508,10 +4555,10 @@ var android;
 var android;
 (function (android) {
     var view;
-    (function (view_2) {
+    (function (view_3) {
         var Rect = android.graphics.Rect;
         var SystemClock = android.os.SystemClock;
-        class ViewGroup extends view_2.View {
+        class ViewGroup extends view_3.View {
             constructor() {
                 super();
                 this.mLastTouchDownTime = 0;
@@ -4529,7 +4576,7 @@ var android;
                 return this.mChildren.length;
             }
             initViewGroup() {
-                this.setFlags(view_2.View.WILL_NOT_DRAW, view_2.View.DRAW_MASK);
+                this.setFlags(view_3.View.WILL_NOT_DRAW, view_3.View.DRAW_MASK);
                 this.mGroupFlags |= ViewGroup.FLAG_CLIP_CHILDREN;
                 this.mGroupFlags |= ViewGroup.FLAG_CLIP_TO_PADDING;
                 this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_DONE;
@@ -4596,7 +4643,7 @@ var android;
                 return true;
             }
             cleanupLayoutState(child) {
-                child.mPrivateFlags &= ~view_2.View.PFLAG_FORCE_LAYOUT;
+                child.mPrivateFlags &= ~view_3.View.PFLAG_FORCE_LAYOUT;
             }
             addViewInner(child, index, params, preventRequestLayout) {
                 if (child.getParent() != null) {
@@ -4635,14 +4682,28 @@ var android;
                 let count = this.mChildrenCount;
                 if (index == count) {
                     this.mChildren.push(child);
-                    this.bindElement.appendChild(child.bindElement);
+                    this.addToBindElement(child.bindElement, null);
                 }
                 else if (index < count) {
+                    let refChild = this.getChildAt(index);
                     this.mChildren.splice(index, 0, child);
-                    this.bindElement.insertBefore(child.bindElement, this.getChildAt(index).bindElement);
+                    this.addToBindElement(child.bindElement, refChild.bindElement);
                 }
                 else {
                     throw new Error("index=" + index + " count=" + count);
+                }
+            }
+            addToBindElement(childElement, insertBeforeElement) {
+                if (childElement.parentElement) {
+                    if (childElement.parentElement == this.bindElement)
+                        return;
+                    childElement.parentElement.removeChild(childElement);
+                }
+                if (insertBeforeElement) {
+                    this.bindElement.appendChild(childElement);
+                }
+                else {
+                    this.bindElement.insertBefore(childElement, insertBeforeElement);
                 }
             }
             removeFromArray(index, count = 1) {
@@ -4749,13 +4810,13 @@ var android;
                 let handled = false;
                 if (this.onFilterTouchEventForSecurity(ev)) {
                     let action = ev.getAction();
-                    let actionMasked = action & view_2.MotionEvent.ACTION_MASK;
-                    if (actionMasked == view_2.MotionEvent.ACTION_DOWN) {
+                    let actionMasked = action & view_3.MotionEvent.ACTION_MASK;
+                    if (actionMasked == view_3.MotionEvent.ACTION_DOWN) {
                         this.cancelAndClearTouchTargets(ev);
                         this.resetTouchState();
                     }
                     let intercepted;
-                    if (actionMasked == view_2.MotionEvent.ACTION_DOWN
+                    if (actionMasked == view_3.MotionEvent.ACTION_DOWN
                         || this.mFirstTouchTarget != null) {
                         let disallowIntercept = (this.mGroupFlags & ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0;
                         if (!disallowIntercept) {
@@ -4770,14 +4831,14 @@ var android;
                         intercepted = true;
                     }
                     let canceled = ViewGroup.resetCancelNextUpFlag(this)
-                        || actionMasked == view_2.MotionEvent.ACTION_CANCEL;
+                        || actionMasked == view_3.MotionEvent.ACTION_CANCEL;
                     let split = (this.mGroupFlags & ViewGroup.FLAG_SPLIT_MOTION_EVENTS) != 0;
                     let newTouchTarget = null;
                     let alreadyDispatchedToNewTouchTarget = false;
                     if (!canceled && !intercepted) {
-                        if (actionMasked == view_2.MotionEvent.ACTION_DOWN
-                            || (split && actionMasked == view_2.MotionEvent.ACTION_POINTER_DOWN)
-                            || actionMasked == view_2.MotionEvent.ACTION_HOVER_MOVE) {
+                        if (actionMasked == view_3.MotionEvent.ACTION_DOWN
+                            || (split && actionMasked == view_3.MotionEvent.ACTION_POINTER_DOWN)
+                            || actionMasked == view_3.MotionEvent.ACTION_HOVER_MOVE) {
                             let actionIndex = ev.getActionIndex();
                             let idBitsToAssign = split ? 1 << ev.getPointerId(actionIndex)
                                 : TouchTarget.ALL_POINTER_IDS;
@@ -4855,11 +4916,11 @@ var android;
                         }
                     }
                     if (canceled
-                        || actionMasked == view_2.MotionEvent.ACTION_UP
-                        || actionMasked == view_2.MotionEvent.ACTION_HOVER_MOVE) {
+                        || actionMasked == view_3.MotionEvent.ACTION_UP
+                        || actionMasked == view_3.MotionEvent.ACTION_HOVER_MOVE) {
                         this.resetTouchState();
                     }
-                    else if (split && actionMasked == view_2.MotionEvent.ACTION_POINTER_UP) {
+                    else if (split && actionMasked == view_3.MotionEvent.ACTION_POINTER_UP) {
                         let actionIndex = ev.getActionIndex();
                         let idBitsToRemove = 1 << ev.getPointerId(actionIndex);
                         this.removePointersFromTouchTargets(idBitsToRemove);
@@ -4873,8 +4934,8 @@ var android;
                 this.mGroupFlags &= ~ViewGroup.FLAG_DISALLOW_INTERCEPT;
             }
             static resetCancelNextUpFlag(view) {
-                if ((view.mPrivateFlags & view_2.View.PFLAG_CANCEL_NEXT_UP_EVENT) != 0) {
-                    view.mPrivateFlags &= ~view_2.View.PFLAG_CANCEL_NEXT_UP_EVENT;
+                if ((view.mPrivateFlags & view_3.View.PFLAG_CANCEL_NEXT_UP_EVENT) != 0) {
+                    view.mPrivateFlags &= ~view_3.View.PFLAG_CANCEL_NEXT_UP_EVENT;
                     return true;
                 }
                 return false;
@@ -4895,7 +4956,7 @@ var android;
                     let syntheticEvent = false;
                     if (event == null) {
                         let now = SystemClock.uptimeMillis();
-                        event = view_2.MotionEvent.obtainWithAction(now, now, view_2.MotionEvent.ACTION_CANCEL, 0, 0);
+                        event = view_3.MotionEvent.obtainWithAction(now, now, view_3.MotionEvent.ACTION_CANCEL, 0, 0);
                         syntheticEvent = true;
                     }
                     for (let target = this.mFirstTouchTarget; target != null; target = target.next) {
@@ -4959,7 +5020,7 @@ var android;
                         }
                         target.recycle();
                         let now = SystemClock.uptimeMillis();
-                        let event = view_2.MotionEvent.obtainWithAction(now, now, view_2.MotionEvent.ACTION_CANCEL, 0, 0);
+                        let event = view_3.MotionEvent.obtainWithAction(now, now, view_3.MotionEvent.ACTION_CANCEL, 0, 0);
                         view.dispatchTouchEvent(event);
                         event.recycle();
                         return;
@@ -4969,7 +5030,7 @@ var android;
                 }
             }
             static canViewReceivePointerEvents(child) {
-                return (child.mViewFlags & view_2.View.VISIBILITY_MASK) == view_2.View.VISIBLE;
+                return (child.mViewFlags & view_3.View.VISIBILITY_MASK) == view_3.View.VISIBLE;
             }
             isTransformedTouchPointInView(x, y, child, outLocalPoint) {
                 let localX = x + this.mScrollX - child.mLeft;
@@ -4983,8 +5044,8 @@ var android;
             dispatchTransformedTouchEvent(event, cancel, child, desiredPointerIdBits) {
                 let handled;
                 const oldAction = event.getAction();
-                if (cancel || oldAction == view_2.MotionEvent.ACTION_CANCEL) {
-                    event.setAction(view_2.MotionEvent.ACTION_CANCEL);
+                if (cancel || oldAction == view_3.MotionEvent.ACTION_CANCEL) {
+                    event.setAction(view_3.MotionEvent.ACTION_CANCEL);
                     if (child == null) {
                         handled = super.dispatchTouchEvent(event);
                     }
@@ -5014,7 +5075,7 @@ var android;
                         }
                         return handled;
                     }
-                    transformedEvent = view_2.MotionEvent.obtain(event);
+                    transformedEvent = view_3.MotionEvent.obtain(event);
                 }
                 else {
                     transformedEvent = event.split(newPointerIdBits);
@@ -5050,7 +5111,7 @@ var android;
                 const size = this.mChildren.length;
                 for (let i = 0; i < size; ++i) {
                     const child = this.mChildren[i];
-                    if ((child.mViewFlags & view_2.View.VISIBILITY_MASK) != view_2.View.GONE) {
+                    if ((child.mViewFlags & view_3.View.VISIBILITY_MASK) != view_3.View.GONE) {
                         this.measureChild(child, widthMeasureSpec, heightMeasureSpec);
                     }
                 }
@@ -5072,7 +5133,7 @@ var android;
                 }
             }
             static getChildMeasureSpec(spec, padding, childDimension) {
-                let MeasureSpec = view_2.View.MeasureSpec;
+                let MeasureSpec = view_3.View.MeasureSpec;
                 let specMode = MeasureSpec.getMode(spec);
                 let specSize = MeasureSpec.getSize(spec);
                 let size = Math.max(0, specSize - padding);
@@ -5132,7 +5193,7 @@ var android;
                 const children = this.mChildren;
                 for (let i = 0; i < count; i++) {
                     const child = children[i];
-                    child.dispatchAttachedToWindow(info, visibility | (child.mViewFlags & view_2.View.VISIBILITY_MASK));
+                    child.dispatchAttachedToWindow(info, visibility | (child.mViewFlags & view_3.View.VISIBILITY_MASK));
                 }
             }
             onAttachedToWindow() {
@@ -5169,7 +5230,7 @@ var android;
                 }
                 let theParent = descendant.mParent;
                 while ((theParent != null)
-                    && (theParent instanceof view_2.View)
+                    && (theParent instanceof view_3.View)
                     && (theParent != this)) {
                     if (offsetFromChildToParent) {
                         rect.offset(descendant.mLeft - descendant.mScrollX, descendant.mTop - descendant.mScrollY);
@@ -5265,7 +5326,7 @@ var android;
                 let customOrder = this.isChildrenDrawingOrderEnabled();
                 for (let i = 0; i < count; i++) {
                     let child = children[customOrder ? this.getChildDrawingOrder(count, i) : i];
-                    if ((child.mViewFlags & view_2.View.VISIBILITY_MASK) == view_2.View.VISIBLE) {
+                    if ((child.mViewFlags & view_3.View.VISIBILITY_MASK) == view_3.View.VISIBLE) {
                         more = more || this.drawChild(canvas, child, drawingTime);
                     }
                 }
@@ -5296,28 +5357,28 @@ var android;
                 let parent = this;
                 const attachInfo = this.mAttachInfo;
                 if (attachInfo != null) {
-                    const drawAnimation = (child.mPrivateFlags & view_2.View.PFLAG_DRAW_ANIMATION)
-                        == view_2.View.PFLAG_DRAW_ANIMATION;
+                    const drawAnimation = (child.mPrivateFlags & view_3.View.PFLAG_DRAW_ANIMATION)
+                        == view_3.View.PFLAG_DRAW_ANIMATION;
                     let childMatrix = child.getMatrix();
                     const isOpaque = child.isOpaque() && !drawAnimation &&
                         child.getAnimation() == null && childMatrix.isIdentity();
-                    let opaqueFlag = isOpaque ? view_2.View.PFLAG_DIRTY_OPAQUE : view_2.View.PFLAG_DIRTY;
-                    if (child.mLayerType != view_2.View.LAYER_TYPE_NONE) {
-                        this.mPrivateFlags |= view_2.View.PFLAG_INVALIDATED;
-                        this.mPrivateFlags &= ~view_2.View.PFLAG_DRAWING_CACHE_VALID;
+                    let opaqueFlag = isOpaque ? view_3.View.PFLAG_DIRTY_OPAQUE : view_3.View.PFLAG_DIRTY;
+                    if (child.mLayerType != view_3.View.LAYER_TYPE_NONE) {
+                        this.mPrivateFlags |= view_3.View.PFLAG_INVALIDATED;
+                        this.mPrivateFlags &= ~view_3.View.PFLAG_DRAWING_CACHE_VALID;
                     }
                     const location = attachInfo.mInvalidateChildLocation;
                     location[0] = child.mLeft;
                     location[1] = child.mTop;
                     do {
                         let view = null;
-                        if (parent instanceof view_2.View) {
+                        if (parent instanceof view_3.View) {
                             view = parent;
                         }
                         if (view != null) {
-                            opaqueFlag = view_2.View.PFLAG_DIRTY;
-                            if ((view.mPrivateFlags & view_2.View.PFLAG_DIRTY_MASK) != view_2.View.PFLAG_DIRTY) {
-                                view.mPrivateFlags = (view.mPrivateFlags & ~view_2.View.PFLAG_DIRTY_MASK) | opaqueFlag;
+                            opaqueFlag = view_3.View.PFLAG_DIRTY;
+                            if ((view.mPrivateFlags & view_3.View.PFLAG_DIRTY_MASK) != view_3.View.PFLAG_DIRTY) {
+                                view.mPrivateFlags = (view.mPrivateFlags & ~view_3.View.PFLAG_DIRTY_MASK) | opaqueFlag;
                             }
                         }
                         parent = parent.invalidateChildInParent(location, dirty);
@@ -5334,8 +5395,8 @@ var android;
                 }
             }
             invalidateChildInParent(location, dirty) {
-                if ((this.mPrivateFlags & view_2.View.PFLAG_DRAWN) == view_2.View.PFLAG_DRAWN ||
-                    (this.mPrivateFlags & view_2.View.PFLAG_DRAWING_CACHE_VALID) == view_2.View.PFLAG_DRAWING_CACHE_VALID) {
+                if ((this.mPrivateFlags & view_3.View.PFLAG_DRAWN) == view_3.View.PFLAG_DRAWN ||
+                    (this.mPrivateFlags & view_3.View.PFLAG_DRAWING_CACHE_VALID) == view_3.View.PFLAG_DRAWING_CACHE_VALID) {
                     if ((this.mGroupFlags & (ViewGroup.FLAG_OPTIMIZE_INVALIDATE | ViewGroup.FLAG_ANIMATION_DONE)) !=
                         ViewGroup.FLAG_OPTIMIZE_INVALIDATE) {
                         dirty.offset(location[0] - this.mScrollX, location[1] - this.mScrollY);
@@ -5349,16 +5410,16 @@ var android;
                                 dirty.setEmpty();
                             }
                         }
-                        this.mPrivateFlags &= ~view_2.View.PFLAG_DRAWING_CACHE_VALID;
+                        this.mPrivateFlags &= ~view_3.View.PFLAG_DRAWING_CACHE_VALID;
                         location[0] = left;
                         location[1] = top;
-                        if (this.mLayerType != view_2.View.LAYER_TYPE_NONE) {
-                            this.mPrivateFlags |= view_2.View.PFLAG_INVALIDATED;
+                        if (this.mLayerType != view_3.View.LAYER_TYPE_NONE) {
+                            this.mPrivateFlags |= view_3.View.PFLAG_INVALIDATED;
                         }
                         return this.mParent;
                     }
                     else {
-                        this.mPrivateFlags &= ~view_2.View.PFLAG_DRAWN & ~view_2.View.PFLAG_DRAWING_CACHE_VALID;
+                        this.mPrivateFlags &= ~view_3.View.PFLAG_DRAWN & ~view_3.View.PFLAG_DRAWING_CACHE_VALID;
                         location[0] = this.mLeft;
                         location[1] = this.mTop;
                         if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == ViewGroup.FLAG_CLIP_CHILDREN) {
@@ -5367,8 +5428,8 @@ var android;
                         else {
                             dirty.union(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
                         }
-                        if (this.mLayerType != view_2.View.LAYER_TYPE_NONE) {
-                            this.mPrivateFlags |= view_2.View.PFLAG_INVALIDATED;
+                        if (this.mLayerType != view_3.View.LAYER_TYPE_NONE) {
+                            this.mPrivateFlags |= view_3.View.PFLAG_INVALIDATED;
                         }
                         return this.mParent;
                     }
@@ -5387,7 +5448,7 @@ var android;
                     do {
                         if (parent instanceof ViewGroup) {
                             let parentVG = parent;
-                            if (parentVG.mLayerType != view_2.View.LAYER_TYPE_NONE) {
+                            if (parentVG.mLayerType != view_3.View.LAYER_TYPE_NONE) {
                                 parentVG.invalidate();
                                 parent = null;
                             }
@@ -5407,15 +5468,15 @@ var android;
                 }
             }
             invalidateChildInParentFast(left, top, dirty) {
-                if ((this.mPrivateFlags & view_2.View.PFLAG_DRAWN) == view_2.View.PFLAG_DRAWN ||
-                    (this.mPrivateFlags & view_2.View.PFLAG_DRAWING_CACHE_VALID) == view_2.View.PFLAG_DRAWING_CACHE_VALID) {
+                if ((this.mPrivateFlags & view_3.View.PFLAG_DRAWN) == view_3.View.PFLAG_DRAWN ||
+                    (this.mPrivateFlags & view_3.View.PFLAG_DRAWING_CACHE_VALID) == view_3.View.PFLAG_DRAWING_CACHE_VALID) {
                     dirty.offset(left - this.mScrollX, top - this.mScrollY);
                     if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == 0) {
                         dirty.union(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
                     }
                     if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == 0 ||
                         dirty.intersect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop)) {
-                        if (this.mLayerType != view_2.View.LAYER_TYPE_NONE) {
+                        if (this.mLayerType != view_3.View.LAYER_TYPE_NONE) {
                         }
                         if (!this.getMatrix().isIdentity()) {
                             this.transformRect(dirty);
@@ -5494,7 +5555,7 @@ var android;
         ViewGroup.LAYOUT_MODE_CLIP_BOUNDS = 0;
         ViewGroup.LAYOUT_MODE_DEFAULT = ViewGroup.LAYOUT_MODE_CLIP_BOUNDS;
         ViewGroup.CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
-        view_2.ViewGroup = ViewGroup;
+        view_3.ViewGroup = ViewGroup;
         (function (ViewGroup) {
             class LayoutParams {
                 constructor(...args) {
@@ -5544,7 +5605,7 @@ var android;
                 }
             }
             ViewGroup.MarginLayoutParams = MarginLayoutParams;
-        })(ViewGroup = view_2.ViewGroup || (view_2.ViewGroup = {}));
+        })(ViewGroup = view_3.ViewGroup || (view_3.ViewGroup = {}));
         class TouchTarget {
             static obtain(child, pointerIdBits) {
                 let target;
@@ -5664,16 +5725,12 @@ var android;
         Gravity.FILL = Gravity.FILL_VERTICAL | Gravity.FILL_HORIZONTAL;
         Gravity.CLIP_VERTICAL = Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT;
         Gravity.CLIP_HORIZONTAL = Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT;
-        Gravity.RELATIVE_LAYOUT_DIRECTION = 0x00800000;
         Gravity.HORIZONTAL_GRAVITY_MASK = (Gravity.AXIS_SPECIFIED |
             Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_X_SHIFT;
         Gravity.VERTICAL_GRAVITY_MASK = (Gravity.AXIS_SPECIFIED |
             Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_Y_SHIFT;
         Gravity.DISPLAY_CLIP_VERTICAL = 0x10000000;
         Gravity.DISPLAY_CLIP_HORIZONTAL = 0x01000000;
-        Gravity.START = Gravity.RELATIVE_LAYOUT_DIRECTION | Gravity.LEFT;
-        Gravity.END = Gravity.RELATIVE_LAYOUT_DIRECTION | Gravity.RIGHT;
-        Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK = Gravity.START | Gravity.END;
         view.Gravity = Gravity;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
@@ -5713,8 +5770,8 @@ var android;
             }
             setForegroundGravity(foregroundGravity) {
                 if (this.mForegroundGravity != foregroundGravity) {
-                    if ((foregroundGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) == 0) {
-                        foregroundGravity |= Gravity.START;
+                    if ((foregroundGravity & Gravity.HORIZONTAL_GRAVITY_MASK) == 0) {
+                        foregroundGravity |= Gravity.LEFT;
                     }
                     if ((foregroundGravity & Gravity.VERTICAL_GRAVITY_MASK) == 0) {
                         foregroundGravity |= Gravity.TOP;
@@ -5909,7 +5966,7 @@ var android;
                 return false;
             }
         }
-        FrameLayout.DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.START;
+        FrameLayout.DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.LEFT;
         widget.FrameLayout = FrameLayout;
         (function (FrameLayout) {
             class LayoutParams extends ViewGroup.MarginLayoutParams {
@@ -5929,6 +5986,214 @@ var android;
             FrameLayout.LayoutParams = LayoutParams;
         })(FrameLayout = widget.FrameLayout || (widget.FrameLayout = {}));
     })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/23.
+ */
+///<reference path="../android/view/View.ts"/>
+///<reference path="../android/view/ViewRootImpl.ts"/>
+///<reference path="../android/widget/FrameLayout.ts"/>
+///<reference path="../android/view/MotionEvent.ts"/>
+var runtime;
+(function (runtime) {
+    var View = android.view.View;
+    var ViewRootImpl = android.view.ViewRootImpl;
+    var FrameLayout = android.widget.FrameLayout;
+    var MotionEvent = android.view.MotionEvent;
+    class AndroidUI {
+        constructor(element) {
+            this.element = element;
+            if (element['AndroidUI']) {
+                throw Error('already init a AndroidUI with this element');
+            }
+            element['AndroidUI'] = this;
+            this.init();
+        }
+        init() {
+            this.viewRootImpl = new ViewRootImpl();
+            this.rootLayout = new RootLayout();
+            this.canvas = document.createElement("canvas");
+            this.initInflateView();
+            this.initRootElementStyle();
+            this.initCanvasStyle();
+            this.initBindElementStyle();
+            this.element.innerHTML = '';
+            this.element.appendChild(this.rootStyleElement);
+            this.element.appendChild(this.canvas);
+            this.element.appendChild(this.rootLayout.bindElement);
+            this.viewRootImpl.setView(this.rootLayout);
+            this.viewRootImpl.initSurface(this.canvas);
+            this.initTouch();
+            this.tryStartLayoutAfterInit();
+        }
+        initInflateView() {
+            Array.from(this.element.children).forEach((item) => {
+                if (item instanceof HTMLStyleElement) {
+                    this.rootStyleElement = item;
+                    return;
+                }
+                if (item instanceof HTMLElement) {
+                    let view = View.inflate(item);
+                    if (view)
+                        this.rootLayout.addView(view);
+                }
+            });
+        }
+        initRootElementStyle() {
+            if (!this.element.style.position) {
+                this.element.style.position = "relative";
+            }
+            if (!this.element.style.display || this.element.style.display == "none") {
+                this.element.style.display = "inline-block";
+            }
+            this.element.style.overflow = 'hidden';
+        }
+        initCanvasStyle() {
+            let canvas = this.canvas;
+            canvas.style.position = "absolute";
+            canvas.style.left = '0px';
+            canvas.style.top = '0px';
+        }
+        initTouch() {
+            let motionEvent;
+            let windowXOffset = 0, windowYOffset = 0;
+            this.element.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                let rootViewBound = this.element.getBoundingClientRect();
+                windowXOffset = rootViewBound.left;
+                windowYOffset = rootViewBound.top;
+                if (!motionEvent)
+                    motionEvent = MotionEvent.obtainWithTouchEvent(e, MotionEvent.ACTION_DOWN);
+                else
+                    motionEvent.init(e, MotionEvent.ACTION_DOWN, windowXOffset, windowYOffset);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                motionEvent.init(e, MotionEvent.ACTION_MOVE, windowXOffset, windowYOffset);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                motionEvent.init(e, MotionEvent.ACTION_UP);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowXOffset, windowYOffset);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+        }
+        initBindElementStyle() {
+            if (!this.rootStyleElement)
+                this.rootStyleElement = document.createElement("style");
+            this.rootStyleElement.setAttribute("scoped", '');
+            let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
+            if (iOS) {
+                this.rootStyleElement.innerHTML += `
+                    android-ScrollView::-webkit-scrollbar {
+                        -webkit-appearance: none;
+                        width: 4px;
+                    }
+                    android-ScrollView::-webkit-scrollbar-thumb {
+                        border-radius: 2px;
+                        background-color: rgba(0,0,0,.3);
+                    }
+                `;
+            }
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            if (density != 1) {
+                this.rootStyleElement.innerHTML += `
+                android-RootLayout {
+                    transform:scale(${1 / density},${1 / density});
+                    -webkit-transform:scale(${1 / density},${1 / density});
+                    transform-origin:0 0;
+                    -webkit-transform-origin:0 0;
+                }
+                `;
+            }
+        }
+        tryStartLayoutAfterInit() {
+            let width = this.element.offsetWidth;
+            let height = this.element.offsetHeight;
+            if (width > 0 && height > 0)
+                this.notifySizeChange(width, height);
+        }
+        notifySizeChange(width, height) {
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            this.viewRootImpl.mWinFrame.set(0, 0, width * density, height * density);
+            this.canvas.width = width * density;
+            this.canvas.height = height * density;
+            this.canvas.style.width = width + "px";
+            this.canvas.style.height = height + "px";
+            this.viewRootImpl.requestLayout();
+        }
+        setContentView(view) {
+            this.rootLayout.removeAllViews();
+            this.rootLayout.addView(view);
+        }
+        addContentView(view) {
+            this.rootLayout.addView(view);
+        }
+        findViewById(id) {
+            return this.rootLayout.findViewById(id);
+        }
+    }
+    runtime.AndroidUI = AndroidUI;
+    class RootLayout extends FrameLayout {
+    }
+})(runtime || (runtime = {}));
+/**
+ * Created by linfaxin on 15/10/11.
+ */
+///<reference path="../view/View.ts"/>
+///<reference path="../view/ViewRootImpl.ts"/>
+///<reference path="../widget/FrameLayout.ts"/>
+///<reference path="../view/MotionEvent.ts"/>
+///<reference path="../../runtime/AndroidUI.ts"/>
+var android;
+(function (android) {
+    var app;
+    (function (app) {
+        var AndroidUI = runtime.AndroidUI;
+        if (typeof HTMLDivElement !== 'function') {
+            var _HTMLDivElement = function () { };
+            _HTMLDivElement.prototype = HTMLDivElement.prototype;
+            HTMLDivElement = _HTMLDivElement;
+        }
+        class Activity extends HTMLDivElement {
+            onCreate() {
+            }
+            createdCallback() {
+                this.AndroidUI = new AndroidUI(this);
+                this.onCreate();
+            }
+            attachedCallback() {
+                this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+            }
+            detachedCallback() {
+            }
+            attributeChangedCallback(attributeName, oldVal, newVal) {
+            }
+            setContentView(view) {
+                this.AndroidUI.setContentView(view);
+            }
+            addContentView(view) {
+                this.AndroidUI.addContentView(view);
+            }
+            findViewById(id) {
+                return this.AndroidUI.findViewById(id);
+            }
+            static registerCustomElement() {
+                document.registerElement("android-" + this.name, this);
+            }
+        }
+        app.Activity = Activity;
+    })(app = android.app || (android.app = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/17.
@@ -7358,218 +7623,234 @@ var android;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
- * Created by linfaxin on 15/10/23.
- */
-///<reference path="../android/view/View.ts"/>
-///<reference path="../android/view/ViewRootImpl.ts"/>
-///<reference path="../android/widget/FrameLayout.ts"/>
-///<reference path="../android/view/MotionEvent.ts"/>
-var runtime;
-(function (runtime) {
-    var View = android.view.View;
-    var ViewRootImpl = android.view.ViewRootImpl;
-    var FrameLayout = android.widget.FrameLayout;
-    var MotionEvent = android.view.MotionEvent;
-    class AndroidUI {
-        constructor(element) {
-            this.element = element;
-            if (element['AndroidUI']) {
-                throw Error('already init a AndroidUI with this element');
-            }
-            element['AndroidUI'] = this;
-            this.init();
-        }
-        init() {
-            this.viewRootImpl = new ViewRootImpl();
-            this.rootLayout = new RootLayout();
-            this.canvas = document.createElement("canvas");
-            this.initInflateView();
-            this.initRootElementStyle();
-            this.initCanvasStyle();
-            this.initBindElementStyle();
-            this.element.innerHTML = '';
-            this.element.appendChild(this.rootStyleElement);
-            this.element.appendChild(this.canvas);
-            this.element.appendChild(this.rootLayout.bindElement);
-            this.viewRootImpl.setView(this.rootLayout);
-            this.viewRootImpl.initSurface(this.canvas);
-            this.initTouch();
-            this.tryStartLayoutAfterInit();
-        }
-        initInflateView() {
-            Array.from(this.element.children).forEach((item) => {
-                if (item instanceof HTMLStyleElement) {
-                    this.rootStyleElement = item;
-                    return;
-                }
-                if (item instanceof HTMLElement) {
-                    let view = View.inflate(item);
-                    if (view)
-                        this.rootLayout.addView(view);
-                }
-            });
-        }
-        initRootElementStyle() {
-            if (!this.element.style.position) {
-                this.element.style.position = "relative";
-            }
-            if (!this.element.style.display) {
-                this.element.style.display = "inline-block";
-            }
-            this.element.style.overflow = 'hidden';
-        }
-        initCanvasStyle() {
-            let canvas = this.canvas;
-            canvas.style.position = "absolute";
-            canvas.style.left = '0px';
-            canvas.style.top = '0px';
-        }
-        initTouch() {
-            let motionEvent;
-            let windowXOffset = 0, windowYOffset = 0;
-            this.element.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                let rootViewBound = this.element.getBoundingClientRect();
-                windowXOffset = rootViewBound.left;
-                windowYOffset = rootViewBound.top;
-                if (!motionEvent)
-                    motionEvent = MotionEvent.obtainWithTouchEvent(e, MotionEvent.ACTION_DOWN);
-                else
-                    motionEvent.init(e, MotionEvent.ACTION_DOWN, windowXOffset, windowYOffset);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                motionEvent.init(e, MotionEvent.ACTION_MOVE, windowXOffset, windowYOffset);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                motionEvent.init(e, MotionEvent.ACTION_UP);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowXOffset, windowYOffset);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-        }
-        initBindElementStyle() {
-            if (!this.rootStyleElement)
-                this.rootStyleElement = document.createElement("style");
-            this.rootStyleElement.setAttribute("scoped", '');
-            let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
-            if (iOS) {
-                this.rootStyleElement.innerHTML += `
-                    android-ScrollView::-webkit-scrollbar {
-                        -webkit-appearance: none;
-                        width: 4px;
-                    }
-                    android-ScrollView::-webkit-scrollbar-thumb {
-                        border-radius: 2px;
-                        background-color: rgba(0,0,0,.3);
-                    }
-                `;
-            }
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            if (density != 1) {
-                this.rootStyleElement.innerHTML += `
-                android-RootLayout {
-                    transform:scale(${1 / density},${1 / density});
-                    -webkit-transform:scale(${1 / density},${1 / density});
-                    transform-origin:0 0;
-                    -webkit-transform-origin:0 0;
-                }
-                `;
-            }
-        }
-        tryStartLayoutAfterInit() {
-            let width = this.element.offsetWidth;
-            let height = this.element.offsetHeight;
-            if (width > 0 && height > 0)
-                this.notifySizeChange(width, height);
-        }
-        notifySizeChange(width, height) {
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            this.viewRootImpl.mWinFrame.set(0, 0, width * density, height * density);
-            this.canvas.width = width * density;
-            this.canvas.height = height * density;
-            this.canvas.style.width = width + "px";
-            this.canvas.style.height = height + "px";
-            this.viewRootImpl.requestLayout();
-        }
-        setContentView(view) {
-            this.rootLayout.removeAllViews();
-            this.rootLayout.addView(view);
-        }
-        addContentView(view) {
-            this.rootLayout.addView(view);
-        }
-        findViewById(id) {
-            return this.rootLayout.findViewById(id);
-        }
-    }
-    runtime.AndroidUI = AndroidUI;
-    class RootLayout extends FrameLayout {
-    }
-})(runtime || (runtime = {}));
-/**
- * Created by linfaxin on 15/10/11.
+ * Created by linfaxin on 15/10/26.
  */
 ///<reference path="../view/View.ts"/>
-///<reference path="../view/ViewRootImpl.ts"/>
-///<reference path="../widget/FrameLayout.ts"/>
-///<reference path="../view/MotionEvent.ts"/>
-///<reference path="../../runtime/AndroidUI.ts"/>
+///<reference path="../view/Gravity.ts"/>
+///<reference path="../content/res/Resources.ts"/>
+///<reference path="../graphics/Color.ts"/>
 var android;
 (function (android) {
-    var app;
-    (function (app) {
-        var AndroidUI = runtime.AndroidUI;
-        if (typeof HTMLDivElement !== 'function') {
-            var _HTMLDivElement = function () { };
-            _HTMLDivElement.prototype = HTMLDivElement.prototype;
-            HTMLDivElement = _HTMLDivElement;
+    var widget;
+    (function (widget) {
+        var View = android.view.View;
+        var Gravity = android.view.Gravity;
+        var Resources = android.content.res.Resources;
+        var Color = android.graphics.Color;
+        var MeasureSpec = View.MeasureSpec;
+        class TextView extends View {
+            constructor() {
+                super();
+                this.mSingleLine = false;
+                this.mTextColor = Color.BLACK;
+                this.mHintColor = Color.LTGRAY;
+                this.mSpacingMult = 1.2;
+                this.mSpacingAdd = 0;
+                this.mMaxWidth = Number.MAX_SAFE_INTEGER;
+                this.mMaxHeight = Number.MAX_SAFE_INTEGER;
+                this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
+                this.mMinLineCount = 0;
+                this.initTextElement();
+                this.setTextSize(TextView.Default_TextSize);
+                this.setGravity(Gravity.TOP | Gravity.LEFT);
+            }
+            initTextElement() {
+                this.mTextElement = document.createElement('div');
+                this.mTextElement.style.position = "absolute";
+                this.mTextElement.style.boxSizing = "border-box";
+                this.mTextElement.style.overflow = "hidden";
+                this.mTextElement.style.opacity = "0";
+            }
+            onLayout(changed, left, top, right, bottom) {
+                super.onLayout(changed, left, top, right, bottom);
+                this.mTextElement.style.opacity = "";
+            }
+            onFinishInflate() {
+                super.onFinishInflate();
+                Array.from(this.bindElement.childNodes).forEach((item) => {
+                    this.bindElement.removeChild(item);
+                    this.mTextElement.appendChild(item);
+                });
+                this.bindElement.appendChild(this.mTextElement);
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                let widthMode = MeasureSpec.getMode(widthMeasureSpec);
+                let heightMode = MeasureSpec.getMode(heightMeasureSpec);
+                let widthSize = MeasureSpec.getSize(widthMeasureSpec);
+                let heightSize = MeasureSpec.getSize(heightMeasureSpec);
+                let width, height;
+                let padLeft = this.getCompoundPaddingLeft();
+                let padTop = this.getCompoundPaddingTop();
+                let padRight = this.getCompoundPaddingRight();
+                let padBottom = this.getCompoundPaddingBottom();
+                this.mTextElement.style.height = "";
+                this.mTextElement.style.width = "";
+                if (widthMode == MeasureSpec.EXACTLY) {
+                    width = widthSize;
+                }
+                else {
+                    width = this.mTextElement.offsetWidth;
+                    width += padLeft + padRight;
+                    width = Math.min(width, this.mMaxWidth);
+                    width = Math.max(width, this.getSuggestedMinimumWidth());
+                    if (widthMode == MeasureSpec.AT_MOST) {
+                        width = Math.min(widthSize, width);
+                    }
+                }
+                let unpaddedWidth = width - padLeft - padRight;
+                this.mTextElement.style.width = unpaddedWidth + "px";
+                this.mTextElement.style.left = padLeft + "px";
+                if (heightMode == MeasureSpec.EXACTLY) {
+                    height = heightSize;
+                    let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
+                    if (this.mMaxLineCount < Number.MAX_SAFE_INTEGER) {
+                        let maxHeightWithLineCount = pad + this.mMaxLineCount * this.getLineHeight();
+                        height = Math.min(maxHeightWithLineCount, height);
+                    }
+                }
+                else {
+                    let desired = this.getDesiredHeight();
+                    height = desired;
+                    if (heightMode == MeasureSpec.AT_MOST) {
+                        height = Math.min(desired, heightSize);
+                    }
+                }
+                let contextHeight = height - padTop - padBottom;
+                let textHeight = this.mTextElement.offsetHeight;
+                let finalTop = padTop;
+                if (textHeight < contextHeight) {
+                    const verticalGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                    switch (verticalGravity) {
+                        case Gravity.CENTER_VERTICAL:
+                            finalTop += (contextHeight - textHeight) / 2;
+                            break;
+                        case Gravity.BOTTOM:
+                            finalTop += (contextHeight - textHeight);
+                            break;
+                        case Gravity.TOP:
+                            break;
+                    }
+                    contextHeight = textHeight;
+                }
+                this.mTextElement.style.height = contextHeight + "px";
+                this.mTextElement.style.top = finalTop + "px";
+                this.setMeasuredDimension(width, height);
+            }
+            getDesiredHeight() {
+                let desired = this.mTextElement.offsetHeight;
+                let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
+                desired += pad;
+                desired = Math.min(this.mMaxHeight, desired);
+                if (this.mMaxLineCount < Number.MAX_SAFE_INTEGER) {
+                    let maxHeightWithLineCount = pad + this.mMaxLineCount * this.getLineHeight();
+                    desired = Math.min(maxHeightWithLineCount, desired);
+                }
+                if (this.mMinLineCount > 0) {
+                    let minHeightWithLineCount = pad + this.mMinLineCount * this.getLineHeight();
+                    desired = Math.max(minHeightWithLineCount, desired);
+                }
+                desired = Math.max(desired, this.getSuggestedMinimumHeight());
+                return desired;
+            }
+            getCompoundPaddingTop() {
+                return this.mPaddingTop;
+            }
+            getCompoundPaddingBottom() {
+                return this.mPaddingBottom;
+            }
+            getCompoundPaddingLeft() {
+                return this.mPaddingLeft;
+            }
+            getCompoundPaddingRight() {
+                return this.mPaddingRight;
+            }
+            setGravity(gravity) {
+                switch (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                    case Gravity.CENTER_HORIZONTAL:
+                        this.mTextElement.style.textAlign = "center";
+                        break;
+                    case Gravity.RIGHT:
+                        this.mTextElement.style.textAlign = "right";
+                        break;
+                    case Gravity.LEFT:
+                        this.mTextElement.style.textAlign = "left";
+                        break;
+                }
+                if ((gravity & Gravity.VERTICAL_GRAVITY_MASK) !=
+                    (this.mGravity & Gravity.VERTICAL_GRAVITY_MASK)) {
+                    this.requestLayout();
+                }
+                this.mGravity = gravity;
+            }
+            setLineSpacing(add, mult) {
+                if (this.mSpacingAdd != add || this.mSpacingMult != mult) {
+                    this.mSpacingAdd = add;
+                    this.mSpacingMult = mult;
+                    this.setTextSize(this.mTextSize);
+                }
+            }
+            setTextSize(size) {
+                let sizeInPx = size * Resources.getDisplayMetrics().density;
+                this.mTextSize = sizeInPx;
+                this.mTextElement.style.fontSize = sizeInPx + "px";
+                this.mTextElement.style.lineHeight = this.getLineHeight() + "px";
+            }
+            getLineHeight() {
+                return Math.ceil(this.mTextSize * this.mSpacingMult + this.mSpacingAdd);
+            }
+            setMaxLines(max) {
+                this.mMaxLineCount = max;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxLines() {
+                return this.mMaxLineCount;
+            }
+            setMinLines(min) {
+                this.mMinLineCount = min;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMinLines() {
+                return this.mMinLineCount;
+            }
+            setSingleLine(singleLine = true) {
+                if (singleLine)
+                    this.setLines(1);
+                else {
+                    this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
+                    this.mMinLineCount = 0;
+                    this.requestLayout();
+                    this.invalidate();
+                }
+            }
+            setLines(lines) {
+                this.mMaxLineCount = this.mMinLineCount = lines;
+                this.requestLayout();
+                this.invalidate();
+            }
+            setText(text) {
+                this.mTextElement.innerText = text;
+                this.requestLayout();
+            }
+            setHtml(html) {
+                this.mTextElement.innerHTML = html;
+                this.requestLayout();
+            }
         }
-        class Activity extends HTMLDivElement {
-            onCreate() {
-            }
-            createdCallback() {
-                this.androidUI = new AndroidUI(this);
-                this.onCreate();
-            }
-            attachedCallback() {
-                this.androidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
-            }
-            detachedCallback() {
-            }
-            attributeChangedCallback(attributeName, oldVal, newVal) {
-            }
-            setContentView(view) {
-                this.androidUI.setContentView(view);
-            }
-            addContentView(view) {
-                this.androidUI.addContentView(view);
-            }
-            findViewById(id) {
-                return this.androidUI.findViewById(id);
-            }
-        }
-        app.Activity = Activity;
-    })(app = android.app || (android.app = {}));
+        TextView.Default_TextSize = 14;
+        widget.TextView = TextView;
+    })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/6.
  */
 //use the deepest sub class as enter
 ///<reference path="android/view/ViewOverlay.ts"/>
+///<reference path="android/app/Activity.ts"/>
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
-///<reference path="android/app/Activity.ts"/>
+///<reference path="android/widget/TextView.ts"/>
 ///<reference path="runtime/AndroidUI.ts"/>
 window[`android`] = android;
 window[`java`] = java;

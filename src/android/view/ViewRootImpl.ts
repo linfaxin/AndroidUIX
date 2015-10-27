@@ -39,7 +39,7 @@ module android.view {
         static DEBUG_INPUT_RESIZE = false || ViewRootImpl.LOCAL_LOGV;
         static DEBUG_ORIENTATION = false || ViewRootImpl.LOCAL_LOGV;
         static DEBUG_CONFIGURATION = false || ViewRootImpl.LOCAL_LOGV;
-        static DEBUG_FPS = true || ViewRootImpl.LOCAL_LOGV;
+        static DEBUG_FPS = false || ViewRootImpl.LOCAL_LOGV;
 
         private mView:View;
         private mViewVisibility:number = 0;
@@ -613,7 +613,7 @@ module android.view {
         }
 
 
-        mInvalidateOnAnimationRunnable = new InvalidateOnAnimationRunnable(this.mHandler);
+        private mInvalidateOnAnimationRunnable = new InvalidateOnAnimationRunnable(this.mHandler);
 
         dispatchInvalidateDelayed(view:View, delayMilliseconds:number):void {
             let msg = this.mHandler.obtainMessage(ViewRootHandler.MSG_INVALIDATE, view);
@@ -761,7 +761,7 @@ module android.view {
             delay:number;
         }
         export class RunQueue {
-            mActions:Array<HandlerAction> = [];
+            private mActions:Array<HandlerAction> = [];
 
             post(action:Runnable) {
                 this.postDelayed(action, 0);

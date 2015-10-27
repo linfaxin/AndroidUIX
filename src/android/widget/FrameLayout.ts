@@ -15,7 +15,7 @@ module android.widget {
     import Rect = android.graphics.Rect;
 
     export class FrameLayout extends ViewGroup {
-        static DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.START;
+        static DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.LEFT;
 
         mMeasureAllChildren = false;
         mForeground:Drawable;
@@ -36,8 +36,8 @@ module android.widget {
 
         setForegroundGravity(foregroundGravity:number) {
             if (this.mForegroundGravity != foregroundGravity) {
-                if ((foregroundGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) == 0) {
-                    foregroundGravity |= Gravity.START;
+                if ((foregroundGravity & Gravity.HORIZONTAL_GRAVITY_MASK) == 0) {
+                    foregroundGravity |= Gravity.LEFT;
                 }
 
                 if ((foregroundGravity & Gravity.VERTICAL_GRAVITY_MASK) == 0) {

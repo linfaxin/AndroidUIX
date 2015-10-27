@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "removeComments": true,
+    "target":"ES6",
+    "outFile": "../dist/android-web-widget.js",
+    "declaration" : true,
+    "sourceMap": false
+  },
+  "files": [
+    "pack_enter"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

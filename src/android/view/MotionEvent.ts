@@ -59,18 +59,18 @@ module android.view {
         mEventTime = 0;
         //mActiveActionIndex = 0;
         mActivePointerId = 0;
-        mTouchingPointers:Array<Touch>;
+        private mTouchingPointers:Array<Touch>;
         mXOffset = 0;
         mYOffset = 0;
         mViewRootTop = 0;
         mViewRootLeft = 0;
 
-        constructor(e:TouchEvent, action:number) {
+        constructor(e, action:number) {
             this.mAction = action;
             if (e) this.init(e, action);
         }
 
-        static obtainWithTouchEvent(e:TouchEvent, action:number):MotionEvent {
+        static obtainWithTouchEvent(e, action:number):MotionEvent {
             return new MotionEvent(e, action);
         }
 
@@ -99,8 +99,8 @@ module android.view {
 
         private static IdIndexCache = new Map<number, number>();
 
-        init(e:TouchEvent, baseAction:number, windowXOffset = 0, windowYOffset = 0) {
-
+        init(event, baseAction:number, windowXOffset = 0, windowYOffset = 0) {
+            let e = <TouchEvent>event;
             //get actionIndex
             let action = baseAction;
             let actionIndex = -1;

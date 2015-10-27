@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>android-components-sample</title>
+    <script>
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <android-TextViewSampleActivity id="activity" style="width: 100%; height:90%;margin-top: 6%;display: none;">
+        <android-ScrollView>
+            <android-FrameLayout>
+                <android-TextView id="text0">
+                    文本文本Test1Test0
+                </android-TextView>
+                <android-TextView id="text1">
+                    文本文本Test1Test1
+                    文本文本Test1Test1
+                    文本文本Test1Test1
+                    文本文本Test1Test1
+                    文本文本Test1Test1
+                    文本文本Test1Test1
+                </android-TextView>
+                <android-TextView id="text2">
+                    文本文本Test2Test2
+                </android-TextView>
+                <android-TextView id="text3">
+                    文本文本Test3Test3
+                </android-TextView>
+            </android-FrameLayout>
+        </android-ScrollView>
+    </android-TextViewSampleActivity>
+
+    <script src="../node_modules/babel-core/browser-polyfill.min.js"></script>
+    <script src="lib/CustomElements.min.js"></script>
+    <script src="../dist/android-web-widget.es5.js"></script>
+    <script src="build/main.es5.js"></script>
+
+</body>
+</html>

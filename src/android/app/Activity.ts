@@ -23,16 +23,16 @@ module android.app{
 
 
     export class Activity extends HTMLDivElement{
-        private androidUI:AndroidUI;
+        private AndroidUI:AndroidUI;
         onCreate():void{
         }
 
         createdCallback():void{
-            this.androidUI = new AndroidUI(this);
+            this.AndroidUI = new AndroidUI(this);
             this.onCreate();
         }
         attachedCallback():void {
-            this.androidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+            this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
         }
         detachedCallback():void {
         }
@@ -41,13 +41,17 @@ module android.app{
 
 
         setContentView(view:View){
-            this.androidUI.setContentView(view);
+            this.AndroidUI.setContentView(view);
         }
         addContentView(view:View){
-            this.androidUI.addContentView(view);
+            this.AndroidUI.addContentView(view);
         }
         findViewById(id:string):View{
-            return this.androidUI.findViewById(id);
+            return this.AndroidUI.findViewById(id);
+        }
+
+        static registerCustomElement(){
+            (<any> document).registerElement("android-"+this.name, this);
         }
     }
 }

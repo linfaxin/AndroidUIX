@@ -73,7 +73,7 @@ module runtime {
             if (!this.element.style.position) {
                 this.element.style.position = "relative";
             }
-            if (!this.element.style.display) {
+            if (!this.element.style.display || this.element.style.display=="none") {
                 this.element.style.display = "inline-block";
             }
             this.element.style.overflow = 'hidden';
