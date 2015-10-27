@@ -955,6 +955,12 @@ module android.view {
             return (this.mPrivateFlags & View.PFLAG_PRESSED) == View.PFLAG_PRESSED;
         }
 
+        isLayoutRtl():boolean{
+            return false;
+        }
+        getBaseline():number {
+            return -1;
+        }
         isLayoutRequested():boolean {
             return (this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT;
         }
@@ -1182,7 +1188,7 @@ module android.view {
             this.mMeasureCache.put(key, (this.mMeasuredWidth) << 32 | this.mMeasuredHeight & 0xffffffff); // suppress sign extension
         }
 
-        onMeasure(widthMeasureSpec, heightMeasureSpec) {
+        onMeasure(widthMeasureSpec, heightMeasureSpec):void {
             this.setMeasuredDimension(View.getDefaultSize(this.getSuggestedMinimumWidth(), widthMeasureSpec),
                 View.getDefaultSize(this.getSuggestedMinimumHeight(), heightMeasureSpec));
         }

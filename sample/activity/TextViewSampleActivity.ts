@@ -4,12 +4,16 @@
 ///<reference path="../../dist/android-web-widget.d.ts"/>
 import Activity = android.app.Activity;
 import TextView = android.widget.TextView;
+import LinearLayout = android.widget.LinearLayout;
 import Gravity = android.view.Gravity;
 import Log = android.util.Log;
 
 module sample.activity {
     export class TextViewSampleActivity extends Activity {
         onCreate():void {
+            let linear = <LinearLayout>this.findViewById("linear");
+            linear.setOrientation(LinearLayout.VERTICAL);
+
             //Log.d("fax", "!onCreate:" + this.constructor.name);
             let textView0:TextView = <TextView>this.findViewById("text0");
             let textView1:TextView = <TextView>this.findViewById("text1");

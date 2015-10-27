@@ -11,6 +11,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var Activity = android.app.Activity;
 var TextView = android.widget.TextView;
+var LinearLayout = android.widget.LinearLayout;
 var Gravity = android.view.Gravity;
 var Log = android.util.Log;
 var sample;
@@ -29,6 +30,8 @@ var sample;
             _createClass(TextViewSampleActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    var linear = this.findViewById("linear");
+                    linear.setOrientation(LinearLayout.VERTICAL);
                     var textView0 = this.findViewById("text0");
                     var textView1 = this.findViewById("text1");
                     var textView2 = this.findViewById("text2");

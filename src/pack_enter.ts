@@ -7,6 +7,7 @@
 
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
+///<reference path="android/widget/LinearLayout.ts"/>
 ///<reference path="android/widget/TextView.ts"/>
 
 ///<reference path="runtime/AndroidUI.ts"/>

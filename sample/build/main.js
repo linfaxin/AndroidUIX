@@ -1,6 +1,7 @@
 ///<reference path="../../dist/android-web-widget.d.ts"/>
 var Activity = android.app.Activity;
 var TextView = android.widget.TextView;
+var LinearLayout = android.widget.LinearLayout;
 var Gravity = android.view.Gravity;
 var Log = android.util.Log;
 var sample;
@@ -9,6 +10,8 @@ var sample;
     (function (activity) {
         class TextViewSampleActivity extends Activity {
             onCreate() {
+                let linear = this.findViewById("linear");
+                linear.setOrientation(LinearLayout.VERTICAL);
                 let textView0 = this.findViewById("text0");
                 let textView1 = this.findViewById("text1");
                 let textView2 = this.findViewById("text2");

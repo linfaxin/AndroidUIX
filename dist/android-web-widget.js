@@ -2617,6 +2617,12 @@ var android;
             isPressed() {
                 return (this.mPrivateFlags & View.PFLAG_PRESSED) == View.PFLAG_PRESSED;
             }
+            isLayoutRtl() {
+                return false;
+            }
+            getBaseline() {
+                return -1;
+            }
             isLayoutRequested() {
                 return (this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT;
             }
@@ -7622,6 +7628,957 @@ var android;
         widget.ScrollView = ScrollView;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
+///<reference path="../view/Gravity.ts"/>
+///<reference path="../view/View.ts"/>
+///<reference path="../view/ViewGroup.ts"/>
+///<reference path="../graphics/drawable/Drawable.ts"/>
+///<reference path="../graphics/Rect.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Gravity = android.view.Gravity;
+        var View = android.view.View;
+        var MeasureSpec = View.MeasureSpec;
+        var ViewGroup = android.view.ViewGroup;
+        class LinearLayout extends ViewGroup {
+            constructor(...args) {
+                super(...args);
+                this.mBaselineAligned = true;
+                this.mBaselineAlignedChildIndex = -1;
+                this.mBaselineChildTop = 0;
+                this.mOrientation = 0;
+                this.mGravity = Gravity.LEFT | Gravity.TOP;
+                this.mTotalLength = 0;
+                this.mWeightSum = -1;
+                this.mUseLargestChild = false;
+                this.mDividerWidth = 0;
+                this.mDividerHeight = 0;
+                this.mShowDividers = LinearLayout.SHOW_DIVIDER_NONE;
+                this.mDividerPadding = 0;
+            }
+            setShowDividers(showDividers) {
+                if (showDividers != this.mShowDividers) {
+                    this.requestLayout();
+                }
+                this.mShowDividers = showDividers;
+            }
+            shouldDelayChildPressedState() {
+                return false;
+            }
+            getShowDividers() {
+                return this.mShowDividers;
+            }
+            getDividerDrawable() {
+                return this.mDivider;
+            }
+            setDividerDrawable(divider) {
+                if (divider == this.mDivider) {
+                    return;
+                }
+                this.mDivider = divider;
+                if (divider != null) {
+                    this.mDividerWidth = divider.getIntrinsicWidth();
+                    this.mDividerHeight = divider.getIntrinsicHeight();
+                }
+                else {
+                    this.mDividerWidth = 0;
+                    this.mDividerHeight = 0;
+                }
+                this.setWillNotDraw(divider == null);
+                this.requestLayout();
+            }
+            setDividerPadding(padding) {
+                this.mDividerPadding = padding;
+            }
+            getDividerPadding() {
+                return this.mDividerPadding;
+            }
+            getDividerWidth() {
+                return this.mDividerWidth;
+            }
+            onDraw(canvas) {
+                if (this.mDivider == null) {
+                    return;
+                }
+                if (this.mOrientation == LinearLayout.VERTICAL) {
+                    this.drawDividersVertical(canvas);
+                }
+                else {
+                    this.drawDividersHorizontal(canvas);
+                }
+            }
+            drawDividersVertical(canvas) {
+                const count = this.getVirtualChildCount();
+                for (let i = 0; i < count; i++) {
+                    const child = this.getVirtualChildAt(i);
+                    if (child != null && child.getVisibility() != View.GONE) {
+                        if (this.hasDividerBeforeChildAt(i)) {
+                            const lp = child.getLayoutParams();
+                            const top = child.getTop() - lp.topMargin - this.mDividerHeight;
+                            this.drawHorizontalDivider(canvas, top);
+                        }
+                    }
+                }
+                if (this.hasDividerBeforeChildAt(count)) {
+                    const child = this.getVirtualChildAt(count - 1);
+                    let bottom = 0;
+                    if (child == null) {
+                        bottom = this.getHeight() - this.getPaddingBottom() - this.mDividerHeight;
+                    }
+                    else {
+                        const lp = child.getLayoutParams();
+                        bottom = child.getBottom() + lp.bottomMargin;
+                    }
+                    this.drawHorizontalDivider(canvas, bottom);
+                }
+            }
+            drawDividersHorizontal(canvas) {
+                const count = this.getVirtualChildCount();
+                const isLayoutRtl = this.isLayoutRtl();
+                for (let i = 0; i < count; i++) {
+                    const child = this.getVirtualChildAt(i);
+                    if (child != null && child.getVisibility() != View.GONE) {
+                        if (this.hasDividerBeforeChildAt(i)) {
+                            const lp = child.getLayoutParams();
+                            let position;
+                            if (isLayoutRtl) {
+                                position = child.getRight() + lp.rightMargin;
+                            }
+                            else {
+                                position = child.getLeft() - lp.leftMargin - this.mDividerWidth;
+                            }
+                            this.drawVerticalDivider(canvas, position);
+                        }
+                    }
+                }
+                if (this.hasDividerBeforeChildAt(count)) {
+                    const child = this.getVirtualChildAt(count - 1);
+                    let position;
+                    if (child == null) {
+                        if (isLayoutRtl) {
+                            position = this.getPaddingLeft();
+                        }
+                        else {
+                            position = this.getWidth() - this.getPaddingRight() - this.mDividerWidth;
+                        }
+                    }
+                    else {
+                        const lp = child.getLayoutParams();
+                        if (isLayoutRtl) {
+                            position = child.getLeft() - lp.leftMargin - this.mDividerWidth;
+                        }
+                        else {
+                            position = child.getRight() + lp.rightMargin;
+                        }
+                    }
+                    this.drawVerticalDivider(canvas, position);
+                }
+            }
+            drawHorizontalDivider(canvas, top) {
+                this.mDivider.setBounds(this.getPaddingLeft() + this.mDividerPadding, top, this.getWidth() - this.getPaddingRight() - this.mDividerPadding, top + this.mDividerHeight);
+                this.mDivider.draw(canvas);
+            }
+            drawVerticalDivider(canvas, left) {
+                this.mDivider.setBounds(left, this.getPaddingTop() + this.mDividerPadding, left + this.mDividerWidth, this.getHeight() - this.getPaddingBottom() - this.mDividerPadding);
+                this.mDivider.draw(canvas);
+            }
+            isBaselineAligned() {
+                return this.mBaselineAligned;
+            }
+            setBaselineAligned(baselineAligned) {
+                this.mBaselineAligned = baselineAligned;
+            }
+            isMeasureWithLargestChildEnabled() {
+                return this.mUseLargestChild;
+            }
+            setMeasureWithLargestChildEnabled(enabled) {
+                this.mUseLargestChild = enabled;
+            }
+            getBaseline() {
+                if (this.mBaselineAlignedChildIndex < 0) {
+                    return super.getBaseline();
+                }
+                if (this.getChildCount() <= this.mBaselineAlignedChildIndex) {
+                    throw new Error("mBaselineAlignedChildIndex of LinearLayout "
+                        + "set to an index that is out of bounds.");
+                }
+                const child = this.getChildAt(this.mBaselineAlignedChildIndex);
+                const childBaseline = child.getBaseline();
+                if (childBaseline == -1) {
+                    if (this.mBaselineAlignedChildIndex == 0) {
+                        return -1;
+                    }
+                    throw new Error("mBaselineAlignedChildIndex of LinearLayout "
+                        + "points to a View that doesn't know how to get its baseline.");
+                }
+                let childTop = this.mBaselineChildTop;
+                if (this.mOrientation == LinearLayout.VERTICAL) {
+                    const majorGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                    if (majorGravity != Gravity.TOP) {
+                        switch (majorGravity) {
+                            case Gravity.BOTTOM:
+                                childTop = this.mBottom - this.mTop - this.mPaddingBottom - this.mTotalLength;
+                                break;
+                            case Gravity.CENTER_VERTICAL:
+                                childTop += ((this.mBottom - this.mTop - this.mPaddingTop - this.mPaddingBottom) -
+                                    this.mTotalLength) / 2;
+                                break;
+                        }
+                    }
+                }
+                let lp = child.getLayoutParams();
+                return childTop + lp.topMargin + childBaseline;
+            }
+            getBaselineAlignedChildIndex() {
+                return this.mBaselineAlignedChildIndex;
+            }
+            setBaselineAlignedChildIndex(i) {
+                if ((i < 0) || (i >= this.getChildCount())) {
+                    throw new Error("base aligned child index out "
+                        + "of range (0, " + this.getChildCount() + ")");
+                }
+                this.mBaselineAlignedChildIndex = i;
+            }
+            getVirtualChildAt(index) {
+                return this.getChildAt(index);
+            }
+            getVirtualChildCount() {
+                return this.getChildCount();
+            }
+            getWeightSum() {
+                return this.mWeightSum;
+            }
+            setWeightSum(weightSum) {
+                this.mWeightSum = Math.max(0, weightSum);
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                if (this.mOrientation == LinearLayout.VERTICAL) {
+                    this.measureVertical(widthMeasureSpec, heightMeasureSpec);
+                }
+                else {
+                    this.measureHorizontal(widthMeasureSpec, heightMeasureSpec);
+                }
+            }
+            hasDividerBeforeChildAt(childIndex) {
+                if (childIndex == 0) {
+                    return (this.mShowDividers & LinearLayout.SHOW_DIVIDER_BEGINNING) != 0;
+                }
+                else if (childIndex == this.getChildCount()) {
+                    return (this.mShowDividers & LinearLayout.SHOW_DIVIDER_END) != 0;
+                }
+                else if ((this.mShowDividers & LinearLayout.SHOW_DIVIDER_MIDDLE) != 0) {
+                    let hasVisibleViewBefore = false;
+                    for (let i = childIndex - 1; i >= 0; i--) {
+                        if (this.getChildAt(i).getVisibility() != LinearLayout.GONE) {
+                            hasVisibleViewBefore = true;
+                            break;
+                        }
+                    }
+                    return hasVisibleViewBefore;
+                }
+                return false;
+            }
+            measureVertical(widthMeasureSpec, heightMeasureSpec) {
+                this.mTotalLength = 0;
+                let maxWidth = 0;
+                let childState = 0;
+                let alternativeMaxWidth = 0;
+                let weightedMaxWidth = 0;
+                let allFillParent = true;
+                let totalWeight = 0;
+                const count = this.getVirtualChildCount();
+                const widthMode = MeasureSpec.getMode(widthMeasureSpec);
+                const heightMode = MeasureSpec.getMode(heightMeasureSpec);
+                let matchWidth = false;
+                const baselineChildIndex = this.mBaselineAlignedChildIndex;
+                const useLargestChild = this.mUseLargestChild;
+                let largestChildHeight = Number.MIN_SAFE_INTEGER;
+                for (let i = 0; i < count; ++i) {
+                    const child = this.getVirtualChildAt(i);
+                    if (child == null) {
+                        this.mTotalLength += this.measureNullChild(i);
+                        continue;
+                    }
+                    if (child.getVisibility() == View.GONE) {
+                        i += this.getChildrenSkipCount(child, i);
+                        continue;
+                    }
+                    if (this.hasDividerBeforeChildAt(i)) {
+                        this.mTotalLength += this.mDividerHeight;
+                    }
+                    let lp = child.getLayoutParams();
+                    totalWeight += lp.weight;
+                    if (heightMode == MeasureSpec.EXACTLY && lp.height == 0 && lp.weight > 0) {
+                        const totalLength = this.mTotalLength;
+                        this.mTotalLength = Math.max(totalLength, totalLength + lp.topMargin + lp.bottomMargin);
+                    }
+                    else {
+                        let oldHeight = Number.MIN_SAFE_INTEGER;
+                        if (lp.height == 0 && lp.weight > 0) {
+                            oldHeight = 0;
+                            lp.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+                        }
+                        this.measureChildBeforeLayout(child, i, widthMeasureSpec, 0, heightMeasureSpec, totalWeight == 0 ? this.mTotalLength : 0);
+                        if (oldHeight != Number.MIN_SAFE_INTEGER) {
+                            lp.height = oldHeight;
+                        }
+                        const childHeight = child.getMeasuredHeight();
+                        const totalLength = this.mTotalLength;
+                        this.mTotalLength = Math.max(totalLength, totalLength + childHeight + lp.topMargin +
+                            lp.bottomMargin + this.getNextLocationOffset(child));
+                        if (useLargestChild) {
+                            largestChildHeight = Math.max(childHeight, largestChildHeight);
+                        }
+                    }
+                    if ((baselineChildIndex >= 0) && (baselineChildIndex == i + 1)) {
+                        this.mBaselineChildTop = this.mTotalLength;
+                    }
+                    if (i < baselineChildIndex && lp.weight > 0) {
+                        throw new Error("A child of LinearLayout with index "
+                            + "less than mBaselineAlignedChildIndex has weight > 0, which "
+                            + "won't work.  Either remove the weight, or don't set "
+                            + "mBaselineAlignedChildIndex.");
+                    }
+                    let matchWidthLocally = false;
+                    if (widthMode != MeasureSpec.EXACTLY && lp.width == LinearLayout.LayoutParams.MATCH_PARENT) {
+                        matchWidth = true;
+                        matchWidthLocally = true;
+                    }
+                    const margin = lp.leftMargin + lp.rightMargin;
+                    const measuredWidth = child.getMeasuredWidth() + margin;
+                    maxWidth = Math.max(maxWidth, measuredWidth);
+                    childState = LinearLayout.combineMeasuredStates(childState, child.getMeasuredState());
+                    allFillParent = allFillParent && lp.width == LinearLayout.LayoutParams.MATCH_PARENT;
+                    if (lp.weight > 0) {
+                        weightedMaxWidth = Math.max(weightedMaxWidth, matchWidthLocally ? margin : measuredWidth);
+                    }
+                    else {
+                        alternativeMaxWidth = Math.max(alternativeMaxWidth, matchWidthLocally ? margin : measuredWidth);
+                    }
+                    i += this.getChildrenSkipCount(child, i);
+                }
+                if (this.mTotalLength > 0 && this.hasDividerBeforeChildAt(count)) {
+                    this.mTotalLength += this.mDividerHeight;
+                }
+                if (useLargestChild &&
+                    (heightMode == MeasureSpec.AT_MOST || heightMode == MeasureSpec.UNSPECIFIED)) {
+                    this.mTotalLength = 0;
+                    for (let i = 0; i < count; ++i) {
+                        const child = this.getVirtualChildAt(i);
+                        if (child == null) {
+                            this.mTotalLength += this.measureNullChild(i);
+                            continue;
+                        }
+                        if (child.getVisibility() == View.GONE) {
+                            i += this.getChildrenSkipCount(child, i);
+                            continue;
+                        }
+                        const lp = child.getLayoutParams();
+                        const totalLength = this.mTotalLength;
+                        this.mTotalLength = Math.max(totalLength, totalLength + largestChildHeight +
+                            lp.topMargin + lp.bottomMargin + this.getNextLocationOffset(child));
+                    }
+                }
+                this.mTotalLength += this.mPaddingTop + this.mPaddingBottom;
+                let heightSize = this.mTotalLength;
+                heightSize = Math.max(heightSize, this.getSuggestedMinimumHeight());
+                let heightSizeAndState = LinearLayout.resolveSizeAndState(heightSize, heightMeasureSpec, 0);
+                heightSize = heightSizeAndState & View.MEASURED_SIZE_MASK;
+                let delta = heightSize - this.mTotalLength;
+                if (delta != 0 && totalWeight > 0) {
+                    let weightSum = this.mWeightSum > 0 ? this.mWeightSum : totalWeight;
+                    this.mTotalLength = 0;
+                    for (let i = 0; i < count; ++i) {
+                        const child = this.getVirtualChildAt(i);
+                        if (child.getVisibility() == View.GONE) {
+                            continue;
+                        }
+                        let lp = child.getLayoutParams();
+                        let childExtra = lp.weight;
+                        if (childExtra > 0) {
+                            let share = (childExtra * delta / weightSum);
+                            weightSum -= childExtra;
+                            delta -= share;
+                            const childWidthMeasureSpec = LinearLayout.getChildMeasureSpec(widthMeasureSpec, this.mPaddingLeft + this.mPaddingRight +
+                                lp.leftMargin + lp.rightMargin, lp.width);
+                            if ((lp.height != 0) || (heightMode != MeasureSpec.EXACTLY)) {
+                                let childHeight = child.getMeasuredHeight() + share;
+                                if (childHeight < 0) {
+                                    childHeight = 0;
+                                }
+                                child.measure(childWidthMeasureSpec, MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY));
+                            }
+                            else {
+                                child.measure(childWidthMeasureSpec, MeasureSpec.makeMeasureSpec(share > 0 ? share : 0, MeasureSpec.EXACTLY));
+                            }
+                            childState = LinearLayout.combineMeasuredStates(childState, child.getMeasuredState()
+                                & (View.MEASURED_STATE_MASK >> View.MEASURED_HEIGHT_STATE_SHIFT));
+                        }
+                        const margin = lp.leftMargin + lp.rightMargin;
+                        const measuredWidth = child.getMeasuredWidth() + margin;
+                        maxWidth = Math.max(maxWidth, measuredWidth);
+                        let matchWidthLocally = widthMode != MeasureSpec.EXACTLY &&
+                            lp.width == LinearLayout.LayoutParams.MATCH_PARENT;
+                        alternativeMaxWidth = Math.max(alternativeMaxWidth, matchWidthLocally ? margin : measuredWidth);
+                        allFillParent = allFillParent && lp.width == LinearLayout.LayoutParams.MATCH_PARENT;
+                        const totalLength = this.mTotalLength;
+                        this.mTotalLength = Math.max(totalLength, totalLength + child.getMeasuredHeight() +
+                            lp.topMargin + lp.bottomMargin + this.getNextLocationOffset(child));
+                    }
+                    this.mTotalLength += this.mPaddingTop + this.mPaddingBottom;
+                }
+                else {
+                    alternativeMaxWidth = Math.max(alternativeMaxWidth, weightedMaxWidth);
+                    if (useLargestChild && heightMode != MeasureSpec.EXACTLY) {
+                        for (let i = 0; i < count; i++) {
+                            const child = this.getVirtualChildAt(i);
+                            if (child == null || child.getVisibility() == View.GONE) {
+                                continue;
+                            }
+                            const lp = child.getLayoutParams();
+                            let childExtra = lp.weight;
+                            if (childExtra > 0) {
+                                child.measure(MeasureSpec.makeMeasureSpec(child.getMeasuredWidth(), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(largestChildHeight, MeasureSpec.EXACTLY));
+                            }
+                        }
+                    }
+                }
+                if (!allFillParent && widthMode != MeasureSpec.EXACTLY) {
+                    maxWidth = alternativeMaxWidth;
+                }
+                maxWidth += this.mPaddingLeft + this.mPaddingRight;
+                maxWidth = Math.max(maxWidth, this.getSuggestedMinimumWidth());
+                this.setMeasuredDimension(LinearLayout.resolveSizeAndState(maxWidth, widthMeasureSpec, childState), heightSizeAndState);
+                if (matchWidth) {
+                    this.forceUniformWidth(count, heightMeasureSpec);
+                }
+            }
+            forceUniformWidth(count, heightMeasureSpec) {
+                let uniformMeasureSpec = MeasureSpec.makeMeasureSpec(this.getMeasuredWidth(), MeasureSpec.EXACTLY);
+                for (let i = 0; i < count; ++i) {
+                    const child = this.getVirtualChildAt(i);
+                    if (child.getVisibility() != View.GONE) {
+                        let lp = child.getLayoutParams();
+                        if (lp.width == LinearLayout.LayoutParams.MATCH_PARENT) {
+                            let oldHeight = lp.height;
+                            lp.height = child.getMeasuredHeight();
+                            this.measureChildWithMargins(child, uniformMeasureSpec, 0, heightMeasureSpec, 0);
+                            lp.height = oldHeight;
+                        }
+                    }
+                }
+            }
+            measureHorizontal(widthMeasureSpec, heightMeasureSpec) {
+                this.mTotalLength = 0;
+                let maxHeight = 0;
+                let childState = 0;
+                let alternativeMaxHeight = 0;
+                let weightedMaxHeight = 0;
+                let allFillParent = true;
+                let totalWeight = 0;
+                const count = this.getVirtualChildCount();
+                const widthMode = MeasureSpec.getMode(widthMeasureSpec);
+                const heightMode = MeasureSpec.getMode(heightMeasureSpec);
+                let matchHeight = false;
+                if (this.mMaxAscent == null || this.mMaxDescent == null) {
+                    this.mMaxAscent = new Array(LinearLayout.VERTICAL_GRAVITY_COUNT);
+                    this.mMaxDescent = new Array(LinearLayout.VERTICAL_GRAVITY_COUNT);
+                }
+                let maxAscent = this.mMaxAscent;
+                let maxDescent = this.mMaxDescent;
+                maxAscent[0] = maxAscent[1] = maxAscent[2] = maxAscent[3] = -1;
+                maxDescent[0] = maxDescent[1] = maxDescent[2] = maxDescent[3] = -1;
+                const baselineAligned = this.mBaselineAligned;
+                const useLargestChild = this.mUseLargestChild;
+                const isExactly = widthMode == MeasureSpec.EXACTLY;
+                let largestChildWidth = Number.MAX_SAFE_INTEGER;
+                for (let i = 0; i < count; ++i) {
+                    const child = this.getVirtualChildAt(i);
+                    if (child == null) {
+                        this.mTotalLength += this.measureNullChild(i);
+                        continue;
+                    }
+                    if (child.getVisibility() == View.GONE) {
+                        i += this.getChildrenSkipCount(child, i);
+                        continue;
+                    }
+                    if (this.hasDividerBeforeChildAt(i)) {
+                        this.mTotalLength += this.mDividerWidth;
+                    }
+                    const lp = child.getLayoutParams();
+                    totalWeight += lp.weight;
+                    if (widthMode == MeasureSpec.EXACTLY && lp.width == 0 && lp.weight > 0) {
+                        if (isExactly) {
+                            this.mTotalLength += lp.leftMargin + lp.rightMargin;
+                        }
+                        else {
+                            const totalLength = this.mTotalLength;
+                            this.mTotalLength = Math.max(totalLength, totalLength +
+                                lp.leftMargin + lp.rightMargin);
+                        }
+                        if (baselineAligned) {
+                            const freeSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+                            child.measure(freeSpec, freeSpec);
+                        }
+                    }
+                    else {
+                        let oldWidth = Number.MIN_SAFE_INTEGER;
+                        if (lp.width == 0 && lp.weight > 0) {
+                            oldWidth = 0;
+                            lp.width = LinearLayout.LayoutParams.WRAP_CONTENT;
+                        }
+                        this.measureChildBeforeLayout(child, i, widthMeasureSpec, totalWeight == 0 ? this.mTotalLength : 0, heightMeasureSpec, 0);
+                        if (oldWidth != Number.MIN_SAFE_INTEGER) {
+                            lp.width = oldWidth;
+                        }
+                        const childWidth = child.getMeasuredWidth();
+                        if (isExactly) {
+                            this.mTotalLength += childWidth + lp.leftMargin + lp.rightMargin +
+                                this.getNextLocationOffset(child);
+                        }
+                        else {
+                            const totalLength = this.mTotalLength;
+                            this.mTotalLength = Math.max(totalLength, totalLength + childWidth + lp.leftMargin +
+                                lp.rightMargin + this.getNextLocationOffset(child));
+                        }
+                        if (useLargestChild) {
+                            largestChildWidth = Math.max(childWidth, largestChildWidth);
+                        }
+                    }
+                    let matchHeightLocally = false;
+                    if (heightMode != MeasureSpec.EXACTLY && lp.height == LinearLayout.LayoutParams.MATCH_PARENT) {
+                        matchHeight = true;
+                        matchHeightLocally = true;
+                    }
+                    const margin = lp.topMargin + lp.bottomMargin;
+                    const childHeight = child.getMeasuredHeight() + margin;
+                    childState = LinearLayout.combineMeasuredStates(childState, child.getMeasuredState());
+                    if (baselineAligned) {
+                        const childBaseline = child.getBaseline();
+                        if (childBaseline != -1) {
+                            const gravity = (lp.gravity < 0 ? this.mGravity : lp.gravity)
+                                & Gravity.VERTICAL_GRAVITY_MASK;
+                            const index = ((gravity >> Gravity.AXIS_Y_SHIFT)
+                                & ~Gravity.AXIS_SPECIFIED) >> 1;
+                            maxAscent[index] = Math.max(maxAscent[index], childBaseline);
+                            maxDescent[index] = Math.max(maxDescent[index], childHeight - childBaseline);
+                        }
+                    }
+                    maxHeight = Math.max(maxHeight, childHeight);
+                    allFillParent = allFillParent && lp.height == LinearLayout.LayoutParams.MATCH_PARENT;
+                    if (lp.weight > 0) {
+                        weightedMaxHeight = Math.max(weightedMaxHeight, matchHeightLocally ? margin : childHeight);
+                    }
+                    else {
+                        alternativeMaxHeight = Math.max(alternativeMaxHeight, matchHeightLocally ? margin : childHeight);
+                    }
+                    i += this.getChildrenSkipCount(child, i);
+                }
+                if (this.mTotalLength > 0 && this.hasDividerBeforeChildAt(count)) {
+                    this.mTotalLength += this.mDividerWidth;
+                }
+                if (maxAscent[LinearLayout.INDEX_TOP] != -1 ||
+                    maxAscent[LinearLayout.INDEX_CENTER_VERTICAL] != -1 ||
+                    maxAscent[LinearLayout.INDEX_BOTTOM] != -1 ||
+                    maxAscent[LinearLayout.INDEX_FILL] != -1) {
+                    const ascent = Math.max(maxAscent[LinearLayout.INDEX_FILL], Math.max(maxAscent[LinearLayout.INDEX_CENTER_VERTICAL], Math.max(maxAscent[LinearLayout.INDEX_TOP], maxAscent[LinearLayout.INDEX_BOTTOM])));
+                    const descent = Math.max(maxDescent[LinearLayout.INDEX_FILL], Math.max(maxDescent[LinearLayout.INDEX_CENTER_VERTICAL], Math.max(maxDescent[LinearLayout.INDEX_TOP], maxDescent[LinearLayout.INDEX_BOTTOM])));
+                    maxHeight = Math.max(maxHeight, ascent + descent);
+                }
+                if (useLargestChild &&
+                    (widthMode == MeasureSpec.AT_MOST || widthMode == MeasureSpec.UNSPECIFIED)) {
+                    this.mTotalLength = 0;
+                    for (let i = 0; i < count; ++i) {
+                        const child = this.getVirtualChildAt(i);
+                        if (child == null) {
+                            this.mTotalLength += this.measureNullChild(i);
+                            continue;
+                        }
+                        if (child.getVisibility() == View.GONE) {
+                            i += this.getChildrenSkipCount(child, i);
+                            continue;
+                        }
+                        const lp = child.getLayoutParams();
+                        if (isExactly) {
+                            this.mTotalLength += largestChildWidth + lp.leftMargin + lp.rightMargin +
+                                this.getNextLocationOffset(child);
+                        }
+                        else {
+                            const totalLength = this.mTotalLength;
+                            this.mTotalLength = Math.max(totalLength, totalLength + largestChildWidth +
+                                lp.leftMargin + lp.rightMargin + this.getNextLocationOffset(child));
+                        }
+                    }
+                }
+                this.mTotalLength += this.mPaddingLeft + this.mPaddingRight;
+                let widthSize = this.mTotalLength;
+                widthSize = Math.max(widthSize, this.getSuggestedMinimumWidth());
+                let widthSizeAndState = LinearLayout.resolveSizeAndState(widthSize, widthMeasureSpec, 0);
+                widthSize = widthSizeAndState & View.MEASURED_SIZE_MASK;
+                let delta = widthSize - this.mTotalLength;
+                if (delta != 0 && totalWeight > 0) {
+                    let weightSum = this.mWeightSum > 0 ? this.mWeightSum : totalWeight;
+                    maxAscent[0] = maxAscent[1] = maxAscent[2] = maxAscent[3] = -1;
+                    maxDescent[0] = maxDescent[1] = maxDescent[2] = maxDescent[3] = -1;
+                    maxHeight = -1;
+                    this.mTotalLength = 0;
+                    for (let i = 0; i < count; ++i) {
+                        const child = this.getVirtualChildAt(i);
+                        if (child == null || child.getVisibility() == View.GONE) {
+                            continue;
+                        }
+                        const lp = child.getLayoutParams();
+                        let childExtra = lp.weight;
+                        if (childExtra > 0) {
+                            let share = (childExtra * delta / weightSum);
+                            weightSum -= childExtra;
+                            delta -= share;
+                            const childHeightMeasureSpec = LinearLayout.getChildMeasureSpec(heightMeasureSpec, this.mPaddingTop + this.mPaddingBottom + lp.topMargin + lp.bottomMargin, lp.height);
+                            if ((lp.width != 0) || (widthMode != MeasureSpec.EXACTLY)) {
+                                let childWidth = child.getMeasuredWidth() + share;
+                                if (childWidth < 0) {
+                                    childWidth = 0;
+                                }
+                                child.measure(MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY), childHeightMeasureSpec);
+                            }
+                            else {
+                                child.measure(MeasureSpec.makeMeasureSpec(share > 0 ? share : 0, MeasureSpec.EXACTLY), childHeightMeasureSpec);
+                            }
+                            childState = LinearLayout.combineMeasuredStates(childState, child.getMeasuredState() & View.MEASURED_STATE_MASK);
+                        }
+                        if (isExactly) {
+                            this.mTotalLength += child.getMeasuredWidth() + lp.leftMargin + lp.rightMargin +
+                                this.getNextLocationOffset(child);
+                        }
+                        else {
+                            const totalLength = this.mTotalLength;
+                            this.mTotalLength = Math.max(totalLength, totalLength + child.getMeasuredWidth() +
+                                lp.leftMargin + lp.rightMargin + this.getNextLocationOffset(child));
+                        }
+                        let matchHeightLocally = heightMode != MeasureSpec.EXACTLY &&
+                            lp.height == LinearLayout.LayoutParams.MATCH_PARENT;
+                        const margin = lp.topMargin + lp.bottomMargin;
+                        let childHeight = child.getMeasuredHeight() + margin;
+                        maxHeight = Math.max(maxHeight, childHeight);
+                        alternativeMaxHeight = Math.max(alternativeMaxHeight, matchHeightLocally ? margin : childHeight);
+                        allFillParent = allFillParent && lp.height == LinearLayout.LayoutParams.MATCH_PARENT;
+                        if (baselineAligned) {
+                            const childBaseline = child.getBaseline();
+                            if (childBaseline != -1) {
+                                const gravity = (lp.gravity < 0 ? this.mGravity : lp.gravity)
+                                    & Gravity.VERTICAL_GRAVITY_MASK;
+                                const index = ((gravity >> Gravity.AXIS_Y_SHIFT)
+                                    & ~Gravity.AXIS_SPECIFIED) >> 1;
+                                maxAscent[index] = Math.max(maxAscent[index], childBaseline);
+                                maxDescent[index] = Math.max(maxDescent[index], childHeight - childBaseline);
+                            }
+                        }
+                    }
+                    this.mTotalLength += this.mPaddingLeft + this.mPaddingRight;
+                    if (maxAscent[LinearLayout.INDEX_TOP] != -1 ||
+                        maxAscent[LinearLayout.INDEX_CENTER_VERTICAL] != -1 ||
+                        maxAscent[LinearLayout.INDEX_BOTTOM] != -1 ||
+                        maxAscent[LinearLayout.INDEX_FILL] != -1) {
+                        const ascent = Math.max(maxAscent[LinearLayout.INDEX_FILL], Math.max(maxAscent[LinearLayout.INDEX_CENTER_VERTICAL], Math.max(maxAscent[LinearLayout.INDEX_TOP], maxAscent[LinearLayout.INDEX_BOTTOM])));
+                        const descent = Math.max(maxDescent[LinearLayout.INDEX_FILL], Math.max(maxDescent[LinearLayout.INDEX_CENTER_VERTICAL], Math.max(maxDescent[LinearLayout.INDEX_TOP], maxDescent[LinearLayout.INDEX_BOTTOM])));
+                        maxHeight = Math.max(maxHeight, ascent + descent);
+                    }
+                }
+                else {
+                    alternativeMaxHeight = Math.max(alternativeMaxHeight, weightedMaxHeight);
+                    if (useLargestChild && widthMode != MeasureSpec.EXACTLY) {
+                        for (let i = 0; i < count; i++) {
+                            const child = this.getVirtualChildAt(i);
+                            if (child == null || child.getVisibility() == View.GONE) {
+                                continue;
+                            }
+                            const lp = child.getLayoutParams();
+                            let childExtra = lp.weight;
+                            if (childExtra > 0) {
+                                child.measure(MeasureSpec.makeMeasureSpec(largestChildWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(child.getMeasuredHeight(), MeasureSpec.EXACTLY));
+                            }
+                        }
+                    }
+                }
+                if (!allFillParent && heightMode != MeasureSpec.EXACTLY) {
+                    maxHeight = alternativeMaxHeight;
+                }
+                maxHeight += this.mPaddingTop + this.mPaddingBottom;
+                maxHeight = Math.max(maxHeight, this.getSuggestedMinimumHeight());
+                this.setMeasuredDimension(widthSizeAndState | (childState & View.MEASURED_STATE_MASK), LinearLayout.resolveSizeAndState(maxHeight, heightMeasureSpec, (childState << View.MEASURED_HEIGHT_STATE_SHIFT)));
+                if (matchHeight) {
+                    this.forceUniformHeight(count, widthMeasureSpec);
+                }
+            }
+            forceUniformHeight(count, widthMeasureSpec) {
+                let uniformMeasureSpec = MeasureSpec.makeMeasureSpec(this.getMeasuredHeight(), MeasureSpec.EXACTLY);
+                for (let i = 0; i < count; ++i) {
+                    const child = this.getVirtualChildAt(i);
+                    if (child.getVisibility() != View.GONE) {
+                        let lp = child.getLayoutParams();
+                        if (lp.height == LinearLayout.LayoutParams.MATCH_PARENT) {
+                            let oldWidth = lp.width;
+                            lp.width = child.getMeasuredWidth();
+                            this.measureChildWithMargins(child, widthMeasureSpec, 0, uniformMeasureSpec, 0);
+                            lp.width = oldWidth;
+                        }
+                    }
+                }
+            }
+            getChildrenSkipCount(child, index) {
+                return 0;
+            }
+            measureNullChild(childIndex) {
+                return 0;
+            }
+            measureChildBeforeLayout(child, childIndex, widthMeasureSpec, totalWidth, heightMeasureSpec, totalHeight) {
+                this.measureChildWithMargins(child, widthMeasureSpec, totalWidth, heightMeasureSpec, totalHeight);
+            }
+            getLocationOffset(child) {
+                return 0;
+            }
+            getNextLocationOffset(child) {
+                return 0;
+            }
+            onLayout(changed, l, t, r, b) {
+                if (this.mOrientation == LinearLayout.VERTICAL) {
+                    this.layoutVertical(l, t, r, b);
+                }
+                else {
+                    this.layoutHorizontal(l, t, r, b);
+                }
+            }
+            layoutVertical(left, top, right, bottom) {
+                const paddingLeft = this.mPaddingLeft;
+                let childTop;
+                let childLeft;
+                const width = right - left;
+                let childRight = width - this.mPaddingRight;
+                let childSpace = width - paddingLeft - this.mPaddingRight;
+                const count = this.getVirtualChildCount();
+                const majorGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                const minorGravity = this.mGravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+                switch (majorGravity) {
+                    case Gravity.BOTTOM:
+                        childTop = this.mPaddingTop + bottom - top - this.mTotalLength;
+                        break;
+                    case Gravity.CENTER_VERTICAL:
+                        childTop = this.mPaddingTop + (bottom - top - this.mTotalLength) / 2;
+                        break;
+                    case Gravity.TOP:
+                    default:
+                        childTop = this.mPaddingTop;
+                        break;
+                }
+                for (let i = 0; i < count; i++) {
+                    const child = this.getVirtualChildAt(i);
+                    if (child == null) {
+                        childTop += this.measureNullChild(i);
+                    }
+                    else if (child.getVisibility() != View.GONE) {
+                        const childWidth = child.getMeasuredWidth();
+                        const childHeight = child.getMeasuredHeight();
+                        const lp = child.getLayoutParams();
+                        let gravity = lp.gravity;
+                        if (gravity < 0) {
+                            gravity = minorGravity;
+                        }
+                        const absoluteGravity = gravity;
+                        switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                            case Gravity.CENTER_HORIZONTAL:
+                                childLeft = paddingLeft + ((childSpace - childWidth) / 2)
+                                    + lp.leftMargin - lp.rightMargin;
+                                break;
+                            case Gravity.RIGHT:
+                                childLeft = childRight - childWidth - lp.rightMargin;
+                                break;
+                            case Gravity.LEFT:
+                            default:
+                                childLeft = paddingLeft + lp.leftMargin;
+                                break;
+                        }
+                        if (this.hasDividerBeforeChildAt(i)) {
+                            childTop += this.mDividerHeight;
+                        }
+                        childTop += lp.topMargin;
+                        this.setChildFrame(child, childLeft, childTop + this.getLocationOffset(child), childWidth, childHeight);
+                        childTop += childHeight + lp.bottomMargin + this.getNextLocationOffset(child);
+                        i += this.getChildrenSkipCount(child, i);
+                    }
+                }
+            }
+            layoutHorizontal(left, top, right, bottom) {
+                const isLayoutRtl = this.isLayoutRtl();
+                const paddingTop = this.mPaddingTop;
+                let childTop;
+                let childLeft;
+                const height = bottom - top;
+                let childBottom = height - this.mPaddingBottom;
+                let childSpace = height - paddingTop - this.mPaddingBottom;
+                const count = this.getVirtualChildCount();
+                const majorGravity = this.mGravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+                const minorGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                const baselineAligned = this.mBaselineAligned;
+                const maxAscent = this.mMaxAscent;
+                const maxDescent = this.mMaxDescent;
+                let absoluteGravity = majorGravity;
+                switch (absoluteGravity) {
+                    case Gravity.RIGHT:
+                        childLeft = this.mPaddingLeft + right - left - this.mTotalLength;
+                        break;
+                    case Gravity.CENTER_HORIZONTAL:
+                        childLeft = this.mPaddingLeft + (right - left - this.mTotalLength) / 2;
+                        break;
+                    case Gravity.LEFT:
+                    default:
+                        childLeft = this.mPaddingLeft;
+                        break;
+                }
+                let start = 0;
+                let dir = 1;
+                if (isLayoutRtl) {
+                    start = count - 1;
+                    dir = -1;
+                }
+                for (let i = 0; i < count; i++) {
+                    let childIndex = start + dir * i;
+                    const child = this.getVirtualChildAt(childIndex);
+                    if (child == null) {
+                        childLeft += this.measureNullChild(childIndex);
+                    }
+                    else if (child.getVisibility() != View.GONE) {
+                        const childWidth = child.getMeasuredWidth();
+                        const childHeight = child.getMeasuredHeight();
+                        let childBaseline = -1;
+                        const lp = child.getLayoutParams();
+                        if (baselineAligned && lp.height != LinearLayout.LayoutParams.MATCH_PARENT) {
+                            childBaseline = child.getBaseline();
+                        }
+                        let gravity = lp.gravity;
+                        if (gravity < 0) {
+                            gravity = minorGravity;
+                        }
+                        switch (gravity & Gravity.VERTICAL_GRAVITY_MASK) {
+                            case Gravity.TOP:
+                                childTop = paddingTop + lp.topMargin;
+                                if (childBaseline != -1) {
+                                    childTop += maxAscent[LinearLayout.INDEX_TOP] - childBaseline;
+                                }
+                                break;
+                            case Gravity.CENTER_VERTICAL:
+                                childTop = paddingTop + ((childSpace - childHeight) / 2)
+                                    + lp.topMargin - lp.bottomMargin;
+                                break;
+                            case Gravity.BOTTOM:
+                                childTop = childBottom - childHeight - lp.bottomMargin;
+                                if (childBaseline != -1) {
+                                    let descent = child.getMeasuredHeight() - childBaseline;
+                                    childTop -= (maxDescent[LinearLayout.INDEX_BOTTOM] - descent);
+                                }
+                                break;
+                            default:
+                                childTop = paddingTop;
+                                break;
+                        }
+                        if (this.hasDividerBeforeChildAt(childIndex)) {
+                            childLeft += this.mDividerWidth;
+                        }
+                        childLeft += lp.leftMargin;
+                        this.setChildFrame(child, childLeft + this.getLocationOffset(child), childTop, childWidth, childHeight);
+                        childLeft += childWidth + lp.rightMargin +
+                            this.getNextLocationOffset(child);
+                        i += this.getChildrenSkipCount(child, childIndex);
+                    }
+                }
+            }
+            setChildFrame(child, left, top, width, height) {
+                child.layout(left, top, left + width, top + height);
+            }
+            setOrientation(orientation) {
+                if (this.mOrientation != orientation) {
+                    this.mOrientation = orientation;
+                    this.requestLayout();
+                }
+            }
+            getOrientation() {
+                return this.mOrientation;
+            }
+            setGravity(gravity) {
+                if (this.mGravity != gravity) {
+                    if ((gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == 0) {
+                        gravity |= Gravity.LEFT;
+                    }
+                    if ((gravity & Gravity.VERTICAL_GRAVITY_MASK) == 0) {
+                        gravity |= Gravity.TOP;
+                    }
+                    this.mGravity = gravity;
+                    this.requestLayout();
+                }
+            }
+            setHorizontalGravity(horizontalGravity) {
+                const gravity = horizontalGravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+                if ((this.mGravity & Gravity.HORIZONTAL_GRAVITY_MASK) != gravity) {
+                    this.mGravity = (this.mGravity & ~Gravity.HORIZONTAL_GRAVITY_MASK) | gravity;
+                    this.requestLayout();
+                }
+            }
+            setVerticalGravity(verticalGravity) {
+                const gravity = verticalGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) != gravity) {
+                    this.mGravity = (this.mGravity & ~Gravity.VERTICAL_GRAVITY_MASK) | gravity;
+                    this.requestLayout();
+                }
+            }
+            generateDefaultLayoutParams() {
+                let LayoutParams = LinearLayout.LayoutParams;
+                if (this.mOrientation == LinearLayout.HORIZONTAL) {
+                    return new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+                }
+                else if (this.mOrientation == LinearLayout.VERTICAL) {
+                    return new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+                }
+                return super.generateDefaultLayoutParams();
+            }
+            generateLayoutParams(p) {
+                return new LinearLayout.LayoutParams(p);
+            }
+            checkLayoutParams(p) {
+                return p instanceof LinearLayout.LayoutParams;
+            }
+        }
+        LinearLayout.HORIZONTAL = 0;
+        LinearLayout.VERTICAL = 1;
+        LinearLayout.SHOW_DIVIDER_NONE = 0;
+        LinearLayout.SHOW_DIVIDER_BEGINNING = 1;
+        LinearLayout.SHOW_DIVIDER_MIDDLE = 2;
+        LinearLayout.SHOW_DIVIDER_END = 4;
+        LinearLayout.VERTICAL_GRAVITY_COUNT = 4;
+        LinearLayout.INDEX_CENTER_VERTICAL = 0;
+        LinearLayout.INDEX_TOP = 1;
+        LinearLayout.INDEX_BOTTOM = 2;
+        LinearLayout.INDEX_FILL = 3;
+        widget.LinearLayout = LinearLayout;
+        (function (LinearLayout) {
+            class LayoutParams extends android.view.ViewGroup.MarginLayoutParams {
+                constructor(...args) {
+                    super();
+                    this.weight = 0;
+                    this.gravity = -1;
+                    if (args.length === 1 && args[0] instanceof LayoutParams) {
+                        this.gravity = args[0].gravity;
+                    }
+                    else {
+                        let [width, height, weight = 0] = args;
+                        super(width, height);
+                        this.weight = weight;
+                    }
+                }
+            }
+            LinearLayout.LayoutParams = LayoutParams;
+        })(LinearLayout = widget.LinearLayout || (widget.LinearLayout = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/26.
  */
@@ -7850,6 +8807,7 @@ var android;
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
+///<reference path="android/widget/LinearLayout.ts"/>
 ///<reference path="android/widget/TextView.ts"/>
 ///<reference path="runtime/AndroidUI.ts"/>
 window[`android`] = android;

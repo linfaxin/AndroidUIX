@@ -779,6 +779,8 @@ declare module android.view {
         setLongClickable(longClickable: boolean): void;
         setPressed(pressed: boolean): void;
         isPressed(): boolean;
+        isLayoutRtl(): boolean;
+        getBaseline(): number;
         isLayoutRequested(): boolean;
         getLayoutParams(): ViewGroup.LayoutParams;
         setLayoutParams(params: ViewGroup.LayoutParams): void;
@@ -1556,6 +1558,96 @@ declare module android.widget {
         private endDrag();
         scrollTo(x: number, y: number): void;
         private static clamp(n, my, child);
+    }
+}
+declare module android.widget {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Canvas = android.graphics.Canvas;
+    class LinearLayout extends ViewGroup {
+        static HORIZONTAL: number;
+        static VERTICAL: number;
+        static SHOW_DIVIDER_NONE: number;
+        static SHOW_DIVIDER_BEGINNING: number;
+        static SHOW_DIVIDER_MIDDLE: number;
+        static SHOW_DIVIDER_END: number;
+        private mBaselineAligned;
+        private mBaselineAlignedChildIndex;
+        private mBaselineChildTop;
+        private mOrientation;
+        private mGravity;
+        private mTotalLength;
+        private mWeightSum;
+        private mUseLargestChild;
+        private mMaxAscent;
+        private mMaxDescent;
+        private static VERTICAL_GRAVITY_COUNT;
+        private static INDEX_CENTER_VERTICAL;
+        private static INDEX_TOP;
+        private static INDEX_BOTTOM;
+        private static INDEX_FILL;
+        private mDivider;
+        private mDividerWidth;
+        private mDividerHeight;
+        private mShowDividers;
+        private mDividerPadding;
+        setShowDividers(showDividers: number): void;
+        shouldDelayChildPressedState(): boolean;
+        getShowDividers(): number;
+        getDividerDrawable(): Drawable;
+        setDividerDrawable(divider: Drawable): void;
+        setDividerPadding(padding: number): void;
+        getDividerPadding(): number;
+        getDividerWidth(): number;
+        onDraw(canvas: Canvas): void;
+        drawDividersVertical(canvas: Canvas): void;
+        drawDividersHorizontal(canvas: Canvas): void;
+        drawHorizontalDivider(canvas: Canvas, top: number): void;
+        drawVerticalDivider(canvas: Canvas, left: number): void;
+        isBaselineAligned(): boolean;
+        setBaselineAligned(baselineAligned: boolean): void;
+        isMeasureWithLargestChildEnabled(): boolean;
+        setMeasureWithLargestChildEnabled(enabled: boolean): void;
+        getBaseline(): number;
+        getBaselineAlignedChildIndex(): number;
+        setBaselineAlignedChildIndex(i: number): void;
+        getVirtualChildAt(index: number): View;
+        getVirtualChildCount(): number;
+        getWeightSum(): number;
+        setWeightSum(weightSum: number): void;
+        onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        hasDividerBeforeChildAt(childIndex: number): boolean;
+        measureVertical(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        forceUniformWidth(count: number, heightMeasureSpec: number): void;
+        measureHorizontal(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        private forceUniformHeight(count, widthMeasureSpec);
+        getChildrenSkipCount(child: View, index: number): number;
+        measureNullChild(childIndex: number): number;
+        measureChildBeforeLayout(child: View, childIndex: number, widthMeasureSpec: number, totalWidth: number, heightMeasureSpec: number, totalHeight: number): void;
+        getLocationOffset(child: View): number;
+        getNextLocationOffset(child: View): number;
+        onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        layoutVertical(left: number, top: number, right: number, bottom: number): void;
+        layoutHorizontal(left: number, top: number, right: number, bottom: number): void;
+        private setChildFrame(child, left, top, width, height);
+        setOrientation(orientation: number): void;
+        getOrientation(): number;
+        setGravity(gravity: number): void;
+        setHorizontalGravity(horizontalGravity: number): void;
+        setVerticalGravity(verticalGravity: number): void;
+        generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
+        generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
+        checkLayoutParams(p: android.view.ViewGroup.LayoutParams): boolean;
+    }
+    module LinearLayout {
+        class LayoutParams extends android.view.ViewGroup.MarginLayoutParams {
+            weight: number;
+            gravity: number;
+            constructor();
+            constructor(source: ViewGroup.LayoutParams);
+            constructor(width: number, height: number, weight?: number);
+        }
     }
 }
 declare module android.widget {
