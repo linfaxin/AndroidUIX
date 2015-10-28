@@ -54,4 +54,5 @@ module android.app{
             (<any> document).registerElement("android-"+this.name, this);
         }
     }
+    Activity.registerCustomElement();
 }

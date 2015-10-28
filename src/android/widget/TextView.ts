@@ -42,6 +42,104 @@ module android.widget{
             this.setGravity(Gravity.TOP | Gravity.LEFT);
         }
 
+
+        createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
+            super.createAttrChangeHandler(mergeHandler);
+            let textView = this;
+            mergeHandler.add({
+                set textColorHighlight(value){
+                },
+                set textColor(value){
+
+                },
+                set textColorHint(value){
+
+                },
+                set textSize(value){
+
+                },
+                set textStyle(value){
+
+                },
+                set textAllCaps(value){
+
+                },
+
+                set drawableLeft(value){
+
+                },
+                set drawableTop(value){
+
+                },
+                set drawableRight(value){
+
+                },
+                set drawableBottom(value){
+
+                },
+                set drawablePadding(value){
+
+                },
+                set maxLines(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setMaxLines(value);
+                },
+                set maxHeight(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setMaxHeight(value);
+                },
+                set lines(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setLines(value);
+                },
+                set height(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setHeight(value);
+                },
+                set minLines(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setMinLines(value);
+                },
+                set minHeight(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setMinimumHeight(value);
+                },
+                set maxWidth(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setMaxWidth(value);
+                },
+                set width(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setWidth(value);
+                },
+                set minWidth(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setMinimumWidth(value);
+                },
+                set gravity(value){
+                    textView.setGravity(View.AttrChangeHandler.parseGravity(value, textView.mGravity));
+                },
+                set text(value){
+                    textView.setText(value);
+                },
+                set singleLine(value){
+                    if(View.AttrChangeHandler.parseBoolean(value, false)) textView.setSingleLine();
+                },
+                set textScaleX(value){
+                },
+                set lineSpacingExtra(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setLineSpacing(value, textView.mSpacingMult);
+                },
+                set lineSpacingMultiplier(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) textView.setLineSpacing(textView.mSpacingAdd, value);
+                },
+
+
+            })
+        }
+
         private initTextElement(){
             this.mTextElement = document.createElement('div');
             this.mTextElement.style.position = "absolute";
@@ -230,6 +328,13 @@ module android.widget{
             return Math.ceil(this.mTextSize * this.mSpacingMult + this.mSpacingAdd);//line height should be Int in style
         }
 
+        setHeight(pixels:number) {
+            this.mMaxHeight = pixels;
+            this.setMinimumHeight(pixels);
+
+            this.requestLayout();
+            this.invalidate();
+        }
         setMaxLines(max:number){
             this.mMaxLineCount = max;
             this.requestLayout();
@@ -238,7 +343,29 @@ module android.widget{
         getMaxLines():number{
             return this.mMaxLineCount;
         }
+        setMaxHeight(maxHeight:number) {
+            this.mMaxHeight = maxHeight;
+            this.requestLayout();
+            this.invalidate();
+        }
+        getMaxHeight():number{
+            return this.mMaxHeight;
+        }
+        setMaxWidth(maxpixels:number) {
+            this.mMaxWidth = maxpixels;
+            this.requestLayout();
+            this.invalidate();
+        }
+        getMaxWidth() {
+            return this.mMaxWidth;
+        }
+        setWidth(pixels:number) {
+            this.mMaxWidth = pixels;
+            this.setMinimumWidth(pixels);
 
+            this.requestLayout();
+            this.invalidate();
+        }
         setMinLines(min:number){
             this.mMinLineCount = min;
             this.requestLayout();
@@ -262,7 +389,7 @@ module android.widget{
             this.invalidate();
         }
 
-        setText(text:string){
+        setText(text=''){
             this.mTextElement.innerText = text;
             this.requestLayout();
         }

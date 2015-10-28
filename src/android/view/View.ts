@@ -9,6 +9,7 @@
 ///<reference path="../../java/lang/StringBuilder.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
 ///<reference path="ViewRootImpl.ts"/>
 ///<reference path="ViewParent.ts"/>
 ///<reference path="ViewGroup.ts"/>
@@ -22,6 +23,8 @@
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../util/Pools.ts"/>
+///<reference path="../util/TypedValue.ts"/>
+///<reference path="Gravity.ts"/>
 
 module android.view {
     import SparseArray = android.util.SparseArray;
@@ -38,10 +41,11 @@ module android.view {
     import Rect = android.graphics.Rect;
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
+    import ArrayList = java.util.ArrayList;
     import OnAttachStateChangeListener = View.OnAttachStateChangeListener;
     import Resources = android.content.res.Resources;
     import Pools = android.util.Pools;
-
+    import TypedValue = android.util.TypedValue;
 
     export class View implements Drawable.Callback{
         private static DBG = Log.View_DBG;
@@ -152,6 +156,7 @@ module android.view {
         mMinWidth = 0;
         mMinHeight = 0;
         private mTouchDelegate : TouchDelegate;
+        private mFloatingTreeObserver : ViewTreeObserver;
         mTouchSlop = 0;
         private mVerticalScrollFactor = 0;
         private mOverScrollMode = 0;
@@ -210,6 +215,163 @@ module android.view {
 
         constructor(){
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
+        }
+
+        //parse xml attr & callback when xml attr change
+        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void{
+            let view = this;
+            mergeHandler.add({
+                set background(value){
+                    //TODO parse & setBackground
+                },
+                set padding(value){
+                    view._setPaddingWithUnit(value, value, value, value);
+                },
+                set paddingLeft(value){
+                    view._setPaddingWithUnit(value, view.mPaddingTop, view.mPaddingRight, view.mPaddingBottom);
+                },
+                set paddingTop(value){
+                    view._setPaddingWithUnit(view.mPaddingLeft, value, view.mPaddingRight, view.mPaddingBottom);
+                },
+                set paddingRight(value){
+                    view._setPaddingWithUnit(view.mPaddingLeft, view.mPaddingTop, value, view.mPaddingBottom);
+                },
+                set paddingBottom(value){
+                    view._setPaddingWithUnit(view.mPaddingLeft, view.mPaddingTop, view.mPaddingRight, value);
+                },
+                set scrollX(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) view.scrollTo(value, view.mScrollY);
+                },
+                set scrollY(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) view.scrollTo(view.mScrollX, value);
+                },
+                set alpha(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set transformPivotX(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set transformPivotY(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set translationX(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set translationY(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set rotation(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set rotationX(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set rotationY(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set scaleX(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set scaleY(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) {//TODO
+                    };
+                },
+                set tag(value){
+                },
+                set id(value){
+                    view.bindElement.id = value;
+                },
+                set focusable(value){
+                    if(View.AttrChangeHandler.parseBoolean(value, false)){
+                        view.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                    }
+                },
+                set focusableInTouchMode(value){
+                    if(View.AttrChangeHandler.parseBoolean(value, false)){
+                        view.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
+                            View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                    }
+                },
+                set clickable(value){
+                    if(View.AttrChangeHandler.parseBoolean(value, false)){
+                        view.setFlags(View.CLICKABLE, View.CLICKABLE);
+                    }
+                },
+                set longClickable(value){
+                    if(View.AttrChangeHandler.parseBoolean(value, false)){
+                        view.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
+                    }
+                },
+                set saveEnabled(value){
+                    if(View.AttrChangeHandler.parseBoolean(value, false)){
+                        //view.setFlags(View.SAVE_DISABLED, View.SAVE_DISABLED_MASK);
+                    }
+                },
+                set duplicateParentState(value){
+                    if(View.AttrChangeHandler.parseBoolean(value, false)){
+                        view.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
+                    }
+                },
+                set visibility(value){
+                    if(value === 'gone') view.setVisibility(View.GONE);
+                    else if(value === 'invisible') view.setVisibility(View.INVISIBLE);
+                    else if(value === 'visible') view.setVisibility(View.VISIBLE);
+                },
+                set scrollbars(value){
+
+                },
+                set isScrollContainer(value){
+                    if(View.AttrChangeHandler.parseBoolean(value, false)){
+                        this.setScrollContainer(true);
+                    }
+                },
+                set minWidth(value){
+                    view.mMinWidth = value;
+                },
+                set minHeight(value){
+                    view.mMinHeight = value;
+                },
+                set onClick(value){
+                    view.setOnClickListener({
+                        onClick(v:View){
+                            let activity = view.getViewRootImpl().mContext;
+                            if(activity && typeof activity[value] === 'function'){
+                                activity[value].call(activity, v);
+                            }
+                        }
+                    });
+                },
+                set overScrollMode(value){
+                    let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
+                    if(scrollMode===undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                    view.setOverScrollMode(scrollMode);
+                },
+                set layerType(value){
+
+                },
+            });
+            mergeHandler.isCallSuper = true;
         }
 
         getWidth():number {
@@ -336,6 +498,30 @@ module android.view {
         getPaddingBottom():number{
             return this.mPaddingBottom;
         }
+        setPaddingLeft(left:number):void{
+            if (this.mPaddingLeft != left) {
+                this.mPaddingLeft = left;
+                this.requestLayout();
+            }
+        }
+        setPaddingTop(top:number):void{
+            if (this.mPaddingTop != top) {
+                this.mPaddingTop = top;
+                this.requestLayout();
+            }
+        }
+        setPaddingRight(right:number):void{
+            if (this.mPaddingRight != right) {
+                this.mPaddingRight = right;
+                this.requestLayout();
+            }
+        }
+        setPaddingBottom(bottom:number):void{
+            if (this.mPaddingBottom != bottom) {
+                this.mPaddingBottom = bottom;
+                this.requestLayout();
+            }
+        }
         setPadding(left:number, top:number, right:number, bottom:number){
             let changed = false;
 
@@ -357,6 +543,34 @@ module android.view {
             }
             if (changed) {
                 this.requestLayout();
+            }
+        }
+
+        private _setPaddingWithUnit(left, top, right, bottom){
+            let view = this;
+            let dm = Resources.getDisplayMetrics();
+            let width = view.getWidth();
+            let height = view.getHeight();
+            let padLeft = TypedValue.complexToDimensionPixelSize(left, width, dm);
+            let padTop = TypedValue.complexToDimensionPixelSize(top, height, dm);
+            let padRight = TypedValue.complexToDimensionPixelSize(right, width, dm);
+            let padBottom = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+            view.setPadding(padLeft, padTop, padRight, padBottom);
+
+            //FRACTION unit should layout again
+            let unit = TypedValue.COMPLEX_UNIT_FRACTION;
+            if(left.endsWith(unit) || top.endsWith(unit) || right.endsWith(unit) || bottom.endsWith(unit)){
+                view.post({
+                    run:()=>{
+                        let width = view.getWidth();
+                        let height = view.getHeight();
+                        let padLeftN = TypedValue.complexToDimensionPixelSize(left, width, dm);
+                        let padTopN = TypedValue.complexToDimensionPixelSize(top, height, dm);
+                        let padRightN = TypedValue.complexToDimensionPixelSize(right, width, dm);
+                        let padBottomN = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+                        view.setPadding(padLeftN, padTopN, padRightN, padBottomN);
+                    }
+                });
             }
         }
 
@@ -613,13 +827,6 @@ module android.view {
         }
         onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
 
-        }
-        getListenerInfo() {
-            if (this.mListenerInfo != null) {
-                return this.mListenerInfo;
-            }
-            this.mListenerInfo = new View.ListenerInfo();
-            return this.mListenerInfo;
         }
         isFocusable():boolean {
             return View.FOCUSABLE == (this.mViewFlags & View.FOCUSABLE_MASK);
@@ -888,6 +1095,57 @@ module android.view {
         getTouchDelegate() {
             return this.mTouchDelegate;
         }
+
+        getListenerInfo() {
+            if (this.mListenerInfo != null) {
+                return this.mListenerInfo;
+            }
+            this.mListenerInfo = new View.ListenerInfo();
+            return this.mListenerInfo;
+        }
+        addOnLayoutChangeListener(listener:View.OnLayoutChangeListener) {
+            let li = this.getListenerInfo();
+            if (li.mOnLayoutChangeListeners == null) {
+                li.mOnLayoutChangeListeners = new ArrayList<View.OnLayoutChangeListener>();
+            }
+            if (!li.mOnLayoutChangeListeners.contains(listener)) {
+                li.mOnLayoutChangeListeners.add(listener);
+            }
+        }
+        removeOnLayoutChangeListener(listener:View.OnLayoutChangeListener) {
+            let li = this.mListenerInfo;
+            if (li == null || li.mOnLayoutChangeListeners == null) {
+                return;
+            }
+            li.mOnLayoutChangeListeners.remove(listener);
+        }
+        addOnAttachStateChangeListener(listener:View.OnAttachStateChangeListener) {
+            let li = this.getListenerInfo();
+            if (li.mOnAttachStateChangeListeners == null) {
+                li.mOnAttachStateChangeListeners
+                    = new CopyOnWriteArrayList<View.OnAttachStateChangeListener>();
+            }
+            li.mOnAttachStateChangeListeners.add(listener);
+        }
+        removeOnAttachStateChangeListener(listener:View.OnAttachStateChangeListener) {
+            let li = this.mListenerInfo;
+            if (li == null || li.mOnAttachStateChangeListeners == null) {
+                return;
+            }
+            li.mOnAttachStateChangeListeners.remove(listener);
+        }
+        setOnClickListener(l:View.OnClickListener) {
+            if (!this.isClickable()) {
+                this.setClickable(true);
+            }
+            this.getListenerInfo().mOnClickListener = l;
+        }
+        hasOnClickListeners():boolean {
+            let li = this.mListenerInfo;
+            return (li != null && li.mOnClickListener != null);
+        }
+
+
         setOnLongClickListener(l:View.OnLongClickListener) {
             if (!this.isLongClickable()) {
                 this.setLongClickable(true);
@@ -953,6 +1211,42 @@ module android.view {
         }
         isPressed():boolean {
             return (this.mPrivateFlags & View.PFLAG_PRESSED) == View.PFLAG_PRESSED;
+        }
+        setSelected(selected:boolean) {
+            if (((this.mPrivateFlags & View.PFLAG_SELECTED) != 0) != selected) {
+                this.mPrivateFlags = (this.mPrivateFlags & ~View.PFLAG_SELECTED) | (selected ? View.PFLAG_SELECTED : 0);
+                if (!selected) this.resetPressedState();
+                this.invalidate(true);
+                this.refreshDrawableState();
+                this.dispatchSetSelected(selected);
+            }
+        }
+        dispatchSetSelected(selected:boolean) {
+        }
+        isSelected() {
+            return (this.mPrivateFlags & View.PFLAG_SELECTED) != 0;
+        }
+        setActivated(activated:boolean) {
+            if (((this.mPrivateFlags & View.PFLAG_ACTIVATED) != 0) != activated) {
+                this.mPrivateFlags = (this.mPrivateFlags & ~View.PFLAG_ACTIVATED) | (activated ? View.PFLAG_ACTIVATED : 0);
+                this.invalidate(true);
+                this.refreshDrawableState();
+                this.dispatchSetActivated(activated);
+            }
+        }
+        dispatchSetActivated(activated:boolean) {
+        }
+        isActivated() {
+            return (this.mPrivateFlags & View.PFLAG_ACTIVATED) != 0;
+        }
+        getViewTreeObserver() {
+            if (this.mAttachInfo != null) {
+                return this.mAttachInfo.mTreeObserver;
+            }
+            if (this.mFloatingTreeObserver == null) {
+                this.mFloatingTreeObserver = new ViewTreeObserver();
+            }
+            return this.mFloatingTreeObserver;
         }
 
         isLayoutRtl():boolean{
@@ -1036,10 +1330,10 @@ module android.view {
 
                 let li = this.mListenerInfo;
                 if (li != null && li.mOnLayoutChangeListeners != null) {
-                    let listenersCopy = li.mOnLayoutChangeListeners.concat();
-                    let numListeners = listenersCopy.length;
+                    let listenersCopy = li.mOnLayoutChangeListeners.clone();
+                    let numListeners = listenersCopy.size();
                     for (let i = 0; i < numListeners; ++i) {
-                        listenersCopy[i].onLayoutChange(this, l, t, r, b, oldL, oldT, oldR, oldB);
+                        listenersCopy.get(i).onLayoutChange(this, l, t, r, b, oldL, oldT, oldR, oldB);
                     }
                 }
             }
@@ -2076,44 +2370,6 @@ module android.view {
             let bindEle = this.bindElement.querySelector('#'+id);
             return bindEle ? bindEle['bindView'] : null;
         }
-
-
-        //bind Element show the layout and extra info
-        _bindElement: HTMLElement;
-        get bindElement():HTMLElement{
-            if(!this._bindElement) this.initBindElement();
-            return this._bindElement;
-        }
-        _bindScrollContent: HTMLElement;//use to show scroll bar
-        get bindScrollContent():HTMLElement {
-            if(!this._bindScrollContent) this._bindScrollContent = document.createElement('div');
-            return this._bindScrollContent;
-        }
-
-        initBindElement(bindElement?:HTMLElement):void{
-            this._bindElement = bindElement || document.createElement(this.tagName());
-            this._bindElement['bindView']=this;
-            //this.bindScrollContent = document.createElement('div');
-            //this.bindScrollContent.style.cssText += '';
-        }
-
-        syncBoundToElement(){
-            let bind = this.bindElement;
-            bind.style.position = 'absolute';
-            bind.style.boxSizing = 'border-box';
-            bind.style.left = this.mLeft + 'px';
-            bind.style.top = this.mTop + 'px';
-            bind.style.width = this.getWidth() + 'px';
-            bind.style.height = this.getHeight() + 'px';
-            //bind.style.paddingLeft = this.mPaddingLeft + 'px';
-            //bind.style.paddingTop = this.mPaddingTop + 'px';
-            //bind.style.paddingRight = this.mPaddingRight + 'px';
-            //bind.style.paddingBottom = this.mPaddingBottom + 'px';
-        }
-        tagName() : string{
-            return "ANDROID-"+this.constructor.name;
-        }
-
         static inflate(domtree:HTMLElement):View{
             let className = domtree.tagName;
             if(className.startsWith('ANDROID-')){
@@ -2149,13 +2405,110 @@ module android.view {
                 Array.from(domtree.children).forEach((item)=>{
                     if(item instanceof HTMLElement){
                         let view = View.inflate(item);
-                        if(view) rootView.addView(view);
+                        let params = rootView.generateDefaultLayoutParams();
+                        this._generateLayoutParamsFromAttribute(item, params);
+                        if(view) rootView.addView(view, params);
                     }
                 });
             }
 
+            let params = this._generateLayoutParamsFromAttribute(domtree);
+            rootView.setLayoutParams(params);
             rootView.onFinishInflate();
             return rootView;
+        }
+
+
+
+
+        //bind Element show the layout and extra info
+        _bindElement: HTMLElement;
+        get bindElement():HTMLElement{
+            if(!this._bindElement) this.initBindElement();
+            return this._bindElement;
+        }
+        _bindScrollContent: HTMLElement;//use to show scroll bar
+        get bindScrollContent():HTMLElement {
+            if(!this._bindScrollContent) this._bindScrollContent = document.createElement('div');
+            return this._bindScrollContent;
+        }
+        _DOMAttrModifiedEvent : EventListener = (event:any)=>{
+            if (event.attrChange) {
+                this.onBindElementAttributeChanged(event.attrName, event.prevValue, event.newValue);
+            }
+        };
+        private initBindElement(bindElement?:HTMLElement):void{
+            this._bindElement = bindElement || document.createElement(this.tagName());
+            let oldBindView:View = this._bindElement['bindView'];
+            if(oldBindView){
+                this._bindElement.removeEventListener("DOMAttrModified", oldBindView._DOMAttrModifiedEvent, true);
+            }
+            this._bindElement['bindView']=this;
+
+            this._initAttrChangeHandler();
+            this._bindElement.addEventListener("DOMAttrModified", this._DOMAttrModifiedEvent, true);
+            this._fireInitBindElementAttribute();
+
+        }
+        syncBoundToElement(){
+            let bind = this.bindElement;
+            bind.style.position = 'absolute';
+            bind.style.boxSizing = 'border-box';
+            bind.style.left = this.mLeft + 'px';
+            bind.style.top = this.mTop + 'px';
+            bind.style.width = this.getWidth() + 'px';
+            bind.style.height = this.getHeight() + 'px';
+            //bind.style.paddingLeft = this.mPaddingLeft + 'px';
+            //bind.style.paddingTop = this.mPaddingTop + 'px';
+            //bind.style.paddingRight = this.mPaddingRight + 'px';
+            //bind.style.paddingBottom = this.mPaddingBottom + 'px';
+        }
+
+        private _attrChangeHandler = new View.AttrChangeHandler();
+
+        private _initAttrChangeHandler(){
+            this.createAttrChangeHandler(this._attrChangeHandler);
+            if(!this._attrChangeHandler.isCallSuper){
+                throw Error('must call super when override createAttrChangeHandler!');
+            }
+        }
+
+        _fireInitBindElementAttribute():void{
+            Array.from(this.bindElement.attributes).forEach((attr:Attr)=>{
+                if(attr.name==="android:id" && !this.bindElement.id) this.bindElement.id = attr.value;
+                this.onBindElementAttributeChanged(attr.name, attr.value, attr.value);
+            });
+        }
+        private onBindElementAttributeChanged(attributeName:string, oldVal:string, newVal:string):void {
+            //remove namespace('android:')
+            let parts = attributeName.split(":");
+            let attrName = parts[parts.length-1].toLowerCase();
+            if(newVal === 'true') newVal = <any>true;
+            else if(newVal === 'false') newVal = <any>false;
+
+            if(attrName.startsWith('layout_')){
+                attrName = attrName.substring('layout_'.length);
+                let params = this.getLayoutParams();
+                if(params) params._attrChangeHandler[attrName] = newVal;
+
+            }else{
+                this._attrChangeHandler.handle(attrName, newVal);
+            }
+        }
+
+        private static _generateLayoutParamsFromAttribute(node:Node, dest = new ViewGroup.LayoutParams(-2, -2)):ViewGroup.LayoutParams{
+            Array.from(node.attributes).forEach((attr:Attr)=>{
+                let layoutParamFiled = attr.name.split("layout_")[1];
+                if(layoutParamFiled!==undefined && dest[layoutParamFiled] !== undefined){
+                    dest[layoutParamFiled] = attr.value;
+                }
+            });
+            return dest;
+        }
+
+
+        tagName() : string{
+            return "ANDROID-"+this.constructor.name;
         }
     }
 
@@ -2229,7 +2582,7 @@ module android.view {
 
         export class ListenerInfo{
             mOnAttachStateChangeListeners:CopyOnWriteArrayList<OnAttachStateChangeListener>;
-            mOnLayoutChangeListeners:Array<OnLayoutChangeListener>;
+            mOnLayoutChangeListeners:ArrayList<OnLayoutChangeListener>;
             mOnClickListener:OnClickListener;
             mOnLongClickListener:OnLongClickListener;
             mOnTouchListener:OnTouchListener;
@@ -2252,6 +2605,42 @@ module android.view {
         }
         export interface OnTouchListener{
             onTouch(v:View, event:MotionEvent);
+        }
+
+        export class AttrChangeHandler{
+            isCallSuper = false;
+            handlers =  [];
+            add(handler){
+                this.handlers.push(handler);
+            }
+            handle(name, value){
+                this.handlers.forEach((handler)=>{
+                    for(let key in handler){
+                        if(key.toLowerCase()===name){
+                            handler[key] = value;
+                        }
+                    }
+                });
+            }
+            static parseBoolean(value, defaultValue = true):boolean{
+                if(value===false || value ==='fales' || value === '0') return false;
+                else if(value===true || value ==='true' || value === '1' || value === '') return true;
+                return defaultValue;
+            }
+            static parseGravity(s:string, defaultValue=Gravity.NO_GRAVITY):number {
+                let gravity = Gravity.NO_GRAVITY;
+                try {
+                    let parts = s.split("|");
+                    parts.forEach((part)=> {
+                        let g = Gravity[part.toUpperCase()];
+                        if (Number.isInteger(g)) gravity |= g;
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
+                if(Number.isNaN(gravity) || gravity===Gravity.NO_GRAVITY) gravity = defaultValue;
+                return gravity;
+            }
         }
     }
     export module View.AttachInfo{

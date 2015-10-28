@@ -42,6 +42,7 @@ module android.view {
         static DEBUG_FPS = false || ViewRootImpl.LOCAL_LOGV;
 
         private mView:View;
+        mContext:HTMLElement;
         private mViewVisibility:number = 0;
         private mWidth:number = -1;
         private mHeight:number = -1;

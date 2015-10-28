@@ -6,6 +6,7 @@
 ///<reference path="../view/ViewGroup.ts"/>
 ///<reference path="../graphics/drawable/Drawable.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
+///<reference path="../graphics/Canvas.ts"/>
 
 module android.widget {
     import Gravity = android.view.Gravity;
@@ -13,6 +14,7 @@ module android.widget {
     import ViewGroup = android.view.ViewGroup;
     import Drawable = android.graphics.drawable.Drawable;
     import Rect = android.graphics.Rect;
+    import Canvas = android.graphics.Canvas;
 
     export class FrameLayout extends ViewGroup {
         static DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.LEFT;
@@ -29,6 +31,18 @@ module android.widget {
         mForegroundInPadding = true;
         mForegroundBoundsChanged = false;
         private mMatchParentChildren = new Array<View>(1);
+
+
+        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
+            super.createAttrChangeHandler(mergeHandler);
+
+            let frameLayout = this;
+            mergeHandler.add({
+                set foregroundGravity(value){
+                    frameLayout.mForegroundGravity = View.AttrChangeHandler.parseGravity(value, frameLayout.mForegroundGravity);
+                },
+            });
+        }
 
         getForegroundGravity():number {
             return this.mForegroundGravity;
@@ -311,6 +325,36 @@ module android.widget {
             this.mForegroundBoundsChanged = true;
         }
 
+        draw(canvas:Canvas){
+            super.draw(canvas);
+
+            if (this.mForeground != null) {
+                const foreground = this.mForeground;
+
+                if (this.mForegroundBoundsChanged) {
+                    this.mForegroundBoundsChanged = false;
+                    const selfBounds = this.mSelfBounds;
+                    const overlayBounds = this.mOverlayBounds;
+
+                    const w = this.mRight - this.mLeft;
+                    const h = this.mBottom - this.mTop;
+
+                    if (this.mForegroundInPadding) {
+                        selfBounds.set(0, 0, w, h);
+                    } else {
+                        selfBounds.set(this.mPaddingLeft, this.mPaddingTop, w - this.mPaddingRight, h - this.mPaddingBottom);
+                    }
+
+                    //const layoutDirection = this.getLayoutDirection();
+                    Gravity.apply(this.mForegroundGravity, foreground.getIntrinsicWidth(),
+                        foreground.getIntrinsicHeight(), selfBounds, overlayBounds);
+                    foreground.setBounds(overlayBounds);
+                }
+
+                foreground.draw(canvas);
+            }
+        }
+
         setMeasureAllChildren( measureAll:boolean) {
             this.mMeasureAllChildren = measureAll;
         }
@@ -319,6 +363,12 @@ module android.widget {
         }
         shouldDelayChildPressedState():boolean {
             return false;
+        }
+        checkLayoutParams(p:ViewGroup.LayoutParams){
+            return p instanceof FrameLayout.LayoutParams;
+        }
+        generateLayoutParams(p:ViewGroup.LayoutParams){
+            return new FrameLayout.LayoutParams(p);
         }
     }
 
@@ -332,12 +382,23 @@ module android.widget {
             constructor(...args) {
                 super();
                 if (args.length === 1 && args[0] instanceof LayoutParams) {
+                    super(args[0]);
                     this.gravity = args[0].gravity;
                 } else {
                     let [width, height, gravity=-1] = args;
                     super(width, height);
                     this.gravity = gravity;
                 }
+            }
+
+            _createAttrChangeHandler(mergeHandler:View.AttrChangeHandler){
+                super._createAttrChangeHandler(mergeHandler);
+                let params = this;
+                mergeHandler.add({
+                    set gravity(value) {
+                        params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
+                    }
+                });
             }
 
         }

@@ -1,7 +1,11 @@
 /**
  * Created by linfaxin on 15/10/9.
  */
+///<reference path="../graphics/Rect.ts"/>
+
 module android.view{
+    import Rect = android.graphics.Rect;
+
     export class Gravity{
         /** Constant indicating that no gravity has been set **/
         static NO_GRAVITY = 0x0000;
@@ -101,6 +105,91 @@ module android.view{
          * Binary mask for the horizontal gravity and script specific direction bit.
          */
         //static RELATIVE_HORIZONTAL_GRAVITY_MASK = Gravity.START | Gravity.END;
+
+        static apply(gravity:number, w:number, h:number, container:Rect, outRect:Rect){
+            let xAdj = 0, yAdj = 0;
+            switch (gravity&((Gravity.AXIS_PULL_BEFORE|Gravity.AXIS_PULL_AFTER)<<Gravity.AXIS_X_SHIFT)) {
+                case 0:
+                    outRect.left = container.left
+                        + ((container.right - container.left - w)/2) + xAdj;
+                    outRect.right = outRect.left + w;
+                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT))
+                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT)) {
+                        if (outRect.left < container.left) {
+                            outRect.left = container.left;
+                        }
+                        if (outRect.right > container.right) {
+                            outRect.right = container.right;
+                        }
+                    }
+                    break;
+                case Gravity.AXIS_PULL_BEFORE<<Gravity.AXIS_X_SHIFT:
+                    outRect.left = container.left + xAdj;
+                    outRect.right = outRect.left + w;
+                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT))
+                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT)) {
+                        if (outRect.right > container.right) {
+                            outRect.right = container.right;
+                        }
+                    }
+                    break;
+                case Gravity.AXIS_PULL_AFTER<<Gravity.AXIS_X_SHIFT:
+                    outRect.right = container.right - xAdj;
+                    outRect.left = outRect.right - w;
+                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT))
+                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT)) {
+                        if (outRect.left < container.left) {
+                            outRect.left = container.left;
+                        }
+                    }
+                    break;
+                default:
+                    outRect.left = container.left + xAdj;
+                    outRect.right = container.right + xAdj;
+                    break;
+            }
+
+            switch (gravity&((Gravity.AXIS_PULL_BEFORE|Gravity.AXIS_PULL_AFTER)<<Gravity.AXIS_Y_SHIFT)) {
+                case 0:
+                    outRect.top = container.top
+                        + ((container.bottom - container.top - h)/2) + yAdj;
+                    outRect.bottom = outRect.top + h;
+                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT))
+                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT)) {
+                        if (outRect.top < container.top) {
+                            outRect.top = container.top;
+                        }
+                        if (outRect.bottom > container.bottom) {
+                            outRect.bottom = container.bottom;
+                        }
+                    }
+                    break;
+                case Gravity.AXIS_PULL_BEFORE<<Gravity.AXIS_Y_SHIFT:
+                    outRect.top = container.top + yAdj;
+                    outRect.bottom = outRect.top + h;
+                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT))
+                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT)) {
+                        if (outRect.bottom > container.bottom) {
+                            outRect.bottom = container.bottom;
+                        }
+                    }
+                    break;
+                case Gravity.AXIS_PULL_AFTER<<Gravity.AXIS_Y_SHIFT:
+                    outRect.bottom = container.bottom - yAdj;
+                    outRect.top = outRect.bottom - h;
+                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT))
+                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT)) {
+                        if (outRect.top < container.top) {
+                            outRect.top = container.top;
+                        }
+                    }
+                    break;
+                default:
+                    outRect.top = container.top + yAdj;
+                    outRect.bottom = container.bottom + yAdj;
+                    break;
+            }
+        }
         
     }
 }

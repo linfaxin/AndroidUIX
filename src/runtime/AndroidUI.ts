@@ -2,6 +2,7 @@
  * Created by linfaxin on 15/10/23.
  */
 ///<reference path="../android/view/View.ts"/>
+///<reference path="../android/view/ViewGroup.ts"/>
 ///<reference path="../android/view/ViewRootImpl.ts"/>
 ///<reference path="../android/widget/FrameLayout.ts"/>
 ///<reference path="../android/view/MotionEvent.ts"/>
@@ -11,6 +12,7 @@
  */
 module runtime {
     import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
     import ViewRootImpl = android.view.ViewRootImpl;
     import FrameLayout = android.widget.FrameLayout;
     import MotionEvent = android.view.MotionEvent;
@@ -19,7 +21,7 @@ module runtime {
         element:HTMLElement;
 
         private canvas:HTMLCanvasElement;
-        private viewRootImpl:ViewRootImpl;
+        viewRootImpl:ViewRootImpl;
         private rootLayout:RootLayout;
         private rootStyleElement:HTMLStyleElement;
 
@@ -35,6 +37,7 @@ module runtime {
 
         private init() {
             this.viewRootImpl = new ViewRootImpl();
+            this.viewRootImpl.mContext = this.element;
             this.rootLayout = new RootLayout();
             this.canvas = document.createElement("canvas");
 
@@ -64,7 +67,7 @@ module runtime {
                 }
                 if (item instanceof HTMLElement) {
                     let view = View.inflate(item);
-                    if (view) this.rootLayout.addView(view);
+                    if (view) this.rootLayout.addView(view, -1, -1);
                 }
             });
         }
@@ -174,8 +177,8 @@ module runtime {
             this.rootLayout.removeAllViews();
             this.rootLayout.addView(view);
         }
-        addContentView(view:View){
-            this.rootLayout.addView(view);
+        addContentView(view:View, params = new ViewGroup.LayoutParams(-1, -1)){
+            this.rootLayout.addView(view, params);
         }
         findViewById(id:string):View{
             return this.rootLayout.findViewById(id);

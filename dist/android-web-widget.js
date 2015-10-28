@@ -694,6 +694,118 @@ var java;
         })(util = lang.util || (lang.util = {}));
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
+var java;
+(function (java) {
+    var util;
+    (function (util) {
+        class ArrayList {
+            constructor(initialCapacity = 0) {
+                this.array = [];
+            }
+            size() {
+                return this.array.length;
+            }
+            isEmpty() {
+                return this.size() === 0;
+            }
+            contains(o) {
+                return this.indexOf(o) >= 0;
+            }
+            indexOf(o) {
+                return this.array.indexOf(o);
+            }
+            lastIndexOf(o) {
+                return this.array.lastIndexOf(o);
+            }
+            clone() {
+                let arrayList = new ArrayList();
+                arrayList.array.push(...this.array);
+                return arrayList;
+            }
+            toArray(a = new Array(this.size())) {
+                let size = this.size();
+                for (let i = 0; i < size; i++) {
+                    a[i] = this.array[i];
+                }
+                return a;
+            }
+            get(index) {
+                return this.array[index];
+            }
+            set(index, element) {
+                let old = this.array[index];
+                this.array[index] = element;
+                return old;
+            }
+            add(...args) {
+                let index, t;
+                if (args.length === 1)
+                    t = args[0];
+                else if (args.length === 2) {
+                    index = args[0];
+                    t = args[1];
+                }
+                if (index === undefined)
+                    this.array.push(t);
+                else
+                    this.array.splice(index, 0, t);
+            }
+            remove(o) {
+                let index;
+                if (Number.isInteger(o)) {
+                    index = o;
+                }
+                else {
+                    index = this.array.indexOf(o);
+                }
+                let old = this.array[index];
+                this.array.splice(index, 1);
+                return old;
+            }
+            clear() {
+                this.array = [];
+            }
+            addAll(...args) {
+                let index, list;
+                if (args.length === 1) {
+                    list = args[0];
+                }
+                else if (args.length === 2) {
+                    index = args[0];
+                    list = args[1];
+                }
+                if (index === undefined) {
+                    this.array.push(...list.array);
+                }
+                else {
+                    this.array.splice(index, 0, ...list.array);
+                }
+            }
+            removeAll(list) {
+                let oldSize = this.size();
+                list.array.forEach((item) => {
+                    let index = this.array.indexOf(item);
+                    this.array.splice(index, 1);
+                });
+                return this.size() === oldSize;
+            }
+            [Symbol.iterator]() {
+                return this.array[Symbol.iterator];
+            }
+            subList(fromIndex, toIndex) {
+                let list = new ArrayList();
+                for (var i = fromIndex; i < toIndex; i++) {
+                    list.array.push(this.array[i]);
+                }
+                return list;
+            }
+            toString() {
+                return this.array.toString();
+            }
+        }
+        util.ArrayList = ArrayList;
+    })(util = java.util || (java.util = {}));
+})(java || (java = {}));
 var android;
 (function (android) {
     var util;
@@ -1936,6 +2048,210 @@ var android;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/10/27.
+ */
+///<reference path="DisplayMetrics.ts"/>
+///<reference path="../content/res/Resources.ts"/>
+var android;
+(function (android) {
+    var util;
+    (function (util) {
+        var Resources = android.content.res.Resources;
+        class TypedValue {
+            static initUnit() {
+                this.initUnit = null;
+                let temp = document.createElement('div');
+                document.body.appendChild(temp);
+                temp.style.height = 100 + TypedValue.COMPLEX_UNIT_PT;
+                TypedValue.UNIT_SCALE_PT = temp.offsetHeight / 100;
+                temp.style.height = 1 + TypedValue.COMPLEX_UNIT_IN;
+                TypedValue.UNIT_SCALE_IN = temp.offsetHeight;
+                temp.style.height = 100 + TypedValue.COMPLEX_UNIT_MM;
+                TypedValue.UNIT_SCALE_MM = temp.offsetHeight / 100;
+                document.body.removeChild(temp);
+            }
+            static complexToDimensionPixelSize(valueWithUnit, baseValue = 0, metrics = Resources.getDisplayMetrics()) {
+                if (this.initUnit)
+                    this.initUnit();
+                if (valueWithUnit === undefined || valueWithUnit === null)
+                    return 0;
+                if (typeof valueWithUnit !== 'string')
+                    valueWithUnit = valueWithUnit + "";
+                let scale = 1;
+                if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_PX)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_PX, "");
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_DP)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_DP, "");
+                    scale = metrics.density;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_DIP)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_DIP, "");
+                    scale = metrics.density;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_SP)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_SP, "");
+                    scale = metrics.density * TypedValue.UNIT_SCALE_SP;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_PT)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_PT, "");
+                    scale = TypedValue.UNIT_SCALE_PT;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_IN)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_IN, "");
+                    scale = TypedValue.UNIT_SCALE_IN;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_MM)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_MM, "");
+                    scale = TypedValue.UNIT_SCALE_MM;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_FRACTION)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_FRACTION, "");
+                    scale = Number.parseInt(valueWithUnit) / 100;
+                    if (Number.isNaN(scale))
+                        return 0;
+                    valueWithUnit = baseValue;
+                }
+                let value = Number.parseInt(valueWithUnit);
+                if (Number.isNaN(value))
+                    return 0;
+                return value * scale;
+            }
+        }
+        TypedValue.COMPLEX_UNIT_PX = 'px';
+        TypedValue.COMPLEX_UNIT_DP = 'dp';
+        TypedValue.COMPLEX_UNIT_DIP = 'dip';
+        TypedValue.COMPLEX_UNIT_SP = 'sp';
+        TypedValue.COMPLEX_UNIT_PT = 'pt';
+        TypedValue.COMPLEX_UNIT_IN = 'in';
+        TypedValue.COMPLEX_UNIT_MM = 'mm';
+        TypedValue.COMPLEX_UNIT_FRACTION = '%';
+        TypedValue.UNIT_SCALE_SP = 1;
+        util.TypedValue = TypedValue;
+    })(util = android.util || (android.util = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/9.
+ */
+///<reference path="../graphics/Rect.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        class Gravity {
+            static apply(gravity, w, h, container, outRect) {
+                let xAdj = 0, yAdj = 0;
+                switch (gravity & ((Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_X_SHIFT)) {
+                    case 0:
+                        outRect.left = container.left
+                            + ((container.right - container.left - w) / 2) + xAdj;
+                        outRect.right = outRect.left + w;
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT))
+                            == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
+                            if (outRect.left < container.left) {
+                                outRect.left = container.left;
+                            }
+                            if (outRect.right > container.right) {
+                                outRect.right = container.right;
+                            }
+                        }
+                        break;
+                    case Gravity.AXIS_PULL_BEFORE << Gravity.AXIS_X_SHIFT:
+                        outRect.left = container.left + xAdj;
+                        outRect.right = outRect.left + w;
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT))
+                            == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
+                            if (outRect.right > container.right) {
+                                outRect.right = container.right;
+                            }
+                        }
+                        break;
+                    case Gravity.AXIS_PULL_AFTER << Gravity.AXIS_X_SHIFT:
+                        outRect.right = container.right - xAdj;
+                        outRect.left = outRect.right - w;
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT))
+                            == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
+                            if (outRect.left < container.left) {
+                                outRect.left = container.left;
+                            }
+                        }
+                        break;
+                    default:
+                        outRect.left = container.left + xAdj;
+                        outRect.right = container.right + xAdj;
+                        break;
+                }
+                switch (gravity & ((Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_Y_SHIFT)) {
+                    case 0:
+                        outRect.top = container.top
+                            + ((container.bottom - container.top - h) / 2) + yAdj;
+                        outRect.bottom = outRect.top + h;
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT))
+                            == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
+                            if (outRect.top < container.top) {
+                                outRect.top = container.top;
+                            }
+                            if (outRect.bottom > container.bottom) {
+                                outRect.bottom = container.bottom;
+                            }
+                        }
+                        break;
+                    case Gravity.AXIS_PULL_BEFORE << Gravity.AXIS_Y_SHIFT:
+                        outRect.top = container.top + yAdj;
+                        outRect.bottom = outRect.top + h;
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT))
+                            == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
+                            if (outRect.bottom > container.bottom) {
+                                outRect.bottom = container.bottom;
+                            }
+                        }
+                        break;
+                    case Gravity.AXIS_PULL_AFTER << Gravity.AXIS_Y_SHIFT:
+                        outRect.bottom = container.bottom - yAdj;
+                        outRect.top = outRect.bottom - h;
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT))
+                            == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
+                            if (outRect.top < container.top) {
+                                outRect.top = container.top;
+                            }
+                        }
+                        break;
+                    default:
+                        outRect.top = container.top + yAdj;
+                        outRect.bottom = container.bottom + yAdj;
+                        break;
+                }
+            }
+        }
+        Gravity.NO_GRAVITY = 0x0000;
+        Gravity.AXIS_SPECIFIED = 0x0001;
+        Gravity.AXIS_PULL_BEFORE = 0x0002;
+        Gravity.AXIS_PULL_AFTER = 0x0004;
+        Gravity.AXIS_CLIP = 0x0008;
+        Gravity.AXIS_X_SHIFT = 0;
+        Gravity.AXIS_Y_SHIFT = 4;
+        Gravity.TOP = (Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_Y_SHIFT;
+        Gravity.BOTTOM = (Gravity.AXIS_PULL_AFTER | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_Y_SHIFT;
+        Gravity.LEFT = (Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_X_SHIFT;
+        Gravity.RIGHT = (Gravity.AXIS_PULL_AFTER | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_X_SHIFT;
+        Gravity.CENTER_VERTICAL = Gravity.AXIS_SPECIFIED << Gravity.AXIS_Y_SHIFT;
+        Gravity.FILL_VERTICAL = Gravity.TOP | Gravity.BOTTOM;
+        Gravity.CENTER_HORIZONTAL = Gravity.AXIS_SPECIFIED << Gravity.AXIS_X_SHIFT;
+        Gravity.FILL_HORIZONTAL = Gravity.LEFT | Gravity.RIGHT;
+        Gravity.CENTER = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
+        Gravity.FILL = Gravity.FILL_VERTICAL | Gravity.FILL_HORIZONTAL;
+        Gravity.CLIP_VERTICAL = Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT;
+        Gravity.CLIP_HORIZONTAL = Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT;
+        Gravity.HORIZONTAL_GRAVITY_MASK = (Gravity.AXIS_SPECIFIED |
+            Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_X_SHIFT;
+        Gravity.VERTICAL_GRAVITY_MASK = (Gravity.AXIS_SPECIFIED |
+            Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_Y_SHIFT;
+        Gravity.DISPLAY_CLIP_VERTICAL = 0x10000000;
+        Gravity.DISPLAY_CLIP_HORIZONTAL = 0x01000000;
+        view.Gravity = Gravity;
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
  * Created by linfaxin on 15/9/27.
  */
 ///<reference path="../util/SparseArray.ts"/>
@@ -1946,6 +2262,7 @@ var android;
 ///<reference path="../../java/lang/StringBuilder.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
 ///<reference path="ViewRootImpl.ts"/>
 ///<reference path="ViewParent.ts"/>
 ///<reference path="ViewGroup.ts"/>
@@ -1959,6 +2276,8 @@ var android;
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../util/Pools.ts"/>
+///<reference path="../util/TypedValue.ts"/>
+///<reference path="Gravity.ts"/>
 var android;
 (function (android) {
     var view;
@@ -1970,8 +2289,11 @@ var android;
         var SystemClock = android.os.SystemClock;
         var Log = android.util.Log;
         var Rect = android.graphics.Rect;
+        var CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
+        var ArrayList = java.util.ArrayList;
         var Resources = android.content.res.Resources;
         var Pools = android.util.Pools;
+        var TypedValue = android.util.TypedValue;
         class View {
             constructor() {
                 this.mPrivateFlags = 0;
@@ -2002,6 +2324,12 @@ var android;
                 this.mPaddingRight = 0;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
+                this._DOMAttrModifiedEvent = (event) => {
+                    if (event.attrChange) {
+                        this.onBindElementAttributeChanged(event.attrName, event.prevValue, event.newValue);
+                    }
+                };
+                this._attrChangeHandler = new View.AttrChangeHandler();
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
             }
             get mScrollX() {
@@ -2033,6 +2361,172 @@ var android;
                         item.style.marginTop = "";
                 });
                 this.bindElement.scrollTop = value;
+            }
+            createAttrChangeHandler(mergeHandler) {
+                let view = this;
+                mergeHandler.add({
+                    set background(value) {
+                    },
+                    set padding(value) {
+                        view._setPaddingWithUnit(value, value, value, value);
+                    },
+                    set paddingLeft(value) {
+                        view._setPaddingWithUnit(value, view.mPaddingTop, view.mPaddingRight, view.mPaddingBottom);
+                    },
+                    set paddingTop(value) {
+                        view._setPaddingWithUnit(view.mPaddingLeft, value, view.mPaddingRight, view.mPaddingBottom);
+                    },
+                    set paddingRight(value) {
+                        view._setPaddingWithUnit(view.mPaddingLeft, view.mPaddingTop, value, view.mPaddingBottom);
+                    },
+                    set paddingBottom(value) {
+                        view._setPaddingWithUnit(view.mPaddingLeft, view.mPaddingTop, view.mPaddingRight, value);
+                    },
+                    set scrollX(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            view.scrollTo(value, view.mScrollY);
+                    },
+                    set scrollY(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            view.scrollTo(view.mScrollX, value);
+                    },
+                    set alpha(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set transformPivotX(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set transformPivotY(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set translationX(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set translationY(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set rotation(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set rotationX(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set rotationY(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set scaleX(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set scaleY(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    },
+                    set tag(value) {
+                    },
+                    set id(value) {
+                        view.bindElement.id = value;
+                    },
+                    set focusable(value) {
+                        if (View.AttrChangeHandler.parseBoolean(value, false)) {
+                            view.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                        }
+                    },
+                    set focusableInTouchMode(value) {
+                        if (View.AttrChangeHandler.parseBoolean(value, false)) {
+                            view.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE, View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                        }
+                    },
+                    set clickable(value) {
+                        if (View.AttrChangeHandler.parseBoolean(value, false)) {
+                            view.setFlags(View.CLICKABLE, View.CLICKABLE);
+                        }
+                    },
+                    set longClickable(value) {
+                        if (View.AttrChangeHandler.parseBoolean(value, false)) {
+                            view.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
+                        }
+                    },
+                    set saveEnabled(value) {
+                        if (View.AttrChangeHandler.parseBoolean(value, false)) {
+                        }
+                    },
+                    set duplicateParentState(value) {
+                        if (View.AttrChangeHandler.parseBoolean(value, false)) {
+                            view.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
+                        }
+                    },
+                    set visibility(value) {
+                        if (value === 'gone')
+                            view.setVisibility(View.GONE);
+                        else if (value === 'invisible')
+                            view.setVisibility(View.INVISIBLE);
+                        else if (value === 'visible')
+                            view.setVisibility(View.VISIBLE);
+                    },
+                    set scrollbars(value) {
+                    },
+                    set isScrollContainer(value) {
+                        if (View.AttrChangeHandler.parseBoolean(value, false)) {
+                            this.setScrollContainer(true);
+                        }
+                    },
+                    set minWidth(value) {
+                        view.mMinWidth = value;
+                    },
+                    set minHeight(value) {
+                        view.mMinHeight = value;
+                    },
+                    set onClick(value) {
+                        view.setOnClickListener({
+                            onClick(v) {
+                                let activity = view.getViewRootImpl().mContext;
+                                if (activity && typeof activity[value] === 'function') {
+                                    activity[value].call(activity, v);
+                                }
+                            }
+                        });
+                    },
+                    set overScrollMode(value) {
+                        let scrollMode = View[('OVER_SCROLL_' + value).toUpperCase()];
+                        if (scrollMode === undefined)
+                            scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                        view.setOverScrollMode(scrollMode);
+                    },
+                    set layerType(value) {
+                    },
+                });
+                mergeHandler.isCallSuper = true;
             }
             getWidth() {
                 return this.mRight - this.mLeft;
@@ -2146,6 +2640,30 @@ var android;
             getPaddingBottom() {
                 return this.mPaddingBottom;
             }
+            setPaddingLeft(left) {
+                if (this.mPaddingLeft != left) {
+                    this.mPaddingLeft = left;
+                    this.requestLayout();
+                }
+            }
+            setPaddingTop(top) {
+                if (this.mPaddingTop != top) {
+                    this.mPaddingTop = top;
+                    this.requestLayout();
+                }
+            }
+            setPaddingRight(right) {
+                if (this.mPaddingRight != right) {
+                    this.mPaddingRight = right;
+                    this.requestLayout();
+                }
+            }
+            setPaddingBottom(bottom) {
+                if (this.mPaddingBottom != bottom) {
+                    this.mPaddingBottom = bottom;
+                    this.requestLayout();
+                }
+            }
             setPadding(left, top, right, bottom) {
                 let changed = false;
                 if (this.mPaddingLeft != left) {
@@ -2166,6 +2684,31 @@ var android;
                 }
                 if (changed) {
                     this.requestLayout();
+                }
+            }
+            _setPaddingWithUnit(left, top, right, bottom) {
+                let view = this;
+                let dm = Resources.getDisplayMetrics();
+                let width = view.getWidth();
+                let height = view.getHeight();
+                let padLeft = TypedValue.complexToDimensionPixelSize(left, width, dm);
+                let padTop = TypedValue.complexToDimensionPixelSize(top, height, dm);
+                let padRight = TypedValue.complexToDimensionPixelSize(right, width, dm);
+                let padBottom = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+                view.setPadding(padLeft, padTop, padRight, padBottom);
+                let unit = TypedValue.COMPLEX_UNIT_FRACTION;
+                if (left.endsWith(unit) || top.endsWith(unit) || right.endsWith(unit) || bottom.endsWith(unit)) {
+                    view.post({
+                        run: () => {
+                            let width = view.getWidth();
+                            let height = view.getHeight();
+                            let padLeftN = TypedValue.complexToDimensionPixelSize(left, width, dm);
+                            let padTopN = TypedValue.complexToDimensionPixelSize(top, height, dm);
+                            let padRightN = TypedValue.complexToDimensionPixelSize(right, width, dm);
+                            let padBottomN = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+                            view.setPadding(padLeftN, padTopN, padRightN, padBottomN);
+                        }
+                    });
                 }
             }
             setScrollX(value) {
@@ -2347,13 +2890,6 @@ var android;
                 }
             }
             onSizeChanged(w, h, oldw, oldh) {
-            }
-            getListenerInfo() {
-                if (this.mListenerInfo != null) {
-                    return this.mListenerInfo;
-                }
-                this.mListenerInfo = new View.ListenerInfo();
-                return this.mListenerInfo;
             }
             isFocusable() {
                 return View.FOCUSABLE == (this.mViewFlags & View.FOCUSABLE_MASK);
@@ -2557,6 +3093,54 @@ var android;
             getTouchDelegate() {
                 return this.mTouchDelegate;
             }
+            getListenerInfo() {
+                if (this.mListenerInfo != null) {
+                    return this.mListenerInfo;
+                }
+                this.mListenerInfo = new View.ListenerInfo();
+                return this.mListenerInfo;
+            }
+            addOnLayoutChangeListener(listener) {
+                let li = this.getListenerInfo();
+                if (li.mOnLayoutChangeListeners == null) {
+                    li.mOnLayoutChangeListeners = new ArrayList();
+                }
+                if (!li.mOnLayoutChangeListeners.contains(listener)) {
+                    li.mOnLayoutChangeListeners.add(listener);
+                }
+            }
+            removeOnLayoutChangeListener(listener) {
+                let li = this.mListenerInfo;
+                if (li == null || li.mOnLayoutChangeListeners == null) {
+                    return;
+                }
+                li.mOnLayoutChangeListeners.remove(listener);
+            }
+            addOnAttachStateChangeListener(listener) {
+                let li = this.getListenerInfo();
+                if (li.mOnAttachStateChangeListeners == null) {
+                    li.mOnAttachStateChangeListeners
+                        = new CopyOnWriteArrayList();
+                }
+                li.mOnAttachStateChangeListeners.add(listener);
+            }
+            removeOnAttachStateChangeListener(listener) {
+                let li = this.mListenerInfo;
+                if (li == null || li.mOnAttachStateChangeListeners == null) {
+                    return;
+                }
+                li.mOnAttachStateChangeListeners.remove(listener);
+            }
+            setOnClickListener(l) {
+                if (!this.isClickable()) {
+                    this.setClickable(true);
+                }
+                this.getListenerInfo().mOnClickListener = l;
+            }
+            hasOnClickListeners() {
+                let li = this.mListenerInfo;
+                return (li != null && li.mOnClickListener != null);
+            }
             setOnLongClickListener(l) {
                 if (!this.isLongClickable()) {
                     this.setLongClickable(true);
@@ -2616,6 +3200,43 @@ var android;
             }
             isPressed() {
                 return (this.mPrivateFlags & View.PFLAG_PRESSED) == View.PFLAG_PRESSED;
+            }
+            setSelected(selected) {
+                if (((this.mPrivateFlags & View.PFLAG_SELECTED) != 0) != selected) {
+                    this.mPrivateFlags = (this.mPrivateFlags & ~View.PFLAG_SELECTED) | (selected ? View.PFLAG_SELECTED : 0);
+                    if (!selected)
+                        this.resetPressedState();
+                    this.invalidate(true);
+                    this.refreshDrawableState();
+                    this.dispatchSetSelected(selected);
+                }
+            }
+            dispatchSetSelected(selected) {
+            }
+            isSelected() {
+                return (this.mPrivateFlags & View.PFLAG_SELECTED) != 0;
+            }
+            setActivated(activated) {
+                if (((this.mPrivateFlags & View.PFLAG_ACTIVATED) != 0) != activated) {
+                    this.mPrivateFlags = (this.mPrivateFlags & ~View.PFLAG_ACTIVATED) | (activated ? View.PFLAG_ACTIVATED : 0);
+                    this.invalidate(true);
+                    this.refreshDrawableState();
+                    this.dispatchSetActivated(activated);
+                }
+            }
+            dispatchSetActivated(activated) {
+            }
+            isActivated() {
+                return (this.mPrivateFlags & View.PFLAG_ACTIVATED) != 0;
+            }
+            getViewTreeObserver() {
+                if (this.mAttachInfo != null) {
+                    return this.mAttachInfo.mTreeObserver;
+                }
+                if (this.mFloatingTreeObserver == null) {
+                    this.mFloatingTreeObserver = new view_1.ViewTreeObserver();
+                }
+                return this.mFloatingTreeObserver;
             }
             isLayoutRtl() {
                 return false;
@@ -2684,10 +3305,10 @@ var android;
                     this.mPrivateFlags &= ~View.PFLAG_LAYOUT_REQUIRED;
                     let li = this.mListenerInfo;
                     if (li != null && li.mOnLayoutChangeListeners != null) {
-                        let listenersCopy = li.mOnLayoutChangeListeners.concat();
-                        let numListeners = listenersCopy.length;
+                        let listenersCopy = li.mOnLayoutChangeListeners.clone();
+                        let numListeners = listenersCopy.size();
                         for (let i = 0; i < numListeners; ++i) {
-                            listenersCopy[i].onLayoutChange(this, l, t, r, b, oldL, oldT, oldR, oldB);
+                            listenersCopy.get(i).onLayoutChange(this, l, t, r, b, oldL, oldT, oldR, oldB);
                         }
                     }
                 }
@@ -3491,32 +4112,6 @@ var android;
                 let bindEle = this.bindElement.querySelector('#' + id);
                 return bindEle ? bindEle['bindView'] : null;
             }
-            get bindElement() {
-                if (!this._bindElement)
-                    this.initBindElement();
-                return this._bindElement;
-            }
-            get bindScrollContent() {
-                if (!this._bindScrollContent)
-                    this._bindScrollContent = document.createElement('div');
-                return this._bindScrollContent;
-            }
-            initBindElement(bindElement) {
-                this._bindElement = bindElement || document.createElement(this.tagName());
-                this._bindElement['bindView'] = this;
-            }
-            syncBoundToElement() {
-                let bind = this.bindElement;
-                bind.style.position = 'absolute';
-                bind.style.boxSizing = 'border-box';
-                bind.style.left = this.mLeft + 'px';
-                bind.style.top = this.mTop + 'px';
-                bind.style.width = this.getWidth() + 'px';
-                bind.style.height = this.getHeight() + 'px';
-            }
-            tagName() {
-                return "ANDROID-" + this.constructor.name;
-            }
             static inflate(domtree) {
                 let className = domtree.tagName;
                 if (className.startsWith('ANDROID-')) {
@@ -3552,13 +4147,89 @@ var android;
                     Array.from(domtree.children).forEach((item) => {
                         if (item instanceof HTMLElement) {
                             let view = View.inflate(item);
+                            let params = rootView.generateDefaultLayoutParams();
+                            this._generateLayoutParamsFromAttribute(item, params);
                             if (view)
-                                rootView.addView(view);
+                                rootView.addView(view, params);
                         }
                     });
                 }
+                let params = this._generateLayoutParamsFromAttribute(domtree);
+                rootView.setLayoutParams(params);
                 rootView.onFinishInflate();
                 return rootView;
+            }
+            get bindElement() {
+                if (!this._bindElement)
+                    this.initBindElement();
+                return this._bindElement;
+            }
+            get bindScrollContent() {
+                if (!this._bindScrollContent)
+                    this._bindScrollContent = document.createElement('div');
+                return this._bindScrollContent;
+            }
+            initBindElement(bindElement) {
+                this._bindElement = bindElement || document.createElement(this.tagName());
+                let oldBindView = this._bindElement['bindView'];
+                if (oldBindView) {
+                    this._bindElement.removeEventListener("DOMAttrModified", oldBindView._DOMAttrModifiedEvent, true);
+                }
+                this._bindElement['bindView'] = this;
+                this._initAttrChangeHandler();
+                this._bindElement.addEventListener("DOMAttrModified", this._DOMAttrModifiedEvent, true);
+                this._fireInitBindElementAttribute();
+            }
+            syncBoundToElement() {
+                let bind = this.bindElement;
+                bind.style.position = 'absolute';
+                bind.style.boxSizing = 'border-box';
+                bind.style.left = this.mLeft + 'px';
+                bind.style.top = this.mTop + 'px';
+                bind.style.width = this.getWidth() + 'px';
+                bind.style.height = this.getHeight() + 'px';
+            }
+            _initAttrChangeHandler() {
+                this.createAttrChangeHandler(this._attrChangeHandler);
+                if (!this._attrChangeHandler.isCallSuper) {
+                    throw Error('must call super when override createAttrChangeHandler!');
+                }
+            }
+            _fireInitBindElementAttribute() {
+                Array.from(this.bindElement.attributes).forEach((attr) => {
+                    if (attr.name === "android:id" && !this.bindElement.id)
+                        this.bindElement.id = attr.value;
+                    this.onBindElementAttributeChanged(attr.name, attr.value, attr.value);
+                });
+            }
+            onBindElementAttributeChanged(attributeName, oldVal, newVal) {
+                let parts = attributeName.split(":");
+                let attrName = parts[parts.length - 1].toLowerCase();
+                if (newVal === 'true')
+                    newVal = true;
+                else if (newVal === 'false')
+                    newVal = false;
+                if (attrName.startsWith('layout_')) {
+                    attrName = attrName.substring('layout_'.length);
+                    let params = this.getLayoutParams();
+                    if (params)
+                        params._attrChangeHandler[attrName] = newVal;
+                }
+                else {
+                    this._attrChangeHandler.handle(attrName, newVal);
+                }
+            }
+            static _generateLayoutParamsFromAttribute(node, dest = new view_1.ViewGroup.LayoutParams(-2, -2)) {
+                Array.from(node.attributes).forEach((attr) => {
+                    let layoutParamFiled = attr.name.split("layout_")[1];
+                    if (layoutParamFiled !== undefined && dest[layoutParamFiled] !== undefined) {
+                        dest[layoutParamFiled] = attr.value;
+                    }
+                });
+                return dest;
+            }
+            tagName() {
+                return "ANDROID-" + this.constructor.name;
             }
         }
         View.DBG = Log.View_DBG;
@@ -3694,6 +4365,49 @@ var android;
             class ListenerInfo {
             }
             View.ListenerInfo = ListenerInfo;
+            class AttrChangeHandler {
+                constructor() {
+                    this.isCallSuper = false;
+                    this.handlers = [];
+                }
+                add(handler) {
+                    this.handlers.push(handler);
+                }
+                handle(name, value) {
+                    this.handlers.forEach((handler) => {
+                        for (let key in handler) {
+                            if (key.toLowerCase() === name) {
+                                handler[key] = value;
+                            }
+                        }
+                    });
+                }
+                static parseBoolean(value, defaultValue = true) {
+                    if (value === false || value === 'fales' || value === '0')
+                        return false;
+                    else if (value === true || value === 'true' || value === '1' || value === '')
+                        return true;
+                    return defaultValue;
+                }
+                static parseGravity(s, defaultValue = view_1.Gravity.NO_GRAVITY) {
+                    let gravity = view_1.Gravity.NO_GRAVITY;
+                    try {
+                        let parts = s.split("|");
+                        parts.forEach((part) => {
+                            let g = view_1.Gravity[part.toUpperCase()];
+                            if (Number.isInteger(g))
+                                gravity |= g;
+                        });
+                    }
+                    catch (e) {
+                        console.error(e);
+                    }
+                    if (Number.isNaN(gravity) || gravity === view_1.Gravity.NO_GRAVITY)
+                        gravity = defaultValue;
+                    return gravity;
+                }
+            }
+            View.AttrChangeHandler = AttrChangeHandler;
         })(View = view_1.View || (view_1.View = {}));
         (function (View) {
             var AttachInfo;
@@ -4558,12 +5272,14 @@ var android;
 ///<reference path="../graphics/Matrix.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
+///<reference path="../util/TypedValue.ts"/>
 var android;
 (function (android) {
     var view;
     (function (view_3) {
         var Rect = android.graphics.Rect;
         var SystemClock = android.os.SystemClock;
+        var TypedValue = android.util.TypedValue;
         class ViewGroup extends view_3.View {
             constructor() {
                 super();
@@ -4580,6 +5296,36 @@ var android;
             }
             get mChildrenCount() {
                 return this.mChildren.length;
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let viewGroup = this;
+                mergeHandler.add({
+                    set clipChildren(value) {
+                        viewGroup.setClipChildren(view_3.View.AttrChangeHandler.parseBoolean(value));
+                    },
+                    set clipToPadding(value) {
+                        viewGroup.setClipToPadding(view_3.View.AttrChangeHandler.parseBoolean(value));
+                    },
+                    set animationCache(value) {
+                    },
+                    set persistentDrawingCache(value) {
+                    },
+                    set addStatesFromChildren(value) {
+                    },
+                    set alwaysDrawnWithCache(value) {
+                    },
+                    set layoutAnimation(value) {
+                    },
+                    set descendantFocusability(value) {
+                    },
+                    set splitMotionEvents(value) {
+                    },
+                    set animateLayoutChanges(value) {
+                    },
+                    set layoutMode(value) {
+                    }
+                });
             }
             initViewGroup() {
                 this.setFlags(view_3.View.WILL_NOT_DRAW, view_3.View.DRAW_MASK);
@@ -5124,12 +5870,18 @@ var android;
             }
             measureChild(child, parentWidthMeasureSpec, parentHeightMeasureSpec) {
                 let lp = child.getLayoutParams();
+                lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
+                lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
                 const childWidthMeasureSpec = ViewGroup.getChildMeasureSpec(parentWidthMeasureSpec, this.mPaddingLeft + this.mPaddingRight, lp.width);
                 const childHeightMeasureSpec = ViewGroup.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
                 child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+                lp._measuringParentWidthMeasureSpec = null;
+                lp._measuringParentHeightMeasureSpec = null;
             }
             measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed) {
                 let lp = child.getLayoutParams();
+                lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
+                lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
                 if (lp instanceof ViewGroup.MarginLayoutParams) {
                     const childWidthMeasureSpec = ViewGroup.getChildMeasureSpec(parentWidthMeasureSpec, this.mPaddingLeft + this.mPaddingRight + lp.leftMargin + lp.rightMargin
                         + widthUsed, lp.width);
@@ -5137,6 +5889,8 @@ var android;
                         + heightUsed, lp.height);
                     child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
                 }
+                lp._measuringParentWidthMeasureSpec = null;
+                lp._measuringParentHeightMeasureSpec = null;
             }
             static getChildMeasureSpec(spec, padding, childDimension) {
                 let MeasureSpec = view_3.View.MeasureSpec;
@@ -5496,8 +6250,6 @@ var android;
             }
             requestChildFocus(child, focused) {
             }
-            recomputeViewAttributes(child) {
-            }
             clearChildFocus(child) {
             }
             focusSearch(v, direction) {
@@ -5565,18 +6317,69 @@ var android;
         (function (ViewGroup) {
             class LayoutParams {
                 constructor(...args) {
-                    this.width = 0;
-                    this.height = 0;
+                    this._width = 0;
+                    this._height = 0;
+                    this._attrChangeHandler = new view_3.View.AttrChangeHandler();
                     if (args.length === 1) {
                         let src = args[0];
-                        this.width = src.width;
-                        this.height = src.height;
+                        this._width = src._width;
+                        this._height = src._height;
                     }
                     else if (args.length === 2) {
                         let [width = 0, height = 0] = args;
-                        this.width = width;
-                        this.height = height;
+                        this._width = width;
+                        this._height = height;
                     }
+                    this._createAttrChangeHandler(this._attrChangeHandler);
+                    if (!this._attrChangeHandler.isCallSuper) {
+                        throw Error('must call super when override createAttrChangeHandler!');
+                    }
+                }
+                get width() {
+                    if (typeof this._width === 'number')
+                        return this._width;
+                    let up = (this._width + "").toUpperCase();
+                    if (up === 'FILL_PARENT' || up === 'MATCH_PARENT')
+                        this._width = -1;
+                    else if (up === 'WRAP_CONTENT')
+                        this._width = -2;
+                    else {
+                        let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                        this._width = TypedValue.complexToDimensionPixelSize(this._width, parentWidth, this._measuringMeasureSpec);
+                    }
+                    return this._width;
+                }
+                set width(value) {
+                    this._width = value;
+                }
+                get height() {
+                    if (typeof this._height === 'number')
+                        return this._height;
+                    let up = (this._height + "").toUpperCase();
+                    if (up === 'FILL_PARENT' || up === 'MATCH_PARENT')
+                        this._height = -1;
+                    else if (up === 'WRAP_CONTENT')
+                        this._height = -2;
+                    else {
+                        let parentHeight = view_3.View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
+                        this._height = TypedValue.complexToDimensionPixelSize(this._height, parentHeight, this._measuringMeasureSpec);
+                    }
+                    return this._height;
+                }
+                set height(value) {
+                    this._height = value;
+                }
+                _createAttrChangeHandler(mergeHandler) {
+                    let params = this;
+                    mergeHandler.add({
+                        set width(value) {
+                            params._width = value;
+                        },
+                        set height(value) {
+                            params._height = value;
+                        }
+                    });
+                    mergeHandler.isCallSuper = true;
                 }
             }
             LayoutParams.FILL_PARENT = -1;
@@ -5586,28 +6389,87 @@ var android;
             class MarginLayoutParams extends LayoutParams {
                 constructor(...args) {
                     super();
-                    this.leftMargin = 0;
-                    this.topMargin = 0;
-                    this.rightMargin = 0;
-                    this.bottomMargin = 0;
+                    this._leftMargin = 0;
+                    this._topMargin = 0;
+                    this._rightMargin = 0;
+                    this._bottomMargin = 0;
                     if (args.length === 1) {
                         let src = args[0];
                         if (src instanceof MarginLayoutParams) {
-                            this.leftMargin = src.leftMargin;
-                            this.topMargin = src.topMargin;
-                            this.rightMargin = src.rightMargin;
-                            this.bottomMargin = src.bottomMargin;
+                            super(src);
+                            this._leftMargin = src.leftMargin;
+                            this._topMargin = src.topMargin;
+                            this._rightMargin = src.rightMargin;
+                            this._bottomMargin = src.bottomMargin;
                         }
                     }
                     else if (args.length == 2) {
                         super(args[0], args[1]);
                     }
                 }
+                get leftMargin() {
+                    if (typeof this._leftMargin === 'number')
+                        return this._leftMargin;
+                    let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    this._leftMargin = TypedValue.complexToDimensionPixelSize(this._leftMargin, parentWidth, this._measuringMeasureSpec);
+                    return this._leftMargin;
+                }
+                get topMargin() {
+                    if (typeof this._topMargin === 'number')
+                        return this._topMargin;
+                    let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    this._topMargin = TypedValue.complexToDimensionPixelSize(this._topMargin, parentWidth, this._measuringMeasureSpec);
+                    return this._topMargin;
+                }
+                get rightMargin() {
+                    if (typeof this._rightMargin === 'number')
+                        return this._rightMargin;
+                    let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    this._rightMargin = TypedValue.complexToDimensionPixelSize(this._rightMargin, parentWidth, this._measuringMeasureSpec);
+                    return this._rightMargin;
+                }
+                get bottomMargin() {
+                    if (typeof this._bottomMargin === 'number')
+                        return this._bottomMargin;
+                    let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    this._bottomMargin = TypedValue.complexToDimensionPixelSize(this._bottomMargin, parentWidth, this._measuringMeasureSpec);
+                    return this._bottomMargin;
+                }
+                set leftMargin(value) {
+                    this._leftMargin = value;
+                }
+                set topMargin(value) {
+                    this._topMargin = value;
+                }
+                set rightMargin(value) {
+                    this._rightMargin = value;
+                }
+                set bottomMargin(value) {
+                    this._bottomMargin = value;
+                }
                 setMargins(left, top, right, bottom) {
                     this.leftMargin = left;
                     this.topMargin = top;
                     this.rightMargin = right;
                     this.bottomMargin = bottom;
+                }
+                _createAttrChangeHandler(mergeHandler) {
+                    super._createAttrChangeHandler(mergeHandler);
+                    let params = this;
+                    mergeHandler.add({
+                        set marginLeft(value) {
+                            params._leftMargin = value;
+                        },
+                        set marginTop(value) {
+                            params._topMargin = value;
+                        },
+                        set marginRight(value) {
+                            params._rightMargin = value;
+                        },
+                        set marginBottom(value) {
+                            params._bottomMargin = value;
+                        }
+                    });
                 }
             }
             ViewGroup.MarginLayoutParams = MarginLayoutParams;
@@ -5706,40 +6568,6 @@ var android;
         })(ViewOverlay = view.ViewOverlay || (view.ViewOverlay = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        class Gravity {
-        }
-        Gravity.NO_GRAVITY = 0x0000;
-        Gravity.AXIS_SPECIFIED = 0x0001;
-        Gravity.AXIS_PULL_BEFORE = 0x0002;
-        Gravity.AXIS_PULL_AFTER = 0x0004;
-        Gravity.AXIS_CLIP = 0x0008;
-        Gravity.AXIS_X_SHIFT = 0;
-        Gravity.AXIS_Y_SHIFT = 4;
-        Gravity.TOP = (Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_Y_SHIFT;
-        Gravity.BOTTOM = (Gravity.AXIS_PULL_AFTER | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_Y_SHIFT;
-        Gravity.LEFT = (Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_X_SHIFT;
-        Gravity.RIGHT = (Gravity.AXIS_PULL_AFTER | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_X_SHIFT;
-        Gravity.CENTER_VERTICAL = Gravity.AXIS_SPECIFIED << Gravity.AXIS_Y_SHIFT;
-        Gravity.FILL_VERTICAL = Gravity.TOP | Gravity.BOTTOM;
-        Gravity.CENTER_HORIZONTAL = Gravity.AXIS_SPECIFIED << Gravity.AXIS_X_SHIFT;
-        Gravity.FILL_HORIZONTAL = Gravity.LEFT | Gravity.RIGHT;
-        Gravity.CENTER = Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL;
-        Gravity.FILL = Gravity.FILL_VERTICAL | Gravity.FILL_HORIZONTAL;
-        Gravity.CLIP_VERTICAL = Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT;
-        Gravity.CLIP_HORIZONTAL = Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT;
-        Gravity.HORIZONTAL_GRAVITY_MASK = (Gravity.AXIS_SPECIFIED |
-            Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_X_SHIFT;
-        Gravity.VERTICAL_GRAVITY_MASK = (Gravity.AXIS_SPECIFIED |
-            Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_Y_SHIFT;
-        Gravity.DISPLAY_CLIP_VERTICAL = 0x10000000;
-        Gravity.DISPLAY_CLIP_HORIZONTAL = 0x01000000;
-        view.Gravity = Gravity;
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/9.
  */
@@ -5748,6 +6576,7 @@ var android;
 ///<reference path="../view/ViewGroup.ts"/>
 ///<reference path="../graphics/drawable/Drawable.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
+///<reference path="../graphics/Canvas.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -5770,6 +6599,15 @@ var android;
                 this.mForegroundInPadding = true;
                 this.mForegroundBoundsChanged = false;
                 this.mMatchParentChildren = new Array(1);
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let frameLayout = this;
+                mergeHandler.add({
+                    set foregroundGravity(value) {
+                        frameLayout.mForegroundGravity = View.AttrChangeHandler.parseGravity(value, frameLayout.mForegroundGravity);
+                    },
+                });
             }
             getForegroundGravity() {
                 return this.mForegroundGravity;
@@ -5962,6 +6800,28 @@ var android;
                 super.onSizeChanged(w, h, oldw, oldh);
                 this.mForegroundBoundsChanged = true;
             }
+            draw(canvas) {
+                super.draw(canvas);
+                if (this.mForeground != null) {
+                    const foreground = this.mForeground;
+                    if (this.mForegroundBoundsChanged) {
+                        this.mForegroundBoundsChanged = false;
+                        const selfBounds = this.mSelfBounds;
+                        const overlayBounds = this.mOverlayBounds;
+                        const w = this.mRight - this.mLeft;
+                        const h = this.mBottom - this.mTop;
+                        if (this.mForegroundInPadding) {
+                            selfBounds.set(0, 0, w, h);
+                        }
+                        else {
+                            selfBounds.set(this.mPaddingLeft, this.mPaddingTop, w - this.mPaddingRight, h - this.mPaddingBottom);
+                        }
+                        Gravity.apply(this.mForegroundGravity, foreground.getIntrinsicWidth(), foreground.getIntrinsicHeight(), selfBounds, overlayBounds);
+                        foreground.setBounds(overlayBounds);
+                    }
+                    foreground.draw(canvas);
+                }
+            }
             setMeasureAllChildren(measureAll) {
                 this.mMeasureAllChildren = measureAll;
             }
@@ -5970,6 +6830,12 @@ var android;
             }
             shouldDelayChildPressedState() {
                 return false;
+            }
+            checkLayoutParams(p) {
+                return p instanceof FrameLayout.LayoutParams;
+            }
+            generateLayoutParams(p) {
+                return new FrameLayout.LayoutParams(p);
             }
         }
         FrameLayout.DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.LEFT;
@@ -5980,6 +6846,7 @@ var android;
                     super();
                     this.gravity = -1;
                     if (args.length === 1 && args[0] instanceof LayoutParams) {
+                        super(args[0]);
                         this.gravity = args[0].gravity;
                     }
                     else {
@@ -5987,6 +6854,15 @@ var android;
                         super(width, height);
                         this.gravity = gravity;
                     }
+                }
+                _createAttrChangeHandler(mergeHandler) {
+                    super._createAttrChangeHandler(mergeHandler);
+                    let params = this;
+                    mergeHandler.add({
+                        set gravity(value) {
+                            params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
+                        }
+                    });
                 }
             }
             FrameLayout.LayoutParams = LayoutParams;
@@ -5997,12 +6873,14 @@ var android;
  * Created by linfaxin on 15/10/23.
  */
 ///<reference path="../android/view/View.ts"/>
+///<reference path="../android/view/ViewGroup.ts"/>
 ///<reference path="../android/view/ViewRootImpl.ts"/>
 ///<reference path="../android/widget/FrameLayout.ts"/>
 ///<reference path="../android/view/MotionEvent.ts"/>
 var runtime;
 (function (runtime) {
     var View = android.view.View;
+    var ViewGroup = android.view.ViewGroup;
     var ViewRootImpl = android.view.ViewRootImpl;
     var FrameLayout = android.widget.FrameLayout;
     var MotionEvent = android.view.MotionEvent;
@@ -6017,6 +6895,7 @@ var runtime;
         }
         init() {
             this.viewRootImpl = new ViewRootImpl();
+            this.viewRootImpl.mContext = this.element;
             this.rootLayout = new RootLayout();
             this.canvas = document.createElement("canvas");
             this.initInflateView();
@@ -6041,7 +6920,7 @@ var runtime;
                 if (item instanceof HTMLElement) {
                     let view = View.inflate(item);
                     if (view)
-                        this.rootLayout.addView(view);
+                        this.rootLayout.addView(view, -1, -1);
                 }
             });
         }
@@ -6142,8 +7021,8 @@ var runtime;
             this.rootLayout.removeAllViews();
             this.rootLayout.addView(view);
         }
-        addContentView(view) {
-            this.rootLayout.addView(view);
+        addContentView(view, params = new ViewGroup.LayoutParams(-1, -1)) {
+            this.rootLayout.addView(view, params);
         }
         findViewById(id) {
             return this.rootLayout.findViewById(id);
@@ -6199,6 +7078,7 @@ var android;
             }
         }
         app.Activity = Activity;
+        Activity.registerCustomElement();
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
 /**
@@ -6987,6 +7867,15 @@ var android;
                 this.mActivePointerId = ScrollView.INVALID_POINTER;
                 this.initScrollView();
             }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let scrollView = this;
+                mergeHandler.add({
+                    set fillViewport(value) {
+                        scrollView.setFillViewport(View.AttrChangeHandler.parseBoolean(value));
+                    }
+                });
+            }
             shouldDelayChildPressedState() {
                 return true;
             }
@@ -7433,19 +8322,27 @@ var android;
             }
             measureChild(child, parentWidthMeasureSpec, parentHeightMeasureSpec) {
                 let lp = child.getLayoutParams();
+                lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
+                lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
                 let childWidthMeasureSpec;
                 let childHeightMeasureSpec;
                 childWidthMeasureSpec = ViewGroup.getChildMeasureSpec(parentWidthMeasureSpec, this.mPaddingLeft
                     + this.mPaddingRight, lp.width);
                 childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
                 child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+                lp._measuringParentWidthMeasureSpec = null;
+                lp._measuringParentHeightMeasureSpec = null;
             }
             measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed) {
                 const lp = child.getLayoutParams();
+                lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
+                lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
                 const childWidthMeasureSpec = ScrollView.getChildMeasureSpec(parentWidthMeasureSpec, this.mPaddingLeft + this.mPaddingRight + lp.leftMargin + lp.rightMargin
                     + widthUsed, lp.width);
                 const childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(lp.topMargin + lp.bottomMargin, MeasureSpec.UNSPECIFIED);
                 child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+                lp._measuringParentWidthMeasureSpec = null;
+                lp._measuringParentHeightMeasureSpec = null;
             }
             computeScroll() {
                 if (this.mScroller.computeScrollOffset()) {
@@ -7656,6 +8553,56 @@ var android;
                 this.mDividerHeight = 0;
                 this.mShowDividers = LinearLayout.SHOW_DIVIDER_NONE;
                 this.mDividerPadding = 0;
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let linearLayout = this;
+                mergeHandler.add({
+                    set orientation(value) {
+                        let isVertical = (value + "").toUpperCase() === 'VERTICAL';
+                        if (isVertical) {
+                            linearLayout.setOrientation(LinearLayout.VERTICAL);
+                            return;
+                        }
+                        let isHorizontal = (value + "").toUpperCase() === 'HORIZONTAL';
+                        if (isHorizontal) {
+                            linearLayout.setOrientation(LinearLayout.HORIZONTAL);
+                        }
+                    },
+                    set baselineAligned(value) {
+                        if (!View.AttrChangeHandler.parseBoolean(value))
+                            linearLayout.setBaselineAligned(false);
+                    },
+                    set weightSum(value) {
+                        let weightSum = Number.parseInt(value);
+                        if (Number.isSafeInteger(weightSum)) {
+                            linearLayout.mWeightSum = weightSum;
+                        }
+                    },
+                    set baselineAlignedChildIndex(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isSafeInteger(value)) {
+                            linearLayout.mBaselineAlignedChildIndex = value;
+                        }
+                    },
+                    set measureWithLargestChild(value) {
+                        linearLayout.mUseLargestChild = View.AttrChangeHandler.parseBoolean(value, linearLayout.mUseLargestChild);
+                    },
+                    set divider(value) {
+                    },
+                    set showDividers(value) {
+                        let fieldName = ('SHOW_DIVIDER_' + value).toUpperCase();
+                        if (Number.isInteger(LinearLayout[fieldName])) {
+                            linearLayout.mShowDividers = LinearLayout[fieldName];
+                        }
+                    },
+                    set dividerPadding(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                            linearLayout.mDividerPadding = value;
+                        }
+                    }
+                });
             }
             setShowDividers(showDividers) {
                 if (showDividers != this.mShowDividers) {
@@ -8496,6 +9443,12 @@ var android;
                 child.layout(left, top, left + width, top + height);
             }
             setOrientation(orientation) {
+                if (typeof orientation === 'string') {
+                    if ('VERTICAL' === (orientation + '').toUpperCase())
+                        orientation = LinearLayout.VERTICAL;
+                    else if ('HORIZONTAL' === (orientation + '').toUpperCase())
+                        orientation = LinearLayout.HORIZONTAL;
+                }
                 if (this.mOrientation != orientation) {
                     this.mOrientation = orientation;
                     this.requestLayout();
@@ -8574,6 +9527,20 @@ var android;
                         this.weight = weight;
                     }
                 }
+                _createAttrChangeHandler(mergeHandler) {
+                    super._createAttrChangeHandler(mergeHandler);
+                    let params = this;
+                    mergeHandler.add({
+                        set gravity(value) {
+                            params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
+                        },
+                        set weight(value) {
+                            value = Number.parseInt(value);
+                            if (Number.isInteger(value))
+                                params.weight = value;
+                        }
+                    });
+                }
             }
             LinearLayout.LayoutParams = LayoutParams;
         })(LinearLayout = widget.LinearLayout || (widget.LinearLayout = {}));
@@ -8610,6 +9577,101 @@ var android;
                 this.initTextElement();
                 this.setTextSize(TextView.Default_TextSize);
                 this.setGravity(Gravity.TOP | Gravity.LEFT);
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let textView = this;
+                mergeHandler.add({
+                    set textColorHighlight(value) {
+                    },
+                    set textColor(value) {
+                    },
+                    set textColorHint(value) {
+                    },
+                    set textSize(value) {
+                    },
+                    set textStyle(value) {
+                    },
+                    set textAllCaps(value) {
+                    },
+                    set drawableLeft(value) {
+                    },
+                    set drawableTop(value) {
+                    },
+                    set drawableRight(value) {
+                    },
+                    set drawableBottom(value) {
+                    },
+                    set drawablePadding(value) {
+                    },
+                    set maxLines(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setMaxLines(value);
+                    },
+                    set maxHeight(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setMaxHeight(value);
+                    },
+                    set lines(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setLines(value);
+                    },
+                    set height(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setHeight(value);
+                    },
+                    set minLines(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setMinLines(value);
+                    },
+                    set minHeight(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setMinimumHeight(value);
+                    },
+                    set maxWidth(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setMaxWidth(value);
+                    },
+                    set width(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setWidth(value);
+                    },
+                    set minWidth(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setMinimumWidth(value);
+                    },
+                    set gravity(value) {
+                        textView.setGravity(View.AttrChangeHandler.parseGravity(value, textView.mGravity));
+                    },
+                    set text(value) {
+                        textView.setText(value);
+                    },
+                    set singleLine(value) {
+                        if (View.AttrChangeHandler.parseBoolean(value, false))
+                            textView.setSingleLine();
+                    },
+                    set textScaleX(value) {
+                    },
+                    set lineSpacingExtra(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setLineSpacing(value, textView.mSpacingMult);
+                    },
+                    set lineSpacingMultiplier(value) {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            textView.setLineSpacing(textView.mSpacingAdd, value);
+                    },
+                });
             }
             initTextElement() {
                 this.mTextElement = document.createElement('div');
@@ -8755,6 +9817,12 @@ var android;
             getLineHeight() {
                 return Math.ceil(this.mTextSize * this.mSpacingMult + this.mSpacingAdd);
             }
+            setHeight(pixels) {
+                this.mMaxHeight = pixels;
+                this.setMinimumHeight(pixels);
+                this.requestLayout();
+                this.invalidate();
+            }
             setMaxLines(max) {
                 this.mMaxLineCount = max;
                 this.requestLayout();
@@ -8762,6 +9830,28 @@ var android;
             }
             getMaxLines() {
                 return this.mMaxLineCount;
+            }
+            setMaxHeight(maxHeight) {
+                this.mMaxHeight = maxHeight;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxHeight() {
+                return this.mMaxHeight;
+            }
+            setMaxWidth(maxpixels) {
+                this.mMaxWidth = maxpixels;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxWidth() {
+                return this.mMaxWidth;
+            }
+            setWidth(pixels) {
+                this.mMaxWidth = pixels;
+                this.setMinimumWidth(pixels);
+                this.requestLayout();
+                this.invalidate();
             }
             setMinLines(min) {
                 this.mMinLineCount = min;
@@ -8786,7 +9876,7 @@ var android;
                 this.requestLayout();
                 this.invalidate();
             }
-            setText(text) {
+            setText(text = '') {
                 this.mTextElement.innerText = text;
                 this.requestLayout();
             }

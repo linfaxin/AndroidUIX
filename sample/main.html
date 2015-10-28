@@ -22,27 +22,50 @@
 </head>
 <body>
     <android-TextViewSampleActivity id="activity" style="width: 100%; height:90%;margin-top: 6%;display: none;">
-        <android-ScrollView>
-            <android-LinearLayout id="linear">
-                <android-TextView id="text0">
+        <ScrollView
+                android:fillViewport="true"
+                android:layout_height="-1">
+            <LinearLayout
+                    android:orientation="vertical">
+                <TextView
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:padding="20dp"
+                        >
                     文本文本Test1Test0
-                </android-TextView>
-                <android-TextView id="text1">
+                </TextView>
+                <TextView
+                        android:layout_height="wrap_content"
+                        android:layout_width="200dp"
+                        android:maxLines="3"
+                        android:padding="20dp"
+                        android:gravity="right"
+                        >
                     文本文本Test1Test1
                     文本文本Test1Test1
                     文本文本Test1Test1
                     文本文本Test1Test1
                     文本文本Test1Test1
                     文本文本Test1Test1
-                </android-TextView>
-                <android-TextView id="text2">
+                </TextView>
+                <TextView
+                        android:layout_height="100dp"
+                        android:layout_width="match_parent"
+                        android:padding="20dp"
+                        android:gravity="right|bottom"
+                        >
                     文本文本Test2Test2
-                </android-TextView>
-                <android-TextView id="text3">
+                </TextView>
+                <TextView
+                        android:layout_height="100dp"
+                        android:layout_width="wrap_content"
+                        android:padding="20dp"
+                        android:gravity="center"
+                        >
                     文本文本Test3Test3
-                </android-TextView>
-            </android-LinearLayout>
-        </android-ScrollView>
+                </TextView>
+            </LinearLayout>
+        </ScrollView>
     </android-TextViewSampleActivity>
 
     <script src="../node_modules/babel-core/browser-polyfill.min.js"></script>

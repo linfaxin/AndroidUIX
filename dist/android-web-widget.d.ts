@@ -199,6 +199,31 @@ declare module java.lang.util.concurrent {
         remove(item: T): void;
     }
 }
+declare module java.util {
+    class ArrayList<T> {
+        private array;
+        constructor(initialCapacity?: number);
+        size(): number;
+        isEmpty(): boolean;
+        contains(o: T): boolean;
+        indexOf(o: T): number;
+        lastIndexOf(o: T): number;
+        clone(): ArrayList<T>;
+        toArray(a?: T[]): Array<T>;
+        get(index: number): T;
+        set(index: number, element: T): T;
+        add(t: T): any;
+        add(index: number, t: T): any;
+        remove(o: number | T): T;
+        clear(): void;
+        addAll(list: ArrayList<T>): any;
+        addAll(index: number, list: ArrayList<T>): any;
+        removeAll(list: ArrayList<T>): boolean;
+        [Symbol.iterator](): () => IterableIterator<T>;
+        subList(fromIndex: number, toIndex: number): ArrayList<T>;
+        toString(): string;
+    }
+}
 declare module android.util {
     class CopyOnWriteArray<T> {
         private mData;
@@ -575,6 +600,53 @@ declare module android.graphics {
         drawCanvas(canvas: Canvas, offsetX: number, offsetY: number, width?: number, height?: number, canvasOffsetX?: number, canvasOffsetY?: number, canvasImageWidth?: number, canvasImageHeight?: number): void;
     }
 }
+declare module android.util {
+    class TypedValue {
+        static COMPLEX_UNIT_PX: string;
+        static COMPLEX_UNIT_DP: string;
+        static COMPLEX_UNIT_DIP: string;
+        static COMPLEX_UNIT_SP: string;
+        static COMPLEX_UNIT_PT: string;
+        static COMPLEX_UNIT_IN: string;
+        static COMPLEX_UNIT_MM: string;
+        static COMPLEX_UNIT_FRACTION: string;
+        static UNIT_SCALE_PT: any;
+        static UNIT_SCALE_IN: any;
+        static UNIT_SCALE_MM: any;
+        static UNIT_SCALE_SP: number;
+        private static initUnit();
+        static complexToDimensionPixelSize(valueWithUnit: string, baseValue?: number, metrics?: DisplayMetrics): number;
+    }
+}
+declare module android.view {
+    import Rect = android.graphics.Rect;
+    class Gravity {
+        static NO_GRAVITY: number;
+        static AXIS_SPECIFIED: number;
+        static AXIS_PULL_BEFORE: number;
+        static AXIS_PULL_AFTER: number;
+        static AXIS_CLIP: number;
+        static AXIS_X_SHIFT: number;
+        static AXIS_Y_SHIFT: number;
+        static TOP: number;
+        static BOTTOM: number;
+        static LEFT: number;
+        static RIGHT: number;
+        static CENTER_VERTICAL: number;
+        static FILL_VERTICAL: number;
+        static CENTER_HORIZONTAL: number;
+        static FILL_HORIZONTAL: number;
+        static CENTER: number;
+        static FILL: number;
+        static CLIP_VERTICAL: number;
+        static CLIP_HORIZONTAL: number;
+        static HORIZONTAL_GRAVITY_MASK: number;
+        static VERTICAL_GRAVITY_MASK: number;
+        static DISPLAY_CLIP_VERTICAL: number;
+        static DISPLAY_CLIP_HORIZONTAL: number;
+        static apply(gravity: number, w: number, h: number, container: Rect, outRect: Rect): void;
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
@@ -584,6 +656,7 @@ declare module android.view {
     import Rect = android.graphics.Rect;
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
+    import ArrayList = java.util.ArrayList;
     class View implements Drawable.Callback {
         private static DBG;
         static VIEW_LOG_TAG: string;
@@ -678,6 +751,7 @@ declare module android.view {
         mMinWidth: number;
         mMinHeight: number;
         private mTouchDelegate;
+        private mFloatingTreeObserver;
         mTouchSlop: number;
         private mVerticalScrollFactor;
         private mOverScrollMode;
@@ -705,6 +779,7 @@ declare module android.view {
         mPaddingTop: number;
         mPaddingBottom: number;
         constructor();
+        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         getWidth(): number;
         getHeight(): number;
         getTop(): number;
@@ -719,7 +794,12 @@ declare module android.view {
         getPaddingTop(): number;
         getPaddingRight(): number;
         getPaddingBottom(): number;
+        setPaddingLeft(left: number): void;
+        setPaddingTop(top: number): void;
+        setPaddingRight(right: number): void;
+        setPaddingBottom(bottom: number): void;
         setPadding(left: number, top: number, right: number, bottom: number): void;
+        private _setPaddingWithUnit(left, top, right, bottom);
         setScrollX(value: number): void;
         setScrollY(value: number): void;
         getScrollX(): number;
@@ -741,7 +821,6 @@ declare module android.view {
         bringToFront(): void;
         onScrollChanged(l: number, t: number, oldl: number, oldt: number): void;
         onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
-        getListenerInfo(): View.ListenerInfo;
         isFocusable(): boolean;
         isFocusableInTouchMode(): boolean;
         hasFocus(): boolean;
@@ -767,6 +846,13 @@ declare module android.view {
         cancelLongPress(): void;
         setTouchDelegate(delegate: TouchDelegate): void;
         getTouchDelegate(): TouchDelegate;
+        getListenerInfo(): View.ListenerInfo;
+        addOnLayoutChangeListener(listener: View.OnLayoutChangeListener): void;
+        removeOnLayoutChangeListener(listener: View.OnLayoutChangeListener): void;
+        addOnAttachStateChangeListener(listener: View.OnAttachStateChangeListener): void;
+        removeOnAttachStateChangeListener(listener: View.OnAttachStateChangeListener): void;
+        setOnClickListener(l: View.OnClickListener): void;
+        hasOnClickListeners(): boolean;
         setOnLongClickListener(l: View.OnLongClickListener): void;
         performClick(): boolean;
         callOnClick(): boolean;
@@ -779,6 +865,13 @@ declare module android.view {
         setLongClickable(longClickable: boolean): void;
         setPressed(pressed: boolean): void;
         isPressed(): boolean;
+        setSelected(selected: boolean): void;
+        dispatchSetSelected(selected: boolean): void;
+        isSelected(): boolean;
+        setActivated(activated: boolean): void;
+        dispatchSetActivated(activated: boolean): void;
+        isActivated(): boolean;
+        getViewTreeObserver(): ViewTreeObserver;
         isLayoutRtl(): boolean;
         getBaseline(): number;
         isLayoutRequested(): boolean;
@@ -881,14 +974,20 @@ declare module android.view {
         toString(): String;
         getRootView(): View;
         findViewById(id: string): View;
+        static inflate(domtree: HTMLElement): View;
         _bindElement: HTMLElement;
         bindElement: HTMLElement;
         _bindScrollContent: HTMLElement;
         bindScrollContent: HTMLElement;
-        initBindElement(bindElement?: HTMLElement): void;
+        _DOMAttrModifiedEvent: EventListener;
+        private initBindElement(bindElement?);
         syncBoundToElement(): void;
+        private _attrChangeHandler;
+        private _initAttrChangeHandler();
+        _fireInitBindElementAttribute(): void;
+        private onBindElementAttributeChanged(attributeName, oldVal, newVal);
+        private static _generateLayoutParamsFromAttribute(node, dest?);
         tagName(): string;
-        static inflate(domtree: HTMLElement): View;
     }
     module View {
         class MeasureSpec {
@@ -922,7 +1021,7 @@ declare module android.view {
         }
         class ListenerInfo {
             mOnAttachStateChangeListeners: CopyOnWriteArrayList<OnAttachStateChangeListener>;
-            mOnLayoutChangeListeners: Array<OnLayoutChangeListener>;
+            mOnLayoutChangeListeners: ArrayList<OnLayoutChangeListener>;
             mOnClickListener: OnClickListener;
             mOnLongClickListener: OnLongClickListener;
             mOnTouchListener: OnTouchListener;
@@ -942,6 +1041,14 @@ declare module android.view {
         }
         interface OnTouchListener {
             onTouch(v: View, event: MotionEvent): any;
+        }
+        class AttrChangeHandler {
+            isCallSuper: boolean;
+            handlers: any[];
+            add(handler: any): void;
+            handle(name: any, value: any): void;
+            static parseBoolean(value: any, defaultValue?: boolean): boolean;
+            static parseGravity(s: string, defaultValue?: number): number;
         }
     }
     module View.AttachInfo {
@@ -1032,6 +1139,7 @@ declare module android.view {
         static DEBUG_CONFIGURATION: boolean;
         static DEBUG_FPS: boolean;
         private mView;
+        mContext: HTMLElement;
         private mViewVisibility;
         private mWidth;
         private mHeight;
@@ -1161,6 +1269,7 @@ declare module android.view {
         mSuppressLayout: boolean;
         private mLayoutCalledWhileSuppressed;
         constructor();
+        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         private initViewGroup();
         addView(view: View): any;
         addView(view: View, index: number): any;
@@ -1240,7 +1349,6 @@ declare module android.view {
         invalidateChildInParentFast(left: number, top: number, dirty: Rect): ViewParent;
         requestTransparentRegion(child: android.view.View): void;
         requestChildFocus(child: android.view.View, focused: android.view.View): void;
-        recomputeViewAttributes(child: android.view.View): void;
         clearChildFocus(child: android.view.View): void;
         focusSearch(v: android.view.View, direction: number): android.view.View;
         focusableViewAvailable(v: android.view.View): void;
@@ -1256,13 +1364,24 @@ declare module android.view {
             static FILL_PARENT: number;
             static MATCH_PARENT: number;
             static WRAP_CONTENT: number;
+            private _width;
+            private _height;
             width: number;
             height: number;
+            _measuringParentWidthMeasureSpec: any;
+            _measuringParentHeightMeasureSpec: any;
+            _measuringMeasureSpec: android.util.DisplayMetrics;
+            _attrChangeHandler: View.AttrChangeHandler;
             constructor();
             constructor(src: LayoutParams);
             constructor(width: number, height: number);
+            _createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         }
         class MarginLayoutParams extends LayoutParams {
+            private _leftMargin;
+            private _topMargin;
+            private _rightMargin;
+            private _bottomMargin;
             leftMargin: number;
             topMargin: number;
             rightMargin: number;
@@ -1271,6 +1390,7 @@ declare module android.view {
             constructor(src: LayoutParams);
             constructor(width: number, height: number);
             setMargins(left: number, top: number, right: number, bottom: number): void;
+            _createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         }
         interface OnHierarchyChangeListener {
             onChildViewAdded(parent: View, child: View): any;
@@ -1303,36 +1423,11 @@ declare module android.view {
         }
     }
 }
-declare module android.view {
-    class Gravity {
-        static NO_GRAVITY: number;
-        static AXIS_SPECIFIED: number;
-        static AXIS_PULL_BEFORE: number;
-        static AXIS_PULL_AFTER: number;
-        static AXIS_CLIP: number;
-        static AXIS_X_SHIFT: number;
-        static AXIS_Y_SHIFT: number;
-        static TOP: number;
-        static BOTTOM: number;
-        static LEFT: number;
-        static RIGHT: number;
-        static CENTER_VERTICAL: number;
-        static FILL_VERTICAL: number;
-        static CENTER_HORIZONTAL: number;
-        static FILL_HORIZONTAL: number;
-        static CENTER: number;
-        static FILL: number;
-        static CLIP_VERTICAL: number;
-        static CLIP_HORIZONTAL: number;
-        static HORIZONTAL_GRAVITY_MASK: number;
-        static VERTICAL_GRAVITY_MASK: number;
-        static DISPLAY_CLIP_VERTICAL: number;
-        static DISPLAY_CLIP_HORIZONTAL: number;
-    }
-}
 declare module android.widget {
+    import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import Drawable = android.graphics.drawable.Drawable;
+    import Canvas = android.graphics.Canvas;
     class FrameLayout extends ViewGroup {
         static DEFAULT_CHILD_GRAVITY: number;
         mMeasureAllChildren: boolean;
@@ -1347,6 +1442,7 @@ declare module android.widget {
         mForegroundInPadding: boolean;
         mForegroundBoundsChanged: boolean;
         private mMatchParentChildren;
+        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         getForegroundGravity(): number;
         setForegroundGravity(foregroundGravity: number): void;
         verifyDrawable(who: Drawable): boolean;
@@ -1363,9 +1459,12 @@ declare module android.widget {
         onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         layoutChildren(left: number, top: number, right: number, bottom: number, forceLeftGravity: boolean): void;
         onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        draw(canvas: Canvas): void;
         setMeasureAllChildren(measureAll: boolean): void;
         getMeasureAllChildren(): boolean;
         shouldDelayChildPressedState(): boolean;
+        checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
+        generateLayoutParams(p: ViewGroup.LayoutParams): FrameLayout.LayoutParams;
     }
     module FrameLayout {
         class LayoutParams extends ViewGroup.MarginLayoutParams {
@@ -1373,15 +1472,18 @@ declare module android.widget {
             constructor();
             constructor(source: ViewGroup.LayoutParams);
             constructor(width: number, height: number, gravity?: number);
+            _createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         }
     }
 }
 declare module runtime {
     import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import ViewRootImpl = android.view.ViewRootImpl;
     class AndroidUI {
         element: HTMLElement;
         private canvas;
-        private viewRootImpl;
+        viewRootImpl: ViewRootImpl;
         private rootLayout;
         private rootStyleElement;
         constructor(element: HTMLElement);
@@ -1394,7 +1496,7 @@ declare module runtime {
         private tryStartLayoutAfterInit();
         notifySizeChange(width: number, height: number): void;
         setContentView(view: View): void;
-        addContentView(view: View): void;
+        addContentView(view: View, params?: ViewGroup.LayoutParams): void;
         findViewById(id: string): View;
     }
 }
@@ -1509,6 +1611,7 @@ declare module android.widget {
         private mOverflingDistance;
         private mActivePointerId;
         constructor();
+        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         shouldDelayChildPressedState(): boolean;
         getMaxScrollAmount(): number;
         private initScrollView();
@@ -1592,6 +1695,7 @@ declare module android.widget {
         private mDividerHeight;
         private mShowDividers;
         private mDividerPadding;
+        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         setShowDividers(showDividers: number): void;
         shouldDelayChildPressedState(): boolean;
         getShowDividers(): number;
@@ -1647,6 +1751,7 @@ declare module android.widget {
             constructor();
             constructor(source: ViewGroup.LayoutParams);
             constructor(width: number, height: number, weight?: number);
+            _createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         }
     }
 }
@@ -1669,6 +1774,7 @@ declare module android.widget {
         private mMinLineCount;
         private mTextElement;
         constructor();
+        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         private initTextElement();
         onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         onFinishInflate(): void;
@@ -1682,13 +1788,19 @@ declare module android.widget {
         setLineSpacing(add: number, mult: number): void;
         setTextSize(size: number): void;
         getLineHeight(): number;
+        setHeight(pixels: number): void;
         setMaxLines(max: number): void;
         getMaxLines(): number;
+        setMaxHeight(maxHeight: number): void;
+        getMaxHeight(): number;
+        setMaxWidth(maxpixels: number): void;
+        getMaxWidth(): number;
+        setWidth(pixels: number): void;
         setMinLines(min: number): void;
         getMinLines(): number;
         setSingleLine(singleLine?: boolean): void;
         setLines(lines: number): void;
-        setText(text: string): void;
+        setText(text?: string): void;
         setHtml(html: string): void;
     }
 }

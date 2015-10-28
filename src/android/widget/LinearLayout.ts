@@ -88,6 +88,58 @@ module android.widget{
         private mShowDividers:number = LinearLayout.SHOW_DIVIDER_NONE;
         private mDividerPadding:number = 0;
 
+
+        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
+            super.createAttrChangeHandler(mergeHandler);
+            let linearLayout = this;
+            mergeHandler.add({
+                set orientation(value){
+                    let isVertical = (value+"").toUpperCase() === 'VERTICAL';
+                    if(isVertical){
+                        linearLayout.setOrientation(LinearLayout.VERTICAL);
+                        return;
+                    }
+                    let isHorizontal = (value+"").toUpperCase() === 'HORIZONTAL';
+                    if(isHorizontal){
+                        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
+                    }
+                },
+                set baselineAligned(value){
+                    if(!View.AttrChangeHandler.parseBoolean(value)) linearLayout.setBaselineAligned(false);
+                },
+                set weightSum(value){
+                    let weightSum = Number.parseInt(value);
+                    if(Number.isSafeInteger(weightSum)){
+                        linearLayout.mWeightSum = weightSum;
+                    }
+                },
+                set baselineAlignedChildIndex(value){
+                    value = Number.parseInt(value);
+                    if(Number.isSafeInteger(value)){
+                        linearLayout.mBaselineAlignedChildIndex = value;
+                    }
+                },
+                set measureWithLargestChild(value){
+                    linearLayout.mUseLargestChild = View.AttrChangeHandler.parseBoolean(value, linearLayout.mUseLargestChild);
+                },
+                set divider(value){
+                    //TODO set divider
+                },
+                set showDividers(value){
+                    let fieldName = ('SHOW_DIVIDER_' + value).toUpperCase();
+                    if(Number.isInteger(LinearLayout[fieldName])){
+                        linearLayout.mShowDividers = LinearLayout[fieldName];
+                    }
+                },
+                set dividerPadding(value){
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)){
+                        linearLayout.mDividerPadding = value;
+                    }
+                }
+            });
+        }
+
         setShowDividers(showDividers:number) {
             if (showDividers != this.mShowDividers) {
                 this.requestLayout();
@@ -1303,6 +1355,10 @@ module android.widget{
         }
 
         setOrientation(orientation:number) {
+            if(typeof orientation === 'string'){
+                if('VERTICAL' === (orientation+'').toUpperCase()) orientation = LinearLayout.VERTICAL;
+                else if('HORIZONTAL' === (orientation+'').toUpperCase()) orientation = LinearLayout.HORIZONTAL;
+            }
             if (this.mOrientation != orientation) {
                 this.mOrientation = orientation;
                 this.requestLayout();
@@ -1381,6 +1437,20 @@ module android.widget{
                     super(width, height);
                     this.weight = weight;
                 }
+            }
+
+            _createAttrChangeHandler(mergeHandler:View.AttrChangeHandler){
+                super._createAttrChangeHandler(mergeHandler);
+                let params = this;
+                mergeHandler.add({
+                    set gravity(value) {
+                        params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
+                    },
+                    set weight(value) {
+                        value = Number.parseInt(value);
+                        if(Number.isInteger(value)) params.weight = value;
+                    }
+                });
             }
         }
     }

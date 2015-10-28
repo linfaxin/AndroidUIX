@@ -55,6 +55,17 @@ module android.widget {
             this.initScrollView();
         }
 
+
+        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
+            super.createAttrChangeHandler(mergeHandler);
+            let scrollView = this;
+            mergeHandler.add({
+                set fillViewport(value){
+                    scrollView.setFillViewport(View.AttrChangeHandler.parseBoolean(value));
+                }
+            });
+        }
+
         shouldDelayChildPressedState():boolean {
             return true;
         }
@@ -638,6 +649,8 @@ module android.widget {
         }
         measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {
             let lp = child.getLayoutParams();
+            lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
+            lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
 
             let childWidthMeasureSpec;
             let childHeightMeasureSpec;
@@ -648,11 +661,16 @@ module android.widget {
             childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 
             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+
+            lp._measuringParentWidthMeasureSpec = null;
+            lp._measuringParentHeightMeasureSpec = null;
         }
 
         measureChildWithMargins(child:View, parentWidthMeasureSpec:number, widthUsed:number,
                                 parentHeightMeasureSpec:number, heightUsed:number) {
             const lp = <ViewGroup.MarginLayoutParams>child.getLayoutParams();
+            lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
+            lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
 
             const childWidthMeasureSpec = ScrollView.getChildMeasureSpec(parentWidthMeasureSpec,
                 this.mPaddingLeft + this.mPaddingRight + lp.leftMargin + lp.rightMargin
@@ -661,6 +679,9 @@ module android.widget {
                 lp.topMargin + lp.bottomMargin, MeasureSpec.UNSPECIFIED);
 
             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+
+            lp._measuringParentWidthMeasureSpec = null;
+            lp._measuringParentHeightMeasureSpec = null;
         }
         computeScroll() {
             if (this.mScroller.computeScrollOffset()) {

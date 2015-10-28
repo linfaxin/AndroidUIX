@@ -10,6 +10,7 @@
 ///<reference path="../graphics/Matrix.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
+///<reference path="../util/TypedValue.ts"/>
 
 
 module android.view {
@@ -18,6 +19,7 @@ module android.view {
     import Rect = android.graphics.Rect;
     import Matrix = android.graphics.Matrix;
     import SystemClock = android.os.SystemClock;
+    import TypedValue = android.util.TypedValue;
 
     export class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN = 0x1;
@@ -73,6 +75,48 @@ module android.view {
         constructor() {
             super();
             this.initViewGroup();
+        }
+
+
+        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
+            super.createAttrChangeHandler(mergeHandler);
+
+            let viewGroup = this;
+            mergeHandler.add({
+                set clipChildren(value){
+                    viewGroup.setClipChildren(View.AttrChangeHandler.parseBoolean(value));
+                },
+                set clipToPadding(value){
+                    viewGroup.setClipToPadding(View.AttrChangeHandler.parseBoolean(value));
+                },
+                set animationCache(value){
+
+                },
+                set persistentDrawingCache(value){
+
+                },
+                set addStatesFromChildren(value){
+
+                },
+                set alwaysDrawnWithCache(value){
+
+                },
+                set layoutAnimation(value){
+
+                },
+                set descendantFocusability(value){
+
+                },
+                set splitMotionEvents(value){
+
+                },
+                set animateLayoutChanges(value){
+
+                },
+                set layoutMode(value){
+
+                }
+            });
         }
 
         private initViewGroup() {
@@ -798,6 +842,8 @@ module android.view {
 
         measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {
             let lp = child.getLayoutParams();
+            lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
+            lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
 
             const childWidthMeasureSpec = ViewGroup.getChildMeasureSpec(parentWidthMeasureSpec,
                 this.mPaddingLeft + this.mPaddingRight, lp.width);
@@ -805,11 +851,17 @@ module android.view {
                 this.mPaddingTop + this.mPaddingBottom, lp.height);
 
             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+
+            lp._measuringParentWidthMeasureSpec = null;
+            lp._measuringParentHeightMeasureSpec = null;
         }
 
         measureChildWithMargins(child:View, parentWidthMeasureSpec:number, widthUsed:number,
                                 parentHeightMeasureSpec:number, heightUsed:number) {
             let lp = child.getLayoutParams();
+            lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
+            lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
+
             if (lp instanceof ViewGroup.MarginLayoutParams) {
 
                 const childWidthMeasureSpec = ViewGroup.getChildMeasureSpec(parentWidthMeasureSpec,
@@ -821,6 +873,9 @@ module android.view {
 
                 child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
             }
+
+            lp._measuringParentWidthMeasureSpec = null;
+            lp._measuringParentHeightMeasureSpec = null;
         }
 
         static getChildMeasureSpec(spec:number, padding:number, childDimension:number):number {
@@ -1380,9 +1435,6 @@ module android.view {
         requestChildFocus(child:android.view.View, focused:android.view.View) {
         }
 
-        recomputeViewAttributes(child:android.view.View) {
-        }
-
         clearChildFocus(child:android.view.View) {
         }
 
@@ -1434,8 +1486,47 @@ module android.view {
             static FILL_PARENT = -1;
             static MATCH_PARENT = -1;
             static WRAP_CONTENT = -2;
-            width = 0;
-            height = 0;
+            private _width = 0;
+            private _height = 0;
+
+            public get width():number {
+                if(typeof this._width === 'number') return this._width;
+                let up = (this._width + "").toUpperCase();
+                if(up === 'FILL_PARENT' || up === 'MATCH_PARENT') this._width = -1;
+                else if(up === 'WRAP_CONTENT') this._width = -2;
+                else{
+                    let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    this._width = TypedValue.complexToDimensionPixelSize(
+                        <any>this._width, parentWidth, this._measuringMeasureSpec);
+                }
+                return this._width;
+            }
+
+            public set width(value) {
+                this._width = value;
+            }
+
+            public get height():number {
+                if(typeof this._height === 'number') return this._height;
+                let up = (this._height + "").toUpperCase();
+                if(up === 'FILL_PARENT' || up === 'MATCH_PARENT') this._height = -1;
+                else if(up === 'WRAP_CONTENT') this._height = -2;
+                else{
+                    let parentHeight = View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
+                    this._height = TypedValue.complexToDimensionPixelSize(
+                        <any>this._height, parentHeight, this._measuringMeasureSpec);
+                }
+                return this._height;
+            }
+
+            public set height(value) {
+                this._height = value;
+            }
+
+            _measuringParentWidthMeasureSpec;
+            _measuringParentHeightMeasureSpec;
+            _measuringMeasureSpec:android.util.DisplayMetrics;
+            _attrChangeHandler = new View.AttrChangeHandler();
 
             constructor();
             constructor(src:LayoutParams);
@@ -1443,20 +1534,82 @@ module android.view {
             constructor(...args) {
                 if (args.length === 1) {
                     let src = args[0];
-                    this.width = src.width;
-                    this.height = src.height;
+                    this._width = src._width;
+                    this._height = src._height;
                 } else if (args.length === 2) {
                     let [width=0, height=0] = args;
-                    this.width = width;
-                    this.height = height;
+                    this._width = width;
+                    this._height = height;
+                }
+
+
+                this._createAttrChangeHandler(this._attrChangeHandler);
+                if(!this._attrChangeHandler.isCallSuper){
+                    throw Error('must call super when override createAttrChangeHandler!');
                 }
             }
+
+            _createAttrChangeHandler(mergeHandler:View.AttrChangeHandler){
+                let params = this;
+                mergeHandler.add({
+                    set width(value){
+                        params._width = value;
+                    },
+                    set height(value){
+                        params._height = value;
+                    }
+                });
+                mergeHandler.isCallSuper = true;
+            }
+
         }
         export class MarginLayoutParams extends LayoutParams {
-            leftMargin=0;
-            topMargin=0;
-            rightMargin=0;
-            bottomMargin=0;
+            private _leftMargin = 0;
+            private _topMargin = 0;
+            private _rightMargin = 0;
+            private _bottomMargin = 0;
+            public get leftMargin():number{
+                if(typeof this._leftMargin === 'number') return this._leftMargin;
+                let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                this._leftMargin = TypedValue.complexToDimensionPixelSize(
+                    <any>this._leftMargin, parentWidth, this._measuringMeasureSpec);
+                return this._leftMargin;
+            }
+            public get topMargin():number{
+                if(typeof this._topMargin === 'number') return this._topMargin;
+                //topMargin with percent will use parent's width
+                let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                this._topMargin = TypedValue.complexToDimensionPixelSize(
+                    <any>this._topMargin, parentWidth, this._measuringMeasureSpec);
+                return this._topMargin;
+            }
+            public get rightMargin():number{
+                if(typeof this._rightMargin === 'number') return this._rightMargin;
+                let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                this._rightMargin = TypedValue.complexToDimensionPixelSize(
+                    <any>this._rightMargin, parentWidth, this._measuringMeasureSpec);
+                return this._rightMargin;
+            }
+            public get bottomMargin():number{
+                if(typeof this._bottomMargin === 'number') return this._bottomMargin;
+                //topMargin with percent will use parent's width
+                let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                this._bottomMargin = TypedValue.complexToDimensionPixelSize(
+                    <any>this._bottomMargin, parentWidth, this._measuringMeasureSpec);
+                return this._bottomMargin;
+            }
+            public set leftMargin(value) {
+                this._leftMargin = value;
+            }
+            public set topMargin(value) {
+                this._topMargin = value;
+            }
+            public set rightMargin(value) {
+                this._rightMargin = value;
+            }
+            public set bottomMargin(value) {
+                this._bottomMargin = value;
+            }
 
             constructor();
             constructor(src:LayoutParams);
@@ -1467,10 +1620,11 @@ module android.view {
                 if (args.length === 1) {
                     let src = args[0];
                     if (src instanceof MarginLayoutParams) {
-                        this.leftMargin = src.leftMargin;
-                        this.topMargin = src.topMargin;
-                        this.rightMargin = src.rightMargin;
-                        this.bottomMargin = src.bottomMargin;
+                        super(src);
+                        this._leftMargin = src.leftMargin;
+                        this._topMargin = src.topMargin;
+                        this._rightMargin = src.rightMargin;
+                        this._bottomMargin = src.bottomMargin;
                     }
                 }else if(args.length==2){
                     super(args[0], args[1]);
@@ -1482,6 +1636,25 @@ module android.view {
                 this.topMargin = top;
                 this.rightMargin = right;
                 this.bottomMargin = bottom;
+            }
+
+            _createAttrChangeHandler(mergeHandler:View.AttrChangeHandler){
+                super._createAttrChangeHandler(mergeHandler);
+                let params = this;
+                mergeHandler.add({
+                    set marginLeft(value) {
+                        params._leftMargin = value;
+                    },
+                    set marginTop(value) {
+                        params._topMargin = value;
+                    },
+                    set marginRight(value) {
+                        params._rightMargin = value;
+                    },
+                    set marginBottom(value) {
+                        params._bottomMargin = value;
+                    }
+                });
             }
         }
         export interface OnHierarchyChangeListener {
