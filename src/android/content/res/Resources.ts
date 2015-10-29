@@ -14,14 +14,16 @@ module android.content.res{
             if(Resources.displayMetrics) return Resources.displayMetrics;
             Resources.displayMetrics = new DisplayMetrics();
             let displayMetrics = Resources.displayMetrics;
+            let density = Resources.density;
 
-            displayMetrics.widthPixels = window.innerWidth;//FIXME view root height
-            displayMetrics.heightPixels = window.innerHeight;
             displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT ;
             displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
-            displayMetrics.density = Resources.density;//window.devicePixelRatio;
-            displayMetrics.densityDpi = displayMetrics.density * DisplayMetrics.DENSITY_DEFAULT;
-            displayMetrics.scaledDensity = displayMetrics.density;
+            displayMetrics.density = density;//window.devicePixelRatio;
+            displayMetrics.densityDpi = density * DisplayMetrics.DENSITY_DEFAULT;
+            displayMetrics.scaledDensity = density;
+
+            displayMetrics.widthPixels = window.innerWidth * density;
+            displayMetrics.heightPixels = window.innerHeight * density;
 
             return displayMetrics;
         }

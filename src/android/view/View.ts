@@ -2370,7 +2370,7 @@ module android.view {
             let bindEle = this.bindElement.querySelector('#'+id);
             return bindEle ? bindEle['bindView'] : null;
         }
-        static inflate(domtree:HTMLElement):View{
+        static inflate(domtree:HTMLElement, rootElement=domtree):View{
             let className = domtree.tagName;
             if(className.startsWith('ANDROID-')){
                 className = className.substring('ANDROID-'.length);
@@ -2399,12 +2399,12 @@ module android.view {
             }
             if(!rootViewClass) return null;
             let rootView:View = new rootViewClass();
-            rootView.initBindElement(domtree);
+            rootView.initBindElement(domtree, rootElement);
 
             if(rootView instanceof ViewGroup){
                 Array.from(domtree.children).forEach((item)=>{
                     if(item instanceof HTMLElement){
-                        let view = View.inflate(item);
+                        let view = View.inflate(item, rootElement);
                         let params = rootView.generateDefaultLayoutParams();
                         this._generateLayoutParamsFromAttribute(item, params);
                         if(view) rootView.addView(view, params);
@@ -2437,7 +2437,7 @@ module android.view {
                 this.onBindElementAttributeChanged(event.attrName, event.prevValue, event.newValue);
             }
         };
-        private initBindElement(bindElement?:HTMLElement):void{
+        private initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
             this._bindElement = bindElement || document.createElement(this.tagName());
             let oldBindView:View = this._bindElement['bindView'];
             if(oldBindView){
@@ -2445,7 +2445,7 @@ module android.view {
             }
             this._bindElement['bindView']=this;
 
-            this._parseRefStyle();
+            this._parseRefStyle(rootElement);
             this._initAttrChangeHandler();
             this._bindElement.addEventListener("DOMAttrModified", this._DOMAttrModifiedEvent, true);
             this._fireInitBindElementAttribute();
@@ -2467,11 +2467,12 @@ module android.view {
 
         private _attrChangeHandler = new View.AttrChangeHandler();
 
-        private _parseRefStyle(){
+        private _parseRefStyle(rootElement?:HTMLElement){
             let style = this._bindElement.getAttribute('style');
             if(style && style.startsWith('@style/')){
                 let ref = style.substring('@style/'.length);
-                let styleElement = document.getElementById(ref);
+                let styleElement = rootElement ? rootElement.querySelector('#'+ref) : null;
+                if(!styleElement) styleElement = document.getElementById(ref);
                 if(styleElement){
                     Array.from(styleElement.attributes).forEach((attr:Attr)=>{
                         if(attr.name!=='id' && !this._bindElement.hasAttribute(attr.name)){

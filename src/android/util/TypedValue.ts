@@ -15,11 +15,17 @@ module android.util{
         static COMPLEX_UNIT_PT = 'pt';
         static COMPLEX_UNIT_IN = 'in';
         static COMPLEX_UNIT_MM = 'mm';
+        static COMPLEX_UNIT_EM = 'em';
+        static COMPLEX_UNIT_REM = 'rem';
+        static COMPLEX_UNIT_VH = 'vh';
+        static COMPLEX_UNIT_VW = 'vw';
         static COMPLEX_UNIT_FRACTION = '%';
 
         static UNIT_SCALE_PT;
         static UNIT_SCALE_IN;
         static UNIT_SCALE_MM;
+        static UNIT_SCALE_EM;
+        static UNIT_SCALE_REM;
         static UNIT_SCALE_SP = 1;
 
         private static initUnit(){
@@ -33,6 +39,10 @@ module android.util{
             TypedValue.UNIT_SCALE_IN = temp.offsetHeight;
             temp.style.height = 100 + TypedValue.COMPLEX_UNIT_MM;
             TypedValue.UNIT_SCALE_MM = temp.offsetHeight / 100;
+            temp.style.height = 10 + TypedValue.COMPLEX_UNIT_EM;
+            TypedValue.UNIT_SCALE_EM = temp.offsetHeight / 10;
+            temp.style.height = 10 + TypedValue.COMPLEX_UNIT_REM;
+            TypedValue.UNIT_SCALE_REM = temp.offsetHeight / 10;
 
             document.body.removeChild(temp);
         }
@@ -41,6 +51,8 @@ module android.util{
         static complexToDimensionPixelSize(valueWithUnit:string, baseValue = 0, metrics = Resources.getDisplayMetrics()):number {
             if(this.initUnit) this.initUnit();
             if(valueWithUnit===undefined || valueWithUnit===null) return 0;
+            if(valueWithUnit === ''+(Number.parseInt(valueWithUnit))) return Number.parseInt(valueWithUnit);
+
             if(typeof valueWithUnit !== 'string') valueWithUnit = valueWithUnit+"";
             let scale = 1;
             if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_PX)){
@@ -69,6 +81,22 @@ module android.util{
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_MM)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_MM, "");
                 scale = TypedValue.UNIT_SCALE_MM;
+
+            }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_EM)){
+                valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_EM, "");
+                scale = TypedValue.UNIT_SCALE_EM;
+
+            }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_REM)){
+                valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_REM, "");
+                scale = TypedValue.UNIT_SCALE_REM;
+
+            }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_VH)){
+                valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_VH, "");
+                scale = metrics.heightPixels / 100;
+
+            }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_VW)){
+                valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_VW, "");
+                scale = metrics.widthPixels / 100;
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_FRACTION)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_FRACTION, "");

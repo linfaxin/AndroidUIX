@@ -24,6 +24,7 @@ module runtime {
         viewRootImpl:ViewRootImpl;
         private rootLayout:RootLayout;
         private rootStyleElement:HTMLStyleElement;
+        private rootResourceElement:Element;
 
         constructor(element:HTMLElement) {
             this.element = element;
@@ -61,12 +62,14 @@ module runtime {
 
         private initInflateView() {
             Array.from(this.element.children).forEach((item)=> {
-                if (item instanceof HTMLStyleElement) {
+                if(item.tagName==='resources'){
+                    this.rootResourceElement = item;
+
+                }else if (item instanceof HTMLStyleElement) {
                     this.rootStyleElement = item;
-                    return;
-                }
-                if (item instanceof HTMLElement) {
-                    let view = View.inflate(item);
+
+                }else if (item instanceof HTMLElement) {
+                    let view = View.inflate(this.element, item);
                     if (view) this.rootLayout.addView(view, -1, -1);
                 }
             });
@@ -130,9 +133,18 @@ module runtime {
             if (!this.rootStyleElement) this.rootStyleElement = document.createElement("style");
             this.rootStyleElement.setAttribute("scoped", '');
 
+            this.rootStyleElement.innerHTML += `
+                * {
+                    overflow : hidden;
+                }
+                `;
+
             let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
             if (iOS) {
                 this.rootStyleElement.innerHTML += `
+                    android-ScrollView {
+                        overflow : scroll;
+                    }
                     android-ScrollView::-webkit-scrollbar {
                         -webkit-appearance: none;
                         width: 4px;
@@ -175,7 +187,7 @@ module runtime {
 
         setContentView(view:View){
             this.rootLayout.removeAllViews();
-            this.rootLayout.addView(view);
+            this.rootLayout.addView(view, -1, -1);
         }
         addContentView(view:View, params = new ViewGroup.LayoutParams(-1, -1)){
             this.rootLayout.addView(view, params);

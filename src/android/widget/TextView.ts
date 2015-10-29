@@ -303,7 +303,6 @@ module android.widget{
 
 
         onDraw(canvas:android.graphics.Canvas) {
-
             //update text color
             let r = Color.red(this.mCurTextColor);
             let g = Color.green(this.mCurTextColor);
