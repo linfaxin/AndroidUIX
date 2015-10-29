@@ -2445,6 +2445,7 @@ module android.view {
             }
             this._bindElement['bindView']=this;
 
+            this._parseRefStyle();
             this._initAttrChangeHandler();
             this._bindElement.addEventListener("DOMAttrModified", this._DOMAttrModifiedEvent, true);
             this._fireInitBindElementAttribute();
@@ -2466,6 +2467,20 @@ module android.view {
 
         private _attrChangeHandler = new View.AttrChangeHandler();
 
+        private _parseRefStyle(){
+            let style = this._bindElement.getAttribute('style');
+            if(style && style.startsWith('@style/')){
+                let ref = style.substring('@style/'.length);
+                let styleElement = document.getElementById(ref);
+                if(styleElement){
+                    Array.from(styleElement.attributes).forEach((attr:Attr)=>{
+                        if(attr.name!=='id' && !this._bindElement.hasAttribute(attr.name)){
+                            this._bindElement.setAttribute(attr.name, attr.value);
+                        }
+                    });
+                }
+            }
+        }
         private _initAttrChangeHandler(){
             this.createAttrChangeHandler(this._attrChangeHandler);
             if(!this._attrChangeHandler.isCallSuper){

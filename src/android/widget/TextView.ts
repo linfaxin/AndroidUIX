@@ -5,13 +5,17 @@
 ///<reference path="../view/Gravity.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Color.ts"/>
+///<reference path="../content/res/ColorStateList.ts"/>
+///<reference path="../util/TypedValue.ts"/>
 
 module android.widget{
     import View = android.view.View;
     import Gravity = android.view.Gravity;
     import Resources = android.content.res.Resources;
     import Color = android.graphics.Color;
+    import ColorStateList = android.content.res.ColorStateList;
     import MeasureSpec = View.MeasureSpec;
+    import TypedValue = android.util.TypedValue;
 
     //FIXME current impl: use dom element to draw the text
     //FIXME may should change to draw by canvas later
@@ -23,7 +27,8 @@ module android.widget{
         private mGravity;
         private mSingleLine = false;
         private mTextSize; //default 14 dp
-        private mTextColor = Color.BLACK;
+        private mTextColor = ColorStateList.valueOf(Color.BLACK);
+        private mCurTextColor = Color.BLACK;
         private mHintColor = Color.LTGRAY;
         private mSpacingMult = 1.2;
         private mSpacingAdd = 0;
@@ -49,14 +54,39 @@ module android.widget{
             mergeHandler.add({
                 set textColorHighlight(value){
                 },
-                set textColor(value){
+                set textColor(value:string){
+                    if(value.startsWith('@')){
+                        //TODO parse ref
 
+                    }else if(value.startsWith('rgb(')){
+                        value = value.replace('rgb(', '').replace(')', '');
+                        let parts = value.split(',');
+                        textView.setTextColor(
+                            Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2])));
+
+                    }else if(value.startsWith('rgba(')){
+                        value = value.replace('rgba(', '').replace(')', '');
+                        let parts = value.split(',');
+                        textView.setTextColor(Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
+                            Number.parseInt(parts[2]), Number.parseInt(parts[2])));
+
+                    }else {
+                        if (value.startsWith('#') && value.length === 4) {//support parse #333
+                            value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
+                        }
+
+                        try {
+                            textView.setTextColor(Color.parseColor(value));
+                        } catch (e) {
+                        }
+                    }
                 },
                 set textColorHint(value){
 
                 },
                 set textSize(value){
-
+                    value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
+                    textView.setTextSize(value);
                 },
                 set textStyle(value){
 
@@ -271,6 +301,66 @@ module android.widget{
             return desired;
         }
 
+
+        onDraw(canvas:android.graphics.Canvas) {
+
+            //update text color
+            let r = Color.red(this.mCurTextColor);
+            let g = Color.green(this.mCurTextColor);
+            let b = Color.blue(this.mCurTextColor);
+            let a = Color.alpha(this.mCurTextColor);
+            this.mTextElement.style.color = `rgb(${r}, ${g}, ${b})`;
+            this.mTextElement.style.opacity = a / 255 + '';//color style not support opacity, make whole element opacity
+
+            return super.onDraw(canvas);
+        }
+
+        setTextColor(color:number|ColorStateList){
+            if(Number.isInteger(<number>color)){
+                this.mTextColor = ColorStateList.valueOf(<number>color);
+
+            }else{
+                if (color === null || color === undefined) {
+                    throw new Error('colors is null');
+                }
+                this.mTextColor = <ColorStateList>color;
+            }
+            this.updateTextColors();
+        }
+        getTextColors():ColorStateList {
+            return this.mTextColor;
+        }
+        getCurrentTextColor():number {
+            return this.mCurTextColor;
+        }
+        private updateTextColors() {
+            let inval = false;
+            let color = this.mTextColor.getColorForState(this.getDrawableState(), 0);
+            if (color != this.mCurTextColor) {
+                this.mCurTextColor = color;
+                inval = true;
+            }
+            //if (mLinkTextColor != null) {
+            //    color = mLinkTextColor.getColorForState(getDrawableState(), 0);
+            //    if (color != mTextPaint.linkColor) {
+            //        mTextPaint.linkColor = color;
+            //        inval = true;
+            //    }
+            //}
+            //if (mHintTextColor != null) {
+            //    color = mHintTextColor.getColorForState(getDrawableState(), 0);
+            //    if (color != mCurHintTextColor && mText.length() == 0) {
+            //        mCurHintTextColor = color;
+            //        inval = true;
+            //    }
+            //}
+            if (inval) {
+                // Text needs to be redrawn with the new color
+                //if (mEditor != null) mEditor.invalidateTextDisplayList();
+                this.invalidate();
+            }
+        }
+
         getCompoundPaddingTop():number {
             return this.mPaddingTop;
         }
@@ -285,7 +375,6 @@ module android.widget{
         }
 
         setGravity(gravity:number){
-
 
             //horizontal don't need relayout
             switch (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {

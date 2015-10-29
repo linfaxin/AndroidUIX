@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="width: 100%;height: 100%;">
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="http://schemas.android.com/apk/res/android">
 <head>
     <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -17,20 +17,26 @@
             padding: 0;
             width: 100%;
             height: 100%;
+            android_maxLines:3;
         }
     </style>
 </head>
 <body>
     <android-TextViewSampleActivity id="activity" style="width: 100%; height:90%;margin-top: 6%;display: none;">
+        <style id="textStyle"
+               android:textSize="14dp"
+               android:textColor="#333"
+                >
+        </style>
         <ScrollView
-                android:fillViewport="true"
-                android:layout_height="-1">
+                android:fillViewport="true">
             <LinearLayout
                     android:orientation="vertical">
                 <TextView
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
                         android:padding="20dp"
+                        style="@style/textStyle"
                         >
                     文本文本Test1Test0
                 </TextView>
@@ -40,6 +46,7 @@
                         android:maxLines="3"
                         android:padding="20dp"
                         android:gravity="right"
+                        style="@style/textStyle"
                         >
                     文本文本Test1Test1
                     文本文本Test1Test1
@@ -53,6 +60,7 @@
                         android:layout_width="match_parent"
                         android:padding="20dp"
                         android:gravity="right|bottom"
+                        style="@style/textStyle"
                         >
                     文本文本Test2Test2
                 </TextView>
@@ -61,6 +69,7 @@
                         android:layout_width="wrap_content"
                         android:padding="20dp"
                         android:gravity="center"
+                        style="@style/textStyle"
                         >
                     文本文本Test3Test3
                 </TextView>

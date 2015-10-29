@@ -75,6 +75,9 @@ module android.graphics{
         static argb(alpha:number, red:number, green:number, blue:number):number {
             return (alpha << 24) | (red << 16) | (green << 8) | blue;
         }
+        static rgba(red:number, green:number, blue:number, alpha:number):number {
+            return (alpha << 24) | (red << 16) | (green << 8) | blue;
+        }
 
         /**
          * Parse the color string, and return the corresponding color-int.

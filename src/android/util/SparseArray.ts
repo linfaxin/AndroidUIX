@@ -16,8 +16,10 @@ module android.util {
             return clone;
         }
 
-        get(key:number, valueIfKeyNotFound:T) {
-            return this.map.get(key) || valueIfKeyNotFound;
+        get(key:number, valueIfKeyNotFound:T=null) {
+            let value = this.map.get(key);
+            if(value===undefined) return valueIfKeyNotFound;
+            return  value;
         }
 
         delete(key:number) {
