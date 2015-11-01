@@ -5,6 +5,7 @@
 ///<reference path="../util/Log.ts"/>
 ///<reference path="Rect.ts"/>
 ///<reference path="Color.ts"/>
+///<reference path="Paint.ts"/>
 module android.graphics {
     import Pools = android.util.Pools;
     import Log = android.util.Log;
@@ -101,7 +102,7 @@ module android.graphics {
         }
 
         drawARGB(a:number, r:number, g:number, b:number) {
-            this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a})`;
+            this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a/255})`;
             this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
         }
 
@@ -214,5 +215,21 @@ module android.graphics {
             this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY, width, height,
                 canvasOffsetX, canvasOffsetY, canvasImageWidth, canvasImageHeight);
         }
+
+        drawRect(rect:Rect, paint:Paint);
+        drawRect(left:number, top:number, right:number, bottom:number, paint:Paint);
+        drawRect(...args) {
+            if (args.length == 2) {
+                let rect:Rect = args[0];
+                this.drawRect(rect.left, rect.top, rect.right, rect.bottom, args[1]);
+            } else {
+                let [left, top, right, bottom, paint] = args;
+                this._mCanvasContent.save();
+                paint._setToCanvasContent(this._mCanvasContent);
+                this._mCanvasContent.fillRect(left, top, right-left, bottom-top);
+                this._mCanvasContent.restore();
+            }
+        }
+
     }
 }

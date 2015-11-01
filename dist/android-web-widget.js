@@ -11,8 +11,11 @@ var android;
                 clone.map = new Map(this.map);
                 return clone;
             }
-            get(key, valueIfKeyNotFound) {
-                return this.map.get(key) || valueIfKeyNotFound;
+            get(key, valueIfKeyNotFound = null) {
+                let value = this.map.get(key);
+                if (value === undefined)
+                    return valueIfKeyNotFound;
+                return value;
             }
             delete(key) {
                 this.map.delete(key);
@@ -417,26 +420,156 @@ var java;
     (function (lang) {
         var ref;
         (function (ref) {
-            const key = "referent";
             class WeakReference {
                 constructor(referent) {
                     this.weakMap = new WeakMap();
-                    this.weakMap.set(key, referent);
+                    this.weakMap.set(this, referent);
                 }
                 get() {
-                    return this.weakMap.get(key);
+                    return this.weakMap.get(this);
                 }
                 set(value) {
-                    this.weakMap.set(key, value);
+                    this.weakMap.set(this, value);
                 }
                 clear() {
-                    this.weakMap.delete(key);
+                    this.weakMap.delete(this);
                 }
             }
             ref.WeakReference = WeakReference;
         })(ref = lang.ref || (lang.ref = {}));
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        class System {
+            static currentTimeMillis() {
+                return new Date().getTime();
+            }
+            static arraycopy(src, srcPos, dest, destPos, length) {
+                let srcLength = src.length;
+                let destLength = dest.length;
+                for (let i = 0; i < length; i++) {
+                    let srcIndex = i + srcPos;
+                    if (srcIndex >= srcLength)
+                        return;
+                    let destIndex = i + destPos;
+                    if (destIndex >= destLength)
+                        return;
+                    dest[destIndex] = src[srcIndex];
+                }
+            }
+        }
+        System.out = {
+            println(any) {
+                console.log('\n');
+                console.log(any);
+            },
+            print(any) {
+                console.log(any);
+            }
+        };
+        lang.System = System;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+/**
+ * Created by linfaxin on 15/10/29.
+ */
+///<reference path="../../java/lang/System.ts"/>
+var android;
+(function (android) {
+    var util;
+    (function (util) {
+        var System = java.lang.System;
+        class StateSet {
+            static isWildCard(stateSetOrSpec) {
+                return stateSetOrSpec.length == 0 || stateSetOrSpec[0] == 0;
+            }
+            static stateSetMatches(stateSpec, stateSetOrState) {
+                if (Number.isInteger(stateSetOrState)) {
+                    return StateSet._stateSetMatches_single(stateSpec, stateSetOrState);
+                }
+                let stateSet = stateSetOrState;
+                if (stateSet == null) {
+                    return (stateSpec == null || this.isWildCard(stateSpec));
+                }
+                let stateSpecSize = stateSpec.length;
+                let stateSetSize = stateSet.length;
+                for (let i = 0; i < stateSpecSize; i++) {
+                    let stateSpecState = stateSpec[i];
+                    if (stateSpecState == 0) {
+                        return true;
+                    }
+                    let mustMatch;
+                    if (stateSpecState > 0) {
+                        mustMatch = true;
+                    }
+                    else {
+                        mustMatch = false;
+                        stateSpecState = -stateSpecState;
+                    }
+                    let found = false;
+                    for (let j = 0; j < stateSetSize; j++) {
+                        const state = stateSet[j];
+                        if (state == 0) {
+                            if (mustMatch) {
+                                return false;
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                        if (state == stateSpecState) {
+                            if (mustMatch) {
+                                found = true;
+                                break;
+                            }
+                            else {
+                                return false;
+                            }
+                        }
+                    }
+                    if (mustMatch && !found) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            static _stateSetMatches_single(stateSpec, state) {
+                let stateSpecSize = stateSpec.length;
+                for (let i = 0; i < stateSpecSize; i++) {
+                    let stateSpecState = stateSpec[i];
+                    if (stateSpecState == 0) {
+                        return true;
+                    }
+                    if (stateSpecState > 0) {
+                        if (state != stateSpecState) {
+                            return false;
+                        }
+                    }
+                    else {
+                        if (state == -stateSpecState) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            static trimStateSet(states, newSize) {
+                if (states.length == newSize) {
+                    return states;
+                }
+                let trimmedStates = new Array(newSize);
+                System.arraycopy(states, 0, trimmedStates, 0, newSize);
+                return trimmedStates;
+            }
+        }
+        StateSet.WILD_CARD = [];
+        StateSet.NOTHING = [0];
+        util.StateSet = StateSet;
+    })(util = android.util || (android.util = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/3.
  */
@@ -444,6 +577,7 @@ var java;
 ///<reference path="../PixelFormat.ts"/>
 ///<reference path="../../../java/lang/ref/WeakReference.ts"/>
 ///<reference path="../../../java/lang/Runnable.ts"/>
+///<reference path="../../util/StateSet.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -453,11 +587,11 @@ var android;
             var Rect = android.graphics.Rect;
             var PixelFormat = android.graphics.PixelFormat;
             var WeakReference = java.lang.ref.WeakReference;
-            const ZERO_BOUNDS_RECT = new Rect();
+            var StateSet = android.util.StateSet;
             class Drawable {
                 constructor() {
-                    this.mBounds = ZERO_BOUNDS_RECT;
-                    this.mStateSet = [];
+                    this.mBounds = Drawable.ZERO_BOUNDS_RECT;
+                    this.mStateSet = StateSet.WILD_CARD;
                     this.mLevel = 0;
                     this.mVisible = true;
                 }
@@ -471,7 +605,7 @@ var android;
                     else {
                         let [left = 0, top = 0, right = 0, bottom = 0] = args;
                         let oldBounds = this.mBounds;
-                        if (oldBounds == ZERO_BOUNDS_RECT) {
+                        if (oldBounds == Drawable.ZERO_BOUNDS_RECT) {
                             oldBounds = this.mBounds = new Rect();
                         }
                         if (oldBounds.left != left || oldBounds.top != top ||
@@ -489,7 +623,7 @@ var android;
                     return bounds;
                 }
                 getBounds() {
-                    if (this.mBounds == ZERO_BOUNDS_RECT) {
+                    if (this.mBounds == Drawable.ZERO_BOUNDS_RECT) {
                         this.mBounds = new Rect();
                     }
                     return this.mBounds;
@@ -572,7 +706,7 @@ var android;
                     return false;
                 }
                 getOpacity() {
-                    return PixelFormat.OPAQUE;
+                    return PixelFormat.TRANSLUCENT;
                 }
                 static resolveOpacity(op1, op2) {
                     if (op1 == op2) {
@@ -622,7 +756,627 @@ var android;
                     return null;
                 }
             }
+            Drawable.ZERO_BOUNDS_RECT = new Rect();
             drawable.Drawable = Drawable;
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
+    var util;
+    (function (util) {
+        class Pools {
+        }
+        util.Pools = Pools;
+        (function (Pools) {
+            class SimplePool {
+                constructor(maxPoolSize) {
+                    this.mPoolSize = 0;
+                    if (maxPoolSize <= 0) {
+                        throw new Error("The max pool size must be > 0");
+                    }
+                    this.mPool = new Array(maxPoolSize);
+                }
+                acquire() {
+                    if (this.mPoolSize > 0) {
+                        const lastPooledIndex = this.mPoolSize - 1;
+                        let instance = this.mPool[lastPooledIndex];
+                        this.mPool[lastPooledIndex] = null;
+                        this.mPoolSize--;
+                        return instance;
+                    }
+                    return null;
+                }
+                release(instance) {
+                    if (this.isInPool(instance)) {
+                        throw new Error("Already in the pool!");
+                    }
+                    if (this.mPoolSize < this.mPool.length) {
+                        this.mPool[this.mPoolSize] = instance;
+                        this.mPoolSize++;
+                        return true;
+                    }
+                    return false;
+                }
+                isInPool(instance) {
+                    for (let i = 0; i < this.mPoolSize; i++) {
+                        if (this.mPool[i] == instance) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }
+            Pools.SimplePool = SimplePool;
+            class SynchronizedPool extends SimplePool {
+            }
+            Pools.SynchronizedPool = SynchronizedPool;
+        })(Pools = util.Pools || (util.Pools = {}));
+    })(util = android.util || (android.util = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        class Color {
+            static alpha(color) {
+                return color >>> 24;
+            }
+            static red(color) {
+                return (color >> 16) & 0xFF;
+            }
+            static green(color) {
+                return (color >> 8) & 0xFF;
+            }
+            static blue(color) {
+                return color & 0xFF;
+            }
+            static rgb(red, green, blue) {
+                return (0xFF << 24) | (red << 16) | (green << 8) | blue;
+            }
+            static argb(alpha, red, green, blue) {
+                return (alpha << 24) | (red << 16) | (green << 8) | blue;
+            }
+            static rgba(red, green, blue, alpha) {
+                return (alpha << 24) | (red << 16) | (green << 8) | blue;
+            }
+            static parseColor(colorString) {
+                if (colorString.charAt(0) == '#') {
+                    let color = parseInt(colorString.substring(1), 16);
+                    if (colorString.length == 7) {
+                        color |= 0x00000000ff000000;
+                    }
+                    else if (colorString.length != 9) {
+                        throw new Error("Unknown color");
+                    }
+                    return color;
+                }
+                else {
+                    let color = Color.sColorNameMap.get(colorString.toLowerCase());
+                    if (color != null) {
+                        return color;
+                    }
+                }
+                throw new Error("Unknown color");
+            }
+            static getHtmlColor(color) {
+                let i = Color.sColorNameMap.get(color.toLowerCase());
+                return i;
+            }
+        }
+        Color.BLACK = 0xFF000000;
+        Color.DKGRAY = 0xFF444444;
+        Color.GRAY = 0xFF888888;
+        Color.LTGRAY = 0xFFCCCCCC;
+        Color.WHITE = 0xFFFFFFFF;
+        Color.RED = 0xFFFF0000;
+        Color.GREEN = 0xFF00FF00;
+        Color.BLUE = 0xFF0000FF;
+        Color.YELLOW = 0xFFFFFF00;
+        Color.CYAN = 0xFF00FFFF;
+        Color.MAGENTA = 0xFFFF00FF;
+        Color.TRANSPARENT = 0;
+        Color.sColorNameMap = new Map();
+        graphics.Color = Color;
+        Color.sColorNameMap = new Map();
+        Color.sColorNameMap.set("black", Color.BLACK);
+        Color.sColorNameMap.set("darkgray", Color.DKGRAY);
+        Color.sColorNameMap.set("gray", Color.GRAY);
+        Color.sColorNameMap.set("lightgray", Color.LTGRAY);
+        Color.sColorNameMap.set("white", Color.WHITE);
+        Color.sColorNameMap.set("red", Color.RED);
+        Color.sColorNameMap.set("green", Color.GREEN);
+        Color.sColorNameMap.set("blue", Color.BLUE);
+        Color.sColorNameMap.set("yellow", Color.YELLOW);
+        Color.sColorNameMap.set("cyan", Color.CYAN);
+        Color.sColorNameMap.set("magenta", Color.MAGENTA);
+        Color.sColorNameMap.set("aqua", 0xFF00FFFF);
+        Color.sColorNameMap.set("fuchsia", 0xFFFF00FF);
+        Color.sColorNameMap.set("darkgrey", Color.DKGRAY);
+        Color.sColorNameMap.set("grey", Color.GRAY);
+        Color.sColorNameMap.set("lightgrey", Color.LTGRAY);
+        Color.sColorNameMap.set("lime", 0xFF00FF00);
+        Color.sColorNameMap.set("maroon", 0xFF800000);
+        Color.sColorNameMap.set("navy", 0xFF000080);
+        Color.sColorNameMap.set("olive", 0xFF808000);
+        Color.sColorNameMap.set("purple", 0xFF800080);
+        Color.sColorNameMap.set("silver", 0xFFC0C0C0);
+        Color.sColorNameMap.set("teal", 0xFF008080);
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/29.
+ */
+///<reference path="Canvas.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        class Paint {
+            getColor() {
+                return this.mColor;
+            }
+            setColor(color) {
+                this.mColor = color;
+            }
+            getAlpha() {
+                return this.mAlpha;
+            }
+            setAlpha(alpha) {
+                this.mAlpha = alpha;
+            }
+            _setToCanvasContent(context) {
+                if (Number.isInteger(this.mColor)) {
+                    let r = graphics.Color.red(this.mColor);
+                    let g = graphics.Color.green(this.mColor);
+                    let b = graphics.Color.blue(this.mColor);
+                    let a = graphics.Color.alpha(this.mColor);
+                    context.fillStyle = `rgba(${r},${g},${b},${a / 255})`;
+                }
+            }
+        }
+        graphics.Paint = Paint;
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+///<reference path="../util/Pools.ts"/>
+///<reference path="../util/Log.ts"/>
+///<reference path="Rect.ts"/>
+///<reference path="Color.ts"/>
+///<reference path="Paint.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var Pools = android.util.Pools;
+        var Rect = android.graphics.Rect;
+        var Color = android.graphics.Color;
+        class Canvas {
+            constructor(...args) {
+                this._saveCount = 0;
+                this.shouldDoRectBeforeRestoreMap = new Map();
+                this.mClipStateMap = new Map();
+                this.mCanvasElement = args.length === 1 ? args[0] : document.createElement("canvas");
+                if (args.length === 1) {
+                    this.mCanvasElement = args[0];
+                }
+                else if (args.length === 2) {
+                    this.mCanvasElement = document.createElement("canvas");
+                    this.mCanvasElement.width = args[0];
+                    this.mCanvasElement.height = args[1];
+                }
+                this.init();
+            }
+            init() {
+                this._mCanvasContent = this.mCanvasElement.getContext("2d");
+                this.mCurrentClip = new Rect(0, 0, this.mCanvasElement.width, this.mCanvasElement.height);
+                this._saveCount = 0;
+                this.fullRectForClip();
+                this._mCanvasContent.clip();
+                this.save();
+            }
+            get canvasElement() {
+                return this.mCanvasElement;
+            }
+            getHeight() {
+                return this.mCanvasElement.height;
+            }
+            getWidth() {
+                return this.mCanvasElement.width;
+            }
+            translate(dx, dy) {
+                if (this.mCurrentClip)
+                    this.mCurrentClip.offset(-dx, -dy);
+                this._mCanvasContent.translate(dx, dy);
+            }
+            scale(sx, sy, px, py) {
+                if (px && py)
+                    this.translate(px, py);
+                this._mCanvasContent.scale(sx, sy);
+                if (px && py)
+                    this.translate(-px, -py);
+            }
+            rotate(degrees, px, py) {
+                if (px && py)
+                    this.translate(px, py);
+                this._mCanvasContent.rotate(degrees);
+                if (px && py)
+                    this.translate(-px, -py);
+            }
+            drawRGB(r, g, b) {
+                this._mCanvasContent.fillStyle = `rgb(${r},${g},${b})`;
+                this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+            }
+            drawARGB(a, r, g, b) {
+                this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a / 255})`;
+                this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+            }
+            drawColor(color) {
+                this.drawARGB(Color.alpha(color), Color.red(color), Color.green(color), Color.blue(color));
+            }
+            clearColor() {
+                this._mCanvasContent.clearRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+            }
+            save() {
+                this._mCanvasContent.save();
+                if (this.mCurrentClip)
+                    this.mClipStateMap.set(this._saveCount, new Rect(this.mCurrentClip));
+                this._saveCount++;
+                return this._saveCount;
+            }
+            restore() {
+                let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
+                if (doRects && doRects.length > 0) {
+                    doRects.forEach((rect) => {
+                        this._mCanvasContent.rect(rect.left, rect.top, rect.width(), rect.height());
+                    });
+                    if (doRects.length % 2 == 1) {
+                        this.fullRectForClip();
+                    }
+                    this.shouldDoRectBeforeRestoreMap.delete(this._saveCount);
+                }
+                this._saveCount--;
+                this._mCanvasContent.restore();
+                let savedClip = this.mClipStateMap.get(this._saveCount);
+                if (savedClip) {
+                    this.mClipStateMap.delete(this._saveCount);
+                    this.mCurrentClip.set(savedClip);
+                }
+            }
+            restoreToCount(saveCount) {
+                if (saveCount <= 0)
+                    throw Error('saveCount can\'t <= 0');
+                while (saveCount <= this._saveCount) {
+                    this.restore();
+                }
+            }
+            getSaveCount() {
+                return this._saveCount;
+            }
+            fullRectForClip() {
+                this._mCanvasContent.rect(Canvas.FullRect.left, Canvas.FullRect.top, Canvas.FullRect.width(), Canvas.FullRect.height());
+            }
+            clipRect(...args) {
+                let rect = new Rect();
+                if (args.length === 1) {
+                    rect.set(args[0]);
+                }
+                else {
+                    let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                    rect.set(left, top, right, bottom);
+                }
+                this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
+                this.fullRectForClip();
+                this._mCanvasContent.clip('evenodd');
+                let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
+                if (!doRects) {
+                    doRects = [];
+                    this.shouldDoRectBeforeRestoreMap.set(this._saveCount, doRects);
+                }
+                doRects.push(rect);
+                this.mCurrentClip.intersect(rect);
+                return rect.isEmpty();
+            }
+            getClipBounds(bounds) {
+                if (!this.mCurrentClip)
+                    this.mCurrentClip = new Rect();
+                let rect = bounds || new Rect();
+                rect.set(this.mCurrentClip);
+                return rect;
+            }
+            quickReject(...args) {
+                if (!this.mCurrentClip)
+                    return false;
+                if (args.length == 1) {
+                    return !this.mCurrentClip.intersects(args[0]);
+                }
+                else {
+                    let [left = 0, t = 0, right = 0, bottom = 0] = args;
+                    return !this.mCurrentClip.intersects(left, t, right, bottom);
+                }
+            }
+            drawCanvas(canvas, offsetX, offsetY, width, height, canvasOffsetX, canvasOffsetY, canvasImageWidth, canvasImageHeight) {
+                this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY, width, height, canvasOffsetX, canvasOffsetY, canvasImageWidth, canvasImageHeight);
+            }
+            drawRect(...args) {
+                if (args.length == 2) {
+                    let rect = args[0];
+                    this.drawRect(rect.left, rect.top, rect.right, rect.bottom, args[1]);
+                }
+                else {
+                    let [left, top, right, bottom, paint] = args;
+                    this._mCanvasContent.save();
+                    paint._setToCanvasContent(this._mCanvasContent);
+                    this._mCanvasContent.fillRect(left, top, right - left, bottom - top);
+                    this._mCanvasContent.restore();
+                }
+            }
+        }
+        Canvas.FullRect = new Rect(-10000, -10000, 10000, 10000);
+        Canvas.sPool = new Pools.SynchronizedPool(10);
+        graphics.Canvas = Canvas;
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/29.
+ */
+///<reference path="Drawable.ts"/>
+///<reference path="../Canvas.ts"/>
+///<reference path="../Paint.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable) {
+            class ColorDrawable extends drawable.Drawable {
+                constructor(color) {
+                    super();
+                    this.mMutated = false;
+                    this.mPaint = new graphics.Paint();
+                    this.mState = new ColorState();
+                    if (color !== undefined) {
+                        this.setColor(color);
+                    }
+                }
+                _setStateCopyFrom(state) {
+                    this.mState = new ColorState(state);
+                }
+                mutate() {
+                    if (!this.mMutated && super.mutate() == this) {
+                        this.mState = new ColorState(this.mState);
+                        this.mMutated = true;
+                    }
+                    return this;
+                }
+                draw(canvas) {
+                    if ((this.mState.mUseColor >>> 24) != 0) {
+                        this.mPaint.setColor(this.mState.mUseColor);
+                        canvas.drawRect(this.getBounds(), this.mPaint);
+                    }
+                }
+                getColor() {
+                    return this.mState.mUseColor;
+                }
+                setColor(color) {
+                    if (this.mState.mBaseColor != color || this.mState.mUseColor != color) {
+                        this.invalidateSelf();
+                        this.mState.mBaseColor = this.mState.mUseColor = color;
+                    }
+                }
+                getAlpha() {
+                    return this.mState.mUseColor >>> 24;
+                }
+                setAlpha(alpha) {
+                    alpha += alpha >> 7;
+                    let baseAlpha = this.mState.mBaseColor >>> 24;
+                    let useAlpha = baseAlpha * alpha >> 8;
+                    let oldUseColor = this.mState.mUseColor;
+                    this.mState.mUseColor = (this.mState.mBaseColor << 8 >>> 8) | (useAlpha << 24);
+                    if (oldUseColor != this.mState.mUseColor) {
+                        this.invalidateSelf();
+                    }
+                }
+                getOpacity() {
+                    switch (this.mState.mUseColor >>> 24) {
+                        case 255:
+                            return graphics.PixelFormat.OPAQUE;
+                        case 0:
+                            return graphics.PixelFormat.TRANSPARENT;
+                    }
+                    return graphics.PixelFormat.TRANSLUCENT;
+                }
+                getConstantState() {
+                    return this.mState;
+                }
+            }
+            drawable.ColorDrawable = ColorDrawable;
+            class ColorState {
+                constructor(state) {
+                    this.mBaseColor = 0;
+                    this.mUseColor = 0;
+                    if (state != null) {
+                        this.mBaseColor = state.mBaseColor;
+                        this.mUseColor = state.mUseColor;
+                    }
+                }
+                newDrawable() {
+                    let c = new ColorDrawable();
+                    c._setStateCopyFrom(this);
+                    return c;
+                }
+            }
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/30.
+ */
+///<reference path="Drawable.ts"/>
+///<reference path="../Canvas.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable) {
+            var Drawable = android.graphics.drawable.Drawable;
+            class ScrollBarDrawable extends Drawable {
+                constructor(...args) {
+                    super(...args);
+                    this.mRange = 0;
+                    this.mOffset = 0;
+                    this.mExtent = 0;
+                    this.mVertical = false;
+                    this.mChanged = false;
+                    this.mRangeChanged = false;
+                    this.mTempBounds = new graphics.Rect();
+                    this.mAlwaysDrawHorizontalTrack = false;
+                    this.mAlwaysDrawVerticalTrack = false;
+                }
+                setAlwaysDrawHorizontalTrack(alwaysDrawTrack) {
+                    this.mAlwaysDrawHorizontalTrack = alwaysDrawTrack;
+                }
+                setAlwaysDrawVerticalTrack(alwaysDrawTrack) {
+                    this.mAlwaysDrawVerticalTrack = alwaysDrawTrack;
+                }
+                getAlwaysDrawVerticalTrack() {
+                    return this.mAlwaysDrawVerticalTrack;
+                }
+                getAlwaysDrawHorizontalTrack() {
+                    return this.mAlwaysDrawHorizontalTrack;
+                }
+                setParameters(range, offset, extent, vertical) {
+                    if (this.mVertical != vertical) {
+                        this.mChanged = true;
+                    }
+                    if (this.mRange != range || this.mOffset != offset || this.mExtent != extent) {
+                        this.mRangeChanged = true;
+                    }
+                    this.mRange = range;
+                    this.mOffset = offset;
+                    this.mExtent = extent;
+                    this.mVertical = vertical;
+                }
+                draw(canvas) {
+                    const vertical = this.mVertical;
+                    const extent = this.mExtent;
+                    const range = this.mRange;
+                    let drawTrack = true;
+                    let drawThumb = true;
+                    if (extent <= 0 || range <= extent) {
+                        drawTrack = vertical ? this.mAlwaysDrawVerticalTrack : this.mAlwaysDrawHorizontalTrack;
+                        drawThumb = false;
+                    }
+                    let r = this.getBounds();
+                    if (drawTrack) {
+                        this.drawTrack(canvas, r, vertical);
+                    }
+                    if (drawThumb) {
+                        let size = vertical ? r.height() : r.width();
+                        let thickness = vertical ? r.width() : r.height();
+                        let length = Math.round(size * extent / range);
+                        let offset = Math.round((size - length) * this.mOffset / (range - extent));
+                        let minLength = thickness * 2;
+                        if (length < minLength) {
+                            length = minLength;
+                        }
+                        if (offset + length > size) {
+                            offset = size - length;
+                        }
+                        this.drawThumb(canvas, r, offset, length, vertical);
+                    }
+                }
+                onBoundsChange(bounds) {
+                    super.onBoundsChange(bounds);
+                    this.mChanged = true;
+                }
+                drawTrack(canvas, bounds, vertical) {
+                    let track;
+                    if (vertical) {
+                        track = this.mVerticalTrack;
+                    }
+                    else {
+                        track = this.mHorizontalTrack;
+                    }
+                    if (track != null) {
+                        if (this.mChanged) {
+                            track.setBounds(bounds);
+                        }
+                        track.draw(canvas);
+                    }
+                }
+                drawThumb(canvas, bounds, offset, length, vertical) {
+                    const thumbRect = this.mTempBounds;
+                    const changed = this.mRangeChanged || this.mChanged;
+                    if (changed) {
+                        if (vertical) {
+                            thumbRect.set(bounds.left, bounds.top + offset, bounds.right, bounds.top + offset + length);
+                        }
+                        else {
+                            thumbRect.set(bounds.left + offset, bounds.top, bounds.left + offset + length, bounds.bottom);
+                        }
+                    }
+                    if (vertical) {
+                        const thumb = this.mVerticalThumb;
+                        if (changed)
+                            thumb.setBounds(thumbRect);
+                        thumb.draw(canvas);
+                    }
+                    else {
+                        const thumb = this.mHorizontalThumb;
+                        if (changed)
+                            thumb.setBounds(thumbRect);
+                        thumb.draw(canvas);
+                    }
+                }
+                setVerticalThumbDrawable(thumb) {
+                    if (thumb != null) {
+                        this.mVerticalThumb = thumb;
+                    }
+                }
+                setVerticalTrackDrawable(track) {
+                    this.mVerticalTrack = track;
+                }
+                setHorizontalThumbDrawable(thumb) {
+                    if (thumb != null) {
+                        this.mHorizontalThumb = thumb;
+                    }
+                }
+                setHorizontalTrackDrawable(track) {
+                    this.mHorizontalTrack = track;
+                }
+                getSize(vertical) {
+                    if (vertical) {
+                        return (this.mVerticalTrack != null ?
+                            this.mVerticalTrack : this.mVerticalThumb).getIntrinsicWidth();
+                    }
+                    else {
+                        return (this.mHorizontalTrack != null ?
+                            this.mHorizontalTrack : this.mHorizontalThumb).getIntrinsicHeight();
+                    }
+                }
+                setAlpha(alpha) {
+                    if (this.mVerticalTrack != null) {
+                        this.mVerticalTrack.setAlpha(alpha);
+                    }
+                    this.mVerticalThumb.setAlpha(alpha);
+                    if (this.mHorizontalTrack != null) {
+                        this.mHorizontalTrack.setAlpha(alpha);
+                    }
+                    this.mHorizontalThumb.setAlpha(alpha);
+                }
+                getAlpha() {
+                    return this.mVerticalThumb.getAlpha();
+                }
+                getOpacity() {
+                    return graphics.PixelFormat.TRANSLUCENT;
+                }
+                toString() {
+                    return "ScrollBarDrawable: range=" + this.mRange + " offset=" + this.mOffset +
+                        " extent=" + this.mExtent + (this.mVertical ? " V" : " H");
+                }
+            }
+            drawable.ScrollBarDrawable = ScrollBarDrawable;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -976,13 +1730,14 @@ var android;
                         return Resources.displayMetrics;
                     Resources.displayMetrics = new DisplayMetrics();
                     let displayMetrics = Resources.displayMetrics;
-                    displayMetrics.widthPixels = window.innerWidth;
-                    displayMetrics.heightPixels = window.innerHeight;
+                    let density = Resources.density;
                     displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
-                    displayMetrics.density = Resources.density;
-                    displayMetrics.densityDpi = displayMetrics.density * DisplayMetrics.DENSITY_DEFAULT;
-                    displayMetrics.scaledDensity = displayMetrics.density;
+                    displayMetrics.density = density;
+                    displayMetrics.densityDpi = density * DisplayMetrics.DENSITY_DEFAULT;
+                    displayMetrics.scaledDensity = density;
+                    displayMetrics.widthPixels = window.innerWidth * density;
+                    displayMetrics.heightPixels = window.innerHeight * density;
                     return displayMetrics;
                 }
                 static setDensity(density) {
@@ -1445,59 +2200,6 @@ var android;
 })(android || (android = {}));
 var android;
 (function (android) {
-    var util;
-    (function (util) {
-        class Pools {
-        }
-        util.Pools = Pools;
-        (function (Pools) {
-            class SimplePool {
-                constructor(maxPoolSize) {
-                    this.mPoolSize = 0;
-                    if (maxPoolSize <= 0) {
-                        throw new Error("The max pool size must be > 0");
-                    }
-                    this.mPool = new Array(maxPoolSize);
-                }
-                acquire() {
-                    if (this.mPoolSize > 0) {
-                        const lastPooledIndex = this.mPoolSize - 1;
-                        let instance = this.mPool[lastPooledIndex];
-                        this.mPool[lastPooledIndex] = null;
-                        this.mPoolSize--;
-                        return instance;
-                    }
-                    return null;
-                }
-                release(instance) {
-                    if (this.isInPool(instance)) {
-                        throw new Error("Already in the pool!");
-                    }
-                    if (this.mPoolSize < this.mPool.length) {
-                        this.mPool[this.mPoolSize] = instance;
-                        this.mPoolSize++;
-                        return true;
-                    }
-                    return false;
-                }
-                isInPool(instance) {
-                    for (let i = 0; i < this.mPoolSize; i++) {
-                        if (this.mPool[i] == instance) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }
-            Pools.SimplePool = SimplePool;
-            class SynchronizedPool extends SimplePool {
-            }
-            Pools.SynchronizedPool = SynchronizedPool;
-        })(Pools = util.Pools || (util.Pools = {}));
-    })(util = android.util || (android.util = {}));
-})(android || (android = {}));
-var android;
-(function (android) {
     var os;
     (function (os) {
         class SystemClock {
@@ -1796,256 +2498,81 @@ var android;
         os.Handler = Handler;
     })(os = android.os || (android.os = {}));
 })(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/29.
+ */
+///<reference path="../../util/SparseArray.ts"/>
+///<reference path="../../../java/lang/ref/WeakReference.ts"/>
+///<reference path="../../util/StateSet.ts"/>
 var android;
 (function (android) {
-    var graphics;
-    (function (graphics) {
-        class Color {
-            static alpha(color) {
-                return color >>> 24;
-            }
-            static red(color) {
-                return (color >> 16) & 0xFF;
-            }
-            static green(color) {
-                return (color >> 8) & 0xFF;
-            }
-            static blue(color) {
-                return color & 0xFF;
-            }
-            static rgb(red, green, blue) {
-                return (0xFF << 24) | (red << 16) | (green << 8) | blue;
-            }
-            static argb(alpha, red, green, blue) {
-                return (alpha << 24) | (red << 16) | (green << 8) | blue;
-            }
-            static parseColor(colorString) {
-                if (colorString.charAt(0) == '#') {
-                    let color = parseInt(colorString.substring(1), 16);
-                    if (colorString.length == 7) {
-                        color |= 0x00000000ff000000;
-                    }
-                    else if (colorString.length != 9) {
-                        throw new Error("Unknown color");
-                    }
-                    return color;
-                }
-                else {
-                    let color = Color.sColorNameMap.get(colorString.toLowerCase());
-                    if (color != null) {
-                        return color;
+    var content;
+    (function (content) {
+        var res;
+        (function (res) {
+            var SparseArray = android.util.SparseArray;
+            var StateSet = android.util.StateSet;
+            var WeakReference = java.lang.ref.WeakReference;
+            class ColorStateList {
+                constructor(states, colors) {
+                    this.mDefaultColor = 0xffff0000;
+                    this.mStateSpecs = states;
+                    this.mColors = colors;
+                    if (states.length > 0) {
+                        this.mDefaultColor = colors[0];
+                        for (let i = 0; i < states.length; i++) {
+                            if (states[i].length == 0) {
+                                this.mDefaultColor = colors[i];
+                            }
+                        }
                     }
                 }
-                throw new Error("Unknown color");
-            }
-            static getHtmlColor(color) {
-                let i = Color.sColorNameMap.get(color.toLowerCase());
-                return i;
-            }
-        }
-        Color.BLACK = 0xFF000000;
-        Color.DKGRAY = 0xFF444444;
-        Color.GRAY = 0xFF888888;
-        Color.LTGRAY = 0xFFCCCCCC;
-        Color.WHITE = 0xFFFFFFFF;
-        Color.RED = 0xFFFF0000;
-        Color.GREEN = 0xFF00FF00;
-        Color.BLUE = 0xFF0000FF;
-        Color.YELLOW = 0xFFFFFF00;
-        Color.CYAN = 0xFF00FFFF;
-        Color.MAGENTA = 0xFFFF00FF;
-        Color.TRANSPARENT = 0;
-        Color.sColorNameMap = new Map();
-        graphics.Color = Color;
-        Color.sColorNameMap = new Map();
-        Color.sColorNameMap.set("black", Color.BLACK);
-        Color.sColorNameMap.set("darkgray", Color.DKGRAY);
-        Color.sColorNameMap.set("gray", Color.GRAY);
-        Color.sColorNameMap.set("lightgray", Color.LTGRAY);
-        Color.sColorNameMap.set("white", Color.WHITE);
-        Color.sColorNameMap.set("red", Color.RED);
-        Color.sColorNameMap.set("green", Color.GREEN);
-        Color.sColorNameMap.set("blue", Color.BLUE);
-        Color.sColorNameMap.set("yellow", Color.YELLOW);
-        Color.sColorNameMap.set("cyan", Color.CYAN);
-        Color.sColorNameMap.set("magenta", Color.MAGENTA);
-        Color.sColorNameMap.set("aqua", 0xFF00FFFF);
-        Color.sColorNameMap.set("fuchsia", 0xFFFF00FF);
-        Color.sColorNameMap.set("darkgrey", Color.DKGRAY);
-        Color.sColorNameMap.set("grey", Color.GRAY);
-        Color.sColorNameMap.set("lightgrey", Color.LTGRAY);
-        Color.sColorNameMap.set("lime", 0xFF00FF00);
-        Color.sColorNameMap.set("maroon", 0xFF800000);
-        Color.sColorNameMap.set("navy", 0xFF000080);
-        Color.sColorNameMap.set("olive", 0xFF808000);
-        Color.sColorNameMap.set("purple", 0xFF800080);
-        Color.sColorNameMap.set("silver", 0xFFC0C0C0);
-        Color.sColorNameMap.set("teal", 0xFF008080);
-    })(graphics = android.graphics || (android.graphics = {}));
-})(android || (android = {}));
-///<reference path="../util/Pools.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="Rect.ts"/>
-///<reference path="Color.ts"/>
-var android;
-(function (android) {
-    var graphics;
-    (function (graphics) {
-        var Pools = android.util.Pools;
-        var Rect = android.graphics.Rect;
-        var Color = android.graphics.Color;
-        class Canvas {
-            constructor(...args) {
-                this._saveCount = 0;
-                this.shouldDoRectBeforeRestoreMap = new Map();
-                this.mClipStateMap = new Map();
-                this.mCanvasElement = args.length === 1 ? args[0] : document.createElement("canvas");
-                if (args.length === 1) {
-                    this.mCanvasElement = args[0];
-                }
-                else if (args.length === 2) {
-                    this.mCanvasElement = document.createElement("canvas");
-                    this.mCanvasElement.width = args[0];
-                    this.mCanvasElement.height = args[1];
-                }
-                this.init();
-            }
-            init() {
-                this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                this.mCurrentClip = new Rect(0, 0, this.mCanvasElement.width, this.mCanvasElement.height);
-                this._saveCount = 0;
-                this.fullRectForClip();
-                this._mCanvasContent.clip();
-                this.save();
-            }
-            get canvasElement() {
-                return this.mCanvasElement;
-            }
-            getHeight() {
-                return this.mCanvasElement.height;
-            }
-            getWidth() {
-                return this.mCanvasElement.width;
-            }
-            translate(dx, dy) {
-                if (this.mCurrentClip)
-                    this.mCurrentClip.offset(-dx, -dy);
-                this._mCanvasContent.translate(dx, dy);
-            }
-            scale(sx, sy, px, py) {
-                if (px && py)
-                    this.translate(px, py);
-                this._mCanvasContent.scale(sx, sy);
-                if (px && py)
-                    this.translate(-px, -py);
-            }
-            rotate(degrees, px, py) {
-                if (px && py)
-                    this.translate(px, py);
-                this._mCanvasContent.rotate(degrees);
-                if (px && py)
-                    this.translate(-px, -py);
-            }
-            drawRGB(r, g, b) {
-                this._mCanvasContent.fillStyle = `rgb(${r},${g},${b})`;
-                this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
-            }
-            drawARGB(a, r, g, b) {
-                this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a})`;
-                this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
-            }
-            drawColor(color) {
-                this.drawARGB(Color.alpha(color), Color.red(color), Color.green(color), Color.blue(color));
-            }
-            clearColor() {
-                this._mCanvasContent.clearRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
-            }
-            save() {
-                this._mCanvasContent.save();
-                if (this.mCurrentClip)
-                    this.mClipStateMap.set(this._saveCount, new Rect(this.mCurrentClip));
-                this._saveCount++;
-                return this._saveCount;
-            }
-            restore() {
-                let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-                if (doRects && doRects.length > 0) {
-                    doRects.forEach((rect) => {
-                        this._mCanvasContent.rect(rect.left, rect.top, rect.width(), rect.height());
-                    });
-                    if (doRects.length % 2 == 1) {
-                        this.fullRectForClip();
+                static valueOf(color) {
+                    let ref = ColorStateList.sCache.get(color);
+                    let csl = ref != null ? ref.get() : null;
+                    if (csl != null) {
+                        return csl;
                     }
-                    this.shouldDoRectBeforeRestoreMap.delete(this._saveCount);
+                    csl = new ColorStateList(ColorStateList.EMPTY, [color]);
+                    ColorStateList.sCache.put(color, new WeakReference(csl));
+                    return csl;
                 }
-                this._saveCount--;
-                this._mCanvasContent.restore();
-                let savedClip = this.mClipStateMap.get(this._saveCount);
-                if (savedClip) {
-                    this.mClipStateMap.delete(this._saveCount);
-                    this.mCurrentClip.set(savedClip);
+                withAlpha(alpha) {
+                    let colors = new Array(this.mColors.length);
+                    let len = colors.length;
+                    for (let i = 0; i < len; i++) {
+                        colors[i] = (this.mColors[i] & 0xFFFFFF) | (alpha << 24);
+                    }
+                    return new ColorStateList(this.mStateSpecs, colors);
                 }
-            }
-            restoreToCount(saveCount) {
-                if (saveCount <= 0)
-                    throw Error('saveCount can\'t <= 0');
-                while (saveCount <= this._saveCount) {
-                    this.restore();
+                isStateful() {
+                    return this.mStateSpecs.length > 1;
                 }
-            }
-            getSaveCount() {
-                return this._saveCount;
-            }
-            fullRectForClip() {
-                this._mCanvasContent.rect(Canvas.FullRect.left, Canvas.FullRect.top, Canvas.FullRect.width(), Canvas.FullRect.height());
-            }
-            clipRect(...args) {
-                let rect = new Rect();
-                if (args.length === 1) {
-                    rect.set(args[0]);
+                getColorForState(stateSet, defaultColor) {
+                    const setLength = this.mStateSpecs.length;
+                    for (let i = 0; i < setLength; i++) {
+                        let stateSpec = this.mStateSpecs[i];
+                        if (StateSet.stateSetMatches(stateSpec, stateSet)) {
+                            return this.mColors[i];
+                        }
+                    }
+                    return defaultColor;
                 }
-                else {
-                    let [left = 0, top = 0, right = 0, bottom = 0] = args;
-                    rect.set(left, top, right, bottom);
+                getDefaultColor() {
+                    return this.mDefaultColor;
                 }
-                this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
-                this.fullRectForClip();
-                this._mCanvasContent.clip('evenodd');
-                let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-                if (!doRects) {
-                    doRects = [];
-                    this.shouldDoRectBeforeRestoreMap.set(this._saveCount, doRects);
-                }
-                doRects.push(rect);
-                this.mCurrentClip.intersect(rect);
-                return rect.isEmpty();
-            }
-            getClipBounds(bounds) {
-                if (!this.mCurrentClip)
-                    this.mCurrentClip = new Rect();
-                let rect = bounds || new Rect();
-                rect.set(this.mCurrentClip);
-                return rect;
-            }
-            quickReject(...args) {
-                if (!this.mCurrentClip)
-                    return false;
-                if (args.length == 1) {
-                    return !this.mCurrentClip.intersects(args[0]);
-                }
-                else {
-                    let [left = 0, t = 0, right = 0, bottom = 0] = args;
-                    return !this.mCurrentClip.intersects(left, t, right, bottom);
+                toString() {
+                    return "ColorStateList{" +
+                        "mStateSpecs=" + JSON.stringify(this.mStateSpecs) +
+                        "mColors=" + JSON.stringify(this.mColors) +
+                        "mDefaultColor=" + this.mDefaultColor + '}';
                 }
             }
-            drawCanvas(canvas, offsetX, offsetY, width, height, canvasOffsetX, canvasOffsetY, canvasImageWidth, canvasImageHeight) {
-                this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY, width, height, canvasOffsetX, canvasOffsetY, canvasImageWidth, canvasImageHeight);
-            }
-        }
-        Canvas.FullRect = new Rect(-10000, -10000, 10000, 10000);
-        Canvas.sPool = new Pools.SynchronizedPool(10);
-        graphics.Canvas = Canvas;
-    })(graphics = android.graphics || (android.graphics = {}));
+            ColorStateList.EMPTY = [[]];
+            ColorStateList.sCache = new SparseArray();
+            res.ColorStateList = ColorStateList;
+        })(res = content.res || (content.res = {}));
+    })(content = android.content || (android.content = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/27.
@@ -2068,6 +2595,10 @@ var android;
                 TypedValue.UNIT_SCALE_IN = temp.offsetHeight;
                 temp.style.height = 100 + TypedValue.COMPLEX_UNIT_MM;
                 TypedValue.UNIT_SCALE_MM = temp.offsetHeight / 100;
+                temp.style.height = 10 + TypedValue.COMPLEX_UNIT_EM;
+                TypedValue.UNIT_SCALE_EM = temp.offsetHeight / 10;
+                temp.style.height = 10 + TypedValue.COMPLEX_UNIT_REM;
+                TypedValue.UNIT_SCALE_REM = temp.offsetHeight / 10;
                 document.body.removeChild(temp);
             }
             static complexToDimensionPixelSize(valueWithUnit, baseValue = 0, metrics = Resources.getDisplayMetrics()) {
@@ -2075,6 +2606,8 @@ var android;
                     this.initUnit();
                 if (valueWithUnit === undefined || valueWithUnit === null)
                     return 0;
+                if (valueWithUnit === '' + (Number.parseInt(valueWithUnit)))
+                    return Number.parseInt(valueWithUnit);
                 if (typeof valueWithUnit !== 'string')
                     valueWithUnit = valueWithUnit + "";
                 let scale = 1;
@@ -2105,6 +2638,22 @@ var android;
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_MM, "");
                     scale = TypedValue.UNIT_SCALE_MM;
                 }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_EM)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_EM, "");
+                    scale = TypedValue.UNIT_SCALE_EM;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_REM)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_REM, "");
+                    scale = TypedValue.UNIT_SCALE_REM;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_VH)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_VH, "");
+                    scale = metrics.heightPixels / 100;
+                }
+                else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_VW)) {
+                    valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_VW, "");
+                    scale = metrics.widthPixels / 100;
+                }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_FRACTION)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_FRACTION, "");
                     scale = Number.parseInt(valueWithUnit) / 100;
@@ -2125,6 +2674,10 @@ var android;
         TypedValue.COMPLEX_UNIT_PT = 'pt';
         TypedValue.COMPLEX_UNIT_IN = 'in';
         TypedValue.COMPLEX_UNIT_MM = 'mm';
+        TypedValue.COMPLEX_UNIT_EM = 'em';
+        TypedValue.COMPLEX_UNIT_REM = 'rem';
+        TypedValue.COMPLEX_UNIT_VH = 'vh';
+        TypedValue.COMPLEX_UNIT_VW = 'vw';
         TypedValue.COMPLEX_UNIT_FRACTION = '%';
         TypedValue.UNIT_SCALE_SP = 1;
         util.TypedValue = TypedValue;
@@ -2252,13 +2805,56 @@ var android;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class LinearInterpolator {
+                getInterpolation(input) {
+                    return input;
+                }
+            }
+            animation.LinearInterpolator = LinearInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="../../os/SystemClock.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var SystemClock = android.os.SystemClock;
+            class AnimationUtils {
+                static currentAnimationTimeMillis() {
+                    return SystemClock.uptimeMillis();
+                }
+            }
+            animation.AnimationUtils = AnimationUtils;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
  * Created by linfaxin on 15/9/27.
  */
 ///<reference path="../util/SparseArray.ts"/>
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../graphics/drawable/Drawable.ts"/>
+///<reference path="../graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../graphics/drawable/ScrollBarDrawable.ts"/>
 ///<reference path="../graphics/PixelFormat.ts"/>
 ///<reference path="../graphics/Matrix.ts"/>
+///<reference path="../graphics/Color.ts"/>
+///<reference path="../graphics/Paint.ts"/>
 ///<reference path="../../java/lang/StringBuilder.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
@@ -2273,18 +2869,24 @@ var android;
 ///<reference path="../os/Handler.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
+///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
 ///<reference path="Gravity.ts"/>
+///<reference path="../view/animation/LinearInterpolator.ts"/>
+///<reference path="../view/animation/AnimationUtils.ts"/>
 var android;
 (function (android) {
     var view;
     (function (view_1) {
         var SparseArray = android.util.SparseArray;
+        var ColorDrawable = android.graphics.drawable.ColorDrawable;
+        var ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
         var PixelFormat = android.graphics.PixelFormat;
         var Matrix = android.graphics.Matrix;
+        var Color = android.graphics.Color;
         var StringBuilder = java.lang.StringBuilder;
         var SystemClock = android.os.SystemClock;
         var Log = android.util.Log;
@@ -2292,8 +2894,11 @@ var android;
         var CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
         var ArrayList = java.util.ArrayList;
         var Resources = android.content.res.Resources;
+        var ColorStateList = android.content.res.ColorStateList;
         var Pools = android.util.Pools;
         var TypedValue = android.util.TypedValue;
+        var LinearInterpolator = android.view.animation.LinearInterpolator;
+        var AnimationUtils = android.view.animation.AnimationUtils;
         class View {
             constructor() {
                 this.mPrivateFlags = 0;
@@ -2318,54 +2923,28 @@ var android;
                 this.mRight = 0;
                 this.mTop = 0;
                 this.mBottom = 0;
-                this._mScrollX = 0;
-                this._mScrollY = 0;
+                this.mScrollX = 0;
+                this.mScrollY = 0;
                 this.mPaddingLeft = 0;
                 this.mPaddingRight = 0;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
                 this._DOMAttrModifiedEvent = (event) => {
                     if (event.attrChange) {
-                        this.onBindElementAttributeChanged(event.attrName, event.prevValue, event.newValue);
+                        this.onBindElementAttributeChanged(event.attrName, event.prevValue, event.newValue, this.getViewRootImpl().mContext);
                     }
                 };
                 this._attrChangeHandler = new View.AttrChangeHandler();
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
-            }
-            get mScrollX() {
-                return this._mScrollX;
-            }
-            set mScrollX(value) {
-                this._mScrollX = value;
-                Array.from(this.bindElement.children).forEach((item) => {
-                    if (item == this.bindScrollContent)
-                        return;
-                    if (value != 0)
-                        item.style.marginLeft = -value + 'px';
-                    else
-                        item.style.marginLeft = "";
-                });
-                this.bindElement.scrollLeft = value;
-            }
-            get mScrollY() {
-                return this._mScrollY;
-            }
-            set mScrollY(value) {
-                this._mScrollY = value;
-                Array.from(this.bindElement.children).forEach((item) => {
-                    if (item == this.bindScrollContent)
-                        return;
-                    if (value != 0)
-                        item.style.marginTop = -value + 'px';
-                    else
-                        item.style.marginTop = "";
-                });
-                this.bindElement.scrollTop = value;
+                this.initializeScrollbars();
             }
             createAttrChangeHandler(mergeHandler) {
                 let view = this;
                 mergeHandler.add({
                     set background(value) {
+                        let bg = mergeHandler.parseDrawable(value);
+                        if (bg)
+                            view.mBackground = bg;
                     },
                     set padding(value) {
                         view._setPaddingWithUnit(value, value, value, value);
@@ -2697,7 +3276,8 @@ var android;
                 let padBottom = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
                 view.setPadding(padLeft, padTop, padRight, padBottom);
                 let unit = TypedValue.COMPLEX_UNIT_FRACTION;
-                if (left.endsWith(unit) || top.endsWith(unit) || right.endsWith(unit) || bottom.endsWith(unit)) {
+                if ((typeof left === 'string' && left.endsWith(unit)) || (typeof top === 'string' && top.endsWith(unit))
+                    || (typeof right === 'string' && right.endsWith(unit)) || (typeof bottom === 'string' && bottom.endsWith(unit))) {
                     view.post({
                         run: () => {
                             let width = view.getWidth();
@@ -2925,6 +3505,7 @@ var android;
             onVisibilityChanged(changedView, visibility) {
                 if (visibility == View.VISIBLE) {
                     if (this.mAttachInfo != null) {
+                        this.initialAwakenScrollBars();
                     }
                     else {
                         this.mPrivateFlags |= View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH;
@@ -3629,6 +4210,13 @@ var android;
                 else {
                     this.mPrivateFlags &= ~View.PFLAG_OPAQUE_BACKGROUND;
                 }
+                const flags = this.mViewFlags;
+                if (((flags & View.SCROLLBARS_VERTICAL) == 0 && (flags & View.SCROLLBARS_HORIZONTAL) == 0)) {
+                    this.mPrivateFlags |= View.PFLAG_OPAQUE_SCROLLBARS;
+                }
+                else {
+                    this.mPrivateFlags &= ~View.PFLAG_OPAQUE_SCROLLBARS;
+                }
             }
             getLayerType() {
                 return this.mLayerType;
@@ -3693,9 +4281,10 @@ var android;
                         layerType = View.LAYER_TYPE_SOFTWARE;
                     }
                 }
+                this.computeScroll();
                 let sx = this.mScrollX;
                 let sy = this.mScrollY;
-                this.computeScroll();
+                this.syncScrollToElement();
                 let hasNoCache = cache == null;
                 let offsetForScroll = cache == null;
                 let restoreTo = canvas.save();
@@ -3774,6 +4363,7 @@ var android;
                 if (!dirtyOpaque)
                     this.onDraw(canvas);
                 this.dispatchDraw(canvas);
+                this.onDrawScrollBars(canvas);
                 if (this.mOverlay != null && !this.mOverlay.isEmpty()) {
                     this.mOverlay.getOverlayView().dispatchDraw(canvas);
                 }
@@ -3781,6 +4371,82 @@ var android;
             onDraw(canvas) {
             }
             dispatchDraw(canvas) {
+            }
+            onDrawScrollBars(canvas) {
+                const cache = this.mScrollCache;
+                if (cache != null) {
+                    let state = cache.state;
+                    if (state == ScrollabilityCache.OFF) {
+                        return;
+                    }
+                    let invalidate = false;
+                    if (state == ScrollabilityCache.FADING) {
+                        cache._computeAlphaToScrollBar();
+                        invalidate = true;
+                    }
+                    else {
+                        cache.scrollBar.setAlpha(255);
+                    }
+                    const viewFlags = this.mViewFlags;
+                    const drawHorizontalScrollBar = (viewFlags & View.SCROLLBARS_HORIZONTAL) == View.SCROLLBARS_HORIZONTAL;
+                    const drawVerticalScrollBar = (viewFlags & View.SCROLLBARS_VERTICAL) == View.SCROLLBARS_VERTICAL
+                        && !this.isVerticalScrollBarHidden();
+                    if (drawVerticalScrollBar || drawHorizontalScrollBar) {
+                        const width = this.mRight - this.mLeft;
+                        const height = this.mBottom - this.mTop;
+                        const scrollBar = cache.scrollBar;
+                        const scrollX = this.mScrollX;
+                        const scrollY = this.mScrollY;
+                        const inside = true;
+                        let left;
+                        let top;
+                        let right;
+                        let bottom;
+                        if (drawHorizontalScrollBar) {
+                            let size = scrollBar.getSize(false);
+                            if (size <= 0) {
+                                size = cache.scrollBarSize;
+                            }
+                            scrollBar.setParameters(this.computeHorizontalScrollRange(), this.computeHorizontalScrollOffset(), this.computeHorizontalScrollExtent(), false);
+                            const verticalScrollBarGap = drawVerticalScrollBar ?
+                                this.getVerticalScrollbarWidth() : 0;
+                            top = scrollY + height - size;
+                            left = scrollX + (this.mPaddingLeft);
+                            right = scrollX + width - -verticalScrollBarGap;
+                            bottom = top + size;
+                            this.onDrawHorizontalScrollBar(canvas, scrollBar, left, top, right, bottom);
+                            if (invalidate) {
+                                this.invalidate(left, top, right, bottom);
+                            }
+                        }
+                        if (drawVerticalScrollBar) {
+                            let size = scrollBar.getSize(true);
+                            if (size <= 0) {
+                                size = cache.scrollBarSize;
+                            }
+                            scrollBar.setParameters(this.computeVerticalScrollRange(), this.computeVerticalScrollOffset(), this.computeVerticalScrollExtent(), true);
+                            left = scrollX + width - size;
+                            top = scrollY + (this.mPaddingTop);
+                            right = left + size;
+                            bottom = scrollY + height;
+                            this.onDrawVerticalScrollBar(canvas, scrollBar, left, top, right, bottom);
+                            if (invalidate) {
+                                this.invalidate(left, top, right, bottom);
+                            }
+                        }
+                    }
+                }
+            }
+            isVerticalScrollBarHidden() {
+                return false;
+            }
+            onDrawHorizontalScrollBar(canvas, scrollBar, l, t, r, b) {
+                scrollBar.setBounds(l, t, r, b);
+                scrollBar.draw(canvas);
+            }
+            onDrawVerticalScrollBar(canvas, scrollBar, l, t, r, b) {
+                scrollBar.setBounds(l, t, r, b);
+                scrollBar.draw(canvas);
             }
             destroyDrawingCache() {
             }
@@ -3989,13 +4655,35 @@ var android;
             scrollBy(x, y) {
                 this.scrollTo(this.mScrollX + x, this.mScrollY + y);
             }
-            awakenScrollBars(startDelay = view_1.ViewConfiguration.getScrollDefaultDelay(), invalidate = true) {
-                if (!this.bindScrollContent.parentNode) {
-                    this.bindElement.appendChild(this.bindScrollContent);
-                    this.bindElement.style.overflow = "scroll";
+            initialAwakenScrollBars() {
+                return this.mScrollCache != null &&
+                    this.awakenScrollBars(this.mScrollCache.scrollBarDefaultDelayBeforeFade * 4, true);
+            }
+            awakenScrollBars(startDelay = this.mScrollCache.scrollBarDefaultDelayBeforeFade, invalidate = true) {
+                const scrollCache = this.mScrollCache;
+                if (scrollCache == null || !scrollCache.fadeScrollBars) {
+                    return false;
                 }
-                this.bindScrollContent.style.height = this.computeVerticalScrollRange() + "px";
-                this.bindScrollContent.style.width = this.computeHorizontalScrollRange() + "px";
+                if (scrollCache.scrollBar == null) {
+                    scrollCache.scrollBar = new ScrollBarDrawable();
+                }
+                if (this.isHorizontalScrollBarEnabled() || this.isVerticalScrollBarEnabled()) {
+                    if (invalidate) {
+                        this.postInvalidateOnAnimation();
+                    }
+                    if (scrollCache.state == ScrollabilityCache.OFF) {
+                        const KEY_REPEAT_FIRST_DELAY = 750;
+                        startDelay = Math.max(KEY_REPEAT_FIRST_DELAY, startDelay);
+                    }
+                    let fadeStartTime = AnimationUtils.currentAnimationTimeMillis() + startDelay;
+                    scrollCache.fadeStartTime = fadeStartTime;
+                    scrollCache.state = ScrollabilityCache.ON;
+                    if (this.mAttachInfo != null) {
+                        this.mAttachInfo.mHandler.removeCallbacks(scrollCache);
+                        this.mAttachInfo.mHandler.postAtTime(scrollCache, fadeStartTime);
+                    }
+                    return true;
+                }
                 return false;
             }
             getVerticalFadingEdgeLength() {
@@ -4007,10 +4695,119 @@ var android;
                 return 0;
             }
             getVerticalScrollbarWidth() {
+                let cache = this.mScrollCache;
+                if (cache != null) {
+                    let scrollBar = cache.scrollBar;
+                    if (scrollBar != null) {
+                        let size = scrollBar.getSize(true);
+                        if (size <= 0) {
+                            size = cache.scrollBarSize;
+                        }
+                        return size;
+                    }
+                    return 0;
+                }
                 return 0;
             }
             getHorizontalScrollbarHeight() {
+                let cache = this.mScrollCache;
+                if (cache != null) {
+                    let scrollBar = cache.scrollBar;
+                    if (scrollBar != null) {
+                        let size = scrollBar.getSize(false);
+                        if (size <= 0) {
+                            size = cache.scrollBarSize;
+                        }
+                        return size;
+                    }
+                    return 0;
+                }
                 return 0;
+            }
+            initializeScrollbars() {
+                this.initScrollCache();
+                const scrollabilityCache = this.mScrollCache;
+                if (scrollabilityCache.scrollBar == null) {
+                    scrollabilityCache.scrollBar = new ScrollBarDrawable();
+                }
+                scrollabilityCache.fadeScrollBars = true;
+                let track = null;
+                scrollabilityCache.scrollBar.setHorizontalTrackDrawable(track);
+                let thumb = new ColorDrawable(Color.parseColor('#aaaaaa'));
+                let oldDraw = thumb.draw;
+                let tempRect = new Rect();
+                thumb.draw = function (canvas) {
+                    let bounds = thumb.getBounds();
+                    tempRect.set(bounds);
+                    bounds.right = bounds.left + bounds.width() / 2;
+                    oldDraw.call(thumb, canvas);
+                    bounds.set(tempRect);
+                };
+                scrollabilityCache.scrollBar.setHorizontalThumbDrawable(thumb);
+                scrollabilityCache.scrollBar.setVerticalTrackDrawable(track);
+                scrollabilityCache.scrollBar.setVerticalThumbDrawable(thumb);
+            }
+            initScrollCache() {
+                if (this.mScrollCache == null) {
+                    this.mScrollCache = new ScrollabilityCache(this);
+                }
+            }
+            getScrollCache() {
+                this.initScrollCache();
+                return this.mScrollCache;
+            }
+            isHorizontalScrollBarEnabled() {
+                return (this.mViewFlags & View.SCROLLBARS_HORIZONTAL) == View.SCROLLBARS_HORIZONTAL;
+            }
+            setHorizontalScrollBarEnabled(horizontalScrollBarEnabled) {
+                if (this.isHorizontalScrollBarEnabled() != horizontalScrollBarEnabled) {
+                    this.mViewFlags ^= View.SCROLLBARS_HORIZONTAL;
+                    this.computeOpaqueFlags();
+                }
+            }
+            isVerticalScrollBarEnabled() {
+                return (this.mViewFlags & View.SCROLLBARS_VERTICAL) == View.SCROLLBARS_VERTICAL;
+            }
+            setVerticalScrollBarEnabled(verticalScrollBarEnabled) {
+                if (this.isVerticalScrollBarEnabled() != verticalScrollBarEnabled) {
+                    this.mViewFlags ^= View.SCROLLBARS_VERTICAL;
+                    this.computeOpaqueFlags();
+                }
+            }
+            setScrollbarFadingEnabled(fadeScrollbars) {
+                this.initScrollCache();
+                const scrollabilityCache = this.mScrollCache;
+                scrollabilityCache.fadeScrollBars = fadeScrollbars;
+                if (fadeScrollbars) {
+                    scrollabilityCache.state = ScrollabilityCache.OFF;
+                }
+                else {
+                    scrollabilityCache.state = ScrollabilityCache.ON;
+                }
+            }
+            isScrollbarFadingEnabled() {
+                return this.mScrollCache != null && this.mScrollCache.fadeScrollBars;
+            }
+            getScrollBarDefaultDelayBeforeFade() {
+                return this.mScrollCache == null ? view_1.ViewConfiguration.getScrollDefaultDelay() :
+                    this.mScrollCache.scrollBarDefaultDelayBeforeFade;
+            }
+            setScrollBarDefaultDelayBeforeFade(scrollBarDefaultDelayBeforeFade) {
+                this.getScrollCache().scrollBarDefaultDelayBeforeFade = scrollBarDefaultDelayBeforeFade;
+            }
+            getScrollBarFadeDuration() {
+                return this.mScrollCache == null ? view_1.ViewConfiguration.getScrollBarFadeDuration() :
+                    this.mScrollCache.scrollBarFadeDuration;
+            }
+            setScrollBarFadeDuration(scrollBarFadeDuration) {
+                this.getScrollCache().scrollBarFadeDuration = scrollBarFadeDuration;
+            }
+            getScrollBarSize() {
+                return this.mScrollCache == null ? view_1.ViewConfiguration.get().getScaledScrollBarSize() :
+                    this.mScrollCache.scrollBarSize;
+            }
+            setScrollBarSize(scrollBarSize) {
+                this.getScrollCache().scrollBarSize = scrollBarSize;
             }
             assignParent(parent) {
                 if (this.mParent == null) {
@@ -4053,6 +4850,10 @@ var android;
                 //if ((this.mPrivateFlags & View.PFLAG_REQUEST_TRANSPARENT_REGIONS) != 0) {
                 //    this.mParent.requestTransparentRegion(this);
                 //}
+                if ((this.mPrivateFlags & View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH) != 0) {
+                    this.initialAwakenScrollBars();
+                    this.mPrivateFlags &= ~View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH;
+                }
                 this.mPrivateFlags3 &= ~View.PFLAG3_IS_LAID_OUT;
                 this.jumpDrawablesToCurrentState();
             }
@@ -4112,7 +4913,7 @@ var android;
                 let bindEle = this.bindElement.querySelector('#' + id);
                 return bindEle ? bindEle['bindView'] : null;
             }
-            static inflate(domtree) {
+            static inflate(domtree, rootElement = domtree) {
                 let className = domtree.tagName;
                 if (className.startsWith('ANDROID-')) {
                     className = className.substring('ANDROID-'.length);
@@ -4139,14 +4940,21 @@ var android;
                     catch (e) {
                     }
                 }
-                if (!rootViewClass)
-                    return null;
+                if (!rootViewClass) {
+                    let rootView;
+                    Array.from(domtree.children).forEach((item) => {
+                        if (!rootView && item instanceof HTMLElement) {
+                            rootView = View.inflate(item, domtree);
+                        }
+                    });
+                    return rootView;
+                }
                 let rootView = new rootViewClass();
-                rootView.initBindElement(domtree);
+                rootView.initBindElement(domtree, rootElement);
                 if (rootView instanceof view_1.ViewGroup) {
                     Array.from(domtree.children).forEach((item) => {
                         if (item instanceof HTMLElement) {
-                            let view = View.inflate(item);
+                            let view = View.inflate(item, rootElement);
                             let params = rootView.generateDefaultLayoutParams();
                             this._generateLayoutParamsFromAttribute(item, params);
                             if (view)
@@ -4164,21 +4972,17 @@ var android;
                     this.initBindElement();
                 return this._bindElement;
             }
-            get bindScrollContent() {
-                if (!this._bindScrollContent)
-                    this._bindScrollContent = document.createElement('div');
-                return this._bindScrollContent;
-            }
-            initBindElement(bindElement) {
+            initBindElement(bindElement, rootElement) {
                 this._bindElement = bindElement || document.createElement(this.tagName());
                 let oldBindView = this._bindElement['bindView'];
                 if (oldBindView) {
                     this._bindElement.removeEventListener("DOMAttrModified", oldBindView._DOMAttrModifiedEvent, true);
                 }
                 this._bindElement['bindView'] = this;
+                this._parseRefStyle(rootElement);
                 this._initAttrChangeHandler();
                 this._bindElement.addEventListener("DOMAttrModified", this._DOMAttrModifiedEvent, true);
-                this._fireInitBindElementAttribute();
+                this._fireInitBindElementAttribute(rootElement);
             }
             syncBoundToElement() {
                 let bind = this.bindElement;
@@ -4189,20 +4993,52 @@ var android;
                 bind.style.width = this.getWidth() + 'px';
                 bind.style.height = this.getHeight() + 'px';
             }
+            syncScrollToElement() {
+                let sx = this.mScrollX;
+                let sy = this.mScrollY;
+                Array.from(this.bindElement.children).forEach((item) => {
+                    if (item.tagName === 'scrollbar')
+                        return;
+                    if (sx !== 0)
+                        item.style.marginLeft = -sx + 'px';
+                    else
+                        item.style.marginLeft = "";
+                    if (sy !== 0)
+                        item.style.marginTop = -sy + 'px';
+                    else
+                        item.style.marginTop = "";
+                });
+            }
+            _parseRefStyle(rootElement) {
+                let style = this._bindElement.getAttribute('style');
+                if (style && style.startsWith('@style/')) {
+                    let ref = style.substring('@style/'.length);
+                    let styleElement = rootElement ? rootElement.querySelector('#' + ref) : null;
+                    if (!styleElement)
+                        styleElement = document.getElementById(ref);
+                    if (styleElement) {
+                        Array.from(styleElement.attributes).forEach((attr) => {
+                            if (attr.name !== 'id' && !this._bindElement.hasAttribute(attr.name)) {
+                                this._bindElement.setAttribute(attr.name, attr.value);
+                            }
+                        });
+                    }
+                }
+            }
             _initAttrChangeHandler() {
                 this.createAttrChangeHandler(this._attrChangeHandler);
                 if (!this._attrChangeHandler.isCallSuper) {
                     throw Error('must call super when override createAttrChangeHandler!');
                 }
             }
-            _fireInitBindElementAttribute() {
+            _fireInitBindElementAttribute(rootElement) {
                 Array.from(this.bindElement.attributes).forEach((attr) => {
                     if (attr.name === "android:id" && !this.bindElement.id)
                         this.bindElement.id = attr.value;
-                    this.onBindElementAttributeChanged(attr.name, attr.value, attr.value);
+                    this.onBindElementAttributeChanged(attr.name, attr.value, attr.value, rootElement);
                 });
             }
-            onBindElementAttributeChanged(attributeName, oldVal, newVal) {
+            onBindElementAttributeChanged(attributeName, oldVal, newVal, rootElement) {
                 let parts = attributeName.split(":");
                 let attrName = parts[parts.length - 1].toLowerCase();
                 if (newVal === 'true')
@@ -4212,10 +5048,15 @@ var android;
                 if (attrName.startsWith('layout_')) {
                     attrName = attrName.substring('layout_'.length);
                     let params = this.getLayoutParams();
-                    if (params)
-                        params._attrChangeHandler[attrName] = newVal;
+                    if (params) {
+                        if (rootElement)
+                            params._attrChangeHandler.rootElement = rootElement;
+                        params._attrChangeHandler.handle(attrName, newVal);
+                    }
                 }
                 else {
+                    if (rootElement)
+                        this._attrChangeHandler.rootElement = rootElement;
                     this._attrChangeHandler.handle(attrName, newVal);
                 }
             }
@@ -4292,6 +5133,10 @@ var android;
         View.ENABLED_MASK = 0x00000020;
         View.WILL_NOT_DRAW = 0x00000080;
         View.DRAW_MASK = 0x00000080;
+        View.SCROLLBARS_NONE = 0x00000000;
+        View.SCROLLBARS_HORIZONTAL = 0x00000100;
+        View.SCROLLBARS_VERTICAL = 0x00000200;
+        View.SCROLLBARS_MASK = 0x00000300;
         View.FOCUSABLES_ALL = 0x00000000;
         View.FOCUSABLES_TOUCH_MODE = 0x00000001;
         View.FOCUS_BACKWARD = 0x00000001;
@@ -4389,6 +5234,9 @@ var android;
                         return true;
                     return defaultValue;
                 }
+                parseBoolean(value, defaultValue = true) {
+                    return AttrChangeHandler.parseBoolean(value, defaultValue);
+                }
                 static parseGravity(s, defaultValue = view_1.Gravity.NO_GRAVITY) {
                     let gravity = view_1.Gravity.NO_GRAVITY;
                     try {
@@ -4405,6 +5253,48 @@ var android;
                     if (Number.isNaN(gravity) || gravity === view_1.Gravity.NO_GRAVITY)
                         gravity = defaultValue;
                     return gravity;
+                }
+                parseGravity(s, defaultValue = view_1.Gravity.NO_GRAVITY) {
+                    return AttrChangeHandler.parseGravity(s, defaultValue);
+                }
+                parseDrawable(s) {
+                    if (s.startsWith('@')) {
+                    }
+                    else {
+                        let color = this.parseColor(s);
+                        return new ColorDrawable(color);
+                    }
+                }
+                parseColor(value) {
+                    if (value.startsWith('rgb(')) {
+                        value = value.replace('rgb(', '').replace(')', '');
+                        let parts = value.split(',');
+                        return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
+                    }
+                    else if (value.startsWith('rgba(')) {
+                        value = value.replace('rgba(', '').replace(')', '');
+                        let parts = value.split(',');
+                        return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[2]));
+                    }
+                    else {
+                        if (value.startsWith('#') && value.length === 4) {
+                            value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
+                        }
+                        try {
+                            return Color.parseColor(value);
+                        }
+                        catch (e) {
+                        }
+                    }
+                }
+                parseColorList(value) {
+                    if (value.startsWith('@')) {
+                    }
+                    else {
+                        let color = this.parseColor(value);
+                        return ColorStateList.valueOf(color);
+                    }
+                    return null;
                 }
             }
             View.AttrChangeHandler = AttrChangeHandler;
@@ -4476,6 +5366,38 @@ var android;
                 this.View_this.setPressed(false);
             }
         }
+        class ScrollabilityCache {
+            constructor(host) {
+                this.fadeScrollBars = true;
+                this.fadingEdgeLength = view_1.ViewConfiguration.get().getScaledFadingEdgeLength();
+                this.scrollBarDefaultDelayBeforeFade = view_1.ViewConfiguration.getScrollDefaultDelay();
+                this.scrollBarFadeDuration = view_1.ViewConfiguration.getScrollBarFadeDuration();
+                this.scrollBarSize = view_1.ViewConfiguration.get().getScaledScrollBarSize();
+                this.interpolator = new LinearInterpolator();
+                this.state = ScrollabilityCache.OFF;
+                this.host = host;
+            }
+            run() {
+                let now = AnimationUtils.currentAnimationTimeMillis();
+                if (now >= this.fadeStartTime) {
+                    this.state = ScrollabilityCache.FADING;
+                    this.host.invalidate(true);
+                }
+            }
+            _computeAlphaToScrollBar() {
+                let now = AnimationUtils.currentAnimationTimeMillis();
+                let factor = (now - this.fadeStartTime) / this.scrollBarFadeDuration;
+                if (factor >= 1) {
+                    this.state = ScrollabilityCache.OFF;
+                    factor = 1;
+                }
+                let alpha = 1 - this.interpolator.getInterpolation(factor);
+                this.scrollBar.setAlpha(255 * alpha);
+            }
+        }
+        ScrollabilityCache.OFF = 0;
+        ScrollabilityCache.ON = 1;
+        ScrollabilityCache.FADING = 2;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 var android;
@@ -4588,27 +5510,6 @@ var android;
         view.Surface = Surface;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-var java;
-(function (java) {
-    var lang;
-    (function (lang) {
-        class System {
-            static currentTimeMillis() {
-                return new Date().getTime();
-            }
-        }
-        System.out = {
-            println(any) {
-                console.log('\n');
-                console.log(any);
-            },
-            print(any) {
-                console.log(any);
-            }
-        };
-        lang.System = System;
-    })(lang = java.lang || (java.lang = {}));
-})(java || (java = {}));
 ///<reference path="ViewParent.ts"/>
 ///<reference path="View.ts"/>
 ///<reference path="Surface.ts"/>
@@ -6913,12 +7814,14 @@ var runtime;
         }
         initInflateView() {
             Array.from(this.element.children).forEach((item) => {
-                if (item instanceof HTMLStyleElement) {
-                    this.rootStyleElement = item;
-                    return;
+                if (item.tagName === 'resources') {
+                    this.rootResourceElement = item;
                 }
-                if (item instanceof HTMLElement) {
-                    let view = View.inflate(item);
+                else if (item instanceof HTMLStyleElement) {
+                    this.rootStyleElement = item;
+                }
+                else if (item instanceof HTMLElement) {
+                    let view = View.inflate(this.element, item);
                     if (view)
                         this.rootLayout.addView(view, -1, -1);
                 }
@@ -6977,6 +7880,11 @@ var runtime;
             if (!this.rootStyleElement)
                 this.rootStyleElement = document.createElement("style");
             this.rootStyleElement.setAttribute("scoped", '');
+            this.rootStyleElement.innerHTML += `
+                * {
+                    overflow : hidden;
+                }
+                `;
             let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
             if (iOS) {
                 this.rootStyleElement.innerHTML += `
@@ -7019,7 +7927,7 @@ var runtime;
         }
         setContentView(view) {
             this.rootLayout.removeAllViews();
-            this.rootLayout.addView(view);
+            this.rootLayout.addView(view, -1, -1);
         }
         addContentView(view, params = new ViewGroup.LayoutParams(-1, -1)) {
             this.rootLayout.addView(view, params);
@@ -7891,6 +8799,7 @@ var android;
                 this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
                 this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
                 this.mOverflingDistance = configuration.getScaledOverflingDistance();
+                this.setVerticalScrollBarEnabled(true);
             }
             addView(...args) {
                 if (this.getChildCount() > 0) {
@@ -8184,6 +9093,7 @@ var android;
                     super.scrollTo(scrollX, scrollY);
                 }
                 if (!this.awakenScrollBars()) {
+                    this.postInvalidateOnAnimation();
                 }
             }
             getScrollRange() {
@@ -9553,6 +10463,8 @@ var android;
 ///<reference path="../view/Gravity.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Color.ts"/>
+///<reference path="../content/res/ColorStateList.ts"/>
+///<reference path="../util/TypedValue.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -9561,12 +10473,15 @@ var android;
         var Gravity = android.view.Gravity;
         var Resources = android.content.res.Resources;
         var Color = android.graphics.Color;
+        var ColorStateList = android.content.res.ColorStateList;
         var MeasureSpec = View.MeasureSpec;
+        var TypedValue = android.util.TypedValue;
         class TextView extends View {
             constructor() {
                 super();
                 this.mSingleLine = false;
-                this.mTextColor = Color.BLACK;
+                this.mTextColor = ColorStateList.valueOf(Color.BLACK);
+                this.mCurTextColor = Color.BLACK;
                 this.mHintColor = Color.LTGRAY;
                 this.mSpacingMult = 1.2;
                 this.mSpacingAdd = 0;
@@ -9585,10 +10500,34 @@ var android;
                     set textColorHighlight(value) {
                     },
                     set textColor(value) {
+                        if (value.startsWith('@')) {
+                        }
+                        else if (value.startsWith('rgb(')) {
+                            value = value.replace('rgb(', '').replace(')', '');
+                            let parts = value.split(',');
+                            textView.setTextColor(Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2])));
+                        }
+                        else if (value.startsWith('rgba(')) {
+                            value = value.replace('rgba(', '').replace(')', '');
+                            let parts = value.split(',');
+                            textView.setTextColor(Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[2])));
+                        }
+                        else {
+                            if (value.startsWith('#') && value.length === 4) {
+                                value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
+                            }
+                            try {
+                                textView.setTextColor(Color.parseColor(value));
+                            }
+                            catch (e) {
+                            }
+                        }
                     },
                     set textColorHint(value) {
                     },
                     set textSize(value) {
+                        value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
+                        textView.setTextSize(value);
                     },
                     set textStyle(value) {
                     },
@@ -9717,8 +10656,8 @@ var android;
                     }
                 }
                 let unpaddedWidth = width - padLeft - padRight;
-                this.mTextElement.style.width = unpaddedWidth + "px";
-                this.mTextElement.style.left = padLeft + "px";
+                this.mTextElement.style.width = unpaddedWidth + 2 + "px";
+                this.mTextElement.style.left = padLeft + 1 + "px";
                 if (heightMode == MeasureSpec.EXACTLY) {
                     height = heightSize;
                     let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
@@ -9770,6 +10709,43 @@ var android;
                 }
                 desired = Math.max(desired, this.getSuggestedMinimumHeight());
                 return desired;
+            }
+            onDraw(canvas) {
+                let r = Color.red(this.mCurTextColor);
+                let g = Color.green(this.mCurTextColor);
+                let b = Color.blue(this.mCurTextColor);
+                let a = Color.alpha(this.mCurTextColor);
+                this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                return super.onDraw(canvas);
+            }
+            setTextColor(color) {
+                if (Number.isInteger(color)) {
+                    this.mTextColor = ColorStateList.valueOf(color);
+                }
+                else {
+                    if (color === null || color === undefined) {
+                        throw new Error('colors is null');
+                    }
+                    this.mTextColor = color;
+                }
+                this.updateTextColors();
+            }
+            getTextColors() {
+                return this.mTextColor;
+            }
+            getCurrentTextColor() {
+                return this.mCurTextColor;
+            }
+            updateTextColors() {
+                let inval = false;
+                let color = this.mTextColor.getColorForState(this.getDrawableState(), 0);
+                if (color != this.mCurTextColor) {
+                    this.mCurTextColor = color;
+                    inval = true;
+                }
+                if (inval) {
+                    this.invalidate();
+                }
             }
             getCompoundPaddingTop() {
                 return this.mPaddingTop;

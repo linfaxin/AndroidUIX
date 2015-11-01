@@ -17,62 +17,129 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            android_maxLines:3;
         }
     </style>
+
 </head>
 <body>
-    <android-TextViewSampleActivity id="activity" style="width: 100%; height:90%;margin-top: 6%;display: none;">
-        <style id="textStyle"
-               android:textSize="14dp"
-               android:textColor="#333"
-                >
-        </style>
-        <ScrollView
-                android:fillViewport="true">
+    <android-TextViewSampleActivity style="width: 100%; height:100%;display: none;">
+        <resources>
+            <style id="textStyle"
+                   android:textSize="14dp"
+                   android:textColor="#333"
+                   android:background="#eee"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                    ></style>
+            <style id="line_spit"
+                   android:layout_height="1px"
+                   android:layout_width="match_parent"
+                    ></style>
+        </resources>
+        <ScrollView>
             <LinearLayout
                     android:orientation="vertical">
+                <View style="@style/line_spit"></View>
                 <TextView
-                        android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"
-                        android:padding="20dp"
+                        android:text="文本"
                         style="@style/textStyle"
-                        >
-                    文本文本Test1Test0
-                </TextView>
+                        ></TextView>
+                <View style="@style/line_spit"></View>
                 <TextView
-                        android:layout_height="wrap_content"
-                        android:layout_width="200dp"
-                        android:maxLines="3"
-                        android:padding="20dp"
+                        android:padding="10dp"
+                        android:text="文本Padding10"
+                        style="@style/textStyle"
+                        ></TextView>
+                <View style="@style/line_spit"></View>
+                <TextView
+                        android:padding="10dp"
+                        android:text="Line1
+                        Line2
+                        Line3
+                        Line4"
+                        style="@style/textStyle"
+                        ></TextView>
+                <View style="@style/line_spit"></View>
+                <TextView
+                        android:maxLines="2"
+                        android:padding="10dp"
+                        android:text="maxLines=2
+                        maxLines=2
+                        maxLines=2
+                        maxLines=2"
+                        style="@style/textStyle"
+                        ></TextView>
+                <View style="@style/line_spit"></View>
+                <TextView
+                        android:layout_width="match_parent"
+                        android:padding="10dp"
+                        android:gravity="center"
+                        android:text="文本居中"
+                        style="@style/textStyle"
+                        ></TextView>
+                <View style="@style/line_spit"></View>
+                <TextView
+                        android:minLines="2"
+                        android:layout_width="match_parent"
+                        android:padding="10dp"
+                        android:gravity="center"
+                        android:text="文本居中minLines=2"
+                        style="@style/textStyle"
+                        ></TextView>
+                <View style="@style/line_spit"></View>
+                <TextView
+                        android:layout_width="match_parent"
+                        android:padding="10dp"
                         android:gravity="right"
+                        android:text="文本居右"
                         style="@style/textStyle"
-                        >
-                    文本文本Test1Test1
-                    文本文本Test1Test1
-                    文本文本Test1Test1
-                    文本文本Test1Test1
-                    文本文本Test1Test1
-                    文本文本Test1Test1
-                </TextView>
+                        ></TextView>
+                <View style="@style/line_spit"></View>
                 <TextView
                         android:layout_height="100dp"
                         android:layout_width="match_parent"
-                        android:padding="20dp"
-                        android:gravity="right|bottom"
+                        android:padding="10dp"
+                        android:gravity="center"
+                        android:text="文本居中"
                         style="@style/textStyle"
-                        >
-                    文本文本Test2Test2
-                </TextView>
+                        ></TextView>
+                <View style="@style/line_spit"></View>
                 <TextView
                         android:layout_height="100dp"
-                        android:layout_width="wrap_content"
-                        android:padding="20dp"
-                        android:gravity="center"
+                        android:layout_width="match_parent"
+                        android:padding="10dp"
+                        android:gravity="bottom"
+                        android:text="文本居下"
                         style="@style/textStyle"
-                        >
-                    文本文本Test3Test3
-                </TextView>
+                        ></TextView>
+                <View style="@style/line_spit"></View>
+                <TextView
+                        android:layout_height="100dp"
+                        android:layout_width="match_parent"
+                        android:padding="10dp"
+                        android:gravity="center_vertical"
+                        android:text="文本垂直居中"
+                        style="@style/textStyle"
+                        ></TextView>
+                <View style="@style/line_spit"></View>
+                <TextView
+                        android:layout_height="100dp"
+                        android:layout_width="match_parent"
+                        android:padding="10dp"
+                        android:gravity="center_horizontal"
+                        android:text="文本水平居中"
+                        style="@style/textStyle"
+                        ></TextView>
+                <View style="@style/line_spit"></View>
+                <TextView
+                        android:layout_height="100dp"
+                        android:layout_width="match_parent"
+                        android:padding="10dp"
+                        android:gravity="right|bottom"
+                        android:text="文本居右居下"
+                        style="@style/textStyle"
+                        ></TextView>
+                <View style="@style/line_spit"></View>
             </LinearLayout>
         </ScrollView>
     </android-TextViewSampleActivity>

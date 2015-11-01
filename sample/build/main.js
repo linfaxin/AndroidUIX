@@ -1,6 +1,7 @@
 ///<reference path="../../dist/android-web-widget.d.ts"/>
 var Activity = android.app.Activity;
 var TextView = android.widget.TextView;
+var View = android.view.View;
 var LinearLayout = android.widget.LinearLayout;
 var Gravity = android.view.Gravity;
 var Log = android.util.Log;

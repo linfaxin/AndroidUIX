@@ -85,7 +85,7 @@ module android.widget {
             this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
             this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
             this.mOverflingDistance = configuration.getScaledOverflingDistance();
-            //this.setVerticalScrollBarEnabled(true);//TODO when scroll bar impl
+            this.setVerticalScrollBarEnabled(true);
             //this.setVerticalFadingEdgeEnabled(true);
         }
 
@@ -468,6 +468,7 @@ module android.widget {
                 const oldY = this.mScrollY;
                 this.mScrollX = scrollX;
                 this.mScrollY = scrollY;
+                //this.invalidateParentCaches();
                 this.invalidateParentIfNeeded();
                 this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
                 if (clampedY || this.mScroller.getCurrVelocity() < this.mMinimumVelocity ) {
@@ -477,8 +478,9 @@ module android.widget {
                 super.scrollTo(scrollX, scrollY);
             }
 
-            if(!this.awakenScrollBars()){
-                //this.postInvalidateOnAnimation();
+            //this.awakenScrollBars();
+            if (!this.awakenScrollBars()) {
+                this.postInvalidateOnAnimation();
             }
         }
 

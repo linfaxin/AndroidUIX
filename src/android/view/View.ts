@@ -4,8 +4,12 @@
 ///<reference path="../util/SparseArray.ts"/>
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../graphics/drawable/Drawable.ts"/>
+///<reference path="../graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../graphics/drawable/ScrollBarDrawable.ts"/>
 ///<reference path="../graphics/PixelFormat.ts"/>
 ///<reference path="../graphics/Matrix.ts"/>
+///<reference path="../graphics/Color.ts"/>
+///<reference path="../graphics/Paint.ts"/>
 ///<reference path="../../java/lang/StringBuilder.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
@@ -20,17 +24,24 @@
 ///<reference path="../os/Handler.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
+///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
 ///<reference path="Gravity.ts"/>
+///<reference path="../view/animation/LinearInterpolator.ts"/>
+///<reference path="../view/animation/AnimationUtils.ts"/>
 
 module android.view {
     import SparseArray = android.util.SparseArray;
     import Drawable = android.graphics.drawable.Drawable;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
+    import ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
     import PixelFormat = android.graphics.PixelFormat;
     import Matrix = android.graphics.Matrix;
+    import Color = android.graphics.Color;
+    import Paint = android.graphics.Paint;
     import StringBuilder = java.lang.StringBuilder;
     import Runnable = java.lang.Runnable;
     //import ViewRootImpl = android.view.ViewRootImpl;
@@ -44,8 +55,11 @@ module android.view {
     import ArrayList = java.util.ArrayList;
     import OnAttachStateChangeListener = View.OnAttachStateChangeListener;
     import Resources = android.content.res.Resources;
+    import ColorStateList = android.content.res.ColorStateList;
     import Pools = android.util.Pools;
     import TypedValue = android.util.TypedValue;
+    import LinearInterpolator = android.view.animation.LinearInterpolator;
+    import AnimationUtils = android.view.animation.AnimationUtils;
 
     export class View implements Drawable.Callback{
         private static DBG = Log.View_DBG;
@@ -119,6 +133,11 @@ module android.view {
         static WILL_NOT_DRAW = 0x00000080;
         static DRAW_MASK = 0x00000080;
 
+        static SCROLLBARS_NONE = 0x00000000;
+        static SCROLLBARS_HORIZONTAL = 0x00000100;
+        static SCROLLBARS_VERTICAL = 0x00000200;
+        static SCROLLBARS_MASK = 0x00000300;
+
         static FOCUSABLES_ALL = 0x00000000;
         static FOCUSABLES_TOUCH_MODE = 0x00000001;
         static FOCUS_BACKWARD = 0x00000001;
@@ -147,6 +166,7 @@ module android.view {
         private mMeasuredHeight = 0;
         private mBackground:Drawable;//TODO Drawable impl
         private mBackgroundSizeChanged=false;
+        private mScrollCache:ScrollabilityCache;
 
         private mPendingCheckForLongPress:CheckForLongPress;
         private mPendingCheckForTap:CheckForTap;
@@ -180,33 +200,8 @@ module android.view {
         mTop = 0;
         mBottom = 0;
 
-        private _mScrollX = 0;
-        private _mScrollY = 0;
-
-        public get mScrollX():number {
-            return this._mScrollX;
-        }
-        public set mScrollX(value:number) {
-            this._mScrollX = value;
-            Array.from(this.bindElement.children).forEach((item:HTMLElement)=>{
-                if(item==this.bindScrollContent) return;
-                if(value!=0) item.style.marginLeft = -value+'px';
-                else item.style.marginLeft = "";
-            });
-            this.bindElement.scrollLeft = value;
-        }
-        public get mScrollY():number {
-            return this._mScrollY;
-        }
-        public set mScrollY(value:number) {
-            this._mScrollY = value;
-            Array.from(this.bindElement.children).forEach((item:HTMLElement)=>{
-                if(item==this.bindScrollContent) return;
-                if(value!=0) item.style.marginTop = -value+'px';
-                else item.style.marginTop = "";
-            });
-            this.bindElement.scrollTop = value;
-        }
+        mScrollX = 0;
+        mScrollY = 0;
 
         mPaddingLeft = 0;
         mPaddingRight = 0;
@@ -215,6 +210,7 @@ module android.view {
 
         constructor(){
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
+            this.initializeScrollbars();
         }
 
         //parse xml attr & callback when xml attr change
@@ -222,7 +218,8 @@ module android.view {
             let view = this;
             mergeHandler.add({
                 set background(value){
-                    //TODO parse & setBackground
+                    let bg = mergeHandler.parseDrawable(value);
+                    if(bg) view.mBackground = bg;
                 },
                 set padding(value){
                     view._setPaddingWithUnit(value, value, value, value);
@@ -559,7 +556,8 @@ module android.view {
 
             //FRACTION unit should layout again
             let unit = TypedValue.COMPLEX_UNIT_FRACTION;
-            if(left.endsWith(unit) || top.endsWith(unit) || right.endsWith(unit) || bottom.endsWith(unit)){
+            if( (typeof left === 'string' && left.endsWith(unit)) || (typeof top === 'string' && top.endsWith(unit))
+                || (typeof right === 'string' && right.endsWith(unit)) || (typeof bottom === 'string' && bottom.endsWith(unit))){
                 view.post({
                     run:()=>{
                         let width = view.getWidth();
@@ -863,7 +861,7 @@ module android.view {
         onVisibilityChanged(changedView:View, visibility:number) {
             if (visibility == View.VISIBLE) {
                 if (this.mAttachInfo != null) {
-                    //this.initialAwakenScrollBars();
+                    this.initialAwakenScrollBars();
                 } else {
                     this.mPrivateFlags |= View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH;
                 }
@@ -1744,14 +1742,17 @@ module android.view {
                 this.mPrivateFlags &= ~View.PFLAG_OPAQUE_BACKGROUND;
             }
 
-            //const flags = this.mViewFlags;//TODO when scroll ok
-            //if (((flags & View.SCROLLBARS_VERTICAL) == 0 && (flags & View.SCROLLBARS_HORIZONTAL) == 0) ||
-            //    (flags & View.SCROLLBARS_STYLE_MASK) == View.SCROLLBARS_INSIDE_OVERLAY ||
-            //    (flags & View.SCROLLBARS_STYLE_MASK) == View.SCROLLBARS_OUTSIDE_OVERLAY) {
-            //    this.mPrivateFlags |= View.PFLAG_OPAQUE_SCROLLBARS;
-            //} else {
-            //    this.mPrivateFlags &= ~View.PFLAG_OPAQUE_SCROLLBARS;
-            //}
+            const flags = this.mViewFlags;
+            if (((flags & View.SCROLLBARS_VERTICAL) == 0 && (flags & View.SCROLLBARS_HORIZONTAL) == 0)
+                ////scroll bar is always inside_overlay
+                //||
+                //(flags & View.SCROLLBARS_STYLE_MASK) == View.SCROLLBARS_INSIDE_OVERLAY ||
+                //(flags & View.SCROLLBARS_STYLE_MASK) == View.SCROLLBARS_OUTSIDE_OVERLAY
+            ) {
+                this.mPrivateFlags |= View.PFLAG_OPAQUE_SCROLLBARS;
+            } else {
+                this.mPrivateFlags &= ~View.PFLAG_OPAQUE_SCROLLBARS;
+            }
         }
         getLayerType() {
             return this.mLayerType;
@@ -1848,9 +1849,10 @@ module android.view {
                 //cache = this.getDrawingCache(true);//TODO when cache impl
             }
 
+            this.computeScroll();
             let sx = this.mScrollX;
             let sy = this.mScrollY;
-            this.computeScroll();
+            this.syncScrollToElement();
 
             let hasNoCache = cache == null;
             let offsetForScroll = cache == null;
@@ -1942,6 +1944,8 @@ module android.view {
             // draw the children
             this.dispatchDraw(canvas);
 
+            //draw decorations (scrollbars)
+            this.onDrawScrollBars(canvas);
 
             if (this.mOverlay != null && !this.mOverlay.isEmpty()) {
                 this.mOverlay.getOverlayView().dispatchDraw(canvas);
@@ -1952,6 +1956,140 @@ module android.view {
         }
         dispatchDraw(canvas:Canvas) {
         }
+        onDrawScrollBars(canvas:Canvas) {
+            // scrollbars are drawn only when the animation is running
+            const cache = this.mScrollCache;
+            if (cache != null) {
+
+                let state = cache.state;
+
+                if (state == ScrollabilityCache.OFF) {
+                    return;
+                }
+
+                let invalidate = false;
+
+                if (state == ScrollabilityCache.FADING) {
+                    // We're fading -- get our fade interpolation
+                    //if (cache.interpolatorValues == null) {
+                    //    cache.interpolatorValues = new Array<number>(1);
+                    //}
+                    //let values = cache.interpolatorValues;
+
+                    // Stops the animation if we're done
+                    //if (cache.scrollBarInterpolator.timeToValues(values) ==
+                    //    Interpolator.Result.FREEZE_END) {
+                    //    cache.state = ScrollabilityCache.OFF;
+                    //} else {
+                    //    cache.scrollBar.setAlpha(Math.round(values[0]));
+                    //}
+
+                    cache._computeAlphaToScrollBar();
+
+                    // This will make the scroll bars inval themselves after
+                    // drawing. We only want this when we're fading so that
+                    // we prevent excessive redraws
+                    invalidate = true;
+                } else {
+                    // We're just on -- but we may have been fading before so
+                    // reset alpha
+                    cache.scrollBar.setAlpha(255);
+                }
+
+
+                const viewFlags = this.mViewFlags;
+
+                const drawHorizontalScrollBar =
+                    (viewFlags & View.SCROLLBARS_HORIZONTAL) == View.SCROLLBARS_HORIZONTAL;
+                const drawVerticalScrollBar =
+                    (viewFlags & View.SCROLLBARS_VERTICAL) == View.SCROLLBARS_VERTICAL
+                    && !this.isVerticalScrollBarHidden();
+
+                if (drawVerticalScrollBar || drawHorizontalScrollBar) {
+                    const width = this.mRight - this.mLeft;
+                    const height = this.mBottom - this.mTop;
+
+                    const scrollBar = cache.scrollBar;
+
+                    const scrollX = this.mScrollX;
+                    const scrollY = this.mScrollY;
+                    const inside = true;//(viewFlags & View.SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
+
+                    let left;
+                    let top;
+                    let right;
+                    let bottom;
+
+                    if (drawHorizontalScrollBar) {
+                        let size = scrollBar.getSize(false);
+                        if (size <= 0) {
+                            size = cache.scrollBarSize;
+                        }
+
+                        scrollBar.setParameters(this.computeHorizontalScrollRange(),
+                            this.computeHorizontalScrollOffset(),
+                            this.computeHorizontalScrollExtent(), false);
+                        const verticalScrollBarGap = drawVerticalScrollBar ?
+                            this.getVerticalScrollbarWidth() : 0;
+                        top = scrollY + height - size;// - (this.mUserPaddingBottom & inside);
+                        left = scrollX + (this.mPaddingLeft);// & inside);
+                        right = scrollX + width - /*(this.mUserPaddingRight & inside)*/ - verticalScrollBarGap;
+                        bottom = top + size;
+                        this.onDrawHorizontalScrollBar(canvas, scrollBar, left, top, right, bottom);
+                        if (invalidate) {
+                            this.invalidate(left, top, right, bottom);
+                        }
+                    }
+
+                    if (drawVerticalScrollBar) {
+                        let size = scrollBar.getSize(true);
+                        if (size <= 0) {
+                            size = cache.scrollBarSize;
+                        }
+
+                        scrollBar.setParameters(this.computeVerticalScrollRange(),
+                            this.computeVerticalScrollOffset(),
+                            this.computeVerticalScrollExtent(), true);
+                        //let verticalScrollbarPosition = this.mVerticalScrollbarPosition;
+                        //if (verticalScrollbarPosition == View.SCROLLBAR_POSITION_DEFAULT) {
+                        //    verticalScrollbarPosition = isLayoutRtl() ?
+                        //        View.SCROLLBAR_POSITION_LEFT : View.SCROLLBAR_POSITION_RIGHT;
+                        //}
+                        //switch (verticalScrollbarPosition) {
+                        //    default:
+                        //    case View.SCROLLBAR_POSITION_RIGHT:
+                        //        left = scrollX + width - size - (this.mUserPaddingRight & inside);
+                        //        break;
+                        //    case View.SCROLLBAR_POSITION_LEFT:
+                        //        left = scrollX + (mUserPaddingLeft & inside);
+                        //        break;
+                        //}
+                        left = scrollX + width - size;// - (this.mUserPaddingRight & inside);
+                        top = scrollY + (this.mPaddingTop);// & inside);
+                        right = left + size;
+                        bottom = scrollY + height;// - (this.mUserPaddingBottom & inside);
+                        this.onDrawVerticalScrollBar(canvas, scrollBar, left, top, right, bottom);
+                        if (invalidate) {
+                            this.invalidate(left, top, right, bottom);
+                        }
+                    }
+                }
+            }
+        }
+        isVerticalScrollBarHidden():boolean {
+            return false;
+        }
+        onDrawHorizontalScrollBar(canvas:Canvas, scrollBar:Drawable, l:number, t:number, r:number, b:number) {
+            scrollBar.setBounds(l, t, r, b);
+            scrollBar.draw(canvas);
+        }
+
+        onDrawVerticalScrollBar(canvas:Canvas, scrollBar:Drawable, l:number, t:number, r:number, b:number) {
+            scrollBar.setBounds(l, t, r, b);
+            scrollBar.draw(canvas);
+        }
+
+
         destroyDrawingCache() {
             //TODO impl draw cache
         }
@@ -2192,14 +2330,50 @@ module android.view {
             this.scrollTo(this.mScrollX + x, this.mScrollY + y);
         }
 
-        awakenScrollBars(startDelay=ViewConfiguration.getScrollDefaultDelay(), invalidate=true):boolean{
-            //FIXME dom's scrollbar not show on some browser. (draw scrollbar on canvas?)
-            if(!this.bindScrollContent.parentNode){
-                this.bindElement.appendChild(this.bindScrollContent);
-                this.bindElement.style.overflow = "scroll";
+        private initialAwakenScrollBars() {
+            return this.mScrollCache != null &&
+                this.awakenScrollBars(this.mScrollCache.scrollBarDefaultDelayBeforeFade * 4, true);
+        }
+        awakenScrollBars(startDelay=this.mScrollCache.scrollBarDefaultDelayBeforeFade, invalidate=true):boolean{
+            const scrollCache = this.mScrollCache;
+
+            if (scrollCache == null || !scrollCache.fadeScrollBars) {
+                return false;
             }
-            this.bindScrollContent.style.height = this.computeVerticalScrollRange() + "px";
-            this.bindScrollContent.style.width = this.computeHorizontalScrollRange() + "px";
+
+            if (scrollCache.scrollBar == null) {
+                scrollCache.scrollBar = new ScrollBarDrawable();
+            }
+
+            if (this.isHorizontalScrollBarEnabled() || this.isVerticalScrollBarEnabled()) {
+
+                if (invalidate) {
+                    // Invalidate to show the scrollbars
+                    this.postInvalidateOnAnimation();
+                }
+
+                if (scrollCache.state == ScrollabilityCache.OFF) {
+                    // FIX-ME: this is copied from WindowManagerService.
+                    // We should get this value from the system when it
+                    // is possible to do so.
+                    const KEY_REPEAT_FIRST_DELAY = 750;
+                    startDelay = Math.max(KEY_REPEAT_FIRST_DELAY, startDelay);
+                }
+
+                // Tell mScrollCache when we should start fading. This may
+                // extend the fade start time if one was already scheduled
+                let fadeStartTime = AnimationUtils.currentAnimationTimeMillis() + startDelay;
+                scrollCache.fadeStartTime = fadeStartTime;
+                scrollCache.state = ScrollabilityCache.ON;
+
+                // Schedule our fader to run, unscheduling any old ones first
+                if (this.mAttachInfo != null) {
+                    this.mAttachInfo.mHandler.removeCallbacks(scrollCache);
+                    this.mAttachInfo.mHandler.postAtTime(scrollCache, fadeStartTime);
+                }
+
+                return true;
+            }
 
             return false;
         }
@@ -2207,21 +2381,132 @@ module android.view {
             return 0;
         }
         setFadingEdgeLength(length:number){
-            //TODO shound impl fade edge?
+            //no need impl fade edge. use overscroll instead
         }
         getHorizontalFadingEdgeLength():number {
+            //no need impl fade edge. use overscroll instead
             return 0;
         }
         getVerticalScrollbarWidth():number {
-            //TODO when scroll bar impl
+            let cache = this.mScrollCache;
+            if (cache != null) {
+                let scrollBar = cache.scrollBar;
+                if (scrollBar != null) {
+                    let size = scrollBar.getSize(true);
+                    if (size <= 0) {
+                        size = cache.scrollBarSize;
+                    }
+                    return size;
+                }
+                return 0;
+            }
             return 0;
         }
         getHorizontalScrollbarHeight():number {
-            //TODO when scroll bar impl
+            let cache = this.mScrollCache;
+            if (cache != null) {
+                let scrollBar = cache.scrollBar;
+                if (scrollBar != null) {
+                    let size = scrollBar.getSize(false);
+                    if (size <= 0) {
+                        size = cache.scrollBarSize;
+                    }
+                    return size;
+                }
+                return 0;
+            }
             return 0;
         }
+        private initializeScrollbars(){
+            this.initScrollCache();
+            const scrollabilityCache = this.mScrollCache;
+            if (scrollabilityCache.scrollBar == null) {
+                scrollabilityCache.scrollBar = new ScrollBarDrawable();
+            }
+            scrollabilityCache.fadeScrollBars = true;
 
+            let track = null;//new ColorDrawable(Color.LTGRAY);//no track
+            scrollabilityCache.scrollBar.setHorizontalTrackDrawable(track);
+            let thumb = new ColorDrawable(Color.parseColor('#aaaaaa'));
+            //change draw size
+            let oldDraw = thumb.draw;
+            let tempRect = new Rect();
+            thumb.draw = function(canvas:Canvas){
+                let bounds = thumb.getBounds();
+                tempRect.set(bounds);
+                bounds.right = bounds.left + bounds.width()/2;
+                oldDraw.call(thumb, canvas);
+                bounds.set(tempRect);
+            };
+            scrollabilityCache.scrollBar.setHorizontalThumbDrawable(thumb);
+            scrollabilityCache.scrollBar.setVerticalTrackDrawable(track);
+            scrollabilityCache.scrollBar.setVerticalThumbDrawable(thumb);
+        }
 
+        private initScrollCache() {
+            if (this.mScrollCache == null) {
+                this.mScrollCache = new ScrollabilityCache(this);
+            }
+        }
+        private getScrollCache():ScrollabilityCache {
+            this.initScrollCache();
+            return this.mScrollCache;
+        }
+
+        isHorizontalScrollBarEnabled():boolean {
+            return (this.mViewFlags & View.SCROLLBARS_HORIZONTAL) == View.SCROLLBARS_HORIZONTAL;
+        }
+        setHorizontalScrollBarEnabled(horizontalScrollBarEnabled:boolean) {
+            if (this.isHorizontalScrollBarEnabled() != horizontalScrollBarEnabled) {
+                this.mViewFlags ^= View.SCROLLBARS_HORIZONTAL;
+                this.computeOpaqueFlags();
+                //this.resolvePadding();
+            }
+        }
+        isVerticalScrollBarEnabled():boolean {
+            return (this.mViewFlags & View.SCROLLBARS_VERTICAL) == View.SCROLLBARS_VERTICAL;
+        }
+        setVerticalScrollBarEnabled(verticalScrollBarEnabled:boolean) {
+            if (this.isVerticalScrollBarEnabled() != verticalScrollBarEnabled) {
+                this.mViewFlags ^= View.SCROLLBARS_VERTICAL;
+                this.computeOpaqueFlags();
+                //this.resolvePadding();
+            }
+        }
+        setScrollbarFadingEnabled(fadeScrollbars:boolean) {
+            this.initScrollCache();
+            const scrollabilityCache = this.mScrollCache;
+            scrollabilityCache.fadeScrollBars = fadeScrollbars;
+            if (fadeScrollbars) {
+                scrollabilityCache.state = ScrollabilityCache.OFF;
+            } else {
+                scrollabilityCache.state = ScrollabilityCache.ON;
+            }
+        }
+        isScrollbarFadingEnabled():boolean {
+            return this.mScrollCache != null && this.mScrollCache.fadeScrollBars;
+        }
+        getScrollBarDefaultDelayBeforeFade():number {
+            return this.mScrollCache == null ? ViewConfiguration.getScrollDefaultDelay() :
+                this.mScrollCache.scrollBarDefaultDelayBeforeFade;
+        }
+        setScrollBarDefaultDelayBeforeFade(scrollBarDefaultDelayBeforeFade:number) {
+            this.getScrollCache().scrollBarDefaultDelayBeforeFade = scrollBarDefaultDelayBeforeFade;
+        }
+        getScrollBarFadeDuration():number {
+            return this.mScrollCache == null ? ViewConfiguration.getScrollBarFadeDuration() :
+                this.mScrollCache.scrollBarFadeDuration;
+        }
+        setScrollBarFadeDuration(scrollBarFadeDuration:number) {
+            this.getScrollCache().scrollBarFadeDuration = scrollBarFadeDuration;
+        }
+        getScrollBarSize():number {
+            return this.mScrollCache == null ? ViewConfiguration.get().getScaledScrollBarSize() :
+                this.mScrollCache.scrollBarSize;
+        }
+        setScrollBarSize(scrollBarSize:number) {
+            this.getScrollCache().scrollBarSize = scrollBarSize;
+        }
 
         /*
          * Caller is responsible for calling requestLayout if necessary.
@@ -2284,10 +2569,10 @@ module android.view {
             //    this.mParent.requestTransparentRegion(this);
             //}
 
-            //if ((this.mPrivateFlags & View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH) != 0) {//TODO when scrollBar ok
-            //    this.initialAwakenScrollBars();
-            //    this.mPrivateFlags &= ~View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH;
-            //}
+            if ((this.mPrivateFlags & View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH) != 0) {
+                this.initialAwakenScrollBars();
+                this.mPrivateFlags &= ~View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH;
+            }
 
             this.mPrivateFlags3 &= ~View.PFLAG3_IS_LAID_OUT;
 
@@ -2397,7 +2682,15 @@ module android.view {
                 } catch (e) {
                 }
             }
-            if(!rootViewClass) return null;
+            if(!rootViewClass){
+                let rootView;//try parse child
+                Array.from(domtree.children).forEach((item)=>{
+                    if(!rootView && item instanceof HTMLElement) {
+                        rootView = View.inflate(item, domtree);
+                    }
+                });
+                return rootView;
+            }
             let rootView:View = new rootViewClass();
             rootView.initBindElement(domtree, rootElement);
 
@@ -2427,14 +2720,9 @@ module android.view {
             if(!this._bindElement) this.initBindElement();
             return this._bindElement;
         }
-        _bindScrollContent: HTMLElement;//use to show scroll bar
-        get bindScrollContent():HTMLElement {
-            if(!this._bindScrollContent) this._bindScrollContent = document.createElement('div');
-            return this._bindScrollContent;
-        }
         _DOMAttrModifiedEvent : EventListener = (event:any)=>{
             if (event.attrChange) {
-                this.onBindElementAttributeChanged(event.attrName, event.prevValue, event.newValue);
+                this.onBindElementAttributeChanged(event.attrName, event.prevValue, event.newValue, this.getViewRootImpl().mContext);
             }
         };
         private initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
@@ -2448,7 +2736,7 @@ module android.view {
             this._parseRefStyle(rootElement);
             this._initAttrChangeHandler();
             this._bindElement.addEventListener("DOMAttrModified", this._DOMAttrModifiedEvent, true);
-            this._fireInitBindElementAttribute();
+            this._fireInitBindElementAttribute(rootElement);
 
         }
         syncBoundToElement(){
@@ -2464,9 +2752,20 @@ module android.view {
             //bind.style.paddingRight = this.mPaddingRight + 'px';
             //bind.style.paddingBottom = this.mPaddingBottom + 'px';
         }
+        syncScrollToElement(){
+            let sx = this.mScrollX;
+            let sy = this.mScrollY;
+
+            Array.from(this.bindElement.children).forEach((item:HTMLElement)=>{
+                if(item.tagName==='scrollbar') return;
+                if(sx!==0) item.style.marginLeft = -sx+'px';
+                else item.style.marginLeft = "";
+                if(sy!==0) item.style.marginTop = -sy+'px';
+                else item.style.marginTop = "";
+            });
+        }
 
         private _attrChangeHandler = new View.AttrChangeHandler();
-
         private _parseRefStyle(rootElement?:HTMLElement){
             let style = this._bindElement.getAttribute('style');
             if(style && style.startsWith('@style/')){
@@ -2489,13 +2788,13 @@ module android.view {
             }
         }
 
-        _fireInitBindElementAttribute():void{
+        _fireInitBindElementAttribute(rootElement?:HTMLElement):void{
             Array.from(this.bindElement.attributes).forEach((attr:Attr)=>{
                 if(attr.name==="android:id" && !this.bindElement.id) this.bindElement.id = attr.value;
-                this.onBindElementAttributeChanged(attr.name, attr.value, attr.value);
+                this.onBindElementAttributeChanged(attr.name, attr.value, attr.value, rootElement);
             });
         }
-        private onBindElementAttributeChanged(attributeName:string, oldVal:string, newVal:string):void {
+        private onBindElementAttributeChanged(attributeName:string, oldVal:string, newVal:string, rootElement?:HTMLElement):void {
             //remove namespace('android:')
             let parts = attributeName.split(":");
             let attrName = parts[parts.length-1].toLowerCase();
@@ -2505,9 +2804,13 @@ module android.view {
             if(attrName.startsWith('layout_')){
                 attrName = attrName.substring('layout_'.length);
                 let params = this.getLayoutParams();
-                if(params) params._attrChangeHandler[attrName] = newVal;
+                if(params){
+                    if(rootElement) params._attrChangeHandler.rootElement = rootElement;
+                    params._attrChangeHandler.handle(attrName, newVal);
+                }
 
             }else{
+                if(rootElement) this._attrChangeHandler.rootElement = rootElement;
                 this._attrChangeHandler.handle(attrName, newVal);
             }
         }
@@ -2623,9 +2926,13 @@ module android.view {
             onTouch(v:View, event:MotionEvent);
         }
 
+        /**
+         * handle html element attribute change and parse the value to view
+         */
         export class AttrChangeHandler{
             isCallSuper = false;
             handlers =  [];
+            rootElement:HTMLElement;
             add(handler){
                 this.handlers.push(handler);
             }
@@ -2643,6 +2950,9 @@ module android.view {
                 else if(value===true || value ==='true' || value === '1' || value === '') return true;
                 return defaultValue;
             }
+            parseBoolean(value, defaultValue = true):boolean{
+                return AttrChangeHandler.parseBoolean(value, defaultValue);
+            }
             static parseGravity(s:string, defaultValue=Gravity.NO_GRAVITY):number {
                 let gravity = Gravity.NO_GRAVITY;
                 try {
@@ -2656,6 +2966,50 @@ module android.view {
                 }
                 if(Number.isNaN(gravity) || gravity===Gravity.NO_GRAVITY) gravity = defaultValue;
                 return gravity;
+            }
+            parseGravity(s:string, defaultValue=Gravity.NO_GRAVITY):number {
+                return AttrChangeHandler.parseGravity(s, defaultValue);
+            }
+            parseDrawable(s:string):Drawable{
+                if(s.startsWith('@')){
+                    //TODO parse ref
+
+                }else{
+                    let color = this.parseColor(s);
+                    return new ColorDrawable(color);
+                }
+            }
+            parseColor(value:string):number{
+                if(value.startsWith('rgb(')){
+                    value = value.replace('rgb(', '').replace(')', '');
+                    let parts = value.split(',');
+                    return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
+
+                }else if(value.startsWith('rgba(')){
+                    value = value.replace('rgba(', '').replace(')', '');
+                    let parts = value.split(',');
+                    return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
+                        Number.parseInt(parts[2]), Number.parseInt(parts[2]));
+
+                }else {
+                    if (value.startsWith('#') && value.length === 4) {//support parse #333
+                        value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
+                    }
+                    try {
+                        return Color.parseColor(value);
+                    } catch (e) {
+                    }
+                }
+            }
+            parseColorList(value:string):ColorStateList{
+                if(value.startsWith('@')){
+                    //TODO parse ref
+
+                }else {
+                    let color = this.parseColor(value);
+                    return ColorStateList.valueOf(color);
+                }
+                return null;
             }
         }
     }
@@ -2734,5 +3088,53 @@ module android.view {
         run() {
             this.View_this.setPressed(false);
         }
+    }
+    class ScrollabilityCache implements Runnable {
+        static OFF = 0;
+        static ON = 1;
+        static FADING = 2;
+
+        fadeScrollBars = true;
+        fadingEdgeLength = ViewConfiguration.get().getScaledFadingEdgeLength();
+        scrollBarDefaultDelayBeforeFade = ViewConfiguration.getScrollDefaultDelay();
+        scrollBarFadeDuration = ViewConfiguration.getScrollBarFadeDuration();
+
+        scrollBarSize = ViewConfiguration.get().getScaledScrollBarSize();
+        scrollBar:ScrollBarDrawable;
+        //interpolatorValues:Array<number>;
+        private interpolator = new LinearInterpolator();
+        host:View;
+        paint:Paint;
+
+        fadeStartTime:number;
+        state = ScrollabilityCache.OFF;
+
+        constructor(host:View){
+            this.host = host;
+        }
+
+        run() {
+            let now = AnimationUtils.currentAnimationTimeMillis();
+            if (now >= this.fadeStartTime) {
+
+                //TODO compute scroll bar optical
+
+                this.state = ScrollabilityCache.FADING;
+                // Kick off the fade animation
+                this.host.invalidate(true);
+            }
+        }
+
+        _computeAlphaToScrollBar(){
+            let now = AnimationUtils.currentAnimationTimeMillis();
+            let factor = (now - this.fadeStartTime) / this.scrollBarFadeDuration;
+            if(factor>=1){
+                this.state = ScrollabilityCache.OFF;
+                factor = 1;
+            }
+            let alpha = 1 - this.interpolator.getInterpolation(factor);
+            this.scrollBar.setAlpha(255 * alpha);
+        }
+
     }
 }

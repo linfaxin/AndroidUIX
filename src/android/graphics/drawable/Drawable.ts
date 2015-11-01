@@ -6,6 +6,7 @@
 ///<reference path="../PixelFormat.ts"/>
 ///<reference path="../../../java/lang/ref/WeakReference.ts"/>
 ///<reference path="../../../java/lang/Runnable.ts"/>
+///<reference path="../../util/StateSet.ts"/>
 
 module android.graphics.drawable {
 
@@ -13,23 +14,19 @@ module android.graphics.drawable {
     import PixelFormat = android.graphics.PixelFormat;
     import WeakReference = java.lang.ref.WeakReference;
     import Runnable = java.lang.Runnable;
+    import StateSet = android.util.StateSet;
 
-    const ZERO_BOUNDS_RECT = new Rect();
-    import Callback = Drawable.Callback;
 
-    interface Abstract {
-        draw(canvas);
-    }
 
 
     export class Drawable {
-        static Callback : Callback;
+        private static ZERO_BOUNDS_RECT = new Rect();
 
-        mBounds:Rect = ZERO_BOUNDS_RECT;
-        mStateSet = [];
+        mBounds:Rect = Drawable.ZERO_BOUNDS_RECT;
+        mStateSet = StateSet.WILD_CARD;
         mLevel = 0;
         mVisible = true;
-        mCallback:WeakReference<Callback>;
+        mCallback:WeakReference<Drawable.Callback>;
 
         constructor() {
         }
@@ -48,7 +45,7 @@ module android.graphics.drawable {
                 let [left=0, top=0, right=0, bottom=0] = args;
                 let oldBounds = this.mBounds;
 
-                if (oldBounds == ZERO_BOUNDS_RECT) {
+                if (oldBounds == Drawable.ZERO_BOUNDS_RECT) {
                     oldBounds = this.mBounds = new Rect();
                 }
 
@@ -70,18 +67,18 @@ module android.graphics.drawable {
         }
 
         getBounds():Rect {
-            if (this.mBounds == ZERO_BOUNDS_RECT) {
+            if (this.mBounds == Drawable.ZERO_BOUNDS_RECT) {
                 this.mBounds = new Rect();
             }
 
             return this.mBounds;
         }
 
-        setCallback(cb:Callback) {
+        setCallback(cb:Drawable.Callback) {
             this.mCallback = new WeakReference(cb);
         }
 
-        getCallback():Callback {
+        getCallback():Drawable.Callback {
             if (this.mCallback != null) {
                 return this.mCallback.get();
             }
@@ -175,7 +172,7 @@ module android.graphics.drawable {
 
         //abstract
         getOpacity():number {
-            return PixelFormat.OPAQUE;
+            return PixelFormat.TRANSLUCENT;
         }
 
         static resolveOpacity(op1:number, op2:number) {
@@ -202,7 +199,7 @@ module android.graphics.drawable {
             return false;
         }
 
-        onBoundsChange(bounds:Rect) {
+        onBoundsChange(bounds:Rect):void {
         }
 
         getIntrinsicWidth():number {
@@ -232,7 +229,7 @@ module android.graphics.drawable {
             return this;
         }
 
-        getConstantState() {
+        getConstantState():Drawable.ConstantState {
             return null;
         }
     }
@@ -244,7 +241,7 @@ module android.graphics.drawable {
             unscheduleDrawable(who: Drawable, what:Runnable):void;
         }
         export interface ConstantState{
-            newDrawable(res);
+            newDrawable():Drawable;
         }
     }
 

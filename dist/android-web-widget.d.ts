@@ -3,7 +3,7 @@ declare module android.util {
         map: Map<number, T>;
         constructor(initialCapacity?: number);
         clone(): SparseArray<T>;
-        get(key: number, valueIfKeyNotFound: T): T;
+        get(key: number, valueIfKeyNotFound?: T): T;
         delete(key: number): void;
         remove(key: number): void;
         removeAt(index: number): void;
@@ -107,7 +107,7 @@ declare module android.graphics {
 }
 declare module java.lang.ref {
     class WeakReference<T> {
-        weakMap: WeakMap<string, T>;
+        weakMap: WeakMap<any, T>;
         constructor(referent: T);
         get(): T;
         set(value: T): void;
@@ -119,26 +119,45 @@ declare module java.lang {
         run(): any;
     }
 }
+declare module java.lang {
+    class System {
+        static out: {
+            println(any?: any): void;
+            print(any: any): void;
+        };
+        static currentTimeMillis(): number;
+        static arraycopy(src: any[], srcPos: number, dest: any[], destPos: number, length: number): void;
+    }
+}
+declare module android.util {
+    class StateSet {
+        static WILD_CARD: Array<number>;
+        static NOTHING: Array<number>;
+        static isWildCard(stateSetOrSpec: Array<number>): boolean;
+        static stateSetMatches(stateSpec: Array<number>, stateSetOrState: Array<number> | number): boolean;
+        private static _stateSetMatches_single(stateSpec, state);
+        static trimStateSet(states: Array<number>, newSize: number): Array<number>;
+    }
+}
 declare module android.graphics.drawable {
     import Rect = android.graphics.Rect;
     import WeakReference = java.lang.ref.WeakReference;
     import Runnable = java.lang.Runnable;
-    import Callback = Drawable.Callback;
     class Drawable {
-        static Callback: Callback;
+        private static ZERO_BOUNDS_RECT;
         mBounds: Rect;
-        mStateSet: any[];
+        mStateSet: number[];
         mLevel: number;
         mVisible: boolean;
-        mCallback: WeakReference<Callback>;
+        mCallback: WeakReference<Drawable.Callback>;
         constructor();
         draw(canvas: any): void;
         setBounds(rect: Rect): any;
         setBounds(left: any, top: any, right: any, bottom: any): any;
         copyBounds(bounds?: Rect): Rect;
         getBounds(): Rect;
-        setCallback(cb: Callback): void;
-        getCallback(): Callback;
+        setCallback(cb: Drawable.Callback): void;
+        getCallback(): Drawable.Callback;
         invalidateSelf(): void;
         scheduleSelf(what: any, when: any): void;
         unscheduleSelf(what: any): void;
@@ -166,7 +185,7 @@ declare module android.graphics.drawable {
         getMinimumHeight(): number;
         getPadding(padding: Rect): boolean;
         mutate(): Drawable;
-        getConstantState(): any;
+        getConstantState(): Drawable.ConstantState;
     }
     module Drawable {
         interface Callback {
@@ -175,8 +194,159 @@ declare module android.graphics.drawable {
             unscheduleDrawable(who: Drawable, what: Runnable): void;
         }
         interface ConstantState {
-            newDrawable(res: any): any;
+            newDrawable(): Drawable;
         }
+    }
+}
+declare module android.util {
+    class Pools {
+        a: Pools.SimplePool<string>;
+    }
+    module Pools {
+        interface Pool<T> {
+            acquire(): T;
+            release(instance: T): boolean;
+        }
+        class SimplePool<T> implements Pools.Pool<T> {
+            mPool: Array<T>;
+            mPoolSize: number;
+            constructor(maxPoolSize: number);
+            acquire(): T;
+            release(instance: T): boolean;
+            private isInPool(instance);
+        }
+        class SynchronizedPool<T> extends SimplePool<T> {
+        }
+    }
+}
+declare module android.graphics {
+    class Color {
+        static BLACK: number;
+        static DKGRAY: number;
+        static GRAY: number;
+        static LTGRAY: number;
+        static WHITE: number;
+        static RED: number;
+        static GREEN: number;
+        static BLUE: number;
+        static YELLOW: number;
+        static CYAN: number;
+        static MAGENTA: number;
+        static TRANSPARENT: number;
+        static alpha(color: number): number;
+        static red(color: number): number;
+        static green(color: number): number;
+        static blue(color: number): number;
+        static rgb(red: number, green: number, blue: number): number;
+        static argb(alpha: number, red: number, green: number, blue: number): number;
+        static rgba(red: number, green: number, blue: number, alpha: number): number;
+        static parseColor(colorString: string): number;
+        static getHtmlColor(color: string): number;
+        static sColorNameMap: Map<String, number>;
+    }
+}
+declare module android.graphics {
+    class Paint {
+        private mColor;
+        private mAlpha;
+        getColor(): number;
+        setColor(color: number): void;
+        getAlpha(): number;
+        setAlpha(alpha: number): void;
+        _setToCanvasContent(context: CanvasRenderingContext2D): void;
+    }
+}
+declare module android.graphics {
+    import Rect = android.graphics.Rect;
+    class Canvas {
+        private static FullRect;
+        private mCanvasElement;
+        private _mCanvasContent;
+        private _saveCount;
+        mCurrentClip: Rect;
+        private shouldDoRectBeforeRestoreMap;
+        private mClipStateMap;
+        private static sPool;
+        constructor(canvasElement: HTMLCanvasElement);
+        constructor(width: number, height: number);
+        private init();
+        canvasElement: HTMLCanvasElement;
+        getHeight(): number;
+        getWidth(): number;
+        translate(dx: number, dy: number): void;
+        scale(sx: number, sy: number, px?: number, py?: number): void;
+        rotate(degrees: number, px?: number, py?: number): void;
+        drawRGB(r: number, g: number, b: number): void;
+        drawARGB(a: number, r: number, g: number, b: number): void;
+        drawColor(color: number): void;
+        clearColor(): void;
+        save(): number;
+        restore(): void;
+        restoreToCount(saveCount: number): void;
+        getSaveCount(): number;
+        private fullRectForClip();
+        clipRect(rect: Rect): boolean;
+        clipRect(left: number, top: number, right: number, bottom: number): boolean;
+        getClipBounds(bounds?: Rect): Rect;
+        quickReject(rect: Rect): boolean;
+        quickReject(left: number, top: number, right: number, bottom: number): boolean;
+        drawCanvas(canvas: Canvas, offsetX: number, offsetY: number, width?: number, height?: number, canvasOffsetX?: number, canvasOffsetY?: number, canvasImageWidth?: number, canvasImageHeight?: number): void;
+        drawRect(rect: Rect, paint: Paint): any;
+        drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
+    }
+}
+declare module android.graphics.drawable {
+    class ColorDrawable extends Drawable {
+        private mState;
+        private mMutated;
+        private mPaint;
+        constructor(color?: number);
+        _setStateCopyFrom(state: any): void;
+        mutate(): Drawable;
+        draw(canvas: Canvas): void;
+        getColor(): number;
+        setColor(color: number): void;
+        getAlpha(): number;
+        setAlpha(alpha: number): void;
+        getOpacity(): number;
+        getConstantState(): Drawable.ConstantState;
+    }
+}
+declare module android.graphics.drawable {
+    import Drawable = android.graphics.drawable.Drawable;
+    import Canvas = android.graphics.Canvas;
+    class ScrollBarDrawable extends Drawable {
+        private mVerticalTrack;
+        private mHorizontalTrack;
+        private mVerticalThumb;
+        private mHorizontalThumb;
+        private mRange;
+        private mOffset;
+        private mExtent;
+        private mVertical;
+        private mChanged;
+        private mRangeChanged;
+        private mTempBounds;
+        private mAlwaysDrawHorizontalTrack;
+        private mAlwaysDrawVerticalTrack;
+        setAlwaysDrawHorizontalTrack(alwaysDrawTrack: boolean): void;
+        setAlwaysDrawVerticalTrack(alwaysDrawTrack: boolean): void;
+        getAlwaysDrawVerticalTrack(): boolean;
+        getAlwaysDrawHorizontalTrack(): boolean;
+        setParameters(range: number, offset: number, extent: number, vertical: boolean): void;
+        draw(canvas: any): void;
+        onBoundsChange(bounds: android.graphics.Rect): void;
+        drawTrack(canvas: Canvas, bounds: Rect, vertical: boolean): void;
+        drawThumb(canvas: Canvas, bounds: Rect, offset: number, length: number, vertical: boolean): void;
+        setVerticalThumbDrawable(thumb: Drawable): void;
+        setVerticalTrackDrawable(track: Drawable): void;
+        setHorizontalThumbDrawable(thumb: Drawable): void;
+        setHorizontalTrackDrawable(track: Drawable): void;
+        getSize(vertical: boolean): number;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getOpacity(): number;
+        toString(): string;
     }
 }
 declare module android.graphics {
@@ -434,27 +604,6 @@ declare module android.view {
         onTouchEvent(event: MotionEvent): boolean;
     }
 }
-declare module android.util {
-    class Pools {
-        a: Pools.SimplePool<string>;
-    }
-    module Pools {
-        interface Pool<T> {
-            acquire(): T;
-            release(instance: T): boolean;
-        }
-        class SimplePool<T> implements Pools.Pool<T> {
-            mPool: Array<T>;
-            mPoolSize: number;
-            constructor(maxPoolSize: number);
-            acquire(): T;
-            release(instance: T): boolean;
-            private isInPool(instance);
-        }
-        class SynchronizedPool<T> extends SimplePool<T> {
-        }
-    }
-}
 declare module android.os {
     class SystemClock {
         static uptimeMillis(): number;
@@ -538,66 +687,20 @@ declare module android.os {
         }
     }
 }
-declare module android.graphics {
-    class Color {
-        static BLACK: number;
-        static DKGRAY: number;
-        static GRAY: number;
-        static LTGRAY: number;
-        static WHITE: number;
-        static RED: number;
-        static GREEN: number;
-        static BLUE: number;
-        static YELLOW: number;
-        static CYAN: number;
-        static MAGENTA: number;
-        static TRANSPARENT: number;
-        static alpha(color: number): number;
-        static red(color: number): number;
-        static green(color: number): number;
-        static blue(color: number): number;
-        static rgb(red: number, green: number, blue: number): number;
-        static argb(alpha: number, red: number, green: number, blue: number): number;
-        static parseColor(colorString: string): number;
-        static getHtmlColor(color: string): number;
-        static sColorNameMap: Map<String, number>;
-    }
-}
-declare module android.graphics {
-    import Rect = android.graphics.Rect;
-    class Canvas {
-        private static FullRect;
-        private mCanvasElement;
-        private _mCanvasContent;
-        private _saveCount;
-        mCurrentClip: Rect;
-        private shouldDoRectBeforeRestoreMap;
-        private mClipStateMap;
-        private static sPool;
-        constructor(canvasElement: HTMLCanvasElement);
-        constructor(width: number, height: number);
-        private init();
-        canvasElement: HTMLCanvasElement;
-        getHeight(): number;
-        getWidth(): number;
-        translate(dx: number, dy: number): void;
-        scale(sx: number, sy: number, px?: number, py?: number): void;
-        rotate(degrees: number, px?: number, py?: number): void;
-        drawRGB(r: number, g: number, b: number): void;
-        drawARGB(a: number, r: number, g: number, b: number): void;
-        drawColor(color: number): void;
-        clearColor(): void;
-        save(): number;
-        restore(): void;
-        restoreToCount(saveCount: number): void;
-        getSaveCount(): number;
-        private fullRectForClip();
-        clipRect(rect: Rect): boolean;
-        clipRect(left: number, top: number, right: number, bottom: number): boolean;
-        getClipBounds(bounds?: Rect): Rect;
-        quickReject(rect: Rect): boolean;
-        quickReject(left: number, top: number, right: number, bottom: number): boolean;
-        drawCanvas(canvas: Canvas, offsetX: number, offsetY: number, width?: number, height?: number, canvasOffsetX?: number, canvasOffsetY?: number, canvasImageWidth?: number, canvasImageHeight?: number): void;
+declare module android.content.res {
+    class ColorStateList {
+        mDefaultColor: number;
+        mColors: Array<number>;
+        mStateSpecs: Array<Array<number>>;
+        private static EMPTY;
+        private static sCache;
+        constructor(states: Array<Array<number>>, colors: Array<number>);
+        static valueOf(color: number): ColorStateList;
+        withAlpha(alpha: number): ColorStateList;
+        isStateful(): boolean;
+        getColorForState(stateSet: Array<number>, defaultColor: number): number;
+        getDefaultColor(): number;
+        toString(): string;
     }
 }
 declare module android.util {
@@ -609,10 +712,16 @@ declare module android.util {
         static COMPLEX_UNIT_PT: string;
         static COMPLEX_UNIT_IN: string;
         static COMPLEX_UNIT_MM: string;
+        static COMPLEX_UNIT_EM: string;
+        static COMPLEX_UNIT_REM: string;
+        static COMPLEX_UNIT_VH: string;
+        static COMPLEX_UNIT_VW: string;
         static COMPLEX_UNIT_FRACTION: string;
         static UNIT_SCALE_PT: any;
         static UNIT_SCALE_IN: any;
         static UNIT_SCALE_MM: any;
+        static UNIT_SCALE_EM: any;
+        static UNIT_SCALE_REM: any;
         static UNIT_SCALE_SP: number;
         private static initUnit();
         static complexToDimensionPixelSize(valueWithUnit: string, baseValue?: number, metrics?: DisplayMetrics): number;
@@ -647,6 +756,21 @@ declare module android.view {
         static apply(gravity: number, w: number, h: number, container: Rect, outRect: Rect): void;
     }
 }
+declare module android.view.animation {
+    interface Interpolator {
+        getInterpolation(input: number): number;
+    }
+}
+declare module android.view.animation {
+    class LinearInterpolator implements Interpolator {
+        getInterpolation(input: number): number;
+    }
+}
+declare module android.view.animation {
+    class AnimationUtils {
+        static currentAnimationTimeMillis(): number;
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
@@ -657,6 +781,7 @@ declare module android.view {
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import ArrayList = java.util.ArrayList;
+    import ColorStateList = android.content.res.ColorStateList;
     class View implements Drawable.Callback {
         private static DBG;
         static VIEW_LOG_TAG: string;
@@ -718,6 +843,10 @@ declare module android.view {
         static ENABLED_MASK: number;
         static WILL_NOT_DRAW: number;
         static DRAW_MASK: number;
+        static SCROLLBARS_NONE: number;
+        static SCROLLBARS_HORIZONTAL: number;
+        static SCROLLBARS_VERTICAL: number;
+        static SCROLLBARS_MASK: number;
         static FOCUSABLES_ALL: number;
         static FOCUSABLES_TOUCH_MODE: number;
         static FOCUS_BACKWARD: number;
@@ -743,6 +872,7 @@ declare module android.view {
         private mMeasuredHeight;
         private mBackground;
         private mBackgroundSizeChanged;
+        private mScrollCache;
         private mPendingCheckForLongPress;
         private mPendingCheckForTap;
         private mPerformClick;
@@ -770,8 +900,6 @@ declare module android.view {
         mRight: number;
         mTop: number;
         mBottom: number;
-        private _mScrollX;
-        private _mScrollY;
         mScrollX: number;
         mScrollY: number;
         mPaddingLeft: number;
@@ -926,6 +1054,10 @@ declare module android.view {
         draw(canvas: Canvas): void;
         onDraw(canvas: Canvas): void;
         dispatchDraw(canvas: Canvas): void;
+        onDrawScrollBars(canvas: Canvas): void;
+        isVerticalScrollBarHidden(): boolean;
+        onDrawHorizontalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
+        onDrawVerticalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
         destroyDrawingCache(): void;
         setWillNotDraw(willNotDraw: boolean): void;
         willNotDraw(): boolean;
@@ -957,12 +1089,28 @@ declare module android.view {
         computeScroll(): void;
         scrollTo(x: number, y: number): void;
         scrollBy(x: number, y: number): void;
+        private initialAwakenScrollBars();
         awakenScrollBars(startDelay?: number, invalidate?: boolean): boolean;
         getVerticalFadingEdgeLength(): number;
         setFadingEdgeLength(length: number): void;
         getHorizontalFadingEdgeLength(): number;
         getVerticalScrollbarWidth(): number;
         getHorizontalScrollbarHeight(): number;
+        private initializeScrollbars();
+        private initScrollCache();
+        private getScrollCache();
+        isHorizontalScrollBarEnabled(): boolean;
+        setHorizontalScrollBarEnabled(horizontalScrollBarEnabled: boolean): void;
+        isVerticalScrollBarEnabled(): boolean;
+        setVerticalScrollBarEnabled(verticalScrollBarEnabled: boolean): void;
+        setScrollbarFadingEnabled(fadeScrollbars: boolean): void;
+        isScrollbarFadingEnabled(): boolean;
+        getScrollBarDefaultDelayBeforeFade(): number;
+        setScrollBarDefaultDelayBeforeFade(scrollBarDefaultDelayBeforeFade: number): void;
+        getScrollBarFadeDuration(): number;
+        setScrollBarFadeDuration(scrollBarFadeDuration: number): void;
+        getScrollBarSize(): number;
+        setScrollBarSize(scrollBarSize: number): void;
         assignParent(parent: ViewParent): void;
         onFinishInflate(): void;
         dispatchAttachedToWindow(info: View.AttachInfo, visibility: number): void;
@@ -974,18 +1122,18 @@ declare module android.view {
         toString(): String;
         getRootView(): View;
         findViewById(id: string): View;
-        static inflate(domtree: HTMLElement): View;
+        static inflate(domtree: HTMLElement, rootElement?: HTMLElement): View;
         _bindElement: HTMLElement;
         bindElement: HTMLElement;
-        _bindScrollContent: HTMLElement;
-        bindScrollContent: HTMLElement;
         _DOMAttrModifiedEvent: EventListener;
-        private initBindElement(bindElement?);
+        private initBindElement(bindElement?, rootElement?);
         syncBoundToElement(): void;
+        syncScrollToElement(): void;
         private _attrChangeHandler;
+        private _parseRefStyle(rootElement?);
         private _initAttrChangeHandler();
-        _fireInitBindElementAttribute(): void;
-        private onBindElementAttributeChanged(attributeName, oldVal, newVal);
+        _fireInitBindElementAttribute(rootElement?: HTMLElement): void;
+        private onBindElementAttributeChanged(attributeName, oldVal, newVal, rootElement?);
         private static _generateLayoutParamsFromAttribute(node, dest?);
         tagName(): string;
     }
@@ -1045,10 +1193,16 @@ declare module android.view {
         class AttrChangeHandler {
             isCallSuper: boolean;
             handlers: any[];
+            rootElement: HTMLElement;
             add(handler: any): void;
             handle(name: any, value: any): void;
             static parseBoolean(value: any, defaultValue?: boolean): boolean;
+            parseBoolean(value: any, defaultValue?: boolean): boolean;
             static parseGravity(s: string, defaultValue?: number): number;
+            parseGravity(s: string, defaultValue?: number): number;
+            parseDrawable(s: string): Drawable;
+            parseColor(value: string): number;
+            parseColorList(value: string): ColorStateList;
         }
     }
     module View.AttachInfo {
@@ -1110,15 +1264,6 @@ declare module android.view {
         constructor(canvasElement: HTMLCanvasElement);
         lockCanvas(dirty: Rect): Canvas;
         unlockCanvasAndPost(canvas: Canvas): void;
-    }
-}
-declare module java.lang {
-    class System {
-        static out: {
-            println(any?: any): void;
-            print(any: any): void;
-        };
-        static currentTimeMillis(): number;
     }
 }
 declare module android.view {
@@ -1486,6 +1631,7 @@ declare module runtime {
         viewRootImpl: ViewRootImpl;
         private rootLayout;
         private rootStyleElement;
+        private rootResourceElement;
         constructor(element: HTMLElement);
         private init();
         private initInflateView();
@@ -1513,11 +1659,6 @@ declare module android.app {
         addContentView(view: View): void;
         findViewById(id: string): View;
         static registerCustomElement(): void;
-    }
-}
-declare module android.view.animation {
-    interface Interpolator {
-        getInterpolation(input: number): number;
     }
 }
 declare module android.widget {
@@ -1757,6 +1898,7 @@ declare module android.widget {
 }
 declare module android.widget {
     import View = android.view.View;
+    import ColorStateList = android.content.res.ColorStateList;
     class TextView extends View {
         private static Default_TextSize;
         private mText;
@@ -1765,6 +1907,7 @@ declare module android.widget {
         private mSingleLine;
         private mTextSize;
         private mTextColor;
+        private mCurTextColor;
         private mHintColor;
         private mSpacingMult;
         private mSpacingAdd;
@@ -1780,6 +1923,11 @@ declare module android.widget {
         onFinishInflate(): void;
         onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         private getDesiredHeight();
+        onDraw(canvas: android.graphics.Canvas): void;
+        setTextColor(color: number | ColorStateList): void;
+        getTextColors(): ColorStateList;
+        getCurrentTextColor(): number;
+        private updateTextColors();
         getCompoundPaddingTop(): number;
         getCompoundPaddingBottom(): number;
         getCompoundPaddingLeft(): number;

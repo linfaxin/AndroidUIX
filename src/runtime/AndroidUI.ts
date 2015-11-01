@@ -142,9 +142,6 @@ module runtime {
             let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
             if (iOS) {
                 this.rootStyleElement.innerHTML += `
-                    android-ScrollView {
-                        overflow : scroll;
-                    }
                     android-ScrollView::-webkit-scrollbar {
                         -webkit-appearance: none;
                         width: 4px;
