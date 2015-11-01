@@ -230,8 +230,8 @@ module android.widget{
             let unpaddedWidth = width - padLeft - padRight;
             //let unpaddedWidth = want;
 
-            this.mTextElement.style.width = unpaddedWidth + "px";
-            this.mTextElement.style.left = padLeft + "px";
+            this.mTextElement.style.width = unpaddedWidth + 2 + "px";//more space, some case may wrap word
+            this.mTextElement.style.left = padLeft + 1 + "px";
 
             if (heightMode == MeasureSpec.EXACTLY) {
                 // Parent has told us how big to be. So be it.
@@ -308,8 +308,8 @@ module android.widget{
             let g = Color.green(this.mCurTextColor);
             let b = Color.blue(this.mCurTextColor);
             let a = Color.alpha(this.mCurTextColor);
-            this.mTextElement.style.color = `rgb(${r}, ${g}, ${b})`;
-            this.mTextElement.style.opacity = a / 255 + '';//color style not support opacity, make whole element opacity
+            this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a/255})`;
+            //this.mTextElement.style.opacity = a / 255 + '';
 
             return super.onDraw(canvas);
         }
