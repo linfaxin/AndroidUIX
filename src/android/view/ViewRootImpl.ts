@@ -43,7 +43,7 @@ module android.view {
 
         private mView:View;
         mContext:HTMLElement;
-        private mViewVisibility:number = 0;
+        private mViewVisibility = View.GONE;
         private mWidth:number = -1;
         private mHeight:number = -1;
         private mDirty = new Rect();
@@ -219,6 +219,7 @@ module android.view {
                 desiredWindowWidth = packageMetrics.widthPixels;//FIXME
                 desiredWindowHeight = packageMetrics.heightPixels;
 
+                attachInfo.mWindowVisibility = viewVisibility;
                 viewVisibilityChanged = false;
                 //mLastConfiguration.setTo(host.getResources().getConfiguration());
                 // Set the layout direction if it has not been set before (inherit is the default)
@@ -242,6 +243,16 @@ module android.view {
                     this.mLayoutRequested = true;
                     windowSizeMayChange = true;
                 }
+            }
+
+            if (viewVisibilityChanged) {
+                attachInfo.mWindowVisibility = viewVisibility;
+                host.dispatchWindowVisibilityChanged(viewVisibility);
+                //if (viewVisibility == View.GONE) {
+                    // After making a window gone, we will count it as being
+                    // shown for the first time the next time it gets focus.
+                    //mHasHadWindowFocus = false;
+                //}
             }
 
             // Execute enqueued actions on every traversal in case a detached view enqueued an action

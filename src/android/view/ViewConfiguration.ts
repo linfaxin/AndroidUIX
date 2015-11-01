@@ -13,7 +13,7 @@ module android.view{
     const sizeAndDensity = density;
 
     export class ViewConfiguration{
-        private static SCROLL_BAR_SIZE = 10;
+        private static SCROLL_BAR_SIZE = 8;
         private static SCROLL_BAR_FADE_DURATION = 250;
         private static SCROLL_BAR_DEFAULT_DELAY = 300;
         private static FADING_EDGE_LENGTH = 12;

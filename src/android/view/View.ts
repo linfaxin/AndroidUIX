@@ -867,6 +867,17 @@ module android.view {
                 }
             }
         }
+        dispatchWindowVisibilityChanged(visibility:number) {
+            this.onWindowVisibilityChanged(visibility);
+        }
+        onWindowVisibilityChanged(visibility:number) {
+            if (visibility == View.VISIBLE) {
+                this.initialAwakenScrollBars();
+            }
+        }
+        getWindowVisibility() {
+            return this.mAttachInfo != null ? this.mAttachInfo.mWindowVisibility : View.GONE;
+        }
 
         isEnabled():boolean {
             return (this.mViewFlags & View.ENABLED_MASK) == View.ENABLED;
@@ -2558,6 +2569,11 @@ module android.view {
                 }
             }
 
+            let vis = info.mWindowVisibility;
+            if (vis != View.GONE) {
+                this.onWindowVisibilityChanged(vis);
+            }
+
             if ((this.mPrivateFlags&View.PFLAG_DRAWABLE_STATE_DIRTY) != 0) {
                 // If nobody has evaluated the drawable state yet, then do it now.
                 this.refreshDrawableState();
@@ -2580,6 +2596,14 @@ module android.view {
         }
 
         dispatchDetachedFromWindow() {
+            let info = this.mAttachInfo;
+            if (info != null) {
+                let vis = info.mWindowVisibility;
+                if (vis != View.GONE) {
+                    this.onWindowVisibilityChanged(View.GONE);
+                }
+            }
+
             this.onDetachedFromWindow();
 
             let li = this.mListenerInfo;
@@ -2653,7 +2677,7 @@ module android.view {
         }
         findViewById(id:string):View{
             let bindEle = this.bindElement.querySelector('#'+id);
-            return bindEle ? bindEle['bindView'] : null;
+            return bindEle ? bindEle[View.AndroidViewProperty] : null;
         }
         static inflate(domtree:HTMLElement, rootElement=domtree):View{
             let className = domtree.tagName;
@@ -2716,6 +2740,7 @@ module android.view {
 
         //bind Element show the layout and extra info
         _bindElement: HTMLElement;
+        static AndroidViewProperty = 'AndroidView';
         get bindElement():HTMLElement{
             if(!this._bindElement) this.initBindElement();
             return this._bindElement;
@@ -2727,11 +2752,11 @@ module android.view {
         };
         private initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
             this._bindElement = bindElement || document.createElement(this.tagName());
-            let oldBindView:View = this._bindElement['bindView'];
+            let oldBindView:View = this._bindElement[View.AndroidViewProperty];
             if(oldBindView){
                 this._bindElement.removeEventListener("DOMAttrModified", oldBindView._DOMAttrModifiedEvent, true);
             }
-            this._bindElement['bindView']=this;
+            this._bindElement[View.AndroidViewProperty]=this;
 
             this._parseRefStyle(rootElement);
             this._initAttrChangeHandler();
@@ -2755,14 +2780,19 @@ module android.view {
         syncScrollToElement(){
             let sx = this.mScrollX;
             let sy = this.mScrollY;
-
-            Array.from(this.bindElement.children).forEach((item:HTMLElement)=>{
-                if(item.tagName==='scrollbar') return;
-                if(sx!==0) item.style.marginLeft = -sx+'px';
-                else item.style.marginLeft = "";
-                if(sy!==0) item.style.marginTop = -sy+'px';
-                else item.style.marginTop = "";
-            });
+            if(this instanceof ViewGroup){
+                let group = <ViewGroup>this;
+                for (let i = 0, count=group.getChildCount(); i < count; i++) {
+                    let child = group.getChildAt(i);
+                    let item = child.bindElement;
+                    if(sx!==0) item.style.marginLeft = -sx+'px';
+                    else item.style.marginLeft = "";
+                    //if(sy!==0) item.style.transform = `translate3d(0px, ${-sy}px, 0px)`;
+                    //else item.style.transform = '';
+                    if(sy!==0) item.style.top =  (child.mTop-sy)+'px';
+                    else item.style.top = child.mTop + "px";
+                }
+            }
         }
 
         private _attrChangeHandler = new View.AttrChangeHandler();
@@ -2891,6 +2921,7 @@ module android.view {
             mInvalidateChildLocation = new Array<number>(2);
             mIgnoreDirtyState = false;
             mSetIgnoreDirtyState = false;
+            mWindowVisibility = 0;
 
             constructor(mViewRootImpl:ViewRootImpl, mHandler:Handler) {
                 this.mViewRootImpl = mViewRootImpl;
