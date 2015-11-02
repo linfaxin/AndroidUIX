@@ -104,6 +104,9 @@ module android.widget{
                         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
                     }
                 },
+                set gravity(value){
+                    linearLayout.setGravity(View.AttrChangeHandler.parseGravity(value, linearLayout.mGravity));
+                },
                 set baselineAligned(value){
                     if(!View.AttrChangeHandler.parseBoolean(value)) linearLayout.setBaselineAligned(false);
                 },
