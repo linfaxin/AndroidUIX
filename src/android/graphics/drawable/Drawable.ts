@@ -120,12 +120,11 @@ module android.graphics.drawable {
         }
 
         setState(stateSet:Array<number>) {
-            stateSet = stateSet || [];
-            if (this.mStateSet && stateSet && this.mStateSet.toString() === stateSet.toString()) {
-                return false;
+            if (this.mStateSet+'' !== stateSet+'') {
+                this.mStateSet = stateSet;
+                return this.onStateChange(stateSet);
             }
-            this.mStateSet = stateSet;
-            return this.onStateChange(stateSet);
+            return false;
         }
 
         getState():Array<number> {

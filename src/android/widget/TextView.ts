@@ -45,6 +45,7 @@ module android.widget{
             this.initTextElement();
             this.setTextSize(TextView.Default_TextSize);
             this.setGravity(Gravity.TOP | Gravity.LEFT);
+            this.setTextColor(new DefaultStyleTextColor());
         }
 
 
@@ -52,6 +53,9 @@ module android.widget{
             super.createAttrChangeHandler(mergeHandler);
             let textView = this;
             mergeHandler.add({
+                set enabled(value){
+                    textView.setEnabled(mergeHandler.parseBoolean(value, true));
+                },
                 set textColorHighlight(value){
                 },
                 set textColor(value:string){
@@ -496,5 +500,13 @@ module android.widget{
             this.requestLayout();
         }
 
+    }
+
+    let _defaultStates = [[-View.VIEW_STATE_ENABLED], []];
+    let _defaultColors = [0xffc0c0c0, 0xff333333];
+    class DefaultStyleTextColor extends ColorStateList{
+        constructor() {
+            super(_defaultStates, _defaultColors);
+        }
     }
 }

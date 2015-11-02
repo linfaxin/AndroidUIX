@@ -31,11 +31,10 @@ module android.widget{
             this.setTextSize(18 * density);
             this.setMinimumHeight(48 * density);
             this.setMinimumWidth(64 * density);
-            this.setBackground(new DefaultButtonBackgroundDrawable())
+            this.setBackground(new DefaultButtonBackgroundDrawable());
             this.setGravity(Gravity.CENTER);
         }
     }
-
 
     //init default button background
     const density = Resources.getDisplayMetrics().density;
@@ -45,11 +44,11 @@ module android.widget{
         }
         private static createStateList():Drawable{
             let stateList = new StateListDrawable();
-            stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(Color.LTGRAY));
+            stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
             stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
             stateList.addState([View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
-            stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(Color.parseColor('#31b6ef')));
-            stateList.addState([], new ColorDrawable(Color.parseColor('#d6d6d6')));
+            stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+            stateList.addState([], new ColorDrawable(Color.LTGRAY));
             return stateList;
         }
 
