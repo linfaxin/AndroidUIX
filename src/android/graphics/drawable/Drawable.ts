@@ -73,6 +73,7 @@ module android.graphics.drawable {
 
             return this.mBounds;
         }
+        setDither(dither:boolean) {}
 
         setCallback(cb:Drawable.Callback) {
             this.mCallback = new WeakReference(cb);

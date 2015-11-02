@@ -5,6 +5,8 @@ module android.util {
     export class Log {
         static View_DBG = false;
         static VelocityTracker_DBG = false;
+        static DBG_DrawableContainer = false;
+        static DBG_StateListDrawable = false;
 
         /**
          * Priority constant for the getLogMsg method; use Log.v.

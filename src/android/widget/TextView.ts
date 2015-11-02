@@ -213,7 +213,7 @@ module android.widget{
                 width = widthSize;
 
             } else {
-                width = this.mTextElement.offsetWidth;
+                width = this.mTextElement.offsetWidth + 4;//more space, or some case may wrap word
 
                 width += padLeft + padRight;
 
@@ -230,8 +230,8 @@ module android.widget{
             let unpaddedWidth = width - padLeft - padRight;
             //let unpaddedWidth = want;
 
-            this.mTextElement.style.width = unpaddedWidth + 2 + "px";//more space, some case may wrap word
-            this.mTextElement.style.left = padLeft + 1 + "px";
+            this.mTextElement.style.width = unpaddedWidth + "px";
+            this.mTextElement.style.left = padLeft + "px";
 
             if (heightMode == MeasureSpec.EXACTLY) {
                 // Parent has told us how big to be. So be it.

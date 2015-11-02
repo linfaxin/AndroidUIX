@@ -106,7 +106,7 @@ module android.util{
 
             }
             let value = Number.parseInt(valueWithUnit);
-            if(Number.isNaN(value)) return 0;
+            if(Number.isNaN(value)) throw Error('complexToDimensionPixelSize error: '+valueWithUnit);
             return value * scale;
         }
     }

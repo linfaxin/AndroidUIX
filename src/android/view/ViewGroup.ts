@@ -1592,8 +1592,13 @@ module android.view {
                 else if(up === 'WRAP_CONTENT') this._width = -2;
                 else{
                     let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                    this._width = TypedValue.complexToDimensionPixelSize(
-                        <any>this._width, parentWidth, this._measuringMeasureSpec);
+                    try {
+                        this._width = TypedValue.complexToDimensionPixelSize(
+                            <any>this._width, parentWidth, this._measuringMeasureSpec);
+                    } catch (e) {
+                        console.error(e);
+                        this._width = -2;
+                    }
                 }
                 return this._width;
             }
@@ -1609,8 +1614,13 @@ module android.view {
                 else if(up === 'WRAP_CONTENT') this._height = -2;
                 else{
                     let parentHeight = View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
-                    this._height = TypedValue.complexToDimensionPixelSize(
-                        <any>this._height, parentHeight, this._measuringMeasureSpec);
+                    try {
+                        this._height = TypedValue.complexToDimensionPixelSize(
+                            <any>this._height, parentHeight, this._measuringMeasureSpec);
+                    } catch (e) {
+                        console.error(e);
+                        this._height = -2;
+                    }
                 }
                 return this._height;
             }

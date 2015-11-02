@@ -6,6 +6,7 @@
 ///<reference path="../graphics/drawable/Drawable.ts"/>
 ///<reference path="../graphics/drawable/ColorDrawable.ts"/>
 ///<reference path="../graphics/drawable/ScrollBarDrawable.ts"/>
+///<reference path="../graphics/drawable/InsetDrawable.ts"/>
 ///<reference path="../graphics/PixelFormat.ts"/>
 ///<reference path="../graphics/Matrix.ts"/>
 ///<reference path="../graphics/Color.ts"/>
@@ -39,6 +40,7 @@ module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
+    import InsetDrawable = android.graphics.drawable.InsetDrawable;
     import PixelFormat = android.graphics.PixelFormat;
     import Matrix = android.graphics.Matrix;
     import Color = android.graphics.Color;
@@ -2158,6 +2160,7 @@ module android.view {
                 }
             }
         }
+
         isVerticalScrollBarHidden():boolean {
             return false;
         }
@@ -2323,6 +2326,101 @@ module android.view {
             if (this.mBackground != null) {
                 this.mBackground.jumpToCurrentState();
             }
+        }
+        setBackgroundColor(color:number) {
+            if (this.mBackground instanceof ColorDrawable) {
+                (<ColorDrawable>this.mBackground.mutate()).setColor(color);
+                this.computeOpaqueFlags();
+                //this.mBackgroundResource = 0;
+            } else {
+                this.setBackground(new ColorDrawable(color));
+            }
+        }
+        setBackground(background:Drawable) {
+            this.setBackgroundDrawable(background);
+        }
+        setBackgroundDrawable(background:Drawable) {
+            this.computeOpaqueFlags();
+
+            if (background == this.mBackground) {
+                return;
+            }
+
+            let requestLayout = false;
+
+            //this.mBackgroundResource = 0;
+
+            /*
+             * Regardless of whether we're setting a new background or not, we want
+             * to clear the previous drawable.
+             */
+            if (this.mBackground != null) {
+                this.mBackground.setCallback(null);
+                this.unscheduleDrawable(this.mBackground);
+            }
+
+            if (background != null) {
+                let padding = new Rect();
+                //this.resetResolvedDrawables();
+                //background.setLayoutDirection(getLayoutDirection());
+                if (background.getPadding(padding)) {
+                    //this.resetResolvedPadding();
+                    this.setPadding(padding.left, padding.top, padding.right, padding.bottom);
+                }
+
+                // Compare the minimum sizes of the old Drawable and the new.  If there isn't an old or
+                // if it has a different minimum size, we should layout again
+                if (this.mBackground == null || this.mBackground.getMinimumHeight() != background.getMinimumHeight() ||
+                    this.mBackground.getMinimumWidth() != background.getMinimumWidth()) {
+                    requestLayout = true;
+                }
+
+                background.setCallback(this);
+                if (background.isStateful()) {
+                    background.setState(this.getDrawableState());
+                }
+                background.setVisible(this.getVisibility() == View.VISIBLE, false);
+                this.mBackground = background;
+
+                if ((this.mPrivateFlags & View.PFLAG_SKIP_DRAW) != 0) {
+                    this.mPrivateFlags &= ~View.PFLAG_SKIP_DRAW;
+                    this.mPrivateFlags |= View.PFLAG_ONLY_DRAWS_BACKGROUND;
+                    requestLayout = true;
+                }
+            } else {
+                /* Remove the background */
+                this.mBackground = null;
+
+                if ((this.mPrivateFlags & View.PFLAG_ONLY_DRAWS_BACKGROUND) != 0) {
+                    /*
+                     * This view ONLY drew the background before and we're removing
+                     * the background, so now it won't draw anything
+                     * (hence we SKIP_DRAW)
+                     */
+                    this.mPrivateFlags &= ~View.PFLAG_ONLY_DRAWS_BACKGROUND;
+                    this.mPrivateFlags |= View.PFLAG_SKIP_DRAW;
+                }
+
+                /*
+                 * When the background is set, we try to apply its padding to this
+                 * View. When the background is removed, we don't touch this View's
+                 * padding. This is noted in the Javadocs. Hence, we don't need to
+                 * requestLayout(), the invalidate() below is sufficient.
+                 */
+
+                // The old background's minimum size could have affected this
+                // View's layout, so let's requestLayout
+                requestLayout = true;
+            }
+
+            this.computeOpaqueFlags();
+
+            if (requestLayout) {
+                this.requestLayout();
+            }
+
+            this.mBackgroundSizeChanged = true;
+            this.invalidate(true);
         }
 
         getAnimation() {
@@ -2573,17 +2671,9 @@ module android.view {
 
             let track = null;//new ColorDrawable(Color.LTGRAY);//no track
             scrollabilityCache.scrollBar.setHorizontalTrackDrawable(track);
-            let thumb = new ColorDrawable(Color.parseColor('#aaaaaa'));
-            //change draw size
-            let oldDraw = thumb.draw;
-            let tempRect = new Rect();
-            thumb.draw = function(canvas:Canvas){
-                let bounds = thumb.getBounds();
-                tempRect.set(bounds);
-                bounds.right = bounds.left + bounds.width()/2;
-                oldDraw.call(thumb, canvas);
-                bounds.set(tempRect);
-            };
+
+            let thumbColor = new ColorDrawable(Color.parseColor('#aaaaaa'));
+            let thumb = new InsetDrawable(thumbColor, 0, 0, ViewConfiguration.get().getScaledScrollBarSize()/2, 0);
             scrollabilityCache.scrollBar.setHorizontalThumbDrawable(thumb);
             scrollabilityCache.scrollBar.setVerticalTrackDrawable(track);
             scrollabilityCache.scrollBar.setVerticalThumbDrawable(thumb);
