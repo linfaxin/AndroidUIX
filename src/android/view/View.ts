@@ -32,6 +32,7 @@
 ///<reference path="Gravity.ts"/>
 ///<reference path="../view/animation/LinearInterpolator.ts"/>
 ///<reference path="../view/animation/AnimationUtils.ts"/>
+///<reference path="../../java/lang/System.ts"/>
 
 module android.view {
     import SparseArray = android.util.SparseArray;
@@ -44,6 +45,7 @@ module android.view {
     import Paint = android.graphics.Paint;
     import StringBuilder = java.lang.StringBuilder;
     import Runnable = java.lang.Runnable;
+    import System = java.lang.System;
     //import ViewRootImpl = android.view.ViewRootImpl;
     import ViewParent = android.view.ViewParent;
     import SystemClock = android.os.SystemClock;
@@ -147,6 +149,58 @@ module android.view {
         static FOCUS_RIGHT = 0x00000042;
         static FOCUS_DOWN = 0x00000082;
 
+
+        static VIEW_STATE_SETS:Array<Array<number>>;
+        static VIEW_STATE_WINDOW_FOCUSED = 1;
+        static VIEW_STATE_SELECTED = 1 << 1;
+        static VIEW_STATE_FOCUSED = 1 << 2;
+        static VIEW_STATE_ENABLED = 1 << 3;
+        static VIEW_STATE_PRESSED = 1 << 4;
+        static VIEW_STATE_ACTIVATED = 1 << 5;
+        static VIEW_STATE_ACCELERATED = 1 << 6;
+        static VIEW_STATE_HOVERED = 1 << 7;
+        static VIEW_STATE_DRAG_CAN_ACCEPT = 1 << 8;
+        static VIEW_STATE_DRAG_HOVERED = 1 << 9;
+        //android default use attr id, there use state value as id
+        static VIEW_STATE_IDS = [
+            View.VIEW_STATE_WINDOW_FOCUSED,    View.VIEW_STATE_WINDOW_FOCUSED,
+            View.VIEW_STATE_SELECTED,          View.VIEW_STATE_SELECTED,
+            View.VIEW_STATE_FOCUSED,           View.VIEW_STATE_FOCUSED,
+            View.VIEW_STATE_ENABLED,           View.VIEW_STATE_ENABLED,
+            View.VIEW_STATE_PRESSED,           View.VIEW_STATE_PRESSED,
+            View.VIEW_STATE_ACTIVATED,         View.VIEW_STATE_ACTIVATED,
+            View.VIEW_STATE_ACCELERATED,       View.VIEW_STATE_ACCELERATED,
+            View.VIEW_STATE_HOVERED,           View.VIEW_STATE_HOVERED,
+            View.VIEW_STATE_DRAG_CAN_ACCEPT,   View.VIEW_STATE_DRAG_CAN_ACCEPT,
+            View.VIEW_STATE_DRAG_HOVERED,      View.VIEW_STATE_DRAG_HOVERED
+        ];
+        private static _static = (()=>{
+            function Integer_bitCount(i):number{
+                // HD, Figure 5-2
+                i = i - ((i >>> 1) & 0x55555555);
+                i = (i & 0x33333333) + ((i >>> 2) & 0x33333333);
+                i = (i + (i >>> 4)) & 0x0f0f0f0f;
+                i = i + (i >>> 8);
+                i = i + (i >>> 16);
+                return i & 0x3f;
+            }
+
+            let orderedIds = View.VIEW_STATE_IDS;
+            const NUM_BITS = View.VIEW_STATE_IDS.length / 2;
+            View.VIEW_STATE_SETS = new Array<Array<number>>(1 << NUM_BITS);
+            for (let i = 0; i < View.VIEW_STATE_SETS.length; i++) {
+                let numBits = Integer_bitCount(i);
+                const stataSet = new Array<number>(numBits);
+                let pos = 0;
+                for (let j = 0; j < orderedIds.length; j += 2) {
+                    if ((i & orderedIds[j+1]) != 0) {
+                        stataSet[pos++] = orderedIds[j];
+                    }
+                }
+                View.VIEW_STATE_SETS[i] = stataSet;
+            }
+        })();
+
         static CLICKABLE = 0x00004000;
         static DRAWING_CACHE_ENABLED = 0x00008000;
         static WILL_NOT_CACHE_DRAWING = 0x000020000;
@@ -164,9 +218,10 @@ module android.view {
         private mOldHeightMeasureSpec = Number.MIN_SAFE_INTEGER;
         private mMeasuredWidth = 0;
         private mMeasuredHeight = 0;
-        private mBackground:Drawable;//TODO Drawable impl
+        private mBackground:Drawable;
         private mBackgroundSizeChanged=false;
         private mScrollCache:ScrollabilityCache;
+        private mDrawableState:Array<number>;
 
         private mPendingCheckForLongPress:CheckForLongPress;
         private mPendingCheckForTap:CheckForTap;
@@ -336,7 +391,10 @@ module android.view {
                     else if(value === 'visible') view.setVisibility(View.VISIBLE);
                 },
                 set scrollbars(value){
-
+                    if(value==='none') {
+                        view.setHorizontalScrollBarEnabled(false);
+                        view.setVerticalScrollBarEnabled(false);
+                    }
                 },
                 set isScrollContainer(value){
                     if(View.AttrChangeHandler.parseBoolean(value, false)){
@@ -1216,7 +1274,20 @@ module android.view {
             this.setFlags(longClickable ? View.LONG_CLICKABLE : 0, View.LONG_CLICKABLE);
         }
         setPressed(pressed:boolean){
-            //TODO refresh drawable & dispath
+            const needsRefresh = pressed != ((this.mPrivateFlags & View.PFLAG_PRESSED) == View.PFLAG_PRESSED);
+
+            if (pressed) {
+                this.mPrivateFlags |= View.PFLAG_PRESSED;
+            } else {
+                this.mPrivateFlags &= ~View.PFLAG_PRESSED;
+            }
+
+            if (needsRefresh) {
+                this.refreshDrawableState();
+            }
+            this.dispatchSetPressed(pressed);
+        }
+        dispatchSetPressed(pressed:boolean):void {
         }
         isPressed():boolean {
             return (this.mPrivateFlags & View.PFLAG_PRESSED) == View.PFLAG_PRESSED;
@@ -1330,7 +1401,7 @@ module android.view {
 
             let changed = this.setFrame(l, t, r, b);
 
-            if(changed) this.syncBoundToElement();//TODO setLeft/Right/.. not sync
+            if(changed) this.syncBoundToElement();
 
             if (changed || (this.mPrivateFlags & View.PFLAG_LAYOUT_REQUIRED) == View.PFLAG_LAYOUT_REQUIRED) {
 
@@ -2118,13 +2189,6 @@ module android.view {
         }
 
 
-        jumpDrawablesToCurrentState() {
-            if (this.mBackground != null) {
-                this.mBackground.jumpToCurrentState();
-            }
-        }
-
-
         invalidateDrawable(drawable:Drawable):void{
             if (this.verifyDrawable(drawable)) {
                 const dirty = drawable.getBounds();
@@ -2179,15 +2243,86 @@ module android.view {
             }
         }
         getDrawableState():Array<number> {
-            return [];
-            //TODO when impl drawable
-            //if ((this.mDrawableState != null) && ((this.mPrivateFlags & View.PFLAG_DRAWABLE_STATE_DIRTY) == 0)) {
-            //    return this.mDrawableState;
-            //} else {
-            //    this.mDrawableState = this.onCreateDrawableState(0);
-            //    this.mPrivateFlags &= ~View.PFLAG_DRAWABLE_STATE_DIRTY;
-            //    return this.mDrawableState;
+            if ((this.mDrawableState != null) && ((this.mPrivateFlags & View.PFLAG_DRAWABLE_STATE_DIRTY) == 0)) {
+                return this.mDrawableState;
+            } else {
+                this.mDrawableState = this.onCreateDrawableState(0);
+                this.mPrivateFlags &= ~View.PFLAG_DRAWABLE_STATE_DIRTY;
+                return this.mDrawableState;
+            }
+        }
+        onCreateDrawableState(extraSpace:number):Array<number> {
+            if ((this.mViewFlags & View.DUPLICATE_PARENT_STATE) == View.DUPLICATE_PARENT_STATE &&
+                this.mParent instanceof View) {
+                return (<View><any>this.mParent).onCreateDrawableState(extraSpace);
+            }
+
+            let drawableState:Array<number>;
+
+            let privateFlags = this.mPrivateFlags;
+
+            let viewStateIndex = 0;
+            if ((privateFlags & View.PFLAG_PRESSED) != 0) viewStateIndex |= View.VIEW_STATE_PRESSED;
+            if ((this.mViewFlags & View.ENABLED_MASK) == View.ENABLED) viewStateIndex |= View.VIEW_STATE_ENABLED;
+            if (this.isFocused()) viewStateIndex |= View.VIEW_STATE_FOCUSED;
+            if ((privateFlags & View.PFLAG_SELECTED) != 0) viewStateIndex |= View.VIEW_STATE_SELECTED;
+            //if (this.hasWindowFocus()) viewStateIndex |= View.VIEW_STATE_WINDOW_FOCUSED;//TODO impl when focus ok
+            if ((privateFlags & View.PFLAG_ACTIVATED) != 0) viewStateIndex |= View.VIEW_STATE_ACTIVATED;
+//        if (mAttachInfo != null && mAttachInfo.mHardwareAccelerationRequested &&
+//                HardwareRenderer.isAvailable()) {
+//            // This is set if HW acceleration is requested, even if the current
+//            // process doesn't allow it.  This is just to allow app preview
+//            // windows to better match their app.
+//            viewStateIndex |= VIEW_STATE_ACCELERATED;
+//        }
+            if ((privateFlags & View.PFLAG_HOVERED) != 0) viewStateIndex |= View.VIEW_STATE_HOVERED;
+
+            const privateFlags2 = this.mPrivateFlags2;
+            //if ((privateFlags2 & View.PFLAG2_DRAG_CAN_ACCEPT) != 0) viewStateIndex |= View.VIEW_STATE_DRAG_CAN_ACCEPT;//no drag state
+            //if ((privateFlags2 & View.PFLAG2_DRAG_HOVERED) != 0) viewStateIndex |= View.VIEW_STATE_DRAG_HOVERED;
+
+            drawableState = View.VIEW_STATE_SETS[viewStateIndex];
+
+            //noinspection ConstantIfStatement
+            //if (false) {
+            //    Log.i("View", "drawableStateIndex=" + viewStateIndex);
+            //    Log.i("View", toString()
+            //        + " pressed=" + ((privateFlags & PFLAG_PRESSED) != 0)
+            //        + " en=" + ((mViewFlags & ENABLED_MASK) == ENABLED)
+            //        + " fo=" + hasFocus()
+            //        + " sl=" + ((privateFlags & PFLAG_SELECTED) != 0)
+            //        + " wf=" + hasWindowFocus()
+            //        + ": " + Arrays.toString(drawableState));
             //}
+
+            if (extraSpace == 0) {
+                return drawableState;
+            }
+
+            let fullState:Array<number>;
+            if (drawableState != null) {
+                fullState = new Array<number>(drawableState.length + extraSpace);
+                System.arraycopy(drawableState, 0, fullState, 0, drawableState.length);
+            } else {
+                fullState = new Array<number>(extraSpace);
+            }
+
+            return fullState;
+        }
+        static mergeDrawableStates(baseState:Array<number>, additionalState:Array<number>) {
+            const N = baseState.length;
+            let i = N - 1;
+            while (i >= 0 && baseState[i] == 0) {
+                i--;
+            }
+            System.arraycopy(additionalState, 0, baseState, i + 1, additionalState.length);
+            return baseState;
+        }
+
+        jumpDrawablesToCurrentState() {
+            if (this.mBackground != null) {
+                this.mBackground.jumpToCurrentState();
+            }
         }
 
         getAnimation() {
@@ -2546,10 +2681,10 @@ module android.view {
             this.mWindowAttachCount++;
             // We will need to evaluate the drawable state at least once.
             this.mPrivateFlags |= View.PFLAG_DRAWABLE_STATE_DIRTY;
-            //if (mFloatingTreeObserver != null) {//TODO when TreeObserver ok
-            //    info.mTreeObserver.merge(mFloatingTreeObserver);
-            //    mFloatingTreeObserver = null;
-            //}
+            if (this.mFloatingTreeObserver != null) {
+                info.mTreeObserver.merge(this.mFloatingTreeObserver);
+                this.mFloatingTreeObserver = null;
+            }
             if ((this.mPrivateFlags&View.PFLAG_SCROLL_CONTAINER) != 0) {
                 this.mAttachInfo.mScrollContainers.add(this);
                 this.mPrivateFlags |= View.PFLAG_SCROLL_CONTAINER_ADDED;

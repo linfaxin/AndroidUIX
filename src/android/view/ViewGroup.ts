@@ -1000,6 +1000,34 @@ module android.view {
                 children[i].dispatchVisibilityChanged(changedView, visibility);
             }
         }
+        dispatchSetSelected(selected:boolean) {
+            const children = this.mChildren;
+            const count = this.mChildrenCount;
+            for (let i = 0; i < count; i++) {
+                children[i].setSelected(selected);
+            }
+        }
+        dispatchSetActivated(activated:boolean) {
+            const children = this.mChildren;
+            const count = this.mChildrenCount;
+            for (let i = 0; i < count; i++) {
+                children[i].setActivated(activated);
+            }
+        }
+        dispatchSetPressed(pressed:boolean):void {
+            const children = this.mChildren;
+            const count = this.mChildrenCount;
+            for (let i = 0; i < count; i++) {
+                const child = children[i];
+                // Children that are clickable on their own should not
+                // show a pressed state when their parent view does.
+                // Clearing a pressed state always propagates.
+                if (!pressed || (!child.isClickable() && !child.isLongClickable())) {
+                    child.setPressed(pressed);
+                }
+            }
+        }
+
         offsetDescendantRectToMyCoords(descendant:View, rect:Rect){
             this.offsetRectBetweenParentAndChild(descendant, rect, true, false);
         }
@@ -1201,6 +1229,77 @@ module android.view {
 
         drawChild(canvas:Canvas, child:View , drawingTime:number):boolean {
             return child.drawFromParent(canvas, this, drawingTime);
+        }
+        drawableStateChanged() {
+            super.drawableStateChanged();
+
+            if ((this.mGroupFlags & ViewGroup.FLAG_NOTIFY_CHILDREN_ON_DRAWABLE_STATE_CHANGE) != 0) {
+                if ((this.mGroupFlags & ViewGroup.FLAG_ADD_STATES_FROM_CHILDREN) != 0) {
+                    throw new Error("addStateFromChildren cannot be enabled if a"
+                        + " child has duplicateParentState set to true");
+                }
+
+                const children = this.mChildren;
+                const count = this.mChildrenCount;
+
+                for (let i = 0; i < count; i++) {
+                    const child = children[i];
+                    if ((child.mViewFlags & View.DUPLICATE_PARENT_STATE) != 0) {
+                        child.refreshDrawableState();
+                    }
+                }
+            }
+        }
+        jumpDrawablesToCurrentState() {
+            super.jumpDrawablesToCurrentState();
+            const children = this.mChildren;
+            const count = this.mChildrenCount;
+            for (let i = 0; i < count; i++) {
+                children[i].jumpDrawablesToCurrentState();
+            }
+        }
+        onCreateDrawableState(extraSpace:number):Array<number> {
+            if ((this.mGroupFlags & ViewGroup.FLAG_ADD_STATES_FROM_CHILDREN) == 0) {
+                return super.onCreateDrawableState(extraSpace);
+            }
+
+            let need = 0;
+            let n = this.getChildCount();
+            for (let i = 0; i < n; i++) {
+                let childState = this.getChildAt(i).getDrawableState();
+
+                if (childState != null) {
+                    need += childState.length;
+                }
+            }
+
+            let state = super.onCreateDrawableState(extraSpace + need);
+
+            for (let i = 0; i < n; i++) {
+                let childState = this.getChildAt(i).getDrawableState();
+
+                if (childState != null) {
+                    state = View.mergeDrawableStates(state, childState);
+                }
+            }
+
+            return state;
+        }
+        setAddStatesFromChildren(addsStates:boolean) {
+            if (addsStates) {
+                this.mGroupFlags |= ViewGroup.FLAG_ADD_STATES_FROM_CHILDREN;
+            } else {
+                this.mGroupFlags &= ~ViewGroup.FLAG_ADD_STATES_FROM_CHILDREN;
+            }
+            this.refreshDrawableState();
+        }
+        addStatesFromChildren():boolean {
+            return (this.mGroupFlags & ViewGroup.FLAG_ADD_STATES_FROM_CHILDREN) != 0;
+        }
+        childDrawableStateChanged(child:android.view.View) {
+            if ((this.mGroupFlags & ViewGroup.FLAG_ADD_STATES_FROM_CHILDREN) != 0) {
+                this.refreshDrawableState();
+            }
         }
 
         getClipChildren():boolean {
@@ -1443,9 +1542,6 @@ module android.view {
         }
 
         focusableViewAvailable(v:android.view.View) {
-        }
-
-        childDrawableStateChanged(child:android.view.View) {
         }
 
         requestDisallowInterceptTouchEvent(disallowIntercept:boolean) {

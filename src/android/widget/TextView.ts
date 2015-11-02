@@ -359,6 +359,15 @@ module android.widget{
                 this.invalidate();
             }
         }
+        drawableStateChanged() {
+            super.drawableStateChanged();
+            if (this.mTextColor != null && this.mTextColor.isStateful()
+                //|| (mHintTextColor != null && mHintTextColor.isStateful())
+                //|| (mLinkTextColor != null && mLinkTextColor.isStateful())
+            ) {
+                this.updateTextColors();
+            }
+        }
 
         getCompoundPaddingTop():number {
             return this.mPaddingTop;

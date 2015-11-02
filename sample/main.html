@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="width: 100%;height: 100%;" xmlns:android="http://schemas.android.com/apk/res/android">
+<html lang="en" style="width: 100%;height: 100%;">
 <head>
     <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -12,6 +12,7 @@
         html {
             height: 100%;
         }
+
         body {
             margin: 0;
             padding: 0;
@@ -22,132 +23,21 @@
 
 </head>
 <body>
-    <android-TextViewSampleActivity style="width: 100%; height:100%;display: none;">
-        <resources>
-            <style id="textStyle"
-                   android:textSize="14dp"
-                   android:textColor="#333"
-                   android:background="#eee"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                    ></style>
-            <style id="line_spit"
-                   android:layout_height="1px"
-                   android:layout_width="match_parent"
-                    ></style>
-        </resources>
-        <ScrollView>
-            <LinearLayout
-                    android:orientation="vertical">
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:text="文本"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:padding="10dp"
-                        android:text="文本Padding10"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:padding="10dp"
-                        android:text="Line1
-                        Line2
-                        Line3
-                        Line4"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:maxLines="2"
-                        android:padding="10dp"
-                        android:text="maxLines=2
-                        maxLines=2
-                        maxLines=2
-                        maxLines=2"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="center"
-                        android:text="文本居中"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:minLines="2"
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="center"
-                        android:text="文本居中minLines=2"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="right"
-                        android:text="文本居右"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:layout_height="100dp"
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="center"
-                        android:text="文本居中"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:layout_height="100dp"
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="bottom"
-                        android:text="文本居下"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:layout_height="100dp"
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="center_vertical"
-                        android:text="文本垂直居中"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:layout_height="100dp"
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="center_horizontal"
-                        android:text="文本水平居中"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-                <TextView
-                        android:layout_height="100dp"
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="right|bottom"
-                        android:text="文本居右居下"
-                        style="@style/textStyle"
-                        ></TextView>
-                <View style="@style/line_spit"></View>
-            </LinearLayout>
-        </ScrollView>
-    </android-TextViewSampleActivity>
+<android-Activity style="width: 100%; height:100%;display: none;">
+    <ScrollView>
+        <LinearLayout
+                android:orientation="vertical"
+                android:gravity="center">
+            <Button>
+            </Button>
+        </LinearLayout>
+    </ScrollView>
+</android-Activity>
 
-    <script src="../node_modules/babel-core/browser-polyfill.min.js"></script>
-    <script src="lib/CustomElements.min.js"></script>
-    <script src="../dist/android-web-widget.es5.js"></script>
-    <script src="build/main.es5.js"></script>
+<script src="../node_modules/babel-core/browser-polyfill.min.js"></script>
+<script src="lib/CustomElements.min.js"></script>
+<script src="../dist/android-web-widget.es5.js"></script>
+<script src="build/main.es5.js"></script>
 
 </body>
 </html>
