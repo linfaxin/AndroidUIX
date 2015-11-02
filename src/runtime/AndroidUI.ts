@@ -137,6 +137,10 @@ module runtime {
                 * {
                     overflow : hidden;
                 }
+                Button {
+                    border: none;
+                    background: none;
+                }
                 `;
 
             let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
