@@ -38,7 +38,7 @@ module runtime {
 
         private init() {
             this.viewRootImpl = new ViewRootImpl();
-            this.viewRootImpl.mContext = this.element;
+            this.viewRootImpl.rootElement = this.element;
             this.rootLayout = new RootLayout();
             this.canvas = document.createElement("canvas");
 

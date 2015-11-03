@@ -412,7 +412,7 @@ module android.view {
                 set onClick(value){
                     view.setOnClickListener({
                         onClick(v:View){
-                            let activity = view.getViewRootImpl().mContext;
+                            let activity = view.getViewRootImpl().rootElement;
                             if(activity && typeof activity[value] === 'function'){
                                 activity[value].call(activity, v);
                             }
@@ -2965,29 +2965,66 @@ module android.view {
 
         //bind Element show the layout and extra info
         _bindElement: HTMLElement;
+        private _AttrObserver:MutationObserver;
         static AndroidViewProperty = 'AndroidView';
         get bindElement():HTMLElement{
             if(!this._bindElement) this.initBindElement();
             return this._bindElement;
         }
-        _DOMAttrModifiedEvent : EventListener = (event:any)=>{
-            if (event.attrChange) {
-                this.onBindElementAttributeChanged(event.attrName, event.prevValue, event.newValue, this.getViewRootImpl().mContext);
-            }
-        };
+        private _AttrObserverCallBack(arr: MutationRecord[], observer: MutationObserver){
+            arr.forEach((record)=>{
+                let target = <Element>record.target;
+                let androidView:View = target[View.AndroidViewProperty];
+                if(!androidView) return;
+                let attrName = record.attributeName;
+                let newAttr = target.getAttribute(attrName);
+                let rootElement = androidView.getViewRootImpl().rootElement;
+                androidView.onBindElementAttributeChanged(attrName, record.oldValue, newAttr, rootElement);
+            });
+        }
+
         private initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
+            if(this._bindElement) this._bindElement[View.AndroidViewProperty] = null;
             this._bindElement = bindElement || document.createElement(this.tagName());
             let oldBindView:View = this._bindElement[View.AndroidViewProperty];
             if(oldBindView){
-                this._bindElement.removeEventListener("DOMAttrModified", oldBindView._DOMAttrModifiedEvent, true);
+                if(oldBindView._AttrObserver) oldBindView._AttrObserver.disconnect();
             }
             this._bindElement[View.AndroidViewProperty]=this;
 
             this._parseRefStyle(rootElement);
             this._initAttrChangeHandler();
-            this._bindElement.addEventListener("DOMAttrModified", this._DOMAttrModifiedEvent, true);
             this._fireInitBindElementAttribute(rootElement);
+            if(!this._AttrObserver) this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
+            this._AttrObserver.disconnect();
+            this._AttrObserver.observe(this._bindElement, {attributes : true, attributeOldValue : true});
 
+
+            //function overrideAttributeApi(prototype) {
+            //    if (prototype.setAttribute._polyfilled) {
+            //        return;
+            //    }
+            //    var setAttribute = prototype.setAttribute;
+            //    prototype.setAttribute = function(name, value) {
+            //        changeAttribute.call(this, name, value, setAttribute);
+            //    };
+            //    var removeAttribute = prototype.removeAttribute;
+            //    prototype.removeAttribute = function(name) {
+            //        changeAttribute.call(this, name, null, removeAttribute);
+            //    };
+            //    prototype.setAttribute._polyfilled = true;
+            //}
+            //function changeAttribute(name, value, operation) {
+            //    name = name.toLowerCase();
+            //    var oldValue = this.getAttribute(name);
+            //    operation.apply(this, arguments);
+            //    var newValue = this.getAttribute(name);
+            //    if (this.attributeChangedCallback && newValue !== oldValue) {
+            //        this.attributeChangedCallback(name, oldValue, newValue);
+            //    }
+            //    console.log('name:'+name+',oldValue:'+oldValue+", newValue:"+newValue)
+            //}
+            //overrideAttributeApi(HTMLElement.prototype);
         }
         syncBoundToElement(){
             let bind = this.bindElement;
@@ -3063,6 +3100,7 @@ module android.view {
                     if(rootElement) params._attrChangeHandler.rootElement = rootElement;
                     params._attrChangeHandler.handle(attrName, newVal);
                 }
+                this.requestLayout();
 
             }else{
                 if(rootElement) this._attrChangeHandler.rootElement = rootElement;
