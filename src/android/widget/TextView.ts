@@ -239,13 +239,15 @@ module android.widget{
 
             this.mTextElement.style.height = "";
             this.mTextElement.style.width = "";
+            this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels + 'px';//measure width no limit
+            this.mTextElement.style.top = "";
 
             if (widthMode == MeasureSpec.EXACTLY) {
                 // Parent has told us how big to be. So be it.
                 width = widthSize;
 
             } else {
-                width = this.mTextElement.offsetWidth + 4;//more space, or some case may wrap word
+                width = this.mTextElement.offsetWidth + 4;//more space (some case may wrap word)
 
                 width += padLeft + padRight;
 
