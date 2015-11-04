@@ -141,26 +141,17 @@ module runtime {
                     border: none;
                     background: none;
                 }
-                `;
+                ScrollView>* {
+                    webkit-transform: translateZ(0);
+                    transform: translateZ(0);
+                }
 
-            let iOS = /iPad|iPhone|iPod/.test(navigator.platform);
-            if (iOS) {
-                this.rootStyleElement.innerHTML += `
-                    android-ScrollView::-webkit-scrollbar {
-                        -webkit-appearance: none;
-                        width: 4px;
-                    }
-                    android-ScrollView::-webkit-scrollbar-thumb {
-                        border-radius: 2px;
-                        background-color: rgba(0,0,0,.3);
-                    }
                 `;
-            }
 
             let density = android.content.res.Resources.getDisplayMetrics().density;
             if(density!=1){
                 this.rootStyleElement.innerHTML += `
-                android-RootLayout {
+                RootLayout {
                     transform:scale(${1/density},${1/density});
                     -webkit-transform:scale(${1/density},${1/density});
                     transform-origin:0 0;
@@ -196,6 +187,8 @@ module runtime {
         findViewById(id:string):View{
             return this.rootLayout.findViewById(id);
         }
+
+
     }
 
     class RootLayout extends FrameLayout{}

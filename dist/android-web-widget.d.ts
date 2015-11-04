@@ -23,6 +23,8 @@ declare module android.util {
     class Log {
         static View_DBG: boolean;
         static VelocityTracker_DBG: boolean;
+        static DBG_DrawableContainer: boolean;
+        static DBG_StateListDrawable: boolean;
         static VERBOSE: number;
         static DEBUG: number;
         static INFO: number;
@@ -156,6 +158,7 @@ declare module android.graphics.drawable {
         setBounds(left: any, top: any, right: any, bottom: any): any;
         copyBounds(bounds?: Rect): Rect;
         getBounds(): Rect;
+        setDither(dither: boolean): void;
         setCallback(cb: Drawable.Callback): void;
         getCallback(): Drawable.Callback;
         invalidateSelf(): void;
@@ -241,6 +244,7 @@ declare module android.graphics {
         static argb(alpha: number, red: number, green: number, blue: number): number;
         static rgba(red: number, green: number, blue: number, alpha: number): number;
         static parseColor(colorString: string): number;
+        static toRGBA(color: number): string;
         static getHtmlColor(color: string): number;
         static sColorNameMap: Map<String, number>;
     }
@@ -349,6 +353,32 @@ declare module android.graphics.drawable {
         toString(): string;
     }
 }
+declare module android.graphics.drawable {
+    import Canvas = android.graphics.Canvas;
+    class InsetDrawable extends Drawable implements Drawable.Callback {
+        private mInsetState;
+        private mTmpRect;
+        private mMutated;
+        constructor(drawable: Drawable, insetLeft: number, insetTop?: number, insetRight?: number, insetBottom?: number);
+        invalidateDrawable(who: android.graphics.drawable.Drawable): void;
+        scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
+        unscheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable): void;
+        draw(canvas: Canvas): void;
+        getPadding(padding: android.graphics.Rect): boolean;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getOpacity(): number;
+        isStateful(): boolean;
+        onStateChange(state: Array<number>): boolean;
+        onBoundsChange(bounds: android.graphics.Rect): void;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getConstantState(): Drawable.ConstantState;
+        mutate(): Drawable;
+        getDrawable(): Drawable;
+    }
+}
 declare module android.graphics {
     class Matrix {
         static IDENTITY_MATRIX: Matrix;
@@ -416,11 +446,27 @@ declare module android.view {
         private mOnScrollChangedListeners;
         private mOnPreDrawListeners;
         private mOnDrawListeners;
+        private mAlive;
+        addOnWindowAttachListener(listener: ViewTreeObserver.OnWindowAttachListener): void;
+        removeOnWindowAttachListener(victim: ViewTreeObserver.OnWindowAttachListener): void;
         dispatchOnWindowAttachedChange(attached: boolean): void;
+        addOnGlobalLayoutListener(listener: ViewTreeObserver.OnGlobalLayoutListener): void;
+        removeGlobalOnLayoutListener(victim: ViewTreeObserver.OnGlobalLayoutListener): void;
+        removeOnGlobalLayoutListener(victim: ViewTreeObserver.OnGlobalLayoutListener): void;
         dispatchOnGlobalLayout(): void;
+        addOnPreDrawListener(listener: ViewTreeObserver.OnPreDrawListener): void;
+        removeOnPreDrawListener(victim: ViewTreeObserver.OnPreDrawListener): void;
         dispatchOnPreDraw(): boolean;
+        addOnScrollChangedListener(listener: ViewTreeObserver.OnScrollChangedListener): void;
+        removeOnScrollChangedListener(victim: ViewTreeObserver.OnScrollChangedListener): void;
         dispatchOnScrollChanged(): void;
+        addOnDrawListener(listener: ViewTreeObserver.OnDrawListener): void;
+        removeOnDrawListener(victim: ViewTreeObserver.OnDrawListener): void;
         dispatchOnDraw(): void;
+        merge(observer: ViewTreeObserver): void;
+        private checkIsAlive();
+        isAlive(): boolean;
+        private kill();
     }
     module ViewTreeObserver {
         interface OnWindowAttachListener {
@@ -771,6 +817,36 @@ declare module android.view.animation {
         static currentAnimationTimeMillis(): number;
     }
 }
+declare module runtime.attr {
+    class StateAttr {
+        private stateSpec;
+        private attributes;
+        constructor(state: number[]);
+        setAttr(name: string, value: string): void;
+        hasAttr(name: string): boolean;
+        getAttrMap(): Map<string, string>;
+        putAll(stateAttr: StateAttr): void;
+        isStateEquals(state: number[]): boolean;
+        isStateMatch(state: number[]): boolean;
+        mergeRemovedFrom(another: StateAttr): Map<string, string>;
+        static parseStateAttrName(stateDesc: any): Set<number>;
+    }
+}
+declare module runtime.attr {
+    class StateAttrList {
+        private list;
+        private list_reverse;
+        private match_list;
+        constructor(ele: Element, rootElement: HTMLElement);
+        private _initStyleAttributes(ele, inParseState, rootElement);
+        private _initStyleAttr(attr, ele, inParseState, rootElement);
+        private static EmptyArray;
+        getDefaultStateAttr(): StateAttr;
+        getStateAttr(state: number[]): StateAttr;
+        private optStateAttr(state);
+        getMatchedAttr(state: number[]): StateAttr;
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
@@ -855,6 +931,16 @@ declare module android.view {
         static FOCUS_UP: number;
         static FOCUS_RIGHT: number;
         static FOCUS_DOWN: number;
+        static VIEW_STATE_SETS: Array<Array<number>>;
+        static VIEW_STATE_WINDOW_FOCUSED: number;
+        static VIEW_STATE_SELECTED: number;
+        static VIEW_STATE_FOCUSED: number;
+        static VIEW_STATE_ENABLED: number;
+        static VIEW_STATE_DISABLE: number;
+        static VIEW_STATE_PRESSED: number;
+        static VIEW_STATE_ACTIVATED: number;
+        static VIEW_STATE_IDS: number[];
+        private static _static;
         static CLICKABLE: number;
         static DRAWING_CACHE_ENABLED: number;
         static WILL_NOT_CACHE_DRAWING: number;
@@ -873,6 +959,7 @@ declare module android.view {
         private mBackground;
         private mBackgroundSizeChanged;
         private mScrollCache;
+        private mDrawableState;
         private mPendingCheckForLongPress;
         private mPendingCheckForTap;
         private mPerformClick;
@@ -960,6 +1047,9 @@ declare module android.view {
         setVisibility(visibility: number): void;
         dispatchVisibilityChanged(changedView: View, visibility: number): void;
         onVisibilityChanged(changedView: View, visibility: number): void;
+        dispatchWindowVisibilityChanged(visibility: number): void;
+        onWindowVisibilityChanged(visibility: number): void;
+        getWindowVisibility(): number;
         isEnabled(): boolean;
         setEnabled(enabled: boolean): void;
         resetPressedState(): void;
@@ -992,6 +1082,7 @@ declare module android.view {
         isLongClickable(): boolean;
         setLongClickable(longClickable: boolean): void;
         setPressed(pressed: boolean): void;
+        dispatchSetPressed(pressed: boolean): void;
         isPressed(): boolean;
         setSelected(selected: boolean): void;
         dispatchSetSelected(selected: boolean): void;
@@ -1063,7 +1154,6 @@ declare module android.view {
         willNotDraw(): boolean;
         setWillNotCacheDrawing(willNotCacheDrawing: boolean): void;
         willNotCacheDrawing(): boolean;
-        jumpDrawablesToCurrentState(): void;
         invalidateDrawable(drawable: Drawable): void;
         scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
         unscheduleDrawable(who: Drawable, what?: Runnable): void;
@@ -1071,6 +1161,12 @@ declare module android.view {
         drawableStateChanged(): void;
         refreshDrawableState(): void;
         getDrawableState(): Array<number>;
+        onCreateDrawableState(extraSpace: number): Array<number>;
+        static mergeDrawableStates(baseState: Array<number>, additionalState: Array<number>): number[];
+        jumpDrawablesToCurrentState(): void;
+        setBackgroundColor(color: number): void;
+        setBackground(background: Drawable): void;
+        setBackgroundDrawable(background: Drawable): void;
         getAnimation(): any;
         computeHorizontalScrollRange(): number;
         computeHorizontalScrollOffset(): number;
@@ -1122,18 +1218,28 @@ declare module android.view {
         toString(): String;
         getRootView(): View;
         findViewById(id: string): View;
-        static inflate(domtree: HTMLElement, rootElement?: HTMLElement): View;
+        static inflate(domtree: HTMLElement, rootElement?: HTMLElement, parentElement?: HTMLElement): View;
+        static optReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
+        static findReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
+        static findReference(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): Element;
         _bindElement: HTMLElement;
+        _rootElement: HTMLElement;
+        private _AttrObserver;
+        private _stateAttrList;
+        static AndroidViewProperty: string;
         bindElement: HTMLElement;
-        _DOMAttrModifiedEvent: EventListener;
+        rootElement: HTMLElement;
+        private _AttrObserverCallBack(arr, observer);
         private initBindElement(bindElement?, rootElement?);
         syncBoundToElement(): void;
         syncScrollToElement(): void;
         private _attrChangeHandler;
-        private _parseRefStyle(rootElement?);
         private _initAttrChangeHandler();
-        _fireInitBindElementAttribute(rootElement?: HTMLElement): void;
-        private onBindElementAttributeChanged(attributeName, oldVal, newVal, rootElement?);
+        private _initAttrObserver();
+        private _initBindElementDefaultAttribute();
+        private _fireInitBindElementAttribute();
+        private _fireStateChangeToAttribute(oldState, newState);
+        private onBindElementAttributeChanged(attributeName, oldVal, newVal);
         private static _generateLayoutParamsFromAttribute(node, dest?);
         tagName(): string;
     }
@@ -1165,6 +1271,7 @@ declare module android.view {
             mInvalidateChildLocation: number[];
             mIgnoreDirtyState: boolean;
             mSetIgnoreDirtyState: boolean;
+            mWindowVisibility: number;
             constructor(mViewRootImpl: ViewRootImpl, mHandler: Handler);
         }
         class ListenerInfo {
@@ -1193,9 +1300,15 @@ declare module android.view {
         class AttrChangeHandler {
             isCallSuper: boolean;
             handlers: any[];
-            rootElement: HTMLElement;
+            view: View;
+            private objectRefs;
+            constructor(view: android.view.View);
             add(handler: any): void;
             handle(name: any, value: any): void;
+            getViewAttrValue(attrName: string): string;
+            private getRefObject(ref, recycel?);
+            private setRefObject(obj);
+            static parsePaddingMarginLTRB(value: any): string[];
             static parseBoolean(value: any, defaultValue?: boolean): boolean;
             parseBoolean(value: any, defaultValue?: boolean): boolean;
             static parseGravity(s: string, defaultValue?: number): number;
@@ -1284,7 +1397,7 @@ declare module android.view {
         static DEBUG_CONFIGURATION: boolean;
         static DEBUG_FPS: boolean;
         private mView;
-        mContext: HTMLElement;
+        rootElement: HTMLElement;
         private mViewVisibility;
         private mWidth;
         private mHeight;
@@ -1475,6 +1588,9 @@ declare module android.view {
         onDetachedFromWindow(): void;
         dispatchDetachedFromWindow(): void;
         dispatchVisibilityChanged(changedView: View, visibility: number): void;
+        dispatchSetSelected(selected: boolean): void;
+        dispatchSetActivated(activated: boolean): void;
+        dispatchSetPressed(pressed: boolean): void;
         offsetDescendantRectToMyCoords(descendant: View, rect: Rect): void;
         offsetRectIntoDescendantCoords(descendant: View, rect: Rect): void;
         offsetRectBetweenParentAndChild(descendant: View, rect: Rect, offsetFromChildToParent: boolean, clipToBounds: boolean): void;
@@ -1485,9 +1601,16 @@ declare module android.view {
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
         dispatchDraw(canvas: Canvas): void;
         drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
+        drawableStateChanged(): void;
+        jumpDrawablesToCurrentState(): void;
+        onCreateDrawableState(extraSpace: number): Array<number>;
+        setAddStatesFromChildren(addsStates: boolean): void;
+        addStatesFromChildren(): boolean;
+        childDrawableStateChanged(child: android.view.View): void;
         getClipChildren(): boolean;
         setClipChildren(clipChildren: boolean): void;
         setClipToPadding(clipToPadding: boolean): void;
+        isClipToPadding(): boolean;
         invalidateChild(child: View, dirty: Rect): void;
         invalidateChildInParent(location: Array<number>, dirty: Rect): ViewParent;
         invalidateChildFast(child: View, dirty: Rect): void;
@@ -1497,7 +1620,6 @@ declare module android.view {
         clearChildFocus(child: android.view.View): void;
         focusSearch(v: android.view.View, direction: number): android.view.View;
         focusableViewAvailable(v: android.view.View): void;
-        childDrawableStateChanged(child: android.view.View): void;
         requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
         requestChildRectangleOnScreen(child: android.view.View, rectangle: android.graphics.Rect, immediate: boolean): boolean;
         childHasTransientStateChanged(child: android.view.View, hasTransientState: boolean): void;
@@ -1510,11 +1632,13 @@ declare module android.view {
             static MATCH_PARENT: number;
             static WRAP_CONTENT: number;
             private _width;
+            private _widthOrig;
             private _height;
+            private _heightOrig;
             width: number;
             height: number;
-            _measuringParentWidthMeasureSpec: any;
-            _measuringParentHeightMeasureSpec: any;
+            _measuringParentWidthMeasureSpec: number;
+            _measuringParentHeightMeasureSpec: number;
             _measuringMeasureSpec: android.util.DisplayMetrics;
             _attrChangeHandler: View.AttrChangeHandler;
             constructor();
@@ -1527,6 +1651,10 @@ declare module android.view {
             private _topMargin;
             private _rightMargin;
             private _bottomMargin;
+            private _leftMarginOrig;
+            private _topMarginOrig;
+            private _rightMarginOrig;
+            private _bottomMarginOrig;
             leftMargin: number;
             topMargin: number;
             rightMargin: number;
@@ -1928,12 +2056,14 @@ declare module android.widget {
         getTextColors(): ColorStateList;
         getCurrentTextColor(): number;
         private updateTextColors();
+        drawableStateChanged(): void;
         getCompoundPaddingTop(): number;
         getCompoundPaddingBottom(): number;
         getCompoundPaddingLeft(): number;
         getCompoundPaddingRight(): number;
         setGravity(gravity: number): void;
         setLineSpacing(add: number, mult: number): void;
+        setTextSizeInPx(sizeInPx: number): void;
         setTextSize(size: number): void;
         getLineHeight(): number;
         setHeight(pixels: number): void;
@@ -1949,6 +2079,131 @@ declare module android.widget {
         setSingleLine(singleLine?: boolean): void;
         setLines(lines: number): void;
         setText(text?: string): void;
+        getText(): string;
         setHtml(html: string): void;
+        getHtml(): string;
+        getTextElement(): HTMLElement;
+    }
+}
+declare module android.graphics.drawable {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    class DrawableContainer extends Drawable implements Drawable.Callback {
+        private static DEBUG;
+        private static TAG;
+        static DEFAULT_DITHER: boolean;
+        private mDrawableContainerState;
+        private mCurrDrawable;
+        private mAlpha;
+        private mCurIndex;
+        mMutated: boolean;
+        private mAnimationRunnable;
+        private mEnterAnimationEnd;
+        private mExitAnimationEnd;
+        private mLastDrawable;
+        draw(canvas: Canvas): void;
+        private needsMirroring();
+        getPadding(padding: android.graphics.Rect): boolean;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        setDither(dither: boolean): void;
+        setEnterFadeDuration(ms: number): void;
+        setExitFadeDuration(ms: number): void;
+        onBoundsChange(bounds: android.graphics.Rect): void;
+        isStateful(): boolean;
+        setAutoMirrored(mirrored: boolean): void;
+        isAutoMirrored(): boolean;
+        jumpToCurrentState(): void;
+        onStateChange(state: Array<number>): boolean;
+        onLevelChange(level: number): boolean;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getMinimumWidth(): number;
+        getMinimumHeight(): number;
+        invalidateDrawable(who: android.graphics.drawable.Drawable): void;
+        scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
+        unscheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable): void;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        getOpacity(): number;
+        selectDrawable(idx: number): boolean;
+        animate(schedule: boolean): void;
+        getCurrent(): Drawable;
+        getConstantState(): Drawable.ConstantState;
+        mutate(): Drawable;
+        setConstantState(state: DrawableContainer.DrawableContainerState): void;
+    }
+    module DrawableContainer {
+        class DrawableContainerState implements Drawable.ConstantState {
+            mOwner: DrawableContainer;
+            private mDrawableFutures;
+            mDrawables: Array<Drawable>;
+            mNumChildren: number;
+            mVariablePadding: boolean;
+            mPaddingChecked: boolean;
+            mConstantPadding: Rect;
+            mConstantSize: boolean;
+            mComputedConstantSize: boolean;
+            mConstantWidth: number;
+            mConstantHeight: number;
+            mConstantMinimumWidth: number;
+            mConstantMinimumHeight: number;
+            mCheckedOpacity: boolean;
+            mOpacity: number;
+            mCheckedStateful: boolean;
+            mStateful: boolean;
+            mCheckedConstantState: boolean;
+            mCanConstantState: boolean;
+            mDither: boolean;
+            mMutated: boolean;
+            mEnterFadeDuration: number;
+            mExitFadeDuration: number;
+            mAutoMirrored: boolean;
+            constructor(orig: DrawableContainerState, owner: DrawableContainer);
+            addChild(dr: Drawable): number;
+            getCapacity(): number;
+            private createAllFutures();
+            getChildCount(): number;
+            getChildren(): Array<Drawable>;
+            getChild(index: number): Drawable;
+            mutate(): void;
+            setVariablePadding(variable: boolean): void;
+            getConstantPadding(): Rect;
+            setConstantSize(constant: boolean): void;
+            isConstantSize(): boolean;
+            getConstantWidth(): number;
+            getConstantHeight(): number;
+            getConstantMinimumWidth(): number;
+            getConstantMinimumHeight(): number;
+            computeConstantSize(): void;
+            setEnterFadeDuration(duration: number): void;
+            getEnterFadeDuration(): number;
+            setExitFadeDuration(duration: number): void;
+            getExitFadeDuration(): number;
+            getOpacity(): number;
+            isStateful(): boolean;
+            canConstantState(): boolean;
+            newDrawable(): android.graphics.drawable.Drawable;
+        }
+    }
+}
+declare module android.graphics.drawable {
+    class StateListDrawable extends DrawableContainer {
+        private mStateListState;
+        constructor();
+        private initWithState(state);
+        addState(stateSet: Array<number>, drawable: Drawable): void;
+        isStateful(): boolean;
+        onStateChange(stateSet: Array<number>): boolean;
+        getStateCount(): number;
+        getStateSet(index: number): Array<number>;
+        getStateDrawable(index: number): Drawable;
+        getStateDrawableIndex(stateSet: Array<number>): number;
+        mutate(): Drawable;
+    }
+}
+declare module android.widget {
+    class Button extends TextView {
+        constructor();
+        private _initDefaultStyle();
     }
 }

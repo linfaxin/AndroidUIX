@@ -104,8 +104,18 @@ module android.widget{
                         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
                     }
                 },
+                get orientation():any{
+                    if(linearLayout.mOrientation === LinearLayout.VERTICAL){
+                        return 'VERTICAL'
+                    }else {
+                        return 'HORIZONTAL';
+                    }
+                },
                 set gravity(value){
                     linearLayout.setGravity(View.AttrChangeHandler.parseGravity(value, linearLayout.mGravity));
+                },
+                get gravity():any{
+                    return linearLayout.mGravity;
                 },
                 set baselineAligned(value){
                     if(!View.AttrChangeHandler.parseBoolean(value)) linearLayout.setBaselineAligned(false);
@@ -115,6 +125,9 @@ module android.widget{
                     if(Number.isSafeInteger(weightSum)){
                         linearLayout.mWeightSum = weightSum;
                     }
+                },
+                get weightSum():any{
+                    return linearLayout.mWeightSum;
                 },
                 set baselineAlignedChildIndex(value){
                     value = Number.parseInt(value);
@@ -139,6 +152,9 @@ module android.widget{
                     if(Number.isInteger(value)){
                         linearLayout.mDividerPadding = value;
                     }
+                },
+                get dividerPadding():any{
+                    return linearLayout.mDividerPadding;
                 }
             });
         }
@@ -1449,9 +1465,15 @@ module android.widget{
                     set gravity(value) {
                         params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
                     },
+                    get gravity():any{
+                        return params.gravity;
+                    },
                     set weight(value) {
                         value = Number.parseInt(value);
                         if(Number.isInteger(value)) params.weight = value;
+                    },
+                    get weight():any{
+                        return params.weight;
                     }
                 });
             }

@@ -110,6 +110,18 @@ module android.graphics{
             throw new Error("Unknown color");
         }
 
+        static toRGBA(color:number):string {
+            let r = Color.red(color);
+            let g = Color.green(color);
+            let b = Color.blue(color);
+            let a = Color.alpha(color);
+            let hR = r<16 ? '0'+r.toString(16) : r.toString(16);
+            let hG = g<16 ? '0'+g.toString(16) : g.toString(16);
+            let hB = b<16 ? '0'+b.toString(16) : b.toString(16);
+            let hA = a<16 ? '0'+a.toString(16) : a.toString(16);
+            return "#"+hA+hR+hG+hB;
+        }
+
 
         /**
          * Converts an HTML color (named or numeric) to an integer RGB value.

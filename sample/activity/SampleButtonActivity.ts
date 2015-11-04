@@ -31,6 +31,7 @@ module sample.activity {
                     return true;
                 }
             });
+
         }
     }
     SampleButtonActivity.registerCustomElement();

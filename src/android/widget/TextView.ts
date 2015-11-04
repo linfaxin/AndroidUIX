@@ -56,41 +56,35 @@ module android.widget{
                 set enabled(value){
                     textView.setEnabled(mergeHandler.parseBoolean(value, true));
                 },
+                get enabled():any{
+                    return textView.isEnabled();
+                },
                 set textColorHighlight(value){
                 },
-                set textColor(value:string){
-                    if(value.startsWith('@')){
-                        //TODO parse ref
-
-                    }else if(value.startsWith('rgb(')){
-                        value = value.replace('rgb(', '').replace(')', '');
-                        let parts = value.split(',');
-                        textView.setTextColor(
-                            Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2])));
-
-                    }else if(value.startsWith('rgba(')){
-                        value = value.replace('rgba(', '').replace(')', '');
-                        let parts = value.split(',');
-                        textView.setTextColor(Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
-                            Number.parseInt(parts[2]), Number.parseInt(parts[2])));
-
-                    }else {
-                        if (value.startsWith('#') && value.length === 4) {//support parse #333
-                            value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
-                        }
-
-                        try {
-                            textView.setTextColor(Color.parseColor(value));
-                        } catch (e) {
-                        }
+                set textColor(value){
+                    let colorList = mergeHandler.parseColorList(value);
+                    if(colorList instanceof ColorStateList){
+                        textView.setTextColor(colorList);
+                        return;
                     }
+                    let color = mergeHandler.parseColor(value);
+                    if(Number.isInteger(color)) textView.setTextColor(color);
+                },
+                get textColor():any{
+                    if(textView.mTextColor.isStateful()) return textView.mTextColor;
+                    return textView.mTextColor.getDefaultColor();
                 },
                 set textColorHint(value){
 
                 },
                 set textSize(value){
-                    value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
-                    textView.setTextSize(value);
+                    if(value !== undefined && value !== null){
+                        value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
+                        textView.setTextSize(value);
+                    }
+                },
+                get textSize(){
+                    return textView.mTextSize;
                 },
                 set textStyle(value){
 
@@ -118,21 +112,38 @@ module android.widget{
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setMaxLines(value);
                 },
+                get maxLines():any{
+                    return textView.mMaxLineCount;
+                },
                 set maxHeight(value){
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setMaxHeight(value);
+                },
+                get maxHeight():any{
+                    return textView.mMaxHeight;
                 },
                 set lines(value){
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setLines(value);
                 },
+                get lines():any{
+                    if(textView.mMaxLineCount === textView.mMinLineCount) return textView.mMaxLineCount;
+                    return null;
+                },
                 set height(value){
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setHeight(value);
                 },
+                get height():any{
+                    if(textView.mMaxHeight === textView.getMinimumHeight()) return textView.mMaxHeight;
+                    return null;
+                },
                 set minLines(value){
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setMinLines(value);
+                },
+                get minLines():any{
+                    return textView.mMinLineCount;
                 },
                 set minHeight(value){
                     value = Number.parseInt(value);
@@ -142,22 +153,35 @@ module android.widget{
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setMaxWidth(value);
                 },
+                get maxWidth():any{
+                    return textView.mMaxWidth;
+                },
                 set width(value){
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setWidth(value);
                 },
-                set minWidth(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setMinimumWidth(value);
+                get width():any{
+                    if(textView.mMinWidth === textView.mMaxWidth) return textView.mMinWidth;
+                    return null;
                 },
                 set gravity(value){
                     textView.setGravity(View.AttrChangeHandler.parseGravity(value, textView.mGravity));
                 },
+                get gravity():any{
+                    return textView.mGravity;
+                },
                 set text(value){
                     textView.setText(value);
                 },
+                get text():any{
+                    return textView.getText();
+                },
                 set singleLine(value){
                     if(View.AttrChangeHandler.parseBoolean(value, false)) textView.setSingleLine();
+                },
+                get singleLine(){
+                    if(textView.mMinLineCount===1 && textView.mMaxLineCount===1) return true;
+                    return false;
                 },
                 set textScaleX(value){
                 },
@@ -165,12 +189,16 @@ module android.widget{
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setLineSpacing(value, textView.mSpacingMult);
                 },
+                get lineSpacingExtra():any{
+                    return textView.mSpacingAdd;
+                },
                 set lineSpacingMultiplier(value){
                     value = Number.parseInt(value);
                     if(Number.isInteger(value)) textView.setLineSpacing(textView.mSpacingAdd, value);
                 },
-
-
+                get lineSpacingMultiplier():any{
+                    return textView.mSpacingMult;
+                },
             })
         }
 
@@ -418,11 +446,18 @@ module android.widget{
             }
         }
 
+        setTextSizeInPx(sizeInPx:number){
+            if(this.mTextSize!==sizeInPx) {
+                this.mTextSize = sizeInPx;
+                this.mTextElement.style.fontSize = sizeInPx + "px";
+                this.mTextElement.style.lineHeight = this.getLineHeight() + "px";
+                this.requestLayout();
+            }
+        }
+
         setTextSize(size:number){
             let sizeInPx = size * Resources.getDisplayMetrics().density;
-            this.mTextSize = sizeInPx;
-            this.mTextElement.style.fontSize = sizeInPx + "px";
-            this.mTextElement.style.lineHeight = this.getLineHeight() + "px";
+            this.setTextSizeInPx(sizeInPx);
         }
 
         getLineHeight():number{
@@ -495,9 +530,21 @@ module android.widget{
             this.requestLayout();
         }
 
+        getText():string{
+            return this.mTextElement.innerText;
+        }
+
         setHtml(html:string){
             this.mTextElement.innerHTML = html;
             this.requestLayout();
+        }
+
+        getHtml():string{
+            return this.mTextElement.innerHTML;
+        }
+
+        getTextElement():HTMLElement{
+            return this.mTextElement;
         }
 
     }

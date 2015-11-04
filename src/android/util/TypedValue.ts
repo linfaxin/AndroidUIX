@@ -50,7 +50,9 @@ module android.util{
 
         static complexToDimensionPixelSize(valueWithUnit:string, baseValue = 0, metrics = Resources.getDisplayMetrics()):number {
             if(this.initUnit) this.initUnit();
-            if(valueWithUnit===undefined || valueWithUnit===null) return 0;
+            if(valueWithUnit===undefined || valueWithUnit===null){
+                throw Error('complexToDimensionPixelSize error: valueWithUnit is '+valueWithUnit);
+            }
             if(valueWithUnit === ''+(Number.parseInt(valueWithUnit))) return Number.parseInt(valueWithUnit);
 
             if(typeof valueWithUnit !== 'string') valueWithUnit = valueWithUnit+"";

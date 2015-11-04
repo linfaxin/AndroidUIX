@@ -28,7 +28,7 @@ module android.widget{
         private _initDefaultStyle(){
             let density = Resources.getDisplayMetrics().density;
             this.setClickable(true);
-            this.setTextSize(18 * density);
+            this.setTextSize(18);
             this.setMinimumHeight(48 * density);
             this.setMinimumWidth(64 * density);
             this.setBackground(new DefaultButtonBackgroundDrawable());
@@ -44,10 +44,10 @@ module android.widget{
         }
         private static createStateList():Drawable{
             let stateList = new StateListDrawable();
-            stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
             stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
             stateList.addState([View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
             stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+            stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
             stateList.addState([], new ColorDrawable(Color.LTGRAY));
             return stateList;
         }

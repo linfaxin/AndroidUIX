@@ -41,6 +41,9 @@ module android.widget {
                 set foregroundGravity(value){
                     frameLayout.mForegroundGravity = View.AttrChangeHandler.parseGravity(value, frameLayout.mForegroundGravity);
                 },
+                get foregroundGravity():any{
+                    return frameLayout.mForegroundGravity;
+                }
             });
         }
 
@@ -397,6 +400,9 @@ module android.widget {
                 mergeHandler.add({
                     set gravity(value) {
                         params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
+                    },
+                    get gravity():any{
+                        return params.gravity;
                     }
                 });
             }

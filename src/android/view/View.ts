@@ -34,6 +34,8 @@
 ///<reference path="../view/animation/LinearInterpolator.ts"/>
 ///<reference path="../view/animation/AnimationUtils.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../runtime/attr/StateAttrList.ts"/>
+///<reference path="../../runtime/attr/StateAttr.ts"/>
 
 module android.view {
     import SparseArray = android.util.SparseArray;
@@ -64,6 +66,8 @@ module android.view {
     import TypedValue = android.util.TypedValue;
     import LinearInterpolator = android.view.animation.LinearInterpolator;
     import AnimationUtils = android.view.animation.AnimationUtils;
+    import StateAttrList = runtime.attr.StateAttrList;
+    import StateAttr = runtime.attr.StateAttr;
 
     export class View implements Drawable.Callback{
         private static DBG = Log.View_DBG;
@@ -157,12 +161,13 @@ module android.view {
         static VIEW_STATE_SELECTED = 1 << 1;
         static VIEW_STATE_FOCUSED = 1 << 2;
         static VIEW_STATE_ENABLED = 1 << 3;
+        static VIEW_STATE_DISABLE = -View.VIEW_STATE_ENABLED;//can defined state style as state_disable
         static VIEW_STATE_PRESSED = 1 << 4;
         static VIEW_STATE_ACTIVATED = 1 << 5;
-        static VIEW_STATE_ACCELERATED = 1 << 6;
-        static VIEW_STATE_HOVERED = 1 << 7;
-        static VIEW_STATE_DRAG_CAN_ACCEPT = 1 << 8;
-        static VIEW_STATE_DRAG_HOVERED = 1 << 9;
+        //static VIEW_STATE_ACCELERATED = 1 << 6;
+        //static VIEW_STATE_HOVERED = 1 << 7;
+        //static VIEW_STATE_DRAG_CAN_ACCEPT = 1 << 8;
+        //static VIEW_STATE_DRAG_HOVERED = 1 << 9;
         //android default use attr id, there use state value as id
         static VIEW_STATE_IDS = [
             View.VIEW_STATE_WINDOW_FOCUSED,    View.VIEW_STATE_WINDOW_FOCUSED,
@@ -171,10 +176,10 @@ module android.view {
             View.VIEW_STATE_ENABLED,           View.VIEW_STATE_ENABLED,
             View.VIEW_STATE_PRESSED,           View.VIEW_STATE_PRESSED,
             View.VIEW_STATE_ACTIVATED,         View.VIEW_STATE_ACTIVATED,
-            View.VIEW_STATE_ACCELERATED,       View.VIEW_STATE_ACCELERATED,
-            View.VIEW_STATE_HOVERED,           View.VIEW_STATE_HOVERED,
-            View.VIEW_STATE_DRAG_CAN_ACCEPT,   View.VIEW_STATE_DRAG_CAN_ACCEPT,
-            View.VIEW_STATE_DRAG_HOVERED,      View.VIEW_STATE_DRAG_HOVERED
+            //View.VIEW_STATE_ACCELERATED,       View.VIEW_STATE_ACCELERATED,
+            //View.VIEW_STATE_HOVERED,           View.VIEW_STATE_HOVERED,
+            //View.VIEW_STATE_DRAG_CAN_ACCEPT,   View.VIEW_STATE_DRAG_CAN_ACCEPT,
+            //View.VIEW_STATE_DRAG_HOVERED,      View.VIEW_STATE_DRAG_HOVERED
         ];
         private static _static = (()=>{
             function Integer_bitCount(i):number{
@@ -276,22 +281,44 @@ module android.view {
             mergeHandler.add({
                 set background(value){
                     let bg = mergeHandler.parseDrawable(value);
-                    if(bg) view.mBackground = bg;
+                    view.setBackground(bg);
+                },
+                get background():any{
+                    if(view.mBackground instanceof ColorDrawable){
+                        return Color.toRGBA((<ColorDrawable>view.mBackground).getColor());
+                    }
+                    return view.mBackground;
                 },
                 set padding(value){
-                    view._setPaddingWithUnit(value, value, value, value);
+                    let [left, top, right, bottom] = View.AttrChangeHandler.parsePaddingMarginLTRB(value);
+                    view._setPaddingWithUnit(left, top, right, bottom);
+                },
+                get padding(){
+                    return view.mPaddingTop + ' ' + view.mPaddingRight + ' ' + view.mPaddingBottom + ' ' + view.mPaddingLeft;
                 },
                 set paddingLeft(value){
                     view._setPaddingWithUnit(value, view.mPaddingTop, view.mPaddingRight, view.mPaddingBottom);
                 },
+                get paddingLeft(){
+                    return view.mPaddingLeft;
+                },
                 set paddingTop(value){
                     view._setPaddingWithUnit(view.mPaddingLeft, value, view.mPaddingRight, view.mPaddingBottom);
+                },
+                get paddingTop(){
+                    return view.mPaddingTop;
                 },
                 set paddingRight(value){
                     view._setPaddingWithUnit(view.mPaddingLeft, view.mPaddingTop, value, view.mPaddingBottom);
                 },
+                get paddingRight(){
+                    return view.mPaddingRight;
+                },
                 set paddingBottom(value){
                     view._setPaddingWithUnit(view.mPaddingLeft, view.mPaddingTop, view.mPaddingRight, value);
+                },
+                get paddingBottom(){
+                    return view.mPaddingBottom;
                 },
                 set scrollX(value){
                     value = Number.parseInt(value);
@@ -404,10 +431,17 @@ module android.view {
                     }
                 },
                 set minWidth(value){
-                    view.mMinWidth = value;
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) view.setMinimumWidth(value);
+                },
+                get minWidth():any{
+                    return view.mMinWidth;
                 },
                 set minHeight(value){
                     view.mMinHeight = value;
+                },
+                get minHeight():any{
+                    return view.mMinHeight;
                 },
                 set onClick(value){
                     view.setOnClickListener({
@@ -2231,6 +2265,8 @@ module android.view {
             return who == this.mBackground;
         }
         drawableStateChanged() {
+            this.getDrawableState();//fire may state change to stateAttrList
+
             let d = this.mBackground;
             if (d != null && d.isStateful()) {
                 d.setState(this.getDrawableState());
@@ -2249,8 +2285,10 @@ module android.view {
             if ((this.mDrawableState != null) && ((this.mPrivateFlags & View.PFLAG_DRAWABLE_STATE_DIRTY) == 0)) {
                 return this.mDrawableState;
             } else {
+                let oldDrawableState = this.mDrawableState;
                 this.mDrawableState = this.onCreateDrawableState(0);
                 this.mPrivateFlags &= ~View.PFLAG_DRAWABLE_STATE_DIRTY;
+                this._fireStateChangeToAttribute(oldDrawableState, this.mDrawableState);
                 return this.mDrawableState;
             }
         }
@@ -2278,7 +2316,7 @@ module android.view {
 //            // windows to better match their app.
 //            viewStateIndex |= VIEW_STATE_ACCELERATED;
 //        }
-            if ((privateFlags & View.PFLAG_HOVERED) != 0) viewStateIndex |= View.VIEW_STATE_HOVERED;
+//            if ((privateFlags & View.PFLAG_HOVERED) != 0) viewStateIndex |= View.VIEW_STATE_HOVERED;
 
             const privateFlags2 = this.mPrivateFlags2;
             //if ((privateFlags2 & View.PFLAG2_DRAG_CAN_ACCEPT) != 0) viewStateIndex |= View.VIEW_STATE_DRAG_CAN_ACCEPT;//no drag state
@@ -2904,7 +2942,7 @@ module android.view {
             let bindEle = this.bindElement.querySelector('#'+id);
             return bindEle ? bindEle[View.AndroidViewProperty] : null;
         }
-        static inflate(domtree:HTMLElement, rootElement=domtree):View{
+        static inflate(domtree:HTMLElement, rootElement=domtree, parentElement?:HTMLElement):View{
             let className = domtree.tagName;
             if(className.startsWith('ANDROID-')){
                 className = className.substring('ANDROID-'.length);
@@ -2943,10 +2981,16 @@ module android.view {
             let rootView:View = new rootViewClass();
             rootView.initBindElement(domtree, rootElement);
 
+            if(!parentElement) {//generate default param is no parent
+                let params = this._generateLayoutParamsFromAttribute(domtree);
+                rootView.setLayoutParams(params);
+            }
+            rootView._initAttrObserver();
+
             if(rootView instanceof ViewGroup){
                 Array.from(domtree.children).forEach((item)=>{
                     if(item instanceof HTMLElement){
-                        let view = View.inflate(item, rootElement);
+                        let view = View.inflate(item, rootElement, domtree);
                         let params = rootView.generateDefaultLayoutParams();
                         this._generateLayoutParamsFromAttribute(item, params);
                         if(view) rootView.addView(view, params);
@@ -2954,22 +2998,61 @@ module android.view {
                 });
             }
 
-            let params = this._generateLayoutParamsFromAttribute(domtree);
-            rootView.setLayoutParams(params);
             rootView.onFinishInflate();
             return rootView;
         }
 
+        static optReferenceString(refString:string, currentElement:NodeSelector=document,
+                                     rootElement:NodeSelector=document):string {
+            return View.findReferenceString(refString, currentElement, rootElement) || refString;
+        }
+
+        static findReferenceString(refString:string, currentElement:NodeSelector=document,
+                                   rootElement:NodeSelector=document):string {
+            if(!refString.startsWith('@')) return null;
+            let referenceArray = [];
+            let attrValue = refString;
+            while(attrValue && attrValue.startsWith('@')){//ref value
+                let reference = android.view.View.findReference(attrValue, currentElement, rootElement);
+                if(referenceArray.indexOf(reference)>=0) throw Error('findReference Error: circle reference');
+                referenceArray.push(reference);
+
+                attrValue = (<HTMLElement>reference).innerText;
+            }
+            return attrValue;
+        }
+
+        static findReference(refString:string, currentElement:NodeSelector=document,
+                             rootElement:NodeSelector=document):Element {
+            if(refString && refString.startsWith('@')){
+                let [tagName, ...refIds] = refString.split('/');
+                tagName = tagName.substring(1);
+                if(!refIds || refIds.length===0) return null;
+
+                if(!tagName.startsWith('android-')) tagName = 'android-'+tagName;
+                //@style/btn1/pressed => resources android-style#btn1 #pressed
+                let q = 'resources '+tagName + '#' + (<any>refIds).join(' #');
+                return currentElement.querySelector(q) || rootElement.querySelector(q) || document.querySelector(q);
+            }
+            return null;
+        }
 
 
 
         //bind Element show the layout and extra info
         _bindElement: HTMLElement;
+        _rootElement: HTMLElement;
         private _AttrObserver:MutationObserver;
+        private _stateAttrList:StateAttrList;
         static AndroidViewProperty = 'AndroidView';
         get bindElement():HTMLElement{
             if(!this._bindElement) this.initBindElement();
             return this._bindElement;
+        }
+        get rootElement():HTMLElement{
+            if(this._rootElement) return this._rootElement;
+            if(this.getViewRootImpl()) return this.getViewRootImpl().rootElement;
+            return null;
         }
         private _AttrObserverCallBack(arr: MutationRecord[], observer: MutationObserver){
             arr.forEach((record)=>{
@@ -2977,9 +3060,10 @@ module android.view {
                 let androidView:View = target[View.AndroidViewProperty];
                 if(!androidView) return;
                 let attrName = record.attributeName;
-                let newAttr = target.getAttribute(attrName);
-                let rootElement = androidView.getViewRootImpl().rootElement;
-                androidView.onBindElementAttributeChanged(attrName, record.oldValue, newAttr, rootElement);
+                let newValue = target.getAttribute(attrName);
+                let oldValue = record.oldValue;
+                if(newValue === oldValue) return;
+                androidView.onBindElementAttributeChanged(attrName, record.oldValue, newValue);
             });
         }
 
@@ -2991,41 +3075,13 @@ module android.view {
                 if(oldBindView._AttrObserver) oldBindView._AttrObserver.disconnect();
             }
             this._bindElement[View.AndroidViewProperty]=this;
+            this._rootElement = rootElement;
 
-            this._parseRefStyle(rootElement);
+            this._stateAttrList = new StateAttrList(this.bindElement, rootElement);
             this._initAttrChangeHandler();
-            this._fireInitBindElementAttribute(rootElement);
-            if(!this._AttrObserver) this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
-            this._AttrObserver.disconnect();
-            this._AttrObserver.observe(this._bindElement, {attributes : true, attributeOldValue : true});
-
-
-            //function overrideAttributeApi(prototype) {
-            //    if (prototype.setAttribute._polyfilled) {
-            //        return;
-            //    }
-            //    var setAttribute = prototype.setAttribute;
-            //    prototype.setAttribute = function(name, value) {
-            //        changeAttribute.call(this, name, value, setAttribute);
-            //    };
-            //    var removeAttribute = prototype.removeAttribute;
-            //    prototype.removeAttribute = function(name) {
-            //        changeAttribute.call(this, name, null, removeAttribute);
-            //    };
-            //    prototype.setAttribute._polyfilled = true;
-            //}
-            //function changeAttribute(name, value, operation) {
-            //    name = name.toLowerCase();
-            //    var oldValue = this.getAttribute(name);
-            //    operation.apply(this, arguments);
-            //    var newValue = this.getAttribute(name);
-            //    if (this.attributeChangedCallback && newValue !== oldValue) {
-            //        this.attributeChangedCallback(name, oldValue, newValue);
-            //    }
-            //    console.log('name:'+name+',oldValue:'+oldValue+", newValue:"+newValue)
-            //}
-            //overrideAttributeApi(HTMLElement.prototype);
+            this._initBindElementDefaultAttribute();
         }
+
         syncBoundToElement(){
             let bind = this.bindElement;
             bind.style.position = 'absolute';
@@ -3051,69 +3107,110 @@ module android.view {
                     else item.style.marginLeft = "";
                     //if(sy!==0) item.style.transform = `translate3d(0px, ${-sy}px, 0px)`;
                     //else item.style.transform = '';
-                    if(sy!==0) item.style.top =  (child.mTop-sy)+'px';
-                    else item.style.top = child.mTop + "px";
+                    //if(sy!==0) item.style.top =  (child.mTop-sy)+'px';
+                    //else item.style.top = child.mTop + "px";
+                    if(sy!==0) item.style.marginTop = -sy+'px';
+                    else item.style.marginTop = "";
                 }
             }
         }
 
-        private _attrChangeHandler = new View.AttrChangeHandler();
-        private _parseRefStyle(rootElement?:HTMLElement){
-            let style = this._bindElement.getAttribute('style');
-            if(style && style.startsWith('@style/')){
-                let ref = style.substring('@style/'.length);
-                let styleElement = rootElement ? rootElement.querySelector('#'+ref) : null;
-                if(!styleElement) styleElement = document.getElementById(ref);
-                if(styleElement){
-                    Array.from(styleElement.attributes).forEach((attr:Attr)=>{
-                        if(attr.name!=='id' && !this._bindElement.hasAttribute(attr.name)){
-                            this._bindElement.setAttribute(attr.name, attr.value);
-                        }
-                    });
-                }
-            }
-        }
+        private _attrChangeHandler = new View.AttrChangeHandler(this);
         private _initAttrChangeHandler(){
             this.createAttrChangeHandler(this._attrChangeHandler);
             if(!this._attrChangeHandler.isCallSuper){
                 throw Error('must call super when override createAttrChangeHandler!');
             }
         }
-
-        _fireInitBindElementAttribute(rootElement?:HTMLElement):void{
-            Array.from(this.bindElement.attributes).forEach((attr:Attr)=>{
-                if(attr.name==="android:id" && !this.bindElement.id) this.bindElement.id = attr.value;
-                this.onBindElementAttributeChanged(attr.name, attr.value, attr.value, rootElement);
-            });
+        private _initAttrObserver(){
+            this._fireInitBindElementAttribute();
+            if(!this._AttrObserver) this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
+            else this._AttrObserver.disconnect();
+            this._AttrObserver.observe(this._bindElement, {attributes : true, attributeOldValue : true});
         }
-        private onBindElementAttributeChanged(attributeName:string, oldVal:string, newVal:string, rootElement?:HTMLElement):void {
+
+        private _initBindElementDefaultAttribute():void{
+            for(let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()){
+                key = 'android:' + key;
+                if( (value===null || value===undefined) && this.bindElement.hasAttribute(key) ){
+                    this.bindElement.removeAttribute(key);
+                }else{
+                    this.bindElement.setAttribute(key, value);
+                }
+            }
+            let id = this.bindElement.getAttribute('android:id');
+            if(id) this.bindElement.id = id;
+        }
+        private _fireInitBindElementAttribute(){
+            for(let attr of Array.from(this.bindElement.attributes)){
+                this.onBindElementAttributeChanged(attr.name, null, attr.value);
+            }
+        }
+        private _fireStateChangeToAttribute(oldState:number[], newState:number[]){
+            if(!this._stateAttrList) return;
+            if(oldState+'' === newState+'') return;
+
+            let oldMatchedAttr:StateAttr = oldState ? this._stateAttrList.getMatchedAttr(oldState) : null;
+            let matchedAttr:StateAttr = this._stateAttrList.getMatchedAttr(newState);
+
+            let attrMap = matchedAttr.mergeRemovedFrom(oldMatchedAttr);
+            for(let [key, value] of attrMap.entries()){
+                //hold the current state to old state attr, so the state attr is sync with the view state.
+                if(oldMatchedAttr) {
+                    let oldValue;
+                    if(key.startsWith('layout_')){
+                        let params = this.getLayoutParams();
+                        if(params){
+                            let attrName = key.substring('layout_'.length);
+                            oldValue=params._attrChangeHandler.getViewAttrValue(attrName);
+                        }
+                    }else{
+                        oldValue = this._attrChangeHandler.getViewAttrValue(key);
+                    }
+                    if (oldValue != null){
+                        oldMatchedAttr.setAttr(key, oldValue);
+                    }
+                }
+
+
+                key = 'android:' + key;
+                if( (value===null || value===undefined) ){
+                    if(this.bindElement.hasAttribute(key)){
+                        this.bindElement.removeAttribute(key);
+                    }else{
+                        this.onBindElementAttributeChanged(key, null, null);//force fire remove event
+                    }
+                }else{
+                    this.bindElement.setAttribute(key, value);
+                }
+            }
+        }
+
+        private onBindElementAttributeChanged(attributeName:string, oldVal:string, newVal:string):void {
             //remove namespace('android:')
             let parts = attributeName.split(":");
             let attrName = parts[parts.length-1].toLowerCase();
             if(newVal === 'true') newVal = <any>true;
             else if(newVal === 'false') newVal = <any>false;
 
+            //layout attr
             if(attrName.startsWith('layout_')){
                 attrName = attrName.substring('layout_'.length);
                 let params = this.getLayoutParams();
                 if(params){
-                    if(rootElement) params._attrChangeHandler.rootElement = rootElement;
                     params._attrChangeHandler.handle(attrName, newVal);
                 }
                 this.requestLayout();
-
-            }else{
-                if(rootElement) this._attrChangeHandler.rootElement = rootElement;
-                this._attrChangeHandler.handle(attrName, newVal);
+                return;
             }
+
+            this._attrChangeHandler.handle(attrName, newVal);
         }
 
         private static _generateLayoutParamsFromAttribute(node:Node, dest = new ViewGroup.LayoutParams(-2, -2)):ViewGroup.LayoutParams{
             Array.from(node.attributes).forEach((attr:Attr)=>{
                 let layoutParamFiled = attr.name.split("layout_")[1];
-                if(layoutParamFiled!==undefined && dest[layoutParamFiled] !== undefined){
-                    dest[layoutParamFiled] = attr.value;
-                }
+                dest._attrChangeHandler.handle(layoutParamFiled, attr.value);
             });
             return dest;
         }
@@ -3226,19 +3323,86 @@ module android.view {
         export class AttrChangeHandler{
             isCallSuper = false;
             handlers =  [];
-            rootElement:HTMLElement;
+            view:View;
+            private objectRefs = [];
+
+            constructor(view:android.view.View) {
+                this.view = view;
+            }
+
             add(handler){
                 this.handlers.push(handler);
             }
             handle(name, value){
-                this.handlers.forEach((handler)=>{
+                for(let handler of this.handlers){
                     for(let key in handler){
                         if(key.toLowerCase()===name){
                             handler[key] = value;
                         }
                     }
-                });
+                }
             }
+            getViewAttrValue(attrName:string):string {
+                for(let handler of this.handlers){
+                    for(let key in handler){
+                        if(key.toLowerCase()===attrName.toLowerCase()){
+                            let value = handler[key];
+                            if(value==null) return null;
+                            if(typeof value === "number") return value+'';
+                            if(typeof value === "boolean") return value+'';
+                            if(typeof value === "string") return value;
+                            return this.setRefObject(value);
+                        }
+                    }
+                }
+                return null;
+            }
+
+            private getRefObject(ref:string, recycel=true):any{
+                if(ref && ref.startsWith('@ref/')){
+                    ref = ref.substring(5);
+                    let index = Number.parseInt(ref);
+                    if(Number.isInteger(index)){
+                        let obj = this.objectRefs[index];
+                        if(recycel) this.objectRefs[index] = null;
+                        return obj;
+                    }
+                }
+            }
+
+            private setRefObject(obj:any):string{
+                let length = this.objectRefs.length;
+                for(let i = 0; i<length; i++){
+                    if(this.objectRefs[i]==null){
+                        this.objectRefs[i] = obj;
+                        return '@ref/'+i;
+                    }
+                }
+
+                this.objectRefs.push(obj);
+                return '@ref/'+length;
+            }
+
+            /**
+             * @param value
+             * @returns {[left, top, right, bottom]}
+             */
+            static parsePaddingMarginLTRB(value):string[]{
+                value = (value + '');
+                let parts = [];
+                for(let part of value.split(' ')){
+                    if(part) parts.push(part);
+                }
+                switch (parts.length){
+                    case 1 : return [parts[0], parts[0], parts[0], parts[0]];
+                    case 2 : return [parts[1], parts[0], parts[1], parts[0]];
+                    case 3 : return [parts[1], parts[0], parts[1], parts[2]];
+                    case 4 : return [parts[3], parts[0], parts[1], parts[2]];
+                }
+                throw Error('not a padding or margin value : '+value);
+
+            }
+
             static parseBoolean(value, defaultValue = true):boolean{
                 if(value===false || value ==='fales' || value === '0') return false;
                 else if(value===true || value ==='true' || value === '1' || value === '') return true;
@@ -3248,7 +3412,10 @@ module android.view {
                 return AttrChangeHandler.parseBoolean(value, defaultValue);
             }
             static parseGravity(s:string, defaultValue=Gravity.NO_GRAVITY):number {
-                let gravity = Gravity.NO_GRAVITY;
+                let gravity = Number.parseInt(s);
+                if(Number.isInteger(gravity)) return gravity;
+
+                gravity = Gravity.NO_GRAVITY;
                 try {
                     let parts = s.split("|");
                     parts.forEach((part)=> {
@@ -3265,7 +3432,10 @@ module android.view {
                 return AttrChangeHandler.parseGravity(s, defaultValue);
             }
             parseDrawable(s:string):Drawable{
+                if(!s) return null;
                 if(s.startsWith('@')){
+                    let refObj = this.getRefObject(s);
+                    if(refObj) return refObj;
                     //TODO parse ref
 
                 }else{
@@ -3274,6 +3444,9 @@ module android.view {
                 }
             }
             parseColor(value:string):number{
+                let color = Number.parseInt(value);
+                if(Number.isInteger(color)) return color;
+
                 if(value.startsWith('rgb(')){
                     value = value.replace('rgb(', '').replace(')', '');
                     let parts = value.split(',');
@@ -3283,7 +3456,7 @@ module android.view {
                     value = value.replace('rgba(', '').replace(')', '');
                     let parts = value.split(',');
                     return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
-                        Number.parseInt(parts[2]), Number.parseInt(parts[2]));
+                        Number.parseInt(parts[2]), Number.parseInt(parts[2])*255);
 
                 }else {
                     if (value.startsWith('#') && value.length === 4) {//support parse #333
@@ -3296,7 +3469,10 @@ module android.view {
                 }
             }
             parseColorList(value:string):ColorStateList{
+                if(!value) return null;
                 if(value.startsWith('@')){
+                    let refObj = this.getRefObject(value);
+                    if(refObj) return refObj;
                     //TODO parse ref
 
                 }else {

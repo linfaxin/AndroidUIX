@@ -15,6 +15,7 @@ module sample.activity {
 
     export class SampleTextViewActivity extends Activity {
         onCreate():void {
+
         }
     }
     SampleTextViewActivity.registerCustomElement();

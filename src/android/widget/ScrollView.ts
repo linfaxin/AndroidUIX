@@ -62,6 +62,9 @@ module android.widget {
             mergeHandler.add({
                 set fillViewport(value){
                     scrollView.setFillViewport(View.AttrChangeHandler.parseBoolean(value));
+                },
+                get fillViewport():any{
+                    return scrollView.mFillViewport;
                 }
             });
         }

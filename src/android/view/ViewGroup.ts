@@ -86,8 +86,14 @@ module android.view {
                 set clipChildren(value){
                     viewGroup.setClipChildren(View.AttrChangeHandler.parseBoolean(value));
                 },
+                get clipChildren(){
+                    return viewGroup.getClipChildren();
+                },
                 set clipToPadding(value){
                     viewGroup.setClipToPadding(View.AttrChangeHandler.parseBoolean(value));
+                },
+                get clipToPadding(){
+                    return viewGroup.isClipToPadding();
                 },
                 set animationCache(value){
 
@@ -228,6 +234,7 @@ module android.view {
             } else {
                 child.setLayoutParams(params);
             }
+            params._attrChangeHandler.view = child;
 
             if (index < 0) {
                 index = this.mChildrenCount;
@@ -1314,6 +1321,9 @@ module android.view {
         setClipToPadding(clipToPadding:boolean) {
             this.setBooleanFlag(ViewGroup.FLAG_CLIP_TO_PADDING, clipToPadding);
         }
+        isClipToPadding():boolean{
+            return (this.mGroupFlags & ViewGroup.FLAG_CLIP_TO_PADDING) == ViewGroup.FLAG_CLIP_TO_PADDING;
+        }
 
 
 
@@ -1582,8 +1592,10 @@ module android.view {
             static FILL_PARENT = -1;
             static MATCH_PARENT = -1;
             static WRAP_CONTENT = -2;
-            private _width = 0;
-            private _height = 0;
+            private _width:any = 0;
+            private _widthOrig:string;
+            private _height:any = 0;
+            private _heightOrig:string;
 
             public get width():number {
                 if(typeof this._width === 'number') return this._width;
@@ -1604,7 +1616,7 @@ module android.view {
             }
 
             public set width(value) {
-                this._width = value;
+                this._width = this._widthOrig = <any>value;
             }
 
             public get height():number {
@@ -1626,13 +1638,14 @@ module android.view {
             }
 
             public set height(value) {
-                this._height = value;
+                this._height = this._heightOrig = <any>value;
             }
 
-            _measuringParentWidthMeasureSpec;
-            _measuringParentHeightMeasureSpec;
+            _measuringParentWidthMeasureSpec = 0;
+            _measuringParentHeightMeasureSpec = 0;
             _measuringMeasureSpec:android.util.DisplayMetrics;
-            _attrChangeHandler = new View.AttrChangeHandler();
+            _attrChangeHandler = new View.AttrChangeHandler(null);
+
 
             constructor();
             constructor(src:LayoutParams);
@@ -1640,12 +1653,12 @@ module android.view {
             constructor(...args) {
                 if (args.length === 1) {
                     let src = args[0];
-                    this._width = src._width;
-                    this._height = src._height;
+                    this.width = src._width;
+                    this.height = src._height;
                 } else if (args.length === 2) {
                     let [width=0, height=0] = args;
-                    this._width = width;
-                    this._height = height;
+                    this.width = width;
+                    this.height = height;
                 }
 
 
@@ -1659,10 +1672,18 @@ module android.view {
                 let params = this;
                 mergeHandler.add({
                     set width(value){
-                        params._width = value;
+                        if(value==null) value = -2;
+                        params.width = value;
+                    },
+                    get width():any{
+                        return params._widthOrig;
                     },
                     set height(value){
-                        params._height = value;
+                        if(value==null) value = -2;
+                        params.height = value;
+                    },
+                    get height():any{
+                        return params._heightOrig;
                     }
                 });
                 mergeHandler.isCallSuper = true;
@@ -1670,51 +1691,76 @@ module android.view {
 
         }
         export class MarginLayoutParams extends LayoutParams {
-            private _leftMargin = 0;
-            private _topMargin = 0;
-            private _rightMargin = 0;
-            private _bottomMargin = 0;
+            private _leftMargin:any = 0;
+            private _topMargin:any = 0;
+            private _rightMargin:any = 0;
+            private _bottomMargin:any = 0;
+            private _leftMarginOrig:any = 0;
+            private _topMarginOrig:any = 0;
+            private _rightMarginOrig:any = 0;
+            private _bottomMarginOrig:any = 0;
+
             public get leftMargin():number{
                 if(typeof this._leftMargin === 'number') return this._leftMargin;
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                this._leftMargin = TypedValue.complexToDimensionPixelSize(
-                    <any>this._leftMargin, parentWidth, this._measuringMeasureSpec);
+                try {
+                    this._leftMargin = TypedValue.complexToDimensionPixelSize(
+                        <any>this._leftMargin, parentWidth, this._measuringMeasureSpec);
+                } catch (e) {
+                    console.warn(e);
+                    this._leftMargin = 0;
+                }
                 return this._leftMargin;
             }
             public get topMargin():number{
                 if(typeof this._topMargin === 'number') return this._topMargin;
                 //topMargin with percent will use parent's width
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                this._topMargin = TypedValue.complexToDimensionPixelSize(
-                    <any>this._topMargin, parentWidth, this._measuringMeasureSpec);
+                try {
+                    this._topMargin = TypedValue.complexToDimensionPixelSize(
+                        <any>this._topMargin, parentWidth, this._measuringMeasureSpec);
+                } catch (e) {
+                    console.warn(e);
+                    this._topMargin = 0;
+                }
                 return this._topMargin;
             }
             public get rightMargin():number{
                 if(typeof this._rightMargin === 'number') return this._rightMargin;
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                this._rightMargin = TypedValue.complexToDimensionPixelSize(
-                    <any>this._rightMargin, parentWidth, this._measuringMeasureSpec);
+                try {
+                    this._rightMargin = TypedValue.complexToDimensionPixelSize(
+                        <any>this._rightMargin, parentWidth, this._measuringMeasureSpec);
+                } catch (e) {
+                    console.warn(e);
+                    this._rightMargin = 0;
+                }
                 return this._rightMargin;
             }
             public get bottomMargin():number{
                 if(typeof this._bottomMargin === 'number') return this._bottomMargin;
                 //topMargin with percent will use parent's width
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                this._bottomMargin = TypedValue.complexToDimensionPixelSize(
-                    <any>this._bottomMargin, parentWidth, this._measuringMeasureSpec);
+                try {
+                    this._bottomMargin = TypedValue.complexToDimensionPixelSize(
+                        <any>this._bottomMargin, parentWidth, this._measuringMeasureSpec);
+                } catch (e) {
+                    console.warn(e);
+                    this._bottomMargin = 0;
+                }
                 return this._bottomMargin;
             }
             public set leftMargin(value) {
-                this._leftMargin = value;
+                this._leftMargin = this._leftMarginOrig = value;
             }
             public set topMargin(value) {
-                this._topMargin = value;
+                this._topMargin = this._topMarginOrig = value;
             }
             public set rightMargin(value) {
-                this._rightMargin = value;
+                this._rightMargin = this._rightMarginOrig = value;
             }
             public set bottomMargin(value) {
-                this._bottomMargin = value;
+                this._bottomMargin = this._bottomMarginOrig = value;
             }
 
             constructor();
@@ -1727,10 +1773,10 @@ module android.view {
                     let src = args[0];
                     if (src instanceof MarginLayoutParams) {
                         super(src);
-                        this._leftMargin = src.leftMargin;
-                        this._topMargin = src.topMargin;
-                        this._rightMargin = src.rightMargin;
-                        this._bottomMargin = src.bottomMargin;
+                        this.leftMargin = src._leftMargin;
+                        this.topMargin = src._topMargin;
+                        this.rightMargin = src._rightMargin;
+                        this.bottomMargin = src._bottomMargin;
                     }
                 }else if(args.length==2){
                     super(args[0], args[1]);
@@ -1749,17 +1795,29 @@ module android.view {
                 let params = this;
                 mergeHandler.add({
                     set marginLeft(value) {
-                        params._leftMargin = value;
+                        if(value==null) value = 0;
+                        params.leftMargin = value;
                     },
                     set marginTop(value) {
-                        params._topMargin = value;
+                        if(value==null) value = 0;
+                        params.topMargin = value;
                     },
                     set marginRight(value) {
-                        params._rightMargin = value;
+                        if(value==null) value = 0;
+                        params.rightMargin = value;
                     },
                     set marginBottom(value) {
-                        params._bottomMargin = value;
-                    }
+                        if(value==null) value = 0;
+                        params.bottomMargin = value;
+                    },
+                    set margin(value) {
+                        if(value==null) value = 0;
+                        let [left, top, right, bottom] = View.AttrChangeHandler.parsePaddingMarginLTRB(value);
+                        params.leftMargin = <any>left;
+                        params.topMargin = <any>top;
+                        params.rightMargin = <any>right;
+                        params.bottomMargin = <any>bottom;
+                    },
                 });
             }
         }
