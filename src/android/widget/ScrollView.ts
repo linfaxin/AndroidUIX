@@ -715,7 +715,7 @@ module android.widget {
                         (overscrollMode == ScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
                     this.overScrollBy(x - oldX, y - oldY, oldX, oldY, 0, range,
-                        0, this.mOverflingDistance, false);
+                        0, this.getOverflingDistance(), false);
                     this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
 
                     if (canOverscroll) {
@@ -899,13 +899,18 @@ module android.widget {
             const theParent = child.getParent();
             return (theParent instanceof ViewGroup) && ScrollView.isViewDescendantOf(<any>theParent, parent);
         }
+        private getOverflingDistance():number{
+            let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
+            let bottom = this.getChildAt(0).getHeight();
+            let minOverY = this.mScrollY < 0 ? -this.mScrollY : this.mScrollY - (bottom - height);
+            return Math.max(this.mOverflingDistance, minOverY + this.mOverflingDistance);
+        }
         fling(velocityY:number){
             if (this.getChildCount() > 0) {
                 let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
                 let bottom = this.getChildAt(0).getHeight();
-
                 this.mScroller.fling(this.mScrollX, this.mScrollY, 0, velocityY, 0, 0, 0,
-                    Math.max(0, bottom - height), 0, height/2);
+                    Math.max(0, bottom - height), 0, this.getOverflingDistance());
 
                 this.postInvalidateOnAnimation();
             }

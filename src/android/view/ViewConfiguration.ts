@@ -38,7 +38,7 @@ module android.view{
         private static MAXIMUM_FLING_VELOCITY = 8000;
         private static SCROLL_FRICTION = 0.015;
         private static OVERSCROLL_DISTANCE = 800;//defaul 0
-        private static OVERFLING_DISTANCE = 400;//default 6
+        private static OVERFLING_DISTANCE = 100;//default 6
 
         static instance : ViewConfiguration;
         static get():ViewConfiguration{
