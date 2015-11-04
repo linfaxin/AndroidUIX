@@ -474,9 +474,6 @@ module android.widget {
                 //this.invalidateParentCaches();
                 this.invalidateParentIfNeeded();
                 this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
-                if (clampedY || this.mScroller.getCurrVelocity() < this.mMinimumVelocity ) {
-                    this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, 0, 0, this.getScrollRange());
-                }
             } else {
                 super.scrollTo(scrollX, scrollY);
             }
