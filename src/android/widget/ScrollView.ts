@@ -959,5 +959,11 @@ module android.widget {
             }
             return n;
         }
+
+
+        canScrollVertically(direction:number):boolean {
+            if(this.getOverScrollMode()===View.OVER_SCROLL_ALWAYS) return true;//can scroll anyway
+            return super.canScrollVertically(direction);
+        }
     }
 }
