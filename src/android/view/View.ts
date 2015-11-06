@@ -262,13 +262,25 @@ module android.view {
         private mClipBounds:Rect;
         private mLastIsOpaque = false;
 
-        mLeft = 0;
-        mRight = 0;
-        mTop = 0;
-        mBottom = 0;
+        private _mLeft = 0;
+        private _mRight = 0;
+        private _mTop = 0;
+        private _mBottom = 0;
+        get mLeft():number{return this._mLeft;}
+        set mLeft(value:number){this._mLeft = Math.floor(value);}
+        get mRight():number{return this._mRight;}
+        set mRight(value:number){this._mRight = Math.floor(value);}
+        get mTop():number{return this._mTop;}
+        set mTop(value:number){this._mTop = Math.floor(value);}
+        get mBottom():number{return this._mBottom;}
+        set mBottom(value:number){this._mBottom = Math.floor(value);}
 
-        mScrollX = 0;
-        mScrollY = 0;
+        private _mScrollX = 0;
+        private _mScrollY = 0;
+        get mScrollX():number{return this._mScrollX;}
+        set mScrollX(value:number){this._mScrollX = Math.floor(value);}
+        get mScrollY():number{return this._mScrollY;}
+        set mScrollY(value:number){this._mScrollY = Math.floor(value);}
 
         mPaddingLeft = 0;
         mPaddingRight = 0;

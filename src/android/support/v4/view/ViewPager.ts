@@ -1375,8 +1375,7 @@ module android.support.v4.view {
             const widthWithMargin = width + this.mPageMargin;
             const marginOffset = this.mPageMargin / width;
             const currentPage = ii.position;
-            const pageOffset = ((xpos / width) - ii.offset) /
-            (ii.widthFactor + marginOffset);
+            const pageOffset = ((xpos / width) - ii.offset) / (ii.widthFactor + marginOffset);
             const offsetPixels = Math.floor(pageOffset * widthWithMargin);
 
             this.mCalledSuper = false;

@@ -59,7 +59,7 @@ var sample;
                 }
                 let page_bg = convertView.findViewById('page_bg');
                 let page_text = convertView.findViewById('page_text');
-                page_bg.setBackgroundColor(Color.rgb(position * 20 % 255, position * 20 % 255, position * 20 % 255));
+                page_bg.setBackgroundColor(Color.rgb(position * 20 % 200 + 50, position * 20 % 200 + 50, position * 20 % 200 + 50));
                 page_text.setText((1 + position) + '/' + this.getCount());
                 return convertView;
             }
