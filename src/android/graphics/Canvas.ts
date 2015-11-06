@@ -13,7 +13,7 @@ module android.graphics {
     import Color = android.graphics.Color;
 
     export class Canvas {
-        private static FullRect = new Rect(-10000, -10000, 10000, 10000);
+        private static FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
         private mCanvasElement:HTMLCanvasElement;
         private _mCanvasContent:CanvasRenderingContext2D;
         private _saveCount = 0;
