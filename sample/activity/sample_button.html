@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="width: 100%;height: 100%;" xmlns:android="" xmlns:state="">
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
 <head>
     <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -27,33 +27,18 @@
 <android-SampleButtonActivity style="width: 100%; height:100%;display: none;">
     <resources>
 
-        </android-style>
-        <android-style id="btnStyle"
-                       android:textSize="14dp"
-                       android:textColor="#333"
-                       android:background="#eee"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:state_active="@style/active">
-
-            <android-style id="active"
-                           android:state_pressed="@style/active_pressed"
-                           android:background="#0f0">
-                <android-style id="active_pressed"
-                        android:background="#f00">
-                </android-style>
-            </android-style>
-        </android-style>
-
-
         <android-style id="btn_custom1"
                        android:layout_margin="6dp"
                        android:textColor="@color/white"
                        android:background="#f00"
-                       android:state_pressed="@style/pressed">
+                       android:state_pressed="@style/pressed"
+                       android:state_disable="@style/disable">
             <android-style id="pressed"
-                           android:textColor="@color/light_gray"
                            android:background="#f66">
+            </android-style>
+            <android-style id="disable"
+                           android:textColor="@color/light_gray"
+                           android:background="#faa">
             </android-style>
         </android-style>
 
@@ -83,11 +68,21 @@
             <Button id="btn_long_click">
                 长按LongClick
             </Button>
+            <Button android:layout_width="wrap_content"
+                    onclick="this.AndroidView.setText('点击:'+new Date().getTime());">
+                也可以用onclick属性/addEventListener设置监听
+            </Button>
 
             <Button
                     android:style="@style/btn_custom1"
                     >
                 引用样式
+            </Button>
+            <Button
+                    android:style="@style/btn_custom1"
+                    android:enabled="false"
+                    >
+                引用样式Disable
             </Button>
             <Button
                     android:layout_margin="6dp"
@@ -101,7 +96,7 @@
                     android:layout_margin="6dp"
                     android:textColor="@color/white"
                     android:background="#f00"
-                    android:state_pressed="background:#f66;textColor:@color/light_gray"
+                    android:state_pressed="background:#f66;"
                     >
                 内联状态样式
             </Button>

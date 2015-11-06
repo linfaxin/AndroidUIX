@@ -36,6 +36,7 @@
 ///<reference path="../../java/lang/System.ts"/>
 ///<reference path="../../runtime/attr/StateAttrList.ts"/>
 ///<reference path="../../runtime/attr/StateAttr.ts"/>
+///<reference path="../../runtime/util/ClassFinder.ts"/>
 
 module android.view {
     import SparseArray = android.util.SparseArray;
@@ -68,6 +69,7 @@ module android.view {
     import AnimationUtils = android.view.animation.AnimationUtils;
     import StateAttrList = runtime.attr.StateAttrList;
     import StateAttr = runtime.attr.StateAttr;
+    import ClassFinder = runtime.util.ClassFinder;
 
     export class View implements Drawable.Callback{
         private static DBG = Log.View_DBG;
@@ -249,6 +251,9 @@ module android.view {
         mViewFlags=0;
 
         mLayerType = View.LAYER_TYPE_NONE;
+
+        mCachingFailed = false;
+
 
         private mOverlay:ViewOverlay;
         private mWindowAttachCount=0;
@@ -463,6 +468,10 @@ module android.view {
                 },
             });
             mergeHandler.isCallSuper = true;
+        }
+
+        getId():string{
+            return this.bindElement.id;
         }
 
         getWidth():number {
@@ -682,6 +691,113 @@ module android.view {
             return 1;//TODO alpha
         }
 
+        /**
+         * Offset this view's vertical location by the specified number of pixels.
+         *
+         * @param offset the number of pixels to offset the view by
+         */
+        offsetTopAndBottom(offset:number):void {
+            if (offset != 0) {
+                this.updateMatrix();
+                const matrixIsIdentity = true;
+                //TODO when Transformation ok
+                // matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+
+                if (matrixIsIdentity) {
+//                if (mDisplayList != null) {
+//                    invalidateViewProperty(false, false);
+//                } else {
+                    const p = this.mParent;
+                    if (p != null && this.mAttachInfo != null) {
+                        const r = this.mAttachInfo.mTmpInvalRect;
+                        let minTop;
+                        let maxBottom;
+                        let yLoc;
+                        if (offset < 0) {
+                            minTop = this.mTop + offset;
+                            maxBottom = this.mBottom;
+                            yLoc = offset;
+                        } else {
+                            minTop = this.mTop;
+                            maxBottom = this.mBottom + offset;
+                            yLoc = 0;
+                        }
+                        r.set(0, yLoc, this.mRight - this.mLeft, maxBottom - minTop);
+                        p.invalidateChild(this, r);
+                    }
+//                }
+                } else {
+                    this.invalidateViewProperty(false, false);
+                }
+
+                this.mTop += offset;
+                this.mBottom += offset;
+//            if (mDisplayList != null) {
+//                mDisplayList.offsetTopAndBottom(offset);
+//                invalidateViewProperty(false, false);
+//            } else {
+                if (!matrixIsIdentity) {
+                    this.invalidateViewProperty(false, true);
+                }
+                this.invalidateParentIfNeeded();
+//            }
+            }
+        }
+
+        /**
+         * Offset this view's horizontal location by the specified amount of pixels.
+         *
+         * @param offset the number of pixels to offset the view by
+         */
+        offsetLeftAndRight(offset:number) {
+            if (offset != 0) {
+                this.updateMatrix();
+                const matrixIsIdentity = true;
+                //TODO when Transformation ok
+                // matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+
+                if (matrixIsIdentity) {
+//                if (mDisplayList != null) {
+//                    invalidateViewProperty(false, false);
+//                } else {
+                    const p = this.mParent;
+                    if (p != null && this.mAttachInfo != null) {
+                        const r = this.mAttachInfo.mTmpInvalRect;
+                        let minLeft;
+                        let maxRight;
+                        if (offset < 0) {
+                            minLeft = this.mLeft + offset;
+                            maxRight = this.mRight;
+                        } else {
+                            minLeft = this.mLeft;
+                            maxRight = this.mRight + offset;
+                        }
+                        r.set(0, 0, maxRight - minLeft, this.mBottom - this.mTop);
+                        p.invalidateChild(this, r);
+                    }
+//                }
+                } else {
+                    this.invalidateViewProperty(false, false);
+                }
+
+                this.mLeft += offset;
+                this.mRight += offset;
+//            if (mDisplayList != null) {
+//                mDisplayList.offsetLeftAndRight(offset);
+//                invalidateViewProperty(false, false);
+//            } else {
+                if (!matrixIsIdentity) {
+                    this.invalidateViewProperty(false, true);
+                }
+                this.invalidateParentIfNeeded();
+//            }
+            }
+        }
+
+
+        private updateMatrix() {
+            //TODO transform
+        }
         getMatrix():Matrix {
             //if (mTransformationInfo != null) {
             //    updateMatrix();
@@ -920,6 +1036,35 @@ module android.view {
         onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
 
         }
+
+        /**
+         * Find and return all touchable views that are descendants of this view,
+         * possibly including this view if it is touchable itself.
+         *
+         * @return A list of touchable views
+         */
+        getTouchables():ArrayList<View> {
+            let result = new ArrayList<View>();
+            this.addTouchables(result);
+            return result;
+        }
+
+        /**
+         * Add any touchable views that are descendants of this view (possibly
+         * including this view if it is touchable itself) to views.
+         *
+         * @param views Touchable views found so far
+         */
+        addTouchables(views:ArrayList<View>):void {
+            const viewFlags = this.mViewFlags;
+
+            if (((viewFlags & View.CLICKABLE) == View.CLICKABLE || (viewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE)
+                && (viewFlags & View.ENABLED_MASK) == View.ENABLED) {
+                views.add(this);
+            }
+        }
+
+
         isFocusable():boolean {
             return View.FOCUSABLE == (this.mViewFlags & View.FOCUSABLE_MASK);
         }
@@ -933,6 +1078,9 @@ module android.view {
             return (this.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE && this.isFocusable();
         }
         clearFocus() {
+            //TODO impl focus
+        }
+        requestFocus(direction=View.FOCUS_DOWN, previouslyFocusedRect=null){
             //TODO impl focus
         }
         findFocus():View {
@@ -1080,7 +1228,7 @@ module android.view {
                                         this.mPerformClick = new PerformClick(this);
                                     }
                                     if (!this.post(this.mPerformClick)) {
-                                        this.performClick();
+                                        this.performClick(event);
                                     }
                                 }
                             }
@@ -1255,7 +1403,9 @@ module android.view {
             }
             this.getListenerInfo().mOnLongClickListener = l;
         }
-        performClick():boolean {
+        performClick(event?:MotionEvent):boolean {
+            this._sendClickToBindElement(event);
+
             let li = this.mListenerInfo;
             if (li != null && li.mOnClickListener != null) {
                 li.mOnClickListener.onClick(this);
@@ -1264,6 +1414,20 @@ module android.view {
 
             return false;
         }
+        private _sendClickToBindElement(event?:MotionEvent){
+            let touch = event ? event._activeTouch : null;
+            let screenX = touch ? touch.screenX : 0;
+            let screenY = touch ? touch.screenY : 0;
+            let clientX = touch ? touch.clientX : 0;
+            let clientY = touch ? touch.clientY : 0;
+
+            // Synthesise a click event, with an extra attribute so it can be tracked
+            let clickEvent = document.createEvent('MouseEvents');
+            clickEvent.initMouseEvent('click', false, true, window, 1, screenX, screenY, clientX, clientY, false, false, false, false, 0, null);
+            (<any>clickEvent).forwardedTouchEvent = true;
+            this.bindElement.dispatchEvent(clickEvent);
+        }
+
         callOnClick():boolean {
             let li = this.mListenerInfo;
             if (li != null && li.mOnClickListener != null) {
@@ -2026,7 +2190,7 @@ module android.view {
             return more;
         }
 
-        draw(canvas:Canvas){
+        draw(canvas:Canvas):void {
             if (this.mClipBounds != null) {
                 canvas.clipRect(this.mClipBounds);
             }
@@ -2070,9 +2234,9 @@ module android.view {
             }
 
         }
-        onDraw(canvas:Canvas) {
+        onDraw(canvas:Canvas):void {
         }
-        dispatchDraw(canvas:Canvas) {
+        dispatchDraw(canvas:Canvas):void {
         }
         onDrawScrollBars(canvas:Canvas) {
             // scrollbars are drawn only when the animation is running
@@ -2208,6 +2372,13 @@ module android.view {
             scrollBar.draw(canvas);
         }
 
+        setDrawingCacheEnabled(enabled:boolean) {
+            this.mCachingFailed = false;
+            this.setFlags(enabled ? View.DRAWING_CACHE_ENABLED : 0, View.DRAWING_CACHE_ENABLED);
+        }
+        isDrawingCacheEnabled():boolean {
+            return (this.mViewFlags & View.DRAWING_CACHE_ENABLED) == View.DRAWING_CACHE_ENABLED;
+        }
 
         destroyDrawingCache() {
             //TODO impl draw cache
@@ -2800,6 +2971,13 @@ module android.view {
         onFinishInflate() {
         }
 
+        /**
+         * Returns true if this view is currently attached to a window.
+         */
+        isAttachedToWindow():boolean {
+            return this.mAttachInfo != null;
+        }
+
         dispatchAttachedToWindow(info: View.AttachInfo, visibility:number) {
             //System.out.println("Attached! " + this);
             this.mAttachInfo = info;
@@ -2939,61 +3117,49 @@ module android.view {
             return parent;
         }
         findViewById(id:string):View{
+            if (id == this.bindElement.id) {
+                return this;
+            }
             let bindEle = this.bindElement.querySelector('#'+id);
             return bindEle ? bindEle[View.AndroidViewProperty] : null;
         }
-        static inflate(domtree:HTMLElement, rootElement=domtree, parentElement?:HTMLElement):View{
+        static inflate(domtree:HTMLElement, rootElement=domtree, viewParent?:ViewGroup):View{
             let className = domtree.tagName;
+            if(className.toLowerCase() === 'android-layout'){
+                let child = domtree.firstElementChild;
+                if(child) return View.inflate(<HTMLElement>child, rootElement, viewParent);
+                return null;
+            }
+
             if(className.startsWith('ANDROID-')){
                 className = className.substring('ANDROID-'.length);
             }
-            let rootViewClass;
-            for(let key in android['view']){
-                if(key.toUpperCase()==className.toUpperCase()){
-                    rootViewClass = android.view[key];
-                    break;
-                }
-            }
+            let rootViewClass = ClassFinder.findClass(className, android.view);
+            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android.widget);
+            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className);
             if(!rootViewClass){
-                for(let key in android['widget']){
-                    if(key.toUpperCase()==className.toUpperCase()){
-                        rootViewClass = android['widget'][key];
-                        break;
-                    }
-                }
-            }
-            if(!rootViewClass){
-                //full class name view
-                try {
-                    rootViewClass = (<any>window).eval(className);
-                } catch (e) {
-                }
-            }
-            if(!rootViewClass){
-                let rootView;//try parse child
-                Array.from(domtree.children).forEach((item)=>{
-                    if(!rootView && item instanceof HTMLElement) {
-                        rootView = View.inflate(item, domtree);
-                    }
-                });
-                return rootView;
+                console.warn('not find class ' + className);
+                return null;
             }
             let rootView:View = new rootViewClass();
             rootView.initBindElement(domtree, rootElement);
 
-            if(!parentElement) {//generate default param is no parent
-                let params = this._generateLayoutParamsFromAttribute(domtree);
-                rootView.setLayoutParams(params);
+            let params;
+            if(viewParent) {
+                params = viewParent.generateDefaultLayoutParams();
+                this._generateLayoutParamsFromAttribute(domtree, params);
+
+            }else{//generate default param is no parent
+                params = this._generateLayoutParamsFromAttribute(domtree);
             }
+            rootView.setLayoutParams(params);
             rootView._initAttrObserver();
 
             if(rootView instanceof ViewGroup){
                 Array.from(domtree.children).forEach((item)=>{
                     if(item instanceof HTMLElement){
-                        let view = View.inflate(item, rootElement, domtree);
-                        let params = rootView.generateDefaultLayoutParams();
-                        this._generateLayoutParamsFromAttribute(item, params);
-                        if(view) rootView.addView(view, params);
+                        let view = View.inflate(item, rootElement, rootView);
+                        if(view) rootView.addView(view);
                     }
                 });
             }
@@ -3013,7 +3179,7 @@ module android.view {
             let referenceArray = [];
             let attrValue = refString;
             while(attrValue && attrValue.startsWith('@')){//ref value
-                let reference = android.view.View.findReference(attrValue, currentElement, rootElement);
+                let reference = View.findReference(attrValue, currentElement, rootElement, false);
                 if(referenceArray.indexOf(reference)>=0) throw Error('findReference Error: circle reference');
                 referenceArray.push(reference);
 
@@ -3023,7 +3189,7 @@ module android.view {
         }
 
         static findReference(refString:string, currentElement:NodeSelector=document,
-                             rootElement:NodeSelector=document):Element {
+                             rootElement:NodeSelector=document, cloneNode=true):Element {
             if(refString && refString.startsWith('@')){
                 let [tagName, ...refIds] = refString.split('/');
                 tagName = tagName.substring(1);
@@ -3032,7 +3198,8 @@ module android.view {
                 if(!tagName.startsWith('android-')) tagName = 'android-'+tagName;
                 //@style/btn1/pressed => resources android-style#btn1 #pressed
                 let q = 'resources '+tagName + '#' + (<any>refIds).join(' #');
-                return currentElement.querySelector(q) || rootElement.querySelector(q) || document.querySelector(q);
+                let el = currentElement.querySelector(q) || rootElement.querySelector(q) || document.querySelector(q);
+                return cloneNode ? <Element>el.cloneNode(true) : el;
             }
             return null;
         }

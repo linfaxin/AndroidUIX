@@ -132,7 +132,7 @@ module android.graphics{
         }
         contains(x : number , y : number) : boolean;
         contains(left : number, top : number, right : number, bottom : number) :boolean;
-        contains(r) : boolean;
+        contains(r:Rect) : boolean;
         contains(...args) : boolean{
             if(args.length === 1){
                 let r : Rect = args[0];

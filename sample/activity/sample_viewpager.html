@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>ViewPager展示</title>
+    <script>
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+
+        }
+    </style>
+
+</head>
+<body>
+<android-Activity style="width: 100%; height:100%;display: none;">
+    <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center">
+        <Button onclick="location.href='sample_viewpager_normal.html'">
+            全屏ViewPager
+        </Button>
+        <Button onclick="location.href='sample_viewpager_banner.html'">
+            当运营位Banner使用
+        </Button>
+        <Button onclick="location.href='sample_viewpager_titletab.html'">
+            全屏ViewPager + 顶部Tab标题
+        </Button>
+    </LinearLayout>
+</android-Activity>
+
+<script src="../../node_modules/babel-core/browser-polyfill.min.js"></script>
+<script src="../lib/CustomElements.min.js"></script>
+<script src="../../dist/android-web-widget.es5.js"></script>
+<script src="../build/main.es5.js"></script>
+
+</body>
+</html>

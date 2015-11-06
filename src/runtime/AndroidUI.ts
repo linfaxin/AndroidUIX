@@ -48,6 +48,7 @@ module runtime {
             this.initBindElementStyle();
 
             this.element.innerHTML = '';
+            this.element.appendChild(this.rootResourceElement);
             this.element.appendChild(this.rootStyleElement);
             this.element.appendChild(this.canvas);
             this.element.appendChild(this.rootLayout.bindElement);//can show the layout with dev mode in browser
@@ -62,15 +63,15 @@ module runtime {
 
         private initInflateView() {
             Array.from(this.element.children).forEach((item)=> {
-                if(item.tagName==='resources'){
+                if(item.tagName.toLowerCase()==='resources'){
                     this.rootResourceElement = item;
 
                 }else if (item instanceof HTMLStyleElement) {
                     this.rootStyleElement = item;
 
                 }else if (item instanceof HTMLElement) {
-                    let view = View.inflate(this.element, item);
-                    if (view) this.rootLayout.addView(view, -1, -1);
+                    let view = View.inflate(item, this.element, this.rootLayout);
+                    if (view) this.rootLayout.addView(view);
                 }
             });
         }
@@ -96,23 +97,22 @@ module runtime {
 
         private initTouch() {
             let motionEvent:MotionEvent;
-            let windowXOffset = 0, windowYOffset = 0;
+            let windowBound = new android.graphics.Rect();
             this.element.addEventListener('touchstart', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
                 let rootViewBound = this.element.getBoundingClientRect();//get viewRoot bound on touch start
-                windowXOffset = rootViewBound.left;
-                windowYOffset = rootViewBound.top;
+                windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
 
 
                 if (!motionEvent) motionEvent = MotionEvent.obtainWithTouchEvent(<any>e, MotionEvent.ACTION_DOWN);
-                else motionEvent.init(<any>e, MotionEvent.ACTION_DOWN, windowXOffset, windowYOffset);
+                else motionEvent.init(<any>e, MotionEvent.ACTION_DOWN, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
             this.element.addEventListener('touchmove', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
-                motionEvent.init(<any>e, MotionEvent.ACTION_MOVE, windowXOffset, windowYOffset);
+                motionEvent.init(<any>e, MotionEvent.ACTION_MOVE, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
             this.element.addEventListener('touchend', (e)=> {
@@ -124,7 +124,7 @@ module runtime {
             this.element.addEventListener('touchcancel', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
-                motionEvent.init(<any>e, MotionEvent.ACTION_CANCEL, windowXOffset, windowYOffset);
+                motionEvent.init(<any>e, MotionEvent.ACTION_CANCEL, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
         }
@@ -191,5 +191,6 @@ module runtime {
 
     }
 
-    class RootLayout extends FrameLayout{}
+    class RootLayout extends FrameLayout{
+    }
 }

@@ -83,7 +83,7 @@ declare module android.graphics {
         inset(dx: any, dy: any): void;
         contains(x: number, y: number): boolean;
         contains(left: number, top: number, right: number, bottom: number): boolean;
-        contains(r: any): boolean;
+        contains(r: Rect): boolean;
         intersect(rect: Rect): boolean;
         intersect(left: number, top: number, right: number, bottom: number): boolean;
         intersects(rect: Rect): boolean;
@@ -422,6 +422,7 @@ declare module java.util {
         [Symbol.iterator](): () => IterableIterator<T>;
         subList(fromIndex: number, toIndex: number): ArrayList<T>;
         toString(): string;
+        sort(compareFn?: (a: T, b: T) => number): void;
     }
 }
 declare module android.util {
@@ -515,65 +516,6 @@ declare module android.content.res {
     }
 }
 declare module android.view {
-    class MotionEvent {
-        static ACTION_MASK: number;
-        static ACTION_DOWN: number;
-        static ACTION_UP: number;
-        static ACTION_MOVE: number;
-        static ACTION_CANCEL: number;
-        static ACTION_OUTSIDE: number;
-        static ACTION_POINTER_DOWN: number;
-        static ACTION_POINTER_UP: number;
-        static ACTION_HOVER_MOVE: number;
-        static ACTION_SCROLL: number;
-        static ACTION_HOVER_ENTER: number;
-        static ACTION_HOVER_EXIT: number;
-        static ACTION_POINTER_INDEX_MASK: number;
-        static ACTION_POINTER_INDEX_SHIFT: number;
-        static HistoryMaxSize: number;
-        private static TouchMoveRecord;
-        mAction: number;
-        mDownTime: number;
-        mEventTime: number;
-        mActivePointerId: number;
-        private mTouchingPointers;
-        mXOffset: number;
-        mYOffset: number;
-        mViewRootTop: number;
-        mViewRootLeft: number;
-        constructor(e: any, action: number);
-        static obtainWithTouchEvent(e: any, action: number): MotionEvent;
-        static obtain(event: MotionEvent): MotionEvent;
-        static obtainWithAction(downTime: number, eventTime: number, action: number, x: number, y: number): MotionEvent;
-        private static IdIndexCache;
-        init(event: any, baseAction: number, windowXOffset?: number, windowYOffset?: number): void;
-        recycle(): void;
-        getAction(): number;
-        getActionMasked(): number;
-        getActionIndex(): number;
-        getDownTime(): number;
-        getEventTime(): number;
-        getX(pointerIndex?: number): number;
-        getY(pointerIndex?: number): number;
-        getPointerCount(): number;
-        getPointerId(pointerIndex: number): number;
-        findPointerIndex(pointerId: number): number;
-        getRawX(): number;
-        getRawY(): number;
-        getHistorySize(id?: number): number;
-        getHistoricalX(pointerIndex: number, pos: number): number;
-        getHistoricalY(pointerIndex: number, pos: number): number;
-        getHistoricalEventTime(pos: number): number;
-        getHistoricalEventTime(pointerIndex: number, pos: number): number;
-        setAction(action: number): void;
-        offsetLocation(deltaX: number, deltaY: number): void;
-        setLocation(x: number, y: number): void;
-        getPointerIdBits(): number;
-        split(idBits: number): MotionEvent;
-        toString(): string;
-    }
-}
-declare module android.view {
     class ViewConfiguration {
         private static SCROLL_BAR_SIZE;
         private static SCROLL_BAR_FADE_DURATION;
@@ -590,7 +532,7 @@ declare module android.view {
         private static HOVER_TAP_TIMEOUT;
         private static HOVER_TAP_SLOP;
         private static ZOOM_CONTROLS_TIMEOUT;
-        private static EDGE_SLOP;
+        static EDGE_SLOP: number;
         private static TOUCH_SLOP;
         private static DOUBLE_TAP_TOUCH_SLOP;
         private static PAGING_TOUCH_SLOP;
@@ -636,6 +578,74 @@ declare module android.view {
         getScaledOverscrollDistance(): number;
         getScaledOverflingDistance(): number;
         static getScrollFriction(): number;
+    }
+}
+declare module android.view {
+    import Rect = android.graphics.Rect;
+    class MotionEvent {
+        static ACTION_MASK: number;
+        static ACTION_DOWN: number;
+        static ACTION_UP: number;
+        static ACTION_MOVE: number;
+        static ACTION_CANCEL: number;
+        static ACTION_OUTSIDE: number;
+        static ACTION_POINTER_DOWN: number;
+        static ACTION_POINTER_UP: number;
+        static ACTION_HOVER_MOVE: number;
+        static ACTION_SCROLL: number;
+        static ACTION_HOVER_ENTER: number;
+        static ACTION_HOVER_EXIT: number;
+        static EDGE_TOP: number;
+        static EDGE_BOTTOM: number;
+        static EDGE_LEFT: number;
+        static EDGE_RIGHT: number;
+        static ACTION_POINTER_INDEX_MASK: number;
+        static ACTION_POINTER_INDEX_SHIFT: number;
+        static HistoryMaxSize: number;
+        private static TouchMoveRecord;
+        mAction: number;
+        mEdgeFlags: number;
+        mDownTime: number;
+        mEventTime: number;
+        mActivePointerId: number;
+        private mTouchingPointers;
+        mXOffset: number;
+        mYOffset: number;
+        mViewRootTop: number;
+        mViewRootLeft: number;
+        _activeTouch: any;
+        constructor(e: any, action: number);
+        static obtainWithTouchEvent(e: any, action: number): MotionEvent;
+        static obtain(event: MotionEvent): MotionEvent;
+        static obtainWithAction(downTime: number, eventTime: number, action: number, x: number, y: number, metaState?: number): MotionEvent;
+        private static IdIndexCache;
+        init(event: any, baseAction: number, windowBound?: Rect): void;
+        recycle(): void;
+        getAction(): number;
+        getActionMasked(): number;
+        getActionIndex(): number;
+        getDownTime(): number;
+        getEventTime(): number;
+        getX(pointerIndex?: number): number;
+        getY(pointerIndex?: number): number;
+        getPointerCount(): number;
+        getPointerId(pointerIndex: number): number;
+        findPointerIndex(pointerId: number): number;
+        getRawX(): number;
+        getRawY(): number;
+        getHistorySize(id?: number): number;
+        getHistoricalX(pointerIndex: number, pos: number): number;
+        getHistoricalY(pointerIndex: number, pos: number): number;
+        getHistoricalEventTime(pos: number): number;
+        getHistoricalEventTime(pointerIndex: number, pos: number): number;
+        getEdgeFlags(): number;
+        setEdgeFlags(flags: number): void;
+        setAction(action: number): void;
+        offsetLocation(deltaX: number, deltaY: number): void;
+        setLocation(x: number, y: number): void;
+        getPointerIdBits(): number;
+        split(idBits: number): MotionEvent;
+        toString(): string;
     }
 }
 declare module android.view {
@@ -847,6 +857,11 @@ declare module runtime.attr {
         getMatchedAttr(state: number[]): StateAttr;
     }
 }
+declare module runtime.util {
+    class ClassFinder {
+        static findClass(classFullName: string, findInRoot?: any): any;
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
@@ -978,6 +993,7 @@ declare module android.view {
         mLayoutParams: ViewGroup.LayoutParams;
         mViewFlags: number;
         mLayerType: number;
+        mCachingFailed: boolean;
         private mOverlay;
         private mWindowAttachCount;
         private mListenerInfo;
@@ -995,6 +1011,7 @@ declare module android.view {
         mPaddingBottom: number;
         constructor();
         createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
+        getId(): string;
         getWidth(): number;
         getHeight(): number;
         getTop(): number;
@@ -1020,6 +1037,9 @@ declare module android.view {
         getScrollX(): number;
         getScrollY(): number;
         getFinalAlpha(): number;
+        offsetTopAndBottom(offset: number): void;
+        offsetLeftAndRight(offset: number): void;
+        private updateMatrix();
         getMatrix(): Matrix;
         hasIdentityMatrix(): boolean;
         transformRect(rect: Rect): void;
@@ -1036,11 +1056,14 @@ declare module android.view {
         bringToFront(): void;
         onScrollChanged(l: number, t: number, oldl: number, oldt: number): void;
         onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        getTouchables(): ArrayList<View>;
+        addTouchables(views: ArrayList<View>): void;
         isFocusable(): boolean;
         isFocusableInTouchMode(): boolean;
         hasFocus(): boolean;
         hasFocusable(): boolean;
         clearFocus(): void;
+        requestFocus(direction?: number, previouslyFocusedRect?: any): void;
         findFocus(): View;
         isFocused(): boolean;
         getVisibility(): number;
@@ -1072,7 +1095,8 @@ declare module android.view {
         setOnClickListener(l: View.OnClickListener): void;
         hasOnClickListeners(): boolean;
         setOnLongClickListener(l: View.OnLongClickListener): void;
-        performClick(): boolean;
+        performClick(event?: MotionEvent): boolean;
+        private _sendClickToBindElement(event?);
         callOnClick(): boolean;
         performLongClick(): boolean;
         private checkForLongClick(delayOffset?);
@@ -1149,6 +1173,8 @@ declare module android.view {
         isVerticalScrollBarHidden(): boolean;
         onDrawHorizontalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
         onDrawVerticalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
+        setDrawingCacheEnabled(enabled: boolean): void;
+        isDrawingCacheEnabled(): boolean;
         destroyDrawingCache(): void;
         setWillNotDraw(willNotDraw: boolean): void;
         willNotDraw(): boolean;
@@ -1209,6 +1235,7 @@ declare module android.view {
         setScrollBarSize(scrollBarSize: number): void;
         assignParent(parent: ViewParent): void;
         onFinishInflate(): void;
+        isAttachedToWindow(): boolean;
         dispatchAttachedToWindow(info: View.AttachInfo, visibility: number): void;
         onAttachedToWindow(): void;
         dispatchDetachedFromWindow(): void;
@@ -1218,10 +1245,10 @@ declare module android.view {
         toString(): String;
         getRootView(): View;
         findViewById(id: string): View;
-        static inflate(domtree: HTMLElement, rootElement?: HTMLElement, parentElement?: HTMLElement): View;
+        static inflate(domtree: HTMLElement, rootElement?: HTMLElement, viewParent?: ViewGroup): View;
         static optReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
-        static findReference(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): Element;
+        static findReference(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector, cloneNode?: boolean): Element;
         _bindElement: HTMLElement;
         _rootElement: HTMLElement;
         private _AttrObserver;
@@ -1561,6 +1588,7 @@ declare module android.view {
         bringChildToFront(child: View): void;
         hasBooleanFlag(flag: number): boolean;
         setBooleanFlag(flag: number, value: boolean): void;
+        addTouchables(views: java.util.ArrayList<android.view.View>): void;
         onInterceptTouchEvent(ev: MotionEvent): boolean;
         dispatchTouchEvent(ev: MotionEvent): boolean;
         private resetTouchState();
@@ -1811,6 +1839,7 @@ declare module android.widget {
         getStartY(): number;
         getFinalX(): number;
         getFinalY(): number;
+        getDuration(): number;
         computeScrollOffset(): boolean;
         startScroll(startX: number, startY: number, dx: number, dy: number, duration?: number): void;
         springBack(startX: number, startY: number, minX: number, maxX: number, minY: number, maxY: number): boolean;
@@ -1926,10 +1955,12 @@ declare module android.widget {
         onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         private static isViewDescendantOf(child, parent);
+        private getOverflingDistance();
         fling(velocityY: number): void;
         private endDrag();
         scrollTo(x: number, y: number): void;
         private static clamp(n, my, child);
+        canScrollVertically(direction: number): boolean;
     }
 }
 declare module android.widget {
@@ -2205,5 +2236,255 @@ declare module android.widget {
     class Button extends TextView {
         constructor();
         private _initDefaultStyle();
+    }
+}
+declare module android.database {
+    import ArrayList = java.util.ArrayList;
+    abstract class Observable<T> {
+        mObservers: ArrayList<T>;
+        registerObserver(observer: T): void;
+        unregisterObserver(observer: T): void;
+        unregisterAll(): void;
+    }
+}
+declare module android.database {
+    class DataSetObserver {
+        onChanged(): void;
+        onInvalidated(): void;
+    }
+}
+declare module android.database {
+    import Observable = android.database.Observable;
+    import DataSetObserver = android.database.DataSetObserver;
+    class DataSetObservable extends Observable<DataSetObserver> {
+        notifyChanged(): void;
+        notifyInvalidated(): void;
+    }
+}
+declare module android.support.v4.view {
+    import DataSetObserver = android.database.DataSetObserver;
+    import ViewGroup = android.view.ViewGroup;
+    import View = android.view.View;
+    abstract class PagerAdapter {
+        private mObservable;
+        static POSITION_UNCHANGED: number;
+        static POSITION_NONE: number;
+        abstract getCount(): number;
+        startUpdate(container: ViewGroup): void;
+        instantiateItem(container: ViewGroup, position: number): any;
+        destroyItem(container: ViewGroup, position: number, object: any): void;
+        setPrimaryItem(container: ViewGroup, position: number, object: any): void;
+        finishUpdate(container: ViewGroup): void;
+        abstract isViewFromObject(view: View, object: any): boolean;
+        getItemPosition(object: any): number;
+        notifyDataSetChanged(): void;
+        registerDataSetObserver(observer: DataSetObserver): void;
+        unregisterDataSetObserver(observer: DataSetObserver): void;
+        getPageTitle(position: number): string;
+        getPageWidth(position: number): number;
+    }
+}
+declare module android.support.v4.view {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import PagerAdapter = android.support.v4.view.PagerAdapter;
+    import Drawable = android.graphics.drawable.Drawable;
+    import MotionEvent = android.view.MotionEvent;
+    class ViewPager extends ViewGroup {
+        private mExpectedAdapterCount;
+        private static COMPARATOR;
+        private static USE_CACHE;
+        private static DEFAULT_OFFSCREEN_PAGES;
+        private static MAX_SETTLE_DURATION;
+        private static MIN_DISTANCE_FOR_FLING;
+        private static DEFAULT_GUTTER_SIZE;
+        private static MIN_FLING_VELOCITY;
+        private static sInterpolator;
+        private mItems;
+        private mTempItem;
+        private mTempRect;
+        private mAdapter;
+        private mCurItem;
+        private mRestoredCurItem;
+        private mScroller;
+        private mObserver;
+        private mPageMargin;
+        private mMarginDrawable;
+        private mTopPageBounds;
+        private mBottomPageBounds;
+        private mFirstOffset;
+        private mLastOffset;
+        private mChildWidthMeasureSpec;
+        private mChildHeightMeasureSpec;
+        private mInLayout;
+        private mScrollingCacheEnabled;
+        private mPopulatePending;
+        private mOffscreenPageLimit;
+        private mIsBeingDragged;
+        private mIsUnableToDrag;
+        private mDefaultGutterSize;
+        private mGutterSize;
+        private mLastMotionX;
+        private mLastMotionY;
+        private mInitialMotionX;
+        private mInitialMotionY;
+        private static INVALID_POINTER;
+        private mActivePointerId;
+        private mVelocityTracker;
+        private mMinimumVelocity;
+        private mMaximumVelocity;
+        private mFlingDistance;
+        private mCloseEnough;
+        private static CLOSE_ENOUGH;
+        private mFakeDragging;
+        private mFakeDragBeginTime;
+        private mFirstLayout;
+        private mNeedCalculatePageOffsets;
+        private mCalledSuper;
+        private mDecorChildCount;
+        private mOnPageChangeListeners;
+        private mOnPageChangeListener;
+        private mInternalPageChangeListener;
+        private mAdapterChangeListener;
+        private mPageTransformer;
+        private static DRAW_ORDER_DEFAULT;
+        private static DRAW_ORDER_FORWARD;
+        private static DRAW_ORDER_REVERSE;
+        private mDrawingOrder;
+        private mDrawingOrderedChildren;
+        private static sPositionComparator;
+        static SCROLL_STATE_IDLE: number;
+        static SCROLL_STATE_DRAGGING: number;
+        static SCROLL_STATE_SETTLING: number;
+        private mEndScrollRunnable;
+        private mScrollState;
+        constructor();
+        private initViewPager();
+        onDetachedFromWindow(): void;
+        private setScrollState(newState);
+        setAdapter(adapter: PagerAdapter): void;
+        private removeNonDecorViews();
+        getAdapter(): PagerAdapter;
+        setOnAdapterChangeListener(listener: ViewPager.OnAdapterChangeListener): void;
+        private getClientWidth();
+        setCurrentItem(item: number, smoothScroll?: boolean): void;
+        getCurrentItem(): number;
+        setCurrentItemInternal(item: number, smoothScroll: boolean, always: boolean, velocity?: number): void;
+        private scrollToItem(item, smoothScroll, velocity, dispatchSelected);
+        setOnPageChangeListener(listener: ViewPager.OnPageChangeListener): void;
+        addOnPageChangeListener(listener: ViewPager.OnPageChangeListener): void;
+        removeOnPageChangeListener(listener: ViewPager.OnPageChangeListener): void;
+        clearOnPageChangeListeners(): void;
+        setPageTransformer(reverseDrawingOrder: boolean, transformer: ViewPager.PageTransformer): void;
+        setChildrenDrawingOrderEnabledCompat(enable?: boolean): void;
+        getChildDrawingOrder(childCount: number, i: number): number;
+        setInternalPageChangeListener(listener: ViewPager.OnPageChangeListener): ViewPager.OnPageChangeListener;
+        getOffscreenPageLimit(): number;
+        setOffscreenPageLimit(limit: number): void;
+        setPageMargin(marginPixels: number): void;
+        getPageMargin(): number;
+        setPageMarginDrawable(d: Drawable): void;
+        verifyDrawable(who: Drawable): boolean;
+        drawableStateChanged(): void;
+        distanceInfluenceForSnapDuration(f: number): number;
+        smoothScrollTo(x: number, y: number, velocity?: number): void;
+        private addNewItem(position, index);
+        dataSetChanged(): void;
+        populate(newCurrentItem?: number): void;
+        private sortChildDrawingOrder();
+        private calculatePageOffsets(curItem, curIndex, oldCurInfo);
+        addView(view: View): any;
+        addView(view: View, index: number): any;
+        addView(view: View, params: ViewGroup.LayoutParams): any;
+        addView(view: View, index: number, params: ViewGroup.LayoutParams): any;
+        addView(view: View, width: number, height: number): any;
+        private _addViewOverride(child, index, params);
+        removeView(view: android.view.View): void;
+        private infoForChild(child);
+        private infoForAnyChild(child);
+        private infoForPosition(position);
+        onAttachedToWindow(): void;
+        onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        private recomputeScrollPosition(width, oldWidth, margin, oldMargin);
+        onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        computeScroll(): void;
+        private pageScrolled(xpos);
+        onPageScrolled(position: number, offset: number, offsetPixels: number): void;
+        private dispatchOnPageScrolled(position, offset, offsetPixels);
+        private dispatchOnPageSelected(position);
+        private dispatchOnScrollStateChanged(state);
+        private completeScroll(postEvents);
+        private isGutterDrag(x, dx);
+        private enableLayers(enable);
+        onInterceptTouchEvent(ev: MotionEvent): boolean;
+        onTouchEvent(ev: android.view.MotionEvent): boolean;
+        private resetTouch();
+        private requestParentDisallowInterceptTouchEvent(disallowIntercept);
+        private performDrag(x);
+        private infoForCurrentScrollPosition();
+        private determineTargetPage(currentPage, pageOffset, velocity, deltaX);
+        draw(canvas: android.graphics.Canvas): void;
+        onDraw(canvas: android.graphics.Canvas): void;
+        beginFakeDrag(): boolean;
+        endFakeDrag(): void;
+        fakeDragBy(xOffset: number): void;
+        isFakeDragging(): boolean;
+        private onSecondaryPointerUp(ev);
+        private endDrag();
+        private setScrollingCacheEnabled(enabled);
+        canScrollHorizontally(direction: number): boolean;
+        canScroll(v: View, checkV: boolean, dx: number, x: number, y: number): boolean;
+        addTouchables(views: java.util.ArrayList<android.view.View>): void;
+        generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
+        generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
+        checkLayoutParams(p: android.view.ViewGroup.LayoutParams): boolean;
+        private static isImplDecor(view);
+        static setClassImplDecor(clazz: Function): void;
+    }
+    module ViewPager {
+        interface OnPageChangeListener {
+            onPageScrolled(position: number, positionOffset: number, positionOffsetPixels: number): void;
+            onPageSelected(position: number): void;
+            onPageScrollStateChanged(state: number): void;
+        }
+        class SimpleOnPageChangeListener implements OnPageChangeListener {
+            onPageScrolled(position: number, positionOffset: number, positionOffsetPixels: number): void;
+            onPageSelected(position: number): void;
+            onPageScrollStateChanged(state: number): void;
+        }
+        interface PageTransformer {
+            transformPage(page: View, position: number): void;
+        }
+        interface OnAdapterChangeListener {
+            onAdapterChanged(oldAdapter: PagerAdapter, newAdapter: PagerAdapter): void;
+        }
+        class LayoutParams extends ViewGroup.LayoutParams {
+            isDecor: boolean;
+            gravity: number;
+            widthFactor: number;
+            needsMeasure: boolean;
+            position: number;
+            childIndex: number;
+            constructor();
+            _createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
+        }
+    }
+}
+declare module com.jakewharton.salvage {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import PagerAdapter = android.support.v4.view.PagerAdapter;
+    abstract class RecyclingPagerAdapter extends PagerAdapter {
+        static IGNORE_ITEM_VIEW_TYPE: number;
+        private recycleBin;
+        constructor();
+        notifyDataSetChanged(): void;
+        instantiateItem(container: android.view.ViewGroup, position: number): any;
+        destroyItem(container: android.view.ViewGroup, position: number, object: any): void;
+        isViewFromObject(view: android.view.View, object: any): boolean;
+        getViewTypeCount(): number;
+        getItemViewType(position: number): number;
+        abstract getView(position: number, convertView: View, parent: ViewGroup): View;
     }
 }

@@ -1716,6 +1716,9 @@ var java;
             toString() {
                 return this.array.toString();
             }
+            sort(compareFn) {
+                this.array.sort(compareFn);
+            }
         }
         util.ArrayList = ArrayList;
     })(util = java.util || (java.util = {}));
@@ -2036,260 +2039,6 @@ var android;
     })(content = android.content || (android.content = {}));
 })(android || (android = {}));
 /**
- * Created by linfaxin on 15/10/6.
- */
-///<reference path="../content/res/Resources.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var Resources = android.content.res.Resources;
-        let density = Resources.getDisplayMetrics().density;
-        class MotionEvent {
-            constructor(e, action) {
-                this.mAction = 0;
-                this.mDownTime = 0;
-                this.mEventTime = 0;
-                this.mActivePointerId = 0;
-                this.mXOffset = 0;
-                this.mYOffset = 0;
-                this.mViewRootTop = 0;
-                this.mViewRootLeft = 0;
-                this.mAction = action;
-                if (e)
-                    this.init(e, action);
-            }
-            static obtainWithTouchEvent(e, action) {
-                return new MotionEvent(e, action);
-            }
-            static obtain(event) {
-                let newEv = new MotionEvent(null, 0);
-                Object.assign(newEv, event);
-                return newEv;
-            }
-            static obtainWithAction(downTime, eventTime, action, x, y) {
-                let newEv = new MotionEvent(null, action);
-                newEv.mDownTime = downTime;
-                newEv.mEventTime = eventTime;
-                let touch = {
-                    identifier: 0,
-                    target: null,
-                    screenX: x,
-                    screenY: y,
-                    clientX: x,
-                    clientY: y,
-                    pageX: x,
-                    pageY: y
-                };
-                newEv.mTouchingPointers = [touch];
-                return newEv;
-            }
-            init(event, baseAction, windowXOffset = 0, windowYOffset = 0) {
-                let e = event;
-                let action = baseAction;
-                let actionIndex = -1;
-                let activeTouch = e.changedTouches[0];
-                let activePointerId = activeTouch.identifier;
-                for (let i = 0, length = e.touches.length; i < length; i++) {
-                    if (e.touches[i].identifier === activePointerId) {
-                        actionIndex = i;
-                        MotionEvent.IdIndexCache.set(activePointerId, i);
-                        break;
-                    }
-                }
-                if (actionIndex < 0 && (baseAction === MotionEvent.ACTION_UP || baseAction === MotionEvent.ACTION_CANCEL)) {
-                    actionIndex = MotionEvent.IdIndexCache.get(activePointerId);
-                }
-                if (actionIndex < 0)
-                    throw Error('not find action index');
-                switch (baseAction) {
-                    case MotionEvent.ACTION_DOWN:
-                    case MotionEvent.ACTION_UP:
-                        MotionEvent.TouchMoveRecord.set(activePointerId, []);
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
-                        if (moveHistory) {
-                            activeTouch.mEventTime = e.timeStamp;
-                            moveHistory.push(activeTouch);
-                            if (moveHistory.length > MotionEvent.HistoryMaxSize)
-                                moveHistory.shift();
-                        }
-                        break;
-                }
-                this.mTouchingPointers = Array.from(e.touches);
-                if (baseAction === MotionEvent.ACTION_UP) {
-                    this.mTouchingPointers.splice(actionIndex, 0, activeTouch);
-                }
-                if (this.mTouchingPointers.length > 1) {
-                    switch (action) {
-                        case MotionEvent.ACTION_DOWN:
-                            action = MotionEvent.ACTION_POINTER_DOWN;
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            action = MotionEvent.ACTION_POINTER_UP;
-                            break;
-                    }
-                }
-                this.mAction = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
-                this.mActivePointerId = activePointerId;
-                if (activePointerId === 0 && action == MotionEvent.ACTION_DOWN) {
-                    this.mDownTime = e.timeStamp;
-                }
-                this.mEventTime = e.timeStamp;
-                this.mViewRootLeft = windowXOffset;
-                this.mViewRootTop = windowYOffset;
-            }
-            recycle() {
-            }
-            getAction() {
-                return this.mAction;
-            }
-            getActionMasked() {
-                return this.mAction & MotionEvent.ACTION_MASK;
-            }
-            getActionIndex() {
-                return (this.mAction & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-            }
-            getDownTime() {
-                return this.mDownTime;
-            }
-            getEventTime() {
-                return this.mEventTime;
-            }
-            getX(pointerIndex = 0) {
-                return (this.mTouchingPointers[pointerIndex].pageX - this.mViewRootLeft) * density + this.mXOffset;
-            }
-            getY(pointerIndex = 0) {
-                return (this.mTouchingPointers[pointerIndex].pageY - this.mViewRootTop) * density + this.mYOffset;
-            }
-            getPointerCount() {
-                return this.mTouchingPointers.length;
-            }
-            getPointerId(pointerIndex) {
-                return this.mTouchingPointers[pointerIndex].identifier;
-            }
-            findPointerIndex(pointerId) {
-                for (let i = 0, length = this.mTouchingPointers.length; i < length; i++) {
-                    if (this.mTouchingPointers[i].identifier === pointerId) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-            getRawX() {
-                return (this.mTouchingPointers[0].pageX - this.mViewRootLeft) * density;
-            }
-            getRawY() {
-                return (this.mTouchingPointers[0].pageY - this.mViewRootTop) * density;
-            }
-            getHistorySize(id = this.mActivePointerId) {
-                let moveHistory = MotionEvent.TouchMoveRecord.get(id);
-                return moveHistory ? moveHistory.length : 0;
-            }
-            getHistoricalX(pointerIndex, pos) {
-                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-                return (moveHistory[pos].pageX - this.mViewRootLeft) * density + this.mXOffset;
-            }
-            getHistoricalY(pointerIndex, pos) {
-                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-                return (moveHistory[pos].pageY - this.mViewRootTop) * density + this.mYOffset;
-            }
-            getHistoricalEventTime(...args) {
-                let pos, activePointerId;
-                if (args.length === 1) {
-                    pos = args[0];
-                    activePointerId = this.mActivePointerId;
-                }
-                else {
-                    pos = args[1];
-                    activePointerId = this.getPointerId(args[0]);
-                }
-                let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
-                return moveHistory[pos].mEventTime;
-            }
-            setAction(action) {
-                this.mAction = action;
-            }
-            offsetLocation(deltaX, deltaY) {
-                this.mXOffset += deltaX;
-                this.mYOffset += deltaY;
-            }
-            setLocation(x, y) {
-                this.mXOffset = x - this.getRawX();
-                this.mYOffset = y - this.getRawY();
-            }
-            getPointerIdBits() {
-                let idBits = 0;
-                let pointerCount = this.getPointerCount();
-                for (let i = 0; i < pointerCount; i++) {
-                    idBits |= 1 << this.getPointerId(i);
-                }
-                return idBits;
-            }
-            split(idBits) {
-                let ev = MotionEvent.obtain(this);
-                let oldPointerCount = this.getPointerCount();
-                const oldAction = this.getAction();
-                const oldActionMasked = oldAction & MotionEvent.ACTION_MASK;
-                let newPointerIds = [];
-                for (let i = 0; i < oldPointerCount; i++) {
-                    let pointerId = this.getPointerId(i);
-                    let idBit = 1 << pointerId;
-                    if ((idBit & idBits) != 0) {
-                        newPointerIds.push(pointerId);
-                    }
-                }
-                let newActionPointerIndex = newPointerIds.indexOf(this.mActivePointerId);
-                let newPointerCount = newPointerIds.length;
-                let newAction;
-                if (oldActionMasked == MotionEvent.ACTION_POINTER_DOWN || oldActionMasked == MotionEvent.ACTION_POINTER_UP) {
-                    if (newActionPointerIndex < 0) {
-                        newAction = MotionEvent.ACTION_MOVE;
-                    }
-                    else if (newPointerCount == 1) {
-                        newAction = oldActionMasked == MotionEvent.ACTION_POINTER_DOWN
-                            ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP;
-                    }
-                    else {
-                        newAction = oldActionMasked | (newActionPointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
-                    }
-                }
-                else {
-                    newAction = oldAction;
-                }
-                ev.mAction = newAction;
-                ev.mTouchingPointers = this.mTouchingPointers.filter((item) => {
-                    return newPointerIds.indexOf(item.identifier) >= 0;
-                });
-                return ev;
-            }
-            toString() {
-                return "MotionEvent{action=" + this.getAction() + " x=" + this.getX()
-                    + " y=" + this.getY() + "}";
-            }
-        }
-        MotionEvent.ACTION_MASK = 0xff;
-        MotionEvent.ACTION_DOWN = 0;
-        MotionEvent.ACTION_UP = 1;
-        MotionEvent.ACTION_MOVE = 2;
-        MotionEvent.ACTION_CANCEL = 3;
-        MotionEvent.ACTION_OUTSIDE = 4;
-        MotionEvent.ACTION_POINTER_DOWN = 5;
-        MotionEvent.ACTION_POINTER_UP = 6;
-        MotionEvent.ACTION_HOVER_MOVE = 7;
-        MotionEvent.ACTION_SCROLL = 8;
-        MotionEvent.ACTION_HOVER_ENTER = 9;
-        MotionEvent.ACTION_HOVER_EXIT = 10;
-        MotionEvent.ACTION_POINTER_INDEX_MASK = 0xff00;
-        MotionEvent.ACTION_POINTER_INDEX_SHIFT = 8;
-        MotionEvent.HistoryMaxSize = 10;
-        MotionEvent.TouchMoveRecord = new Map();
-        MotionEvent.IdIndexCache = new Map();
-        view.MotionEvent = MotionEvent;
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
-/**
  * Created by linfaxin on 15/10/5.
  */
 ///<reference path="../util/SparseArray.ts"/>
@@ -2412,8 +2161,309 @@ var android;
         ViewConfiguration.MAXIMUM_FLING_VELOCITY = 8000;
         ViewConfiguration.SCROLL_FRICTION = 0.015;
         ViewConfiguration.OVERSCROLL_DISTANCE = 800;
-        ViewConfiguration.OVERFLING_DISTANCE = 400;
+        ViewConfiguration.OVERFLING_DISTANCE = 100;
         view.ViewConfiguration = ViewConfiguration;
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/6.
+ */
+///<reference path="../content/res/Resources.ts"/>
+///<reference path="../graphics/Rect.ts"/>
+///<reference path="../view/ViewConfiguration.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var Resources = android.content.res.Resources;
+        var Rect = android.graphics.Rect;
+        var ViewConfiguration = android.view.ViewConfiguration;
+        class MotionEvent {
+            constructor(e, action) {
+                this.mAction = 0;
+                this.mEdgeFlags = 0;
+                this.mDownTime = 0;
+                this.mEventTime = 0;
+                this.mActivePointerId = 0;
+                this.mXOffset = 0;
+                this.mYOffset = 0;
+                this.mViewRootTop = 0;
+                this.mViewRootLeft = 0;
+                this.mAction = action;
+                if (e)
+                    this.init(e, action);
+            }
+            static obtainWithTouchEvent(e, action) {
+                return new MotionEvent(e, action);
+            }
+            static obtain(event) {
+                let newEv = new MotionEvent(null, 0);
+                Object.assign(newEv, event);
+                return newEv;
+            }
+            static obtainWithAction(downTime, eventTime, action, x, y, metaState = 0) {
+                let newEv = new MotionEvent(null, action);
+                newEv.mDownTime = downTime;
+                newEv.mEventTime = eventTime;
+                let touch = {
+                    identifier: 0,
+                    target: null,
+                    screenX: x,
+                    screenY: y,
+                    clientX: x,
+                    clientY: y,
+                    pageX: x,
+                    pageY: y
+                };
+                newEv.mTouchingPointers = [touch];
+                return newEv;
+            }
+            init(event, baseAction, windowBound = new Rect()) {
+                let e = event;
+                let action = baseAction;
+                let actionIndex = -1;
+                let activeTouch = e.changedTouches[0];
+                this._activeTouch = activeTouch;
+                let activePointerId = activeTouch.identifier;
+                for (let i = 0, length = e.touches.length; i < length; i++) {
+                    if (e.touches[i].identifier === activePointerId) {
+                        actionIndex = i;
+                        MotionEvent.IdIndexCache.set(activePointerId, i);
+                        break;
+                    }
+                }
+                if (actionIndex < 0 && (baseAction === MotionEvent.ACTION_UP || baseAction === MotionEvent.ACTION_CANCEL)) {
+                    actionIndex = MotionEvent.IdIndexCache.get(activePointerId);
+                }
+                if (actionIndex < 0)
+                    throw Error('not find action index');
+                switch (baseAction) {
+                    case MotionEvent.ACTION_DOWN:
+                    case MotionEvent.ACTION_UP:
+                        MotionEvent.TouchMoveRecord.set(activePointerId, []);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
+                        if (moveHistory) {
+                            activeTouch.mEventTime = e.timeStamp;
+                            moveHistory.push(activeTouch);
+                            if (moveHistory.length > MotionEvent.HistoryMaxSize)
+                                moveHistory.shift();
+                        }
+                        break;
+                }
+                this.mTouchingPointers = Array.from(e.touches);
+                if (baseAction === MotionEvent.ACTION_UP) {
+                    this.mTouchingPointers.splice(actionIndex, 0, activeTouch);
+                }
+                if (this.mTouchingPointers.length > 1) {
+                    switch (action) {
+                        case MotionEvent.ACTION_DOWN:
+                            action = MotionEvent.ACTION_POINTER_DOWN;
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            action = MotionEvent.ACTION_POINTER_UP;
+                            break;
+                    }
+                }
+                this.mAction = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
+                this.mActivePointerId = activePointerId;
+                if (activePointerId === 0 && action == MotionEvent.ACTION_DOWN) {
+                    this.mDownTime = e.timeStamp;
+                }
+                this.mEventTime = e.timeStamp;
+                this.mViewRootLeft = windowBound.left;
+                this.mViewRootTop = windowBound.top;
+                let edgeFlag = 0;
+                let unScaledX = activeTouch.pageX;
+                let unScaledY = activeTouch.pageY;
+                let edgeSlop = ViewConfiguration.EDGE_SLOP;
+                let tempBound = new Rect();
+                tempBound.set(windowBound);
+                tempBound.right = tempBound.left + edgeSlop;
+                if (tempBound.contains(unScaledX, unScaledY)) {
+                    edgeFlag |= MotionEvent.EDGE_LEFT;
+                }
+                tempBound.set(windowBound);
+                tempBound.bottom = tempBound.top + edgeSlop;
+                if (tempBound.contains(unScaledX, unScaledY)) {
+                    edgeFlag |= MotionEvent.EDGE_TOP;
+                }
+                tempBound.set(windowBound);
+                tempBound.left = tempBound.right - edgeSlop;
+                if (tempBound.contains(unScaledX, unScaledY)) {
+                    edgeFlag |= MotionEvent.EDGE_RIGHT;
+                }
+                tempBound.set(windowBound);
+                tempBound.top = tempBound.bottom - edgeSlop;
+                if (tempBound.contains(unScaledX, unScaledY)) {
+                    edgeFlag |= MotionEvent.EDGE_BOTTOM;
+                }
+                this.mEdgeFlags = edgeFlag;
+            }
+            recycle() {
+            }
+            getAction() {
+                return this.mAction;
+            }
+            getActionMasked() {
+                return this.mAction & MotionEvent.ACTION_MASK;
+            }
+            getActionIndex() {
+                return (this.mAction & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+            }
+            getDownTime() {
+                return this.mDownTime;
+            }
+            getEventTime() {
+                return this.mEventTime;
+            }
+            getX(pointerIndex = 0) {
+                let density = Resources.getDisplayMetrics().density;
+                return (this.mTouchingPointers[pointerIndex].pageX - this.mViewRootLeft) * density + this.mXOffset;
+            }
+            getY(pointerIndex = 0) {
+                let density = Resources.getDisplayMetrics().density;
+                return (this.mTouchingPointers[pointerIndex].pageY - this.mViewRootTop) * density + this.mYOffset;
+            }
+            getPointerCount() {
+                return this.mTouchingPointers.length;
+            }
+            getPointerId(pointerIndex) {
+                return this.mTouchingPointers[pointerIndex].identifier;
+            }
+            findPointerIndex(pointerId) {
+                for (let i = 0, length = this.mTouchingPointers.length; i < length; i++) {
+                    if (this.mTouchingPointers[i].identifier === pointerId) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            getRawX() {
+                let density = Resources.getDisplayMetrics().density;
+                return (this.mTouchingPointers[0].pageX - this.mViewRootLeft) * density;
+            }
+            getRawY() {
+                let density = Resources.getDisplayMetrics().density;
+                return (this.mTouchingPointers[0].pageY - this.mViewRootTop) * density;
+            }
+            getHistorySize(id = this.mActivePointerId) {
+                let moveHistory = MotionEvent.TouchMoveRecord.get(id);
+                return moveHistory ? moveHistory.length : 0;
+            }
+            getHistoricalX(pointerIndex, pos) {
+                let density = Resources.getDisplayMetrics().density;
+                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
+                return (moveHistory[pos].pageX - this.mViewRootLeft) * density + this.mXOffset;
+            }
+            getHistoricalY(pointerIndex, pos) {
+                let density = Resources.getDisplayMetrics().density;
+                let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
+                return (moveHistory[pos].pageY - this.mViewRootTop) * density + this.mYOffset;
+            }
+            getHistoricalEventTime(...args) {
+                let pos, activePointerId;
+                if (args.length === 1) {
+                    pos = args[0];
+                    activePointerId = this.mActivePointerId;
+                }
+                else {
+                    pos = args[1];
+                    activePointerId = this.getPointerId(args[0]);
+                }
+                let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
+                return moveHistory[pos].mEventTime;
+            }
+            getEdgeFlags() {
+                return this.mEdgeFlags;
+            }
+            setEdgeFlags(flags) {
+                this.mEdgeFlags = flags;
+            }
+            setAction(action) {
+                this.mAction = action;
+            }
+            offsetLocation(deltaX, deltaY) {
+                this.mXOffset += deltaX;
+                this.mYOffset += deltaY;
+            }
+            setLocation(x, y) {
+                this.mXOffset = x - this.getRawX();
+                this.mYOffset = y - this.getRawY();
+            }
+            getPointerIdBits() {
+                let idBits = 0;
+                let pointerCount = this.getPointerCount();
+                for (let i = 0; i < pointerCount; i++) {
+                    idBits |= 1 << this.getPointerId(i);
+                }
+                return idBits;
+            }
+            split(idBits) {
+                let ev = MotionEvent.obtain(this);
+                let oldPointerCount = this.getPointerCount();
+                const oldAction = this.getAction();
+                const oldActionMasked = oldAction & MotionEvent.ACTION_MASK;
+                let newPointerIds = [];
+                for (let i = 0; i < oldPointerCount; i++) {
+                    let pointerId = this.getPointerId(i);
+                    let idBit = 1 << pointerId;
+                    if ((idBit & idBits) != 0) {
+                        newPointerIds.push(pointerId);
+                    }
+                }
+                let newActionPointerIndex = newPointerIds.indexOf(this.mActivePointerId);
+                let newPointerCount = newPointerIds.length;
+                let newAction;
+                if (oldActionMasked == MotionEvent.ACTION_POINTER_DOWN || oldActionMasked == MotionEvent.ACTION_POINTER_UP) {
+                    if (newActionPointerIndex < 0) {
+                        newAction = MotionEvent.ACTION_MOVE;
+                    }
+                    else if (newPointerCount == 1) {
+                        newAction = oldActionMasked == MotionEvent.ACTION_POINTER_DOWN
+                            ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP;
+                    }
+                    else {
+                        newAction = oldActionMasked | (newActionPointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+                    }
+                }
+                else {
+                    newAction = oldAction;
+                }
+                ev.mAction = newAction;
+                ev.mTouchingPointers = this.mTouchingPointers.filter((item) => {
+                    return newPointerIds.indexOf(item.identifier) >= 0;
+                });
+                return ev;
+            }
+            toString() {
+                return "MotionEvent{action=" + this.getAction() + " x=" + this.getX()
+                    + " y=" + this.getY() + "}";
+            }
+        }
+        MotionEvent.ACTION_MASK = 0xff;
+        MotionEvent.ACTION_DOWN = 0;
+        MotionEvent.ACTION_UP = 1;
+        MotionEvent.ACTION_MOVE = 2;
+        MotionEvent.ACTION_CANCEL = 3;
+        MotionEvent.ACTION_OUTSIDE = 4;
+        MotionEvent.ACTION_POINTER_DOWN = 5;
+        MotionEvent.ACTION_POINTER_UP = 6;
+        MotionEvent.ACTION_HOVER_MOVE = 7;
+        MotionEvent.ACTION_SCROLL = 8;
+        MotionEvent.ACTION_HOVER_ENTER = 9;
+        MotionEvent.ACTION_HOVER_EXIT = 10;
+        MotionEvent.EDGE_TOP = 0x00000001;
+        MotionEvent.EDGE_BOTTOM = 0x00000002;
+        MotionEvent.EDGE_LEFT = 0x00000004;
+        MotionEvent.EDGE_RIGHT = 0x00000008;
+        MotionEvent.ACTION_POINTER_INDEX_MASK = 0xff00;
+        MotionEvent.ACTION_POINTER_INDEX_SHIFT = 8;
+        MotionEvent.HistoryMaxSize = 10;
+        MotionEvent.TouchMoveRecord = new Map();
+        MotionEvent.IdIndexCache = new Map();
+        view.MotionEvent = MotionEvent;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
@@ -3256,7 +3306,7 @@ var runtime;
                 let _stateAttr = this.optStateAttr(inParseState);
                 if (attrName.startsWith('state_') || attrName === 'style') {
                     if (attrValue.startsWith('@')) {
-                        let reference = android.view.View.findReference(attrValue, ele, rootElement);
+                        let reference = android.view.View.findReference(attrValue, ele, rootElement, false);
                         this._initStyleAttributes(reference, inParseState, rootElement);
                     }
                     else {
@@ -3308,6 +3358,40 @@ var runtime;
         attr_1.StateAttrList = StateAttrList;
     })(attr = runtime.attr || (runtime.attr = {}));
 })(runtime || (runtime = {}));
+var runtime;
+(function (runtime) {
+    var util;
+    (function (util) {
+        class ClassFinder {
+            static findClass(classFullName, findInRoot = window) {
+                let nameParts = classFullName.split('.');
+                let finding = findInRoot;
+                for (let part of nameParts) {
+                    let quickFind = finding[part.toLowerCase()];
+                    if (quickFind) {
+                        finding = quickFind;
+                        continue;
+                    }
+                    let found = false;
+                    for (let key in finding) {
+                        if (key.toUpperCase() === part.toUpperCase()) {
+                            finding = finding[key];
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        return null;
+                }
+                if (finding === findInRoot) {
+                    return null;
+                }
+                return finding;
+            }
+        }
+        util.ClassFinder = ClassFinder;
+    })(util = runtime.util || (runtime.util = {}));
+})(runtime || (runtime = {}));
 /**
  * Created by linfaxin on 15/9/27.
  */
@@ -3346,6 +3430,7 @@ var runtime;
 ///<reference path="../../java/lang/System.ts"/>
 ///<reference path="../../runtime/attr/StateAttrList.ts"/>
 ///<reference path="../../runtime/attr/StateAttr.ts"/>
+///<reference path="../../runtime/util/ClassFinder.ts"/>
 var android;
 (function (android) {
     var view;
@@ -3371,6 +3456,7 @@ var android;
         var LinearInterpolator = android.view.animation.LinearInterpolator;
         var AnimationUtils = android.view.animation.AnimationUtils;
         var StateAttrList = runtime.attr.StateAttrList;
+        var ClassFinder = runtime.util.ClassFinder;
         class View {
             constructor() {
                 this.mPrivateFlags = 0;
@@ -3389,6 +3475,7 @@ var android;
                 this.mOverScrollMode = 0;
                 this.mViewFlags = 0;
                 this.mLayerType = View.LAYER_TYPE_NONE;
+                this.mCachingFailed = false;
                 this.mWindowAttachCount = 0;
                 this.mLastIsOpaque = false;
                 this.mLeft = 0;
@@ -3607,6 +3694,9 @@ var android;
                 });
                 mergeHandler.isCallSuper = true;
             }
+            getId() {
+                return this.bindElement.id;
+            }
             getWidth() {
                 return this.mRight - this.mLeft;
             }
@@ -3806,6 +3896,77 @@ var android;
             getFinalAlpha() {
                 return 1;
             }
+            offsetTopAndBottom(offset) {
+                if (offset != 0) {
+                    this.updateMatrix();
+                    const matrixIsIdentity = true;
+                    if (matrixIsIdentity) {
+                        const p = this.mParent;
+                        if (p != null && this.mAttachInfo != null) {
+                            const r = this.mAttachInfo.mTmpInvalRect;
+                            let minTop;
+                            let maxBottom;
+                            let yLoc;
+                            if (offset < 0) {
+                                minTop = this.mTop + offset;
+                                maxBottom = this.mBottom;
+                                yLoc = offset;
+                            }
+                            else {
+                                minTop = this.mTop;
+                                maxBottom = this.mBottom + offset;
+                                yLoc = 0;
+                            }
+                            r.set(0, yLoc, this.mRight - this.mLeft, maxBottom - minTop);
+                            p.invalidateChild(this, r);
+                        }
+                    }
+                    else {
+                        this.invalidateViewProperty(false, false);
+                    }
+                    this.mTop += offset;
+                    this.mBottom += offset;
+                    if (!matrixIsIdentity) {
+                        this.invalidateViewProperty(false, true);
+                    }
+                    this.invalidateParentIfNeeded();
+                }
+            }
+            offsetLeftAndRight(offset) {
+                if (offset != 0) {
+                    this.updateMatrix();
+                    const matrixIsIdentity = true;
+                    if (matrixIsIdentity) {
+                        const p = this.mParent;
+                        if (p != null && this.mAttachInfo != null) {
+                            const r = this.mAttachInfo.mTmpInvalRect;
+                            let minLeft;
+                            let maxRight;
+                            if (offset < 0) {
+                                minLeft = this.mLeft + offset;
+                                maxRight = this.mRight;
+                            }
+                            else {
+                                minLeft = this.mLeft;
+                                maxRight = this.mRight + offset;
+                            }
+                            r.set(0, 0, maxRight - minLeft, this.mBottom - this.mTop);
+                            p.invalidateChild(this, r);
+                        }
+                    }
+                    else {
+                        this.invalidateViewProperty(false, false);
+                    }
+                    this.mLeft += offset;
+                    this.mRight += offset;
+                    if (!matrixIsIdentity) {
+                        this.invalidateViewProperty(false, true);
+                    }
+                    this.invalidateParentIfNeeded();
+                }
+            }
+            updateMatrix() {
+            }
             getMatrix() {
                 return Matrix.IDENTITY_MATRIX;
             }
@@ -3971,6 +4132,18 @@ var android;
             }
             onSizeChanged(w, h, oldw, oldh) {
             }
+            getTouchables() {
+                let result = new ArrayList();
+                this.addTouchables(result);
+                return result;
+            }
+            addTouchables(views) {
+                const viewFlags = this.mViewFlags;
+                if (((viewFlags & View.CLICKABLE) == View.CLICKABLE || (viewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE)
+                    && (viewFlags & View.ENABLED_MASK) == View.ENABLED) {
+                    views.add(this);
+                }
+            }
             isFocusable() {
                 return View.FOCUSABLE == (this.mViewFlags & View.FOCUSABLE_MASK);
             }
@@ -3984,6 +4157,8 @@ var android;
                 return (this.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE && this.isFocusable();
             }
             clearFocus() {
+            }
+            requestFocus(direction = View.FOCUS_DOWN, previouslyFocusedRect = null) {
             }
             findFocus() {
                 return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0 ? this : null;
@@ -4091,7 +4266,7 @@ var android;
                                             this.mPerformClick = new PerformClick(this);
                                         }
                                         if (!this.post(this.mPerformClick)) {
-                                            this.performClick();
+                                            this.performClick(event);
                                         }
                                     }
                                 }
@@ -4239,13 +4414,25 @@ var android;
                 }
                 this.getListenerInfo().mOnLongClickListener = l;
             }
-            performClick() {
+            performClick(event) {
+                this._sendClickToBindElement(event);
                 let li = this.mListenerInfo;
                 if (li != null && li.mOnClickListener != null) {
                     li.mOnClickListener.onClick(this);
                     return true;
                 }
                 return false;
+            }
+            _sendClickToBindElement(event) {
+                let touch = event ? event._activeTouch : null;
+                let screenX = touch ? touch.screenX : 0;
+                let screenY = touch ? touch.screenY : 0;
+                let clientX = touch ? touch.clientX : 0;
+                let clientY = touch ? touch.clientY : 0;
+                let clickEvent = document.createEvent('MouseEvents');
+                clickEvent.initMouseEvent('click', false, true, window, 1, screenX, screenY, clientX, clientY, false, false, false, false, 0, null);
+                clickEvent.forwardedTouchEvent = true;
+                this.bindElement.dispatchEvent(clickEvent);
             }
             callOnClick() {
                 let li = this.mListenerInfo;
@@ -4972,6 +5159,13 @@ var android;
                 scrollBar.setBounds(l, t, r, b);
                 scrollBar.draw(canvas);
             }
+            setDrawingCacheEnabled(enabled) {
+                this.mCachingFailed = false;
+                this.setFlags(enabled ? View.DRAWING_CACHE_ENABLED : 0, View.DRAWING_CACHE_ENABLED);
+            }
+            isDrawingCacheEnabled() {
+                return (this.mViewFlags & View.DRAWING_CACHE_ENABLED) == View.DRAWING_CACHE_ENABLED;
+            }
             destroyDrawingCache() {
             }
             setWillNotDraw(willNotDraw) {
@@ -5449,6 +5643,9 @@ var android;
             }
             onFinishInflate() {
             }
+            isAttachedToWindow() {
+                return this.mAttachInfo != null;
+            }
             dispatchAttachedToWindow(info, visibility) {
                 this.mAttachInfo = info;
                 if (this.mOverlay != null) {
@@ -5551,60 +5748,50 @@ var android;
                 return parent;
             }
             findViewById(id) {
+                if (id == this.bindElement.id) {
+                    return this;
+                }
                 let bindEle = this.bindElement.querySelector('#' + id);
                 return bindEle ? bindEle[View.AndroidViewProperty] : null;
             }
-            static inflate(domtree, rootElement = domtree, parentElement) {
+            static inflate(domtree, rootElement = domtree, viewParent) {
                 let className = domtree.tagName;
+                if (className.toLowerCase() === 'android-layout') {
+                    let child = domtree.firstElementChild;
+                    if (child)
+                        return View.inflate(child, rootElement, viewParent);
+                    return null;
+                }
                 if (className.startsWith('ANDROID-')) {
                     className = className.substring('ANDROID-'.length);
                 }
-                let rootViewClass;
-                for (let key in android['view']) {
-                    if (key.toUpperCase() == className.toUpperCase()) {
-                        rootViewClass = android.view[key];
-                        break;
-                    }
-                }
+                let rootViewClass = ClassFinder.findClass(className, android.view);
+                if (!rootViewClass)
+                    rootViewClass = ClassFinder.findClass(className, android.widget);
+                if (!rootViewClass)
+                    rootViewClass = ClassFinder.findClass(className);
                 if (!rootViewClass) {
-                    for (let key in android['widget']) {
-                        if (key.toUpperCase() == className.toUpperCase()) {
-                            rootViewClass = android['widget'][key];
-                            break;
-                        }
-                    }
-                }
-                if (!rootViewClass) {
-                    try {
-                        rootViewClass = window.eval(className);
-                    }
-                    catch (e) {
-                    }
-                }
-                if (!rootViewClass) {
-                    let rootView;
-                    Array.from(domtree.children).forEach((item) => {
-                        if (!rootView && item instanceof HTMLElement) {
-                            rootView = View.inflate(item, domtree);
-                        }
-                    });
-                    return rootView;
+                    console.warn('not find class ' + className);
+                    return null;
                 }
                 let rootView = new rootViewClass();
                 rootView.initBindElement(domtree, rootElement);
-                if (!parentElement) {
-                    let params = this._generateLayoutParamsFromAttribute(domtree);
-                    rootView.setLayoutParams(params);
+                let params;
+                if (viewParent) {
+                    params = viewParent.generateDefaultLayoutParams();
+                    this._generateLayoutParamsFromAttribute(domtree, params);
                 }
+                else {
+                    params = this._generateLayoutParamsFromAttribute(domtree);
+                }
+                rootView.setLayoutParams(params);
                 rootView._initAttrObserver();
                 if (rootView instanceof view_1.ViewGroup) {
                     Array.from(domtree.children).forEach((item) => {
                         if (item instanceof HTMLElement) {
-                            let view = View.inflate(item, rootElement, domtree);
-                            let params = rootView.generateDefaultLayoutParams();
-                            this._generateLayoutParamsFromAttribute(item, params);
+                            let view = View.inflate(item, rootElement, rootView);
                             if (view)
-                                rootView.addView(view, params);
+                                rootView.addView(view);
                         }
                     });
                 }
@@ -5620,7 +5807,7 @@ var android;
                 let referenceArray = [];
                 let attrValue = refString;
                 while (attrValue && attrValue.startsWith('@')) {
-                    let reference = android.view.View.findReference(attrValue, currentElement, rootElement);
+                    let reference = View.findReference(attrValue, currentElement, rootElement, false);
                     if (referenceArray.indexOf(reference) >= 0)
                         throw Error('findReference Error: circle reference');
                     referenceArray.push(reference);
@@ -5628,7 +5815,7 @@ var android;
                 }
                 return attrValue;
             }
-            static findReference(refString, currentElement = document, rootElement = document) {
+            static findReference(refString, currentElement = document, rootElement = document, cloneNode = true) {
                 if (refString && refString.startsWith('@')) {
                     let [tagName, ...refIds] = refString.split('/');
                     tagName = tagName.substring(1);
@@ -5637,7 +5824,8 @@ var android;
                     if (!tagName.startsWith('android-'))
                         tagName = 'android-' + tagName;
                     let q = 'resources ' + tagName + '#' + refIds.join(' #');
-                    return currentElement.querySelector(q) || rootElement.querySelector(q) || document.querySelector(q);
+                    let el = currentElement.querySelector(q) || rootElement.querySelector(q) || document.querySelector(q);
+                    return cloneNode ? el.cloneNode(true) : el;
                 }
                 return null;
             }
@@ -7322,6 +7510,17 @@ var android;
                     this.mGroupFlags &= ~flag;
                 }
             }
+            addTouchables(views) {
+                super.addTouchables(views);
+                const count = this.mChildrenCount;
+                const children = this.mChildren;
+                for (let i = 0; i < count; i++) {
+                    const child = children[i];
+                    if ((child.mViewFlags & view_3.View.VISIBILITY_MASK) == view_3.View.VISIBLE) {
+                        child.addTouchables(views);
+                    }
+                }
+            }
             onInterceptTouchEvent(ev) {
                 return false;
             }
@@ -8833,6 +9032,7 @@ var runtime;
             this.initCanvasStyle();
             this.initBindElementStyle();
             this.element.innerHTML = '';
+            this.element.appendChild(this.rootResourceElement);
             this.element.appendChild(this.rootStyleElement);
             this.element.appendChild(this.canvas);
             this.element.appendChild(this.rootLayout.bindElement);
@@ -8843,16 +9043,16 @@ var runtime;
         }
         initInflateView() {
             Array.from(this.element.children).forEach((item) => {
-                if (item.tagName === 'resources') {
+                if (item.tagName.toLowerCase() === 'resources') {
                     this.rootResourceElement = item;
                 }
                 else if (item instanceof HTMLStyleElement) {
                     this.rootStyleElement = item;
                 }
                 else if (item instanceof HTMLElement) {
-                    let view = View.inflate(this.element, item);
+                    let view = View.inflate(item, this.element, this.rootLayout);
                     if (view)
-                        this.rootLayout.addView(view, -1, -1);
+                        this.rootLayout.addView(view);
                 }
             });
         }
@@ -8873,23 +9073,22 @@ var runtime;
         }
         initTouch() {
             let motionEvent;
-            let windowXOffset = 0, windowYOffset = 0;
+            let windowBound = new android.graphics.Rect();
             this.element.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 let rootViewBound = this.element.getBoundingClientRect();
-                windowXOffset = rootViewBound.left;
-                windowYOffset = rootViewBound.top;
+                windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
                 if (!motionEvent)
                     motionEvent = MotionEvent.obtainWithTouchEvent(e, MotionEvent.ACTION_DOWN);
                 else
-                    motionEvent.init(e, MotionEvent.ACTION_DOWN, windowXOffset, windowYOffset);
+                    motionEvent.init(e, MotionEvent.ACTION_DOWN, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
             this.element.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                motionEvent.init(e, MotionEvent.ACTION_MOVE, windowXOffset, windowYOffset);
+                motionEvent.init(e, MotionEvent.ACTION_MOVE, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
             this.element.addEventListener('touchend', (e) => {
@@ -8901,7 +9100,7 @@ var runtime;
             this.element.addEventListener('touchcancel', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowXOffset, windowYOffset);
+                motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
         }
@@ -8988,7 +9187,13 @@ var android;
             }
             createdCallback() {
                 this.AndroidUI = new AndroidUI(this);
-                this.onCreate();
+                requestAnimationFrame(() => {
+                    this.onCreate();
+                    let onCreateFunc = this.getAttribute('oncreate');
+                    if (onCreateFunc && typeof window[onCreateFunc] === "function") {
+                        window[onCreateFunc].call(this, this);
+                    }
+                });
             }
             attachedCallback() {
                 this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
@@ -9071,6 +9276,9 @@ var android;
             }
             getFinalY() {
                 return this.mScrollerY.mFinal;
+            }
+            getDuration() {
+                return Math.max(this.mScrollerX.mDuration, this.mScrollerY.mDuration);
             }
             computeScrollOffset() {
                 if (this.isFinished()) {
@@ -10113,9 +10321,6 @@ var android;
                     this.mScrollY = scrollY;
                     this.invalidateParentIfNeeded();
                     this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
-                    if (clampedY || this.mScroller.getCurrVelocity() < this.mMinimumVelocity) {
-                        this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, 0, 0, this.getScrollRange());
-                    }
                 }
                 else {
                     super.scrollTo(scrollX, scrollY);
@@ -10293,7 +10498,7 @@ var android;
                         const overscrollMode = this.getOverScrollMode();
                         const canOverscroll = overscrollMode == ScrollView.OVER_SCROLL_ALWAYS ||
                             (overscrollMode == ScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
-                        this.overScrollBy(x - oldX, y - oldY, oldX, oldY, 0, range, 0, this.mOverflingDistance, false);
+                        this.overScrollBy(x - oldX, y - oldY, oldX, oldY, 0, range, 0, this.getOverflingDistance(), false);
                         this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
                         if (canOverscroll) {
                             if (y < 0 && oldY >= 0) {
@@ -10424,11 +10629,17 @@ var android;
                 const theParent = child.getParent();
                 return (theParent instanceof ViewGroup) && ScrollView.isViewDescendantOf(theParent, parent);
             }
+            getOverflingDistance() {
+                let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
+                let bottom = this.getChildAt(0).getHeight();
+                let minOverY = this.mScrollY < 0 ? -this.mScrollY : this.mScrollY - (bottom - height);
+                return Math.max(this.mOverflingDistance, minOverY + this.mOverflingDistance);
+            }
             fling(velocityY) {
                 if (this.getChildCount() > 0) {
                     let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
                     let bottom = this.getChildAt(0).getHeight();
-                    this.mScroller.fling(this.mScrollX, this.mScrollY, 0, velocityY, 0, 0, 0, Math.max(0, bottom - height), 0, height / 2);
+                    this.mScroller.fling(this.mScrollX, this.mScrollY, 0, velocityY, 0, 0, 0, Math.max(0, bottom - height), 0, this.getOverflingDistance());
                     this.postInvalidateOnAnimation();
                 }
             }
@@ -10454,6 +10665,11 @@ var android;
                     return child - my;
                 }
                 return n;
+            }
+            canScrollVertically(direction) {
+                if (this.getOverScrollMode() === View.OVER_SCROLL_ALWAYS)
+                    return true;
+                return super.canScrollVertically(direction);
             }
         }
         ScrollView.ANIMATED_SCROLL_GAP = 250;
@@ -11739,6 +11955,8 @@ var android;
                 let padBottom = this.getCompoundPaddingBottom();
                 this.mTextElement.style.height = "";
                 this.mTextElement.style.width = "";
+                this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels + 'px';
+                this.mTextElement.style.top = "";
                 if (widthMode == MeasureSpec.EXACTLY) {
                     width = widthSize;
                 }
@@ -12805,6 +13023,2036 @@ var android;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/11/5.
+ */
+///<reference path="../../java/util/ArrayList.ts"/>
+var android;
+(function (android) {
+    var database;
+    (function (database) {
+        var ArrayList = java.util.ArrayList;
+        class Observable {
+            constructor() {
+                this.mObservers = new ArrayList();
+            }
+            registerObserver(observer) {
+                if (observer == null) {
+                    throw new Error("The observer is null.");
+                }
+                if (this.mObservers.contains(observer)) {
+                    throw new Error("Observer " + observer + " is already registered.");
+                }
+                this.mObservers.add(observer);
+            }
+            unregisterObserver(observer) {
+                if (observer == null) {
+                    throw new Error("The observer is null.");
+                }
+                let index = this.mObservers.indexOf(observer);
+                if (index == -1) {
+                    throw new Error("Observer " + observer + " was not registered.");
+                }
+                this.mObservers.remove(index);
+            }
+            unregisterAll() {
+                this.mObservers.clear();
+            }
+        }
+        database.Observable = Observable;
+    })(database = android.database || (android.database = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/5.
+ */
+var android;
+(function (android) {
+    var database;
+    (function (database) {
+        class DataSetObserver {
+            onChanged() { }
+            onInvalidated() { }
+        }
+        database.DataSetObserver = DataSetObserver;
+    })(database = android.database || (android.database = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/5.
+ */
+///<reference path="Observable.ts"/>
+///<reference path="DataSetObserver.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
+var android;
+(function (android) {
+    var database;
+    (function (database) {
+        var Observable = android.database.Observable;
+        class DataSetObservable extends Observable {
+            notifyChanged() {
+                for (let i = this.mObservers.size() - 1; i >= 0; i--) {
+                    this.mObservers.get(i).onChanged();
+                }
+            }
+            notifyInvalidated() {
+                for (let i = this.mObservers.size() - 1; i >= 0; i--) {
+                    this.mObservers.get(i).onInvalidated();
+                }
+            }
+        }
+        database.DataSetObservable = DataSetObservable;
+    })(database = android.database || (android.database = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/5.
+ */
+///<reference path="../../../database/DataSetObservable.ts"/>
+///<reference path="../../../database/Observable.ts"/>
+///<reference path="../../../database/DataSetObserver.ts"/>
+///<reference path="../../../view/ViewGroup.ts"/>
+var android;
+(function (android) {
+    var support;
+    (function (support) {
+        var v4;
+        (function (v4) {
+            var view;
+            (function (view_4) {
+                var DataSetObservable = android.database.DataSetObservable;
+                class PagerAdapter {
+                    constructor() {
+                        this.mObservable = new DataSetObservable();
+                    }
+                    startUpdate(container) {
+                    }
+                    instantiateItem(container, position) {
+                        throw new Error("Required method instantiateItem was not overridden");
+                    }
+                    destroyItem(container, position, object) {
+                        throw new Error("Required method destroyItem was not overridden");
+                    }
+                    setPrimaryItem(container, position, object) {
+                    }
+                    finishUpdate(container) {
+                    }
+                    getItemPosition(object) {
+                        return PagerAdapter.POSITION_UNCHANGED;
+                    }
+                    notifyDataSetChanged() {
+                        this.mObservable.notifyChanged();
+                    }
+                    registerDataSetObserver(observer) {
+                        this.mObservable.registerObserver(observer);
+                    }
+                    unregisterDataSetObserver(observer) {
+                        this.mObservable.unregisterObserver(observer);
+                    }
+                    getPageTitle(position) {
+                        return null;
+                    }
+                    getPageWidth(position) {
+                        return 1;
+                    }
+                }
+                PagerAdapter.POSITION_UNCHANGED = -1;
+                PagerAdapter.POSITION_NONE = -2;
+                view_4.PagerAdapter = PagerAdapter;
+            })(view = v4.view || (v4.view = {}));
+        })(v4 = support.v4 || (support.v4 = {}));
+    })(support = android.support || (android.support = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/5.
+ */
+///<reference path="../../../view/View.ts"/>
+///<reference path="../../../view/VelocityTracker.ts"/>
+///<reference path="../../../widget/OverScroller.ts"/>
+///<reference path="../../../view/ViewGroup.ts"/>
+///<reference path="../../../view/MotionEvent.ts"/>
+///<reference path="../../../view/animation/Interpolator.ts"/>
+///<reference path="../../../../java/util/ArrayList.ts"/>
+///<reference path="../../../database/DataSetObservable.ts"/>
+///<reference path="../../../database/Observable.ts"/>
+///<reference path="../../../database/DataSetObserver.ts"/>
+///<reference path="PagerAdapter.ts"/>
+var android;
+(function (android) {
+    var support;
+    (function (support) {
+        var v4;
+        (function (v4) {
+            var view;
+            (function (view_5) {
+                var View = android.view.View;
+                var Gravity = android.view.Gravity;
+                var MeasureSpec = View.MeasureSpec;
+                var OverScroller = android.widget.OverScroller;
+                var ViewGroup = android.view.ViewGroup;
+                var ArrayList = java.util.ArrayList;
+                var Rect = android.graphics.Rect;
+                var PagerAdapter = android.support.v4.view.PagerAdapter;
+                var DataSetObserver = android.database.DataSetObserver;
+                var VelocityTracker = android.view.VelocityTracker;
+                var ViewConfiguration = android.view.ViewConfiguration;
+                var Resources = android.content.res.Resources;
+                var Log = android.util.Log;
+                var MotionEvent = android.view.MotionEvent;
+                const TAG = "ViewPager";
+                const DEBUG = false;
+                const SymbolDecor = Symbol();
+                class ViewPager extends ViewGroup {
+                    constructor() {
+                        super();
+                        this.mExpectedAdapterCount = 0;
+                        this.mItems = new ArrayList();
+                        this.mTempItem = new ItemInfo();
+                        this.mTempRect = new Rect();
+                        this.mCurItem = 0;
+                        this.mRestoredCurItem = -1;
+                        this.mPageMargin = 0;
+                        this.mTopPageBounds = 0;
+                        this.mBottomPageBounds = 0;
+                        this.mFirstOffset = -Number.MAX_VALUE;
+                        this.mLastOffset = Number.MAX_VALUE;
+                        this.mChildWidthMeasureSpec = 0;
+                        this.mChildHeightMeasureSpec = 0;
+                        this.mInLayout = false;
+                        this.mScrollingCacheEnabled = false;
+                        this.mPopulatePending = false;
+                        this.mOffscreenPageLimit = ViewPager.DEFAULT_OFFSCREEN_PAGES;
+                        this.mIsBeingDragged = false;
+                        this.mIsUnableToDrag = false;
+                        this.mDefaultGutterSize = 0;
+                        this.mGutterSize = 0;
+                        this.mLastMotionX = 0;
+                        this.mLastMotionY = 0;
+                        this.mInitialMotionX = 0;
+                        this.mInitialMotionY = 0;
+                        this.mActivePointerId = ViewPager.INVALID_POINTER;
+                        this.mMinimumVelocity = 0;
+                        this.mMaximumVelocity = 0;
+                        this.mFlingDistance = 0;
+                        this.mCloseEnough = 0;
+                        this.mFakeDragging = false;
+                        this.mFakeDragBeginTime = 0;
+                        this.mFirstLayout = true;
+                        this.mNeedCalculatePageOffsets = false;
+                        this.mCalledSuper = false;
+                        this.mDecorChildCount = 0;
+                        this.mDrawingOrder = 0;
+                        this.mEndScrollRunnable = {
+                            ViewPager_this: this,
+                            run() {
+                                this.ViewPager_this.setScrollState(ViewPager.SCROLL_STATE_IDLE);
+                                this.ViewPager_this.populate();
+                            }
+                        };
+                        this.mScrollState = ViewPager.SCROLL_STATE_IDLE;
+                        this.initViewPager();
+                    }
+                    initViewPager() {
+                        this.setWillNotDraw(false);
+                        this.mScroller = new OverScroller(ViewPager.sInterpolator);
+                        let density = Resources.getDisplayMetrics().density;
+                        this.mTouchSlop = ViewConfiguration.get().getScaledPagingTouchSlop();
+                        this.mMinimumVelocity = Math.floor(ViewPager.MIN_FLING_VELOCITY * density);
+                        this.mMaximumVelocity = ViewConfiguration.get().getScaledMaximumFlingVelocity();
+                        this.mFlingDistance = Math.floor(ViewPager.MIN_DISTANCE_FOR_FLING * density);
+                        this.mCloseEnough = Math.floor(ViewPager.CLOSE_ENOUGH * density);
+                        this.mDefaultGutterSize = Math.floor(ViewPager.DEFAULT_GUTTER_SIZE * density);
+                    }
+                    onDetachedFromWindow() {
+                        this.removeCallbacks(this.mEndScrollRunnable);
+                        super.onDetachedFromWindow();
+                    }
+                    setScrollState(newState) {
+                        if (this.mScrollState == newState) {
+                            return;
+                        }
+                        this.mScrollState = newState;
+                        if (this.mPageTransformer != null) {
+                            this.enableLayers(newState != ViewPager.SCROLL_STATE_IDLE);
+                        }
+                        this.dispatchOnScrollStateChanged(newState);
+                    }
+                    setAdapter(adapter) {
+                        if (this.mAdapter != null) {
+                            this.mAdapter.unregisterDataSetObserver(this.mObserver);
+                            this.mAdapter.startUpdate(this);
+                            for (let i = 0; i < this.mItems.size(); i++) {
+                                const ii = this.mItems.get(i);
+                                this.mAdapter.destroyItem(this, ii.position, ii.object);
+                            }
+                            this.mAdapter.finishUpdate(this);
+                            this.mItems.clear();
+                            this.removeNonDecorViews();
+                            this.mCurItem = 0;
+                            this.scrollTo(0, 0);
+                        }
+                        const oldAdapter = this.mAdapter;
+                        this.mAdapter = adapter;
+                        this.mExpectedAdapterCount = 0;
+                        if (this.mAdapter != null) {
+                            if (this.mObserver == null) {
+                                this.mObserver = new PagerObserver(this);
+                            }
+                            this.mAdapter.registerDataSetObserver(this.mObserver);
+                            this.mPopulatePending = false;
+                            const wasFirstLayout = this.mFirstLayout;
+                            this.mFirstLayout = true;
+                            this.mExpectedAdapterCount = this.mAdapter.getCount();
+                            if (this.mRestoredCurItem >= 0) {
+                                this.setCurrentItemInternal(this.mRestoredCurItem, false, true);
+                                this.mRestoredCurItem = -1;
+                            }
+                            else if (!wasFirstLayout) {
+                                this.populate();
+                            }
+                            else {
+                                this.requestLayout();
+                            }
+                        }
+                        if (this.mAdapterChangeListener != null && oldAdapter != adapter) {
+                            this.mAdapterChangeListener.onAdapterChanged(oldAdapter, adapter);
+                        }
+                    }
+                    removeNonDecorViews() {
+                        for (let i = 0; i < this.getChildCount(); i++) {
+                            const child = this.getChildAt(i);
+                            const lp = child.getLayoutParams();
+                            if (!lp.isDecor) {
+                                this.removeViewAt(i);
+                                i--;
+                            }
+                        }
+                    }
+                    getAdapter() {
+                        return this.mAdapter;
+                    }
+                    setOnAdapterChangeListener(listener) {
+                        this.mAdapterChangeListener = listener;
+                    }
+                    getClientWidth() {
+                        return this.getMeasuredWidth() - this.getPaddingLeft() - this.getPaddingRight();
+                    }
+                    setCurrentItem(item, smoothScroll = !this.mFirstLayout) {
+                        this.mPopulatePending = false;
+                        this.setCurrentItemInternal(item, smoothScroll, false);
+                    }
+                    getCurrentItem() {
+                        return this.mCurItem;
+                    }
+                    setCurrentItemInternal(item, smoothScroll, always, velocity = 0) {
+                        if (this.mAdapter == null || this.mAdapter.getCount() <= 0) {
+                            this.setScrollingCacheEnabled(false);
+                            return;
+                        }
+                        if (!always && this.mCurItem == item && this.mItems.size() != 0) {
+                            this.setScrollingCacheEnabled(false);
+                            return;
+                        }
+                        if (item < 0) {
+                            item = 0;
+                        }
+                        else if (item >= this.mAdapter.getCount()) {
+                            item = this.mAdapter.getCount() - 1;
+                        }
+                        const pageLimit = this.mOffscreenPageLimit;
+                        if (item > (this.mCurItem + pageLimit) || item < (this.mCurItem - pageLimit)) {
+                            for (let i = 0; i < this.mItems.size(); i++) {
+                                this.mItems.get(i).scrolling = true;
+                            }
+                        }
+                        const dispatchSelected = this.mCurItem != item;
+                        if (this.mFirstLayout) {
+                            this.mCurItem = item;
+                            if (dispatchSelected) {
+                                this.dispatchOnPageSelected(item);
+                            }
+                            this.requestLayout();
+                        }
+                        else {
+                            this.populate(item);
+                            this.scrollToItem(item, smoothScroll, velocity, dispatchSelected);
+                        }
+                    }
+                    scrollToItem(item, smoothScroll, velocity, dispatchSelected) {
+                        const curInfo = this.infoForPosition(item);
+                        let destX = 0;
+                        if (curInfo != null) {
+                            const width = this.getClientWidth();
+                            destX = Math.floor(width * Math.max(this.mFirstOffset, Math.min(curInfo.offset, this.mLastOffset)));
+                        }
+                        if (smoothScroll) {
+                            this.smoothScrollTo(destX, 0, velocity);
+                            if (dispatchSelected) {
+                                this.dispatchOnPageSelected(item);
+                            }
+                        }
+                        else {
+                            if (dispatchSelected) {
+                                this.dispatchOnPageSelected(item);
+                            }
+                            this.completeScroll(false);
+                            scrollTo(destX, 0);
+                            this.pageScrolled(destX);
+                        }
+                    }
+                    setOnPageChangeListener(listener) {
+                        this.mOnPageChangeListener = listener;
+                    }
+                    addOnPageChangeListener(listener) {
+                        if (this.mOnPageChangeListeners == null) {
+                            this.mOnPageChangeListeners = new ArrayList();
+                        }
+                        this.mOnPageChangeListeners.add(listener);
+                    }
+                    removeOnPageChangeListener(listener) {
+                        if (this.mOnPageChangeListeners != null) {
+                            this.mOnPageChangeListeners.remove(listener);
+                        }
+                    }
+                    clearOnPageChangeListeners() {
+                        if (this.mOnPageChangeListeners != null) {
+                            this.mOnPageChangeListeners.clear();
+                        }
+                    }
+                    setPageTransformer(reverseDrawingOrder, transformer) {
+                        const hasTransformer = transformer != null;
+                        const needsPopulate = hasTransformer != (this.mPageTransformer != null);
+                        this.mPageTransformer = transformer;
+                        this.setChildrenDrawingOrderEnabledCompat(hasTransformer);
+                        if (hasTransformer) {
+                            this.mDrawingOrder = reverseDrawingOrder ? ViewPager.DRAW_ORDER_REVERSE : ViewPager.DRAW_ORDER_FORWARD;
+                        }
+                        else {
+                            this.mDrawingOrder = ViewPager.DRAW_ORDER_DEFAULT;
+                        }
+                        if (needsPopulate)
+                            this.populate();
+                    }
+                    setChildrenDrawingOrderEnabledCompat(enable = true) {
+                        this.setChildrenDrawingOrderEnabled(enable);
+                    }
+                    getChildDrawingOrder(childCount, i) {
+                        const index = this.mDrawingOrder == ViewPager.DRAW_ORDER_REVERSE ? childCount - 1 - i : i;
+                        const result = this.mDrawingOrderedChildren.get(index).getLayoutParams().childIndex;
+                        return result;
+                    }
+                    setInternalPageChangeListener(listener) {
+                        let oldListener = this.mInternalPageChangeListener;
+                        this.mInternalPageChangeListener = listener;
+                        return oldListener;
+                    }
+                    getOffscreenPageLimit() {
+                        return this.mOffscreenPageLimit;
+                    }
+                    setOffscreenPageLimit(limit) {
+                        if (limit < ViewPager.DEFAULT_OFFSCREEN_PAGES) {
+                            Log.w(TAG, "Requested offscreen page limit " + limit + " too small; defaulting to " +
+                                ViewPager.DEFAULT_OFFSCREEN_PAGES);
+                            limit = ViewPager.DEFAULT_OFFSCREEN_PAGES;
+                        }
+                        if (limit != this.mOffscreenPageLimit) {
+                            this.mOffscreenPageLimit = limit;
+                            this.populate();
+                        }
+                    }
+                    setPageMargin(marginPixels) {
+                        const oldMargin = this.mPageMargin;
+                        this.mPageMargin = marginPixels;
+                        const width = this.getWidth();
+                        this.recomputeScrollPosition(width, width, marginPixels, oldMargin);
+                        this.requestLayout();
+                    }
+                    getPageMargin() {
+                        return this.mPageMargin;
+                    }
+                    setPageMarginDrawable(d) {
+                        this.mMarginDrawable = d;
+                        if (d != null)
+                            this.refreshDrawableState();
+                        this.setWillNotDraw(d == null);
+                        this.invalidate();
+                    }
+                    verifyDrawable(who) {
+                        return super.verifyDrawable(who) || who == this.mMarginDrawable;
+                    }
+                    drawableStateChanged() {
+                        super.drawableStateChanged();
+                        const d = this.mMarginDrawable;
+                        if (d != null && d.isStateful()) {
+                            d.setState(this.getDrawableState());
+                        }
+                    }
+                    distanceInfluenceForSnapDuration(f) {
+                        f -= 0.5;
+                        f *= 0.3 * Math.PI / 2.0;
+                        return Math.sin(f);
+                    }
+                    smoothScrollTo(x, y, velocity = 0) {
+                        if (this.getChildCount() == 0) {
+                            this.setScrollingCacheEnabled(false);
+                            return;
+                        }
+                        let sx = this.getScrollX();
+                        let sy = this.getScrollY();
+                        let dx = x - sx;
+                        let dy = y - sy;
+                        if (dx == 0 && dy == 0) {
+                            this.completeScroll(false);
+                            this.populate();
+                            this.setScrollState(ViewPager.SCROLL_STATE_IDLE);
+                            return;
+                        }
+                        this.setScrollingCacheEnabled(true);
+                        this.setScrollState(ViewPager.SCROLL_STATE_SETTLING);
+                        const width = this.getClientWidth();
+                        const halfWidth = width / 2;
+                        const distanceRatio = Math.min(1, 1.0 * Math.abs(dx) / width);
+                        const distance = halfWidth + halfWidth *
+                            this.distanceInfluenceForSnapDuration(distanceRatio);
+                        let duration = 0;
+                        velocity = Math.abs(velocity);
+                        if (velocity > 0) {
+                            duration = 4 * Math.round(1000 * Math.abs(distance / velocity));
+                        }
+                        else {
+                            const pageWidth = width * this.mAdapter.getPageWidth(this.mCurItem);
+                            const pageDelta = Math.abs(dx) / (pageWidth + this.mPageMargin);
+                            duration = Math.floor((pageDelta + 1) * 100);
+                        }
+                        duration = Math.min(duration, ViewPager.MAX_SETTLE_DURATION);
+                        this.mScroller.startScroll(sx, sy, dx, dy, duration);
+                        this.postInvalidateOnAnimation();
+                    }
+                    addNewItem(position, index) {
+                        let ii = new ItemInfo();
+                        ii.position = position;
+                        ii.object = this.mAdapter.instantiateItem(this, position);
+                        ii.widthFactor = this.mAdapter.getPageWidth(position);
+                        if (index < 0 || index >= this.mItems.size()) {
+                            this.mItems.add(ii);
+                        }
+                        else {
+                            this.mItems.add(index, ii);
+                        }
+                        return ii;
+                    }
+                    dataSetChanged() {
+                        // This method only gets called if our observer is attached, so mAdapter is non-null.
+                        const adapterCount = this.mAdapter.getCount();
+                        this.mExpectedAdapterCount = adapterCount;
+                        let needPopulate = this.mItems.size() < this.mOffscreenPageLimit * 2 + 1 &&
+                            this.mItems.size() < adapterCount;
+                        let newCurrItem = this.mCurItem;
+                        let isUpdating = false;
+                        for (let i = 0; i < this.mItems.size(); i++) {
+                            const ii = this.mItems.get(i);
+                            const newPos = this.mAdapter.getItemPosition(ii.object);
+                            if (newPos == PagerAdapter.POSITION_UNCHANGED) {
+                                continue;
+                            }
+                            if (newPos == PagerAdapter.POSITION_NONE) {
+                                this.mItems.remove(i);
+                                i--;
+                                if (!isUpdating) {
+                                    this.mAdapter.startUpdate(this);
+                                    isUpdating = true;
+                                }
+                                this.mAdapter.destroyItem(this, ii.position, ii.object);
+                                needPopulate = true;
+                                if (this.mCurItem == ii.position) {
+                                    newCurrItem = Math.max(0, Math.min(this.mCurItem, adapterCount - 1));
+                                    needPopulate = true;
+                                }
+                                continue;
+                            }
+                            if (ii.position != newPos) {
+                                if (ii.position == this.mCurItem) {
+                                    newCurrItem = newPos;
+                                }
+                                ii.position = newPos;
+                                needPopulate = true;
+                            }
+                        }
+                        if (isUpdating) {
+                            this.mAdapter.finishUpdate(this);
+                        }
+                        this.mItems.sort(ViewPager.COMPARATOR);
+                        if (needPopulate) {
+                            const childCount = this.getChildCount();
+                            for (let i = 0; i < childCount; i++) {
+                                const child = this.getChildAt(i);
+                                const lp = child.getLayoutParams();
+                                if (!lp.isDecor) {
+                                    lp.widthFactor = 0;
+                                }
+                            }
+                            this.setCurrentItemInternal(newCurrItem, false, true);
+                            this.requestLayout();
+                        }
+                    }
+                    populate(newCurrentItem = this.mCurItem) {
+                        let oldCurInfo = null;
+                        let focusDirection = View.FOCUS_FORWARD;
+                        if (this.mCurItem != newCurrentItem) {
+                            focusDirection = this.mCurItem < newCurrentItem ? View.FOCUS_RIGHT : View.FOCUS_LEFT;
+                            oldCurInfo = this.infoForPosition(this.mCurItem);
+                            this.mCurItem = newCurrentItem;
+                        }
+                        if (this.mAdapter == null) {
+                            this.sortChildDrawingOrder();
+                            return;
+                        }
+                        if (this.mPopulatePending) {
+                            if (DEBUG)
+                                Log.i(TAG, "populate is pending, skipping for now...");
+                            this.sortChildDrawingOrder();
+                            return;
+                        }
+                        if (!this.isAttachedToWindow()) {
+                            return;
+                        }
+                        this.mAdapter.startUpdate(this);
+                        const pageLimit = this.mOffscreenPageLimit;
+                        const startPos = Math.max(0, this.mCurItem - pageLimit);
+                        const N = this.mAdapter.getCount();
+                        const endPos = Math.min(N - 1, this.mCurItem + pageLimit);
+                        if (N != this.mExpectedAdapterCount) {
+                            throw new Error("The application's PagerAdapter changed the adapter's" +
+                                " contents without calling PagerAdapter#notifyDataSetChanged!" +
+                                " Expected adapter item count: " + this.mExpectedAdapterCount + ", found: " + N +
+                                " Pager id: " + this.getId() +
+                                " Pager class: " + this.constructor.name +
+                                " Problematic adapter: " + this.mAdapter.constructor.name);
+                        }
+                        let curIndex = -1;
+                        let curItem = null;
+                        for (curIndex = 0; curIndex < this.mItems.size(); curIndex++) {
+                            const ii = this.mItems.get(curIndex);
+                            if (ii.position >= this.mCurItem) {
+                                if (ii.position == this.mCurItem)
+                                    curItem = ii;
+                                break;
+                            }
+                        }
+                        if (curItem == null && N > 0) {
+                            curItem = this.addNewItem(this.mCurItem, curIndex);
+                        }
+                        if (curItem != null) {
+                            let extraWidthLeft = 0;
+                            let itemIndex = curIndex - 1;
+                            let ii = itemIndex >= 0 ? this.mItems.get(itemIndex) : null;
+                            const clientWidth = this.getClientWidth();
+                            const leftWidthNeeded = clientWidth <= 0 ? 0 :
+                                2 - curItem.widthFactor + this.getPaddingLeft() / clientWidth;
+                            for (let pos = this.mCurItem - 1; pos >= 0; pos--) {
+                                if (extraWidthLeft >= leftWidthNeeded && pos < startPos) {
+                                    if (ii == null) {
+                                        break;
+                                    }
+                                    if (pos == ii.position && !ii.scrolling) {
+                                        this.mItems.remove(itemIndex);
+                                        this.mAdapter.destroyItem(this, pos, ii.object);
+                                        if (DEBUG) {
+                                            Log.i(TAG, "populate() - destroyItem() with pos: " + pos +
+                                                " view: " + ii.object);
+                                        }
+                                        itemIndex--;
+                                        curIndex--;
+                                        ii = itemIndex >= 0 ? this.mItems.get(itemIndex) : null;
+                                    }
+                                }
+                                else if (ii != null && pos == ii.position) {
+                                    extraWidthLeft += ii.widthFactor;
+                                    itemIndex--;
+                                    ii = itemIndex >= 0 ? this.mItems.get(itemIndex) : null;
+                                }
+                                else {
+                                    ii = this.addNewItem(pos, itemIndex + 1);
+                                    extraWidthLeft += ii.widthFactor;
+                                    curIndex++;
+                                    ii = itemIndex >= 0 ? this.mItems.get(itemIndex) : null;
+                                }
+                            }
+                            let extraWidthRight = curItem.widthFactor;
+                            itemIndex = curIndex + 1;
+                            if (extraWidthRight < 2) {
+                                ii = itemIndex < this.mItems.size() ? this.mItems.get(itemIndex) : null;
+                                const rightWidthNeeded = clientWidth <= 0 ? 0 :
+                                    this.getPaddingRight() / clientWidth + 2;
+                                for (let pos = this.mCurItem + 1; pos < N; pos++) {
+                                    if (extraWidthRight >= rightWidthNeeded && pos > endPos) {
+                                        if (ii == null) {
+                                            break;
+                                        }
+                                        if (pos == ii.position && !ii.scrolling) {
+                                            this.mItems.remove(itemIndex);
+                                            this.mAdapter.destroyItem(this, pos, ii.object);
+                                            if (DEBUG) {
+                                                Log.i(TAG, "populate() - destroyItem() with pos: " + pos +
+                                                    " view: " + ii.object);
+                                            }
+                                            ii = itemIndex < this.mItems.size() ? this.mItems.get(itemIndex) : null;
+                                        }
+                                    }
+                                    else if (ii != null && pos == ii.position) {
+                                        extraWidthRight += ii.widthFactor;
+                                        itemIndex++;
+                                        ii = itemIndex < this.mItems.size() ? this.mItems.get(itemIndex) : null;
+                                    }
+                                    else {
+                                        ii = this.addNewItem(pos, itemIndex);
+                                        itemIndex++;
+                                        extraWidthRight += ii.widthFactor;
+                                        ii = itemIndex < this.mItems.size() ? this.mItems.get(itemIndex) : null;
+                                    }
+                                }
+                            }
+                            this.calculatePageOffsets(curItem, curIndex, oldCurInfo);
+                        }
+                        if (DEBUG) {
+                            Log.i(TAG, "Current page list:");
+                            for (let i = 0; i < this.mItems.size(); i++) {
+                                Log.i(TAG, "#" + i + ": page " + this.mItems.get(i).position);
+                            }
+                        }
+                        this.mAdapter.setPrimaryItem(this, this.mCurItem, curItem != null ? curItem.object : null);
+                        this.mAdapter.finishUpdate(this);
+                        const childCount = this.getChildCount();
+                        for (let i = 0; i < childCount; i++) {
+                            const child = this.getChildAt(i);
+                            const lp = child.getLayoutParams();
+                            lp.childIndex = i;
+                            if (!lp.isDecor && lp.widthFactor == 0) {
+                                const ii = this.infoForChild(child);
+                                if (ii != null) {
+                                    lp.widthFactor = ii.widthFactor;
+                                    lp.position = ii.position;
+                                }
+                            }
+                        }
+                        this.sortChildDrawingOrder();
+                        if (this.hasFocus()) {
+                            let currentFocused = this.findFocus();
+                            let ii = currentFocused != null ? this.infoForAnyChild(currentFocused) : null;
+                            if (ii == null || ii.position != this.mCurItem) {
+                                for (let i = 0; i < this.getChildCount(); i++) {
+                                    let child = this.getChildAt(i);
+                                    ii = this.infoForChild(child);
+                                    if (ii != null && ii.position == this.mCurItem) {
+                                        if (child.requestFocus(focusDirection)) {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    sortChildDrawingOrder() {
+                        if (this.mDrawingOrder != ViewPager.DRAW_ORDER_DEFAULT) {
+                            if (this.mDrawingOrderedChildren == null) {
+                                this.mDrawingOrderedChildren = new ArrayList();
+                            }
+                            else {
+                                this.mDrawingOrderedChildren.clear();
+                            }
+                            const childCount = this.getChildCount();
+                            for (let i = 0; i < childCount; i++) {
+                                const child = this.getChildAt(i);
+                                this.mDrawingOrderedChildren.add(child);
+                            }
+                            this.mDrawingOrderedChildren.sort(ViewPager.sPositionComparator);
+                        }
+                    }
+                    calculatePageOffsets(curItem, curIndex, oldCurInfo) {
+                        const N = this.mAdapter.getCount();
+                        const width = this.getClientWidth();
+                        const marginOffset = width > 0 ? this.mPageMargin / width : 0;
+                        if (oldCurInfo != null) {
+                            const oldCurPosition = oldCurInfo.position;
+                            if (oldCurPosition < curItem.position) {
+                                let itemIndex = 0;
+                                let ii = null;
+                                let offset = oldCurInfo.offset + oldCurInfo.widthFactor + marginOffset;
+                                for (let pos = oldCurPosition + 1; pos <= curItem.position && itemIndex < this.mItems.size(); pos++) {
+                                    ii = this.mItems.get(itemIndex);
+                                    while (pos > ii.position && itemIndex < this.mItems.size() - 1) {
+                                        itemIndex++;
+                                        ii = this.mItems.get(itemIndex);
+                                    }
+                                    while (pos < ii.position) {
+                                        offset += this.mAdapter.getPageWidth(pos) + marginOffset;
+                                        pos++;
+                                    }
+                                    ii.offset = offset;
+                                    offset += ii.widthFactor + marginOffset;
+                                }
+                            }
+                            else if (oldCurPosition > curItem.position) {
+                                let itemIndex = this.mItems.size() - 1;
+                                let ii = null;
+                                let offset = oldCurInfo.offset;
+                                for (let pos = oldCurPosition - 1; pos >= curItem.position && itemIndex >= 0; pos--) {
+                                    ii = this.mItems.get(itemIndex);
+                                    while (pos < ii.position && itemIndex > 0) {
+                                        itemIndex--;
+                                        ii = this.mItems.get(itemIndex);
+                                    }
+                                    while (pos > ii.position) {
+                                        offset -= this.mAdapter.getPageWidth(pos) + marginOffset;
+                                        pos--;
+                                    }
+                                    offset -= ii.widthFactor + marginOffset;
+                                    ii.offset = offset;
+                                }
+                            }
+                        }
+                        const itemCount = this.mItems.size();
+                        let offset = curItem.offset;
+                        let pos = curItem.position - 1;
+                        this.mFirstOffset = curItem.position == 0 ? curItem.offset : -Number.MAX_VALUE;
+                        this.mLastOffset = curItem.position == N - 1 ?
+                            curItem.offset + curItem.widthFactor - 1 : Number.MAX_VALUE;
+                        for (let i = curIndex - 1; i >= 0; i--, pos--) {
+                            const ii = this.mItems.get(i);
+                            while (pos > ii.position) {
+                                offset -= this.mAdapter.getPageWidth(pos--) + marginOffset;
+                            }
+                            offset -= ii.widthFactor + marginOffset;
+                            ii.offset = offset;
+                            if (ii.position == 0)
+                                this.mFirstOffset = offset;
+                        }
+                        offset = curItem.offset + curItem.widthFactor + marginOffset;
+                        pos = curItem.position + 1;
+                        for (let i = curIndex + 1; i < itemCount; i++, pos++) {
+                            const ii = this.mItems.get(i);
+                            while (pos < ii.position) {
+                                offset += this.mAdapter.getPageWidth(pos++) + marginOffset;
+                            }
+                            if (ii.position == N - 1) {
+                                this.mLastOffset = offset + ii.widthFactor - 1;
+                            }
+                            ii.offset = offset;
+                            offset += ii.widthFactor + marginOffset;
+                        }
+                        this.mNeedCalculatePageOffsets = false;
+                    }
+                    addView(...args) {
+                        if (args.length === 3 && args[2] instanceof ViewGroup.LayoutParams) {
+                            this._addViewOverride(args[0], args[1], args[2]);
+                        }
+                        else {
+                            super.addView(...args);
+                        }
+                    }
+                    _addViewOverride(child, index, params) {
+                        if (!this.checkLayoutParams(params)) {
+                            params = this.generateLayoutParams(params);
+                        }
+                        const lp = params;
+                        lp.isDecor = lp.isDecor || ViewPager.isImplDecor(child);
+                        if (this.mInLayout) {
+                            if (lp != null && lp.isDecor) {
+                                throw new Error("Cannot add pager decor view during layout");
+                            }
+                            lp.needsMeasure = true;
+                            this.addViewInLayout(child, index, params);
+                        }
+                        else {
+                            super.addView(child, index, params);
+                        }
+                        if (ViewPager.USE_CACHE) {
+                            if (child.getVisibility() != View.GONE) {
+                                child.setDrawingCacheEnabled(this.mScrollingCacheEnabled);
+                            }
+                            else {
+                                child.setDrawingCacheEnabled(false);
+                            }
+                        }
+                    }
+                    removeView(view) {
+                        if (this.mInLayout) {
+                            this.removeViewInLayout(view);
+                        }
+                        else {
+                            super.removeView(view);
+                        }
+                    }
+                    infoForChild(child) {
+                        for (let i = 0; i < this.mItems.size(); i++) {
+                            let ii = this.mItems.get(i);
+                            if (this.mAdapter.isViewFromObject(child, ii.object)) {
+                                return ii;
+                            }
+                        }
+                        return null;
+                    }
+                    infoForAnyChild(child) {
+                        let parent;
+                        while ((parent = child.getParent()) != this) {
+                            if (parent == null || !(parent instanceof View)) {
+                                return null;
+                            }
+                            child = parent;
+                        }
+                        return this.infoForChild(child);
+                    }
+                    infoForPosition(position) {
+                        for (let i = 0; i < this.mItems.size(); i++) {
+                            let ii = this.mItems.get(i);
+                            if (ii.position == position) {
+                                return ii;
+                            }
+                        }
+                        return null;
+                    }
+                    onAttachedToWindow() {
+                        super.onAttachedToWindow();
+                        this.mFirstLayout = true;
+                    }
+                    onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                        this.setMeasuredDimension(ViewPager.getDefaultSize(0, widthMeasureSpec), ViewPager.getDefaultSize(0, heightMeasureSpec));
+                        const measuredWidth = this.getMeasuredWidth();
+                        const maxGutterSize = measuredWidth / 10;
+                        this.mGutterSize = Math.min(maxGutterSize, this.mDefaultGutterSize);
+                        let childWidthSize = measuredWidth - this.getPaddingLeft() - this.getPaddingRight();
+                        let childHeightSize = this.getMeasuredHeight() - this.getPaddingTop() - this.getPaddingBottom();
+                        let size = this.getChildCount();
+                        for (let i = 0; i < size; ++i) {
+                            const child = this.getChildAt(i);
+                            if (child.getVisibility() != View.GONE) {
+                                const lp = child.getLayoutParams();
+                                if (lp != null && lp.isDecor) {
+                                    const hgrav = lp.gravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+                                    const vgrav = lp.gravity & Gravity.VERTICAL_GRAVITY_MASK;
+                                    let widthMode = MeasureSpec.AT_MOST;
+                                    let heightMode = MeasureSpec.AT_MOST;
+                                    let consumeVertical = vgrav == Gravity.TOP || vgrav == Gravity.BOTTOM;
+                                    let consumeHorizontal = hgrav == Gravity.LEFT || hgrav == Gravity.RIGHT;
+                                    if (consumeVertical) {
+                                        widthMode = MeasureSpec.EXACTLY;
+                                    }
+                                    else if (consumeHorizontal) {
+                                        heightMode = MeasureSpec.EXACTLY;
+                                    }
+                                    let widthSize = childWidthSize;
+                                    let heightSize = childHeightSize;
+                                    if (lp.width != ViewPager.LayoutParams.WRAP_CONTENT) {
+                                        widthMode = MeasureSpec.EXACTLY;
+                                        if (lp.width != ViewPager.LayoutParams.FILL_PARENT) {
+                                            widthSize = lp.width;
+                                        }
+                                    }
+                                    if (lp.height != ViewPager.LayoutParams.WRAP_CONTENT) {
+                                        heightMode = MeasureSpec.EXACTLY;
+                                        if (lp.height != ViewPager.LayoutParams.FILL_PARENT) {
+                                            heightSize = lp.height;
+                                        }
+                                    }
+                                    const widthSpec = MeasureSpec.makeMeasureSpec(widthSize, widthMode);
+                                    const heightSpec = MeasureSpec.makeMeasureSpec(heightSize, heightMode);
+                                    child.measure(widthSpec, heightSpec);
+                                    if (consumeVertical) {
+                                        childHeightSize -= child.getMeasuredHeight();
+                                    }
+                                    else if (consumeHorizontal) {
+                                        childWidthSize -= child.getMeasuredWidth();
+                                    }
+                                }
+                            }
+                        }
+                        this.mChildWidthMeasureSpec = MeasureSpec.makeMeasureSpec(childWidthSize, MeasureSpec.EXACTLY);
+                        this.mChildHeightMeasureSpec = MeasureSpec.makeMeasureSpec(childHeightSize, MeasureSpec.EXACTLY);
+                        this.mInLayout = true;
+                        this.populate();
+                        this.mInLayout = false;
+                        size = this.getChildCount();
+                        for (let i = 0; i < size; ++i) {
+                            const child = this.getChildAt(i);
+                            if (child.getVisibility() != View.GONE) {
+                                if (DEBUG)
+                                    Log.v(TAG, "Measuring #" + i + " " + child
+                                        + ": " + this.mChildWidthMeasureSpec);
+                                const lp = child.getLayoutParams();
+                                if (lp == null || !lp.isDecor) {
+                                    const widthSpec = MeasureSpec.makeMeasureSpec((childWidthSize * lp.widthFactor), MeasureSpec.EXACTLY);
+                                    child.measure(widthSpec, this.mChildHeightMeasureSpec);
+                                }
+                            }
+                        }
+                    }
+                    onSizeChanged(w, h, oldw, oldh) {
+                        super.onSizeChanged(w, h, oldw, oldh);
+                        if (w != oldw) {
+                            this.recomputeScrollPosition(w, oldw, this.mPageMargin, this.mPageMargin);
+                        }
+                    }
+                    recomputeScrollPosition(width, oldWidth, margin, oldMargin) {
+                        if (oldWidth > 0 && !this.mItems.isEmpty()) {
+                            const widthWithMargin = width - this.getPaddingLeft() - this.getPaddingRight() + margin;
+                            const oldWidthWithMargin = oldWidth - this.getPaddingLeft() - this.getPaddingRight()
+                                + oldMargin;
+                            const xpos = this.getScrollX();
+                            const pageOffset = xpos / oldWidthWithMargin;
+                            const newOffsetPixels = Math.floor(pageOffset * widthWithMargin);
+                            this.scrollTo(newOffsetPixels, this.getScrollY());
+                            if (!this.mScroller.isFinished()) {
+                                const newDuration = this.mScroller.getDuration() - this.mScroller.timePassed();
+                                let targetInfo = this.infoForPosition(this.mCurItem);
+                                this.mScroller.startScroll(newOffsetPixels, 0, Math.floor(targetInfo.offset * width), 0, newDuration);
+                            }
+                        }
+                        else {
+                            const ii = this.infoForPosition(this.mCurItem);
+                            const scrollOffset = ii != null ? Math.min(ii.offset, this.mLastOffset) : 0;
+                            const scrollPos = Math.floor(scrollOffset *
+                                (width - this.getPaddingLeft() - this.getPaddingRight()));
+                            if (scrollPos != this.getScrollX()) {
+                                this.completeScroll(false);
+                                this.scrollTo(scrollPos, this.getScrollY());
+                            }
+                        }
+                    }
+                    onLayout(changed, l, t, r, b) {
+                        const count = this.getChildCount();
+                        let width = r - l;
+                        let height = b - t;
+                        let paddingLeft = this.getPaddingLeft();
+                        let paddingTop = this.getPaddingTop();
+                        let paddingRight = this.getPaddingRight();
+                        let paddingBottom = this.getPaddingBottom();
+                        const scrollX = this.getScrollX();
+                        let decorCount = 0;
+                        for (let i = 0; i < count; i++) {
+                            const child = this.getChildAt(i);
+                            if (child.getVisibility() != View.GONE) {
+                                const lp = child.getLayoutParams();
+                                let childLeft = 0;
+                                let childTop = 0;
+                                if (lp.isDecor) {
+                                    const hgrav = lp.gravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+                                    const vgrav = lp.gravity & Gravity.VERTICAL_GRAVITY_MASK;
+                                    switch (hgrav) {
+                                        default:
+                                            childLeft = paddingLeft;
+                                            break;
+                                        case Gravity.LEFT:
+                                            childLeft = paddingLeft;
+                                            paddingLeft += child.getMeasuredWidth();
+                                            break;
+                                        case Gravity.CENTER_HORIZONTAL:
+                                            childLeft = Math.max((width - child.getMeasuredWidth()) / 2, paddingLeft);
+                                            break;
+                                        case Gravity.RIGHT:
+                                            childLeft = width - paddingRight - child.getMeasuredWidth();
+                                            paddingRight += child.getMeasuredWidth();
+                                            break;
+                                    }
+                                    switch (vgrav) {
+                                        default:
+                                            childTop = paddingTop;
+                                            break;
+                                        case Gravity.TOP:
+                                            childTop = paddingTop;
+                                            paddingTop += child.getMeasuredHeight();
+                                            break;
+                                        case Gravity.CENTER_VERTICAL:
+                                            childTop = Math.max((height - child.getMeasuredHeight()) / 2, paddingTop);
+                                            break;
+                                        case Gravity.BOTTOM:
+                                            childTop = height - paddingBottom - child.getMeasuredHeight();
+                                            paddingBottom += child.getMeasuredHeight();
+                                            break;
+                                    }
+                                    childLeft += scrollX;
+                                    child.layout(childLeft, childTop, childLeft + child.getMeasuredWidth(), childTop + child.getMeasuredHeight());
+                                    decorCount++;
+                                }
+                            }
+                        }
+                        const childWidth = width - paddingLeft - paddingRight;
+                        for (let i = 0; i < count; i++) {
+                            const child = this.getChildAt(i);
+                            if (child.getVisibility() != View.GONE) {
+                                const lp = child.getLayoutParams();
+                                let ii;
+                                if (!lp.isDecor && (ii = this.infoForChild(child)) != null) {
+                                    let loff = Math.floor(childWidth * ii.offset);
+                                    let childLeft = paddingLeft + loff;
+                                    let childTop = paddingTop;
+                                    if (lp.needsMeasure) {
+                                        lp.needsMeasure = false;
+                                        const widthSpec = MeasureSpec.makeMeasureSpec(Math.floor(childWidth * lp.widthFactor), MeasureSpec.EXACTLY);
+                                        const heightSpec = MeasureSpec.makeMeasureSpec(Math.floor(height - paddingTop - paddingBottom), MeasureSpec.EXACTLY);
+                                        child.measure(widthSpec, heightSpec);
+                                    }
+                                    if (DEBUG)
+                                        Log.v(TAG, "Positioning #" + i + " " + child + " f=" + ii.object
+                                            + ":" + childLeft + "," + childTop + " " + child.getMeasuredWidth()
+                                            + "x" + child.getMeasuredHeight());
+                                    child.layout(childLeft, childTop, childLeft + child.getMeasuredWidth(), childTop + child.getMeasuredHeight());
+                                }
+                            }
+                        }
+                        this.mTopPageBounds = paddingTop;
+                        this.mBottomPageBounds = height - paddingBottom;
+                        this.mDecorChildCount = decorCount;
+                        if (this.mFirstLayout) {
+                            this.scrollToItem(this.mCurItem, false, 0, false);
+                        }
+                        this.mFirstLayout = false;
+                    }
+                    computeScroll() {
+                        if (!this.mScroller.isFinished() && this.mScroller.computeScrollOffset()) {
+                            let oldX = this.getScrollX();
+                            let oldY = this.getScrollY();
+                            let x = this.mScroller.getCurrX();
+                            let y = this.mScroller.getCurrY();
+                            if (oldX != x || oldY != y) {
+                                this.scrollTo(x, y);
+                                if (!this.pageScrolled(x)) {
+                                    this.mScroller.abortAnimation();
+                                    this.scrollTo(0, y);
+                                }
+                            }
+                            this.postInvalidateOnAnimation();
+                            return;
+                        }
+                        this.completeScroll(true);
+                    }
+                    pageScrolled(xpos) {
+                        if (this.mItems.size() == 0) {
+                            this.mCalledSuper = false;
+                            this.onPageScrolled(0, 0, 0);
+                            if (!this.mCalledSuper) {
+                                throw new Error("onPageScrolled did not call superclass implementation");
+                            }
+                            return false;
+                        }
+                        const ii = this.infoForCurrentScrollPosition();
+                        const width = this.getClientWidth();
+                        const widthWithMargin = width + this.mPageMargin;
+                        const marginOffset = this.mPageMargin / width;
+                        const currentPage = ii.position;
+                        const pageOffset = ((xpos / width) - ii.offset) /
+                            (ii.widthFactor + marginOffset);
+                        const offsetPixels = Math.floor(pageOffset * widthWithMargin);
+                        this.mCalledSuper = false;
+                        this.onPageScrolled(currentPage, pageOffset, offsetPixels);
+                        if (!this.mCalledSuper) {
+                            throw new Error("onPageScrolled did not call superclass implementation");
+                        }
+                        return true;
+                    }
+                    onPageScrolled(position, offset, offsetPixels) {
+                        if (this.mDecorChildCount > 0) {
+                            const scrollX = this.getScrollX();
+                            let paddingLeft = this.getPaddingLeft();
+                            let paddingRight = this.getPaddingRight();
+                            const width = this.getWidth();
+                            const childCount = this.getChildCount();
+                            for (let i = 0; i < childCount; i++) {
+                                const child = this.getChildAt(i);
+                                const lp = child.getLayoutParams();
+                                if (!lp.isDecor)
+                                    continue;
+                                const hgrav = lp.gravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+                                let childLeft = 0;
+                                switch (hgrav) {
+                                    default:
+                                        childLeft = paddingLeft;
+                                        break;
+                                    case Gravity.LEFT:
+                                        childLeft = paddingLeft;
+                                        paddingLeft += child.getWidth();
+                                        break;
+                                    case Gravity.CENTER_HORIZONTAL:
+                                        childLeft = Math.max((width - child.getMeasuredWidth()) / 2, paddingLeft);
+                                        break;
+                                    case Gravity.RIGHT:
+                                        childLeft = width - paddingRight - child.getMeasuredWidth();
+                                        paddingRight += child.getMeasuredWidth();
+                                        break;
+                                }
+                                childLeft += scrollX;
+                                const childOffset = childLeft - child.getLeft();
+                                if (childOffset != 0) {
+                                    child.offsetLeftAndRight(childOffset);
+                                }
+                            }
+                        }
+                        this.dispatchOnPageScrolled(position, offset, offsetPixels);
+                        if (this.mPageTransformer != null) {
+                            const scrollX = this.getScrollX();
+                            const childCount = this.getChildCount();
+                            for (let i = 0; i < childCount; i++) {
+                                const child = this.getChildAt(i);
+                                const lp = child.getLayoutParams();
+                                if (lp.isDecor)
+                                    continue;
+                                const transformPos = (child.getLeft() - scrollX) / this.getClientWidth();
+                                this.mPageTransformer.transformPage(child, transformPos);
+                            }
+                        }
+                        this.mCalledSuper = true;
+                    }
+                    dispatchOnPageScrolled(position, offset, offsetPixels) {
+                        if (this.mOnPageChangeListener != null) {
+                            this.mOnPageChangeListener.onPageScrolled(position, offset, offsetPixels);
+                        }
+                        if (this.mOnPageChangeListeners != null) {
+                            for (let i = 0, z = this.mOnPageChangeListeners.size(); i < z; i++) {
+                                let listener = this.mOnPageChangeListeners.get(i);
+                                if (listener != null) {
+                                    listener.onPageScrolled(position, offset, offsetPixels);
+                                }
+                            }
+                        }
+                        if (this.mInternalPageChangeListener != null) {
+                            this.mInternalPageChangeListener.onPageScrolled(position, offset, offsetPixels);
+                        }
+                    }
+                    dispatchOnPageSelected(position) {
+                        if (this.mOnPageChangeListener != null) {
+                            this.mOnPageChangeListener.onPageSelected(position);
+                        }
+                        if (this.mOnPageChangeListeners != null) {
+                            for (let i = 0, z = this.mOnPageChangeListeners.size(); i < z; i++) {
+                                let listener = this.mOnPageChangeListeners.get(i);
+                                if (listener != null) {
+                                    listener.onPageSelected(position);
+                                }
+                            }
+                        }
+                        if (this.mInternalPageChangeListener != null) {
+                            this.mInternalPageChangeListener.onPageSelected(position);
+                        }
+                    }
+                    dispatchOnScrollStateChanged(state) {
+                        if (this.mOnPageChangeListener != null) {
+                            this.mOnPageChangeListener.onPageScrollStateChanged(state);
+                        }
+                        if (this.mOnPageChangeListeners != null) {
+                            for (let i = 0, z = this.mOnPageChangeListeners.size(); i < z; i++) {
+                                let listener = this.mOnPageChangeListeners.get(i);
+                                if (listener != null) {
+                                    listener.onPageScrollStateChanged(state);
+                                }
+                            }
+                        }
+                        if (this.mInternalPageChangeListener != null) {
+                            this.mInternalPageChangeListener.onPageScrollStateChanged(state);
+                        }
+                    }
+                    completeScroll(postEvents) {
+                        let needPopulate = this.mScrollState == ViewPager.SCROLL_STATE_SETTLING;
+                        if (needPopulate) {
+                            this.setScrollingCacheEnabled(false);
+                            this.mScroller.abortAnimation();
+                            let oldX = this.getScrollX();
+                            let oldY = this.getScrollY();
+                            let x = this.mScroller.getCurrX();
+                            let y = this.mScroller.getCurrY();
+                            if (oldX != x || oldY != y) {
+                                scrollTo(x, y);
+                                if (x != oldX) {
+                                    this.pageScrolled(x);
+                                }
+                            }
+                        }
+                        this.mPopulatePending = false;
+                        for (let i = 0; i < this.mItems.size(); i++) {
+                            let ii = this.mItems.get(i);
+                            if (ii.scrolling) {
+                                needPopulate = true;
+                                ii.scrolling = false;
+                            }
+                        }
+                        if (needPopulate) {
+                            if (postEvents) {
+                                this.postOnAnimation(this.mEndScrollRunnable);
+                            }
+                            else {
+                                this.mEndScrollRunnable.run();
+                            }
+                        }
+                    }
+                    isGutterDrag(x, dx) {
+                        return (x < this.mGutterSize && dx > 0) || (x > this.getWidth() - this.mGutterSize && dx < 0);
+                    }
+                    enableLayers(enable) {
+                    }
+                    onInterceptTouchEvent(ev) {
+                        /*
+                         * This method JUST determines whether we want to intercept the motion.
+                         * If we return true, onMotionEvent will be called and we do the actual
+                         * scrolling there.
+                         */
+                        const action = ev.getAction() & MotionEvent.ACTION_MASK;
+                        if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
+                            if (DEBUG)
+                                Log.v(TAG, "Intercept done!");
+                            this.resetTouch();
+                            return false;
+                        }
+                        if (action != MotionEvent.ACTION_DOWN) {
+                            if (this.mIsBeingDragged) {
+                                if (DEBUG)
+                                    Log.v(TAG, "Intercept returning true!");
+                                return true;
+                            }
+                            if (this.mIsUnableToDrag) {
+                                if (DEBUG)
+                                    Log.v(TAG, "Intercept returning false!");
+                                return false;
+                            }
+                        }
+                        switch (action) {
+                            case MotionEvent.ACTION_MOVE: {
+                                const activePointerId = this.mActivePointerId;
+                                if (activePointerId == ViewPager.INVALID_POINTER) {
+                                    break;
+                                }
+                                const pointerIndex = ev.findPointerIndex(activePointerId);
+                                const x = ev.getX(pointerIndex);
+                                const dx = x - this.mLastMotionX;
+                                const xDiff = Math.abs(dx);
+                                const y = ev.getY(pointerIndex);
+                                const yDiff = Math.abs(y - this.mInitialMotionY);
+                                if (DEBUG)
+                                    Log.v(TAG, "Moved x to " + x + "," + y + " diff=" + xDiff + "," + yDiff);
+                                if (dx != 0 && !this.isGutterDrag(this.mLastMotionX, dx) &&
+                                    this.canScroll(this, false, Math.floor(dx), Math.floor(x), Math.floor(y))) {
+                                    this.mLastMotionX = x;
+                                    this.mLastMotionY = y;
+                                    this.mIsUnableToDrag = true;
+                                    return false;
+                                }
+                                if (xDiff > this.mTouchSlop && xDiff * 0.5 > yDiff) {
+                                    if (DEBUG)
+                                        Log.v(TAG, "Starting drag!");
+                                    this.mIsBeingDragged = true;
+                                    this.requestParentDisallowInterceptTouchEvent(true);
+                                    this.setScrollState(ViewPager.SCROLL_STATE_DRAGGING);
+                                    this.mLastMotionX = dx > 0 ? this.mInitialMotionX + this.mTouchSlop :
+                                        this.mInitialMotionX - this.mTouchSlop;
+                                    this.mLastMotionY = y;
+                                    this.setScrollingCacheEnabled(true);
+                                }
+                                else if (yDiff > this.mTouchSlop) {
+                                    if (DEBUG)
+                                        Log.v(TAG, "Starting unable to drag!");
+                                    this.mIsUnableToDrag = true;
+                                }
+                                if (this.mIsBeingDragged) {
+                                    if (this.performDrag(x)) {
+                                        this.postInvalidateOnAnimation();
+                                    }
+                                }
+                                break;
+                            }
+                            case MotionEvent.ACTION_DOWN: {
+                                this.mLastMotionX = this.mInitialMotionX = ev.getX();
+                                this.mLastMotionY = this.mInitialMotionY = ev.getY();
+                                this.mActivePointerId = ev.getPointerId(0);
+                                this.mIsUnableToDrag = false;
+                                this.mScroller.computeScrollOffset();
+                                if (this.mScrollState == ViewPager.SCROLL_STATE_SETTLING &&
+                                    Math.abs(this.mScroller.getFinalX() - this.mScroller.getCurrX()) > this.mCloseEnough) {
+                                    this.mScroller.abortAnimation();
+                                    this.mPopulatePending = false;
+                                    this.populate();
+                                    this.mIsBeingDragged = true;
+                                    this.requestParentDisallowInterceptTouchEvent(true);
+                                    this.setScrollState(ViewPager.SCROLL_STATE_DRAGGING);
+                                }
+                                else {
+                                    this.completeScroll(false);
+                                    this.mIsBeingDragged = false;
+                                }
+                                if (DEBUG)
+                                    Log.v(TAG, "Down at " + this.mLastMotionX + "," + this.mLastMotionY
+                                        + " mIsBeingDragged=" + this.mIsBeingDragged
+                                        + "mIsUnableToDrag=" + this.mIsUnableToDrag);
+                                break;
+                            }
+                            case MotionEvent.ACTION_POINTER_UP:
+                                this.onSecondaryPointerUp(ev);
+                                break;
+                        }
+                        if (this.mVelocityTracker == null) {
+                            this.mVelocityTracker = VelocityTracker.obtain();
+                        }
+                        this.mVelocityTracker.addMovement(ev);
+                        return this.mIsBeingDragged;
+                    }
+                    onTouchEvent(ev) {
+                        if (this.mFakeDragging) {
+                            return true;
+                        }
+                        if (ev.getAction() == MotionEvent.ACTION_DOWN && ev.getEdgeFlags() != 0) {
+                            return false;
+                        }
+                        if (this.mAdapter == null || this.mAdapter.getCount() == 0) {
+                            return false;
+                        }
+                        if (this.mVelocityTracker == null) {
+                            this.mVelocityTracker = VelocityTracker.obtain();
+                        }
+                        this.mVelocityTracker.addMovement(ev);
+                        const action = ev.getAction();
+                        let needsInvalidate = false;
+                        switch (action & MotionEvent.ACTION_MASK) {
+                            case MotionEvent.ACTION_DOWN: {
+                                this.mScroller.abortAnimation();
+                                this.mPopulatePending = false;
+                                this.populate();
+                                this.mLastMotionX = this.mInitialMotionX = ev.getX();
+                                this.mLastMotionY = this.mInitialMotionY = ev.getY();
+                                this.mActivePointerId = ev.getPointerId(0);
+                                break;
+                            }
+                            case MotionEvent.ACTION_MOVE:
+                                if (!this.mIsBeingDragged) {
+                                    const pointerIndex = ev.findPointerIndex(this.mActivePointerId);
+                                    if (pointerIndex == -1) {
+                                        needsInvalidate = this.resetTouch();
+                                        break;
+                                    }
+                                    const x = ev.getX(pointerIndex);
+                                    const xDiff = Math.abs(x - this.mLastMotionX);
+                                    const y = ev.getY(pointerIndex);
+                                    const yDiff = Math.abs(y - this.mLastMotionY);
+                                    if (DEBUG)
+                                        Log.v(TAG, "Moved x to " + x + "," + y + " diff=" + xDiff + "," + yDiff);
+                                    if (xDiff > this.mTouchSlop && xDiff > yDiff) {
+                                        if (DEBUG)
+                                            Log.v(TAG, "Starting drag!");
+                                        this.mIsBeingDragged = true;
+                                        this.requestParentDisallowInterceptTouchEvent(true);
+                                        this.mLastMotionX = x - this.mInitialMotionX > 0 ? this.mInitialMotionX + this.mTouchSlop :
+                                            this.mInitialMotionX - this.mTouchSlop;
+                                        this.mLastMotionY = y;
+                                        this.setScrollState(ViewPager.SCROLL_STATE_DRAGGING);
+                                        this.setScrollingCacheEnabled(true);
+                                        let parent = this.getParent();
+                                        if (parent != null) {
+                                            parent.requestDisallowInterceptTouchEvent(true);
+                                        }
+                                    }
+                                }
+                                if (this.mIsBeingDragged) {
+                                    const activePointerIndex = ev.findPointerIndex(this.mActivePointerId);
+                                    const x = ev.getX(activePointerIndex);
+                                    needsInvalidate = needsInvalidate || this.performDrag(x);
+                                }
+                                break;
+                            case MotionEvent.ACTION_UP:
+                                if (this.mIsBeingDragged) {
+                                    const velocityTracker = this.mVelocityTracker;
+                                    velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
+                                    let initialVelocity = velocityTracker.getXVelocity(this.mActivePointerId);
+                                    this.mPopulatePending = true;
+                                    const width = this.getClientWidth();
+                                    const scrollX = this.getScrollX();
+                                    const ii = this.infoForCurrentScrollPosition();
+                                    const currentPage = ii.position;
+                                    const pageOffset = ((scrollX / width) - ii.offset) / ii.widthFactor;
+                                    const activePointerIndex = ev.findPointerIndex(this.mActivePointerId);
+                                    const x = ev.getX(activePointerIndex);
+                                    const totalDelta = (x - this.mInitialMotionX);
+                                    let nextPage = this.determineTargetPage(currentPage, pageOffset, initialVelocity, totalDelta);
+                                    this.setCurrentItemInternal(nextPage, true, true, initialVelocity);
+                                    needsInvalidate = this.resetTouch();
+                                }
+                                break;
+                            case MotionEvent.ACTION_CANCEL:
+                                if (this.mIsBeingDragged) {
+                                    this.scrollToItem(this.mCurItem, true, 0, false);
+                                    needsInvalidate = this.resetTouch();
+                                }
+                                break;
+                            case MotionEvent.ACTION_POINTER_DOWN: {
+                                const index = ev.getActionIndex();
+                                const x = ev.getX(index);
+                                this.mLastMotionX = x;
+                                this.mActivePointerId = ev.getPointerId(index);
+                                break;
+                            }
+                            case MotionEvent.ACTION_POINTER_UP:
+                                this.onSecondaryPointerUp(ev);
+                                this.mLastMotionX = ev.getX(ev.findPointerIndex(this.mActivePointerId));
+                                break;
+                        }
+                        if (needsInvalidate) {
+                            this.postInvalidateOnAnimation();
+                        }
+                        return true;
+                    }
+                    resetTouch() {
+                        let needsInvalidate = false;
+                        this.mActivePointerId = ViewPager.INVALID_POINTER;
+                        this.endDrag();
+                        return needsInvalidate;
+                    }
+                    requestParentDisallowInterceptTouchEvent(disallowIntercept) {
+                        const parent = this.getParent();
+                        if (parent != null) {
+                            parent.requestDisallowInterceptTouchEvent(disallowIntercept);
+                        }
+                    }
+                    performDrag(x) {
+                        let needsInvalidate = false;
+                        const deltaX = this.mLastMotionX - x;
+                        this.mLastMotionX = x;
+                        let oldScrollX = this.getScrollX();
+                        let scrollX = oldScrollX + deltaX;
+                        const width = this.getClientWidth();
+                        let leftBound = width * this.mFirstOffset;
+                        let rightBound = width * this.mLastOffset;
+                        let leftAbsolute = true;
+                        let rightAbsolute = true;
+                        const firstItem = this.mItems.get(0);
+                        const lastItem = this.mItems.get(this.mItems.size() - 1);
+                        if (firstItem.position != 0) {
+                            leftAbsolute = false;
+                            leftBound = firstItem.offset * width;
+                        }
+                        if (lastItem.position != this.mAdapter.getCount() - 1) {
+                            rightAbsolute = false;
+                            rightBound = lastItem.offset * width;
+                        }
+                        if (scrollX < leftBound) {
+                            if (leftAbsolute) {
+                                let over = leftBound - scrollX;
+                                needsInvalidate = false;
+                            }
+                            scrollX = leftBound;
+                        }
+                        else if (scrollX > rightBound) {
+                            if (rightAbsolute) {
+                                let over = scrollX - rightBound;
+                                needsInvalidate = false;
+                            }
+                            scrollX = rightBound;
+                        }
+                        this.mLastMotionX += scrollX - Math.floor(scrollX);
+                        this.scrollTo(scrollX, this.getScrollY());
+                        this.pageScrolled(scrollX);
+                        return needsInvalidate;
+                    }
+                    infoForCurrentScrollPosition() {
+                        const width = this.getClientWidth();
+                        const scrollOffset = width > 0 ? this.getScrollX() / width : 0;
+                        const marginOffset = width > 0 ? this.mPageMargin / width : 0;
+                        let lastPos = -1;
+                        let lastOffset = 0;
+                        let lastWidth = 0;
+                        let first = true;
+                        let lastItem = null;
+                        for (let i = 0; i < this.mItems.size(); i++) {
+                            let ii = this.mItems.get(i);
+                            let offset;
+                            if (!first && ii.position != lastPos + 1) {
+                                ii = this.mTempItem;
+                                ii.offset = lastOffset + lastWidth + marginOffset;
+                                ii.position = lastPos + 1;
+                                ii.widthFactor = this.mAdapter.getPageWidth(ii.position);
+                                i--;
+                            }
+                            offset = ii.offset;
+                            const leftBound = offset;
+                            const rightBound = offset + ii.widthFactor + marginOffset;
+                            if (first || scrollOffset >= leftBound) {
+                                if (scrollOffset < rightBound || i == this.mItems.size() - 1) {
+                                    return ii;
+                                }
+                            }
+                            else {
+                                return lastItem;
+                            }
+                            first = false;
+                            lastPos = ii.position;
+                            lastOffset = offset;
+                            lastWidth = ii.widthFactor;
+                            lastItem = ii;
+                        }
+                        return lastItem;
+                    }
+                    determineTargetPage(currentPage, pageOffset, velocity, deltaX) {
+                        let targetPage;
+                        if (Math.abs(deltaX) > this.mFlingDistance && Math.abs(velocity) > this.mMinimumVelocity) {
+                            targetPage = velocity > 0 ? currentPage : currentPage + 1;
+                        }
+                        else {
+                            const truncator = currentPage >= this.mCurItem ? 0.4 : 0.6;
+                            targetPage = Math.floor(currentPage + pageOffset + truncator);
+                        }
+                        if (this.mItems.size() > 0) {
+                            const firstItem = this.mItems.get(0);
+                            const lastItem = this.mItems.get(this.mItems.size() - 1);
+                            targetPage = Math.max(firstItem.position, Math.min(targetPage, lastItem.position));
+                        }
+                        return targetPage;
+                    }
+                    draw(canvas) {
+                        super.draw(canvas);
+                        let needsInvalidate = false;
+                        if (needsInvalidate) {
+                            this.postInvalidateOnAnimation();
+                        }
+                    }
+                    onDraw(canvas) {
+                        super.onDraw(canvas);
+                        if (this.mPageMargin > 0 && this.mMarginDrawable != null && this.mItems.size() > 0 && this.mAdapter != null) {
+                            const scrollX = this.getScrollX();
+                            const width = this.getWidth();
+                            const marginOffset = this.mPageMargin / width;
+                            let itemIndex = 0;
+                            let ii = this.mItems.get(0);
+                            let offset = ii.offset;
+                            const itemCount = this.mItems.size();
+                            const firstPos = ii.position;
+                            const lastPos = this.mItems.get(itemCount - 1).position;
+                            for (let pos = firstPos; pos < lastPos; pos++) {
+                                while (pos > ii.position && itemIndex < itemCount) {
+                                    ii = this.mItems.get(++itemIndex);
+                                }
+                                let drawAt;
+                                if (pos == ii.position) {
+                                    drawAt = (ii.offset + ii.widthFactor) * width;
+                                    offset = ii.offset + ii.widthFactor + marginOffset;
+                                }
+                                else {
+                                    let widthFactor = this.mAdapter.getPageWidth(pos);
+                                    drawAt = (offset + widthFactor) * width;
+                                    offset += widthFactor + marginOffset;
+                                }
+                                if (drawAt + this.mPageMargin > scrollX) {
+                                    this.mMarginDrawable.setBounds(drawAt, this.mTopPageBounds, drawAt + this.mPageMargin, this.mBottomPageBounds);
+                                    this.mMarginDrawable.draw(canvas);
+                                }
+                                if (drawAt > scrollX + width) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    beginFakeDrag() {
+                        if (this.mIsBeingDragged) {
+                            return false;
+                        }
+                        this.mFakeDragging = true;
+                        this.setScrollState(ViewPager.SCROLL_STATE_DRAGGING);
+                        this.mInitialMotionX = this.mLastMotionX = 0;
+                        if (this.mVelocityTracker == null) {
+                            this.mVelocityTracker = VelocityTracker.obtain();
+                        }
+                        else {
+                            this.mVelocityTracker.clear();
+                        }
+                        const time = android.os.SystemClock.uptimeMillis();
+                        const ev = MotionEvent.obtainWithAction(time, time, MotionEvent.ACTION_DOWN, 0, 0, 0);
+                        this.mVelocityTracker.addMovement(ev);
+                        ev.recycle();
+                        this.mFakeDragBeginTime = time;
+                        return true;
+                    }
+                    endFakeDrag() {
+                        if (!this.mFakeDragging) {
+                            throw new Error("No fake drag in progress. Call beginFakeDrag first.");
+                        }
+                        const velocityTracker = this.mVelocityTracker;
+                        velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
+                        let initialVelocity = Math.floor(velocityTracker.getXVelocity(this.mActivePointerId));
+                        this.mPopulatePending = true;
+                        const width = this.getClientWidth();
+                        const scrollX = this.getScrollX();
+                        const ii = this.infoForCurrentScrollPosition();
+                        const currentPage = ii.position;
+                        const pageOffset = ((scrollX / width) - ii.offset) / ii.widthFactor;
+                        const totalDelta = Math.floor(this.mLastMotionX - this.mInitialMotionX);
+                        let nextPage = this.determineTargetPage(currentPage, pageOffset, initialVelocity, totalDelta);
+                        this.setCurrentItemInternal(nextPage, true, true, initialVelocity);
+                        this.endDrag();
+                        this.mFakeDragging = false;
+                    }
+                    fakeDragBy(xOffset) {
+                        if (!this.mFakeDragging) {
+                            throw new Error("No fake drag in progress. Call beginFakeDrag first.");
+                        }
+                        this.mLastMotionX += xOffset;
+                        let oldScrollX = this.getScrollX();
+                        let scrollX = oldScrollX - xOffset;
+                        const width = this.getClientWidth();
+                        let leftBound = width * this.mFirstOffset;
+                        let rightBound = width * this.mLastOffset;
+                        const firstItem = this.mItems.get(0);
+                        const lastItem = this.mItems.get(this.mItems.size() - 1);
+                        if (firstItem.position != 0) {
+                            leftBound = firstItem.offset * width;
+                        }
+                        if (lastItem.position != this.mAdapter.getCount() - 1) {
+                            rightBound = lastItem.offset * width;
+                        }
+                        if (scrollX < leftBound) {
+                            scrollX = leftBound;
+                        }
+                        else if (scrollX > rightBound) {
+                            scrollX = rightBound;
+                        }
+                        this.mLastMotionX += scrollX - Math.floor(scrollX);
+                        scrollTo(Math.floor(scrollX), this.getScrollY());
+                        this.pageScrolled(Math.floor(scrollX));
+                        const time = android.os.SystemClock.uptimeMillis();
+                        const ev = MotionEvent.obtainWithAction(this.mFakeDragBeginTime, time, MotionEvent.ACTION_MOVE, this.mLastMotionX, 0, 0);
+                        this.mVelocityTracker.addMovement(ev);
+                        ev.recycle();
+                    }
+                    isFakeDragging() {
+                        return this.mFakeDragging;
+                    }
+                    onSecondaryPointerUp(ev) {
+                        const pointerIndex = ev.getActionIndex();
+                        const pointerId = ev.getPointerId(pointerIndex);
+                        if (pointerId == this.mActivePointerId) {
+                            const newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                            this.mLastMotionX = ev.getX(newPointerIndex);
+                            this.mActivePointerId = ev.getPointerId(newPointerIndex);
+                            if (this.mVelocityTracker != null) {
+                                this.mVelocityTracker.clear();
+                            }
+                        }
+                    }
+                    endDrag() {
+                        this.mIsBeingDragged = false;
+                        this.mIsUnableToDrag = false;
+                        if (this.mVelocityTracker != null) {
+                            this.mVelocityTracker.recycle();
+                            this.mVelocityTracker = null;
+                        }
+                    }
+                    setScrollingCacheEnabled(enabled) {
+                        if (this.mScrollingCacheEnabled != enabled) {
+                            this.mScrollingCacheEnabled = enabled;
+                            if (ViewPager.USE_CACHE) {
+                                const size = this.getChildCount();
+                                for (let i = 0; i < size; ++i) {
+                                    const child = this.getChildAt(i);
+                                    if (child.getVisibility() != View.GONE) {
+                                        child.setDrawingCacheEnabled(enabled);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    canScrollHorizontally(direction) {
+                        if (this.mAdapter == null) {
+                            return false;
+                        }
+                        const width = this.getClientWidth();
+                        const scrollX = this.getScrollX();
+                        if (direction < 0) {
+                            return (scrollX > (width * this.mFirstOffset));
+                        }
+                        else if (direction > 0) {
+                            return (scrollX < (width * this.mLastOffset));
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                    canScroll(v, checkV, dx, x, y) {
+                        if (v instanceof ViewGroup) {
+                            const group = v;
+                            const scrollX = v.getScrollX();
+                            const scrollY = v.getScrollY();
+                            const count = group.getChildCount();
+                            for (let i = count - 1; i >= 0; i--) {
+                                const child = group.getChildAt(i);
+                                if (x + scrollX >= child.getLeft() && x + scrollX < child.getRight() &&
+                                    y + scrollY >= child.getTop() && y + scrollY < child.getBottom() &&
+                                    this.canScroll(child, true, dx, x + scrollX - child.getLeft(), y + scrollY - child.getTop())) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return checkV && v.canScrollHorizontally(-dx);
+                    }
+                    addTouchables(views) {
+                        for (let i = 0; i < this.getChildCount(); i++) {
+                            const child = this.getChildAt(i);
+                            if (child.getVisibility() == View.VISIBLE) {
+                                let ii = this.infoForChild(child);
+                                if (ii != null && ii.position == this.mCurItem) {
+                                    child.addTouchables(views);
+                                }
+                            }
+                        }
+                    }
+                    generateDefaultLayoutParams() {
+                        return new ViewPager.LayoutParams();
+                    }
+                    generateLayoutParams(p) {
+                        return this.generateDefaultLayoutParams();
+                    }
+                    checkLayoutParams(p) {
+                        return p instanceof ViewPager.LayoutParams && super.checkLayoutParams(p);
+                    }
+                    static isImplDecor(view) {
+                        return view[SymbolDecor] || view.constructor[SymbolDecor];
+                    }
+                    static setClassImplDecor(clazz) {
+                        clazz[SymbolDecor] = true;
+                    }
+                }
+                ViewPager.COMPARATOR = (lhs, rhs) => {
+                    return lhs.position - rhs.position;
+                };
+                ViewPager.USE_CACHE = false;
+                ViewPager.DEFAULT_OFFSCREEN_PAGES = 1;
+                ViewPager.MAX_SETTLE_DURATION = 600;
+                ViewPager.MIN_DISTANCE_FOR_FLING = 25;
+                ViewPager.DEFAULT_GUTTER_SIZE = 16;
+                ViewPager.MIN_FLING_VELOCITY = 400;
+                ViewPager.sInterpolator = {
+                    getInterpolation(t) {
+                        t -= 1.0;
+                        return t * t * t * t * t + 1.0;
+                    }
+                };
+                ViewPager.INVALID_POINTER = -1;
+                ViewPager.CLOSE_ENOUGH = 2;
+                ViewPager.DRAW_ORDER_DEFAULT = 0;
+                ViewPager.DRAW_ORDER_FORWARD = 1;
+                ViewPager.DRAW_ORDER_REVERSE = 2;
+                ViewPager.sPositionComparator = (lhs, rhs) => {
+                    let llp = lhs.getLayoutParams();
+                    let rlp = rhs.getLayoutParams();
+                    if (llp.isDecor != rlp.isDecor) {
+                        return llp.isDecor ? 1 : -1;
+                    }
+                    return llp.position - rlp.position;
+                };
+                ViewPager.SCROLL_STATE_IDLE = 0;
+                ViewPager.SCROLL_STATE_DRAGGING = 1;
+                ViewPager.SCROLL_STATE_SETTLING = 2;
+                view_5.ViewPager = ViewPager;
+                (function (ViewPager) {
+                    class SimpleOnPageChangeListener {
+                        onPageScrolled(position, positionOffset, positionOffsetPixels) {
+                        }
+                        onPageSelected(position) {
+                        }
+                        onPageScrollStateChanged(state) {
+                        }
+                    }
+                    ViewPager.SimpleOnPageChangeListener = SimpleOnPageChangeListener;
+                    class LayoutParams extends ViewGroup.LayoutParams {
+                        constructor() {
+                            super(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+                            this.isDecor = false;
+                            this.gravity = 0;
+                            this.widthFactor = 0;
+                            this.needsMeasure = false;
+                            this.position = 0;
+                            this.childIndex = 0;
+                        }
+                        _createAttrChangeHandler(mergeHandler) {
+                            super._createAttrChangeHandler(mergeHandler);
+                            let params = this;
+                            mergeHandler.add({
+                                set gravity(value) {
+                                    params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
+                                },
+                                get gravity() {
+                                    return params.gravity;
+                                }
+                            });
+                        }
+                    }
+                    ViewPager.LayoutParams = LayoutParams;
+                })(ViewPager = view_5.ViewPager || (view_5.ViewPager = {}));
+                class ItemInfo {
+                    constructor() {
+                        this.position = 0;
+                        this.scrolling = false;
+                        this.widthFactor = 0;
+                        this.offset = 0;
+                    }
+                }
+                class PagerObserver extends DataSetObserver {
+                    constructor(viewPager) {
+                        super();
+                        this.ViewPager_this = viewPager;
+                    }
+                    onChanged() {
+                        this.ViewPager_this.dataSetChanged();
+                    }
+                    onInvalidated() {
+                        this.ViewPager_this.dataSetChanged();
+                    }
+                }
+            })(view = v4.view || (v4.view = {}));
+        })(v4 = support.v4 || (support.v4 = {}));
+    })(support = android.support || (android.support = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/6.
+ */
+///<reference path="../../../../android/view/View.ts"/>
+///<reference path="../../../../android/view/ViewGroup.ts"/>
+///<reference path="../../../../android/support/v4/view/ViewPager.ts"/>
+///<reference path="../../../../android/support/v4/view/PagerAdapter.ts"/>
+var com;
+(function (com) {
+    var jakewharton;
+    (function (jakewharton) {
+        var salvage;
+        (function (salvage) {
+            var SparseArray = android.util.SparseArray;
+            var PagerAdapter = android.support.v4.view.PagerAdapter;
+            class RecyclingPagerAdapter extends PagerAdapter {
+                constructor() {
+                    super();
+                    this.recycleBin = new RecycleBin();
+                    this.recycleBin.setViewTypeCount(this.getViewTypeCount());
+                }
+                notifyDataSetChanged() {
+                    this.recycleBin.scrapActiveViews();
+                    super.notifyDataSetChanged();
+                }
+                instantiateItem(container, position) {
+                    let viewType = this.getItemViewType(position);
+                    let view = null;
+                    if (viewType != RecyclingPagerAdapter.IGNORE_ITEM_VIEW_TYPE) {
+                        view = this.recycleBin.getScrapView(position, viewType);
+                    }
+                    view = this.getView(position, view, container);
+                    container.addView(view);
+                    return view;
+                }
+                destroyItem(container, position, object) {
+                    let view = object;
+                    container.removeView(view);
+                    let viewType = this.getItemViewType(position);
+                    if (viewType != RecyclingPagerAdapter.IGNORE_ITEM_VIEW_TYPE) {
+                        this.recycleBin.addScrapView(view, position, viewType);
+                    }
+                }
+                isViewFromObject(view, object) {
+                    return view === object;
+                }
+                getViewTypeCount() {
+                    return 1;
+                }
+                getItemViewType(position) {
+                    return 0;
+                }
+            }
+            RecyclingPagerAdapter.IGNORE_ITEM_VIEW_TYPE = -1;
+            salvage.RecyclingPagerAdapter = RecyclingPagerAdapter;
+            class RecycleBin {
+                constructor() {
+                    this.activeViews = [];
+                    this.activeViewTypes = [];
+                    this.viewTypeCount = 0;
+                }
+                setViewTypeCount(viewTypeCount) {
+                    if (viewTypeCount < 1) {
+                        throw new Error("Can't have a viewTypeCount < 1");
+                    }
+                    let scrapViews = new Array(viewTypeCount);
+                    for (let i = 0; i < viewTypeCount; i++) {
+                        scrapViews[i] = new SparseArray();
+                    }
+                    this.viewTypeCount = viewTypeCount;
+                    this.currentScrapViews = scrapViews[0];
+                    this.scrapViews = scrapViews;
+                }
+                shouldRecycleViewType(viewType) {
+                    return viewType >= 0;
+                }
+                getScrapView(position, viewType) {
+                    if (this.viewTypeCount == 1) {
+                        return this.retrieveFromScrap(this.currentScrapViews, position);
+                    }
+                    else if (viewType >= 0 && viewType < this.scrapViews.length) {
+                        return this.retrieveFromScrap(this.scrapViews[viewType], position);
+                    }
+                    return null;
+                }
+                addScrapView(scrap, position, viewType) {
+                    if (this.viewTypeCount == 1) {
+                        this.currentScrapViews.put(position, scrap);
+                    }
+                    else {
+                        this.scrapViews[viewType].put(position, scrap);
+                    }
+                }
+                scrapActiveViews() {
+                    const activeViews = this.activeViews;
+                    const activeViewTypes = this.activeViewTypes;
+                    const multipleScraps = this.viewTypeCount > 1;
+                    let scrapViews = this.currentScrapViews;
+                    const count = activeViews.length;
+                    for (let i = count - 1; i >= 0; i--) {
+                        const victim = activeViews[i];
+                        if (victim != null) {
+                            let whichScrap = activeViewTypes[i];
+                            activeViews[i] = null;
+                            activeViewTypes[i] = -1;
+                            if (!this.shouldRecycleViewType(whichScrap)) {
+                                continue;
+                            }
+                            if (multipleScraps) {
+                                scrapViews = this.scrapViews[whichScrap];
+                            }
+                            scrapViews.put(i, victim);
+                        }
+                    }
+                    this.pruneScrapViews();
+                }
+                pruneScrapViews() {
+                    const maxViews = this.activeViews.length;
+                    const viewTypeCount = this.viewTypeCount;
+                    const scrapViews = this.scrapViews;
+                    for (let i = 0; i < viewTypeCount; ++i) {
+                        const scrapPile = scrapViews[i];
+                        let size = scrapPile.size();
+                        const extras = size - maxViews;
+                        size--;
+                        for (let j = 0; j < extras; j++) {
+                            scrapPile.remove(scrapPile.keyAt(size--));
+                        }
+                    }
+                }
+                retrieveFromScrap(scrapViews, position) {
+                    let size = scrapViews.size();
+                    if (size > 0) {
+                        for (let i = 0; i < size; i++) {
+                            let fromPosition = scrapViews.keyAt(i);
+                            let view = scrapViews.get(fromPosition);
+                            if (fromPosition == position) {
+                                scrapViews.remove(fromPosition);
+                                return view;
+                            }
+                        }
+                        let index = size - 1;
+                        let r = scrapViews.valueAt(index);
+                        scrapViews.remove(scrapViews.keyAt(index));
+                        return r;
+                    }
+                    else {
+                        return null;
+                    }
+                }
+            }
+        })(salvage = jakewharton.salvage || (jakewharton.salvage = {}));
+    })(jakewharton = com.jakewharton || (com.jakewharton = {}));
+})(com || (com = {}));
+/**
  * Created by linfaxin on 15/10/6.
  */
 //use the deepest sub class as enter
@@ -12815,6 +15063,8 @@ var android;
 ///<reference path="android/widget/LinearLayout.ts"/>
 ///<reference path="android/widget/TextView.ts"/>
 ///<reference path="android/widget/Button.ts"/>
+///<reference path="android/support/v4/view/ViewPager.ts"/>
+///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="runtime/AndroidUI.ts"/>
 window[`android`] = android;
 window[`java`] = java;

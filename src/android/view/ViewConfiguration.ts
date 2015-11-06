@@ -28,7 +28,7 @@ module android.view{
         private static HOVER_TAP_TIMEOUT = 150;
         private static HOVER_TAP_SLOP = 20;
         private static ZOOM_CONTROLS_TIMEOUT = 3000;
-        private static EDGE_SLOP = 12;
+        public static EDGE_SLOP = 12;
         private static TOUCH_SLOP = 8;
         private static DOUBLE_TAP_TOUCH_SLOP = ViewConfiguration.TOUCH_SLOP;
         private static PAGING_TOUCH_SLOP = ViewConfiguration.TOUCH_SLOP * 2;

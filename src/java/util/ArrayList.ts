@@ -113,5 +113,8 @@ module java.util{
             return this.array.toString();
         }
 
+        sort(compareFn?: (a: T, b: T) => number){
+            this.array.sort(compareFn);
+        }
     }
 }

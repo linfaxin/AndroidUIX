@@ -29,7 +29,15 @@ module android.app{
 
         createdCallback():void{
             this.AndroidUI = new AndroidUI(this);
-            this.onCreate();
+            //delay call onCreate, insure browser load lib complete
+            requestAnimationFrame(()=>{
+                this.onCreate();
+                //activity could have a attribute defined callback when created
+                let onCreateFunc = this.getAttribute('oncreate');
+                if(onCreateFunc && typeof window[onCreateFunc] === "function"){
+                    window[onCreateFunc].call(this, this);
+                }
+            });
         }
         attachedCallback():void {
             this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);

@@ -452,6 +452,21 @@ module android.view {
                 this.mGroupFlags &= ~flag;
             }
         }
+
+        addTouchables(views:java.util.ArrayList<android.view.View>):void {
+            super.addTouchables(views);
+
+            const count = this.mChildrenCount;
+            const children = this.mChildren;
+
+            for (let i = 0; i < count; i++) {
+                const child = children[i];
+                if ((child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE) {
+                    child.addTouchables(views);
+                }
+            }
+        }
+
         onInterceptTouchEvent(ev:MotionEvent) {
             return false;
         }

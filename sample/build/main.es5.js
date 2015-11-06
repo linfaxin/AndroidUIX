@@ -18,39 +18,8 @@ var sample;
     (function (activity) {
         var Activity = android.app.Activity;
 
-        var SampleTextViewActivity = (function (_Activity) {
-            _inherits(SampleTextViewActivity, _Activity);
-
-            function SampleTextViewActivity() {
-                _classCallCheck(this, SampleTextViewActivity);
-
-                _get(Object.getPrototypeOf(SampleTextViewActivity.prototype), 'constructor', this).apply(this, arguments);
-            }
-
-            _createClass(SampleTextViewActivity, [{
-                key: 'onCreate',
-                value: function onCreate() {}
-            }]);
-
-            return SampleTextViewActivity;
-        })(Activity);
-
-        activity.SampleTextViewActivity = SampleTextViewActivity;
-        SampleTextViewActivity.registerCustomElement();
-    })(activity = sample.activity || (sample.activity = {}));
-})(sample || (sample = {}));
-/**
- * Created by linfaxin on 15/10/26.
- */
-///<reference path="../../dist/android-web-widget.d.ts"/>
-var sample;
-(function (sample) {
-    var activity;
-    (function (activity) {
-        var Activity = android.app.Activity;
-
-        var SampleButtonActivity = (function (_Activity2) {
-            _inherits(SampleButtonActivity, _Activity2);
+        var SampleButtonActivity = (function (_Activity) {
+            _inherits(SampleButtonActivity, _Activity);
 
             function SampleButtonActivity() {
                 _classCallCheck(this, SampleButtonActivity);
@@ -84,8 +53,77 @@ var sample;
         SampleButtonActivity.registerCustomElement();
     })(activity = sample.activity || (sample.activity = {}));
 })(sample || (sample = {}));
+/**
+ * Created by linfaxin on 15/10/26.
+ */
+///<reference path="../../dist/android-web-widget.d.ts"/>
+var sample;
+(function (sample) {
+    var activity;
+    (function (activity) {
+        var Activity = android.app.Activity;
+        var View = android.view.View;
+        var Color = android.graphics.Color;
+
+        var SampleViewPagerNormalActivity = (function (_Activity2) {
+            _inherits(SampleViewPagerNormalActivity, _Activity2);
+
+            function SampleViewPagerNormalActivity() {
+                _classCallCheck(this, SampleViewPagerNormalActivity);
+
+                _get(Object.getPrototypeOf(SampleViewPagerNormalActivity.prototype), 'constructor', this).apply(this, arguments);
+            }
+
+            _createClass(SampleViewPagerNormalActivity, [{
+                key: 'onCreate',
+                value: function onCreate() {
+                    var viewPager = this.findViewById('viewPager');
+                    viewPager.setAdapter(new MyPageAdapter());
+                }
+            }]);
+
+            return SampleViewPagerNormalActivity;
+        })(Activity);
+
+        activity.SampleViewPagerNormalActivity = SampleViewPagerNormalActivity;
+        SampleViewPagerNormalActivity.registerCustomElement();
+
+        var MyPageAdapter = (function (_com$jakewharton$salvage$RecyclingPagerAdapter) {
+            _inherits(MyPageAdapter, _com$jakewharton$salvage$RecyclingPagerAdapter);
+
+            function MyPageAdapter() {
+                _classCallCheck(this, MyPageAdapter);
+
+                _get(Object.getPrototypeOf(MyPageAdapter.prototype), 'constructor', this).apply(this, arguments);
+            }
+
+            _createClass(MyPageAdapter, [{
+                key: 'getCount',
+                value: function getCount() {
+                    return 100;
+                }
+            }, {
+                key: 'getView',
+                value: function getView(position, convertView, parent) {
+                    if (convertView == null) {
+                        var rootElement = parent.rootElement;
+                        var domTree = View.findReference('@layout/page', rootElement);
+                        convertView = View.inflate(domTree, rootElement);
+                    }
+                    var page_bg = convertView.findViewById('page_bg');
+                    var page_text = convertView.findViewById('page_text');
+                    page_bg.setBackgroundColor(Color.rgb(position * 20 % 255, position * 20 % 255, position * 20 % 255));
+                    page_text.setText(1 + position + '/' + this.getCount());
+                    return convertView;
+                }
+            }]);
+
+            return MyPageAdapter;
+        })(com.jakewharton.salvage.RecyclingPagerAdapter);
+    })(activity = sample.activity || (sample.activity = {}));
+})(sample || (sample = {}));
 ///<reference path="../dist/android-web-widget.d.ts"/>
-///<reference path="activity/SampleTextViewActivity.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
+///<reference path="activity/SampleViewPagerNormalActivity.ts"/>
 
 //# sourceMappingURL=main.es5.js.map

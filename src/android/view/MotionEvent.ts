@@ -2,9 +2,14 @@
  * Created by linfaxin on 15/10/6.
  */
 ///<reference path="../content/res/Resources.ts"/>
+///<reference path="../graphics/Rect.ts"/>
+///<reference path="../view/ViewConfiguration.ts"/>
+
 
 module android.view {
     import Resources = android.content.res.Resources;
+    import Rect = android.graphics.Rect;
+    import ViewConfiguration = android.view.ViewConfiguration;
 
     interface TouchEvent extends UIEvent {
         touches: TouchList;
@@ -32,7 +37,6 @@ module android.view {
         mEventTime?:number;
     }
 
-    let density = Resources.getDisplayMetrics().density;
     export class MotionEvent {
         static ACTION_MASK = 0xff;
         static ACTION_DOWN = 0;
@@ -47,6 +51,11 @@ module android.view {
         static ACTION_HOVER_ENTER = 9;
         static ACTION_HOVER_EXIT = 10;
 
+        static EDGE_TOP = 0x00000001;
+        static EDGE_BOTTOM = 0x00000002;
+        static EDGE_LEFT = 0x00000004;
+        static EDGE_RIGHT = 0x00000008;
+
         static ACTION_POINTER_INDEX_MASK = 0xff00;
         static ACTION_POINTER_INDEX_SHIFT = 8;
 
@@ -55,6 +64,7 @@ module android.view {
         private static TouchMoveRecord = new Map<number, Array<Touch>>();// (id, [])
 
         mAction = 0;
+        mEdgeFlags = 0;
         mDownTime = 0;
         mEventTime = 0;
         //mActiveActionIndex = 0;
@@ -64,6 +74,8 @@ module android.view {
         mYOffset = 0;
         mViewRootTop = 0;
         mViewRootLeft = 0;
+
+        _activeTouch:any;
 
         constructor(e, action:number) {
             this.mAction = action;
@@ -79,7 +91,7 @@ module android.view {
             Object.assign(newEv, event);
             return newEv;
         }
-        static obtainWithAction(downTime:number, eventTime:number, action:number, x:number, y:number):MotionEvent {
+        static obtainWithAction(downTime:number, eventTime:number, action:number, x:number, y:number, metaState=0):MotionEvent {
             let newEv = new MotionEvent(null, action);
             newEv.mDownTime = downTime;
             newEv.mEventTime = eventTime;
@@ -99,12 +111,13 @@ module android.view {
 
         private static IdIndexCache = new Map<number, number>();
 
-        init(event, baseAction:number, windowXOffset = 0, windowYOffset = 0) {
+        init(event, baseAction:number, windowBound = new Rect() ) {
             let e = <TouchEvent>event;
             //get actionIndex
             let action = baseAction;
             let actionIndex = -1;
             let activeTouch = e.changedTouches[0];
+            this._activeTouch = activeTouch;
             let activePointerId = activeTouch.identifier;
             for (let i = 0, length = e.touches.length; i < length; i++) {
                 if (e.touches[i].identifier === activePointerId) {
@@ -168,8 +181,40 @@ module android.view {
                 this.mDownTime = e.timeStamp;
             }
             this.mEventTime = e.timeStamp;
-            this.mViewRootLeft = windowXOffset;
-            this.mViewRootTop = windowYOffset;
+            this.mViewRootLeft = windowBound.left;
+            this.mViewRootTop = windowBound.top;
+
+            //set edge flag
+            let edgeFlag = 0;
+            let unScaledX = activeTouch.pageX;
+            let unScaledY = activeTouch.pageY;
+            let edgeSlop = ViewConfiguration.EDGE_SLOP;
+            let tempBound = new Rect();
+
+            tempBound.set(windowBound);
+            tempBound.right = tempBound.left + edgeSlop;
+            if(tempBound.contains(unScaledX, unScaledY)){
+                edgeFlag |= MotionEvent.EDGE_LEFT;
+            }
+
+            tempBound.set(windowBound);
+            tempBound.bottom = tempBound.top + edgeSlop;
+            if(tempBound.contains(unScaledX, unScaledY)){
+                edgeFlag |= MotionEvent.EDGE_TOP;
+            }
+
+            tempBound.set(windowBound);
+            tempBound.left = tempBound.right - edgeSlop;
+            if(tempBound.contains(unScaledX, unScaledY)){
+                edgeFlag |= MotionEvent.EDGE_RIGHT;
+            }
+
+            tempBound.set(windowBound);
+            tempBound.top = tempBound.bottom - edgeSlop;
+            if(tempBound.contains(unScaledX, unScaledY)){
+                edgeFlag |= MotionEvent.EDGE_BOTTOM;
+            }
+            this.mEdgeFlags = edgeFlag;
 
         }
 
@@ -220,10 +265,12 @@ module android.view {
         }
 
         getX(pointerIndex = 0):number {
+            let density = Resources.getDisplayMetrics().density;
             return (this.mTouchingPointers[pointerIndex].pageX - this.mViewRootLeft) * density + this.mXOffset;
         }
 
         getY(pointerIndex = 0):number {
+            let density = Resources.getDisplayMetrics().density;
             return (this.mTouchingPointers[pointerIndex].pageY - this.mViewRootTop) * density + this.mYOffset;
         }
 
@@ -246,10 +293,12 @@ module android.view {
         }
 
         getRawX():number {
+            let density = Resources.getDisplayMetrics().density;
             return (this.mTouchingPointers[0].pageX - this.mViewRootLeft) * density;
         }
 
         getRawY():number {
+            let density = Resources.getDisplayMetrics().density;
             return (this.mTouchingPointers[0].pageY - this.mViewRootTop) * density;
         }
 
@@ -259,11 +308,13 @@ module android.view {
         }
 
         getHistoricalX(pointerIndex:number, pos:number):number {
+            let density = Resources.getDisplayMetrics().density;
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
             return (moveHistory[pos].pageX - this.mViewRootLeft) * density + this.mXOffset;
         }
 
         getHistoricalY(pointerIndex:number, pos:number):number {
+            let density = Resources.getDisplayMetrics().density;
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
             return (moveHistory[pos].pageY - this.mViewRootTop) * density + this.mYOffset;
         }
@@ -283,6 +334,29 @@ module android.view {
             return moveHistory[pos].mEventTime;
         }
 
+        /**
+         * Returns a bitfield indicating which edges, if any, were touched by this
+         * MotionEvent. For touch events, clients can use this to determine if the
+         * user's finger was touching the edge of the display.
+         *
+         * @see #EDGE_LEFT
+         * @see #EDGE_TOP
+         * @see #EDGE_RIGHT
+         * @see #EDGE_BOTTOM
+         */
+        getEdgeFlags():number {
+            return this.mEdgeFlags;
+        }
+
+        /**
+         * Sets the bitfield indicating which edges, if any, were touched by this
+         * MotionEvent.
+         *
+         * @see #getEdgeFlags()
+         */
+        setEdgeFlags(flags:number) {
+            this.mEdgeFlags = flags;
+        }
         setAction(action:number) {
             this.mAction = action;
         }

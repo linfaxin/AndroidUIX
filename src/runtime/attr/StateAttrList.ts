@@ -69,7 +69,7 @@ module runtime.attr{
             if(attrName.startsWith('state_') || attrName==='style'){
                 //attr with state
                 if(attrValue.startsWith('@')){
-                    let reference = android.view.View.findReference(attrValue, ele, rootElement);
+                    let reference = android.view.View.findReference(attrValue, ele, rootElement, false);
                     this._initStyleAttributes(reference, inParseState, rootElement);
 
                 }else{
