@@ -247,7 +247,7 @@ module android.widget{
                 width = widthSize;
 
             } else {
-                width = this.mTextElement.offsetWidth + 4;//more space (some case may wrap word)
+                width = this.mTextElement.offsetWidth + 2;//more space (some case may wrap word)
 
                 width += padLeft + padRight;
 
