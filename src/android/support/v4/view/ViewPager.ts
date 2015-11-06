@@ -1862,13 +1862,13 @@ module android.support.v4.view {
                     let over = leftBound - scrollX;
                     needsInvalidate = false;//this.mLeftEdge.onPull(Math.abs(over) / width);
                 }
-                scrollX = leftBound;
+                scrollX -= deltaX/2;//leftBound;
             } else if (scrollX > rightBound) {
                 if (rightAbsolute) {
                     let over = scrollX - rightBound;
                     needsInvalidate = false;//this.mRightEdge.onPull(Math.abs(over) / width);
                 }
-                scrollX = rightBound;
+                scrollX -= deltaX/2;//rightBound;
             }
             // Don't lose the rounded component
             this.mLastMotionX += scrollX - Math.floor(scrollX);
