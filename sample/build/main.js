@@ -39,14 +39,14 @@ var sample;
         var Activity = android.app.Activity;
         var View = android.view.View;
         var Color = android.graphics.Color;
-        class SampleViewPagerNormalActivity extends Activity {
+        class SampleViewPagerActivity extends Activity {
             onCreate() {
                 let viewPager = this.findViewById('viewPager');
                 viewPager.setAdapter(new MyPageAdapter());
             }
         }
-        activity.SampleViewPagerNormalActivity = SampleViewPagerNormalActivity;
-        SampleViewPagerNormalActivity.registerCustomElement();
+        activity.SampleViewPagerActivity = SampleViewPagerActivity;
+        SampleViewPagerActivity.registerCustomElement();
         class MyPageAdapter extends com.jakewharton.salvage.RecyclingPagerAdapter {
             getCount() {
                 return 100;
@@ -68,4 +68,4 @@ var sample;
 })(sample || (sample = {}));
 ///<reference path="../dist/android-web-widget.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
-///<reference path="activity/SampleViewPagerNormalActivity.ts"/>
+///<reference path="activity/SampleViewPagerActivity.ts"/>

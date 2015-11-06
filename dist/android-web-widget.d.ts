@@ -999,10 +999,16 @@ declare module android.view {
         private mListenerInfo;
         private mClipBounds;
         private mLastIsOpaque;
+        private _mLeft;
+        private _mRight;
+        private _mTop;
+        private _mBottom;
         mLeft: number;
         mRight: number;
         mTop: number;
         mBottom: number;
+        private _mScrollX;
+        private _mScrollY;
         mScrollX: number;
         mScrollY: number;
         mPaddingLeft: number;
@@ -1434,7 +1440,7 @@ declare module android.view {
         private mVisRect;
         private mTraversalScheduled;
         private mWillDrawSoon;
-        private mIsInTraversal;
+        mIsInTraversal: boolean;
         private mLayoutRequested;
         private mFirst;
         private mFullRedrawNeeded;

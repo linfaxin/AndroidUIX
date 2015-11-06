@@ -65,16 +65,16 @@ var sample;
         var View = android.view.View;
         var Color = android.graphics.Color;
 
-        var SampleViewPagerNormalActivity = (function (_Activity2) {
-            _inherits(SampleViewPagerNormalActivity, _Activity2);
+        var SampleViewPagerActivity = (function (_Activity2) {
+            _inherits(SampleViewPagerActivity, _Activity2);
 
-            function SampleViewPagerNormalActivity() {
-                _classCallCheck(this, SampleViewPagerNormalActivity);
+            function SampleViewPagerActivity() {
+                _classCallCheck(this, SampleViewPagerActivity);
 
-                _get(Object.getPrototypeOf(SampleViewPagerNormalActivity.prototype), 'constructor', this).apply(this, arguments);
+                _get(Object.getPrototypeOf(SampleViewPagerActivity.prototype), 'constructor', this).apply(this, arguments);
             }
 
-            _createClass(SampleViewPagerNormalActivity, [{
+            _createClass(SampleViewPagerActivity, [{
                 key: 'onCreate',
                 value: function onCreate() {
                     var viewPager = this.findViewById('viewPager');
@@ -82,11 +82,11 @@ var sample;
                 }
             }]);
 
-            return SampleViewPagerNormalActivity;
+            return SampleViewPagerActivity;
         })(Activity);
 
-        activity.SampleViewPagerNormalActivity = SampleViewPagerNormalActivity;
-        SampleViewPagerNormalActivity.registerCustomElement();
+        activity.SampleViewPagerActivity = SampleViewPagerActivity;
+        SampleViewPagerActivity.registerCustomElement();
 
         var MyPageAdapter = (function (_com$jakewharton$salvage$RecyclingPagerAdapter) {
             _inherits(MyPageAdapter, _com$jakewharton$salvage$RecyclingPagerAdapter);
@@ -124,6 +124,6 @@ var sample;
 })(sample || (sample = {}));
 ///<reference path="../dist/android-web-widget.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
-///<reference path="activity/SampleViewPagerNormalActivity.ts"/>
+///<reference path="activity/SampleViewPagerActivity.ts"/>
 
 //# sourceMappingURL=main.es5.js.map

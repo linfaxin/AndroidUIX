@@ -1124,7 +1124,7 @@ var android;
                 }
             }
         }
-        Canvas.FullRect = new Rect(-10000, -10000, 10000, 10000);
+        Canvas.FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
         Canvas.sPool = new Pools.SynchronizedPool(10);
         graphics.Canvas = Canvas;
     })(graphics = android.graphics || (android.graphics = {}));
@@ -3478,12 +3478,12 @@ var android;
                 this.mCachingFailed = false;
                 this.mWindowAttachCount = 0;
                 this.mLastIsOpaque = false;
-                this.mLeft = 0;
-                this.mRight = 0;
-                this.mTop = 0;
-                this.mBottom = 0;
-                this.mScrollX = 0;
-                this.mScrollY = 0;
+                this._mLeft = 0;
+                this._mRight = 0;
+                this._mTop = 0;
+                this._mBottom = 0;
+                this._mScrollX = 0;
+                this._mScrollY = 0;
                 this.mPaddingLeft = 0;
                 this.mPaddingRight = 0;
                 this.mPaddingTop = 0;
@@ -3492,6 +3492,18 @@ var android;
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
                 this.initializeScrollbars();
             }
+            get mLeft() { return this._mLeft; }
+            set mLeft(value) { this._mLeft = Math.floor(value); }
+            get mRight() { return this._mRight; }
+            set mRight(value) { this._mRight = Math.floor(value); }
+            get mTop() { return this._mTop; }
+            set mTop(value) { this._mTop = Math.floor(value); }
+            get mBottom() { return this._mBottom; }
+            set mBottom(value) { this._mBottom = Math.floor(value); }
+            get mScrollX() { return this._mScrollX; }
+            set mScrollX(value) { this._mScrollX = Math.floor(value); }
+            get mScrollY() { return this._mScrollY; }
+            set mScrollY(value) { this._mScrollY = Math.floor(value); }
             createAttrChangeHandler(mergeHandler) {
                 let view = this;
                 mergeHandler.add({
@@ -9077,6 +9089,8 @@ var runtime;
             this.element.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
+                    return;
                 let rootViewBound = this.element.getBoundingClientRect();
                 windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
                 if (!motionEvent)
@@ -9088,18 +9102,24 @@ var runtime;
             this.element.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
+                    return;
                 motionEvent.init(e, MotionEvent.ACTION_MOVE, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
             this.element.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
+                    return;
                 motionEvent.init(e, MotionEvent.ACTION_UP);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
             this.element.addEventListener('touchcancel', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
+                    return;
                 motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
@@ -10608,7 +10628,7 @@ var android;
                         this.mScrollY = 0;
                     }
                 }
-                scrollTo(this.mScrollX, this.mScrollY);
+                this.scrollTo(this.mScrollX, this.mScrollY);
             }
             onSizeChanged(w, h, oldw, oldh) {
                 super.onSizeChanged(w, h, oldw, oldh);
@@ -11961,7 +11981,7 @@ var android;
                     width = widthSize;
                 }
                 else {
-                    width = this.mTextElement.offsetWidth + 4;
+                    width = this.mTextElement.offsetWidth + 2;
                     width += padLeft + padRight;
                     width = Math.min(width, this.mMaxWidth);
                     width = Math.max(width, this.getSuggestedMinimumWidth());
@@ -13392,7 +13412,7 @@ var android;
                                 this.dispatchOnPageSelected(item);
                             }
                             this.completeScroll(false);
-                            scrollTo(destX, 0);
+                            this.scrollTo(destX, 0);
                             this.pageScrolled(destX);
                         }
                     }
@@ -14135,8 +14155,7 @@ var android;
                         const widthWithMargin = width + this.mPageMargin;
                         const marginOffset = this.mPageMargin / width;
                         const currentPage = ii.position;
-                        const pageOffset = ((xpos / width) - ii.offset) /
-                            (ii.widthFactor + marginOffset);
+                        const pageOffset = ((xpos / width) - ii.offset) / (ii.widthFactor + marginOffset);
                         const offsetPixels = Math.floor(pageOffset * widthWithMargin);
                         this.mCalledSuper = false;
                         this.onPageScrolled(currentPage, pageOffset, offsetPixels);
@@ -14255,7 +14274,7 @@ var android;
                             let x = this.mScroller.getCurrX();
                             let y = this.mScroller.getCurrY();
                             if (oldX != x || oldY != y) {
-                                scrollTo(x, y);
+                                this.scrollTo(x, y);
                                 if (x != oldX) {
                                     this.pageScrolled(x);
                                 }
@@ -14528,14 +14547,14 @@ var android;
                                 let over = leftBound - scrollX;
                                 needsInvalidate = false;
                             }
-                            scrollX = leftBound;
+                            scrollX -= deltaX / 2;
                         }
                         else if (scrollX > rightBound) {
                             if (rightAbsolute) {
                                 let over = scrollX - rightBound;
                                 needsInvalidate = false;
                             }
-                            scrollX = rightBound;
+                            scrollX -= deltaX / 2;
                         }
                         this.mLastMotionX += scrollX - Math.floor(scrollX);
                         this.scrollTo(scrollX, this.getScrollY());
@@ -14703,7 +14722,7 @@ var android;
                             scrollX = rightBound;
                         }
                         this.mLastMotionX += scrollX - Math.floor(scrollX);
-                        scrollTo(Math.floor(scrollX), this.getScrollY());
+                        this.scrollTo(Math.floor(scrollX), this.getScrollY());
                         this.pageScrolled(Math.floor(scrollX));
                         const time = android.os.SystemClock.uptimeMillis();
                         const ev = MotionEvent.obtainWithAction(this.mFakeDragBeginTime, time, MotionEvent.ACTION_MOVE, this.mLastMotionX, 0, 0);

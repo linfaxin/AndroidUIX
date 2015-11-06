@@ -24,21 +24,34 @@
 
 </head>
 <body>
-<android-Activity style="width: 100%; height:100%;display: none;">
-    <LinearLayout
-            android:orientation="vertical"
-            android:gravity="center">
-        <Button onclick="location.href='sample_viewpager_normal.html'">
-            全屏ViewPager
-        </Button>
-        <Button onclick="location.href='sample_viewpager_banner.html'">
-            当运营位Banner使用
-        </Button>
-        <Button onclick="location.href='sample_viewpager_titletab.html'">
-            全屏ViewPager + 顶部Tab标题
-        </Button>
-    </LinearLayout>
-</android-Activity>
+<android-SampleViewPagerActivity style="width: 100%; height:100%;display: none;">
+    <resources>
+        <android-layout id="page">
+            <FrameLayout id="page_bg">
+                <TextView id="page_text"
+                          android:padding="12dp"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:background="#55000000"
+                          android:textColor="white"
+                          android:layout_gravity="center"
+                        >
+                </TextView>
+            </FrameLayout>
+        </android-layout>
+    </resources>
+    <android.support.v4.view.ViewPager id="viewPager">
+    </android.support.v4.view.ViewPager>
+    <TextView
+            android:padding="12dp"
+            android:layout_gravity="bottom"
+            android:layout_height="wrap_content"
+            android:background="#55000000"
+            android:textColor="white"
+            >
+        ViewPager使用Adapter机制,移出屏幕的页卡可以被回收再用,因此不用担心页卡太多的内存问题
+    </TextView>
+</android-SampleViewPagerActivity>
 
 <script src="../../node_modules/babel-core/browser-polyfill.min.js"></script>
 <script src="../lib/CustomElements.min.js"></script>

@@ -14,13 +14,13 @@ module sample.activity {
     import Color = android.graphics.Color;
     import ViewPager = android.support.v4.view.ViewPager;
 
-    export class SampleViewPagerNormalActivity extends Activity {
+    export class SampleViewPagerActivity extends Activity {
         onCreate():void {
             let viewPager = <ViewPager>this.findViewById('viewPager');
             viewPager.setAdapter(new MyPageAdapter());
         }
     }
-    SampleViewPagerNormalActivity.registerCustomElement();
+    SampleViewPagerActivity.registerCustomElement();
 
 
     class MyPageAdapter extends com.jakewharton.salvage.RecyclingPagerAdapter{

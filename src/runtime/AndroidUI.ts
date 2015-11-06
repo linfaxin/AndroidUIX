@@ -101,6 +101,7 @@ module runtime {
             this.element.addEventListener('touchstart', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
+                if(this.viewRootImpl && this.viewRootImpl.mIsInTraversal) return;
                 let rootViewBound = this.element.getBoundingClientRect();//get viewRoot bound on touch start
                 windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
 
@@ -112,18 +113,21 @@ module runtime {
             this.element.addEventListener('touchmove', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
+                if(this.viewRootImpl && this.viewRootImpl.mIsInTraversal) return;
                 motionEvent.init(<any>e, MotionEvent.ACTION_MOVE, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
             this.element.addEventListener('touchend', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
+                if(this.viewRootImpl && this.viewRootImpl.mIsInTraversal) return;
                 motionEvent.init(<any>e, MotionEvent.ACTION_UP);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);
             this.element.addEventListener('touchcancel', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
+                if(this.viewRootImpl && this.viewRootImpl.mIsInTraversal) return;
                 motionEvent.init(<any>e, MotionEvent.ACTION_CANCEL, windowBound);
                 this.rootLayout.dispatchTouchEvent(motionEvent);
             }, true);

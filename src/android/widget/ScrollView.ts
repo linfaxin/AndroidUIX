@@ -871,7 +871,7 @@ module android.widget {
             }
 
             // Calling this with the present values causes it to re-claim them
-            scrollTo(this.mScrollX, this.mScrollY);
+            this.scrollTo(this.mScrollX, this.mScrollY);
         }
 
 

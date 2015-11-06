@@ -388,7 +388,7 @@ module android.support.v4.view {
                     this.dispatchOnPageSelected(item);
                 }
                 this.completeScroll(false);
-                scrollTo(destX, 0);
+                this.scrollTo(destX, 0);
                 this.pageScrolled(destX);
             }
         }
@@ -1522,7 +1522,7 @@ module android.support.v4.view {
                 let x = this.mScroller.getCurrX();
                 let y = this.mScroller.getCurrY();
                 if (oldX != x || oldY != y) {
-                    scrollTo(x, y);
+                    this.scrollTo(x, y);
                     if (x != oldX) {
                         this.pageScrolled(x);
                     }
@@ -1659,6 +1659,7 @@ module android.support.v4.view {
                     this.mIsUnableToDrag = false;
 
                     this.mScroller.computeScrollOffset();
+
                     if (this.mScrollState == ViewPager.SCROLL_STATE_SETTLING &&
                         Math.abs(this.mScroller.getFinalX() - this.mScroller.getCurrX()) > this.mCloseEnough) {
                         // Let the user 'catch' the pager as it animates.
@@ -2133,7 +2134,7 @@ module android.support.v4.view {
             }
             // Don't lose the rounded component
             this.mLastMotionX += scrollX - Math.floor(scrollX);
-            scrollTo(Math.floor(scrollX), this.getScrollY());
+            this.scrollTo(Math.floor(scrollX), this.getScrollY());
             this.pageScrolled(Math.floor(scrollX));
 
             // Synthesize an event for the VelocityTracker.
