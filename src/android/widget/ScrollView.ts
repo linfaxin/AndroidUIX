@@ -407,7 +407,8 @@ module android.widget {
                         let initialVelocity = velocityTracker.getYVelocity(this.mActivePointerId);
 
                         if (this.getChildCount() > 0) {
-                            if ((Math.abs(initialVelocity) > this.mMinimumVelocity)) {
+                            let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.getScrollRange();
+                            if ((Math.abs(initialVelocity) > this.mMinimumVelocity) && !isOverDrag) {
                                 this.fling(-initialVelocity);
                             } else {
                                 if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, 0, 0,
