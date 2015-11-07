@@ -141,13 +141,12 @@ module runtime {
                 * {
                     overflow : hidden;
                 }
+                resources {
+                    display: none;
+                }
                 Button {
                     border: none;
                     background: none;
-                }
-                ScrollView>* {
-                    webkit-transform: translateZ(0);
-                    transform: translateZ(0);
                 }
 
                 `;

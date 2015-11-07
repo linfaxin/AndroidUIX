@@ -1783,46 +1783,6 @@ declare module android.widget {
         }
     }
 }
-declare module runtime {
-    import View = android.view.View;
-    import ViewGroup = android.view.ViewGroup;
-    import ViewRootImpl = android.view.ViewRootImpl;
-    class AndroidUI {
-        element: HTMLElement;
-        private canvas;
-        viewRootImpl: ViewRootImpl;
-        private rootLayout;
-        private rootStyleElement;
-        private rootResourceElement;
-        constructor(element: HTMLElement);
-        private init();
-        private initInflateView();
-        private initRootElementStyle();
-        private initCanvasStyle();
-        private initTouch();
-        private initBindElementStyle();
-        private tryStartLayoutAfterInit();
-        notifySizeChange(width: number, height: number): void;
-        setContentView(view: View): void;
-        addContentView(view: View, params?: ViewGroup.LayoutParams): void;
-        findViewById(id: string): View;
-    }
-}
-declare module android.app {
-    import View = android.view.View;
-    class Activity extends HTMLDivElement {
-        private AndroidUI;
-        onCreate(): void;
-        createdCallback(): void;
-        attachedCallback(): void;
-        detachedCallback(): void;
-        attributeChangedCallback(attributeName: string, oldVal: string, newVal: string): void;
-        setContentView(view: View): void;
-        addContentView(view: View): void;
-        findViewById(id: string): View;
-        static registerCustomElement(): void;
-    }
-}
 declare module android.widget {
     import Interpolator = android.view.animation.Interpolator;
     class OverScroller {
@@ -2492,5 +2452,45 @@ declare module com.jakewharton.salvage {
         getViewTypeCount(): number;
         getItemViewType(position: number): number;
         abstract getView(position: number, convertView: View, parent: ViewGroup): View;
+    }
+}
+declare module runtime {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import ViewRootImpl = android.view.ViewRootImpl;
+    class AndroidUI {
+        element: HTMLElement;
+        private canvas;
+        viewRootImpl: ViewRootImpl;
+        private rootLayout;
+        private rootStyleElement;
+        private rootResourceElement;
+        constructor(element: HTMLElement);
+        private init();
+        private initInflateView();
+        private initRootElementStyle();
+        private initCanvasStyle();
+        private initTouch();
+        private initBindElementStyle();
+        private tryStartLayoutAfterInit();
+        notifySizeChange(width: number, height: number): void;
+        setContentView(view: View): void;
+        addContentView(view: View, params?: ViewGroup.LayoutParams): void;
+        findViewById(id: string): View;
+    }
+}
+declare module android.app {
+    import View = android.view.View;
+    class Activity extends HTMLDivElement {
+        private AndroidUI;
+        onCreate(): void;
+        createdCallback(): void;
+        attachedCallback(): void;
+        detachedCallback(): void;
+        attributeChangedCallback(attributeName: string, oldVal: string, newVal: string): void;
+        setContentView(view: View): void;
+        addContentView(view: View): void;
+        findViewById(id: string): View;
+        static registerCustomElement(): void;
     }
 }

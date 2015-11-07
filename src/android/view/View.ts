@@ -3282,14 +3282,19 @@ module android.view {
                 for (let i = 0, count=group.getChildCount(); i < count; i++) {
                     let child = group.getChildAt(i);
                     let item = child.bindElement;
-                    if(sx!==0) item.style.marginLeft = -sx+'px';
-                    else item.style.marginLeft = "";
+
+                    //if(sx!==0) item.style.marginLeft = -sx+'px';
+                    //else item.style.marginLeft = "";
+                    if(sx!==0) item.style.left =  (child.mLeft-sx)+'px';
+                    else item.style.left = child.mLeft + "px";
+
+
                     //if(sy!==0) item.style.transform = `translate3d(0px, ${-sy}px, 0px)`;
                     //else item.style.transform = '';
-                    //if(sy!==0) item.style.top =  (child.mTop-sy)+'px';
-                    //else item.style.top = child.mTop + "px";
-                    if(sy!==0) item.style.marginTop = -sy+'px';
-                    else item.style.marginTop = "";
+                    if(sy!==0) item.style.top =  (child.mTop-sy)+'px';
+                    else item.style.top = child.mTop + "px";
+                    //if(sy!==0) item.style.marginTop = -sy+'px';
+                    //else item.style.marginTop = "";
                 }
             }
         }

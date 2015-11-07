@@ -5900,13 +5900,13 @@ var android;
                         let child = group.getChildAt(i);
                         let item = child.bindElement;
                         if (sx !== 0)
-                            item.style.marginLeft = -sx + 'px';
+                            item.style.left = (child.mLeft - sx) + 'px';
                         else
-                            item.style.marginLeft = "";
+                            item.style.left = child.mLeft + "px";
                         if (sy !== 0)
-                            item.style.marginTop = -sy + 'px';
+                            item.style.top = (child.mTop - sy) + 'px';
                         else
-                            item.style.marginTop = "";
+                            item.style.top = child.mTop + "px";
                     }
                 }
             }
@@ -9009,235 +9009,6 @@ var android;
             FrameLayout.LayoutParams = LayoutParams;
         })(FrameLayout = widget.FrameLayout || (widget.FrameLayout = {}));
     })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/23.
- */
-///<reference path="../android/view/View.ts"/>
-///<reference path="../android/view/ViewGroup.ts"/>
-///<reference path="../android/view/ViewRootImpl.ts"/>
-///<reference path="../android/widget/FrameLayout.ts"/>
-///<reference path="../android/view/MotionEvent.ts"/>
-var runtime;
-(function (runtime) {
-    var View = android.view.View;
-    var ViewGroup = android.view.ViewGroup;
-    var ViewRootImpl = android.view.ViewRootImpl;
-    var FrameLayout = android.widget.FrameLayout;
-    var MotionEvent = android.view.MotionEvent;
-    class AndroidUI {
-        constructor(element) {
-            this.element = element;
-            if (element['AndroidUI']) {
-                throw Error('already init a AndroidUI with this element');
-            }
-            element['AndroidUI'] = this;
-            this.init();
-        }
-        init() {
-            this.viewRootImpl = new ViewRootImpl();
-            this.viewRootImpl.rootElement = this.element;
-            this.rootLayout = new RootLayout();
-            this.canvas = document.createElement("canvas");
-            this.initInflateView();
-            this.initRootElementStyle();
-            this.initCanvasStyle();
-            this.initBindElementStyle();
-            this.element.innerHTML = '';
-            this.element.appendChild(this.rootResourceElement);
-            this.element.appendChild(this.rootStyleElement);
-            this.element.appendChild(this.canvas);
-            this.element.appendChild(this.rootLayout.bindElement);
-            this.viewRootImpl.setView(this.rootLayout);
-            this.viewRootImpl.initSurface(this.canvas);
-            this.initTouch();
-            this.tryStartLayoutAfterInit();
-        }
-        initInflateView() {
-            Array.from(this.element.children).forEach((item) => {
-                if (item.tagName.toLowerCase() === 'resources') {
-                    this.rootResourceElement = item;
-                }
-                else if (item instanceof HTMLStyleElement) {
-                    this.rootStyleElement = item;
-                }
-                else if (item instanceof HTMLElement) {
-                    let view = View.inflate(item, this.element, this.rootLayout);
-                    if (view)
-                        this.rootLayout.addView(view);
-                }
-            });
-        }
-        initRootElementStyle() {
-            if (!this.element.style.position) {
-                this.element.style.position = "relative";
-            }
-            if (!this.element.style.display || this.element.style.display == "none") {
-                this.element.style.display = "inline-block";
-            }
-            this.element.style.overflow = 'hidden';
-        }
-        initCanvasStyle() {
-            let canvas = this.canvas;
-            canvas.style.position = "absolute";
-            canvas.style.left = '0px';
-            canvas.style.top = '0px';
-        }
-        initTouch() {
-            let motionEvent;
-            let windowBound = new android.graphics.Rect();
-            this.element.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
-                    return;
-                let rootViewBound = this.element.getBoundingClientRect();
-                windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
-                if (!motionEvent)
-                    motionEvent = MotionEvent.obtainWithTouchEvent(e, MotionEvent.ACTION_DOWN);
-                else
-                    motionEvent.init(e, MotionEvent.ACTION_DOWN, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
-                    return;
-                motionEvent.init(e, MotionEvent.ACTION_MOVE, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
-                    return;
-                motionEvent.init(e, MotionEvent.ACTION_UP);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
-                    return;
-                motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-        }
-        initBindElementStyle() {
-            if (!this.rootStyleElement)
-                this.rootStyleElement = document.createElement("style");
-            this.rootStyleElement.setAttribute("scoped", '');
-            this.rootStyleElement.innerHTML += `
-                * {
-                    overflow : hidden;
-                }
-                Button {
-                    border: none;
-                    background: none;
-                }
-                ScrollView>* {
-                    webkit-transform: translateZ(0);
-                    transform: translateZ(0);
-                }
-
-                `;
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            if (density != 1) {
-                this.rootStyleElement.innerHTML += `
-                RootLayout {
-                    transform:scale(${1 / density},${1 / density});
-                    -webkit-transform:scale(${1 / density},${1 / density});
-                    transform-origin:0 0;
-                    -webkit-transform-origin:0 0;
-                }
-                `;
-            }
-        }
-        tryStartLayoutAfterInit() {
-            let width = this.element.offsetWidth;
-            let height = this.element.offsetHeight;
-            if (width > 0 && height > 0)
-                this.notifySizeChange(width, height);
-        }
-        notifySizeChange(width, height) {
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            this.viewRootImpl.mWinFrame.set(0, 0, width * density, height * density);
-            this.canvas.width = width * density;
-            this.canvas.height = height * density;
-            this.canvas.style.width = width + "px";
-            this.canvas.style.height = height + "px";
-            this.viewRootImpl.requestLayout();
-        }
-        setContentView(view) {
-            this.rootLayout.removeAllViews();
-            this.rootLayout.addView(view, -1, -1);
-        }
-        addContentView(view, params = new ViewGroup.LayoutParams(-1, -1)) {
-            this.rootLayout.addView(view, params);
-        }
-        findViewById(id) {
-            return this.rootLayout.findViewById(id);
-        }
-    }
-    runtime.AndroidUI = AndroidUI;
-    class RootLayout extends FrameLayout {
-    }
-})(runtime || (runtime = {}));
-/**
- * Created by linfaxin on 15/10/11.
- */
-///<reference path="../view/View.ts"/>
-///<reference path="../view/ViewRootImpl.ts"/>
-///<reference path="../widget/FrameLayout.ts"/>
-///<reference path="../view/MotionEvent.ts"/>
-///<reference path="../../runtime/AndroidUI.ts"/>
-var android;
-(function (android) {
-    var app;
-    (function (app) {
-        var AndroidUI = runtime.AndroidUI;
-        if (typeof HTMLDivElement !== 'function') {
-            var _HTMLDivElement = function () { };
-            _HTMLDivElement.prototype = HTMLDivElement.prototype;
-            HTMLDivElement = _HTMLDivElement;
-        }
-        class Activity extends HTMLDivElement {
-            onCreate() {
-            }
-            createdCallback() {
-                this.AndroidUI = new AndroidUI(this);
-                requestAnimationFrame(() => {
-                    this.onCreate();
-                    let onCreateFunc = this.getAttribute('oncreate');
-                    if (onCreateFunc && typeof window[onCreateFunc] === "function") {
-                        window[onCreateFunc].call(this, this);
-                    }
-                });
-            }
-            attachedCallback() {
-                this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
-            }
-            detachedCallback() {
-            }
-            attributeChangedCallback(attributeName, oldVal, newVal) {
-            }
-            setContentView(view) {
-                this.AndroidUI.setContentView(view);
-            }
-            addContentView(view) {
-                this.AndroidUI.addContentView(view);
-            }
-            findViewById(id) {
-                return this.AndroidUI.findViewById(id);
-            }
-            static registerCustomElement() {
-                document.registerElement("android-" + this.name, this);
-            }
-        }
-        app.Activity = Activity;
-        Activity.registerCustomElement();
-    })(app = android.app || (android.app = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/17.
@@ -15072,11 +14843,245 @@ var com;
     })(jakewharton = com.jakewharton || (com.jakewharton = {}));
 })(com || (com = {}));
 /**
+ * Created by linfaxin on 15/10/23.
+ */
+///<reference path="../android/view/View.ts"/>
+///<reference path="../android/view/ViewGroup.ts"/>
+///<reference path="../android/view/ViewRootImpl.ts"/>
+///<reference path="../android/widget/FrameLayout.ts"/>
+///<reference path="../android/view/MotionEvent.ts"/>
+var runtime;
+(function (runtime) {
+    var View = android.view.View;
+    var ViewGroup = android.view.ViewGroup;
+    var ViewRootImpl = android.view.ViewRootImpl;
+    var FrameLayout = android.widget.FrameLayout;
+    var MotionEvent = android.view.MotionEvent;
+    class AndroidUI {
+        constructor(element) {
+            this.element = element;
+            if (element['AndroidUI']) {
+                throw Error('already init a AndroidUI with this element');
+            }
+            element['AndroidUI'] = this;
+            this.init();
+        }
+        init() {
+            this.viewRootImpl = new ViewRootImpl();
+            this.viewRootImpl.rootElement = this.element;
+            this.rootLayout = new RootLayout();
+            this.canvas = document.createElement("canvas");
+            this.initInflateView();
+            this.initRootElementStyle();
+            this.initCanvasStyle();
+            this.initBindElementStyle();
+            this.element.innerHTML = '';
+            this.element.appendChild(this.rootResourceElement);
+            this.element.appendChild(this.rootStyleElement);
+            this.element.appendChild(this.canvas);
+            this.element.appendChild(this.rootLayout.bindElement);
+            this.viewRootImpl.setView(this.rootLayout);
+            this.viewRootImpl.initSurface(this.canvas);
+            this.initTouch();
+            this.tryStartLayoutAfterInit();
+        }
+        initInflateView() {
+            Array.from(this.element.children).forEach((item) => {
+                if (item.tagName.toLowerCase() === 'resources') {
+                    this.rootResourceElement = item;
+                }
+                else if (item instanceof HTMLStyleElement) {
+                    this.rootStyleElement = item;
+                }
+                else if (item instanceof HTMLElement) {
+                    let view = View.inflate(item, this.element, this.rootLayout);
+                    if (view)
+                        this.rootLayout.addView(view);
+                }
+            });
+        }
+        initRootElementStyle() {
+            if (!this.element.style.position) {
+                this.element.style.position = "relative";
+            }
+            if (!this.element.style.display || this.element.style.display == "none") {
+                this.element.style.display = "inline-block";
+            }
+            this.element.style.overflow = 'hidden';
+        }
+        initCanvasStyle() {
+            let canvas = this.canvas;
+            canvas.style.position = "absolute";
+            canvas.style.left = '0px';
+            canvas.style.top = '0px';
+        }
+        initTouch() {
+            let motionEvent;
+            let windowBound = new android.graphics.Rect();
+            this.element.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
+                    return;
+                let rootViewBound = this.element.getBoundingClientRect();
+                windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
+                if (!motionEvent)
+                    motionEvent = MotionEvent.obtainWithTouchEvent(e, MotionEvent.ACTION_DOWN);
+                else
+                    motionEvent.init(e, MotionEvent.ACTION_DOWN, windowBound);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
+                    return;
+                motionEvent.init(e, MotionEvent.ACTION_MOVE, windowBound);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
+                    return;
+                motionEvent.init(e, MotionEvent.ACTION_UP);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+            this.element.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
+                    return;
+                motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowBound);
+                this.rootLayout.dispatchTouchEvent(motionEvent);
+            }, true);
+        }
+        initBindElementStyle() {
+            if (!this.rootStyleElement)
+                this.rootStyleElement = document.createElement("style");
+            this.rootStyleElement.setAttribute("scoped", '');
+            this.rootStyleElement.innerHTML += `
+                * {
+                    overflow : hidden;
+                }
+                resources {
+                    display: none;
+                }
+                Button {
+                    border: none;
+                    background: none;
+                }
+
+                `;
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            if (density != 1) {
+                this.rootStyleElement.innerHTML += `
+                RootLayout {
+                    transform:scale(${1 / density},${1 / density});
+                    -webkit-transform:scale(${1 / density},${1 / density});
+                    transform-origin:0 0;
+                    -webkit-transform-origin:0 0;
+                }
+                `;
+            }
+        }
+        tryStartLayoutAfterInit() {
+            let width = this.element.offsetWidth;
+            let height = this.element.offsetHeight;
+            if (width > 0 && height > 0)
+                this.notifySizeChange(width, height);
+        }
+        notifySizeChange(width, height) {
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            this.viewRootImpl.mWinFrame.set(0, 0, width * density, height * density);
+            this.canvas.width = width * density;
+            this.canvas.height = height * density;
+            this.canvas.style.width = width + "px";
+            this.canvas.style.height = height + "px";
+            this.viewRootImpl.requestLayout();
+        }
+        setContentView(view) {
+            this.rootLayout.removeAllViews();
+            this.rootLayout.addView(view, -1, -1);
+        }
+        addContentView(view, params = new ViewGroup.LayoutParams(-1, -1)) {
+            this.rootLayout.addView(view, params);
+        }
+        findViewById(id) {
+            return this.rootLayout.findViewById(id);
+        }
+    }
+    runtime.AndroidUI = AndroidUI;
+    class RootLayout extends FrameLayout {
+    }
+})(runtime || (runtime = {}));
+/**
+ * Created by linfaxin on 15/10/11.
+ */
+///<reference path="../view/View.ts"/>
+///<reference path="../view/ViewRootImpl.ts"/>
+///<reference path="../widget/FrameLayout.ts"/>
+///<reference path="../view/MotionEvent.ts"/>
+///<reference path="../../runtime/AndroidUI.ts"/>
+var android;
+(function (android) {
+    var app;
+    (function (app) {
+        var AndroidUI = runtime.AndroidUI;
+        if (typeof HTMLDivElement !== 'function') {
+            var _HTMLDivElement = function () { };
+            _HTMLDivElement.prototype = HTMLDivElement.prototype;
+            HTMLDivElement = _HTMLDivElement;
+        }
+        class Activity extends HTMLDivElement {
+            onCreate() {
+            }
+            createdCallback() {
+                requestAnimationFrame(() => {
+                    this.AndroidUI = new AndroidUI(this);
+                    this.onCreate();
+                    let onCreateFunc = this.getAttribute('oncreate');
+                    if (onCreateFunc && typeof window[onCreateFunc] === "function") {
+                        window[onCreateFunc].call(this, this);
+                    }
+                });
+            }
+            attachedCallback() {
+                if (this.AndroidUI) {
+                    this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+                }
+                else {
+                    setTimeout(() => {
+                        this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+                    }, 50);
+                }
+            }
+            detachedCallback() {
+            }
+            attributeChangedCallback(attributeName, oldVal, newVal) {
+            }
+            setContentView(view) {
+                this.AndroidUI.setContentView(view);
+            }
+            addContentView(view) {
+                this.AndroidUI.addContentView(view);
+            }
+            findViewById(id) {
+                return this.AndroidUI.findViewById(id);
+            }
+            static registerCustomElement() {
+                document.registerElement("android-" + this.name, this);
+            }
+        }
+        app.Activity = Activity;
+        Activity.registerCustomElement();
+    })(app = android.app || (android.app = {}));
+})(android || (android = {}));
+/**
  * Created by linfaxin on 15/10/6.
  */
 //use the deepest sub class as enter
 ///<reference path="android/view/ViewOverlay.ts"/>
-///<reference path="android/app/Activity.ts"/>
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
 ///<reference path="android/widget/LinearLayout.ts"/>
@@ -15084,6 +15089,7 @@ var com;
 ///<reference path="android/widget/Button.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
+///<reference path="android/app/Activity.ts"/>
 ///<reference path="runtime/AndroidUI.ts"/>
 window[`android`] = android;
 window[`java`] = java;

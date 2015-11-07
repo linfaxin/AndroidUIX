@@ -28,9 +28,9 @@ module android.app{
         }
 
         createdCallback():void{
-            this.AndroidUI = new AndroidUI(this);
             //delay call onCreate, insure browser load lib complete
             requestAnimationFrame(()=>{
+                this.AndroidUI = new AndroidUI(this);
                 this.onCreate();
                 //activity could have a attribute defined callback when created
                 let onCreateFunc = this.getAttribute('oncreate');
@@ -40,7 +40,14 @@ module android.app{
             });
         }
         attachedCallback():void {
-            this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+            if(this.AndroidUI){
+                this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+            }else{
+                //delay call onCreate, insure browser load lib complete
+                setTimeout(()=>{
+                    this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+                }, 50);
+            }
         }
         detachedCallback():void {
         }
