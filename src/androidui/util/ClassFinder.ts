@@ -1,7 +1,7 @@
 /**
  * Created by linfaxin on 15/11/6.
  */
-module runtime.util{
+module androidui.util{
     export class ClassFinder{
         /**
          * @param classFullName com.xxx.xxx.MyView

@@ -5,10 +5,10 @@
 ///<reference path="../view/ViewRootImpl.ts"/>
 ///<reference path="../widget/FrameLayout.ts"/>
 ///<reference path="../view/MotionEvent.ts"/>
-///<reference path="../../runtime/AndroidUI.ts"/>
+///<reference path="../../androidui/AndroidUI.ts"/>
 
 module android.app{
-    import AndroidUI = runtime.AndroidUI;
+    import AndroidUI = androidui.AndroidUI;
     import View = android.view.View;
     import ViewRootImpl = android.view.ViewRootImpl;
     import FrameLayout = android.widget.FrameLayout;

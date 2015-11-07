@@ -10,7 +10,7 @@
 /**
  * Bridge between Html Element and Android View
  */
-module runtime {
+module androidui {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import ViewRootImpl = android.view.ViewRootImpl;

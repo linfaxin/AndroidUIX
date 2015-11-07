@@ -3184,8 +3184,8 @@ var android;
  */
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/util/StateSet.ts"/>
-var runtime;
-(function (runtime) {
+var androidui;
+(function (androidui) {
     var attr;
     (function (attr) {
         class StateAttr {
@@ -3248,16 +3248,16 @@ var runtime;
             }
         }
         attr.StateAttr = StateAttr;
-    })(attr = runtime.attr || (runtime.attr = {}));
-})(runtime || (runtime = {}));
+    })(attr = androidui.attr || (androidui.attr = {}));
+})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/11/3.
  */
 ///<reference path="StateAttr.ts"/>
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/util/StateSet.ts"/>
-var runtime;
-(function (runtime) {
+var androidui;
+(function (androidui) {
     var attr;
     (function (attr_1) {
         class StateAttrList {
@@ -3356,10 +3356,10 @@ var runtime;
         }
         StateAttrList.EmptyArray = [];
         attr_1.StateAttrList = StateAttrList;
-    })(attr = runtime.attr || (runtime.attr = {}));
-})(runtime || (runtime = {}));
-var runtime;
-(function (runtime) {
+    })(attr = androidui.attr || (androidui.attr = {}));
+})(androidui || (androidui = {}));
+var androidui;
+(function (androidui) {
     var util;
     (function (util) {
         class ClassFinder {
@@ -3390,8 +3390,8 @@ var runtime;
             }
         }
         util.ClassFinder = ClassFinder;
-    })(util = runtime.util || (runtime.util = {}));
-})(runtime || (runtime = {}));
+    })(util = androidui.util || (androidui.util = {}));
+})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/9/27.
  */
@@ -3428,9 +3428,9 @@ var runtime;
 ///<reference path="../view/animation/LinearInterpolator.ts"/>
 ///<reference path="../view/animation/AnimationUtils.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../runtime/attr/StateAttrList.ts"/>
-///<reference path="../../runtime/attr/StateAttr.ts"/>
-///<reference path="../../runtime/util/ClassFinder.ts"/>
+///<reference path="../../androidui/attr/StateAttrList.ts"/>
+///<reference path="../../androidui/attr/StateAttr.ts"/>
+///<reference path="../../androidui/util/ClassFinder.ts"/>
 var android;
 (function (android) {
     var view;
@@ -3455,8 +3455,8 @@ var android;
         var TypedValue = android.util.TypedValue;
         var LinearInterpolator = android.view.animation.LinearInterpolator;
         var AnimationUtils = android.view.animation.AnimationUtils;
-        var StateAttrList = runtime.attr.StateAttrList;
-        var ClassFinder = runtime.util.ClassFinder;
+        var StateAttrList = androidui.attr.StateAttrList;
+        var ClassFinder = androidui.util.ClassFinder;
         class View {
             constructor() {
                 this.mPrivateFlags = 0;
@@ -3977,6 +3977,10 @@ var android;
                     this.invalidateParentIfNeeded();
                 }
             }
+            setAlpha(alpha) {
+                alpha &= 0xFF;
+                this.bindElement.style.opacity = alpha / 255 + '';
+            }
             updateMatrix() {
             }
             getMatrix() {
@@ -4104,6 +4108,18 @@ var android;
                         this.mParent.invalidateChild(this, null);
                     }
                     this.dispatchVisibilityChanged(this, newVisibility);
+                    if (newVisibility === View.VISIBLE) {
+                        this.bindElement.style.display = '';
+                        this.bindElement.style.visibility = '';
+                    }
+                    else if (newVisibility === View.INVISIBLE) {
+                        this.bindElement.style.display = '';
+                        this.bindElement.style.visibility = 'hidden';
+                    }
+                    else {
+                        this.bindElement.style.display = 'none';
+                        this.bindElement.style.visibility = '';
+                    }
                 }
                 if ((changed & View.WILL_NOT_CACHE_DRAWING) != 0) {
                     this.destroyDrawingCache();
@@ -5779,7 +5795,7 @@ var android;
                 }
                 let rootViewClass = ClassFinder.findClass(className, android.view);
                 if (!rootViewClass)
-                    rootViewClass = ClassFinder.findClass(className, android.widget);
+                    rootViewClass = ClassFinder.findClass(className, android['widget']);
                 if (!rootViewClass)
                     rootViewClass = ClassFinder.findClass(className);
                 if (!rootViewClass) {
@@ -6349,6 +6365,14 @@ var android;
                         return ColorStateList.valueOf(color);
                     }
                     return null;
+                }
+                parseNumber(value, defaultValue = 0) {
+                    try {
+                        return TypedValue.complexToDimensionPixelSize(value);
+                    }
+                    catch (e) {
+                        return defaultValue;
+                    }
                 }
             }
             View.AttrChangeHandler = AttrChangeHandler;
@@ -11722,6 +11746,10 @@ var android;
                 this.mTextElement.style.overflow = "hidden";
                 this.mTextElement.style.opacity = "0";
             }
+            initBindElement(bindElement, rootElement) {
+                super.initBindElement(bindElement, rootElement);
+                this.bindElement.appendChild(this.mTextElement);
+            }
             onLayout(changed, left, top, right, bottom) {
                 super.onLayout(changed, left, top, right, bottom);
                 this.mTextElement.style.opacity = "";
@@ -11729,10 +11757,11 @@ var android;
             onFinishInflate() {
                 super.onFinishInflate();
                 Array.from(this.bindElement.childNodes).forEach((item) => {
+                    if (item === this.mTextElement)
+                        return;
                     this.bindElement.removeChild(item);
                     this.mTextElement.appendChild(item);
                 });
-                this.bindElement.appendChild(this.mTextElement);
             }
             onMeasure(widthMeasureSpec, heightMeasureSpec) {
                 let widthMode = MeasureSpec.getMode(widthMeasureSpec);
@@ -12811,6 +12840,385 @@ var android;
                 return result;
             }
         }
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/7.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/widget/ImageView.ts"/>
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var View = android.view.View;
+        var MeasureSpec = View.MeasureSpec;
+        var ImageView = android.widget.ImageView;
+        requestAnimationFrame(() => {
+            eval('ImageView = android.widget.ImageView;');
+        });
+        class HtmlImageView extends View {
+            constructor() {
+                super();
+                this.mHaveFrame = false;
+                this.mAdjustViewBounds = false;
+                this.mMaxWidth = Number.MAX_SAFE_INTEGER;
+                this.mMaxHeight = Number.MAX_SAFE_INTEGER;
+                this.mAlpha = 255;
+                this.mDrawableWidth = 0;
+                this.mDrawableHeight = 0;
+                this.mAdjustViewBoundsCompat = false;
+                this.initImageView();
+            }
+            initImageView() {
+                this.mScaleType = ImageView.ScaleType.FIT_CENTER;
+                this.mImgElement = document.createElement('img');
+                this.mImgElement.style.position = "absolute";
+                this.mImgElement.onload = (() => {
+                    this.mImgElement.style.left = 0 + 'px';
+                    this.mImgElement.style.top = 0 + 'px';
+                    this.mImgElement.style.width = '';
+                    this.mImgElement.style.height = '';
+                    this.mDrawableWidth = this.mImgElement.width;
+                    this.mDrawableHeight = this.mImgElement.height;
+                    this.requestLayout();
+                });
+            }
+            initBindElement(bindElement, rootElement) {
+                super.initBindElement(bindElement, rootElement);
+                this.bindElement.appendChild(this.mImgElement);
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let imageView = this;
+                mergeHandler.add({
+                    set src(value) {
+                        imageView.setImageURI(value);
+                    },
+                    get src() {
+                        return imageView.mImgElement.src;
+                    },
+                    set adjustViewBounds(value) {
+                        imageView.setAdjustViewBounds(mergeHandler.parseBoolean(value, false));
+                    },
+                    get adjustViewBounds() {
+                        return imageView.mAdjustViewBounds;
+                    },
+                    set maxWidth(value) {
+                        imageView.setMaxWidth(mergeHandler.parseNumber(value, imageView.mMaxWidth));
+                    },
+                    get maxWidth() {
+                        return imageView.mMaxWidth;
+                    },
+                    set maxHeight(value) {
+                        imageView.setMaxHeight(mergeHandler.parseNumber(value, imageView.mMaxHeight));
+                    },
+                    get maxHeight() {
+                        return imageView.mMaxHeight;
+                    },
+                    set scaleType(value) {
+                        imageView.setScaleType(ImageView.ScaleType.parseScaleType(value, imageView.mScaleType));
+                    },
+                    get scaleType() {
+                        return imageView.mScaleType.toString();
+                    }
+                });
+            }
+            getAdjustViewBounds() {
+                return this.mAdjustViewBounds;
+            }
+            setAdjustViewBounds(adjustViewBounds) {
+                this.mAdjustViewBounds = adjustViewBounds;
+                if (adjustViewBounds) {
+                    this.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                }
+            }
+            getMaxWidth() {
+                return this.mMaxWidth;
+            }
+            setMaxWidth(maxWidth) {
+                this.mMaxWidth = maxWidth;
+            }
+            getMaxHeight() {
+                return this.mMaxHeight;
+            }
+            setMaxHeight(maxHeight) {
+                this.mMaxHeight = maxHeight;
+            }
+            setImageURI(uri) {
+                this.mDrawableWidth = -1;
+                this.mDrawableHeight = -1;
+                this.mImgElement.src = uri;
+            }
+            setScaleType(scaleType) {
+                if (scaleType == null) {
+                    throw new Error('NullPointerException');
+                }
+                if (this.mScaleType != scaleType) {
+                    this.mScaleType = scaleType;
+                    this.setWillNotCacheDrawing(scaleType == ImageView.ScaleType.CENTER);
+                    this.requestLayout();
+                    this.invalidate();
+                }
+            }
+            getScaleType() {
+                return this.mScaleType;
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                let w;
+                let h;
+                let desiredAspect = 0.0;
+                let resizeWidth = false;
+                let resizeHeight = false;
+                const widthSpecMode = MeasureSpec.getMode(widthMeasureSpec);
+                const heightSpecMode = MeasureSpec.getMode(heightMeasureSpec);
+                if (!this.mImgElement.src || !this.mImgElement.complete) {
+                    this.mDrawableWidth = -1;
+                    this.mDrawableHeight = -1;
+                    w = h = 0;
+                }
+                else {
+                    w = this.mDrawableWidth;
+                    h = this.mDrawableHeight;
+                    if (w <= 0)
+                        w = 1;
+                    if (h <= 0)
+                        h = 1;
+                    if (this.mAdjustViewBounds) {
+                        resizeWidth = widthSpecMode != MeasureSpec.EXACTLY;
+                        resizeHeight = heightSpecMode != MeasureSpec.EXACTLY;
+                        desiredAspect = w / h;
+                    }
+                }
+                let pleft = this.mPaddingLeft;
+                let pright = this.mPaddingRight;
+                let ptop = this.mPaddingTop;
+                let pbottom = this.mPaddingBottom;
+                let widthSize;
+                let heightSize;
+                if (resizeWidth || resizeHeight) {
+                    widthSize = this.resolveAdjustedSize(w + pleft + pright, this.mMaxWidth, widthMeasureSpec);
+                    heightSize = this.resolveAdjustedSize(h + ptop + pbottom, this.mMaxHeight, heightMeasureSpec);
+                    if (desiredAspect != 0) {
+                        let actualAspect = (widthSize - pleft - pright) / (heightSize - ptop - pbottom);
+                        if (Math.abs(actualAspect - desiredAspect) > 0.0000001) {
+                            let done = false;
+                            if (resizeWidth) {
+                                let newWidth = Math.floor(desiredAspect * (heightSize - ptop - pbottom)) +
+                                    pleft + pright;
+                                if (!resizeHeight && !this.mAdjustViewBoundsCompat) {
+                                    widthSize = this.resolveAdjustedSize(newWidth, this.mMaxWidth, widthMeasureSpec);
+                                }
+                                if (newWidth <= widthSize) {
+                                    widthSize = newWidth;
+                                    done = true;
+                                }
+                            }
+                            if (!done && resizeHeight) {
+                                let newHeight = Math.floor((widthSize - pleft - pright) / desiredAspect) +
+                                    ptop + pbottom;
+                                if (!resizeWidth && !this.mAdjustViewBoundsCompat) {
+                                    heightSize = this.resolveAdjustedSize(newHeight, this.mMaxHeight, heightMeasureSpec);
+                                }
+                                if (newHeight <= heightSize) {
+                                    heightSize = newHeight;
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    w += pleft + pright;
+                    h += ptop + pbottom;
+                    w = Math.max(w, this.getSuggestedMinimumWidth());
+                    h = Math.max(h, this.getSuggestedMinimumHeight());
+                    widthSize = HtmlImageView.resolveSizeAndState(w, widthMeasureSpec, 0);
+                    heightSize = HtmlImageView.resolveSizeAndState(h, heightMeasureSpec, 0);
+                }
+                this.setMeasuredDimension(widthSize, heightSize);
+            }
+            resolveAdjustedSize(desiredSize, maxSize, measureSpec) {
+                let result = desiredSize;
+                let specMode = MeasureSpec.getMode(measureSpec);
+                let specSize = MeasureSpec.getSize(measureSpec);
+                switch (specMode) {
+                    case MeasureSpec.UNSPECIFIED:
+                        result = Math.min(desiredSize, maxSize);
+                        break;
+                    case MeasureSpec.AT_MOST:
+                        result = Math.min(Math.min(desiredSize, specSize), maxSize);
+                        break;
+                    case MeasureSpec.EXACTLY:
+                        result = specSize;
+                        break;
+                }
+                return result;
+            }
+            setFrame(left, top, right, bottom) {
+                let changed = super.setFrame(left, top, right, bottom);
+                this.mHaveFrame = true;
+                this.configureBounds();
+                return changed;
+            }
+            configureBounds() {
+                let dwidth = this.mDrawableWidth;
+                let dheight = this.mDrawableHeight;
+                let vwidth = this.getWidth() - this.mPaddingLeft - this.mPaddingRight;
+                let vheight = this.getHeight() - this.mPaddingTop - this.mPaddingBottom;
+                let fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
+                this.mImgElement.style.left = 0 + 'px';
+                this.mImgElement.style.top = 0 + 'px';
+                this.mImgElement.style.width = '';
+                this.mImgElement.style.height = '';
+                if (dwidth <= 0 || dheight <= 0) {
+                    return;
+                }
+                if (this.mScaleType === ImageView.ScaleType.FIT_XY) {
+                    this.mImgElement.style.width = vwidth + 'px';
+                    this.mImgElement.style.height = vheight + 'px';
+                    return;
+                }
+                this.mImgElement.style.width = dwidth + 'px';
+                this.mImgElement.style.height = dheight + 'px';
+                if (ImageView.ScaleType.MATRIX === this.mScaleType) {
+                }
+                else if (fits) {
+                }
+                else if (ImageView.ScaleType.CENTER === this.mScaleType) {
+                    let left = Math.round((vwidth - dwidth) * 0.5);
+                    let top = Math.round((vheight - dheight) * 0.5);
+                    this.mImgElement.style.left = left + 'px';
+                    this.mImgElement.style.top = top + 'px';
+                }
+                else if (ImageView.ScaleType.CENTER_CROP === this.mScaleType) {
+                    let scale;
+                    let dx = 0, dy = 0;
+                    if (dwidth * vheight > vwidth * dheight) {
+                        scale = vheight / dheight;
+                        dx = (vwidth - dwidth * scale) * 0.5;
+                        this.mImgElement.style.width = 'auto';
+                        this.mImgElement.style.height = vheight + 'px';
+                        this.mImgElement.style.left = Math.round(dx) + 'px';
+                        this.mImgElement.style.top = '0px';
+                    }
+                    else {
+                        scale = vwidth / dwidth;
+                        dy = (vheight - dheight * scale) * 0.5;
+                        this.mImgElement.style.width = vwidth + 'px';
+                        this.mImgElement.style.height = 'auto';
+                        this.mImgElement.style.left = '0px';
+                        this.mImgElement.style.top = Math.round(dy) + 'px';
+                    }
+                }
+                else if (ImageView.ScaleType.CENTER_INSIDE === this.mScaleType) {
+                    let scale = 1;
+                    if (dwidth <= vwidth && dheight <= vheight) {
+                    }
+                    else {
+                        let wScale = vwidth / dwidth;
+                        let hScale = vheight / dheight;
+                        if (wScale < hScale) {
+                            this.mImgElement.style.width = vwidth + 'px';
+                            this.mImgElement.style.height = 'auto';
+                        }
+                        else {
+                            this.mImgElement.style.width = 'auto';
+                            this.mImgElement.style.height = vheight + 'px';
+                        }
+                        scale = Math.min(wScale, hScale);
+                    }
+                    let dx = Math.round((vwidth - dwidth * scale) * 0.5);
+                    let dy = Math.round((vheight - dheight * scale) * 0.5);
+                    this.mImgElement.style.left = dx + 'px';
+                    this.mImgElement.style.top = dy + 'px';
+                }
+                else {
+                    let wScale = vwidth / dwidth;
+                    let hScale = vheight / dheight;
+                    if (wScale < hScale) {
+                        this.mImgElement.style.width = vwidth + 'px';
+                        this.mImgElement.style.height = 'auto';
+                    }
+                    else {
+                        this.mImgElement.style.width = 'auto';
+                        this.mImgElement.style.height = vheight + 'px';
+                    }
+                    let scale = Math.min(wScale, hScale);
+                    if (ImageView.ScaleType.FIT_CENTER === this.mScaleType) {
+                        let dx = Math.round((vwidth - dwidth * scale) * 0.5);
+                        let dy = Math.round((vheight - dheight * scale) * 0.5);
+                        this.mImgElement.style.left = dx + 'px';
+                        this.mImgElement.style.top = dy + 'px';
+                    }
+                    else if (ImageView.ScaleType.FIT_END === this.mScaleType) {
+                        let dx = Math.round((vwidth - dwidth * scale));
+                        let dy = Math.round((vheight - dheight * scale));
+                        this.mImgElement.style.left = dx + 'px';
+                        this.mImgElement.style.top = dy + 'px';
+                    }
+                    else if (ImageView.ScaleType.FIT_START === this.mScaleType) {
+                    }
+                }
+            }
+            getImageAlpha() {
+                return this.mAlpha;
+            }
+            setImageAlpha(alpha) {
+                this.setAlpha(alpha);
+            }
+        }
+        widget.HtmlImageView = HtmlImageView;
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
+///<reference path="../view/View.ts"/>
+///<reference path="../../androidui/widget/HtmlImageView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        class ImageView extends androidui.widget.HtmlImageView {
+        }
+        widget.ImageView = ImageView;
+        (function (ImageView) {
+            class ScaleType {
+                constructor(type) {
+                    this.mType = type;
+                }
+                toString() {
+                    return this.mType;
+                }
+                static parseScaleType(s, defaultType) {
+                    if (s == null)
+                        return defaultType;
+                    if (s.toLowerCase() === ScaleType.MATRIX.mType.toLowerCase())
+                        return ScaleType.MATRIX;
+                    if (s.toLowerCase() === ScaleType.FIT_XY.mType.toLowerCase())
+                        return ScaleType.FIT_XY;
+                    if (s.toLowerCase() === ScaleType.FIT_START.mType.toLowerCase())
+                        return ScaleType.FIT_START;
+                    if (s.toLowerCase() === ScaleType.FIT_CENTER.mType.toLowerCase())
+                        return ScaleType.FIT_CENTER;
+                    if (s.toLowerCase() === ScaleType.FIT_END.mType.toLowerCase())
+                        return ScaleType.FIT_END;
+                    if (s.toLowerCase() === ScaleType.CENTER.mType.toLowerCase())
+                        return ScaleType.CENTER;
+                    if (s.toLowerCase() === ScaleType.CENTER_CROP.mType.toLowerCase())
+                        return ScaleType.CENTER_CROP;
+                    if (s.toLowerCase() === ScaleType.CENTER_INSIDE.mType.toLowerCase())
+                        return ScaleType.CENTER_INSIDE;
+                    return defaultType;
+                }
+            }
+            ScaleType.MATRIX = new ScaleType("matrix");
+            ScaleType.FIT_XY = new ScaleType("fitXY");
+            ScaleType.FIT_START = new ScaleType("fitStart");
+            ScaleType.FIT_CENTER = new ScaleType("fitCenter");
+            ScaleType.FIT_END = new ScaleType("fitEnd");
+            ScaleType.CENTER = new ScaleType("center");
+            ScaleType.CENTER_CROP = new ScaleType("centerCrop");
+            ScaleType.CENTER_INSIDE = new ScaleType("centerInside");
+            ImageView.ScaleType = ScaleType;
+        })(ImageView = widget.ImageView || (widget.ImageView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
@@ -14850,8 +15258,8 @@ var com;
 ///<reference path="../android/view/ViewRootImpl.ts"/>
 ///<reference path="../android/widget/FrameLayout.ts"/>
 ///<reference path="../android/view/MotionEvent.ts"/>
-var runtime;
-(function (runtime) {
+var androidui;
+(function (androidui) {
     var View = android.view.View;
     var ViewGroup = android.view.ViewGroup;
     var ViewRootImpl = android.view.ViewRootImpl;
@@ -15011,10 +15419,10 @@ var runtime;
             return this.rootLayout.findViewById(id);
         }
     }
-    runtime.AndroidUI = AndroidUI;
+    androidui.AndroidUI = AndroidUI;
     class RootLayout extends FrameLayout {
     }
-})(runtime || (runtime = {}));
+})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/10/11.
  */
@@ -15022,12 +15430,12 @@ var runtime;
 ///<reference path="../view/ViewRootImpl.ts"/>
 ///<reference path="../widget/FrameLayout.ts"/>
 ///<reference path="../view/MotionEvent.ts"/>
-///<reference path="../../runtime/AndroidUI.ts"/>
+///<reference path="../../androidui/AndroidUI.ts"/>
 var android;
 (function (android) {
     var app;
     (function (app) {
-        var AndroidUI = runtime.AndroidUI;
+        var AndroidUI = androidui.AndroidUI;
         if (typeof HTMLDivElement !== 'function') {
             var _HTMLDivElement = function () { };
             _HTMLDivElement.prototype = HTMLDivElement.prototype;
@@ -15087,10 +15495,11 @@ var android;
 ///<reference path="android/widget/LinearLayout.ts"/>
 ///<reference path="android/widget/TextView.ts"/>
 ///<reference path="android/widget/Button.ts"/>
+///<reference path="android/widget/ImageView.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="android/app/Activity.ts"/>
-///<reference path="runtime/AndroidUI.ts"/>
+///<reference path="androidui/AndroidUI.ts"/>
+///<reference path="androidui/widget/HtmlImageView.ts"/>
 window[`android`] = android;
 window[`java`] = java;
-window[`runtime`] = runtime;

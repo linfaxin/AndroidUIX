@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>android-components-sample</title>
+    <script>
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <android-Activity style="width: 100%; height:100%;display: none;">
+        <resources>
+            <android-style id="imageStyle"
+                   android:background="#eee"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:layout_marginBottom="12dp"
+                    ></android-style>
+            <android-style id="line_spit"
+                   android:layout_height="10px"
+                   android:layout_width="match_parent"
+                    ></android-style>
+        </resources>
+        <ScrollView>
+            <LinearLayout
+                    android:padding="0 6dp"
+                    android:orientation="vertical">
+                <TextView>自适应高宽:</TextView>
+                <ImageView
+                        android:src="images/logo_android_1.png"
+                        android:style="@style/imageStyle"
+                        ></ImageView>
+                <TextView>FitCenter(默认ScaleType):</TextView>
+                <LinearLayout>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:layout_height="200dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:layout_width="match_parent"
+                            android:layout_marginLeft="4dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                </LinearLayout>
+                <TextView>FitStart:</TextView>
+                <LinearLayout>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="fitStart"
+                            android:layout_height="200dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="fitStart"
+                            android:layout_width="match_parent"
+                            android:layout_marginLeft="4dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                </LinearLayout>
+                <TextView>FitEnd:</TextView>
+                <LinearLayout>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="fitEnd"
+                            android:layout_height="200dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="fitEnd"
+                            android:layout_width="match_parent"
+                            android:layout_marginLeft="4dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                </LinearLayout>
+                <TextView>FitXy:</TextView>
+                <LinearLayout>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="fitXy"
+                            android:layout_height="200dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="fitXy"
+                            android:layout_width="match_parent"
+                            android:layout_marginLeft="4dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                </LinearLayout>
+                <TextView>Center:</TextView>
+                <LinearLayout>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="center"
+                            android:layout_height="80dp"
+                            android:layout_width="80dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="center"
+                            android:layout_height="180dp"
+                            android:layout_width="180dp"
+                            android:layout_marginLeft="4dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                </LinearLayout>
+                <TextView>centerCrop:</TextView>
+                <LinearLayout>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="centerCrop"
+                            android:layout_height="80dp"
+                            android:layout_width="80dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="centerCrop"
+                            android:layout_marginLeft="4dp"
+                            android:layout_height="100dp"
+                            android:layout_width="60dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="centerCrop"
+                            android:layout_height="60dp"
+                            android:layout_width="100dp"
+                            android:layout_marginLeft="4dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                </LinearLayout>
+                <TextView>centerInside:</TextView>
+                <LinearLayout>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="centerInside"
+                            android:layout_height="80dp"
+                            android:layout_width="80dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                    <ImageView
+                            android:src="images/logo_android_1.png"
+                            android:scaleType="centerInside"
+                            android:layout_height="180dp"
+                            android:layout_width="180dp"
+                            android:layout_marginLeft="4dp"
+                            android:style="@style/imageStyle"
+                            ></ImageView>
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+    </android-Activity>
+
+    <script src="../../node_modules/babel-core/browser-polyfill.min.js"></script>
+    <script src="../lib/CustomElements.min.js"></script>
+    <script src="../../dist/android-web-widget.es5.js"></script>
+    <script src="../build/main.es5.js"></script>
+
+</body>
+</html>

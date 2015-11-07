@@ -5,7 +5,7 @@
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/util/StateSet.ts"/>
 
-module runtime.attr{
+module androidui.attr{
 
     export class StateAttrList{
         private list = new Array<StateAttr>(0);

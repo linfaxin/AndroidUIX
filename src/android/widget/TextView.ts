@@ -211,6 +211,11 @@ module android.widget{
         }
 
 
+        initBindElement(bindElement:HTMLElement, rootElement:HTMLElement):void {
+            super.initBindElement(bindElement, rootElement);
+            this.bindElement.appendChild(this.mTextElement);
+        }
+
         onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
             super.onLayout(changed, left, top, right, bottom);
             this.mTextElement.style.opacity = "";//layout ok
@@ -219,10 +224,10 @@ module android.widget{
         onFinishInflate():void {
             super.onFinishInflate();
             Array.from(this.bindElement.childNodes).forEach((item:Node)=>{
+                if(item===this.mTextElement) return;
                 this.bindElement.removeChild(item);
                 this.mTextElement.appendChild(item);
             });
-            this.bindElement.appendChild(this.mTextElement);
         }
 
         onMeasure(widthMeasureSpec:any, heightMeasureSpec:any):void {

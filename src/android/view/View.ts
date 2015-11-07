@@ -34,9 +34,9 @@
 ///<reference path="../view/animation/LinearInterpolator.ts"/>
 ///<reference path="../view/animation/AnimationUtils.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../runtime/attr/StateAttrList.ts"/>
-///<reference path="../../runtime/attr/StateAttr.ts"/>
-///<reference path="../../runtime/util/ClassFinder.ts"/>
+///<reference path="../../androidui/attr/StateAttrList.ts"/>
+///<reference path="../../androidui/attr/StateAttr.ts"/>
+///<reference path="../../androidui/util/ClassFinder.ts"/>
 
 module android.view {
     import SparseArray = android.util.SparseArray;
@@ -67,9 +67,9 @@ module android.view {
     import TypedValue = android.util.TypedValue;
     import LinearInterpolator = android.view.animation.LinearInterpolator;
     import AnimationUtils = android.view.animation.AnimationUtils;
-    import StateAttrList = runtime.attr.StateAttrList;
-    import StateAttr = runtime.attr.StateAttr;
-    import ClassFinder = runtime.util.ClassFinder;
+    import StateAttrList = androidui.attr.StateAttrList;
+    import StateAttr = androidui.attr.StateAttr;
+    import ClassFinder = androidui.util.ClassFinder;
 
     export class View implements Drawable.Callback{
         private static DBG = Log.View_DBG;
@@ -807,6 +807,13 @@ module android.view {
         }
 
 
+        setAlpha(alpha:number) {
+            alpha &= 0xFF;          // keep it legal
+            //TODO set to Transformation
+            this.bindElement.style.opacity = alpha / 255 + '';
+        }
+
+
         private updateMatrix() {
             //TODO transform
         }
@@ -996,6 +1003,18 @@ module android.view {
                     this.mParent.invalidateChild(this, null);
                 }
                 this.dispatchVisibilityChanged(this, newVisibility);
+
+                if(newVisibility === View.VISIBLE){
+                    this.bindElement.style.display = '';
+                    this.bindElement.style.visibility = '';
+
+                }else if(newVisibility === View.INVISIBLE){
+                    this.bindElement.style.display = '';
+                    this.bindElement.style.visibility = 'hidden';
+                }else{
+                    this.bindElement.style.display = 'none';
+                    this.bindElement.style.visibility = '';
+                }
             }
 
             if ((changed & View.WILL_NOT_CACHE_DRAWING) != 0) {
@@ -1636,7 +1655,7 @@ module android.view {
         onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
         }
 
-        private setFrame(left:number, top:number, right:number, bottom:number) {
+        setFrame(left:number, top:number, right:number, bottom:number) {
             let changed = false;
 
             if (View.DBG) {
@@ -3147,7 +3166,7 @@ module android.view {
                 className = className.substring('ANDROID-'.length);
             }
             let rootViewClass = ClassFinder.findClass(className, android.view);
-            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android.widget);
+            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android['widget']);
             if(!rootViewClass) rootViewClass = ClassFinder.findClass(className);
             if(!rootViewClass){
                 console.warn('not find class ' + className);
@@ -3246,7 +3265,7 @@ module android.view {
             });
         }
 
-        private initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
+        initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
             if(this._bindElement) this._bindElement[View.AndroidViewProperty] = null;
             this._bindElement = bindElement || document.createElement(this.tagName());
             let oldBindView:View = this._bindElement[View.AndroidViewProperty];
@@ -3664,6 +3683,13 @@ module android.view {
                     return ColorStateList.valueOf(color);
                 }
                 return null;
+            }
+            parseNumber(value, defaultValue = 0):number{
+                try {
+                    return TypedValue.complexToDimensionPixelSize(value);
+                } catch (e) {
+                    return defaultValue;
+                }
             }
         }
     }

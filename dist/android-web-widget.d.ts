@@ -827,7 +827,7 @@ declare module android.view.animation {
         static currentAnimationTimeMillis(): number;
     }
 }
-declare module runtime.attr {
+declare module androidui.attr {
     class StateAttr {
         private stateSpec;
         private attributes;
@@ -842,7 +842,7 @@ declare module runtime.attr {
         static parseStateAttrName(stateDesc: any): Set<number>;
     }
 }
-declare module runtime.attr {
+declare module androidui.attr {
     class StateAttrList {
         private list;
         private list_reverse;
@@ -857,7 +857,7 @@ declare module runtime.attr {
         getMatchedAttr(state: number[]): StateAttr;
     }
 }
-declare module runtime.util {
+declare module androidui.util {
     class ClassFinder {
         static findClass(classFullName: string, findInRoot?: any): any;
     }
@@ -1045,6 +1045,7 @@ declare module android.view {
         getFinalAlpha(): number;
         offsetTopAndBottom(offset: number): void;
         offsetLeftAndRight(offset: number): void;
+        setAlpha(alpha: number): void;
         private updateMatrix();
         getMatrix(): Matrix;
         hasIdentityMatrix(): boolean;
@@ -1131,7 +1132,7 @@ declare module android.view {
         isLaidOut(): boolean;
         layout(l: number, t: number, r: number, b: number): void;
         onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
-        private setFrame(left, top, right, bottom);
+        setFrame(left: number, top: number, right: number, bottom: number): boolean;
         private sizeChange(newWidth, newHeight, oldWidth, oldHeight);
         getDrawingRect(outRect: Rect): void;
         getMeasuredWidth(): number;
@@ -1263,7 +1264,7 @@ declare module android.view {
         bindElement: HTMLElement;
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
-        private initBindElement(bindElement?, rootElement?);
+        initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
         syncBoundToElement(): void;
         syncScrollToElement(): void;
         private _attrChangeHandler;
@@ -1349,6 +1350,7 @@ declare module android.view {
             parseDrawable(s: string): Drawable;
             parseColor(value: string): number;
             parseColorList(value: string): ColorStateList;
+            parseNumber(value: any, defaultValue?: number): number;
         }
     }
     module View.AttachInfo {
@@ -2044,6 +2046,7 @@ declare module android.widget {
         constructor();
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         private initTextElement();
+        initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
         onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         onFinishInflate(): void;
         onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
@@ -2202,6 +2205,61 @@ declare module android.widget {
     class Button extends TextView {
         constructor();
         private _initDefaultStyle();
+    }
+}
+declare module androidui.widget {
+    import View = android.view.View;
+    import ImageView = android.widget.ImageView;
+    class HtmlImageView extends View {
+        private mScaleType;
+        private mHaveFrame;
+        private mAdjustViewBounds;
+        private mMaxWidth;
+        private mMaxHeight;
+        private mAlpha;
+        private mDrawableWidth;
+        private mDrawableHeight;
+        private mAdjustViewBoundsCompat;
+        private mImgElement;
+        constructor();
+        private initImageView();
+        initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
+        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
+        getAdjustViewBounds(): boolean;
+        setAdjustViewBounds(adjustViewBounds: boolean): void;
+        getMaxWidth(): number;
+        setMaxWidth(maxWidth: number): void;
+        getMaxHeight(): number;
+        setMaxHeight(maxHeight: number): void;
+        setImageURI(uri: string): void;
+        setScaleType(scaleType: ImageView.ScaleType): void;
+        getScaleType(): ImageView.ScaleType;
+        onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        private resolveAdjustedSize(desiredSize, maxSize, measureSpec);
+        setFrame(left: number, top: number, right: number, bottom: number): boolean;
+        private configureBounds();
+        getImageAlpha(): number;
+        setImageAlpha(alpha: number): void;
+    }
+}
+declare module android.widget {
+    class ImageView extends androidui.widget.HtmlImageView {
+    }
+    module ImageView {
+        class ScaleType {
+            static MATRIX: ScaleType;
+            static FIT_XY: ScaleType;
+            static FIT_START: ScaleType;
+            static FIT_CENTER: ScaleType;
+            static FIT_END: ScaleType;
+            static CENTER: ScaleType;
+            static CENTER_CROP: ScaleType;
+            static CENTER_INSIDE: ScaleType;
+            private mType;
+            constructor(type: string);
+            toString(): string;
+            static parseScaleType(s: string, defaultType: ScaleType): ScaleType;
+        }
     }
 }
 declare module android.database {
@@ -2454,7 +2512,7 @@ declare module com.jakewharton.salvage {
         abstract getView(position: number, convertView: View, parent: ViewGroup): View;
     }
 }
-declare module runtime {
+declare module androidui {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import ViewRootImpl = android.view.ViewRootImpl;
