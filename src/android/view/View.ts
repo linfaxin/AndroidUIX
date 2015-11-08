@@ -2912,8 +2912,9 @@ module android.view {
             let track = null;//new ColorDrawable(Color.LTGRAY);//no track
             scrollabilityCache.scrollBar.setHorizontalTrackDrawable(track);
 
-            let thumbColor = new ColorDrawable(Color.parseColor('#aaaaaa'));
-            let thumb = new InsetDrawable(thumbColor, 0, 0, ViewConfiguration.get().getScaledScrollBarSize()/2, 0);
+            let thumbColor = new ColorDrawable(0x44000000);
+            let density = Resources.getDisplayMetrics().density;
+            let thumb = new InsetDrawable(thumbColor, 0, 2*density, ViewConfiguration.get().getScaledScrollBarSize()/2, 2*density);
             scrollabilityCache.scrollBar.setHorizontalThumbDrawable(thumb);
             scrollabilityCache.scrollBar.setVerticalTrackDrawable(track);
             scrollabilityCache.scrollBar.setVerticalThumbDrawable(thumb);
