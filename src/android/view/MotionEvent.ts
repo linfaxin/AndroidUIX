@@ -15,8 +15,8 @@ module android.view {
         touches: TouchList;
         targetTouches: TouchList;
         changedTouches: TouchList;
-        rotation: number;
-        scale: number;
+        //rotation: number;
+        //scale: number;
     }
     interface TouchList {
         length: number;
@@ -77,22 +77,20 @@ module android.view {
 
         _activeTouch:any;
 
-        constructor(e, action:number) {
-            this.mAction = action;
-            if (e) this.init(e, action);
-        }
-
         static obtainWithTouchEvent(e, action:number):MotionEvent {
-            return new MotionEvent(e, action);
+            let event = new MotionEvent();
+            event.initWithTouch(e, action);
+            return event;
         }
 
         static obtain(event:MotionEvent):MotionEvent {
-            let newEv = new MotionEvent(null, 0);
+            let newEv = new MotionEvent();
             Object.assign(newEv, event);
             return newEv;
         }
         static obtainWithAction(downTime:number, eventTime:number, action:number, x:number, y:number, metaState=0):MotionEvent {
-            let newEv = new MotionEvent(null, action);
+            let newEv = new MotionEvent();
+            newEv.mAction = action;
             newEv.mDownTime = downTime;
             newEv.mEventTime = eventTime;
             let touch:Touch = {
@@ -111,7 +109,7 @@ module android.view {
 
         private static IdIndexCache = new Map<number, number>();
 
-        init(event, baseAction:number, windowBound = new Rect() ) {
+        initWithTouch(event, baseAction:number, windowBound = new Rect() ) {
             let e = <TouchEvent>event;
             //get actionIndex
             let action = baseAction;
@@ -215,7 +213,6 @@ module android.view {
                 edgeFlag |= MotionEvent.EDGE_BOTTOM;
             }
             this.mEdgeFlags = edgeFlag;
-
         }
 
 

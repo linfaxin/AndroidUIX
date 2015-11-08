@@ -26,6 +26,9 @@ module androidui {
         private rootStyleElement:HTMLStyleElement;
         private rootResourceElement:Element;
 
+        private windowBound = new android.graphics.Rect();
+        private motionEvent:MotionEvent = new MotionEvent();
+
         constructor(element:HTMLElement) {
             this.element = element;
             if(element['AndroidUI']){
@@ -56,9 +59,11 @@ module androidui {
             this.viewRootImpl.setView(this.rootLayout);
             this.viewRootImpl.initSurface(this.canvas);
 
-            this.initTouch();
+            this.initEvent();
 
             this.tryStartLayoutAfterInit();
+
+            this.refreshWindowBound();
         }
 
         private initInflateView() {
@@ -95,47 +100,110 @@ module androidui {
             //canvas.style.bottom = '0px';
         }
 
-        private initTouch() {
-            let motionEvent:MotionEvent;
-            let windowBound = new android.graphics.Rect();
+        private refreshWindowBound(){
+            let rootViewBound = this.element.getBoundingClientRect();//get viewRoot bound on touch start
+            this.windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
+        }
+
+        private initEvent(){
+            this.initTouchEvent();
+            this.initMouseEvent();
+        }
+
+        private initTouchEvent() {
             this.element.addEventListener('touchstart', (e)=> {
+                this.refreshWindowBound();
+
                 e.preventDefault();
                 e.stopPropagation();
-                if(this.viewRootImpl && this.viewRootImpl.mIsInTraversal) return;
-                let rootViewBound = this.element.getBoundingClientRect();//get viewRoot bound on touch start
-                windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
 
-
-                if (!motionEvent) motionEvent = MotionEvent.obtainWithTouchEvent(<any>e, MotionEvent.ACTION_DOWN);
-                else motionEvent.init(<any>e, MotionEvent.ACTION_DOWN, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
+                this.motionEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this.windowBound);
+                this.rootLayout.dispatchTouchEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchmove', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
-                if(this.viewRootImpl && this.viewRootImpl.mIsInTraversal) return;
-                motionEvent.init(<any>e, MotionEvent.ACTION_MOVE, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
+                this.motionEvent.initWithTouch(<any>e, MotionEvent.ACTION_MOVE, this.windowBound);
+                this.rootLayout.dispatchTouchEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchend', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
-                if(this.viewRootImpl && this.viewRootImpl.mIsInTraversal) return;
-                motionEvent.init(<any>e, MotionEvent.ACTION_UP);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
+                this.motionEvent.initWithTouch(<any>e, MotionEvent.ACTION_UP);
+                this.rootLayout.dispatchTouchEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchcancel', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
-                if(this.viewRootImpl && this.viewRootImpl.mIsInTraversal) return;
-                motionEvent.init(<any>e, MotionEvent.ACTION_CANCEL, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
+                this.motionEvent.initWithTouch(<any>e, MotionEvent.ACTION_CANCEL, this.windowBound);
+                this.rootLayout.dispatchTouchEvent(this.motionEvent);
             }, true);
+        }
+
+        private initMouseEvent(){
+            function mouseToTouchEvent(e:MouseEvent){
+                let touch:Touch = {
+                    identifier: 0,
+                    target: null,
+                    screenX: e.screenX,
+                    screenY: e.screenY,
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                    pageX: e.pageX,
+                    pageY: e.pageY
+                };
+                return {
+                    changedTouches : [touch],
+                    targetTouches : [touch],
+                    touches : e.type === 'mouseup' ? [] : [touch],
+                    timeStamp : e.timeStamp
+                };
+            }
+            let isMouseDown = false;
+
+            this.element.addEventListener('mousedown', (e:MouseEvent)=> {
+                this.refreshWindowBound();
+                isMouseDown = true;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                this.motionEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this.windowBound);
+                this.rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+
+            this.element.addEventListener('mousemove', (e)=> {
+                if(!isMouseDown) return;
+                e.preventDefault();
+                e.stopPropagation();
+                this.motionEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this.windowBound);
+                this.rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+
+            this.element.addEventListener('mouseup', (e)=> {
+                console.log('mouseup');
+                isMouseDown = false;
+                e.preventDefault();
+                e.stopPropagation();
+                this.motionEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this.windowBound);
+                this.rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+
+            this.element.addEventListener('mouseleave', (e)=> {
+                if(e.fromElement === this.element){
+                    isMouseDown = false;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.motionEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this.windowBound);
+                    this.rootLayout.dispatchTouchEvent(this.motionEvent);
+                }
+            }, true);
+
         }
 
         private initBindElementStyle() {
             if (!this.rootStyleElement) this.rootStyleElement = document.createElement("style");
-            this.rootStyleElement.setAttribute("scoped", '');
+            this.rootStyleElement.setAttribute('scoped', '');
 
             this.rootStyleElement.innerHTML += `
                 * {

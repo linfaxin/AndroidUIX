@@ -52,7 +52,7 @@ module android.view {
         private mVisRect:Rect = new Rect();
         private mTraversalScheduled:boolean = false;
         private mWillDrawSoon:boolean = false;
-        mIsInTraversal:boolean = false;
+        private mIsInTraversal:boolean = false;
         private mLayoutRequested:boolean = false;
         private mFirst:boolean = true;
         private mFullRedrawNeeded:boolean = false;
