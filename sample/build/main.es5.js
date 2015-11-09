@@ -79,9 +79,6 @@ var sample;
                 value: function onCreate() {
                     var viewPager = this.findViewById('viewPager');
                     viewPager.setAdapter(new MyPageAdapter());
-                    this.AndroidUI.rootLayout.findFocus = function () {
-                        return viewPager;
-                    };
                 }
             }]);
 

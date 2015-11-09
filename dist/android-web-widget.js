@@ -2179,7 +2179,7 @@ var android;
         var Rect = android.graphics.Rect;
         var ViewConfiguration = android.view.ViewConfiguration;
         class MotionEvent {
-            constructor(e, action) {
+            constructor() {
                 this.mAction = 0;
                 this.mEdgeFlags = 0;
                 this.mDownTime = 0;
@@ -2187,22 +2187,20 @@ var android;
                 this.mActivePointerId = 0;
                 this.mXOffset = 0;
                 this.mYOffset = 0;
-                this.mViewRootTop = 0;
-                this.mViewRootLeft = 0;
-                this.mAction = action;
-                if (e)
-                    this.init(e, action);
             }
             static obtainWithTouchEvent(e, action) {
-                return new MotionEvent(e, action);
+                let event = new MotionEvent();
+                event.initWithTouch(e, action);
+                return event;
             }
             static obtain(event) {
-                let newEv = new MotionEvent(null, 0);
+                let newEv = new MotionEvent();
                 Object.assign(newEv, event);
                 return newEv;
             }
             static obtainWithAction(downTime, eventTime, action, x, y, metaState = 0) {
-                let newEv = new MotionEvent(null, action);
+                let newEv = new MotionEvent();
+                newEv.mAction = action;
                 newEv.mDownTime = downTime;
                 newEv.mEventTime = eventTime;
                 let touch = {
@@ -2218,7 +2216,7 @@ var android;
                 newEv.mTouchingPointers = [touch];
                 return newEv;
             }
-            init(event, baseAction, windowBound = new Rect()) {
+            initWithTouch(event, baseAction, windowBound = new Rect()) {
                 let e = event;
                 let action = baseAction;
                 let actionIndex = -1;
@@ -2272,11 +2270,10 @@ var android;
                     this.mDownTime = e.timeStamp;
                 }
                 this.mEventTime = e.timeStamp;
-                this.mViewRootLeft = windowBound.left;
-                this.mViewRootTop = windowBound.top;
+                this.mXOffset = this.mYOffset = 0;
                 let edgeFlag = 0;
-                let unScaledX = activeTouch.pageX;
-                let unScaledY = activeTouch.pageY;
+                let unScaledX = activeTouch.clientX;
+                let unScaledY = activeTouch.clientY;
                 let edgeSlop = ViewConfiguration.EDGE_SLOP;
                 let tempBound = new Rect();
                 tempBound.set(windowBound);
@@ -2320,11 +2317,11 @@ var android;
             }
             getX(pointerIndex = 0) {
                 let density = Resources.getDisplayMetrics().density;
-                return (this.mTouchingPointers[pointerIndex].pageX - this.mViewRootLeft) * density + this.mXOffset;
+                return (this.mTouchingPointers[pointerIndex].clientX) * density + this.mXOffset;
             }
             getY(pointerIndex = 0) {
                 let density = Resources.getDisplayMetrics().density;
-                return (this.mTouchingPointers[pointerIndex].pageY - this.mViewRootTop) * density + this.mYOffset;
+                return (this.mTouchingPointers[pointerIndex].clientY) * density + this.mYOffset;
             }
             getPointerCount() {
                 return this.mTouchingPointers.length;
@@ -2342,11 +2339,11 @@ var android;
             }
             getRawX() {
                 let density = Resources.getDisplayMetrics().density;
-                return (this.mTouchingPointers[0].pageX - this.mViewRootLeft) * density;
+                return (this.mTouchingPointers[0].clientX) * density;
             }
             getRawY() {
                 let density = Resources.getDisplayMetrics().density;
-                return (this.mTouchingPointers[0].pageY - this.mViewRootTop) * density;
+                return (this.mTouchingPointers[0].clientY) * density;
             }
             getHistorySize(id = this.mActivePointerId) {
                 let moveHistory = MotionEvent.TouchMoveRecord.get(id);
@@ -2355,12 +2352,12 @@ var android;
             getHistoricalX(pointerIndex, pos) {
                 let density = Resources.getDisplayMetrics().density;
                 let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-                return (moveHistory[pos].pageX - this.mViewRootLeft) * density + this.mXOffset;
+                return (moveHistory[pos].clientX) * density + this.mXOffset;
             }
             getHistoricalY(pointerIndex, pos) {
                 let density = Resources.getDisplayMetrics().density;
                 let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-                return (moveHistory[pos].pageY - this.mViewRootTop) * density + this.mYOffset;
+                return (moveHistory[pos].clientY) * density + this.mYOffset;
             }
             getHistoricalEventTime(...args) {
                 let pos, activePointerId;
@@ -3392,6 +3389,215 @@ var androidui;
         util.ClassFinder = ClassFinder;
     })(util = androidui.util || (androidui.util = {}));
 })(androidui || (androidui = {}));
+///<reference path="../content/res/Resources.ts"/>
+///<reference path="../graphics/Rect.ts"/>
+///<reference path="../view/ViewConfiguration.ts"/>
+///<reference path="../os/SystemClock.ts"/>
+///<reference path="../util/Log.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var SystemClock = android.os.SystemClock;
+        var Log = android.util.Log;
+        const DEBUG = false;
+        const TAG = "KeyEvent";
+        class KeyEvent {
+            constructor() {
+                this._downingKeyEventMap = new Map();
+            }
+            appendKeyEvent(keyEvent, action) {
+                this._activeKeyEvent = keyEvent;
+                if (action === KeyEvent.ACTION_DOWN) {
+                    this.mDownTime = SystemClock.uptimeMillis();
+                    let keyEvents = this._downingKeyEventMap.get(keyEvent.keyCode);
+                    if (keyEvents == null) {
+                        keyEvents = [];
+                        this._downingKeyEventMap.set(keyEvent.keyCode, keyEvents);
+                    }
+                    keyEvents.push(keyEvent);
+                }
+                else if (action === KeyEvent.ACTION_UP) {
+                    this._downingKeyEventMap.delete(keyEvent.keyCode);
+                }
+                this.mAction = action;
+            }
+            static isConfirmKey(keyCode) {
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_CENTER:
+                    case KeyEvent.KEYCODE_ENTER:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+            isAltPressed() {
+                return this._activeKeyEvent.altKey;
+            }
+            isShiftPressed() {
+                return this._activeKeyEvent.shiftKey;
+            }
+            isCtrlPressed() {
+                return this._activeKeyEvent.ctrlKey;
+            }
+            isMetaPressed() {
+                return this._activeKeyEvent.metaKey;
+            }
+            getAction() {
+                return this.mAction;
+            }
+            startTracking() {
+                this.mFlags |= KeyEvent.FLAG_START_TRACKING;
+            }
+            isTracking() {
+                return (this.mFlags & KeyEvent.FLAG_TRACKING) != 0;
+            }
+            isLongPress() {
+                return this.getRepeatCount() === 1;
+            }
+            getKeyCode() {
+                return this._activeKeyEvent.keyCode;
+            }
+            getRepeatCount() {
+                return this._downingKeyEventMap.get(this._activeKeyEvent.keyCode).length;
+            }
+            getDownTime() {
+                return this.mDownTime;
+            }
+            getEventTime() {
+                return this._activeKeyEvent.timeStamp;
+            }
+            dispatch(receiver, state, target) {
+                switch (this.mAction) {
+                    case KeyEvent.ACTION_DOWN: {
+                        this.mFlags &= ~KeyEvent.FLAG_START_TRACKING;
+                        if (DEBUG)
+                            Log.v(TAG, "Key down to " + target + " in " + state
+                                + ": " + this);
+                        let res = receiver.onKeyDown(this.getKeyCode(), this);
+                        if (state != null) {
+                            if (res && this.getRepeatCount() == 0 && (this.mFlags & KeyEvent.FLAG_START_TRACKING) != 0) {
+                                if (DEBUG)
+                                    Log.v(TAG, "  Start tracking!");
+                                state.startTracking(this, target);
+                            }
+                            else if (this.isLongPress() && state.isTracking(this)) {
+                                if (receiver.onKeyLongPress(this.getKeyCode(), this)) {
+                                    if (DEBUG)
+                                        Log.v(TAG, "  Clear from long press!");
+                                    state.performedLongPress(this);
+                                    res = true;
+                                }
+                            }
+                        }
+                        return res;
+                    }
+                    case KeyEvent.ACTION_UP:
+                        if (DEBUG)
+                            Log.v(TAG, "Key up to " + target + " in " + state
+                                + ": " + this);
+                        if (state != null) {
+                            state.handleUpEvent(this);
+                        }
+                        return receiver.onKeyUp(this.getKeyCode(), this);
+                }
+                return false;
+            }
+            toString() {
+                return JSON.stringify(this._activeKeyEvent);
+            }
+            static actionToString(action) {
+                switch (action) {
+                    case KeyEvent.ACTION_DOWN:
+                        return "ACTION_DOWN";
+                    case KeyEvent.ACTION_UP:
+                        return "ACTION_UP";
+                    default:
+                        return '' + (action);
+                }
+            }
+            static keyCodeToString(keyCode) {
+                return String.fromCharCode(keyCode);
+            }
+        }
+        KeyEvent.KEYCODE_DPAD_UP = 38;
+        KeyEvent.KEYCODE_DPAD_DOWN = 40;
+        KeyEvent.KEYCODE_DPAD_LEFT = 37;
+        KeyEvent.KEYCODE_DPAD_RIGHT = 39;
+        KeyEvent.KEYCODE_DPAD_CENTER = 13;
+        KeyEvent.KEYCODE_ENTER = 13;
+        KeyEvent.KEYCODE_TAB = 9;
+        KeyEvent.KEYCODE_SPACE = 32;
+        KeyEvent.KEYCODE_ESCAPE = 27;
+        KeyEvent.ACTION_DOWN = 0;
+        KeyEvent.ACTION_UP = 1;
+        KeyEvent.FLAG_CANCELED = 0x20;
+        KeyEvent.FLAG_CANCELED_LONG_PRESS = 0x100;
+        KeyEvent.FLAG_LONG_PRESS = 0x80;
+        KeyEvent.FLAG_TRACKING = 0x200;
+        KeyEvent.FLAG_START_TRACKING = 0x40000000;
+        view.KeyEvent = KeyEvent;
+        (function (KeyEvent) {
+            class DispatcherState {
+                constructor() {
+                    this.mActiveLongPresses = new android.util.SparseArray();
+                }
+                reset(target) {
+                    if (target == null) {
+                        if (DEBUG)
+                            Log.v(TAG, "Reset: " + this);
+                        this.mDownKeyCode = 0;
+                        this.mDownTarget = null;
+                        this.mActiveLongPresses.clear();
+                    }
+                    else {
+                        if (this.mDownTarget == target) {
+                            if (DEBUG)
+                                Log.v(TAG, "Reset in " + target + ": " + this);
+                            this.mDownKeyCode = 0;
+                            this.mDownTarget = null;
+                        }
+                    }
+                }
+                startTracking(event, target) {
+                    if (event.getAction() != KeyEvent.ACTION_DOWN) {
+                        throw new Error("Can only start tracking on a down event");
+                    }
+                    if (DEBUG)
+                        Log.v(TAG, "Start trackingt in " + target + ": " + this);
+                    this.mDownKeyCode = event.getKeyCode();
+                    this.mDownTarget = target;
+                }
+                isTracking(event) {
+                    return this.mDownKeyCode == event.getKeyCode();
+                }
+                performedLongPress(event) {
+                    this.mActiveLongPresses.put(event.getKeyCode(), 1);
+                }
+                handleUpEvent(event) {
+                    const keyCode = event.getKeyCode();
+                    if (DEBUG)
+                        Log.v(TAG, "Handle key up " + event + ": " + this);
+                    let index = this.mActiveLongPresses.indexOfKey(keyCode);
+                    if (index >= 0) {
+                        if (DEBUG)
+                            Log.v(TAG, "  Index: " + index);
+                        event.mFlags |= KeyEvent.FLAG_CANCELED | KeyEvent.FLAG_CANCELED_LONG_PRESS;
+                        this.mActiveLongPresses.removeAt(index);
+                    }
+                    if (this.mDownKeyCode == keyCode) {
+                        if (DEBUG)
+                            Log.v(TAG, "  Tracking!");
+                        event.mFlags |= KeyEvent.FLAG_TRACKING;
+                        this.mDownKeyCode = 0;
+                        this.mDownTarget = null;
+                    }
+                }
+            }
+            KeyEvent.DispatcherState = DispatcherState;
+        })(KeyEvent = view.KeyEvent || (view.KeyEvent = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/9/27.
  */
@@ -3431,6 +3637,7 @@ var androidui;
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
+///<reference path="KeyEvent.ts"/>
 var android;
 (function (android) {
     var view;
@@ -3457,6 +3664,7 @@ var android;
         var AnimationUtils = android.view.animation.AnimationUtils;
         var StateAttrList = androidui.attr.StateAttrList;
         var ClassFinder = androidui.util.ClassFinder;
+        var KeyEvent = android.view.KeyEvent;
         class View {
             constructor() {
                 this.mPrivateFlags = 0;
@@ -4246,6 +4454,73 @@ var android;
                         this.removeLongPressCallback();
                     }
                 }
+            }
+            dispatchGenericMotionEvent(event) {
+                let li = this.mListenerInfo;
+                if (li != null && li.mOnGenericMotionListener != null
+                    && (this.mViewFlags & View.ENABLED_MASK) == View.ENABLED
+                    && li.mOnGenericMotionListener.onGenericMotion(this, event)) {
+                    return true;
+                }
+                if (this.onGenericMotionEvent(event)) {
+                    return true;
+                }
+                return false;
+            }
+            onGenericMotionEvent(event) {
+                return false;
+            }
+            dispatchKeyEvent(event) {
+                let li = this.mListenerInfo;
+                if (li != null && li.mOnKeyListener != null && (this.mViewFlags & View.ENABLED_MASK) == View.ENABLED
+                    && li.mOnKeyListener.onKey(this, event.getKeyCode(), event)) {
+                    return true;
+                }
+                if (event.dispatch(this, this.mAttachInfo != null
+                    ? this.mAttachInfo.mKeyDispatchState : null, this)) {
+                    return true;
+                }
+                return false;
+            }
+            setOnKeyListener(l) {
+                this.getListenerInfo().mOnKeyListener = l;
+            }
+            getKeyDispatcherState() {
+                return this.mAttachInfo != null ? this.mAttachInfo.mKeyDispatchState : null;
+            }
+            onKeyDown(keyCode, event) {
+                let result = false;
+                if (KeyEvent.isConfirmKey(keyCode)) {
+                    if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
+                        return true;
+                    }
+                    if (((this.mViewFlags & View.CLICKABLE) == View.CLICKABLE ||
+                        (this.mViewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE) &&
+                        (event.getRepeatCount() == 0)) {
+                        this.setPressed(true);
+                        this.checkForLongClick(0);
+                        return true;
+                    }
+                }
+                return result;
+            }
+            onKeyLongPress(keyCode, event) {
+                return false;
+            }
+            onKeyUp(keyCode, event) {
+                if (KeyEvent.isConfirmKey(keyCode)) {
+                    if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
+                        return true;
+                    }
+                    if ((this.mViewFlags & View.CLICKABLE) == View.CLICKABLE && this.isPressed()) {
+                        this.setPressed(false);
+                        if (!this.mHasPerformedLongPress) {
+                            this.removeLongPressCallback();
+                            return this.performClick();
+                        }
+                    }
+                }
+                return false;
             }
             dispatchTouchEvent(event) {
                 if (this.onFilterTouchEventForSecurity(event)) {
@@ -5486,7 +5761,7 @@ var android;
             }
             getVerticalScrollFactor() {
                 if (this.mVerticalScrollFactor == 0) {
-                    this.mVerticalScrollFactor = Resources.getDisplayMetrics().density * 64;
+                    this.mVerticalScrollFactor = Resources.getDisplayMetrics().density * 1;
                 }
                 return this.mVerticalScrollFactor;
             }
@@ -5589,8 +5864,9 @@ var android;
                 scrollabilityCache.fadeScrollBars = true;
                 let track = null;
                 scrollabilityCache.scrollBar.setHorizontalTrackDrawable(track);
-                let thumbColor = new ColorDrawable(Color.parseColor('#aaaaaa'));
-                let thumb = new InsetDrawable(thumbColor, 0, 0, view_1.ViewConfiguration.get().getScaledScrollBarSize() / 2, 0);
+                let thumbColor = new ColorDrawable(0x44000000);
+                let density = Resources.getDisplayMetrics().density;
+                let thumb = new InsetDrawable(thumbColor, 0, 2 * density, view_1.ViewConfiguration.get().getScaledScrollBarSize() / 2, 2 * density);
                 scrollabilityCache.scrollBar.setHorizontalThumbDrawable(thumb);
                 scrollabilityCache.scrollBar.setVerticalTrackDrawable(track);
                 scrollabilityCache.scrollBar.setVerticalThumbDrawable(thumb);
@@ -5782,7 +6058,19 @@ var android;
                 let bindEle = this.bindElement.querySelector('#' + id);
                 return bindEle ? bindEle[View.AndroidViewProperty] : null;
             }
-            static inflate(domtree, rootElement = domtree, viewParent) {
+            static inflate(eleOrRef, rootElement, viewParent) {
+                let domtree;
+                if (typeof eleOrRef === "string") {
+                    let ref = View.findReference('@layout/page', rootElement);
+                    if (ref == null) {
+                        console.warn('not find Reference :' + eleOrRef);
+                        return null;
+                    }
+                    domtree = ref.firstElementChild;
+                }
+                else {
+                    domtree = eleOrRef;
+                }
                 let className = domtree.tagName;
                 if (className.toLowerCase() === 'android-layout') {
                     let child = domtree.firstElementChild;
@@ -6186,6 +6474,9 @@ var android;
             View.MeasureSpec = MeasureSpec;
             class AttachInfo {
                 constructor(mViewRootImpl, mHandler) {
+                    this.mWindowLeft = 0;
+                    this.mWindowTop = 0;
+                    this.mKeyDispatchState = new KeyEvent.DispatcherState();
                     this.mDrawingTime = 0;
                     this.mTmpInvalRect = new Rect();
                     this.mTmpTransformRect = new Rect();
@@ -6765,14 +7056,12 @@ var android;
                     if (this.mFirst) {
                     }
                     else {
-                        if (lp.width == view_2.ViewGroup.LayoutParams.WRAP_CONTENT
-                            || lp.height == view_2.ViewGroup.LayoutParams.WRAP_CONTENT) {
+                        if (lp.width < 0 || lp.height < 0) {
                             windowSizeMayChange = true;
                             let packageMetrics = Resources.getDisplayMetrics();
                             desiredWindowWidth = packageMetrics.widthPixels;
                             desiredWindowHeight = packageMetrics.heightPixels;
                         }
-                        windowSizeMayChange = windowSizeMayChange || this.measureHierarchy(host, lp, desiredWindowWidth, desiredWindowHeight);
                     }
                     windowSizeMayChange == windowSizeMayChange || this.measureHierarchy(host, lp, desiredWindowWidth, desiredWindowHeight);
                 }
@@ -6784,10 +7073,8 @@ var android;
                 }
                 let windowShouldResize = layoutRequested && windowSizeMayChange
                     && ((this.mWidth != host.getMeasuredWidth() || this.mHeight != host.getMeasuredHeight())
-                        || (lp.width == view_2.ViewGroup.LayoutParams.WRAP_CONTENT &&
-                            frame.width() < desiredWindowWidth && frame.width() != this.mWidth)
-                        || (lp.height == view_2.ViewGroup.LayoutParams.WRAP_CONTENT &&
-                            frame.height() < desiredWindowHeight && frame.height() != this.mHeight));
+                        || (lp.width < 0 && frame.width() !== desiredWindowWidth && frame.width() !== this.mWidth)
+                        || (lp.height < 0 && frame.height() !== desiredWindowHeight && frame.height() !== this.mHeight));
                 if (this.mFirst || windowShouldResize || viewVisibilityChanged) {
                     if (ViewRootImpl.DEBUG_LAYOUT) {
                         Log.i(ViewRootImpl.TAG, "host=w:" + host.getMeasuredWidth() + ", h:" +
@@ -6795,6 +7082,8 @@ var android;
                     }
                     if (ViewRootImpl.DEBUG_ORIENTATION)
                         Log.v(ViewRootImpl.TAG, "Relayout returned: frame=" + frame);
+                    attachInfo.mWindowLeft = frame.left;
+                    attachInfo.mWindowTop = frame.top;
                     if (this.mWidth != frame.width() || this.mHeight != frame.height()) {
                         this.mWidth = frame.width();
                         this.mHeight = frame.height();
@@ -6810,6 +7099,14 @@ var android;
                                 + " measuredHeight=" + host.getMeasuredHeight());
                         this.performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
                         layoutRequested = true;
+                    }
+                }
+                else {
+                    const windowMoved = (attachInfo.mWindowLeft != frame.left
+                        || attachInfo.mWindowTop != frame.top);
+                    if (windowMoved) {
+                        attachInfo.mWindowLeft = frame.left;
+                        attachInfo.mWindowTop = frame.top;
                     }
                 }
                 const didLayout = layoutRequested;
@@ -7545,6 +7842,9 @@ var android;
                 else {
                     this.mGroupFlags &= ~flag;
                 }
+            }
+            dispatchKeyEvent(event) {
+                return super.dispatchKeyEvent(event);
             }
             addTouchables(views) {
                 super.addTouchables(views);
@@ -9533,6 +9833,7 @@ var android;
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="MotionEvent.ts"/>
+///<reference path="KeyEvent.ts"/>
 var android;
 (function (android) {
     var view;
@@ -9806,6 +10107,7 @@ var android;
         var OverScroller = android.widget.OverScroller;
         var Log = android.util.Log;
         var SystemClock = android.os.SystemClock;
+        var KeyEvent = android.view.KeyEvent;
         class ScrollView extends widget.FrameLayout {
             constructor() {
                 super();
@@ -9902,6 +10204,40 @@ var android;
                         child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
                     }
                 }
+            }
+            dispatchKeyEvent(event) {
+                return super.dispatchKeyEvent(event) || this.executeKeyEvent(event);
+            }
+            executeKeyEvent(event) {
+                this.mTempRect.setEmpty();
+                if (!this.canScroll()) {
+                    return false;
+                }
+                let handled = false;
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    switch (event.getKeyCode()) {
+                        case KeyEvent.KEYCODE_DPAD_UP:
+                            if (!event.isAltPressed()) {
+                                handled = this.arrowScroll(View.FOCUS_UP);
+                            }
+                            else {
+                                handled = this.fullScroll(View.FOCUS_UP);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_DPAD_DOWN:
+                            if (!event.isAltPressed()) {
+                                handled = this.arrowScroll(View.FOCUS_DOWN);
+                            }
+                            else {
+                                handled = this.fullScroll(View.FOCUS_DOWN);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_SPACE:
+                            this.pageScroll(event.isShiftPressed() ? View.FOCUS_UP : View.FOCUS_DOWN);
+                            break;
+                    }
+                }
+                return handled;
             }
             inChild(x, y) {
                 if (this.getChildCount() > 0) {
@@ -10079,7 +10415,8 @@ var android;
                             velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                             let initialVelocity = velocityTracker.getYVelocity(this.mActivePointerId);
                             if (this.getChildCount() > 0) {
-                                if ((Math.abs(initialVelocity) > this.mMinimumVelocity)) {
+                                let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.getScrollRange();
+                                if ((Math.abs(initialVelocity) > this.mMinimumVelocity) && !isOverDrag) {
                                     this.fling(-initialVelocity);
                                 }
                                 else {
@@ -10127,6 +10464,33 @@ var android;
                         this.mVelocityTracker.clear();
                     }
                 }
+            }
+            onGenericMotionEvent(event) {
+                if (event instanceof WheelEvent) {
+                    if (!this.mIsBeingDragged) {
+                        if (!this.mScroller.isFinished()) {
+                            this.mScroller.abortAnimation();
+                        }
+                        let vScroll = -event.deltaY;
+                        if (vScroll) {
+                            const delta = Math.floor(vScroll * this.getVerticalScrollFactor());
+                            const range = this.getScrollRange();
+                            let oldScrollY = this.mScrollY;
+                            let newScrollY = oldScrollY - delta;
+                            if (newScrollY < 0) {
+                                newScrollY = 0;
+                            }
+                            else if (newScrollY > range) {
+                                newScrollY = range;
+                            }
+                            if (newScrollY != oldScrollY) {
+                                super.scrollTo(this.mScrollX, newScrollY);
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return super.onGenericMotionEvent(event);
             }
             onOverScrolled(scrollX, scrollY, clampedX, clampedY) {
                 if (!this.mScroller.isFinished()) {
@@ -10209,10 +10573,40 @@ var android;
                     let delta = up ? (top - containerTop) : (bottom - containerBottom);
                     this.doScrollY(delta);
                 }
+                if (newFocused != this.findFocus())
+                    newFocused.requestFocus(direction);
                 return handled;
             }
             arrowScroll(direction) {
-                return false;
+                let currentFocused = this.findFocus();
+                if (currentFocused == this)
+                    currentFocused = null;
+                let nextFocused = null;
+                const maxJump = this.getMaxScrollAmount();
+                if (nextFocused != null && this.isWithinDeltaOfScreen(nextFocused, maxJump, this.getHeight())) {
+                }
+                else {
+                    let scrollDelta = maxJump;
+                    if (direction == View.FOCUS_UP && this.getScrollY() < scrollDelta) {
+                        scrollDelta = this.getScrollY();
+                    }
+                    else if (direction == View.FOCUS_DOWN) {
+                        if (this.getChildCount() > 0) {
+                            let daBottom = this.getChildAt(0).getBottom();
+                            let screenBottom = this.getScrollY() + this.getHeight() - this.mPaddingBottom;
+                            if (daBottom - screenBottom < maxJump) {
+                                scrollDelta = daBottom - screenBottom;
+                            }
+                        }
+                    }
+                    if (scrollDelta == 0) {
+                        return false;
+                    }
+                    this.doScrollY(direction == View.FOCUS_DOWN ? scrollDelta : -scrollDelta);
+                }
+                if (currentFocused != null && currentFocused.isFocused() && this.isOffScreen(currentFocused)) {
+                }
+                return true;
             }
             isOffScreen(descendant) {
                 return !this.isWithinDeltaOfScreen(descendant, 0, this.getHeight());
@@ -10251,7 +10645,7 @@ var android;
                     if (!this.mScroller.isFinished()) {
                         this.mScroller.abortAnimation();
                     }
-                    scrollBy(dx, dy);
+                    this.scrollBy(dx, dy);
                 }
                 this.mLastScroll = SystemClock.uptimeMillis();
             }
@@ -13394,6 +13788,7 @@ var android;
                 var Resources = android.content.res.Resources;
                 var Log = android.util.Log;
                 var MotionEvent = android.view.MotionEvent;
+                var KeyEvent = android.view.KeyEvent;
                 const TAG = "ViewPager";
                 const DEBUG = false;
                 const SymbolDecor = Symbol();
@@ -14978,6 +15373,124 @@ var android;
                         }
                         return checkV && v.canScrollHorizontally(-dx);
                     }
+                    dispatchKeyEvent(event) {
+                        return super.dispatchKeyEvent(event) || this.executeKeyEvent(event);
+                    }
+                    executeKeyEvent(event) {
+                        let handled = false;
+                        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                            switch (event.getKeyCode()) {
+                                case KeyEvent.KEYCODE_DPAD_LEFT:
+                                    handled = this.arrowScroll(View.FOCUS_LEFT);
+                                    break;
+                                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                                    handled = this.arrowScroll(View.FOCUS_RIGHT);
+                                    break;
+                                case KeyEvent.KEYCODE_TAB:
+                                    if (event.isShiftPressed()) {
+                                        handled = this.arrowScroll(View.FOCUS_BACKWARD);
+                                    }
+                                    else {
+                                        handled = this.arrowScroll(View.FOCUS_FORWARD);
+                                    }
+                                    break;
+                            }
+                        }
+                        return handled;
+                    }
+                    arrowScroll(direction) {
+                        let currentFocused = this.findFocus();
+                        if (currentFocused == this) {
+                            currentFocused = null;
+                        }
+                        else if (currentFocused != null) {
+                            let isChild = false;
+                            for (let parent = currentFocused.getParent(); parent instanceof ViewGroup; parent = parent.getParent()) {
+                                if (parent == this) {
+                                    isChild = true;
+                                    break;
+                                }
+                            }
+                            if (!isChild) {
+                                const sb = new java.lang.StringBuilder();
+                                sb.append(currentFocused.toString());
+                                for (let parent = currentFocused.getParent(); parent instanceof ViewGroup; parent = parent.getParent()) {
+                                    sb.append(" => ").append(parent.toString());
+                                }
+                                Log.e(TAG, "arrowScroll tried to find focus based on non-child " +
+                                    "current focused view " + sb.toString());
+                                currentFocused = null;
+                            }
+                        }
+                        let handled = false;
+                        let nextFocused = null;
+                        if (nextFocused != null && nextFocused != currentFocused) {
+                            if (direction == View.FOCUS_LEFT) {
+                                const nextLeft = this.getChildRectInPagerCoordinates(this.mTempRect, nextFocused).left;
+                                const currLeft = this.getChildRectInPagerCoordinates(this.mTempRect, currentFocused).left;
+                                if (currentFocused != null && nextLeft >= currLeft) {
+                                    handled = this.pageLeft();
+                                }
+                                else {
+                                    handled = nextFocused.requestFocus();
+                                }
+                            }
+                            else if (direction == View.FOCUS_RIGHT) {
+                                const nextLeft = this.getChildRectInPagerCoordinates(this.mTempRect, nextFocused).left;
+                                const currLeft = this.getChildRectInPagerCoordinates(this.mTempRect, currentFocused).left;
+                                if (currentFocused != null && nextLeft <= currLeft) {
+                                    handled = this.pageRight();
+                                }
+                                else {
+                                    handled = nextFocused.requestFocus();
+                                }
+                            }
+                        }
+                        else if (direction == View.FOCUS_LEFT || direction == View.FOCUS_BACKWARD) {
+                            handled = this.pageLeft();
+                        }
+                        else if (direction == View.FOCUS_RIGHT || direction == View.FOCUS_FORWARD) {
+                            handled = this.pageRight();
+                        }
+                        return handled;
+                    }
+                    getChildRectInPagerCoordinates(outRect, child) {
+                        if (outRect == null) {
+                            outRect = new Rect();
+                        }
+                        if (child == null) {
+                            outRect.set(0, 0, 0, 0);
+                            return outRect;
+                        }
+                        outRect.left = child.getLeft();
+                        outRect.right = child.getRight();
+                        outRect.top = child.getTop();
+                        outRect.bottom = child.getBottom();
+                        let parent = child.getParent();
+                        while (parent instanceof ViewGroup && parent != this) {
+                            const group = parent;
+                            outRect.left += group.getLeft();
+                            outRect.right += group.getRight();
+                            outRect.top += group.getTop();
+                            outRect.bottom += group.getBottom();
+                            parent = group.getParent();
+                        }
+                        return outRect;
+                    }
+                    pageLeft() {
+                        if (this.mCurItem > 0) {
+                            this.setCurrentItem(this.mCurItem - 1, true);
+                            return true;
+                        }
+                        return false;
+                    }
+                    pageRight() {
+                        if (this.mAdapter != null && this.mCurItem < (this.mAdapter.getCount() - 1)) {
+                            this.setCurrentItem(this.mCurItem + 1, true);
+                            return true;
+                        }
+                        return false;
+                    }
                     addTouchables(views) {
                         for (let i = 0; i < this.getChildCount(); i++) {
                             const child = this.getChildAt(i);
@@ -15258,6 +15771,7 @@ var com;
 ///<reference path="../android/view/ViewRootImpl.ts"/>
 ///<reference path="../android/widget/FrameLayout.ts"/>
 ///<reference path="../android/view/MotionEvent.ts"/>
+///<reference path="../android/view/KeyEvent.ts"/>
 var androidui;
 (function (androidui) {
     var View = android.view.View;
@@ -15265,33 +15779,44 @@ var androidui;
     var ViewRootImpl = android.view.ViewRootImpl;
     var FrameLayout = android.widget.FrameLayout;
     var MotionEvent = android.view.MotionEvent;
+    var KeyEvent = android.view.KeyEvent;
+    let AndroidIDCreator = 0;
     class AndroidUI {
         constructor(element) {
+            this._windowBound = new android.graphics.Rect();
+            this.motionEvent = new MotionEvent();
+            this.ketEvent = new KeyEvent();
             this.element = element;
-            if (element['AndroidUI']) {
+            if (element[AndroidUI.BindTOElementName]) {
                 throw Error('already init a AndroidUI with this element');
             }
-            element['AndroidUI'] = this;
+            element[AndroidUI.BindTOElementName] = this;
             this.init();
         }
+        get windowBound() {
+            return this._windowBound;
+        }
         init() {
-            this.viewRootImpl = new ViewRootImpl();
-            this.viewRootImpl.rootElement = this.element;
-            this.rootLayout = new RootLayout();
-            this.canvas = document.createElement("canvas");
+            this.AndroidID = AndroidIDCreator++;
+            this.element.classList.add(AndroidUI.DomClassName);
+            this.element.classList.add('id-' + this.AndroidID);
+            this._viewRootImpl = new ViewRootImpl();
+            this._viewRootImpl.rootElement = this.element;
+            this._rootLayout = new RootLayout(this);
+            this._canvas = document.createElement("canvas");
             this.initInflateView();
-            this.initRootElementStyle();
-            this.initCanvasStyle();
-            this.initBindElementStyle();
             this.element.innerHTML = '';
+            this.initElementStyle();
             this.element.appendChild(this.rootResourceElement);
-            this.element.appendChild(this.rootStyleElement);
-            this.element.appendChild(this.canvas);
-            this.element.appendChild(this.rootLayout.bindElement);
-            this.viewRootImpl.setView(this.rootLayout);
-            this.viewRootImpl.initSurface(this.canvas);
-            this.initTouch();
-            this.tryStartLayoutAfterInit();
+            if (this.rootStyleElement)
+                this.element.appendChild(this.rootStyleElement);
+            this.element.appendChild(this._canvas);
+            this.element.appendChild(this._rootLayout.bindElement);
+            this._viewRootImpl.setView(this._rootLayout);
+            this._viewRootImpl.initSurface(this._canvas);
+            this.initFocus();
+            this.initEvent();
+            this.initListenSizeChange();
         }
         initInflateView() {
             Array.from(this.element.children).forEach((item) => {
@@ -15302,89 +15827,21 @@ var androidui;
                     this.rootStyleElement = item;
                 }
                 else if (item instanceof HTMLElement) {
-                    let view = View.inflate(item, this.element, this.rootLayout);
+                    let view = View.inflate(item, this.element, this._rootLayout);
                     if (view)
-                        this.rootLayout.addView(view);
+                        this._rootLayout.addView(view);
                 }
             });
         }
-        initRootElementStyle() {
-            if (!this.element.style.position) {
-                this.element.style.position = "relative";
-            }
-            if (!this.element.style.display || this.element.style.display == "none") {
-                this.element.style.display = "inline-block";
-            }
-            this.element.style.overflow = 'hidden';
-        }
-        initCanvasStyle() {
-            let canvas = this.canvas;
-            canvas.style.position = "absolute";
-            canvas.style.left = '0px';
-            canvas.style.top = '0px';
-        }
-        initTouch() {
-            let motionEvent;
-            let windowBound = new android.graphics.Rect();
-            this.element.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
-                    return;
-                let rootViewBound = this.element.getBoundingClientRect();
-                windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
-                if (!motionEvent)
-                    motionEvent = MotionEvent.obtainWithTouchEvent(e, MotionEvent.ACTION_DOWN);
-                else
-                    motionEvent.init(e, MotionEvent.ACTION_DOWN, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
-                    return;
-                motionEvent.init(e, MotionEvent.ACTION_MOVE, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
-                    return;
-                motionEvent.init(e, MotionEvent.ACTION_UP);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-            this.element.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (this.viewRootImpl && this.viewRootImpl.mIsInTraversal)
-                    return;
-                motionEvent.init(e, MotionEvent.ACTION_CANCEL, windowBound);
-                this.rootLayout.dispatchTouchEvent(motionEvent);
-            }, true);
-        }
-        initBindElementStyle() {
-            if (!this.rootStyleElement)
+        initElementStyle() {
+            if (!this.rootStyleElement) {
                 this.rootStyleElement = document.createElement("style");
-            this.rootStyleElement.setAttribute("scoped", '');
-            this.rootStyleElement.innerHTML += `
-                * {
-                    overflow : hidden;
-                }
-                resources {
-                    display: none;
-                }
-                Button {
-                    border: none;
-                    background: none;
-                }
-
-                `;
+            }
+            this.rootStyleElement.setAttribute('scoped', '');
             let density = android.content.res.Resources.getDisplayMetrics().density;
             if (density != 1) {
                 this.rootStyleElement.innerHTML += `
-                RootLayout {
+                .${AndroidUI.DomClassName}.id-${this.AndroidID} RootLayout {
                     transform:scale(${1 / density},${1 / density});
                     -webkit-transform:scale(${1 / density},${1 / density});
                     transform-origin:0 0;
@@ -15392,35 +15849,219 @@ var androidui;
                 }
                 `;
             }
+            if (this.element.style.display === 'none') {
+                this.element.style.display = '';
+            }
+            if (this.rootStyleElement.innerHTML.length == 0) {
+                this.rootStyleElement = null;
+            }
         }
-        tryStartLayoutAfterInit() {
-            let width = this.element.offsetWidth;
-            let height = this.element.offsetHeight;
-            if (width > 0 && height > 0)
-                this.notifySizeChange(width, height);
+        refreshWindowBound() {
+            let rootViewBound = this.element.getBoundingClientRect();
+            this._windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
         }
-        notifySizeChange(width, height) {
+        initFocus() {
+            this.element.setAttribute('tabindex', '0');
+            this.element.focus();
+        }
+        initEvent() {
+            this.initTouchEvent();
+            this.initMouseEvent();
+            this.initKeyEvent();
+            this.initGenericEvent();
+        }
+        initTouchEvent() {
+            this.element.addEventListener('touchstart', (e) => {
+                this.refreshWindowBound();
+                e.preventDefault();
+                e.stopPropagation();
+                this.element.focus();
+                this.motionEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
+                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+            this.element.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.motionEvent.initWithTouch(e, MotionEvent.ACTION_MOVE, this._windowBound);
+                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+            this.element.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.motionEvent.initWithTouch(e, MotionEvent.ACTION_UP, this._windowBound);
+                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+            this.element.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.motionEvent.initWithTouch(e, MotionEvent.ACTION_CANCEL, this._windowBound);
+                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+        }
+        initMouseEvent() {
+            function mouseToTouchEvent(e) {
+                let touch = {
+                    identifier: 0,
+                    target: null,
+                    screenX: e.screenX,
+                    screenY: e.screenY,
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                    pageX: e.pageX,
+                    pageY: e.pageY
+                };
+                return {
+                    changedTouches: [touch],
+                    targetTouches: [touch],
+                    touches: e.type === 'mouseup' ? [] : [touch],
+                    timeStamp: e.timeStamp
+                };
+            }
+            let isMouseDown = false;
+            this.element.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                this.refreshWindowBound();
+                e.preventDefault();
+                e.stopPropagation();
+                this.element.focus();
+                this.motionEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
+                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+            this.element.addEventListener('mousemove', (e) => {
+                if (!isMouseDown)
+                    return;
+                e.preventDefault();
+                e.stopPropagation();
+                this.motionEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
+                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+            this.element.addEventListener('mouseup', (e) => {
+                isMouseDown = false;
+                e.preventDefault();
+                e.stopPropagation();
+                this.motionEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
+                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+            }, true);
+            this.element.addEventListener('mouseleave', (e) => {
+                if (e.fromElement === this.element) {
+                    isMouseDown = false;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.motionEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
+                    this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                }
+            }, true);
+        }
+        initKeyEvent() {
+            this.element.addEventListener('keydown', (e) => {
+                this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_DOWN);
+                let focus = this._rootLayout.findFocus();
+                if (focus && focus.dispatchKeyEvent(this.ketEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+            this.element.addEventListener('keyup', (e) => {
+                this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_UP);
+                let focus = this._rootLayout.findFocus();
+                if (focus && focus.dispatchKeyEvent(this.ketEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        }
+        initGenericEvent() {
+            this.element.addEventListener('mousewheel', (e) => {
+                let focus = this._rootLayout.findFocus();
+                if (focus && focus.dispatchGenericMotionEvent(e)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        }
+        initListenSizeChange() {
+            window.addEventListener('resize', () => {
+                this.notifySizeChange();
+            });
+            let lastWidth = this.element.offsetWidth;
+            let lastHeight = this.element.offsetHeight;
+            if (lastWidth > 0 && lastHeight > 0)
+                this.notifySizeChange();
+            setInterval(() => {
+                let width = this.element.offsetWidth;
+                let height = this.element.offsetHeight;
+                if (lastHeight !== height || lastWidth !== width) {
+                    lastWidth = width;
+                    lastHeight = height;
+                    this.notifySizeChange();
+                }
+            }, 300);
+        }
+        notifySizeChange() {
+            this.refreshWindowBound();
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            this.viewRootImpl.mWinFrame.set(0, 0, width * density, height * density);
-            this.canvas.width = width * density;
-            this.canvas.height = height * density;
-            this.canvas.style.width = width + "px";
-            this.canvas.style.height = height + "px";
-            this.viewRootImpl.requestLayout();
+            this._viewRootImpl.mWinFrame.set(this._windowBound.left * density, this._windowBound.top * density, this._windowBound.right * density, this._windowBound.bottom * density);
+            let width = this._windowBound.width();
+            let height = this._windowBound.height();
+            this._canvas.width = width * density;
+            this._canvas.height = height * density;
+            this._canvas.style.width = width + "px";
+            this._canvas.style.height = height + "px";
+            this._viewRootImpl.requestLayout();
         }
         setContentView(view) {
-            this.rootLayout.removeAllViews();
-            this.rootLayout.addView(view, -1, -1);
+            this._rootLayout.removeAllViews();
+            this._rootLayout.addView(view, -1, -1);
         }
         addContentView(view, params = new ViewGroup.LayoutParams(-1, -1)) {
-            this.rootLayout.addView(view, params);
+            this._rootLayout.addView(view, params);
         }
         findViewById(id) {
-            return this.rootLayout.findViewById(id);
+            return this._rootLayout.findViewById(id);
         }
     }
+    AndroidUI.DomClassName = 'AndroidUI';
+    AndroidUI.BindTOElementName = 'AndroidUI';
     androidui.AndroidUI = AndroidUI;
+    let styleElement = document.createElement('style');
+    styleElement.innerHTML += `
+        .${AndroidUI.DomClassName} {
+            position : relative;
+            overflow : hidden;
+            display : block;
+            outline: none;
+        }
+        .${AndroidUI.DomClassName} * {
+            overflow : hidden;
+            border : none;
+            outline: none;
+        }
+        .${AndroidUI.DomClassName} resources {
+            display: none;
+        }
+        .${AndroidUI.DomClassName} Button {
+            border: none;
+            background: none;
+        }
+        .${AndroidUI.DomClassName} > canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        `;
+    document.head.appendChild(styleElement);
     class RootLayout extends FrameLayout {
+        constructor(ui) {
+            super();
+            this.AndroidUI_this = ui;
+        }
+        dispatchTouchEvent(ev) {
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            let offsetX = -this.AndroidUI_this.windowBound.left * density;
+            let offsetY = -this.AndroidUI_this.windowBound.top * density;
+            ev.offsetLocation(offsetX, offsetY);
+            return super.dispatchTouchEvent(ev);
+        }
     }
 })(androidui || (androidui = {}));
 /**
@@ -15456,11 +16097,11 @@ var android;
             }
             attachedCallback() {
                 if (this.AndroidUI) {
-                    this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+                    this.AndroidUI.notifySizeChange();
                 }
                 else {
                     setTimeout(() => {
-                        this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+                        this.AndroidUI.notifySizeChange();
                     }, 50);
                 }
             }

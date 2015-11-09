@@ -43,9 +43,6 @@ var sample;
             onCreate() {
                 let viewPager = this.findViewById('viewPager');
                 viewPager.setAdapter(new MyPageAdapter());
-                this.AndroidUI.rootLayout.findFocus = function () {
-                    return viewPager;
-                };
             }
         }
         activity.SampleViewPagerActivity = SampleViewPagerActivity;

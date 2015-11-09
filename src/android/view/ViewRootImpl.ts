@@ -279,18 +279,13 @@ module android.view {
                     //    if (DEBUG_LAYOUT) Log.v(TAG, "Visible insets changing to: "
                     //        + mAttachInfo.mVisibleInsets);
                     //}
-                    if (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT
-                        || lp.height == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                    if (lp.width < 0 || lp.height < 0) {
                         windowSizeMayChange = true;
 
                         let packageMetrics = Resources.getDisplayMetrics();
                         desiredWindowWidth = packageMetrics.widthPixels;
                         desiredWindowHeight = packageMetrics.heightPixels;
                     }
-
-                    // Ask host how big it wants to be
-                    windowSizeMayChange = windowSizeMayChange || this.measureHierarchy(host, lp,
-                        desiredWindowWidth, desiredWindowHeight);
                 }
 
                 // Ask host how big it wants to be
@@ -311,10 +306,8 @@ module android.view {
 
             let windowShouldResize = layoutRequested && windowSizeMayChange
                 && ((this.mWidth != host.getMeasuredWidth() || this.mHeight != host.getMeasuredHeight())
-                || (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT &&
-                frame.width() < desiredWindowWidth && frame.width() != this.mWidth)
-                || (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT &&
-                frame.height() < desiredWindowHeight && frame.height() != this.mHeight));
+                || (lp.width < 0 && frame.width() !== desiredWindowWidth && frame.width() !== this.mWidth)
+                || (lp.height < 0 && frame.height() !== desiredWindowHeight && frame.height() !== this.mHeight));
 
             if (this.mFirst || windowShouldResize || viewVisibilityChanged) {
 

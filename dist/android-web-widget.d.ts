@@ -611,15 +611,12 @@ declare module android.view {
         private mTouchingPointers;
         mXOffset: number;
         mYOffset: number;
-        mViewRootTop: number;
-        mViewRootLeft: number;
         _activeTouch: any;
-        constructor(e: any, action: number);
         static obtainWithTouchEvent(e: any, action: number): MotionEvent;
         static obtain(event: MotionEvent): MotionEvent;
         static obtainWithAction(downTime: number, eventTime: number, action: number, x: number, y: number, metaState?: number): MotionEvent;
         private static IdIndexCache;
-        init(event: any, baseAction: number, windowBound?: Rect): void;
+        initWithTouch(event: any, baseAction: number, windowBound?: Rect): void;
         recycle(): void;
         getAction(): number;
         getActionMasked(): number;
@@ -863,6 +860,66 @@ declare module androidui.util {
     }
 }
 declare module android.view {
+    class KeyEvent {
+        static KEYCODE_DPAD_UP: number;
+        static KEYCODE_DPAD_DOWN: number;
+        static KEYCODE_DPAD_LEFT: number;
+        static KEYCODE_DPAD_RIGHT: number;
+        static KEYCODE_DPAD_CENTER: number;
+        static KEYCODE_ENTER: number;
+        static KEYCODE_TAB: number;
+        static KEYCODE_SPACE: number;
+        static KEYCODE_ESCAPE: number;
+        static ACTION_DOWN: number;
+        static ACTION_UP: number;
+        static FLAG_CANCELED: number;
+        static FLAG_CANCELED_LONG_PRESS: number;
+        private static FLAG_LONG_PRESS;
+        static FLAG_TRACKING: number;
+        private static FLAG_START_TRACKING;
+        mFlags: number;
+        private mAction;
+        private mDownTime;
+        _activeKeyEvent: KeyboardEvent;
+        _downingKeyEventMap: Map<number, KeyboardEvent[]>;
+        appendKeyEvent(keyEvent: KeyboardEvent, action: number): void;
+        static isConfirmKey(keyCode: number): boolean;
+        isAltPressed(): boolean;
+        isShiftPressed(): boolean;
+        isCtrlPressed(): boolean;
+        isMetaPressed(): boolean;
+        getAction(): number;
+        startTracking(): void;
+        isTracking(): boolean;
+        isLongPress(): boolean;
+        getKeyCode(): number;
+        getRepeatCount(): number;
+        getDownTime(): number;
+        getEventTime(): number;
+        dispatch(receiver: KeyEvent.Callback, state?: KeyEvent.DispatcherState, target?: any): boolean;
+        toString(): string;
+        static actionToString(action: number): string;
+        static keyCodeToString(keyCode: number): string;
+    }
+    module KeyEvent {
+        interface Callback {
+            onKeyDown(keyCode: number, event: KeyEvent): boolean;
+            onKeyLongPress(keyCode: number, event: KeyEvent): boolean;
+            onKeyUp(keyCode: number, event: KeyEvent): boolean;
+        }
+        class DispatcherState {
+            mDownKeyCode: number;
+            mDownTarget: any;
+            mActiveLongPresses: util.SparseArray<number>;
+            reset(target: any): void;
+            startTracking(event: KeyEvent, target: any): void;
+            isTracking(event: KeyEvent): boolean;
+            performedLongPress(event: KeyEvent): void;
+            handleUpEvent(event: KeyEvent): void;
+        }
+    }
+}
+declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
     import Runnable = java.lang.Runnable;
@@ -873,7 +930,8 @@ declare module android.view {
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import ArrayList = java.util.ArrayList;
     import ColorStateList = android.content.res.ColorStateList;
-    class View implements Drawable.Callback {
+    import KeyEvent = android.view.KeyEvent;
+    class View implements Drawable.Callback, KeyEvent.Callback {
         private static DBG;
         static VIEW_LOG_TAG: string;
         static PFLAG_WANTS_FOCUS: number;
@@ -1083,6 +1141,14 @@ declare module android.view {
         isEnabled(): boolean;
         setEnabled(enabled: boolean): void;
         resetPressedState(): void;
+        dispatchGenericMotionEvent(event: Event): boolean;
+        onGenericMotionEvent(event: Event): boolean;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        setOnKeyListener(l: View.OnKeyListener): void;
+        getKeyDispatcherState(): KeyEvent.DispatcherState;
+        onKeyDown(keyCode: number, event: android.view.KeyEvent): boolean;
+        onKeyLongPress(keyCode: number, event: android.view.KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: android.view.KeyEvent): boolean;
         dispatchTouchEvent(event: MotionEvent): boolean;
         onFilterTouchEventForSecurity(event: MotionEvent): boolean;
         onTouchEvent(event: MotionEvent): boolean;
@@ -1252,7 +1318,7 @@ declare module android.view {
         toString(): String;
         getRootView(): View;
         findViewById(id: string): View;
-        static inflate(domtree: HTMLElement, rootElement?: HTMLElement, viewParent?: ViewGroup): View;
+        static inflate(eleOrRef: HTMLElement | string, rootElement: HTMLElement, viewParent?: ViewGroup): View;
         static optReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReference(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector, cloneNode?: boolean): Element;
@@ -1292,6 +1358,9 @@ declare module android.view {
         }
         class AttachInfo {
             mRootView: View;
+            mWindowLeft: number;
+            mWindowTop: number;
+            mKeyDispatchState: KeyEvent.DispatcherState;
             mDrawingTime: number;
             mViewRootImpl: ViewRootImpl;
             mHandler: Handler;
@@ -1314,6 +1383,8 @@ declare module android.view {
             mOnClickListener: OnClickListener;
             mOnLongClickListener: OnLongClickListener;
             mOnTouchListener: OnTouchListener;
+            mOnKeyListener: OnKeyListener;
+            mOnGenericMotionListener: OnGenericMotionListener;
         }
         interface OnAttachStateChangeListener {
             onViewAttachedToWindow(v: View): any;
@@ -1330,6 +1401,12 @@ declare module android.view {
         }
         interface OnTouchListener {
             onTouch(v: View, event: MotionEvent): any;
+        }
+        interface OnKeyListener {
+            onKey(v: View, keyCode: number, event: KeyEvent): any;
+        }
+        interface OnGenericMotionListener {
+            onGenericMotion(v: View, event: Event): any;
         }
         class AttrChangeHandler {
             isCallSuper: boolean;
@@ -1442,7 +1519,7 @@ declare module android.view {
         private mVisRect;
         private mTraversalScheduled;
         private mWillDrawSoon;
-        mIsInTraversal: boolean;
+        private mIsInTraversal;
         private mLayoutRequested;
         private mFirst;
         private mFullRedrawNeeded;
@@ -1596,6 +1673,7 @@ declare module android.view {
         bringChildToFront(child: View): void;
         hasBooleanFlag(flag: number): boolean;
         setBooleanFlag(flag: number, value: boolean): void;
+        dispatchKeyEvent(event: android.view.KeyEvent): boolean;
         addTouchables(views: java.util.ArrayList<android.view.View>): void;
         onInterceptTouchEvent(ev: MotionEvent): boolean;
         dispatchTouchEvent(ev: MotionEvent): boolean;
@@ -1856,6 +1934,7 @@ declare module android.widget {
     import View = android.view.View;
     import MotionEvent = android.view.MotionEvent;
     import Rect = android.graphics.Rect;
+    import KeyEvent = android.view.KeyEvent;
     class ScrollView extends FrameLayout {
         static ANIMATED_SCROLL_GAP: number;
         static MAX_SCROLL_FACTOR: number;
@@ -1888,6 +1967,8 @@ declare module android.widget {
         isSmoothScrollingEnabled(): boolean;
         setSmoothScrollingEnabled(smoothScrollingEnabled: boolean): void;
         onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        executeKeyEvent(event: KeyEvent): boolean;
         private inChild(x, y);
         private initOrResetVelocityTracker();
         private initVelocityTrackerIfNotExists();
@@ -1896,6 +1977,7 @@ declare module android.widget {
         onInterceptTouchEvent(ev: MotionEvent): boolean;
         onTouchEvent(ev: MotionEvent): boolean;
         private onSecondaryPointerUp(ev);
+        onGenericMotionEvent(event: Event): boolean;
         onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
         private getScrollRange();
         private findFocusableViewInBounds(topFocus, top, bottom);
@@ -2314,6 +2396,7 @@ declare module android.support.v4.view {
     import PagerAdapter = android.support.v4.view.PagerAdapter;
     import Drawable = android.graphics.drawable.Drawable;
     import MotionEvent = android.view.MotionEvent;
+    import KeyEvent = android.view.KeyEvent;
     class ViewPager extends ViewGroup {
         private mExpectedAdapterCount;
         private static COMPARATOR;
@@ -2459,6 +2542,12 @@ declare module android.support.v4.view {
         private setScrollingCacheEnabled(enabled);
         canScrollHorizontally(direction: number): boolean;
         canScroll(v: View, checkV: boolean, dx: number, x: number, y: number): boolean;
+        dispatchKeyEvent(event: android.view.KeyEvent): boolean;
+        executeKeyEvent(event: KeyEvent): boolean;
+        arrowScroll(direction: number): boolean;
+        private getChildRectInPagerCoordinates(outRect, child);
+        pageLeft(): boolean;
+        pageRight(): boolean;
         addTouchables(views: java.util.ArrayList<android.view.View>): void;
         generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
         generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
@@ -2515,23 +2604,33 @@ declare module com.jakewharton.salvage {
 declare module androidui {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
-    import ViewRootImpl = android.view.ViewRootImpl;
     class AndroidUI {
+        static DomClassName: string;
+        static BindTOElementName: string;
         element: HTMLElement;
-        private canvas;
-        viewRootImpl: ViewRootImpl;
-        private rootLayout;
+        private _canvas;
+        private _viewRootImpl;
+        private _rootLayout;
         private rootStyleElement;
         private rootResourceElement;
+        private _windowBound;
+        windowBound: android.graphics.Rect;
+        private motionEvent;
+        private ketEvent;
+        private AndroidID;
         constructor(element: HTMLElement);
         private init();
         private initInflateView();
-        private initRootElementStyle();
-        private initCanvasStyle();
-        private initTouch();
-        private initBindElementStyle();
-        private tryStartLayoutAfterInit();
-        notifySizeChange(width: number, height: number): void;
+        private initElementStyle();
+        private refreshWindowBound();
+        private initFocus();
+        private initEvent();
+        private initTouchEvent();
+        private initMouseEvent();
+        private initKeyEvent();
+        private initGenericEvent();
+        private initListenSizeChange();
+        notifySizeChange(): void;
         setContentView(view: View): void;
         addContentView(view: View, params?: ViewGroup.LayoutParams): void;
         findViewById(id: string): View;

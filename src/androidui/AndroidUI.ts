@@ -76,7 +76,7 @@ module androidui {
             this.initFocus();
             this.initEvent();
 
-            this.tryStartLayoutAfterInit();
+            this.initListenSizeChange();
         }
 
         private initInflateView() {
@@ -260,11 +260,23 @@ module androidui {
             }, true);
         }
 
-        private tryStartLayoutAfterInit(){
-            let width = this.element.offsetWidth;
-            let height = this.element.offsetHeight;
-            if(width>0 && height>0) this.notifySizeChange();
-            else this.refreshWindowBound();
+        private initListenSizeChange(){
+            window.addEventListener('resize', ()=>{
+                this.notifySizeChange();
+            });
+
+            let lastWidth = this.element.offsetWidth;
+            let lastHeight = this.element.offsetHeight;
+            if(lastWidth>0 && lastHeight>0) this.notifySizeChange();
+            setInterval(()=>{
+                let width = this.element.offsetWidth;
+                let height = this.element.offsetHeight;
+                if(lastHeight !== height || lastWidth !== width){
+                    lastWidth = width;
+                    lastHeight = height;
+                    this.notifySizeChange();
+                }
+            }, 300);
         }
 
         notifySizeChange(){
