@@ -23,6 +23,7 @@ module android.widget {
     import OverScroller = android.widget.OverScroller;
     import Log = android.util.Log;
     import SystemClock = android.os.SystemClock;
+    import KeyEvent = android.view.KeyEvent;
 
     export class ScrollView extends FrameLayout {
         static ANIMATED_SCROLL_GAP = 250;
@@ -157,7 +158,54 @@ module android.widget {
             }
         }
 
-        //TODO dispatch key & execute
+
+        dispatchKeyEvent(event:KeyEvent):boolean {
+            // Let the focused view and/or our descendants get the key first
+            return super.dispatchKeyEvent(event) || this.executeKeyEvent(event);
+        }
+
+        executeKeyEvent(event:KeyEvent):boolean {
+            this.mTempRect.setEmpty();
+
+            if (!this.canScroll()) {
+                //TODO when focus impl
+                //if (this.isFocused() && event.getKeyCode() != KeyEvent.KEYCODE_BACK) {
+                //    let currentFocused = this.findFocus();
+                //    if (currentFocused == this) currentFocused = null;
+                //    let nextFocused = FocusFinder.getInstance().findNextFocus(this,
+                //        currentFocused, View.FOCUS_DOWN);
+                //    return nextFocused != null
+                //        && nextFocused != this
+                //        && nextFocused.requestFocus(View.FOCUS_DOWN);
+                //}
+                return false;
+            }
+
+            let handled = false;
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                switch (event.getKeyCode()) {
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        if (!event.isAltPressed()) {
+                            handled = this.arrowScroll(View.FOCUS_UP);
+                        } else {
+                            handled = this.fullScroll(View.FOCUS_UP);
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        if (!event.isAltPressed()) {
+                            handled = this.arrowScroll(View.FOCUS_DOWN);
+                        } else {
+                            handled = this.fullScroll(View.FOCUS_DOWN);
+                        }
+                        break;
+                    case KeyEvent.KEYCODE_SPACE:
+                        this.pageScroll(event.isShiftPressed() ? View.FOCUS_UP : View.FOCUS_DOWN);
+                        break;
+                }
+            }
+
+            return handled;
+        }
 
         private inChild(x:number, y:number):boolean {
             if (this.getChildCount() > 0) {
@@ -463,7 +511,32 @@ module android.widget {
             }
         }
 
-        //TODO onGenericMotionEvent handle ACTION_SCROLL
+        onGenericMotionEvent(event:Event):boolean {
+            if(event instanceof WheelEvent){
+                if (!this.mIsBeingDragged) {
+                    if (!this.mScroller.isFinished()) {
+                        this.mScroller.abortAnimation();
+                    }
+                    let vScroll:number = -event.deltaY;//nature scroll
+                    if(vScroll){
+                        const delta = Math.floor(vScroll * this.getVerticalScrollFactor());
+                        const range = this.getScrollRange();
+                        let oldScrollY = this.mScrollY;
+                        let newScrollY = oldScrollY - delta;
+                        if (newScrollY < 0) {
+                            newScrollY = 0;
+                        } else if (newScrollY > range) {
+                            newScrollY = range;
+                        }
+                        if (newScrollY != oldScrollY) {
+                            super.scrollTo(this.mScrollX, newScrollY);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return super.onGenericMotionEvent(event);
+        }
 
         onOverScrolled(scrollX:number, scrollY:number, clampedX:boolean, clampedY:boolean) {
             // Treat animating scrolls differently; see #computeScroll() for why.
@@ -576,13 +649,60 @@ module android.widget {
                 this.doScrollY(delta);
             }
 
-            //if (newFocused != this.findFocus()) newFocused.requestFocus(direction); //TODO when focus ok
+            if (newFocused != this.findFocus()) newFocused.requestFocus(direction);
 
             return handled;
         }
         arrowScroll(direction:number):boolean {
-            //TODO exec key
-            return false;
+            let currentFocused = this.findFocus();
+            if (currentFocused == this) currentFocused = null;
+
+            //TODO when focus impl
+            let nextFocused = null;//FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
+
+            const maxJump = this.getMaxScrollAmount();
+
+            if (nextFocused != null && this.isWithinDeltaOfScreen(nextFocused, maxJump, this.getHeight())) {
+                //TODO when focus impl
+                //nextFocused.getDrawingRect(this.mTempRect);
+                //this.offsetDescendantRectToMyCoords(nextFocused, this.mTempRect);
+                //let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(mTempRect);
+                //this.doScrollY(scrollDelta);
+                //nextFocused.requestFocus(direction);
+            } else {
+                // no new focus
+                let scrollDelta = maxJump;
+
+                if (direction == View.FOCUS_UP && this.getScrollY() < scrollDelta) {
+                    scrollDelta = this.getScrollY();
+                } else if (direction == View.FOCUS_DOWN) {
+                    if (this.getChildCount() > 0) {
+                        let daBottom = this.getChildAt(0).getBottom();
+                        let screenBottom = this.getScrollY() + this.getHeight() - this.mPaddingBottom;
+                        if (daBottom - screenBottom < maxJump) {
+                            scrollDelta = daBottom - screenBottom;
+                        }
+                    }
+                }
+                if (scrollDelta == 0) {
+                    return false;
+                }
+                this.doScrollY(direction == View.FOCUS_DOWN ? scrollDelta : -scrollDelta);
+            }
+
+            if (currentFocused != null && currentFocused.isFocused() && this.isOffScreen(currentFocused)) {
+                // previously focused item still has focus and is off screen, give
+                // it up (take it back to ourselves)
+                // (also, need to temporarily force FOCUS_BEFORE_DESCENDANTS so we are
+                // sure to
+                // get it)
+                //TODO when focus impl
+                //const descendantFocusability = this.getDescendantFocusability();  // save
+                //this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                //this.requestFocus();
+                //this.setDescendantFocusability(descendantFocusability);  // restore
+            }
+            return true;
         }
         private isOffScreen(descendant:View):boolean {
             return !this.isWithinDeltaOfScreen(descendant, 0, this.getHeight());

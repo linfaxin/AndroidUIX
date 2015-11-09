@@ -21,7 +21,7 @@
     </style>
 </head>
 <body>
-    <android-Activity style="width: 100%; height:100%;display: none;">
+    <android-Activity style="width: 100%; height:100%;display: none;" oncreate="onCreate">
         <resources>
             <android-style id="imageStyle"
                    android:background="#eee"
@@ -177,5 +177,12 @@
     <script src="../../dist/android-web-widget.es5.js"></script>
     <script src="../build/main.es5.js"></script>
 
+    <script>
+        function onCreate(activity){
+            activity.AndroidUI.rootLayout.findFocus = function(){
+                return document.querySelector('ScrollView').AndroidView;
+            }
+        }
+    </script>
 </body>
 </html>

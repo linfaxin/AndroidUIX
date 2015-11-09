@@ -37,6 +37,8 @@
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
+///<reference path="KeyEvent.ts"/>
+
 
 module android.view {
     import SparseArray = android.util.SparseArray;
@@ -70,8 +72,10 @@ module android.view {
     import StateAttrList = androidui.attr.StateAttrList;
     import StateAttr = androidui.attr.StateAttr;
     import ClassFinder = androidui.util.ClassFinder;
+    import KeyEvent = android.view.KeyEvent;
 
-    export class View implements Drawable.Callback{
+
+    export class View implements Drawable.Callback, KeyEvent.Callback{
         private static DBG = Log.View_DBG;
         static VIEW_LOG_TAG = "View";
 
@@ -1186,6 +1190,91 @@ module android.view {
                     this.removeLongPressCallback();
                 }
             }
+        }
+
+        dispatchGenericMotionEvent(event:Event){
+            //noinspection SimplifiableIfStatement
+            let li = this.mListenerInfo;
+            if (li != null && li.mOnGenericMotionListener != null
+                && (this.mViewFlags & View.ENABLED_MASK) == View.ENABLED
+                && li.mOnGenericMotionListener.onGenericMotion(this, event)) {
+                return true;
+            }
+
+            if (this.onGenericMotionEvent(event)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        onGenericMotionEvent(event:Event) {
+            return false;
+        }
+
+        dispatchKeyEvent(event:KeyEvent):boolean {
+
+            // Give any attached key listener a first crack at the event.
+            //noinspection SimplifiableIfStatement
+            let li = this.mListenerInfo;
+            if (li != null && li.mOnKeyListener != null && (this.mViewFlags & View.ENABLED_MASK) == View.ENABLED
+                && li.mOnKeyListener.onKey(this, event.getKeyCode(), event)) {
+                return true;
+            }
+
+            if (event.dispatch(this, this.mAttachInfo != null
+                    ? this.mAttachInfo.mKeyDispatchState : null, this)) {
+                return true;
+            }
+
+            return false;
+        }
+        setOnKeyListener(l:View.OnKeyListener) {
+            this.getListenerInfo().mOnKeyListener = l;
+        }
+        getKeyDispatcherState():KeyEvent.DispatcherState {
+            return this.mAttachInfo != null ? this.mAttachInfo.mKeyDispatchState : null;
+        }
+
+        onKeyDown(keyCode:number, event:android.view.KeyEvent):boolean {
+            let result = false;
+
+            if (KeyEvent.isConfirmKey(keyCode)) {
+                if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
+                    return true;
+                }
+                // Long clickable items don't necessarily have to be clickable
+                if (((this.mViewFlags & View.CLICKABLE) == View.CLICKABLE ||
+                    (this.mViewFlags & View.LONG_CLICKABLE) == View.LONG_CLICKABLE) &&
+                    (event.getRepeatCount() == 0)) {
+                    this.setPressed(true);
+                    this.checkForLongClick(0);
+                    return true;
+                }
+            }
+            return result;
+        }
+
+        onKeyLongPress(keyCode:number, event:android.view.KeyEvent):boolean {
+            return false;
+        }
+
+        onKeyUp(keyCode:number, event:android.view.KeyEvent):boolean {
+            if (KeyEvent.isConfirmKey(keyCode)) {
+                if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
+                    return true;
+                }
+                if ((this.mViewFlags & View.CLICKABLE) == View.CLICKABLE && this.isPressed()) {
+                    this.setPressed(false);
+
+                    if (!this.mHasPerformedLongPress) {
+                        // This is a tap, so remove the longpress check
+                        this.removeLongPressCallback();
+                        return this.performClick();
+                    }
+                }
+            }
+            return false;
         }
 
         dispatchTouchEvent(event:MotionEvent):boolean {
@@ -2787,7 +2876,7 @@ module android.view {
         }
         getVerticalScrollFactor():number {
             if (this.mVerticalScrollFactor == 0) {
-                this.mVerticalScrollFactor = Resources.getDisplayMetrics().density * 64;
+                this.mVerticalScrollFactor = Resources.getDisplayMetrics().density * 1;
             }
             return this.mVerticalScrollFactor;
         }
@@ -3471,6 +3560,9 @@ module android.view {
         }
         export class AttachInfo {
             mRootView:View;
+            mWindowLeft = 0;
+            mWindowTop = 0;
+            mKeyDispatchState = new KeyEvent.DispatcherState();
             mDrawingTime=0;
             //mCanvas : Canvas;
             mViewRootImpl : ViewRootImpl;
@@ -3500,6 +3592,8 @@ module android.view {
             mOnClickListener:OnClickListener;
             mOnLongClickListener:OnLongClickListener;
             mOnTouchListener:OnTouchListener;
+            mOnKeyListener:OnKeyListener;
+            mOnGenericMotionListener:OnGenericMotionListener;
 
         }
 
@@ -3519,6 +3613,12 @@ module android.view {
         }
         export interface OnTouchListener{
             onTouch(v:View, event:MotionEvent);
+        }
+        export interface OnKeyListener{
+            onKey(v:View, keyCode:number, event:KeyEvent);
+        }
+        export interface OnGenericMotionListener{
+            onGenericMotion(v:View, event:Event);
         }
 
         /**

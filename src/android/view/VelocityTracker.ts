@@ -4,11 +4,13 @@
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="MotionEvent.ts"/>
+///<reference path="KeyEvent.ts"/>
 
 module android.view{
     import Log = android.util.Log;
     import Pools = android.util.Pools;
     import MotionEvent = android.view.MotionEvent;
+    import KeyEvent = android.view.KeyEvent;
 
     export class VelocityTracker{
         private static TAG = "VelocityTracker";

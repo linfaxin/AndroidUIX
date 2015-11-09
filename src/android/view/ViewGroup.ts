@@ -453,6 +453,11 @@ module android.view {
             }
         }
 
+        dispatchKeyEvent(event:android.view.KeyEvent):boolean {
+            //TODO dispath to focus first (when focus impl)
+            return super.dispatchKeyEvent(event);
+        }
+
         addTouchables(views:java.util.ArrayList<android.view.View>):void {
             super.addTouchables(views);
 
