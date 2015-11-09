@@ -327,6 +327,9 @@ module android.view {
 
                 if (ViewRootImpl.DEBUG_ORIENTATION) Log.v(ViewRootImpl.TAG, "Relayout returned: frame=" + frame);
 
+                attachInfo.mWindowLeft = frame.left;
+                attachInfo.mWindowTop = frame.top;
+
                 // !!FIXME!! This next section handles the case where we did not get the
                 // window size we asked for. We should avoid this by getting a maximum size from
                 // the window session beforehand.
@@ -349,6 +352,13 @@ module android.view {
                     this.performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
 
                     layoutRequested = true;
+                }
+            }else{
+                const windowMoved = (attachInfo.mWindowLeft != frame.left
+                || attachInfo.mWindowTop != frame.top);
+                if (windowMoved) {
+                    attachInfo.mWindowLeft = frame.left;
+                    attachInfo.mWindowTop = frame.top;
                 }
             }
 
