@@ -41,11 +41,11 @@ module android.app{
         }
         attachedCallback():void {
             if(this.AndroidUI){
-                this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+                this.AndroidUI.notifySizeChange();
             }else{
                 //delay call onCreate, insure browser load lib complete
                 setTimeout(()=>{
-                    this.AndroidUI.notifySizeChange(this.offsetWidth, this.offsetHeight);
+                    this.AndroidUI.notifySizeChange();
                 }, 50);
             }
         }

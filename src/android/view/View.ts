@@ -3244,7 +3244,7 @@ module android.view {
             let bindEle = this.bindElement.querySelector('#'+id);
             return bindEle ? bindEle[View.AndroidViewProperty] : null;
         }
-        static inflate(eleOrRef:HTMLElement|string, rootElement=domtree, viewParent?:ViewGroup):View{
+        static inflate(eleOrRef:HTMLElement|string, rootElement:HTMLElement, viewParent?:ViewGroup):View{
             let domtree : HTMLElement;
             if(typeof eleOrRef === "string"){
                 let ref = <HTMLElement>View.findReference('@layout/page', rootElement);
@@ -3252,7 +3252,7 @@ module android.view {
                     console.warn('not find Reference :'+ eleOrRef);
                     return null;
                 }
-                domtree = ref.firstElementChild;
+                domtree = <HTMLElement>ref.firstElementChild;
             }else{
                 domtree = <HTMLElement>eleOrRef;
             }
