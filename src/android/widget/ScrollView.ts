@@ -742,7 +742,7 @@ module android.widget {
                 if (!this.mScroller.isFinished()) {
                     this.mScroller.abortAnimation();
                 }
-                scrollBy(dx, dy);
+                this.scrollBy(dx, dy);
             }
             this.mLastScroll = SystemClock.uptimeMillis();
         }
