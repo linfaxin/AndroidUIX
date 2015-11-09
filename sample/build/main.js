@@ -43,6 +43,9 @@ var sample;
             onCreate() {
                 let viewPager = this.findViewById('viewPager');
                 viewPager.setAdapter(new MyPageAdapter());
+                this.AndroidUI.rootLayout.findFocus = function () {
+                    return viewPager;
+                };
             }
         }
         activity.SampleViewPagerActivity = SampleViewPagerActivity;
@@ -53,9 +56,7 @@ var sample;
             }
             getView(position, convertView, parent) {
                 if (convertView == null) {
-                    let rootElement = parent.rootElement;
-                    let domTree = View.findReference('@layout/page', rootElement);
-                    convertView = View.inflate(domTree, rootElement);
+                    convertView = View.inflate('@layout/page', parent.rootElement);
                 }
                 let page_bg = convertView.findViewById('page_bg');
                 let page_text = convertView.findViewById('page_text');

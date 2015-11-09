@@ -18,6 +18,7 @@ module sample.activity {
         onCreate():void {
             let viewPager = <ViewPager>this.findViewById('viewPager');
             viewPager.setAdapter(new MyPageAdapter());
+
         }
     }
     SampleViewPagerActivity.registerCustomElement();
@@ -30,9 +31,7 @@ module sample.activity {
 
         getView(position:number, convertView:android.view.View, parent:android.view.ViewGroup):android.view.View {
             if(convertView==null){
-                let rootElement = parent.rootElement;
-                let domTree = <HTMLElement>View.findReference('@layout/page', rootElement);
-                convertView = View.inflate(domTree, rootElement);
+                convertView = View.inflate('@layout/page', parent.rootElement);
             }
             let page_bg = convertView.findViewById('page_bg');
             let page_text = <TextView>convertView.findViewById('page_text');

@@ -35,6 +35,7 @@ module android.support.v4.view {
     import Resources = android.content.res.Resources;
     import Log = android.util.Log;
     import MotionEvent = android.view.MotionEvent;
+    import KeyEvent = android.view.KeyEvent;
 
     const TAG = "ViewPager";
     const DEBUG = false;
@@ -192,8 +193,8 @@ module android.support.v4.view {
 
         private initViewPager() {
             this.setWillNotDraw(false)
-            //this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS)
-            //this.setFocusable(true) //TODO impl
+            //this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+            //this.setFocusable(true);//TODO todo when focus impl
             //let context = getContext()
             this.mScroller = new OverScroller(ViewPager.sInterpolator)
             //let configuration = ViewConfiguration.get(context)
@@ -2250,9 +2251,147 @@ module android.support.v4.view {
             return checkV && v.canScrollHorizontally(-dx);
         }
 
-        //TODO impl when KeyEvent ok
-        //dispatchKeyEvent & executeKeyEvent & arrowScroll & getChildRectInPagerCoordinates & pageLeft & pageRight
 
+        dispatchKeyEvent(event:android.view.KeyEvent):boolean {
+            // Let the focused view and/or our descendants get the key first
+            return super.dispatchKeyEvent(event) || this.executeKeyEvent(event);
+        }
+
+
+        /**
+         * You can call this function yourself to have the scroll view perform
+         * scrolling from a key event, just as if the event had been dispatched to
+         * it by the view hierarchy.
+         *
+         * @param event The key event to execute.
+         * @return Return true if the event was handled, else false.
+         */
+        executeKeyEvent(event:KeyEvent):boolean {
+            let handled = false;
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                switch (event.getKeyCode()) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        handled = this.arrowScroll(View.FOCUS_LEFT);
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        handled = this.arrowScroll(View.FOCUS_RIGHT);
+                        break;
+                    case KeyEvent.KEYCODE_TAB:
+                        // The focus finder had a bug handling FOCUS_FORWARD and FOCUS_BACKWARD
+                        // before Android 3.0. Ignore the tab key on those devices.
+                        if (event.isShiftPressed()) {
+                            handled = this.arrowScroll(View.FOCUS_BACKWARD);
+                        }else{
+                            handled = this.arrowScroll(View.FOCUS_FORWARD);
+                        }
+                        break;
+                }
+            }
+            return handled;
+        }
+
+        arrowScroll(direction:number):boolean {
+            let currentFocused = this.findFocus();
+            if (currentFocused == this) {
+                currentFocused = null;
+            } else if (currentFocused != null) {
+                let isChild = false;
+                for (let parent = currentFocused.getParent(); parent instanceof ViewGroup; parent = parent.getParent()) {
+                    if (parent == this) {
+                        isChild = true;
+                        break;
+                    }
+                }
+                if (!isChild) {
+                    // This would cause the focus search down below to fail in fun ways.
+                    const sb = new java.lang.StringBuilder();
+                    sb.append(currentFocused.toString());
+                    for (let parent = currentFocused.getParent(); parent instanceof ViewGroup; parent = parent.getParent()) {
+                        sb.append(" => ").append(parent.toString());
+                    }
+                    Log.e(TAG, "arrowScroll tried to find focus based on non-child " +
+                        "current focused view " + sb.toString());
+                    currentFocused = null;
+                }
+            }
+
+            let handled = false;
+
+            //TODO when FocusFinder impl
+            let nextFocused = null;//FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
+            if (nextFocused != null && nextFocused != currentFocused) {
+                if (direction == View.FOCUS_LEFT) {
+                    // If there is nothing to the left, or this is causing us to
+                    // jump to the right, then what we really want to do is page left.
+                    const nextLeft = this.getChildRectInPagerCoordinates(this.mTempRect, nextFocused).left;
+                    const currLeft = this.getChildRectInPagerCoordinates(this.mTempRect, currentFocused).left;
+                    if (currentFocused != null && nextLeft >= currLeft) {
+                        handled = this.pageLeft();
+                    } else {
+                        handled = nextFocused.requestFocus();
+                    }
+                } else if (direction == View.FOCUS_RIGHT) {
+                    // If there is nothing to the right, or this is causing us to
+                    // jump to the left, then what we really want to do is page right.
+                    const nextLeft = this.getChildRectInPagerCoordinates(this.mTempRect, nextFocused).left;
+                    const currLeft = this.getChildRectInPagerCoordinates(this.mTempRect, currentFocused).left;
+                    if (currentFocused != null && nextLeft <= currLeft) {
+                        handled = this.pageRight();
+                    } else {
+                        handled = nextFocused.requestFocus();
+                    }
+                }
+            } else if (direction == View.FOCUS_LEFT || direction == View.FOCUS_BACKWARD) {
+                // Trying to move left and nothing there; try to page.
+                handled = this.pageLeft();
+            } else if (direction == View.FOCUS_RIGHT || direction == View.FOCUS_FORWARD) {
+                // Trying to move right and nothing there; try to page.
+                handled = this.pageRight();
+            }
+            //if (handled) {
+            //    playSoundEffect(SoundEffectConstants.getContantForFocusDirection(direction));
+            //}
+            return handled;
+        }
+        private getChildRectInPagerCoordinates(outRect:Rect, child:View):Rect {
+            if (outRect == null) {
+                outRect = new Rect();
+            }
+            if (child == null) {
+                outRect.set(0, 0, 0, 0);
+                return outRect;
+            }
+            outRect.left = child.getLeft();
+            outRect.right = child.getRight();
+            outRect.top = child.getTop();
+            outRect.bottom = child.getBottom();
+
+            let parent = child.getParent();
+            while (parent instanceof ViewGroup && parent != this) {
+                const group = <ViewGroup>parent;
+                outRect.left += group.getLeft();
+                outRect.right += group.getRight();
+                outRect.top += group.getTop();
+                outRect.bottom += group.getBottom();
+
+                parent = group.getParent();
+            }
+            return outRect;
+        }
+        pageLeft():boolean {
+            if (this.mCurItem > 0) {
+                this.setCurrentItem(this.mCurItem-1, true);
+                return true;
+            }
+            return false;
+        }
+        pageRight():boolean {
+            if (this.mAdapter != null && this.mCurItem < (this.mAdapter.getCount()-1)) {
+                this.setCurrentItem(this.mCurItem+1, true);
+                return true;
+            }
+            return false;
+        }
 
         //TODO impl when focus ok
         //addFocusables

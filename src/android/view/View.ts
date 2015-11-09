@@ -3244,7 +3244,18 @@ module android.view {
             let bindEle = this.bindElement.querySelector('#'+id);
             return bindEle ? bindEle[View.AndroidViewProperty] : null;
         }
-        static inflate(domtree:HTMLElement, rootElement=domtree, viewParent?:ViewGroup):View{
+        static inflate(eleOrRef:HTMLElement|string, rootElement=domtree, viewParent?:ViewGroup):View{
+            let domtree : HTMLElement;
+            if(typeof eleOrRef === "string"){
+                let ref = <HTMLElement>View.findReference('@layout/page', rootElement);
+                if(ref==null){
+                    console.warn('not find Reference :'+ eleOrRef);
+                    return null;
+                }
+                domtree = ref.firstElementChild;
+            }else{
+                domtree = <HTMLElement>eleOrRef;
+            }
             let className = domtree.tagName;
             if(className.toLowerCase() === 'android-layout'){
                 let child = domtree.firstElementChild;

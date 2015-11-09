@@ -294,7 +294,7 @@ module androidui {
         .${AndroidUI.DomClassName} {
             position : relative;
             overflow : hidden;
-            display : inline-block;
+            display : block;
             outline: none;
         }
         .${AndroidUI.DomClassName} * {

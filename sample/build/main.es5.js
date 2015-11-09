@@ -79,6 +79,9 @@ var sample;
                 value: function onCreate() {
                     var viewPager = this.findViewById('viewPager');
                     viewPager.setAdapter(new MyPageAdapter());
+                    this.AndroidUI.rootLayout.findFocus = function () {
+                        return viewPager;
+                    };
                 }
             }]);
 
@@ -106,9 +109,7 @@ var sample;
                 key: 'getView',
                 value: function getView(position, convertView, parent) {
                     if (convertView == null) {
-                        var rootElement = parent.rootElement;
-                        var domTree = View.findReference('@layout/page', rootElement);
-                        convertView = View.inflate(domTree, rootElement);
+                        convertView = View.inflate('@layout/page', parent.rootElement);
                     }
                     var page_bg = convertView.findViewById('page_bg');
                     var page_text = convertView.findViewById('page_text');
