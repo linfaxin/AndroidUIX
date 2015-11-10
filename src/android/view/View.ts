@@ -3192,8 +3192,10 @@ module android.view {
                 this.awakenScrollBars(this.mScrollCache.scrollBarDefaultDelayBeforeFade * 4, true);
         }
 
-        awakenScrollBars(startDelay=this.mScrollCache.scrollBarDefaultDelayBeforeFade, invalidate=true):boolean{
+        awakenScrollBars(startDelay?:number, invalidate=true):boolean{
             const scrollCache = this.mScrollCache;
+            if(scrollCache==null) return false;
+            startDelay = startDelay || scrollCache.scrollBarDefaultDelayBeforeFade
 
             if (scrollCache == null || !scrollCache.fadeScrollBars) {
                 return false;
