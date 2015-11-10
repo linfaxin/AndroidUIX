@@ -44,6 +44,7 @@ module android.view {
         private mView:View;
         rootElement:HTMLElement;
         private mViewVisibility = View.GONE;
+        private mStopped = false;
         private mWidth:number = -1;
         private mHeight:number = -1;
         private mDirty = new Rect();
@@ -58,12 +59,16 @@ module android.view {
         private mFullRedrawNeeded:boolean = false;
         private mIsDrawing:boolean = false;
         private mAdded:boolean = false;
-        mWinFrame = new Rect();//Root Element Bound
+        private mAddedTouchMode:boolean = false;
+        private mWinFrame = new Rect();//Root Element Bound
         private mInLayout:boolean;
         private mLayoutRequesters : Array<View> = [];
         private mHandlingLayoutInLayoutRequest:boolean;
         private mRemoved:boolean;
         private mHandler = new ViewRootHandler();
+
+        private mFirstInputStage:InputStage;
+        //private mFirstPostImeInputStage:InputStage;
 
 
         // Variables to track frames per second, enabled via DEBUG_FPS flag
@@ -102,7 +107,12 @@ module android.view {
 
 
                 view.assignParent(this);
-                //this.mAddedTouchMode = true;
+                this.mAddedTouchMode = true;
+
+                let syntheticInputStage = new SyntheticInputStage(this);
+                let viewPostImeStage = new ViewPostImeInputStage(this, syntheticInputStage);
+                let earlyPostImeStage = new EarlyPostImeInputStage(this, viewPostImeStage);
+                this.mFirstInputStage = earlyPostImeStage;
             }
         }
 
@@ -219,6 +229,7 @@ module android.view {
                 desiredWindowWidth = packageMetrics.widthPixels;//FIXME
                 desiredWindowHeight = packageMetrics.heightPixels;
 
+                attachInfo.mHasWindowFocus = true;//false. fix when window impl
                 attachInfo.mWindowVisibility = viewVisibility;
                 viewVisibilityChanged = false;
                 //mLastConfiguration.setTo(host.getResources().getConfiguration());
@@ -264,8 +275,8 @@ module android.view {
                 if (this.mFirst) {
                     // make sure touch mode code executes by setting cached value
                     // to opposite of the added touch mode.
-                    //mAttachInfo.mInTouchMode = !mAddedTouchMode;
-                    //ensureTouchModeLocally(mAddedTouchMode);
+                    this.mAttachInfo.mInTouchMode = !this.mAddedTouchMode;
+                    this.ensureTouchModeLocally(this.mAddedTouchMode);
 
                 } else {
                     //if (!mPendingOverscanInsets.equals(mAttachInfo.mOverscanInsets)) {
@@ -376,6 +387,32 @@ module android.view {
             }
 
             let skipDraw = false;
+
+            if (this.mFirst) {
+                // handle first focus request
+                if (ViewRootImpl.DEBUG_INPUT_RESIZE) Log.v(ViewRootImpl.TAG, "First: mView.hasFocus()="
+                    + this.mView.hasFocus());
+                if (this.mView != null) {
+                    if (!this.mView.hasFocus()) {
+                        this.mView.requestFocus(View.FOCUS_FORWARD);
+                        if (ViewRootImpl.DEBUG_INPUT_RESIZE) Log.v(ViewRootImpl.TAG, "First: requested focused view="
+                            + this.mView.findFocus());
+                    } else {
+                        if (ViewRootImpl.DEBUG_INPUT_RESIZE) Log.v(ViewRootImpl.TAG, "First: existing focused view="
+                            + this.mView.findFocus());
+                    }
+                }
+//            if ((relayoutResult & WindowManagerGlobal.RELAYOUT_RES_ANIMATING) != 0) {
+//                // The first time we relayout the window, if the system is
+//                // doing window animations, we want to hold of on any future
+//                // draws until the animation is done.
+//                mWindowsAnimating = true;
+//            }
+            }
+            //else if (mWindowsAnimating) {
+            //    skipDraw = true;
+            //}
+
             this.mFirst = false;
             this.mWillDrawSoon = false;
             this.mViewVisibility = viewVisibility;
@@ -672,7 +709,7 @@ module android.view {
         invalidateWorld(view:View) {
             view.invalidate();
             if (view instanceof ViewGroup) {
-                let parent = <ViewGroup> view;
+                let parent = <ViewGroup>view;
                 for (let i = 0; i < parent.getChildCount(); i++) {
                     this.invalidateWorld(parent.getChildAt(i));
                 }
@@ -723,32 +760,263 @@ module android.view {
         }
 
         requestChildFocus(child:View, focused:View) {
+            if (ViewRootImpl.DEBUG_INPUT_RESIZE) {
+                Log.v(ViewRootImpl.TAG, "Request child focus: focus now " + focused);
+            }
+            //checkThread();
+            this.scheduleTraversals();
         }
 
-        clearChildFocus(child:View) {
+        clearChildFocus(focused:View) {
+            if (ViewRootImpl.DEBUG_INPUT_RESIZE) {
+                Log.v(ViewRootImpl.TAG, "Request child focus: focus now " + focused);
+            }
+            //checkThread();
+            this.scheduleTraversals();
         }
 
         getChildVisibleRect(child:View, r:Rect, offset:Point):boolean {
-            return undefined;
+            if (child != this.mView) {
+                throw new Error("child is not mine, honest!");
+            }
+            // Note: don't apply scroll offset, because we want to know its
+            // visibility in the virtual canvas being given to the view hierarchy.
+            return r.intersect(0, 0, this.mWidth, this.mHeight);
         }
 
-        focusSearch(v:View, direction:number):View {
-            return undefined;
+        focusSearch(focused:View, direction:number):View {
+            if (!(this.mView instanceof ViewGroup)) {
+                return null;
+            }
+            return FocusFinder.getInstance().findNextFocus(<ViewGroup>this.mView, focused, direction);
         }
 
         bringChildToFront(child:View) {
+            //nothing
         }
 
         focusableViewAvailable(v:View) {
+            if (this.mView != null) {
+                if (!this.mView.hasFocus()) {
+                    v.requestFocus();
+                } else {
+                    // the one case where will transfer focus away from the current one
+                    // is if the current view is a view group that prefers to give focus
+                    // to its children first AND the view is a descendant of it.
+                    let focused = this.mView.findFocus();
+                    if (focused instanceof ViewGroup) {
+                        let group = <ViewGroup>focused;
+                        if (group.getDescendantFocusability() == ViewGroup.FOCUS_AFTER_DESCENDANTS
+                            && ViewRootImpl.isViewDescendantOf(v, focused)) {
+                            v.requestFocus();
+                        }
+                    }
+                }
+            }
+        }
+        static isViewDescendantOf(child:View, parent:View) {
+            if (child == parent) {
+                return true;
+            }
+
+            const theParent = child.getParent();
+            return (theParent instanceof ViewGroup) && ViewRootImpl.isViewDescendantOf(<View>theParent, parent);
         }
 
         childDrawableStateChanged(child:View) {
+            //nothing
         }
 
         requestDisallowInterceptTouchEvent(disallowIntercept:boolean) {
+            // ViewAncestor never intercepts touch event, so this can be a no-op
+        }
+
+        requestChildRectangleOnScreen(child:View, rectangle:Rect, immediate:boolean):boolean{
+            //TODO should scroll window
+            //final boolean scrolled = scrollToRectOrFocus(rectangle, immediate);
+            //if (rectangle != null) {
+            //    mTempRect.set(rectangle);
+            //    mTempRect.offset(0, -mCurScrollY);
+            //    mTempRect.offset(mAttachInfo.mWindowLeft, mAttachInfo.mWindowTop);
+            //}
+            //return scrolled;
+            return false;
         }
 
         childHasTransientStateChanged(child:View, hasTransientState:boolean) {
+            // Do nothing.
+        }
+
+        dispatchResized(frame:Rect){
+            this.mWinFrame.set(frame.left, frame.top, frame.right, frame.bottom);
+            this.requestLayout();
+        }
+        dispatchInputEvent(event:MotionEvent|KeyEvent|Event) {
+            this.deliverInputEvent(event);
+        }
+        private deliverInputEvent(event) {
+            this.mFirstInputStage.deliver(event);
+        }
+        private finishInputEvent(event){
+            event[InputStage.FLAG_FINISHED] = false;
+            event[InputStage.FLAG_FINISHED_HANDLED] = false;
+        }
+
+        private checkForLeavingTouchModeAndConsume(event:KeyEvent) {
+            // Only relevant in touch mode.
+            if (!this.mAttachInfo.mInTouchMode) {
+                return false;
+            }
+
+            // Only consider leaving touch mode on DOWN or MULTIPLE actions, never on UP.
+            const action = event.getAction();
+            if (action != KeyEvent.ACTION_DOWN
+                //&& action != KeyEvent.ACTION_MULTIPLE
+            ) {
+                return false;
+            }
+
+            // Don't leave touch mode if the IME told us not to.
+            //if ((event.getFlags() & KeyEvent.FLAG_KEEP_TOUCH_MODE) != 0) {
+            //    return false;
+            //}
+
+            // If the key can be used for keyboard navigation then leave touch mode
+            // and select a focused view if needed (in ensureTouchMode).
+            // When a new focused view is selected, we consume the navigation key because
+            // navigation doesn't make much sense unless a view already has focus so
+            // the key's purpose is to set focus.
+            if (ViewRootImpl.isNavigationKey(event)) {
+                return this.ensureTouchMode(false);
+            }
+
+            // If the key can be used for typing then leave touch mode
+            // and select a focused view if needed (in ensureTouchMode).
+            // Always allow the view to process the typing key.
+            if (ViewRootImpl.isTypingKey(event)) {
+                this.ensureTouchMode(false);
+                return false;
+            }
+
+            return false;
+        }
+        private static isNavigationKey(keyEvent:KeyEvent):boolean {
+            switch (keyEvent.getKeyCode()) {
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                case KeyEvent.KEYCODE_DPAD_UP:
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                case KeyEvent.KEYCODE_DPAD_CENTER:
+                case KeyEvent.KEYCODE_PAGE_UP:
+                case KeyEvent.KEYCODE_PAGE_DOWN:
+                case KeyEvent.KEYCODE_MOVE_HOME:
+                case KeyEvent.KEYCODE_MOVE_END:
+                case KeyEvent.KEYCODE_TAB:
+                case KeyEvent.KEYCODE_SPACE:
+                case KeyEvent.KEYCODE_ENTER:
+                    return true;
+            }
+            return false;
+        }
+        private static isTypingKey(keyEvent:KeyEvent):boolean {
+            try {
+                return keyEvent._activeKeyEvent['keyIdentifier'].startsWith('U+');
+            } catch (e) {
+                console.warn(e);
+            }
+            return true;
+        }
+        ensureTouchMode(inTouchMode:boolean):boolean {
+            if (ViewRootImpl.DBG) Log.d("touchmode", "ensureTouchMode(" + inTouchMode + "), current "
+                + "touch mode is " + this.mAttachInfo.mInTouchMode);
+            if (this.mAttachInfo.mInTouchMode == inTouchMode) return false;
+
+            // tell the window manager
+            //try {
+            //    if (!this.isInLocalFocusMode()) {
+            //        mWindowSession.setInTouchMode(inTouchMode);
+            //    }
+            //} catch (RemoteException e) {
+            //    throw new RuntimeException(e);
+            //}
+
+            // handle the change
+            return this.ensureTouchModeLocally(inTouchMode);
+        }
+
+        ensureTouchModeLocally(inTouchMode:boolean):boolean {
+            if (ViewRootImpl.DBG) Log.d("touchmode", "ensureTouchModeLocally(" + inTouchMode + "), current "
+                + "touch mode is " + this.mAttachInfo.mInTouchMode);
+
+            if (this.mAttachInfo.mInTouchMode == inTouchMode) return false;
+
+            this.mAttachInfo.mInTouchMode = inTouchMode;
+            this.mAttachInfo.mTreeObserver.dispatchOnTouchModeChanged(inTouchMode);
+
+            return (inTouchMode) ? this.enterTouchMode() : this.leaveTouchMode();
+        }
+        private enterTouchMode():boolean {
+            if (this.mView != null && this.mView.hasFocus()) {
+                // note: not relying on mFocusedView here because this could
+                // be when the window is first being added, and mFocused isn't
+                // set yet.
+                const focused = this.mView.findFocus();
+                if (focused != null && !focused.isFocusableInTouchMode()) {
+                    const ancestorToTakeFocus = ViewRootImpl.findAncestorToTakeFocusInTouchMode(focused);
+                    if (ancestorToTakeFocus != null) {
+                        // there is an ancestor that wants focus after its
+                        // descendants that is focusable in touch mode.. give it
+                        // focus
+                        return ancestorToTakeFocus.requestFocus();
+                    } else {
+                        // There's nothing to focus. Clear and propagate through the
+                        // hierarchy, but don't attempt to place new focus.
+                        focused.clearFocusInternal(true, false);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        private static findAncestorToTakeFocusInTouchMode(focused:View):ViewGroup {
+            let parent = focused.getParent();
+            while (parent instanceof ViewGroup) {
+                const vgParent = <ViewGroup>parent;
+                if (vgParent.getDescendantFocusability() == ViewGroup.FOCUS_AFTER_DESCENDANTS
+                    && vgParent.isFocusableInTouchMode()) {
+                    return vgParent;
+                }
+                if (vgParent.isRootNamespace()) {
+                    return null;
+                } else {
+                    parent = vgParent.getParent();
+                }
+            }
+            return null;
+        }
+        private leaveTouchMode():boolean {
+            if (this.mView != null) {
+                if (this.mView.hasFocus()) {
+                    let focusedView = this.mView.findFocus();
+                    if (!(focusedView instanceof ViewGroup)) {
+                        // some view has focus, let it keep it
+                        return false;
+                    } else if ((<ViewGroup>focusedView).getDescendantFocusability() !=
+                    ViewGroup.FOCUS_AFTER_DESCENDANTS) {
+                        // some view group has focus, and doesn't prefer its children
+                        // over itself for focus, so let them keep it.
+                        return false;
+                    }
+                }
+
+                // find the best view to give focus to in this brave new non-touch-mode
+                // world
+                const focused = this.focusSearch(null, View.FOCUS_DOWN);
+                if (focused != null) {
+                    return focused.requestFocus(View.FOCUS_DOWN);
+                }
+            }
+            return false;
         }
 
 
@@ -899,4 +1167,269 @@ module android.view {
             }
         }
     }
+
+
+    abstract
+    class InputStage {
+        static FLAG_FINISHED = Symbol();
+        static FLAG_FINISHED_HANDLED = Symbol();
+        static FORWARD = 0;
+        static FINISH_HANDLED = 1;
+        static FINISH_NOT_HANDLED = 2;
+
+        mNext:InputStage;
+
+        ViewRootImpl_this:ViewRootImpl;
+        constructor(impl:ViewRootImpl, next?:InputStage){
+            this.ViewRootImpl_this = impl;
+            this.mNext = next;
+        }
+        deliver(event) {
+            if (event[InputStage.FLAG_FINISHED]) {
+                this.forward(event);
+            } else if (this.shouldDropInputEvent(event)) {
+                this.finish(event, false);
+            } else {
+                this.apply(event, this.onProcess(event));
+            }
+        }
+        finish(event, handled:boolean) {
+            event[InputStage.FLAG_FINISHED] = true;
+            if(handled){
+                event[InputStage.FLAG_FINISHED_HANDLED] = true;
+            }
+            this.forward(event);
+        }
+        forward(event) {
+            this.onDeliverToNext(event);
+        }
+        apply(event, result:number) {
+            if (result == InputStage.FORWARD) {
+                this.forward(event);
+            } else if (result == InputStage.FINISH_HANDLED) {
+                this.finish(event, true);
+            } else if (result == InputStage.FINISH_NOT_HANDLED) {
+                this.finish(event, false);
+            } else {
+                throw new Error("Invalid result: " + result);
+            }
+        }
+        onDeliverToNext(event) {
+            if (this.mNext != null) {
+                this.mNext.deliver(event);
+            } else {
+                (<any>this.ViewRootImpl_this).finishInputEvent(event);
+            }
+        }
+
+        onProcess(event):number{
+            return InputStage.FORWARD;
+        }
+
+        shouldDropInputEvent(event){
+            if ((<any>this.ViewRootImpl_this).mView == null || !(<any>this.ViewRootImpl_this).mAdded) {
+                Log.w(ViewRootImpl.TAG, "Dropping event due to root view being removed: " + event);
+                return true;
+            } else if ((!(<any>this.ViewRootImpl_this).mAttachInfo.mHasWindowFocus ||
+                (<any>this.ViewRootImpl_this).mStopped)) {
+
+                // Drop non-terminal input events.
+                Log.w(ViewRootImpl.TAG, "Dropping event due to no window focus: " + event);
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * handle touch event
+     */
+    class EarlyPostImeInputStage extends InputStage{
+        onProcess(event):number {
+            if (event instanceof MotionEvent) {
+                return this.processMotionEvent(event);
+            } else if (event instanceof KeyEvent) {
+                return this.processKeyEvent(event);
+            }
+            return InputStage.FORWARD;
+        }
+
+        private processKeyEvent(event:KeyEvent):number {
+            // If the key's purpose is to exit touch mode then we consume it
+            // and consider it handled.
+            if ((<any>this.ViewRootImpl_this).checkForLeavingTouchModeAndConsume(event)) {
+                return InputStage.FINISH_HANDLED;
+            }
+
+            // Make sure the fallback event policy sees all keys that will be
+            // delivered to the view hierarchy.
+            //mFallbackEventHandler.preDispatchKeyEvent(event);
+            return InputStage.FORWARD;
+        }
+
+        private processMotionEvent(event:MotionEvent):number {
+            // Enter touch mode on down or scroll.
+            const action = event.getAction();
+            if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_SCROLL) {
+                this.ViewRootImpl_this.ensureTouchMode(true);
+            }
+
+            // Offset the window bound
+            event.offsetLocation((<any>this.ViewRootImpl_this).mWinFrame.left, (<any>this.ViewRootImpl_this).mWinFrame.top);
+
+
+            // Offset the scroll position.
+            //if (mCurScrollY != 0) {
+            //    event.offsetLocation(0, mCurScrollY);
+            //}
+
+            // Remember the touch position for possible drag-initiation.
+            //if (event.isTouchEvent()) {
+            //    mLastTouchPoint.x = event.getRawX();
+            //    mLastTouchPoint.y = event.getRawY();
+            //}
+            return InputStage.FORWARD;
+        }
+    }
+    /**
+     * handle key event
+     */
+    class ViewPostImeInputStage extends InputStage{
+        onProcess(event):number {
+            if (event instanceof KeyEvent) {
+                return this.processKeyEvent(event);
+            }else if (event instanceof MotionEvent){
+                return this.processTouchEvent(event);
+            }else if(event instanceof Event){//origin web event
+                return this.processGenericMotionEvent(event);
+            }
+            return InputStage.FORWARD;
+        }
+
+        private processKeyEvent(event:KeyEvent):number {
+            let mView:View = (<any>this.ViewRootImpl_this).mView;
+            //if (event.getAction() != KeyEvent.ACTION_UP) {
+            //    // If delivering a new key event, make sure the window is
+            //    // now allowed to start updating.
+            //    this.handleDispatchDoneAnimating();
+            //}
+
+            // Deliver the key to the view hierarchy.
+            if ((<any>this.ViewRootImpl_this).mView.dispatchKeyEvent(event)) {
+                return InputStage.FINISH_HANDLED;
+            }
+
+            if (this.shouldDropInputEvent(event)) {
+                return InputStage.FINISH_NOT_HANDLED;
+            }
+
+            // If the Control modifier is held, try to interpret the key as a shortcut.
+            if (event.getAction() == KeyEvent.ACTION_DOWN
+                && event.isCtrlPressed()
+                && event.getRepeatCount() == 0
+                //&& !KeyEvent.isModifierKey(event.getKeyCode())
+            ) {
+                //if (mView.dispatchKeyShortcutEvent(event)) {
+                //    return InputStage.FINISH_HANDLED;
+                //}
+                if ((<any>this.ViewRootImpl_this).shouldDropInputEvent(event)) {
+                    return InputStage.FINISH_NOT_HANDLED;
+                }
+            }
+
+            // Apply the fallback event policy.
+            //if (mFallbackEventHandler.dispatchKeyEvent(event)) {
+            //    return FINISH_HANDLED;
+            //}
+            if (this.shouldDropInputEvent(event)) {
+                return InputStage.FINISH_NOT_HANDLED;
+            }
+
+            // Handle automatic focus changes.
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                let direction = 0;
+                switch (event.getKeyCode()) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        direction = View.FOCUS_LEFT;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        direction = View.FOCUS_RIGHT;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        direction = View.FOCUS_UP;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        direction = View.FOCUS_DOWN;
+                        break;
+                    case KeyEvent.KEYCODE_TAB:
+                        if (event.isShiftPressed()) {
+                            direction = View.FOCUS_BACKWARD;
+                        } else {
+                            direction = View.FOCUS_FORWARD;
+                        }
+                        break;
+                }
+                if (direction != 0) {
+                    let focused = mView.findFocus();
+                    if (focused != null) {
+                        let v = focused.focusSearchView(direction);
+                        if (v != null && v != focused) {
+                            // do the math the get the interesting rect
+                            // of previous focused into the coord system of
+                            // newly focused view
+                            focused.getFocusedRect((<any>this.ViewRootImpl_this).mTempRect);
+                            if (mView instanceof ViewGroup) {
+                                (<ViewGroup>mView).offsetDescendantRectToMyCoords(focused,
+                                    (<any>this.ViewRootImpl_this).mTempRect);
+                                (<ViewGroup>mView).offsetRectIntoDescendantCoords(v,
+                                    (<any>this.ViewRootImpl_this).mTempRect);
+                            }
+                            if (v.requestFocus(direction, (<any>this.ViewRootImpl_this).mTempRect)) {
+                                //playSoundEffect(SoundEffectConstants
+                                //    .getContantForFocusDirection(direction));
+                                return InputStage.FINISH_HANDLED;
+                            }
+                        }
+
+                        // Give the focused view a last chance to handle the dpad key.
+                        if (mView.dispatchUnhandledMove(focused, direction)) {
+                            return InputStage.FINISH_HANDLED;
+                        }
+                    } else {
+                        // find the best view to give focus to in this non-touch-mode with no-focus
+                        let v = this.ViewRootImpl_this.focusSearch(null, direction);
+                        if (v != null && v.requestFocus(direction)) {
+                            return InputStage.FINISH_HANDLED;
+                        }
+                    }
+                }
+            }
+            return InputStage.FORWARD;
+        }
+
+        private processGenericMotionEvent(event:Event){
+            // Deliver the event to the view.
+            if ((<any>this.ViewRootImpl_this).mView.dispatchGenericMotionEvent(event)) {
+                return InputStage.FINISH_HANDLED;
+            }
+            return InputStage.FORWARD;
+        }
+
+        private processTouchEvent(event:MotionEvent){
+            let handled = (<any>this.ViewRootImpl_this).mView.dispatchTouchEvent(event);
+            return handled ? InputStage.FINISH_HANDLED : InputStage.FORWARD;
+        }
+
+    }
+
+    /**
+     * Performs synthesis of new input events from unhandled input events.
+     */
+    class SyntheticInputStage extends InputStage{
+        onProcess(event):number {
+            return super.onProcess(event);
+        }
+    }
+
+
 }

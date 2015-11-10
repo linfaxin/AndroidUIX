@@ -111,6 +111,11 @@ module android.view{
                 //}
                 //return false;
             }
+
+            onLayout(changed:boolean, l:number, t:number, r:number, b:number) {
+
+            }
+
             //TODO impl
 
         }

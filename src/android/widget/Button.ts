@@ -27,6 +27,7 @@ module android.widget{
         }
         private _initDefaultStyle(){
             let density = Resources.getDisplayMetrics().density;
+            this.setFocusable(true);
             this.setClickable(true);
             this.setTextSize(18);
             this.setMinimumHeight(48 * density);

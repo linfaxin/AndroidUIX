@@ -3,6 +3,7 @@
  */
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
 ///<reference path="../util/CopyOnWriteArray.ts"/>
+///<reference path="../view/View.ts"/>
 
 module android.view {
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
@@ -11,6 +12,8 @@ module android.view {
     export class ViewTreeObserver {
 
         private mOnWindowAttachListeners:CopyOnWriteArrayList<ViewTreeObserver.OnWindowAttachListener>;
+        private mOnGlobalFocusListeners:CopyOnWriteArrayList<ViewTreeObserver.OnGlobalFocusChangeListener>;
+        private mOnTouchModeChangeListeners:CopyOnWriteArrayList<ViewTreeObserver.OnTouchModeChangeListener>;
 
         private mOnGlobalLayoutListeners:CopyOnWriteArray<ViewTreeObserver.OnGlobalLayoutListener>;
         private mOnScrollChangedListeners:CopyOnWriteArray<ViewTreeObserver.OnScrollChangedListener>;
@@ -87,6 +90,35 @@ module android.view {
                 }
             }
         }
+        addOnGlobalFocusChangeListener(listener:ViewTreeObserver.OnGlobalFocusChangeListener) {
+            this.checkIsAlive();
+
+            if (this.mOnGlobalFocusListeners == null) {
+                this.mOnGlobalFocusListeners = new CopyOnWriteArrayList<ViewTreeObserver.OnGlobalFocusChangeListener>();
+            }
+
+            this.mOnGlobalFocusListeners.add(listener);
+        }
+        removeOnGlobalFocusChangeListener(victim:ViewTreeObserver.OnGlobalFocusChangeListener) {
+            this.checkIsAlive();
+            if (this.mOnGlobalFocusListeners == null) {
+                return;
+            }
+            this.mOnGlobalFocusListeners.remove(victim);
+        }
+
+        dispatchOnGlobalFocusChange(oldFocus:android.view.View, newFocus:android.view.View) {
+            // NOTE: because of the use of CopyOnWriteArrayList, we *must* use an iterator to
+            // perform the dispatching. The iterator is a safe guard against listeners that
+            // could mutate the list by calling the various add/remove methods. This prevents
+            // the array from being modified while we iterate it.
+            const listeners = this.mOnGlobalFocusListeners;
+            if (listeners != null && listeners.size() > 0) {
+                for (let listener of listeners) {
+                    listener.onGlobalFocusChanged(oldFocus, newFocus);
+                }
+            }
+        }
 
         addOnPreDrawListener(listener:ViewTreeObserver.OnPreDrawListener) {
             this.checkIsAlive();
@@ -120,6 +152,32 @@ module android.view {
             }
             return cancelDraw;
         }
+        addOnTouchModeChangeListener(listener:ViewTreeObserver.OnTouchModeChangeListener) {
+            this.checkIsAlive();
+
+            if (this.mOnTouchModeChangeListeners == null) {
+                this.mOnTouchModeChangeListeners = new CopyOnWriteArrayList<ViewTreeObserver.OnTouchModeChangeListener>();
+            }
+
+            this.mOnTouchModeChangeListeners.add(listener);
+        }
+        removeOnTouchModeChangeListener(victim:ViewTreeObserver.OnTouchModeChangeListener) {
+            this.checkIsAlive();
+            if (this.mOnTouchModeChangeListeners == null) {
+                return;
+            }
+            this.mOnTouchModeChangeListeners.remove(victim);
+        }
+
+        dispatchOnTouchModeChanged(inTouchMode:boolean) {
+            const listeners = this.mOnTouchModeChangeListeners;
+            if (listeners != null && listeners.size() > 0) {
+                for (let listener of listeners) {
+                    listener.onTouchModeChanged(inTouchMode);
+                }
+            }
+        }
+
         addOnScrollChangedListener(listener:ViewTreeObserver.OnScrollChangedListener) {
             this.checkIsAlive();
 
@@ -260,6 +318,9 @@ module android.view {
             onWindowAttached();
             onWindowDetached();
         }
+        export interface OnGlobalFocusChangeListener {
+            onGlobalFocusChanged(oldFocus:android.view.View, newFocus:android.view.View);
+        }
         export interface OnGlobalLayoutListener {
             onGlobalLayout();
         }
@@ -271,6 +332,9 @@ module android.view {
         }
         export interface OnScrollChangedListener {
             onScrollChanged();
+        }
+        export interface OnTouchModeChangeListener {
+            onTouchModeChanged(isInTouchMode:boolean);
         }
     }
 }

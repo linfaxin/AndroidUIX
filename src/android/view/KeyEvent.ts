@@ -40,6 +40,10 @@ module android.view{
         static KEYCODE_SPACE           = 32;
         /** Key code constant: Escape key. */
         static KEYCODE_ESCAPE          = 27;
+        static KEYCODE_PAGE_UP          = 33;
+        static KEYCODE_PAGE_DOWN          = 34;
+        static KEYCODE_MOVE_HOME          = 36;
+        static KEYCODE_MOVE_END          = 35;
 
 
 
@@ -182,7 +186,8 @@ module android.view{
          * @return The number of times the key has repeated.
          */
         getRepeatCount() {
-            return this._downingKeyEventMap.get(this._activeKeyEvent.keyCode).length;
+            let downArray = this._downingKeyEventMap.get(this._activeKeyEvent.keyCode);
+            return downArray ? downArray.length-1 : 0;
         }
 
         /**

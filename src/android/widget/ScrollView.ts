@@ -80,8 +80,8 @@ module android.widget {
 
         private initScrollView() {
             this.mScroller = new OverScroller();
-            //this.setFocusable(true);//TODO when focus impl
-            //this.setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
+            this.setFocusable(true);
+            this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
             this.setWillNotDraw(false);
             const configuration = ViewConfiguration.get();
             this.mTouchSlop = configuration.getScaledTouchSlop();
@@ -89,6 +89,8 @@ module android.widget {
             this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
             this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
             this.mOverflingDistance = configuration.getScaledOverflingDistance();
+
+            this.initScrollCache();
             this.setVerticalScrollBarEnabled(true);
             //this.setVerticalFadingEdgeEnabled(true);
         }

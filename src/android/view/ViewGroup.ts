@@ -11,6 +11,8 @@
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
+///<reference path="FocusFinder.ts"/>
+
 
 
 module android.view {
@@ -20,8 +22,10 @@ module android.view {
     import Matrix = android.graphics.Matrix;
     import SystemClock = android.os.SystemClock;
     import TypedValue = android.util.TypedValue;
+    import System = java.lang.System;
+    import ArrayList = java.util.ArrayList;
 
-    export class ViewGroup extends View implements ViewParent {
+    export abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN = 0x1;
         static FLAG_CLIP_TO_PADDING = 0x2;
         static FLAG_INVALIDATE_REQUIRED = 0x4;
@@ -55,6 +59,7 @@ module android.view {
         static CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
 
         mOnHierarchyChangeListener:ViewGroup.OnHierarchyChangeListener;
+        private mFocused:View;
         private mFirstTouchTarget:TouchTarget;
         // For debugging only.  You can see these in hierarchyviewer.
         private mLastTouchDownTime = 0;
@@ -71,6 +76,7 @@ module android.view {
 
         mSuppressLayout = false;
         private mLayoutCalledWhileSuppressed = false;
+        private mChildCountWithTransientState = 0;
 
         constructor() {
             super();
@@ -136,9 +142,266 @@ module android.view {
 
             this.mGroupFlags |= ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
 
-            //setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
+            this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
 
             //this.mPersistentDrawingCache = PERSISTENT_SCROLLING_CACHE;
+        }
+
+        getDescendantFocusability():number {
+            return this.mGroupFlags & ViewGroup.FLAG_MASK_FOCUSABILITY;
+        }
+        setDescendantFocusability(focusability:number) {
+            switch (focusability) {
+                case ViewGroup.FOCUS_BEFORE_DESCENDANTS:
+                case ViewGroup.FOCUS_AFTER_DESCENDANTS:
+                case ViewGroup.FOCUS_BLOCK_DESCENDANTS:
+                    break;
+                default:
+                    throw new Error("must be one of FOCUS_BEFORE_DESCENDANTS, "
+                        + "FOCUS_AFTER_DESCENDANTS, FOCUS_BLOCK_DESCENDANTS");
+            }
+            this.mGroupFlags &= ~ViewGroup.FLAG_MASK_FOCUSABILITY;
+            this.mGroupFlags |= (focusability & ViewGroup.FLAG_MASK_FOCUSABILITY);
+        }
+
+        handleFocusGainInternal(direction:number, previouslyFocusedRect:Rect) {
+            if (this.mFocused != null) {
+                this.mFocused.unFocus();
+                this.mFocused = null;
+            }
+            super.handleFocusGainInternal(direction, previouslyFocusedRect);
+        }
+        requestChildFocus(child:View, focused:View) {
+            if (View.DBG) {
+                System.out.println(this + " requestChildFocus()");
+            }
+            if (this.getDescendantFocusability() == ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                return;
+            }
+
+            // Unfocus us, if necessary
+            super.unFocus();
+
+            // We had a previous notion of who had focus. Clear it.
+            if (this.mFocused != child) {
+                if (this.mFocused != null) {
+                    this.mFocused.unFocus();
+                }
+
+                this.mFocused = child;
+            }
+            if (this.mParent != null) {
+                this.mParent.requestChildFocus(this, focused);
+            }
+        }
+        focusableViewAvailable(v:View) {
+            if (this.mParent != null
+                    // shortcut: don't report a new focusable view if we block our descendants from
+                    // getting focus
+                && (this.getDescendantFocusability() != ViewGroup.FOCUS_BLOCK_DESCENDANTS)
+                    // shortcut: don't report a new focusable view if we already are focused
+                    // (and we don't prefer our descendants)
+                    //
+                    // note: knowing that mFocused is non-null is not a good enough reason
+                    // to break the traversal since in that case we'd actually have to find
+                    // the focused view and make sure it wasn't FOCUS_AFTER_DESCENDANTS and
+                    // an ancestor of v; this will get checked for at ViewAncestor
+                && !(this.isFocused() && this.getDescendantFocusability() != ViewGroup.FOCUS_AFTER_DESCENDANTS)) {
+                this.mParent.focusableViewAvailable(v);
+            }
+        }
+        focusSearch(focused:View, direction:number) {
+            if (this.isRootNamespace()) {
+                // root namespace means we should consider ourselves the top of the
+                // tree for focus searching; otherwise we could be focus searching
+                // into other tabs.  see LocalActivityManager and TabHost for more info
+                return FocusFinder.getInstance().findNextFocus(this, focused, direction);
+            } else if (this.mParent != null) {
+                return this.mParent.focusSearch(focused, direction);
+            }
+            return null;
+        }
+        requestChildRectangleOnScreen(child:View, rectangle:Rect, immediate:boolean) {
+            return false;
+        }
+        childHasTransientStateChanged(child:View, childHasTransientState:boolean) {
+            const oldHasTransientState = this.hasTransientState();
+            if (childHasTransientState) {
+                this.mChildCountWithTransientState++;
+            } else {
+                this.mChildCountWithTransientState--;
+            }
+
+            const newHasTransientState = this.hasTransientState();
+            if (this.mParent != null && oldHasTransientState != newHasTransientState) {
+                this.mParent.childHasTransientStateChanged(this, newHasTransientState);
+            }
+        }
+        hasTransientState():boolean {
+            return this.mChildCountWithTransientState > 0 || super.hasTransientState();
+        }
+
+        dispatchUnhandledMove(focused:android.view.View, direction:number):boolean {
+            return this.mFocused != null && this.mFocused.dispatchUnhandledMove(focused, direction);
+        }
+        clearChildFocus(child:View) {
+            if (View.DBG) {
+                System.out.println(this + " clearChildFocus()");
+            }
+
+            this.mFocused = null;
+            if (this.mParent != null) {
+                this.mParent.clearChildFocus(this);
+            }
+        }
+        clearFocus() {
+            if (View.DBG) {
+                System.out.println(this + " clearFocus()");
+            }
+            if (this.mFocused == null) {
+                super.clearFocus();
+            } else {
+                let focused = this.mFocused;
+                this.mFocused = null;
+                focused.clearFocus();
+            }
+        }
+        unFocus() {
+            if (View.DBG) {
+                System.out.println(this + " unFocus()");
+            }
+            if (this.mFocused == null) {
+                super.unFocus();
+            } else {
+                this.mFocused.unFocus();
+                this.mFocused = null;
+            }
+        }
+        getFocusedChild():View {
+            return this.mFocused;
+        }
+        hasFocus():boolean {
+            return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0 || this.mFocused != null;
+        }
+        findFocus():View {
+            if (ViewGroup.DBG) {
+                System.out.println("Find focus in " + this + ": flags=" + this.isFocused() + ", child=" + this.mFocused);
+            }
+
+            if (this.isFocused()) {
+                return this;
+            }
+
+            if (this.mFocused != null) {
+                return this.mFocused.findFocus();
+            }
+            return null;
+        }
+
+
+        hasFocusable():boolean {
+            if ((this.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE) {
+                return false;
+            }
+
+            if (this.isFocusable()) {
+                return true;
+            }
+
+            const descendantFocusability = this.getDescendantFocusability();
+            if (descendantFocusability != ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                const count = this.mChildrenCount;
+                const children = this.mChildren;
+
+                for (let i = 0; i < count; i++) {
+                    const child = children[i];
+                    if (child.hasFocusable()) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+
+        addFocusables(views:ArrayList<View>, direction:number, focusableMode = View.FOCUSABLES_TOUCH_MODE):void {
+            const focusableCount = views.size();
+
+            const descendantFocusability = this.getDescendantFocusability();
+
+            if (descendantFocusability != ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                const count = this.mChildrenCount;
+                const children = this.mChildren;
+
+                for (let i = 0; i < count; i++) {
+                    const child = children[i];
+                    if ((child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE) {
+                        child.addFocusables(views, direction, focusableMode);
+                    }
+                }
+            }
+
+            // we add ourselves (if focusable) in all cases except for when we are
+            // FOCUS_AFTER_DESCENDANTS and there are some descendants focusable.  this is
+            // to avoid the focus search finding layouts when a more precise search
+            // among the focusable children would be more interesting.
+            if (descendantFocusability != ViewGroup.FOCUS_AFTER_DESCENDANTS
+                    // No focusable descendants
+                || (focusableCount == views.size())) {
+                super.addFocusables(views, direction, focusableMode);
+            }
+        }
+
+        requestFocus(direction?:number, previouslyFocusedRect?:Rect):boolean {
+            if (View.DBG) {
+                System.out.println(this + " ViewGroup.requestFocus direction="
+                    + direction);
+            }
+            let descendantFocusability = this.getDescendantFocusability();
+
+            switch (descendantFocusability) {
+                case ViewGroup.FOCUS_BLOCK_DESCENDANTS:
+                    return super.requestFocus(direction, previouslyFocusedRect);
+                case ViewGroup.FOCUS_BEFORE_DESCENDANTS: {
+                    const took = super.requestFocus(direction, previouslyFocusedRect);
+                    return took ? took : this.onRequestFocusInDescendants(direction, previouslyFocusedRect);
+                }
+                case ViewGroup.FOCUS_AFTER_DESCENDANTS: {
+                    const took = this.onRequestFocusInDescendants(direction, previouslyFocusedRect);
+                    return took ? took : super.requestFocus(direction, previouslyFocusedRect);
+                }
+                default:
+                    throw new Error("descendant focusability must be "
+                        + "one of FOCUS_BEFORE_DESCENDANTS, FOCUS_AFTER_DESCENDANTS, FOCUS_BLOCK_DESCENDANTS "
+                        + "but is " + descendantFocusability);
+            }
+        }
+
+        onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
+            let index;
+            let increment;
+            let end;
+            let count = this.mChildrenCount;
+            if ((direction & View.FOCUS_FORWARD) != 0) {
+                index = 0;
+                increment = 1;
+                end = count;
+            } else {
+                index = count - 1;
+                increment = -1;
+                end = -1;
+            }
+            const children = this.mChildren;
+            for (let i = index; i != end; i += increment) {
+                let child = children[i];
+                if ((child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE) {
+                    if (child.requestFocus(direction, previouslyFocusedRect)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
 
@@ -249,9 +512,9 @@ module android.view {
                 child.mParent = this;
             }
 
-            //if (child.hasFocus()) {//TODO impl when focus ok
-            //    requestChildFocus(child, child.findFocus());
-            //}
+            if (child.hasFocus()) {
+                this.requestChildFocus(child, child.findFocus());
+            }
 
             let ai = this.mAttachInfo;
             if (ai != null && (this.mGroupFlags & ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW) == 0) {
@@ -349,8 +612,8 @@ module android.view {
         }
 
         private removeViewsInternal(start:number, count:number) {
-            //let focused = this.mFocused;//TODO when focus ok
-            //let clearChildFocus = false;
+            let focused = this.mFocused;
+            let clearChildFocus = false;
             const detach = this.mAttachInfo != null;
 
             const children = this.mChildren;
@@ -359,13 +622,13 @@ module android.view {
             for (let i = start; i < end; i++) {
                 const view = children[i];
 
-                //if (view == focused) {//TODO when focus ok
-                //    view.unFocus();
-                //    clearChildFocus = true;
-                //}
-                //
-                //cancelTouchTarget(view);
-                //cancelHoverTarget(view);
+                if (view == focused) {
+                    view.unFocus();
+                    clearChildFocus = true;
+                }
+
+                this.cancelTouchTarget(view);
+                //this.cancelHoverTarget(view);//TODO when hover ok
 
                 //if (view.getAnimation() != null || //TODO when animation ok
                 //    (mTransitioningViews != null && mTransitioningViews.contains(view))) {
@@ -384,12 +647,12 @@ module android.view {
 
             this.removeFromArray(start, count);
 
-            //if (clearChildFocus) {//TODO when focus ok
-            //    clearChildFocus(focused);
-            //    if (!rootViewRequestFocus()) {
-            //        notifyGlobalFocusCleared(focused);
-            //    }
-            //}
+            if (clearChildFocus) {
+                this.clearChildFocus(focused);
+                if (!this.rootViewRequestFocus()) {
+                    this.notifyGlobalFocusCleared(focused);
+                }
+            }
         }
 
         removeAllViews() {
@@ -406,14 +669,6 @@ module android.view {
             this.removeViewsInternal(0, count);
         }
 
-        //layout(l:number, t:number, r:number, b:number) {
-        //    if (!this.mSuppressLayout) {
-        //        super.layout(l, t, r, b);
-        //    } else {
-        //        // record the fact that we noop'd it; request layout when transition finishes
-        //        this.mLayoutCalledWhileSuppressed = true;
-        //    }
-        //}
 
         indexOfChild(child:View):number {
             return this.mChildren.indexOf(child);
@@ -454,8 +709,18 @@ module android.view {
         }
 
         dispatchKeyEvent(event:android.view.KeyEvent):boolean {
-            //TODO dispath to focus first (when focus impl)
-            return super.dispatchKeyEvent(event);
+            if ((this.mPrivateFlags & (View.PFLAG_FOCUSED | View.PFLAG_HAS_BOUNDS))
+                == (View.PFLAG_FOCUSED | View.PFLAG_HAS_BOUNDS)) {
+                if (super.dispatchKeyEvent(event)) {
+                    return true;
+                }
+            } else if (this.mFocused != null && (this.mFocused.mPrivateFlags & View.PFLAG_HAS_BOUNDS)
+                == View.PFLAG_HAS_BOUNDS) {
+                if (this.mFocused.dispatchKeyEvent(event)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         addTouchables(views:java.util.ArrayList<android.view.View>):void {
@@ -1144,6 +1409,9 @@ module android.view {
             }
         }
 
+        abstract
+        onLayout(changed:boolean, l:number, t:number, r:number, b:number);
+
         getChildVisibleRect(child:View, r:Rect, offset:Point):boolean{
             // It doesn't make a whole lot of sense to call this on a view that isn't attached,
             // but for some simple tests it can be useful. If we don't have attach info this
@@ -1558,20 +1826,27 @@ module android.view {
             return null;
         }
 
-        requestTransparentRegion(child:android.view.View) {
-        }
+        findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View {
+            if (predicate.apply(this)) {
+                return this;
+            }
 
-        requestChildFocus(child:android.view.View, focused:android.view.View) {
-        }
+            const where = this.mChildren;
+            const len = this.mChildrenCount;
 
-        clearChildFocus(child:android.view.View) {
-        }
+            for (let i = 0; i < len; i++) {
+                let v = where[i];
 
-        focusSearch(v:android.view.View, direction:number):android.view.View {
-            return undefined;
-        }
+                if (v != childToSkip && (v.mPrivateFlags & View.PFLAG_IS_ROOT_NAMESPACE) == 0) {
+                    v = v.findViewByPredicate(predicate);
 
-        focusableViewAvailable(v:android.view.View) {
+                    if (v != null) {
+                        return v;
+                    }
+                }
+            }
+
+            return null;
         }
 
         requestDisallowInterceptTouchEvent(disallowIntercept:boolean) {
@@ -1591,14 +1866,6 @@ module android.view {
                 this.mParent.requestDisallowInterceptTouchEvent(disallowIntercept);
             }
         }
-
-        requestChildRectangleOnScreen(child:android.view.View, rectangle:android.graphics.Rect, immediate:boolean):boolean {
-            return undefined;
-        }
-
-        childHasTransientStateChanged(child:android.view.View, hasTransientState:boolean) {
-        }
-
         shouldDelayChildPressedState():boolean {
             return true;
         }

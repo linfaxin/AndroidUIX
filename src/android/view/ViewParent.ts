@@ -187,8 +187,7 @@ module android.view{
          * false otherwise
          * @return Whether the group scrolled to handle the operation
          */
-        //requestChildRectangleOnScreen(child:View, rectangle:Rect,
-        //                                  immediate:boolean):boolean
+        requestChildRectangleOnScreen(child:View, rectangle:Rect, immediate:boolean):boolean
         /**
          * Called when a child view now has or no longer is tracking transient state.
          *

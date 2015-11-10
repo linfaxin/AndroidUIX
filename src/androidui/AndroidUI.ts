@@ -19,7 +19,7 @@ module androidui {
     import MotionEvent = android.view.MotionEvent;
     import KeyEvent = android.view.KeyEvent;
 
-    let AndroidIDCreator = 0;
+    let sNextAndroidID = 0;
 
     export class AndroidUI {
         static DomClassName = 'AndroidUI';
@@ -34,6 +34,7 @@ module androidui {
         private rootResourceElement:Element;
 
         private _windowBound = new android.graphics.Rect();
+        private tempRect = new android.graphics.Rect();
         get windowBound():android.graphics.Rect{
             return this._windowBound;
         }
@@ -52,13 +53,13 @@ module androidui {
 
 
         private init() {
-            this.AndroidID = AndroidIDCreator++;
+            this.AndroidID = sNextAndroidID++;
             this.element.classList.add(AndroidUI.DomClassName);
             this.element.classList.add('id-'+this.AndroidID);
 
             this._viewRootImpl = new ViewRootImpl();
             this._viewRootImpl.rootElement = this.element;
-            this._rootLayout = new RootLayout(this);
+            this._rootLayout = new RootLayout();
             this._canvas = document.createElement("canvas");
 
             this.initInflateView();
@@ -148,25 +149,25 @@ module androidui {
                 this.element.focus();
 
                 this.motionEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchmove', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(<any>e, MotionEvent.ACTION_MOVE, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchend', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(<any>e, MotionEvent.ACTION_UP, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchcancel', (e)=> {
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(<any>e, MotionEvent.ACTION_CANCEL, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
         }
 
@@ -200,7 +201,7 @@ module androidui {
                 this.element.focus();
 
                 this.motionEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
 
             this.element.addEventListener('mousemove', (e)=> {
@@ -208,7 +209,7 @@ module androidui {
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
 
             this.element.addEventListener('mouseup', (e)=> {
@@ -216,7 +217,7 @@ module androidui {
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
 
             this.element.addEventListener('mouseleave', (e)=> {
@@ -225,7 +226,7 @@ module androidui {
                     e.preventDefault();
                     e.stopPropagation();
                     this.motionEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
-                    this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                    this._viewRootImpl.dispatchInputEvent(this.motionEvent);
                 }
             }, true);
 
@@ -234,16 +235,14 @@ module androidui {
         private initKeyEvent(){
             this.element.addEventListener('keydown', (e:KeyboardEvent)=> {
                 this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_DOWN);
-                let focus = this._rootLayout.findFocus();
-                if(focus && focus.dispatchKeyEvent(this.ketEvent)){
+                if(this._viewRootImpl.dispatchInputEvent(this.ketEvent)){
                     e.preventDefault();
                     e.stopPropagation();
                 }
             }, true);
             this.element.addEventListener('keyup', (e:KeyboardEvent)=> {
                 this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_UP);
-                let focus = this._rootLayout.findFocus();
-                if(focus && focus.dispatchKeyEvent(this.ketEvent)){
+                if(this._viewRootImpl.dispatchInputEvent(this.ketEvent)){
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -251,6 +250,7 @@ module androidui {
 
         }
         private initGenericEvent(){
+            //FIXME convert to MotionEvent
             this.element.addEventListener('mousewheel', (e:MouseWheelEvent)=> {
                 let focus = this._rootLayout.findFocus();
                 if(focus && focus.dispatchGenericMotionEvent(e)){
@@ -282,15 +282,15 @@ module androidui {
         notifySizeChange(){
             this.refreshWindowBound();
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            this._viewRootImpl.mWinFrame.set(this._windowBound.left* density, this._windowBound.top* density,
+            this.tempRect.set(this._windowBound.left* density, this._windowBound.top* density,
                 this._windowBound.right * density, this._windowBound.bottom * density);
+            this._viewRootImpl.dispatchResized(this.tempRect);
             let width = this._windowBound.width();
             let height = this._windowBound.height();
             this._canvas.width = width * density;
             this._canvas.height = height * density;
             this._canvas.style.width = width + "px";
             this._canvas.style.height = height + "px";
-            this._viewRootImpl.requestLayout();
         }
 
         setContentView(view:View){
@@ -335,18 +335,5 @@ module androidui {
     document.head.appendChild(styleElement);
 
     class RootLayout extends FrameLayout{
-        AndroidUI_this : AndroidUI;
-        constructor(ui:AndroidUI){
-            super();
-            this.AndroidUI_this = ui;
-        }
-
-        dispatchTouchEvent(ev:android.view.MotionEvent):boolean {
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            let offsetX = -this.AndroidUI_this.windowBound.left * density;
-            let offsetY = -this.AndroidUI_this.windowBound.top * density;
-            ev.offsetLocation(offsetX, offsetY);
-            return super.dispatchTouchEvent(ev);
-        }
     }
 }

@@ -193,8 +193,8 @@ module android.support.v4.view {
 
         private initViewPager() {
             this.setWillNotDraw(false)
-            //this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-            //this.setFocusable(true);//TODO todo when focus impl
+            this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+            this.setFocusable(true);
             //let context = getContext()
             this.mScroller = new OverScroller(ViewPager.sInterpolator)
             //let configuration = ViewConfiguration.get(context)
@@ -2317,8 +2317,7 @@ module android.support.v4.view {
 
             let handled = false;
 
-            //TODO when FocusFinder impl
-            let nextFocused = null;//FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
+            let nextFocused = android.view.FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
             if (nextFocused != null && nextFocused != currentFocused) {
                 if (direction == View.FOCUS_LEFT) {
                     // If there is nothing to the left, or this is causing us to
@@ -2415,7 +2414,33 @@ module android.support.v4.view {
             }
         }
 
-        //TODO onRequestFocusInDescendants when focus ok
+        onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
+            let index;
+            let increment;
+            let end;
+            let count = this.getChildCount();
+            if ((direction & View.FOCUS_FORWARD) != 0) {
+                index = 0;
+                increment = 1;
+                end = count;
+            } else {
+                index = count - 1;
+                increment = -1;
+                end = -1;
+            }
+            for (let i = index; i != end; i += increment) {
+                let child = this.getChildAt(i);
+                if (child.getVisibility() == View.VISIBLE) {
+                    let ii = this.infoForChild(child);
+                    if (ii != null && ii.position == this.mCurItem) {
+                        if (child.requestFocus(direction, previouslyFocusedRect)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
 
 
         generateDefaultLayoutParams():android.view.ViewGroup.LayoutParams {

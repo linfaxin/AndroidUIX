@@ -76,7 +76,7 @@ module android.view {
 
 
     export class View implements Drawable.Callback, KeyEvent.Callback{
-        private static DBG = Log.View_DBG;
+        static DBG = Log.View_DBG;
         static VIEW_LOG_TAG = "View";
 
         static PFLAG_WANTS_FOCUS                   = 0x00000001;
@@ -114,6 +114,7 @@ module android.view {
         static PFLAG_INVALIDATED                   = 0x80000000;
 
         static PFLAG2_VIEW_QUICK_REJECTED = 0x10000000;
+        static PFLAG2_HAS_TRANSIENT_STATE = 0x80000000;
 
         static PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x1;
         static PFLAG3_VIEW_IS_ANIMATING_ALPHA = 0x2;
@@ -224,6 +225,13 @@ module android.view {
         static LAYER_TYPE_NONE = 0;
         static LAYER_TYPE_SOFTWARE = 1;
 
+        get mID():string{
+            if(this._bindElement){
+                let id = this._bindElement.id;
+                return id ? id : null;
+            }
+            return null;
+        }
         mPrivateFlags = 0;
         private mPrivateFlags2 = 0;
         private mPrivateFlags3 = 0;
@@ -235,6 +243,12 @@ module android.view {
         private mBackgroundSizeChanged=false;
         private mScrollCache:ScrollabilityCache;
         private mDrawableState:Array<number>;
+
+        private mNextFocusLeftId:string;
+        private mNextFocusRightId:string;
+        private mNextFocusUpId:string;
+        private mNextFocusDownId:string;
+        mNextFocusForwardId:string;
 
         private mPendingCheckForLongPress:CheckForLongPress;
         private mPendingCheckForTap:CheckForTap;
@@ -261,10 +275,12 @@ module android.view {
 
         private mOverlay:ViewOverlay;
         private mWindowAttachCount=0;
+        private mTransientStateCount = 0;
         private mListenerInfo:View.ListenerInfo;
 
         private mClipBounds:Rect;
         private mLastIsOpaque = false;
+        private mMatchIdPredicate : MatchIdPredicate;
 
         private _mLeft = 0;
         private _mRight = 0;
@@ -286,6 +302,8 @@ module android.view {
         get mScrollY():number{return this._mScrollY;}
         set mScrollY(value:number){this._mScrollY = Math.floor(value);}
 
+
+
         mPaddingLeft = 0;
         mPaddingRight = 0;
         mPaddingTop = 0;
@@ -293,7 +311,7 @@ module android.view {
 
         constructor(){
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
-            this.initializeScrollbars();
+            this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
         }
 
         //parse xml attr & callback when xml attr change
@@ -402,7 +420,7 @@ module android.view {
                 set tag(value){
                 },
                 set id(value){
-                    view.bindElement.id = value;
+                    view.setId(value);
                 },
                 set focusable(value){
                     if(View.AttrChangeHandler.parseBoolean(value, false)){
@@ -484,10 +502,6 @@ module android.view {
                 },
             });
             mergeHandler.isCallSuper = true;
-        }
-
-        getId():string{
-            return this.bindElement.id;
         }
 
         getWidth():number {
@@ -912,22 +926,21 @@ module android.view {
             }
             let privateFlags = this.mPrivateFlags;
 
-            /* TODO Check if the FOCUSABLE bit has changed */
-            //if (((changed & FOCUSABLE_MASK) != 0) &&
-            //    ((privateFlags & PFLAG_HAS_BOUNDS) !=0)) {
-            //    if (((old & FOCUSABLE_MASK) == FOCUSABLE)
-            //        && ((privateFlags & PFLAG_FOCUSED) != 0)) {
-            //        /* Give up focus if we are no longer focusable */
-            //        clearFocus();
-            //    } else if (((old & FOCUSABLE_MASK) == NOT_FOCUSABLE)
-            //        && ((privateFlags & PFLAG_FOCUSED) == 0)) {
-            //        /*
-            //         * Tell the view system that we are now available to take focus
-            //         * if no one else already has it.
-            //         */
-            //        if (mParent != null) mParent.focusableViewAvailable(this);
-            //    }
-            //}
+            if (((changed & View.FOCUSABLE_MASK) != 0) &&
+                ((privateFlags & View.PFLAG_HAS_BOUNDS) !=0)) {
+                if (((old & View.FOCUSABLE_MASK) == View.FOCUSABLE)
+                    && ((privateFlags & View.PFLAG_FOCUSED) != 0)) {
+                    /* Give up focus if we are no longer focusable */
+                    this.clearFocus();
+                } else if (((old & View.FOCUSABLE_MASK) == View.NOT_FOCUSABLE)
+                    && ((privateFlags & View.PFLAG_FOCUSED) == 0)) {
+                    /*
+                     * Tell the view system that we are now available to take focus
+                     * if no one else already has it.
+                     */
+                    if (this.mParent != null) this.mParent.focusableViewAvailable(this);
+                }
+            }
 
             const newVisibility = flags & View.VISIBILITY_MASK;
             if (newVisibility == View.VISIBLE) {
@@ -1007,18 +1020,7 @@ module android.view {
                     this.mParent.invalidateChild(this, null);
                 }
                 this.dispatchVisibilityChanged(this, newVisibility);
-
-                if(newVisibility === View.VISIBLE){
-                    this.bindElement.style.display = '';
-                    this.bindElement.style.visibility = '';
-
-                }else if(newVisibility === View.INVISIBLE){
-                    this.bindElement.style.display = '';
-                    this.bindElement.style.visibility = 'hidden';
-                }else{
-                    this.bindElement.style.display = 'none';
-                    this.bindElement.style.visibility = '';
-                }
+                this.syncVisibleToElement();
             }
 
             if ((changed & View.WILL_NOT_CACHE_DRAWING) != 0) {
@@ -1099,32 +1101,324 @@ module android.view {
             }
         }
 
+        onFocusLost() {
+            this.resetPressedState();
+        }
+        resetPressedState() {
+            if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
+                return;
+            }
 
+            if (this.isPressed()) {
+                this.setPressed(false);
+
+                if (!this.mHasPerformedLongPress) {
+                    this.removeLongPressCallback();
+                }
+            }
+        }
+        isFocused():boolean {
+            return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
+        }
+        findFocus():View {
+            return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0 ? this : null;
+        }
+        getNextFocusLeftId():string {
+            return this.mNextFocusLeftId;
+        }
+        setNextFocusLeftId(nextFocusLeftId:string) {
+            this.mNextFocusLeftId = nextFocusLeftId;
+        }
+        getNextFocusRightId():string {
+            return this.mNextFocusRightId;
+        }
+        setNextFocusRightId(nextFocusRightId:string) {
+            this.mNextFocusRightId = nextFocusRightId;
+        }
+        getNextFocusUpId():string {
+            return this.mNextFocusUpId;
+        }
+        setNextFocusUpId(nextFocusUpId:string) {
+            this.mNextFocusUpId = nextFocusUpId;
+        }
+        getNextFocusDownId():string {
+            return this.mNextFocusDownId;
+        }
+        setNextFocusDownId(nextFocusDownId:string) {
+            this.mNextFocusDownId = nextFocusDownId;
+        }
+        getNextFocusForwardId():string {
+            return this.mNextFocusForwardId;
+        }
+        setNextFocusForwardId(nextFocusForwardId:string) {
+            this.mNextFocusForwardId = nextFocusForwardId;
+        }
+        setFocusable(focusable:boolean) {
+            if (!focusable) {
+                this.setFlags(0, View.FOCUSABLE_IN_TOUCH_MODE);
+            }
+            this.setFlags(focusable ? View.FOCUSABLE : View.NOT_FOCUSABLE, View.FOCUSABLE_MASK);
+        }
         isFocusable():boolean {
             return View.FOCUSABLE == (this.mViewFlags & View.FOCUSABLE_MASK);
         }
+        setFocusableInTouchMode(focusableInTouchMode:boolean) {
+            // Focusable in touch mode should always be set before the focusable flag
+            // otherwise, setting the focusable flag will trigger a focusableViewAvailable()
+            // which, in touch mode, will not successfully request focus on this view
+            // because the focusable in touch mode flag is not set
+            this.setFlags(focusableInTouchMode ? View.FOCUSABLE_IN_TOUCH_MODE : 0, View.FOCUSABLE_IN_TOUCH_MODE);
+            if (focusableInTouchMode) {
+                this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+            }
+        }
         isFocusableInTouchMode():boolean {
             return View.FOCUSABLE_IN_TOUCH_MODE == (this.mViewFlags & View.FOCUSABLE_IN_TOUCH_MODE);
-        }
-        hasFocus():boolean{
-            return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
         }
         hasFocusable():boolean {
             return (this.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE && this.isFocusable();
         }
         clearFocus() {
-            //TODO impl focus
+            if (View.DBG) {
+                System.out.println(this + " clearFocus()");
+            }
+            this.clearFocusInternal(true, true);
         }
-        requestFocus(direction=View.FOCUS_DOWN, previouslyFocusedRect=null){
-            //TODO impl focus
+        clearFocusInternal(propagate:boolean, refocus:boolean) {
+            if ((this.mPrivateFlags & View.PFLAG_FOCUSED) != 0) {
+                this.mPrivateFlags &= ~View.PFLAG_FOCUSED;
+
+                if (propagate && this.mParent != null) {
+                    this.mParent.clearChildFocus(this);
+                }
+
+                this.onFocusChanged(false, 0, null);
+
+                this.refreshDrawableState();
+
+                if (propagate && (!refocus || !this.rootViewRequestFocus())) {
+                    this.notifyGlobalFocusCleared(this);
+                }
+            }
         }
-        findFocus():View {
-            return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0 ? this : null;
+        notifyGlobalFocusCleared(oldFocus:View) {
+            if (oldFocus != null && this.mAttachInfo != null) {
+                this.mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, null);
+            }
         }
-        isFocused():boolean {
+        rootViewRequestFocus() {
+            const root = this.getRootView();
+            return root != null && root.requestFocus();
+        }
+        unFocus() {
+            if (View.DBG) {
+                System.out.println(this + " unFocus()");
+            }
+            this.clearFocusInternal(false, false);
+        }
+        hasFocus():boolean{
             return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
         }
+        onFocusChanged(gainFocus:boolean, direction:number, previouslyFocusedRect:Rect) {
+            if (!gainFocus) {
+                if (this.isPressed()) {
+                    this.setPressed(false);
+                }
+                this.onFocusLost();
+            }
+            this.invalidate(true);
+            let li = this.mListenerInfo;
+            if (li != null && li.mOnFocusChangeListener != null) {
+                li.mOnFocusChangeListener.onFocusChange(this, gainFocus);
+            }
 
+            if (this.mAttachInfo != null) {
+                this.mAttachInfo.mKeyDispatchState.reset(this);
+            }
+        }
+
+        focusSearchView(direction:number):View {
+            if (this.mParent != null) {
+                return this.mParent.focusSearch(this, direction);
+            } else {
+                return null;
+            }
+        }
+        dispatchUnhandledMove(focused:View, direction:number):boolean {
+            return false;
+        }
+        findUserSetNextFocus(root:View, direction:number):View {
+            switch (direction) {
+                case View.FOCUS_LEFT:
+                    if (!this.mNextFocusLeftId) return null;
+                    return this.findViewInsideOutShouldExist(root, this.mNextFocusLeftId);
+                case View.FOCUS_RIGHT:
+                    if (!this.mNextFocusRightId) return null;
+                    return this.findViewInsideOutShouldExist(root, this.mNextFocusRightId);
+                case View.FOCUS_UP:
+                    if (!this.mNextFocusUpId) return null;
+                    return this.findViewInsideOutShouldExist(root, this.mNextFocusUpId);
+                case View.FOCUS_DOWN:
+                    if (!this.mNextFocusDownId) return null;
+                    return this.findViewInsideOutShouldExist(root, this.mNextFocusDownId);
+                case View.FOCUS_FORWARD:
+                    if (!this.mNextFocusForwardId) return null;
+                    return this.findViewInsideOutShouldExist(root, this.mNextFocusForwardId);
+                case View.FOCUS_BACKWARD: {
+                    if (!this.mID) return null;
+                    let id = this.mID;
+                    return root.findViewByPredicateInsideOut(this, {
+                        apply(t:View):boolean {
+                            return t.mNextFocusForwardId == id;
+                        }
+                    });
+                }
+            }
+            return null;
+        }
+        private findViewInsideOutShouldExist(root:View, id:string):View {
+            if (this.mMatchIdPredicate == null) {
+                this.mMatchIdPredicate = new MatchIdPredicate();
+            }
+            this.mMatchIdPredicate.mId = id;
+            let result = root.findViewByPredicateInsideOut(this, this.mMatchIdPredicate);
+            if (result == null) {
+                Log.w(View.VIEW_LOG_TAG, "couldn't find view with id " + id);
+            }
+            return result;
+        }
+
+        getFocusables(direction:number):ArrayList<View> {
+            let result = new ArrayList<View>(24);
+            this.addFocusables(result, direction);
+            return result;
+        }
+        addFocusables(views:ArrayList<View>, direction:number, focusableMode=View.FOCUSABLES_TOUCH_MODE):void {
+            if (views == null) {
+                return;
+            }
+            if (!this.isFocusable()) {
+                return;
+            }
+            if ((focusableMode & View.FOCUSABLES_TOUCH_MODE) == View.FOCUSABLES_TOUCH_MODE
+                && this.isInTouchMode() && !this.isFocusableInTouchMode()) {
+                return;
+            }
+            views.add(this);
+        }
+        setOnFocusChangeListener(l:View.OnFocusChangeListener) {
+            this.getListenerInfo().mOnFocusChangeListener = l;
+        }
+        getOnFocusChangeListener():View.OnFocusChangeListener {
+            let li = this.mListenerInfo;
+            return li != null ? li.mOnFocusChangeListener : null;
+        }
+
+
+        requestFocus(direction=View.FOCUS_DOWN, previouslyFocusedRect=null):boolean{
+            return this.requestFocusNoSearch(direction, previouslyFocusedRect);
+        }
+
+        private requestFocusNoSearch(direction:number, previouslyFocusedRect:Rect):boolean {
+            // need to be focusable
+            if ((this.mViewFlags & View.FOCUSABLE_MASK) != View.FOCUSABLE ||
+                (this.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE) {
+                return false;
+            }
+
+            // need to be focusable in touch mode if in touch mode
+            if (this.isInTouchMode() &&
+                (View.FOCUSABLE_IN_TOUCH_MODE != (this.mViewFlags & View.FOCUSABLE_IN_TOUCH_MODE))) {
+                return false;
+            }
+
+            // need to not have any parents blocking us
+            if (this.hasAncestorThatBlocksDescendantFocus()) {
+                return false;
+            }
+
+            this.handleFocusGainInternal(direction, previouslyFocusedRect);
+            return true;
+        }
+        private hasAncestorThatBlocksDescendantFocus():boolean {
+            let ancestor = this.mParent;
+            while (ancestor instanceof ViewGroup) {
+                const vgAncestor = <ViewGroup>ancestor;
+                if (vgAncestor.getDescendantFocusability() == ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                    return true;
+                } else {
+                    ancestor = vgAncestor.getParent();
+                }
+            }
+            return false;
+        }
+        handleFocusGainInternal(direction:number, previouslyFocusedRect:Rect) {
+            if (View.DBG) {
+                System.out.println(this + " requestFocus()");
+            }
+
+            if ((this.mPrivateFlags & View.PFLAG_FOCUSED) == 0) {
+                this.mPrivateFlags |= View.PFLAG_FOCUSED;
+
+                let oldFocus = (this.mAttachInfo != null) ? this.getRootView().findFocus() : null;
+
+                if (this.mParent != null) {
+                    this.mParent.requestChildFocus(this, this);
+                }
+
+                if (this.mAttachInfo != null) {
+                    this.mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, this);
+                }
+
+                this.onFocusChanged(true, direction, previouslyFocusedRect);
+                this.refreshDrawableState();
+            }
+        }
+        hasTransientState():boolean {
+            return (this.mPrivateFlags2 & View.PFLAG2_HAS_TRANSIENT_STATE) == View.PFLAG2_HAS_TRANSIENT_STATE;
+        }
+        setHasTransientState(hasTransientState:boolean) {
+            this.mTransientStateCount = hasTransientState ? this.mTransientStateCount + 1 :
+            this.mTransientStateCount - 1;
+            if (this.mTransientStateCount < 0) {
+                this.mTransientStateCount = 0;
+                Log.e(View.VIEW_LOG_TAG, "hasTransientState decremented below 0: " +
+                    "unmatched pair of setHasTransientState calls");
+            } else if ((hasTransientState && this.mTransientStateCount == 1) ||
+                (!hasTransientState && this.mTransientStateCount == 0)) {
+                // update flag if we've just incremented up from 0 or decremented down to 0
+                this.mPrivateFlags2 = (this.mPrivateFlags2 & ~View.PFLAG2_HAS_TRANSIENT_STATE) |
+                    (hasTransientState ? View.PFLAG2_HAS_TRANSIENT_STATE : 0);
+                if (this.mParent != null) {
+                    this.mParent.childHasTransientStateChanged(this, hasTransientState);
+                }
+            }
+        }
+
+
+        isInTouchMode():boolean{
+            return this.mAttachInfo.mInTouchMode;
+        }
+
+        isShown():boolean {
+            let current = this;
+            //noinspection ConstantConditions
+            do {
+                if ((current.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE) {
+                    return false;
+                }
+                let parent = current.mParent;
+                if (parent == null) {
+                    return false; // We are not attached to the view root
+                }
+                if (!(parent instanceof View)) {
+                    return true;
+                }
+                current = <View><any>parent;
+            } while (current != null);
+
+            return false;
+        }
         getVisibility():number {
             return this.mViewFlags & View.VISIBILITY_MASK;
         }
@@ -1177,19 +1471,6 @@ module android.view {
             //if (!enabled) {
             //    cancelPendingInputEvents();
             //}
-        }
-        resetPressedState() {
-            if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
-                return;
-            }
-
-            if (this.isPressed()) {
-                this.setPressed(false);
-
-                if (!this.mHasPerformedLongPress) {
-                    this.removeLongPressCallback();
-                }
-            }
         }
 
         dispatchGenericMotionEvent(event:Event){
@@ -1813,6 +2094,9 @@ module android.view {
                 this.mOverlay.getOverlayView().setRight(newWidth);
                 this.mOverlay.getOverlayView().setBottom(newHeight);
             }
+        }
+        getFocusedRect(r:Rect) {
+            this.getDrawingRect(r);
         }
         getDrawingRect(outRect:Rect) {
             outRect.left = this.mScrollX;
@@ -2907,6 +3191,7 @@ module android.view {
             return this.mScrollCache != null &&
                 this.awakenScrollBars(this.mScrollCache.scrollBarDefaultDelayBeforeFade * 4, true);
         }
+
         awakenScrollBars(startDelay=this.mScrollCache.scrollBarDefaultDelayBeforeFade, invalidate=true):boolean{
             const scrollCache = this.mScrollCache;
 
@@ -2990,26 +3275,8 @@ module android.view {
             }
             return 0;
         }
-        private initializeScrollbars(){
-            this.initScrollCache();
-            const scrollabilityCache = this.mScrollCache;
-            if (scrollabilityCache.scrollBar == null) {
-                scrollabilityCache.scrollBar = new ScrollBarDrawable();
-            }
-            scrollabilityCache.fadeScrollBars = true;
 
-            let track = null;//new ColorDrawable(Color.LTGRAY);//no track
-            scrollabilityCache.scrollBar.setHorizontalTrackDrawable(track);
-
-            let thumbColor = new ColorDrawable(0x44000000);
-            let density = Resources.getDisplayMetrics().density;
-            let thumb = new InsetDrawable(thumbColor, 0, 2*density, ViewConfiguration.get().getScaledScrollBarSize()/2, 2*density);
-            scrollabilityCache.scrollBar.setHorizontalThumbDrawable(thumb);
-            scrollabilityCache.scrollBar.setVerticalTrackDrawable(track);
-            scrollabilityCache.scrollBar.setVerticalThumbDrawable(thumb);
-        }
-
-        private initScrollCache() {
+        initScrollCache() {
             if (this.mScrollCache == null) {
                 this.mScrollCache = new ScrollabilityCache(this);
             }
@@ -3237,6 +3504,12 @@ module android.view {
 
             return parent;
         }
+        findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View {
+            if (predicate.apply(this)) {
+                return this;
+            }
+            return null;
+        }
         findViewById(id:string):View{
             if (id == this.bindElement.id) {
                 return this;
@@ -3244,6 +3517,43 @@ module android.view {
             let bindEle = this.bindElement.querySelector('#'+id);
             return bindEle ? bindEle[View.AndroidViewProperty] : null;
         }
+        findViewByPredicate(predicate:View.Predicate<View>) {
+            return this.findViewByPredicateTraversal(predicate, null);
+        }
+        findViewByPredicateInsideOut(start:View, predicate:View.Predicate<View>) {
+            let childToSkip = null;
+            for (;;) {
+                let view = start.findViewByPredicateTraversal(predicate, childToSkip);
+                if (view != null || start == this) {
+                    return view;
+                }
+
+                let parent = start.getParent();
+                if (parent == null || !(parent instanceof View)) {
+                    return null;
+                }
+
+                childToSkip = start;
+                start = <View><any>parent;
+            }
+        }
+        setId(id:string) {
+            if(this._bindElement) this._bindElement.id = id;
+        }
+        getId():string {
+            return this.mID;
+        }
+        setIsRootNamespace(isRoot:boolean) {
+            if (isRoot) {
+                this.mPrivateFlags |= View.PFLAG_IS_ROOT_NAMESPACE;
+            } else {
+                this.mPrivateFlags &= ~View.PFLAG_IS_ROOT_NAMESPACE;
+            }
+        }
+        isRootNamespace():boolean {
+            return (this.mPrivateFlags&View.PFLAG_IS_ROOT_NAMESPACE) != 0;
+        }
+
         static inflate(eleOrRef:HTMLElement|string, rootElement:HTMLElement, viewParent?:ViewGroup):View{
             let domtree : HTMLElement;
             if(typeof eleOrRef === "string"){
@@ -3288,10 +3598,11 @@ module android.view {
             rootView._initAttrObserver();
 
             if(rootView instanceof ViewGroup){
+                let parent = <ViewGroup><any>rootView;
                 Array.from(domtree.children).forEach((item)=>{
                     if(item instanceof HTMLElement){
-                        let view = View.inflate(item, rootElement, rootView);
-                        if(view) rootView.addView(view);
+                        let view = View.inflate(item, rootElement, parent);
+                        if(view) parent.addView(view);
                     }
                 });
             }
@@ -3398,7 +3709,7 @@ module android.view {
             let sx = this.mScrollX;
             let sy = this.mScrollY;
             if(this instanceof ViewGroup){
-                let group = <ViewGroup>this;
+                let group = <ViewGroup><any>this;
                 for (let i = 0, count=group.getChildCount(); i < count; i++) {
                     let child = group.getChildAt(i);
                     let item = child.bindElement;
@@ -3416,6 +3727,20 @@ module android.view {
                     //if(sy!==0) item.style.marginTop = -sy+'px';
                     //else item.style.marginTop = "";
                 }
+            }
+        }
+        syncVisibleToElement(){
+            let visibility = this.getVisibility();
+            if(visibility === View.VISIBLE){
+                this.bindElement.style.display = '';
+                this.bindElement.style.visibility = '';
+
+            }else if(visibility === View.INVISIBLE){
+                this.bindElement.style.display = '';
+                this.bindElement.style.visibility = 'hidden';
+            }else{
+                this.bindElement.style.display = 'none';
+                this.bindElement.style.visibility = '';
             }
         }
 
@@ -3588,7 +3913,9 @@ module android.view {
             mInvalidateChildLocation = new Array<number>(2);
             mIgnoreDirtyState = false;
             mSetIgnoreDirtyState = false;
+            mHasWindowFocus = false;
             mWindowVisibility = 0;
+            mInTouchMode = false;
 
             constructor(mViewRootImpl:ViewRootImpl, mHandler:Handler) {
                 this.mViewRootImpl = mViewRootImpl;
@@ -3598,6 +3925,7 @@ module android.view {
         }
 
         export class ListenerInfo{
+            mOnFocusChangeListener:OnFocusChangeListener;
             mOnAttachStateChangeListeners:CopyOnWriteArrayList<OnAttachStateChangeListener>;
             mOnLayoutChangeListeners:ArrayList<OnLayoutChangeListener>;
             mOnClickListener:OnClickListener;
@@ -3622,6 +3950,9 @@ module android.view {
         export interface OnLongClickListener{
             onLongClick(v:View):boolean;
         }
+        export interface OnFocusChangeListener{
+            onFocusChange(v:View, hasFocus:boolean);
+        }
         export interface OnTouchListener{
             onTouch(v:View, event:MotionEvent);
         }
@@ -3632,6 +3963,9 @@ module android.view {
             onGenericMotion(v:View, event:Event);
         }
 
+        export interface Predicate<T>{
+            apply(t:T):boolean;
+        }
         /**
          * handle html element attribute change and parse the value to view
          */
@@ -3903,6 +4237,20 @@ module android.view {
 
         constructor(host:View){
             this.host = host;
+
+            this.scrollBar = new ScrollBarDrawable();
+
+
+            //no track
+            //let track = null;
+            //this.scrollBar.setHorizontalTrackDrawable(track);
+            //this.scrollBar.setVerticalTrackDrawable(track);
+
+            let thumbColor = new ColorDrawable(0x44000000);
+            let density = Resources.getDisplayMetrics().density;
+            let thumb = new InsetDrawable(thumbColor, 0, 2*density, ViewConfiguration.get().getScaledScrollBarSize()/2, 2*density);
+            this.scrollBar.setHorizontalThumbDrawable(thumb);
+            this.scrollBar.setVerticalThumbDrawable(thumb);
         }
 
         run() {
@@ -3928,5 +4276,11 @@ module android.view {
             this.scrollBar.setAlpha(255 * alpha);
         }
 
+    }
+    class MatchIdPredicate implements View.Predicate<View>{
+        mId:string;
+        apply(view:View):boolean {
+            return view.mID === this.mId;
+        }
     }
 }
