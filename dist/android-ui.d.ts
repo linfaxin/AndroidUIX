@@ -443,6 +443,8 @@ declare module android.util {
 declare module android.view {
     class ViewTreeObserver {
         private mOnWindowAttachListeners;
+        private mOnGlobalFocusListeners;
+        private mOnTouchModeChangeListeners;
         private mOnGlobalLayoutListeners;
         private mOnScrollChangedListeners;
         private mOnPreDrawListeners;
@@ -455,9 +457,15 @@ declare module android.view {
         removeGlobalOnLayoutListener(victim: ViewTreeObserver.OnGlobalLayoutListener): void;
         removeOnGlobalLayoutListener(victim: ViewTreeObserver.OnGlobalLayoutListener): void;
         dispatchOnGlobalLayout(): void;
+        addOnGlobalFocusChangeListener(listener: ViewTreeObserver.OnGlobalFocusChangeListener): void;
+        removeOnGlobalFocusChangeListener(victim: ViewTreeObserver.OnGlobalFocusChangeListener): void;
+        dispatchOnGlobalFocusChange(oldFocus: android.view.View, newFocus: android.view.View): void;
         addOnPreDrawListener(listener: ViewTreeObserver.OnPreDrawListener): void;
         removeOnPreDrawListener(victim: ViewTreeObserver.OnPreDrawListener): void;
         dispatchOnPreDraw(): boolean;
+        addOnTouchModeChangeListener(listener: ViewTreeObserver.OnTouchModeChangeListener): void;
+        removeOnTouchModeChangeListener(victim: ViewTreeObserver.OnTouchModeChangeListener): void;
+        dispatchOnTouchModeChanged(inTouchMode: boolean): void;
         addOnScrollChangedListener(listener: ViewTreeObserver.OnScrollChangedListener): void;
         removeOnScrollChangedListener(victim: ViewTreeObserver.OnScrollChangedListener): void;
         dispatchOnScrollChanged(): void;
@@ -474,6 +482,9 @@ declare module android.view {
             onWindowAttached(): any;
             onWindowDetached(): any;
         }
+        interface OnGlobalFocusChangeListener {
+            onGlobalFocusChanged(oldFocus: android.view.View, newFocus: android.view.View): any;
+        }
         interface OnGlobalLayoutListener {
             onGlobalLayout(): any;
         }
@@ -485,6 +496,9 @@ declare module android.view {
         }
         interface OnScrollChangedListener {
             onScrollChanged(): any;
+        }
+        interface OnTouchModeChangeListener {
+            onTouchModeChanged(isInTouchMode: boolean): any;
         }
     }
 }
@@ -870,6 +884,10 @@ declare module android.view {
         static KEYCODE_TAB: number;
         static KEYCODE_SPACE: number;
         static KEYCODE_ESCAPE: number;
+        static KEYCODE_PAGE_UP: number;
+        static KEYCODE_PAGE_DOWN: number;
+        static KEYCODE_MOVE_HOME: number;
+        static KEYCODE_MOVE_END: number;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
         static FLAG_CANCELED: number;
@@ -932,7 +950,7 @@ declare module android.view {
     import ColorStateList = android.content.res.ColorStateList;
     import KeyEvent = android.view.KeyEvent;
     class View implements Drawable.Callback, KeyEvent.Callback {
-        private static DBG;
+        static DBG: boolean;
         static VIEW_LOG_TAG: string;
         static PFLAG_WANTS_FOCUS: number;
         static PFLAG_FOCUSED: number;
@@ -968,6 +986,7 @@ declare module android.view {
         static PFLAG_ACTIVATED: number;
         static PFLAG_INVALIDATED: number;
         static PFLAG2_VIEW_QUICK_REJECTED: number;
+        static PFLAG2_HAS_TRANSIENT_STATE: number;
         static PFLAG3_VIEW_IS_ANIMATING_TRANSFORM: number;
         static PFLAG3_VIEW_IS_ANIMATING_ALPHA: number;
         static PFLAG3_IS_LAID_OUT: number;
@@ -1022,6 +1041,7 @@ declare module android.view {
         static DUPLICATE_PARENT_STATE: number;
         static LAYER_TYPE_NONE: number;
         static LAYER_TYPE_SOFTWARE: number;
+        mID: string;
         mPrivateFlags: number;
         private mPrivateFlags2;
         private mPrivateFlags3;
@@ -1033,6 +1053,11 @@ declare module android.view {
         private mBackgroundSizeChanged;
         private mScrollCache;
         private mDrawableState;
+        private mNextFocusLeftId;
+        private mNextFocusRightId;
+        private mNextFocusUpId;
+        private mNextFocusDownId;
+        mNextFocusForwardId: string;
         private mPendingCheckForLongPress;
         private mPendingCheckForTap;
         private mPerformClick;
@@ -1054,9 +1079,11 @@ declare module android.view {
         mCachingFailed: boolean;
         private mOverlay;
         private mWindowAttachCount;
+        private mTransientStateCount;
         private mListenerInfo;
         private mClipBounds;
         private mLastIsOpaque;
+        private mMatchIdPredicate;
         private _mLeft;
         private _mRight;
         private _mTop;
@@ -1075,7 +1102,6 @@ declare module android.view {
         mPaddingBottom: number;
         constructor();
         createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
-        getId(): string;
         getWidth(): number;
         getHeight(): number;
         getTop(): number;
@@ -1123,14 +1149,48 @@ declare module android.view {
         onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         getTouchables(): ArrayList<View>;
         addTouchables(views: ArrayList<View>): void;
+        onFocusLost(): void;
+        resetPressedState(): void;
+        isFocused(): boolean;
+        findFocus(): View;
+        getNextFocusLeftId(): string;
+        setNextFocusLeftId(nextFocusLeftId: string): void;
+        getNextFocusRightId(): string;
+        setNextFocusRightId(nextFocusRightId: string): void;
+        getNextFocusUpId(): string;
+        setNextFocusUpId(nextFocusUpId: string): void;
+        getNextFocusDownId(): string;
+        setNextFocusDownId(nextFocusDownId: string): void;
+        getNextFocusForwardId(): string;
+        setNextFocusForwardId(nextFocusForwardId: string): void;
+        setFocusable(focusable: boolean): void;
         isFocusable(): boolean;
+        setFocusableInTouchMode(focusableInTouchMode: boolean): void;
         isFocusableInTouchMode(): boolean;
-        hasFocus(): boolean;
         hasFocusable(): boolean;
         clearFocus(): void;
-        requestFocus(direction?: number, previouslyFocusedRect?: any): void;
-        findFocus(): View;
-        isFocused(): boolean;
+        clearFocusInternal(propagate: boolean, refocus: boolean): void;
+        notifyGlobalFocusCleared(oldFocus: View): void;
+        rootViewRequestFocus(): boolean;
+        unFocus(): void;
+        hasFocus(): boolean;
+        onFocusChanged(gainFocus: boolean, direction: number, previouslyFocusedRect: Rect): void;
+        focusSearchView(direction: number): View;
+        dispatchUnhandledMove(focused: View, direction: number): boolean;
+        findUserSetNextFocus(root: View, direction: number): View;
+        private findViewInsideOutShouldExist(root, id);
+        getFocusables(direction: number): ArrayList<View>;
+        addFocusables(views: ArrayList<View>, direction: number, focusableMode?: number): void;
+        setOnFocusChangeListener(l: View.OnFocusChangeListener): void;
+        getOnFocusChangeListener(): View.OnFocusChangeListener;
+        requestFocus(direction?: number, previouslyFocusedRect?: any): boolean;
+        private requestFocusNoSearch(direction, previouslyFocusedRect);
+        private hasAncestorThatBlocksDescendantFocus();
+        handleFocusGainInternal(direction: number, previouslyFocusedRect: Rect): void;
+        hasTransientState(): boolean;
+        setHasTransientState(hasTransientState: boolean): void;
+        isInTouchMode(): boolean;
+        isShown(): boolean;
         getVisibility(): number;
         setVisibility(visibility: number): void;
         dispatchVisibilityChanged(changedView: View, visibility: number): void;
@@ -1140,7 +1200,6 @@ declare module android.view {
         getWindowVisibility(): number;
         isEnabled(): boolean;
         setEnabled(enabled: boolean): void;
-        resetPressedState(): void;
         dispatchGenericMotionEvent(event: Event): boolean;
         onGenericMotionEvent(event: Event): boolean;
         dispatchKeyEvent(event: KeyEvent): boolean;
@@ -1200,6 +1259,7 @@ declare module android.view {
         onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         setFrame(left: number, top: number, right: number, bottom: number): boolean;
         private sizeChange(newWidth, newHeight, oldWidth, oldHeight);
+        getFocusedRect(r: Rect): void;
         getDrawingRect(outRect: Rect): void;
         getMeasuredWidth(): number;
         getMeasuredWidthAndState(): number;
@@ -1291,8 +1351,7 @@ declare module android.view {
         getHorizontalFadingEdgeLength(): number;
         getVerticalScrollbarWidth(): number;
         getHorizontalScrollbarHeight(): number;
-        private initializeScrollbars();
-        private initScrollCache();
+        initScrollCache(): void;
         private getScrollCache();
         isHorizontalScrollBarEnabled(): boolean;
         setHorizontalScrollBarEnabled(horizontalScrollBarEnabled: boolean): void;
@@ -1317,7 +1376,14 @@ declare module android.view {
         debug(depth?: number): void;
         toString(): String;
         getRootView(): View;
+        findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
         findViewById(id: string): View;
+        findViewByPredicate(predicate: View.Predicate<View>): View;
+        findViewByPredicateInsideOut(start: View, predicate: View.Predicate<View>): View;
+        setId(id: string): void;
+        getId(): string;
+        setIsRootNamespace(isRoot: boolean): void;
+        isRootNamespace(): boolean;
         static inflate(eleOrRef: HTMLElement | string, rootElement: HTMLElement, viewParent?: ViewGroup): View;
         static optReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
@@ -1333,6 +1399,7 @@ declare module android.view {
         initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
         syncBoundToElement(): void;
         syncScrollToElement(): void;
+        syncVisibleToElement(): void;
         private _attrChangeHandler;
         private _initAttrChangeHandler();
         private _initAttrObserver();
@@ -1374,10 +1441,13 @@ declare module android.view {
             mInvalidateChildLocation: number[];
             mIgnoreDirtyState: boolean;
             mSetIgnoreDirtyState: boolean;
+            mHasWindowFocus: boolean;
             mWindowVisibility: number;
+            mInTouchMode: boolean;
             constructor(mViewRootImpl: ViewRootImpl, mHandler: Handler);
         }
         class ListenerInfo {
+            mOnFocusChangeListener: OnFocusChangeListener;
             mOnAttachStateChangeListeners: CopyOnWriteArrayList<OnAttachStateChangeListener>;
             mOnLayoutChangeListeners: ArrayList<OnLayoutChangeListener>;
             mOnClickListener: OnClickListener;
@@ -1399,6 +1469,9 @@ declare module android.view {
         interface OnLongClickListener {
             onLongClick(v: View): boolean;
         }
+        interface OnFocusChangeListener {
+            onFocusChange(v: View, hasFocus: boolean): any;
+        }
         interface OnTouchListener {
             onTouch(v: View, event: MotionEvent): any;
         }
@@ -1407,6 +1480,9 @@ declare module android.view {
         }
         interface OnGenericMotionListener {
             onGenericMotion(v: View, event: Event): any;
+        }
+        interface Predicate<T> {
+            apply(t: T): boolean;
         }
         class AttrChangeHandler {
             isCallSuper: boolean;
@@ -1477,6 +1553,7 @@ declare module android.view {
         focusableViewAvailable(v: View): any;
         childDrawableStateChanged(child: View): any;
         requestDisallowInterceptTouchEvent(disallowIntercept: boolean): any;
+        requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
         childHasTransientStateChanged(child: View, hasTransientState: boolean): any;
     }
 }
@@ -1511,6 +1588,7 @@ declare module android.view {
         private mView;
         rootElement: HTMLElement;
         private mViewVisibility;
+        private mStopped;
         private mWidth;
         private mHeight;
         private mDirty;
@@ -1525,12 +1603,14 @@ declare module android.view {
         private mFullRedrawNeeded;
         private mIsDrawing;
         private mAdded;
-        mWinFrame: Rect;
+        private mAddedTouchMode;
+        private mWinFrame;
         private mInLayout;
         private mLayoutRequesters;
         private mHandlingLayoutInLayoutRequest;
         private mRemoved;
         private mHandler;
+        private mFirstInputStage;
         private mFpsStartTime;
         private mFpsPrevTime;
         private mFpsNumFrames;
@@ -1570,14 +1650,28 @@ declare module android.view {
         invalidateChild(child: View, dirty: Rect): void;
         invalidateChildInParent(location: Array<number>, dirty: Rect): ViewParent;
         requestChildFocus(child: View, focused: View): void;
-        clearChildFocus(child: View): void;
+        clearChildFocus(focused: View): void;
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
-        focusSearch(v: View, direction: number): View;
+        focusSearch(focused: View, direction: number): View;
         bringChildToFront(child: View): void;
         focusableViewAvailable(v: View): void;
+        static isViewDescendantOf(child: View, parent: View): any;
         childDrawableStateChanged(child: View): void;
         requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
+        requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
         childHasTransientStateChanged(child: View, hasTransientState: boolean): void;
+        dispatchResized(frame: Rect): void;
+        dispatchInputEvent(event: MotionEvent | KeyEvent | Event): void;
+        private deliverInputEvent(event);
+        private finishInputEvent(event);
+        private checkForLeavingTouchModeAndConsume(event);
+        private static isNavigationKey(keyEvent);
+        private static isTypingKey(keyEvent);
+        ensureTouchMode(inTouchMode: boolean): boolean;
+        ensureTouchModeLocally(inTouchMode: boolean): boolean;
+        private enterTouchMode();
+        private static findAncestorToTakeFocusInTouchMode(focused);
+        private leaveTouchMode();
         private static RunQueueInstance;
         private mRunQueue;
         static getRunQueue(viewRoot?: ViewRootImpl): ViewRootImpl.RunQueue;
@@ -1593,10 +1687,48 @@ declare module android.view {
     }
 }
 declare module android.view {
+    import View = android.view.View;
+    import Rect = android.graphics.Rect;
+    class FocusFinder {
+        private static sFocusFinder;
+        static getInstance(): FocusFinder;
+        mFocusedRect: Rect;
+        mOtherRect: Rect;
+        mBestCandidateRect: Rect;
+        private mSequentialFocusComparator;
+        private mTempList;
+        findNextFocus(root: ViewGroup, focused: View, direction: number): View;
+        findNextFocusFromRect(root: ViewGroup, focusedRect: Rect, direction: number): View;
+        private _findNextFocus(root, focused, focusedRect, direction);
+        private findNextUserSpecifiedFocus(root, focused, direction);
+        private __findNextFocus(root, focused, focusedRect, direction, focusables);
+        private findNextFocusInRelativeDirection(focusables, root, focused, focusedRect, direction);
+        private setFocusBottomRight(root, focusedRect);
+        private setFocusTopLeft(root, focusedRect);
+        private findNextFocusInAbsoluteDirection(focusables, root, focused, focusedRect, direction);
+        private static getNextFocusable(focused, focusables, count);
+        private static getPreviousFocusable(focused, focusables, count);
+        isBetterCandidate(direction: number, source: Rect, rect1: Rect, rect2: Rect): boolean;
+        beamBeats(direction: number, source: Rect, rect1: Rect, rect2: Rect): boolean;
+        getWeightedDistanceFor(majorAxisDistance: number, minorAxisDistance: number): number;
+        isCandidate(srcRect: Rect, destRect: Rect, direction: number): boolean;
+        beamsOverlap(direction: number, rect1: Rect, rect2: Rect): boolean;
+        isToDirectionOf(direction: number, src: Rect, dest: Rect): boolean;
+        static majorAxisDistance(direction: number, source: Rect, dest: Rect): number;
+        static majorAxisDistanceRaw(direction: number, source: Rect, dest: Rect): number;
+        static majorAxisDistanceToFarEdge(direction: number, source: Rect, dest: Rect): number;
+        static majorAxisDistanceToFarEdgeRaw(direction: number, source: Rect, dest: Rect): number;
+        static minorAxisDistance(direction: number, source: Rect, dest: Rect): number;
+        findNearestTouchable(root: ViewGroup, x: number, y: number, direction: number, deltas: number[]): View;
+        private isTouchCandidate(x, y, destRect, direction);
+    }
+}
+declare module android.view {
     import Canvas = android.graphics.Canvas;
     import Point = android.graphics.Point;
     import Rect = android.graphics.Rect;
-    class ViewGroup extends View implements ViewParent {
+    import ArrayList = java.util.ArrayList;
+    abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN: number;
         static FLAG_CLIP_TO_PADDING: number;
         static FLAG_INVALIDATE_REQUIRED: number;
@@ -1627,6 +1759,7 @@ declare module android.view {
         static LAYOUT_MODE_DEFAULT: number;
         static CLIP_TO_PADDING_MASK: number;
         mOnHierarchyChangeListener: ViewGroup.OnHierarchyChangeListener;
+        private mFocused;
         private mFirstTouchTarget;
         private mLastTouchDownTime;
         private mLastTouchDownIndex;
@@ -1638,9 +1771,30 @@ declare module android.view {
         mChildrenCount: number;
         mSuppressLayout: boolean;
         private mLayoutCalledWhileSuppressed;
+        private mChildCountWithTransientState;
         constructor();
         createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         private initViewGroup();
+        getDescendantFocusability(): number;
+        setDescendantFocusability(focusability: number): void;
+        handleFocusGainInternal(direction: number, previouslyFocusedRect: Rect): void;
+        requestChildFocus(child: View, focused: View): void;
+        focusableViewAvailable(v: View): void;
+        focusSearch(focused: View, direction: number): View;
+        requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
+        childHasTransientStateChanged(child: View, childHasTransientState: boolean): void;
+        hasTransientState(): boolean;
+        dispatchUnhandledMove(focused: android.view.View, direction: number): boolean;
+        clearChildFocus(child: View): void;
+        clearFocus(): void;
+        unFocus(): void;
+        getFocusedChild(): View;
+        hasFocus(): boolean;
+        findFocus(): View;
+        hasFocusable(): boolean;
+        addFocusables(views: ArrayList<View>, direction: number, focusableMode?: number): void;
+        requestFocus(direction?: number, previouslyFocusedRect?: Rect): boolean;
+        onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
         addView(view: View): any;
         addView(view: View, index: number): any;
         addView(view: View, params: ViewGroup.LayoutParams): any;
@@ -1712,6 +1866,7 @@ declare module android.view {
         suppressLayout(suppress: boolean): void;
         isLayoutSuppressed(): boolean;
         layout(l: number, t: number, r: number, b: number): void;
+        abstract onLayout(changed: boolean, l: number, t: number, r: number, b: number): any;
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
         dispatchDraw(canvas: Canvas): void;
         drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
@@ -1729,14 +1884,8 @@ declare module android.view {
         invalidateChildInParent(location: Array<number>, dirty: Rect): ViewParent;
         invalidateChildFast(child: View, dirty: Rect): void;
         invalidateChildInParentFast(left: number, top: number, dirty: Rect): ViewParent;
-        requestTransparentRegion(child: android.view.View): void;
-        requestChildFocus(child: android.view.View, focused: android.view.View): void;
-        clearChildFocus(child: android.view.View): void;
-        focusSearch(v: android.view.View, direction: number): android.view.View;
-        focusableViewAvailable(v: android.view.View): void;
+        findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
         requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
-        requestChildRectangleOnScreen(child: android.view.View, rectangle: android.graphics.Rect, immediate: boolean): boolean;
-        childHasTransientStateChanged(child: android.view.View, hasTransientState: boolean): void;
         shouldDelayChildPressedState(): boolean;
         onSetLayoutParams(child: View, layoutParams: ViewGroup.LayoutParams): void;
     }
@@ -1807,6 +1956,7 @@ declare module android.view {
             add(child: View): any;
             clear(): void;
             isEmpty(): boolean;
+            onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         }
     }
 }
@@ -2393,6 +2543,7 @@ declare module android.support.v4.view {
 declare module android.support.v4.view {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
+    import Rect = android.graphics.Rect;
     import PagerAdapter = android.support.v4.view.PagerAdapter;
     import Drawable = android.graphics.drawable.Drawable;
     import MotionEvent = android.view.MotionEvent;
@@ -2549,6 +2700,7 @@ declare module android.support.v4.view {
         pageLeft(): boolean;
         pageRight(): boolean;
         addTouchables(views: java.util.ArrayList<android.view.View>): void;
+        onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
         generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
         generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
         checkLayoutParams(p: android.view.ViewGroup.LayoutParams): boolean;
@@ -2614,6 +2766,7 @@ declare module androidui {
         private rootStyleElement;
         private rootResourceElement;
         private _windowBound;
+        private tempRect;
         windowBound: android.graphics.Rect;
         private motionEvent;
         private ketEvent;

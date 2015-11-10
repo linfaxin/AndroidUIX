@@ -300,8 +300,8 @@ module android.view {
                 }
 
                 // Ask host how big it wants to be
-                windowSizeMayChange == windowSizeMayChange || this.measureHierarchy(host, lp,
-                    desiredWindowWidth, desiredWindowHeight);
+                windowSizeMayChange ==  this.measureHierarchy(host, lp,
+                    desiredWindowWidth, desiredWindowHeight) || windowSizeMayChange;
             }
 
             if (this.mFirst || attachInfo.mViewVisibilityChanged) {

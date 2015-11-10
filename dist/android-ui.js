@@ -1789,6 +1789,7 @@ var android;
  */
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
 ///<reference path="../util/CopyOnWriteArray.ts"/>
+///<reference path="../view/View.ts"/>
 var android;
 (function (android) {
     var view;
@@ -1856,6 +1857,28 @@ var android;
                     }
                 }
             }
+            addOnGlobalFocusChangeListener(listener) {
+                this.checkIsAlive();
+                if (this.mOnGlobalFocusListeners == null) {
+                    this.mOnGlobalFocusListeners = new CopyOnWriteArrayList();
+                }
+                this.mOnGlobalFocusListeners.add(listener);
+            }
+            removeOnGlobalFocusChangeListener(victim) {
+                this.checkIsAlive();
+                if (this.mOnGlobalFocusListeners == null) {
+                    return;
+                }
+                this.mOnGlobalFocusListeners.remove(victim);
+            }
+            dispatchOnGlobalFocusChange(oldFocus, newFocus) {
+                const listeners = this.mOnGlobalFocusListeners;
+                if (listeners != null && listeners.size() > 0) {
+                    for (let listener of listeners) {
+                        listener.onGlobalFocusChanged(oldFocus, newFocus);
+                    }
+                }
+            }
             addOnPreDrawListener(listener) {
                 this.checkIsAlive();
                 if (this.mOnPreDrawListeners == null) {
@@ -1886,6 +1909,28 @@ var android;
                     }
                 }
                 return cancelDraw;
+            }
+            addOnTouchModeChangeListener(listener) {
+                this.checkIsAlive();
+                if (this.mOnTouchModeChangeListeners == null) {
+                    this.mOnTouchModeChangeListeners = new CopyOnWriteArrayList();
+                }
+                this.mOnTouchModeChangeListeners.add(listener);
+            }
+            removeOnTouchModeChangeListener(victim) {
+                this.checkIsAlive();
+                if (this.mOnTouchModeChangeListeners == null) {
+                    return;
+                }
+                this.mOnTouchModeChangeListeners.remove(victim);
+            }
+            dispatchOnTouchModeChanged(inTouchMode) {
+                const listeners = this.mOnTouchModeChangeListeners;
+                if (listeners != null && listeners.size() > 0) {
+                    for (let listener of listeners) {
+                        listener.onTouchModeChanged(inTouchMode);
+                    }
+                }
             }
             addOnScrollChangedListener(listener) {
                 this.checkIsAlive();
@@ -3459,7 +3504,8 @@ var android;
                 return this._activeKeyEvent.keyCode;
             }
             getRepeatCount() {
-                return this._downingKeyEventMap.get(this._activeKeyEvent.keyCode).length;
+                let downArray = this._downingKeyEventMap.get(this._activeKeyEvent.keyCode);
+                return downArray ? downArray.length - 1 : 0;
             }
             getDownTime() {
                 return this.mDownTime;
@@ -3529,6 +3575,10 @@ var android;
         KeyEvent.KEYCODE_TAB = 9;
         KeyEvent.KEYCODE_SPACE = 32;
         KeyEvent.KEYCODE_ESCAPE = 27;
+        KeyEvent.KEYCODE_PAGE_UP = 33;
+        KeyEvent.KEYCODE_PAGE_DOWN = 34;
+        KeyEvent.KEYCODE_MOVE_HOME = 36;
+        KeyEvent.KEYCODE_MOVE_END = 35;
         KeyEvent.ACTION_DOWN = 0;
         KeyEvent.ACTION_UP = 1;
         KeyEvent.FLAG_CANCELED = 0x20;
@@ -3685,6 +3735,7 @@ var android;
                 this.mLayerType = View.LAYER_TYPE_NONE;
                 this.mCachingFailed = false;
                 this.mWindowAttachCount = 0;
+                this.mTransientStateCount = 0;
                 this.mLastIsOpaque = false;
                 this._mLeft = 0;
                 this._mRight = 0;
@@ -3698,7 +3749,14 @@ var android;
                 this.mPaddingBottom = 0;
                 this._attrChangeHandler = new View.AttrChangeHandler(this);
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
-                this.initializeScrollbars();
+                this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+            }
+            get mID() {
+                if (this._bindElement) {
+                    let id = this._bindElement.id;
+                    return id ? id : null;
+                }
+                return null;
             }
             get mLeft() { return this._mLeft; }
             set mLeft(value) { this._mLeft = Math.floor(value); }
@@ -3829,7 +3887,7 @@ var android;
                     set tag(value) {
                     },
                     set id(value) {
-                        view.bindElement.id = value;
+                        view.setId(value);
                     },
                     set focusable(value) {
                         if (View.AttrChangeHandler.parseBoolean(value, false)) {
@@ -3913,9 +3971,6 @@ var android;
                     },
                 });
                 mergeHandler.isCallSuper = true;
-            }
-            getId() {
-                return this.bindElement.id;
             }
             getWidth() {
                 return this.mRight - this.mLeft;
@@ -4267,6 +4322,18 @@ var android;
                     return;
                 }
                 let privateFlags = this.mPrivateFlags;
+                if (((changed & View.FOCUSABLE_MASK) != 0) &&
+                    ((privateFlags & View.PFLAG_HAS_BOUNDS) != 0)) {
+                    if (((old & View.FOCUSABLE_MASK) == View.FOCUSABLE)
+                        && ((privateFlags & View.PFLAG_FOCUSED) != 0)) {
+                        this.clearFocus();
+                    }
+                    else if (((old & View.FOCUSABLE_MASK) == View.NOT_FOCUSABLE)
+                        && ((privateFlags & View.PFLAG_FOCUSED) == 0)) {
+                        if (this.mParent != null)
+                            this.mParent.focusableViewAvailable(this);
+                    }
+                }
                 const newVisibility = flags & View.VISIBILITY_MASK;
                 if (newVisibility == View.VISIBLE) {
                     if ((changed & View.VISIBILITY_MASK) != 0) {
@@ -4316,18 +4383,7 @@ var android;
                         this.mParent.invalidateChild(this, null);
                     }
                     this.dispatchVisibilityChanged(this, newVisibility);
-                    if (newVisibility === View.VISIBLE) {
-                        this.bindElement.style.display = '';
-                        this.bindElement.style.visibility = '';
-                    }
-                    else if (newVisibility === View.INVISIBLE) {
-                        this.bindElement.style.display = '';
-                        this.bindElement.style.visibility = 'hidden';
-                    }
-                    else {
-                        this.bindElement.style.display = 'none';
-                        this.bindElement.style.visibility = '';
-                    }
+                    this.syncVisibleToElement();
                 }
                 if ((changed & View.WILL_NOT_CACHE_DRAWING) != 0) {
                     this.destroyDrawingCache();
@@ -4380,27 +4436,299 @@ var android;
                     views.add(this);
                 }
             }
+            onFocusLost() {
+                this.resetPressedState();
+            }
+            resetPressedState() {
+                if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
+                    return;
+                }
+                if (this.isPressed()) {
+                    this.setPressed(false);
+                    if (!this.mHasPerformedLongPress) {
+                        this.removeLongPressCallback();
+                    }
+                }
+            }
+            isFocused() {
+                return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
+            }
+            findFocus() {
+                return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0 ? this : null;
+            }
+            getNextFocusLeftId() {
+                return this.mNextFocusLeftId;
+            }
+            setNextFocusLeftId(nextFocusLeftId) {
+                this.mNextFocusLeftId = nextFocusLeftId;
+            }
+            getNextFocusRightId() {
+                return this.mNextFocusRightId;
+            }
+            setNextFocusRightId(nextFocusRightId) {
+                this.mNextFocusRightId = nextFocusRightId;
+            }
+            getNextFocusUpId() {
+                return this.mNextFocusUpId;
+            }
+            setNextFocusUpId(nextFocusUpId) {
+                this.mNextFocusUpId = nextFocusUpId;
+            }
+            getNextFocusDownId() {
+                return this.mNextFocusDownId;
+            }
+            setNextFocusDownId(nextFocusDownId) {
+                this.mNextFocusDownId = nextFocusDownId;
+            }
+            getNextFocusForwardId() {
+                return this.mNextFocusForwardId;
+            }
+            setNextFocusForwardId(nextFocusForwardId) {
+                this.mNextFocusForwardId = nextFocusForwardId;
+            }
+            setFocusable(focusable) {
+                if (!focusable) {
+                    this.setFlags(0, View.FOCUSABLE_IN_TOUCH_MODE);
+                }
+                this.setFlags(focusable ? View.FOCUSABLE : View.NOT_FOCUSABLE, View.FOCUSABLE_MASK);
+            }
             isFocusable() {
                 return View.FOCUSABLE == (this.mViewFlags & View.FOCUSABLE_MASK);
             }
+            setFocusableInTouchMode(focusableInTouchMode) {
+                this.setFlags(focusableInTouchMode ? View.FOCUSABLE_IN_TOUCH_MODE : 0, View.FOCUSABLE_IN_TOUCH_MODE);
+                if (focusableInTouchMode) {
+                    this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                }
+            }
             isFocusableInTouchMode() {
                 return View.FOCUSABLE_IN_TOUCH_MODE == (this.mViewFlags & View.FOCUSABLE_IN_TOUCH_MODE);
-            }
-            hasFocus() {
-                return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
             }
             hasFocusable() {
                 return (this.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE && this.isFocusable();
             }
             clearFocus() {
+                if (View.DBG) {
+                    System.out.println(this + " clearFocus()");
+                }
+                this.clearFocusInternal(true, true);
+            }
+            clearFocusInternal(propagate, refocus) {
+                if ((this.mPrivateFlags & View.PFLAG_FOCUSED) != 0) {
+                    this.mPrivateFlags &= ~View.PFLAG_FOCUSED;
+                    if (propagate && this.mParent != null) {
+                        this.mParent.clearChildFocus(this);
+                    }
+                    this.onFocusChanged(false, 0, null);
+                    this.refreshDrawableState();
+                    if (propagate && (!refocus || !this.rootViewRequestFocus())) {
+                        this.notifyGlobalFocusCleared(this);
+                    }
+                }
+            }
+            notifyGlobalFocusCleared(oldFocus) {
+                if (oldFocus != null && this.mAttachInfo != null) {
+                    this.mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, null);
+                }
+            }
+            rootViewRequestFocus() {
+                const root = this.getRootView();
+                return root != null && root.requestFocus();
+            }
+            unFocus() {
+                if (View.DBG) {
+                    System.out.println(this + " unFocus()");
+                }
+                this.clearFocusInternal(false, false);
+            }
+            hasFocus() {
+                return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
+            }
+            onFocusChanged(gainFocus, direction, previouslyFocusedRect) {
+                if (!gainFocus) {
+                    if (this.isPressed()) {
+                        this.setPressed(false);
+                    }
+                    this.onFocusLost();
+                }
+                this.invalidate(true);
+                let li = this.mListenerInfo;
+                if (li != null && li.mOnFocusChangeListener != null) {
+                    li.mOnFocusChangeListener.onFocusChange(this, gainFocus);
+                }
+                if (this.mAttachInfo != null) {
+                    this.mAttachInfo.mKeyDispatchState.reset(this);
+                }
+            }
+            focusSearchView(direction) {
+                if (this.mParent != null) {
+                    return this.mParent.focusSearch(this, direction);
+                }
+                else {
+                    return null;
+                }
+            }
+            dispatchUnhandledMove(focused, direction) {
+                return false;
+            }
+            findUserSetNextFocus(root, direction) {
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                        if (!this.mNextFocusLeftId)
+                            return null;
+                        return this.findViewInsideOutShouldExist(root, this.mNextFocusLeftId);
+                    case View.FOCUS_RIGHT:
+                        if (!this.mNextFocusRightId)
+                            return null;
+                        return this.findViewInsideOutShouldExist(root, this.mNextFocusRightId);
+                    case View.FOCUS_UP:
+                        if (!this.mNextFocusUpId)
+                            return null;
+                        return this.findViewInsideOutShouldExist(root, this.mNextFocusUpId);
+                    case View.FOCUS_DOWN:
+                        if (!this.mNextFocusDownId)
+                            return null;
+                        return this.findViewInsideOutShouldExist(root, this.mNextFocusDownId);
+                    case View.FOCUS_FORWARD:
+                        if (!this.mNextFocusForwardId)
+                            return null;
+                        return this.findViewInsideOutShouldExist(root, this.mNextFocusForwardId);
+                    case View.FOCUS_BACKWARD: {
+                        if (!this.mID)
+                            return null;
+                        let id = this.mID;
+                        return root.findViewByPredicateInsideOut(this, {
+                            apply(t) {
+                                return t.mNextFocusForwardId == id;
+                            }
+                        });
+                    }
+                }
+                return null;
+            }
+            findViewInsideOutShouldExist(root, id) {
+                if (this.mMatchIdPredicate == null) {
+                    this.mMatchIdPredicate = new MatchIdPredicate();
+                }
+                this.mMatchIdPredicate.mId = id;
+                let result = root.findViewByPredicateInsideOut(this, this.mMatchIdPredicate);
+                if (result == null) {
+                    Log.w(View.VIEW_LOG_TAG, "couldn't find view with id " + id);
+                }
+                return result;
+            }
+            getFocusables(direction) {
+                let result = new ArrayList(24);
+                this.addFocusables(result, direction);
+                return result;
+            }
+            addFocusables(views, direction, focusableMode = View.FOCUSABLES_TOUCH_MODE) {
+                if (views == null) {
+                    return;
+                }
+                if (!this.isFocusable()) {
+                    return;
+                }
+                if ((focusableMode & View.FOCUSABLES_TOUCH_MODE) == View.FOCUSABLES_TOUCH_MODE
+                    && this.isInTouchMode() && !this.isFocusableInTouchMode()) {
+                    return;
+                }
+                views.add(this);
+            }
+            setOnFocusChangeListener(l) {
+                this.getListenerInfo().mOnFocusChangeListener = l;
+            }
+            getOnFocusChangeListener() {
+                let li = this.mListenerInfo;
+                return li != null ? li.mOnFocusChangeListener : null;
             }
             requestFocus(direction = View.FOCUS_DOWN, previouslyFocusedRect = null) {
+                return this.requestFocusNoSearch(direction, previouslyFocusedRect);
             }
-            findFocus() {
-                return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0 ? this : null;
+            requestFocusNoSearch(direction, previouslyFocusedRect) {
+                if ((this.mViewFlags & View.FOCUSABLE_MASK) != View.FOCUSABLE ||
+                    (this.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE) {
+                    return false;
+                }
+                if (this.isInTouchMode() &&
+                    (View.FOCUSABLE_IN_TOUCH_MODE != (this.mViewFlags & View.FOCUSABLE_IN_TOUCH_MODE))) {
+                    return false;
+                }
+                if (this.hasAncestorThatBlocksDescendantFocus()) {
+                    return false;
+                }
+                this.handleFocusGainInternal(direction, previouslyFocusedRect);
+                return true;
             }
-            isFocused() {
-                return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
+            hasAncestorThatBlocksDescendantFocus() {
+                let ancestor = this.mParent;
+                while (ancestor instanceof view_1.ViewGroup) {
+                    const vgAncestor = ancestor;
+                    if (vgAncestor.getDescendantFocusability() == view_1.ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                        return true;
+                    }
+                    else {
+                        ancestor = vgAncestor.getParent();
+                    }
+                }
+                return false;
+            }
+            handleFocusGainInternal(direction, previouslyFocusedRect) {
+                if (View.DBG) {
+                    System.out.println(this + " requestFocus()");
+                }
+                if ((this.mPrivateFlags & View.PFLAG_FOCUSED) == 0) {
+                    this.mPrivateFlags |= View.PFLAG_FOCUSED;
+                    let oldFocus = (this.mAttachInfo != null) ? this.getRootView().findFocus() : null;
+                    if (this.mParent != null) {
+                        this.mParent.requestChildFocus(this, this);
+                    }
+                    if (this.mAttachInfo != null) {
+                        this.mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, this);
+                    }
+                    this.onFocusChanged(true, direction, previouslyFocusedRect);
+                    this.refreshDrawableState();
+                }
+            }
+            hasTransientState() {
+                return (this.mPrivateFlags2 & View.PFLAG2_HAS_TRANSIENT_STATE) == View.PFLAG2_HAS_TRANSIENT_STATE;
+            }
+            setHasTransientState(hasTransientState) {
+                this.mTransientStateCount = hasTransientState ? this.mTransientStateCount + 1 :
+                    this.mTransientStateCount - 1;
+                if (this.mTransientStateCount < 0) {
+                    this.mTransientStateCount = 0;
+                    Log.e(View.VIEW_LOG_TAG, "hasTransientState decremented below 0: " +
+                        "unmatched pair of setHasTransientState calls");
+                }
+                else if ((hasTransientState && this.mTransientStateCount == 1) ||
+                    (!hasTransientState && this.mTransientStateCount == 0)) {
+                    this.mPrivateFlags2 = (this.mPrivateFlags2 & ~View.PFLAG2_HAS_TRANSIENT_STATE) |
+                        (hasTransientState ? View.PFLAG2_HAS_TRANSIENT_STATE : 0);
+                    if (this.mParent != null) {
+                        this.mParent.childHasTransientStateChanged(this, hasTransientState);
+                    }
+                }
+            }
+            isInTouchMode() {
+                return this.mAttachInfo.mInTouchMode;
+            }
+            isShown() {
+                let current = this;
+                do {
+                    if ((current.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE) {
+                        return false;
+                    }
+                    let parent = current.mParent;
+                    if (parent == null) {
+                        return false;
+                    }
+                    if (!(parent instanceof View)) {
+                        return true;
+                    }
+                    current = parent;
+                } while (current != null);
+                return false;
             }
             getVisibility() {
                 return this.mViewFlags & View.VISIBILITY_MASK;
@@ -4443,17 +4771,6 @@ var android;
                 this.setFlags(enabled ? View.ENABLED : View.DISABLED, View.ENABLED_MASK);
                 this.refreshDrawableState();
                 this.invalidate(true);
-            }
-            resetPressedState() {
-                if ((this.mViewFlags & View.ENABLED_MASK) == View.DISABLED) {
-                    return;
-                }
-                if (this.isPressed()) {
-                    this.setPressed(false);
-                    if (!this.mHasPerformedLongPress) {
-                        this.removeLongPressCallback();
-                    }
-                }
             }
             dispatchGenericMotionEvent(event) {
                 let li = this.mListenerInfo;
@@ -4952,6 +5269,9 @@ var android;
                     this.mOverlay.getOverlayView().setRight(newWidth);
                     this.mOverlay.getOverlayView().setBottom(newHeight);
                 }
+            }
+            getFocusedRect(r) {
+                this.getDrawingRect(r);
             }
             getDrawingRect(outRect) {
                 outRect.left = this.mScrollX;
@@ -5790,8 +6110,11 @@ var android;
                 return this.mScrollCache != null &&
                     this.awakenScrollBars(this.mScrollCache.scrollBarDefaultDelayBeforeFade * 4, true);
             }
-            awakenScrollBars(startDelay = this.mScrollCache.scrollBarDefaultDelayBeforeFade, invalidate = true) {
+            awakenScrollBars(startDelay, invalidate = true) {
                 const scrollCache = this.mScrollCache;
+                if (scrollCache == null)
+                    return false;
+                startDelay = startDelay || scrollCache.scrollBarDefaultDelayBeforeFade;
                 if (scrollCache == null || !scrollCache.fadeScrollBars) {
                     return false;
                 }
@@ -5854,22 +6177,6 @@ var android;
                     return 0;
                 }
                 return 0;
-            }
-            initializeScrollbars() {
-                this.initScrollCache();
-                const scrollabilityCache = this.mScrollCache;
-                if (scrollabilityCache.scrollBar == null) {
-                    scrollabilityCache.scrollBar = new ScrollBarDrawable();
-                }
-                scrollabilityCache.fadeScrollBars = true;
-                let track = null;
-                scrollabilityCache.scrollBar.setHorizontalTrackDrawable(track);
-                let thumbColor = new ColorDrawable(0x44000000);
-                let density = Resources.getDisplayMetrics().density;
-                let thumb = new InsetDrawable(thumbColor, 0, 2 * density, view_1.ViewConfiguration.get().getScaledScrollBarSize() / 2, 2 * density);
-                scrollabilityCache.scrollBar.setHorizontalThumbDrawable(thumb);
-                scrollabilityCache.scrollBar.setVerticalTrackDrawable(track);
-                scrollabilityCache.scrollBar.setVerticalThumbDrawable(thumb);
             }
             initScrollCache() {
                 if (this.mScrollCache == null) {
@@ -6051,12 +6358,54 @@ var android;
                 }
                 return parent;
             }
+            findViewByPredicateTraversal(predicate, childToSkip) {
+                if (predicate.apply(this)) {
+                    return this;
+                }
+                return null;
+            }
             findViewById(id) {
                 if (id == this.bindElement.id) {
                     return this;
                 }
                 let bindEle = this.bindElement.querySelector('#' + id);
                 return bindEle ? bindEle[View.AndroidViewProperty] : null;
+            }
+            findViewByPredicate(predicate) {
+                return this.findViewByPredicateTraversal(predicate, null);
+            }
+            findViewByPredicateInsideOut(start, predicate) {
+                let childToSkip = null;
+                for (;;) {
+                    let view = start.findViewByPredicateTraversal(predicate, childToSkip);
+                    if (view != null || start == this) {
+                        return view;
+                    }
+                    let parent = start.getParent();
+                    if (parent == null || !(parent instanceof View)) {
+                        return null;
+                    }
+                    childToSkip = start;
+                    start = parent;
+                }
+            }
+            setId(id) {
+                if (this._bindElement)
+                    this._bindElement.id = id;
+            }
+            getId() {
+                return this.mID;
+            }
+            setIsRootNamespace(isRoot) {
+                if (isRoot) {
+                    this.mPrivateFlags |= View.PFLAG_IS_ROOT_NAMESPACE;
+                }
+                else {
+                    this.mPrivateFlags &= ~View.PFLAG_IS_ROOT_NAMESPACE;
+                }
+            }
+            isRootNamespace() {
+                return (this.mPrivateFlags & View.PFLAG_IS_ROOT_NAMESPACE) != 0;
             }
             static inflate(eleOrRef, rootElement, viewParent) {
                 let domtree;
@@ -6103,11 +6452,12 @@ var android;
                 rootView.setLayoutParams(params);
                 rootView._initAttrObserver();
                 if (rootView instanceof view_1.ViewGroup) {
+                    let parent = rootView;
                     Array.from(domtree.children).forEach((item) => {
                         if (item instanceof HTMLElement) {
-                            let view = View.inflate(item, rootElement, rootView);
+                            let view = View.inflate(item, rootElement, parent);
                             if (view)
-                                rootView.addView(view);
+                                parent.addView(view);
                         }
                     });
                 }
@@ -6212,6 +6562,21 @@ var android;
                         else
                             item.style.top = child.mTop + "px";
                     }
+                }
+            }
+            syncVisibleToElement() {
+                let visibility = this.getVisibility();
+                if (visibility === View.VISIBLE) {
+                    this.bindElement.style.display = '';
+                    this.bindElement.style.visibility = '';
+                }
+                else if (visibility === View.INVISIBLE) {
+                    this.bindElement.style.display = '';
+                    this.bindElement.style.visibility = 'hidden';
+                }
+                else {
+                    this.bindElement.style.display = 'none';
+                    this.bindElement.style.visibility = '';
                 }
             }
             _initAttrChangeHandler() {
@@ -6351,6 +6716,7 @@ var android;
         View.PFLAG_ACTIVATED = 0x40000000;
         View.PFLAG_INVALIDATED = 0x80000000;
         View.PFLAG2_VIEW_QUICK_REJECTED = 0x10000000;
+        View.PFLAG2_HAS_TRANSIENT_STATE = 0x80000000;
         View.PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x1;
         View.PFLAG3_VIEW_IS_ANIMATING_ALPHA = 0x2;
         View.PFLAG3_IS_LAID_OUT = 0x4;
@@ -6487,7 +6853,9 @@ var android;
                     this.mInvalidateChildLocation = new Array(2);
                     this.mIgnoreDirtyState = false;
                     this.mSetIgnoreDirtyState = false;
+                    this.mHasWindowFocus = false;
                     this.mWindowVisibility = 0;
+                    this.mInTouchMode = false;
                     this.mViewRootImpl = mViewRootImpl;
                     this.mHandler = mHandler;
                 }
@@ -6745,6 +7113,12 @@ var android;
                 this.interpolator = new LinearInterpolator();
                 this.state = ScrollabilityCache.OFF;
                 this.host = host;
+                this.scrollBar = new ScrollBarDrawable();
+                let thumbColor = new ColorDrawable(0x44000000);
+                let density = Resources.getDisplayMetrics().density;
+                let thumb = new InsetDrawable(thumbColor, 0, 2 * density, view_1.ViewConfiguration.get().getScaledScrollBarSize() / 2, 2 * density);
+                this.scrollBar.setHorizontalThumbDrawable(thumb);
+                this.scrollBar.setVerticalThumbDrawable(thumb);
             }
             run() {
                 let now = AnimationUtils.currentAnimationTimeMillis();
@@ -6767,6 +7141,11 @@ var android;
         ScrollabilityCache.OFF = 0;
         ScrollabilityCache.ON = 1;
         ScrollabilityCache.FADING = 2;
+        class MatchIdPredicate {
+            apply(view) {
+                return view.mID === this.mId;
+            }
+        }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 var android;
@@ -6908,6 +7287,7 @@ var android;
         class ViewRootImpl {
             constructor() {
                 this.mViewVisibility = View.GONE;
+                this.mStopped = false;
                 this.mWidth = -1;
                 this.mHeight = -1;
                 this.mDirty = new Rect();
@@ -6921,6 +7301,7 @@ var android;
                 this.mFullRedrawNeeded = false;
                 this.mIsDrawing = false;
                 this.mAdded = false;
+                this.mAddedTouchMode = false;
                 this.mWinFrame = new Rect();
                 this.mLayoutRequesters = [];
                 this.mHandler = new ViewRootHandler();
@@ -6941,6 +7322,11 @@ var android;
                     this.mAdded = true;
                     this.requestLayout();
                     view.assignParent(this);
+                    this.mAddedTouchMode = true;
+                    let syntheticInputStage = new SyntheticInputStage(this);
+                    let viewPostImeStage = new ViewPostImeInputStage(this, syntheticInputStage);
+                    let earlyPostImeStage = new EarlyPostImeInputStage(this, viewPostImeStage);
+                    this.mFirstInputStage = earlyPostImeStage;
                 }
             }
             getView() {
@@ -7029,6 +7415,7 @@ var android;
                     let packageMetrics = Resources.getDisplayMetrics();
                     desiredWindowWidth = packageMetrics.widthPixels;
                     desiredWindowHeight = packageMetrics.heightPixels;
+                    attachInfo.mHasWindowFocus = true;
                     attachInfo.mWindowVisibility = viewVisibility;
                     viewVisibilityChanged = false;
                     host.dispatchAttachedToWindow(attachInfo, 0);
@@ -7054,6 +7441,8 @@ var android;
                 let layoutRequested = this.mLayoutRequested;
                 if (layoutRequested) {
                     if (this.mFirst) {
+                        this.mAttachInfo.mInTouchMode = !this.mAddedTouchMode;
+                        this.ensureTouchModeLocally(this.mAddedTouchMode);
                     }
                     else {
                         if (lp.width < 0 || lp.height < 0) {
@@ -7063,7 +7452,7 @@ var android;
                             desiredWindowHeight = packageMetrics.heightPixels;
                         }
                     }
-                    windowSizeMayChange == windowSizeMayChange || this.measureHierarchy(host, lp, desiredWindowWidth, desiredWindowHeight);
+                    windowSizeMayChange == this.measureHierarchy(host, lp, desiredWindowWidth, desiredWindowHeight) || windowSizeMayChange;
                 }
                 if (this.mFirst || attachInfo.mViewVisibilityChanged) {
                     attachInfo.mViewVisibilityChanged = false;
@@ -7123,6 +7512,24 @@ var android;
                     attachInfo.mTreeObserver.dispatchOnGlobalLayout();
                 }
                 let skipDraw = false;
+                if (this.mFirst) {
+                    if (ViewRootImpl.DEBUG_INPUT_RESIZE)
+                        Log.v(ViewRootImpl.TAG, "First: mView.hasFocus()="
+                            + this.mView.hasFocus());
+                    if (this.mView != null) {
+                        if (!this.mView.hasFocus()) {
+                            this.mView.requestFocus(View.FOCUS_FORWARD);
+                            if (ViewRootImpl.DEBUG_INPUT_RESIZE)
+                                Log.v(ViewRootImpl.TAG, "First: requested focused view="
+                                    + this.mView.findFocus());
+                        }
+                        else {
+                            if (ViewRootImpl.DEBUG_INPUT_RESIZE)
+                                Log.v(ViewRootImpl.TAG, "First: existing focused view="
+                                    + this.mView.findFocus());
+                        }
+                    }
+                }
                 this.mFirst = false;
                 this.mWillDrawSoon = false;
                 this.mViewVisibility = viewVisibility;
@@ -7392,24 +7799,191 @@ var android;
                 return null;
             }
             requestChildFocus(child, focused) {
+                if (ViewRootImpl.DEBUG_INPUT_RESIZE) {
+                    Log.v(ViewRootImpl.TAG, "Request child focus: focus now " + focused);
+                }
+                this.scheduleTraversals();
             }
-            clearChildFocus(child) {
+            clearChildFocus(focused) {
+                if (ViewRootImpl.DEBUG_INPUT_RESIZE) {
+                    Log.v(ViewRootImpl.TAG, "Request child focus: focus now " + focused);
+                }
+                this.scheduleTraversals();
             }
             getChildVisibleRect(child, r, offset) {
-                return undefined;
+                if (child != this.mView) {
+                    throw new Error("child is not mine, honest!");
+                }
+                return r.intersect(0, 0, this.mWidth, this.mHeight);
             }
-            focusSearch(v, direction) {
-                return undefined;
+            focusSearch(focused, direction) {
+                if (!(this.mView instanceof view_2.ViewGroup)) {
+                    return null;
+                }
+                return view_2.FocusFinder.getInstance().findNextFocus(this.mView, focused, direction);
             }
             bringChildToFront(child) {
             }
             focusableViewAvailable(v) {
+                if (this.mView != null) {
+                    if (!this.mView.hasFocus()) {
+                        v.requestFocus();
+                    }
+                    else {
+                        let focused = this.mView.findFocus();
+                        if (focused instanceof view_2.ViewGroup) {
+                            let group = focused;
+                            if (group.getDescendantFocusability() == view_2.ViewGroup.FOCUS_AFTER_DESCENDANTS
+                                && ViewRootImpl.isViewDescendantOf(v, focused)) {
+                                v.requestFocus();
+                            }
+                        }
+                    }
+                }
+            }
+            static isViewDescendantOf(child, parent) {
+                if (child == parent) {
+                    return true;
+                }
+                const theParent = child.getParent();
+                return (theParent instanceof view_2.ViewGroup) && ViewRootImpl.isViewDescendantOf(theParent, parent);
             }
             childDrawableStateChanged(child) {
             }
             requestDisallowInterceptTouchEvent(disallowIntercept) {
             }
+            requestChildRectangleOnScreen(child, rectangle, immediate) {
+                return false;
+            }
             childHasTransientStateChanged(child, hasTransientState) {
+            }
+            dispatchResized(frame) {
+                this.mWinFrame.set(frame.left, frame.top, frame.right, frame.bottom);
+                this.requestLayout();
+            }
+            dispatchInputEvent(event) {
+                this.deliverInputEvent(event);
+            }
+            deliverInputEvent(event) {
+                this.mFirstInputStage.deliver(event);
+            }
+            finishInputEvent(event) {
+                event[InputStage.FLAG_FINISHED] = false;
+                event[InputStage.FLAG_FINISHED_HANDLED] = false;
+            }
+            checkForLeavingTouchModeAndConsume(event) {
+                if (!this.mAttachInfo.mInTouchMode) {
+                    return false;
+                }
+                const action = event.getAction();
+                if (action != view_2.KeyEvent.ACTION_DOWN) {
+                    return false;
+                }
+                if (ViewRootImpl.isNavigationKey(event)) {
+                    return this.ensureTouchMode(false);
+                }
+                if (ViewRootImpl.isTypingKey(event)) {
+                    this.ensureTouchMode(false);
+                    return false;
+                }
+                return false;
+            }
+            static isNavigationKey(keyEvent) {
+                switch (keyEvent.getKeyCode()) {
+                    case view_2.KeyEvent.KEYCODE_DPAD_LEFT:
+                    case view_2.KeyEvent.KEYCODE_DPAD_RIGHT:
+                    case view_2.KeyEvent.KEYCODE_DPAD_UP:
+                    case view_2.KeyEvent.KEYCODE_DPAD_DOWN:
+                    case view_2.KeyEvent.KEYCODE_DPAD_CENTER:
+                    case view_2.KeyEvent.KEYCODE_PAGE_UP:
+                    case view_2.KeyEvent.KEYCODE_PAGE_DOWN:
+                    case view_2.KeyEvent.KEYCODE_MOVE_HOME:
+                    case view_2.KeyEvent.KEYCODE_MOVE_END:
+                    case view_2.KeyEvent.KEYCODE_TAB:
+                    case view_2.KeyEvent.KEYCODE_SPACE:
+                    case view_2.KeyEvent.KEYCODE_ENTER:
+                        return true;
+                }
+                return false;
+            }
+            static isTypingKey(keyEvent) {
+                try {
+                    return keyEvent._activeKeyEvent['keyIdentifier'].startsWith('U+');
+                }
+                catch (e) {
+                    console.warn(e);
+                }
+                return true;
+            }
+            ensureTouchMode(inTouchMode) {
+                if (ViewRootImpl.DBG)
+                    Log.d("touchmode", "ensureTouchMode(" + inTouchMode + "), current "
+                        + "touch mode is " + this.mAttachInfo.mInTouchMode);
+                if (this.mAttachInfo.mInTouchMode == inTouchMode)
+                    return false;
+                return this.ensureTouchModeLocally(inTouchMode);
+            }
+            ensureTouchModeLocally(inTouchMode) {
+                if (ViewRootImpl.DBG)
+                    Log.d("touchmode", "ensureTouchModeLocally(" + inTouchMode + "), current "
+                        + "touch mode is " + this.mAttachInfo.mInTouchMode);
+                if (this.mAttachInfo.mInTouchMode == inTouchMode)
+                    return false;
+                this.mAttachInfo.mInTouchMode = inTouchMode;
+                this.mAttachInfo.mTreeObserver.dispatchOnTouchModeChanged(inTouchMode);
+                return (inTouchMode) ? this.enterTouchMode() : this.leaveTouchMode();
+            }
+            enterTouchMode() {
+                if (this.mView != null && this.mView.hasFocus()) {
+                    const focused = this.mView.findFocus();
+                    if (focused != null && !focused.isFocusableInTouchMode()) {
+                        const ancestorToTakeFocus = ViewRootImpl.findAncestorToTakeFocusInTouchMode(focused);
+                        if (ancestorToTakeFocus != null) {
+                            return ancestorToTakeFocus.requestFocus();
+                        }
+                        else {
+                            focused.clearFocusInternal(true, false);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            static findAncestorToTakeFocusInTouchMode(focused) {
+                let parent = focused.getParent();
+                while (parent instanceof view_2.ViewGroup) {
+                    const vgParent = parent;
+                    if (vgParent.getDescendantFocusability() == view_2.ViewGroup.FOCUS_AFTER_DESCENDANTS
+                        && vgParent.isFocusableInTouchMode()) {
+                        return vgParent;
+                    }
+                    if (vgParent.isRootNamespace()) {
+                        return null;
+                    }
+                    else {
+                        parent = vgParent.getParent();
+                    }
+                }
+                return null;
+            }
+            leaveTouchMode() {
+                if (this.mView != null) {
+                    if (this.mView.hasFocus()) {
+                        let focusedView = this.mView.findFocus();
+                        if (!(focusedView instanceof view_2.ViewGroup)) {
+                            return false;
+                        }
+                        else if (focusedView.getDescendantFocusability() !=
+                            view_2.ViewGroup.FOCUS_AFTER_DESCENDANTS) {
+                            return false;
+                        }
+                    }
+                    const focused = this.focusSearch(null, View.FOCUS_DOWN);
+                    if (focused != null) {
+                        return focused.requestFocus(View.FOCUS_DOWN);
+                    }
+                }
+                return false;
             }
             static getRunQueue(viewRoot) {
                 if (viewRoot) {
@@ -7539,6 +8113,639 @@ var android;
         }
         ViewRootHandler.MSG_INVALIDATE = 1;
         ViewRootHandler.MSG_INVALIDATE_RECT = 2;
+        class InputStage {
+            constructor(impl, next) {
+                this.ViewRootImpl_this = impl;
+                this.mNext = next;
+            }
+            deliver(event) {
+                if (event[InputStage.FLAG_FINISHED]) {
+                    this.forward(event);
+                }
+                else if (this.shouldDropInputEvent(event)) {
+                    this.finish(event, false);
+                }
+                else {
+                    this.apply(event, this.onProcess(event));
+                }
+            }
+            finish(event, handled) {
+                event[InputStage.FLAG_FINISHED] = true;
+                if (handled) {
+                    event[InputStage.FLAG_FINISHED_HANDLED] = true;
+                }
+                this.forward(event);
+            }
+            forward(event) {
+                this.onDeliverToNext(event);
+            }
+            apply(event, result) {
+                if (result == InputStage.FORWARD) {
+                    this.forward(event);
+                }
+                else if (result == InputStage.FINISH_HANDLED) {
+                    this.finish(event, true);
+                }
+                else if (result == InputStage.FINISH_NOT_HANDLED) {
+                    this.finish(event, false);
+                }
+                else {
+                    throw new Error("Invalid result: " + result);
+                }
+            }
+            onDeliverToNext(event) {
+                if (this.mNext != null) {
+                    this.mNext.deliver(event);
+                }
+                else {
+                    this.ViewRootImpl_this.finishInputEvent(event);
+                }
+            }
+            onProcess(event) {
+                return InputStage.FORWARD;
+            }
+            shouldDropInputEvent(event) {
+                if (this.ViewRootImpl_this.mView == null || !this.ViewRootImpl_this.mAdded) {
+                    Log.w(ViewRootImpl.TAG, "Dropping event due to root view being removed: " + event);
+                    return true;
+                }
+                else if ((!this.ViewRootImpl_this.mAttachInfo.mHasWindowFocus ||
+                    this.ViewRootImpl_this.mStopped)) {
+                    Log.w(ViewRootImpl.TAG, "Dropping event due to no window focus: " + event);
+                    return true;
+                }
+                return false;
+            }
+        }
+        InputStage.FLAG_FINISHED = Symbol();
+        InputStage.FLAG_FINISHED_HANDLED = Symbol();
+        InputStage.FORWARD = 0;
+        InputStage.FINISH_HANDLED = 1;
+        InputStage.FINISH_NOT_HANDLED = 2;
+        class EarlyPostImeInputStage extends InputStage {
+            onProcess(event) {
+                if (event instanceof view_2.MotionEvent) {
+                    return this.processMotionEvent(event);
+                }
+                else if (event instanceof view_2.KeyEvent) {
+                    return this.processKeyEvent(event);
+                }
+                return InputStage.FORWARD;
+            }
+            processKeyEvent(event) {
+                if (this.ViewRootImpl_this.checkForLeavingTouchModeAndConsume(event)) {
+                    return InputStage.FINISH_HANDLED;
+                }
+                return InputStage.FORWARD;
+            }
+            processMotionEvent(event) {
+                const action = event.getAction();
+                if (action == view_2.MotionEvent.ACTION_DOWN || action == view_2.MotionEvent.ACTION_SCROLL) {
+                    this.ViewRootImpl_this.ensureTouchMode(true);
+                }
+                event.offsetLocation(this.ViewRootImpl_this.mWinFrame.left, this.ViewRootImpl_this.mWinFrame.top);
+                return InputStage.FORWARD;
+            }
+        }
+        class ViewPostImeInputStage extends InputStage {
+            onProcess(event) {
+                if (event instanceof view_2.KeyEvent) {
+                    return this.processKeyEvent(event);
+                }
+                else if (event instanceof view_2.MotionEvent) {
+                    return this.processTouchEvent(event);
+                }
+                else if (event instanceof Event) {
+                    return this.processGenericMotionEvent(event);
+                }
+                return InputStage.FORWARD;
+            }
+            processKeyEvent(event) {
+                let mView = this.ViewRootImpl_this.mView;
+                if (this.ViewRootImpl_this.mView.dispatchKeyEvent(event)) {
+                    return InputStage.FINISH_HANDLED;
+                }
+                if (this.shouldDropInputEvent(event)) {
+                    return InputStage.FINISH_NOT_HANDLED;
+                }
+                if (event.getAction() == view_2.KeyEvent.ACTION_DOWN
+                    && event.isCtrlPressed()
+                    && event.getRepeatCount() == 0) {
+                    if (this.ViewRootImpl_this.shouldDropInputEvent(event)) {
+                        return InputStage.FINISH_NOT_HANDLED;
+                    }
+                }
+                if (this.shouldDropInputEvent(event)) {
+                    return InputStage.FINISH_NOT_HANDLED;
+                }
+                if (event.getAction() == view_2.KeyEvent.ACTION_DOWN) {
+                    let direction = 0;
+                    switch (event.getKeyCode()) {
+                        case view_2.KeyEvent.KEYCODE_DPAD_LEFT:
+                            direction = View.FOCUS_LEFT;
+                            break;
+                        case view_2.KeyEvent.KEYCODE_DPAD_RIGHT:
+                            direction = View.FOCUS_RIGHT;
+                            break;
+                        case view_2.KeyEvent.KEYCODE_DPAD_UP:
+                            direction = View.FOCUS_UP;
+                            break;
+                        case view_2.KeyEvent.KEYCODE_DPAD_DOWN:
+                            direction = View.FOCUS_DOWN;
+                            break;
+                        case view_2.KeyEvent.KEYCODE_TAB:
+                            if (event.isShiftPressed()) {
+                                direction = View.FOCUS_BACKWARD;
+                            }
+                            else {
+                                direction = View.FOCUS_FORWARD;
+                            }
+                            break;
+                    }
+                    if (direction != 0) {
+                        let focused = mView.findFocus();
+                        if (focused != null) {
+                            let v = focused.focusSearchView(direction);
+                            if (v != null && v != focused) {
+                                focused.getFocusedRect(this.ViewRootImpl_this.mTempRect);
+                                if (mView instanceof view_2.ViewGroup) {
+                                    mView.offsetDescendantRectToMyCoords(focused, this.ViewRootImpl_this.mTempRect);
+                                    mView.offsetRectIntoDescendantCoords(v, this.ViewRootImpl_this.mTempRect);
+                                }
+                                if (v.requestFocus(direction, this.ViewRootImpl_this.mTempRect)) {
+                                    return InputStage.FINISH_HANDLED;
+                                }
+                            }
+                            if (mView.dispatchUnhandledMove(focused, direction)) {
+                                return InputStage.FINISH_HANDLED;
+                            }
+                        }
+                        else {
+                            let v = this.ViewRootImpl_this.focusSearch(null, direction);
+                            if (v != null && v.requestFocus(direction)) {
+                                return InputStage.FINISH_HANDLED;
+                            }
+                        }
+                    }
+                }
+                return InputStage.FORWARD;
+            }
+            processGenericMotionEvent(event) {
+                if (this.ViewRootImpl_this.mView.dispatchGenericMotionEvent(event)) {
+                    return InputStage.FINISH_HANDLED;
+                }
+                return InputStage.FORWARD;
+            }
+            processTouchEvent(event) {
+                let handled = this.ViewRootImpl_this.mView.dispatchTouchEvent(event);
+                return handled ? InputStage.FINISH_HANDLED : InputStage.FORWARD;
+            }
+        }
+        class SyntheticInputStage extends InputStage {
+            onProcess(event) {
+                return super.onProcess(event);
+            }
+        }
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/10.
+ */
+///<reference path="View.ts"/>
+///<reference path="ViewGroup.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view_3) {
+        var View = android.view.View;
+        var Rect = android.graphics.Rect;
+        var ArrayList = java.util.ArrayList;
+        class FocusFinder {
+            constructor() {
+                this.mFocusedRect = new Rect();
+                this.mOtherRect = new Rect();
+                this.mBestCandidateRect = new Rect();
+                this.mSequentialFocusComparator = new SequentialFocusComparator();
+                this.mTempList = new ArrayList();
+            }
+            static getInstance() {
+                if (!FocusFinder.sFocusFinder) {
+                    FocusFinder.sFocusFinder = new FocusFinder();
+                }
+                return FocusFinder.sFocusFinder;
+            }
+            findNextFocus(root, focused, direction) {
+                return this._findNextFocus(root, focused, null, direction);
+            }
+            findNextFocusFromRect(root, focusedRect, direction) {
+                this.mFocusedRect.set(focusedRect);
+                return this._findNextFocus(root, null, this.mFocusedRect, direction);
+            }
+            _findNextFocus(root, focused, focusedRect, direction) {
+                let next = null;
+                if (focused != null) {
+                    next = this.findNextUserSpecifiedFocus(root, focused, direction);
+                }
+                if (next != null) {
+                    return next;
+                }
+                let focusables = this.mTempList;
+                try {
+                    focusables.clear();
+                    root.addFocusables(focusables, direction);
+                    if (!focusables.isEmpty()) {
+                        next = this.__findNextFocus(root, focused, focusedRect, direction, focusables);
+                    }
+                }
+                finally {
+                    focusables.clear();
+                }
+                return next;
+            }
+            findNextUserSpecifiedFocus(root, focused, direction) {
+                let userSetNextFocus = focused.findUserSetNextFocus(root, direction);
+                if (userSetNextFocus != null && userSetNextFocus.isFocusable()
+                    && (!userSetNextFocus.isInTouchMode()
+                        || userSetNextFocus.isFocusableInTouchMode())) {
+                    return userSetNextFocus;
+                }
+                return null;
+            }
+            __findNextFocus(root, focused, focusedRect, direction, focusables) {
+                if (focused != null) {
+                    if (focusedRect == null) {
+                        focusedRect = this.mFocusedRect;
+                    }
+                    focused.getFocusedRect(focusedRect);
+                    root.offsetDescendantRectToMyCoords(focused, focusedRect);
+                }
+                else {
+                    if (focusedRect == null) {
+                        focusedRect = this.mFocusedRect;
+                        switch (direction) {
+                            case View.FOCUS_RIGHT:
+                            case View.FOCUS_DOWN:
+                                this.setFocusTopLeft(root, focusedRect);
+                                break;
+                            case View.FOCUS_FORWARD:
+                                this.setFocusTopLeft(root, focusedRect);
+                                break;
+                            case View.FOCUS_LEFT:
+                            case View.FOCUS_UP:
+                                this.setFocusBottomRight(root, focusedRect);
+                                break;
+                            case View.FOCUS_BACKWARD:
+                                this.setFocusBottomRight(root, focusedRect);
+                        }
+                    }
+                }
+                switch (direction) {
+                    case View.FOCUS_FORWARD:
+                    case View.FOCUS_BACKWARD:
+                        return this.findNextFocusInRelativeDirection(focusables, root, focused, focusedRect, direction);
+                    case View.FOCUS_UP:
+                    case View.FOCUS_DOWN:
+                    case View.FOCUS_LEFT:
+                    case View.FOCUS_RIGHT:
+                        return this.findNextFocusInAbsoluteDirection(focusables, root, focused, focusedRect, direction);
+                    default:
+                        throw new Error("Unknown direction: " + direction);
+                }
+            }
+            findNextFocusInRelativeDirection(focusables, root, focused, focusedRect, direction) {
+                try {
+                    this.mSequentialFocusComparator.setRoot(root);
+                    this.mSequentialFocusComparator.sort(focusables);
+                }
+                finally {
+                    this.mSequentialFocusComparator.recycle();
+                }
+                const count = focusables.size();
+                switch (direction) {
+                    case View.FOCUS_FORWARD:
+                        return FocusFinder.getNextFocusable(focused, focusables, count);
+                    case View.FOCUS_BACKWARD:
+                        return FocusFinder.getPreviousFocusable(focused, focusables, count);
+                }
+                return focusables.get(count - 1);
+            }
+            setFocusBottomRight(root, focusedRect) {
+                const rootBottom = root.getScrollY() + root.getHeight();
+                const rootRight = root.getScrollX() + root.getWidth();
+                focusedRect.set(rootRight, rootBottom, rootRight, rootBottom);
+            }
+            setFocusTopLeft(root, focusedRect) {
+                const rootTop = root.getScrollY();
+                const rootLeft = root.getScrollX();
+                focusedRect.set(rootLeft, rootTop, rootLeft, rootTop);
+            }
+            findNextFocusInAbsoluteDirection(focusables, root, focused, focusedRect, direction) {
+                this.mBestCandidateRect.set(focusedRect);
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                        this.mBestCandidateRect.offset(focusedRect.width() + 1, 0);
+                        break;
+                    case View.FOCUS_RIGHT:
+                        this.mBestCandidateRect.offset(-(focusedRect.width() + 1), 0);
+                        break;
+                    case View.FOCUS_UP:
+                        this.mBestCandidateRect.offset(0, focusedRect.height() + 1);
+                        break;
+                    case View.FOCUS_DOWN:
+                        this.mBestCandidateRect.offset(0, -(focusedRect.height() + 1));
+                }
+                let closest = null;
+                let numFocusables = focusables.size();
+                for (let i = 0; i < numFocusables; i++) {
+                    let focusable = focusables.get(i);
+                    if (focusable == focused || focusable == root)
+                        continue;
+                    focusable.getFocusedRect(this.mOtherRect);
+                    root.offsetDescendantRectToMyCoords(focusable, this.mOtherRect);
+                    if (this.isBetterCandidate(direction, focusedRect, this.mOtherRect, this.mBestCandidateRect)) {
+                        this.mBestCandidateRect.set(this.mOtherRect);
+                        closest = focusable;
+                    }
+                }
+                return closest;
+            }
+            static getNextFocusable(focused, focusables, count) {
+                if (focused != null) {
+                    let position = focusables.lastIndexOf(focused);
+                    if (position >= 0 && position + 1 < count) {
+                        return focusables.get(position + 1);
+                    }
+                }
+                if (!focusables.isEmpty()) {
+                    return focusables.get(0);
+                }
+                return null;
+            }
+            static getPreviousFocusable(focused, focusables, count) {
+                if (focused != null) {
+                    let position = focusables.indexOf(focused);
+                    if (position > 0) {
+                        return focusables.get(position - 1);
+                    }
+                }
+                if (!focusables.isEmpty()) {
+                    return focusables.get(count - 1);
+                }
+                return null;
+            }
+            isBetterCandidate(direction, source, rect1, rect2) {
+                if (!this.isCandidate(source, rect1, direction)) {
+                    return false;
+                }
+                if (!this.isCandidate(source, rect2, direction)) {
+                    return true;
+                }
+                if (this.beamBeats(direction, source, rect1, rect2)) {
+                    return true;
+                }
+                if (this.beamBeats(direction, source, rect2, rect1)) {
+                    return false;
+                }
+                return (this.getWeightedDistanceFor(FocusFinder.majorAxisDistance(direction, source, rect1), FocusFinder.minorAxisDistance(direction, source, rect1))
+                    < this.getWeightedDistanceFor(FocusFinder.majorAxisDistance(direction, source, rect2), FocusFinder.minorAxisDistance(direction, source, rect2)));
+            }
+            beamBeats(direction, source, rect1, rect2) {
+                const rect1InSrcBeam = this.beamsOverlap(direction, source, rect1);
+                const rect2InSrcBeam = this.beamsOverlap(direction, source, rect2);
+                if (rect2InSrcBeam || !rect1InSrcBeam) {
+                    return false;
+                }
+                if (!this.isToDirectionOf(direction, source, rect2)) {
+                    return true;
+                }
+                if ((direction == View.FOCUS_LEFT || direction == View.FOCUS_RIGHT)) {
+                    return true;
+                }
+                return (FocusFinder.majorAxisDistance(direction, source, rect1)
+                    < FocusFinder.majorAxisDistanceToFarEdge(direction, source, rect2));
+            }
+            getWeightedDistanceFor(majorAxisDistance, minorAxisDistance) {
+                return 13 * majorAxisDistance * majorAxisDistance
+                    + minorAxisDistance * minorAxisDistance;
+            }
+            isCandidate(srcRect, destRect, direction) {
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                        return (srcRect.right > destRect.right || srcRect.left >= destRect.right)
+                            && srcRect.left > destRect.left;
+                    case View.FOCUS_RIGHT:
+                        return (srcRect.left < destRect.left || srcRect.right <= destRect.left)
+                            && srcRect.right < destRect.right;
+                    case View.FOCUS_UP:
+                        return (srcRect.bottom > destRect.bottom || srcRect.top >= destRect.bottom)
+                            && srcRect.top > destRect.top;
+                    case View.FOCUS_DOWN:
+                        return (srcRect.top < destRect.top || srcRect.bottom <= destRect.top)
+                            && srcRect.bottom < destRect.bottom;
+                }
+                throw new Error("direction must be one of "
+                    + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
+            }
+            beamsOverlap(direction, rect1, rect2) {
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                    case View.FOCUS_RIGHT:
+                        return (rect2.bottom >= rect1.top) && (rect2.top <= rect1.bottom);
+                    case View.FOCUS_UP:
+                    case View.FOCUS_DOWN:
+                        return (rect2.right >= rect1.left) && (rect2.left <= rect1.right);
+                }
+                throw new Error("direction must be one of "
+                    + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
+            }
+            isToDirectionOf(direction, src, dest) {
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                        return src.left >= dest.right;
+                    case View.FOCUS_RIGHT:
+                        return src.right <= dest.left;
+                    case View.FOCUS_UP:
+                        return src.top >= dest.bottom;
+                    case View.FOCUS_DOWN:
+                        return src.bottom <= dest.top;
+                }
+                throw new Error("direction must be one of "
+                    + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
+            }
+            static majorAxisDistance(direction, source, dest) {
+                return Math.max(0, FocusFinder.majorAxisDistanceRaw(direction, source, dest));
+            }
+            static majorAxisDistanceRaw(direction, source, dest) {
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                        return source.left - dest.right;
+                    case View.FOCUS_RIGHT:
+                        return dest.left - source.right;
+                    case View.FOCUS_UP:
+                        return source.top - dest.bottom;
+                    case View.FOCUS_DOWN:
+                        return dest.top - source.bottom;
+                }
+                throw new Error("direction must be one of "
+                    + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
+            }
+            static majorAxisDistanceToFarEdge(direction, source, dest) {
+                return Math.max(1, FocusFinder.majorAxisDistanceToFarEdgeRaw(direction, source, dest));
+            }
+            static majorAxisDistanceToFarEdgeRaw(direction, source, dest) {
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                        return source.left - dest.left;
+                    case View.FOCUS_RIGHT:
+                        return dest.right - source.right;
+                    case View.FOCUS_UP:
+                        return source.top - dest.top;
+                    case View.FOCUS_DOWN:
+                        return dest.bottom - source.bottom;
+                }
+                throw new Error("direction must be one of "
+                    + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
+            }
+            static minorAxisDistance(direction, source, dest) {
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                    case View.FOCUS_RIGHT:
+                        return Math.abs(((source.top + source.height() / 2) -
+                            ((dest.top + dest.height() / 2))));
+                    case View.FOCUS_UP:
+                    case View.FOCUS_DOWN:
+                        return Math.abs(((source.left + source.width() / 2) -
+                            ((dest.left + dest.width() / 2))));
+                }
+                throw new Error("direction must be one of "
+                    + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
+            }
+            findNearestTouchable(root, x, y, direction, deltas) {
+                let touchables = root.getTouchables();
+                let minDistance = Number.MAX_SAFE_INTEGER;
+                let closest = null;
+                let numTouchables = touchables.size();
+                let edgeSlop = view_3.ViewConfiguration.get().getScaledEdgeSlop();
+                let closestBounds = new Rect();
+                let touchableBounds = this.mOtherRect;
+                for (let i = 0; i < numTouchables; i++) {
+                    let touchable = touchables.get(i);
+                    touchable.getDrawingRect(touchableBounds);
+                    root.offsetRectBetweenParentAndChild(touchable, touchableBounds, true, true);
+                    if (!this.isTouchCandidate(x, y, touchableBounds, direction)) {
+                        continue;
+                    }
+                    let distance = Number.MAX_SAFE_INTEGER;
+                    switch (direction) {
+                        case View.FOCUS_LEFT:
+                            distance = x - touchableBounds.right + 1;
+                            break;
+                        case View.FOCUS_RIGHT:
+                            distance = touchableBounds.left;
+                            break;
+                        case View.FOCUS_UP:
+                            distance = y - touchableBounds.bottom + 1;
+                            break;
+                        case View.FOCUS_DOWN:
+                            distance = touchableBounds.top;
+                            break;
+                    }
+                    if (distance < edgeSlop) {
+                        if (closest == null ||
+                            closestBounds.contains(touchableBounds) ||
+                            (!touchableBounds.contains(closestBounds) && distance < minDistance)) {
+                            minDistance = distance;
+                            closest = touchable;
+                            closestBounds.set(touchableBounds);
+                            switch (direction) {
+                                case View.FOCUS_LEFT:
+                                    deltas[0] = -distance;
+                                    break;
+                                case View.FOCUS_RIGHT:
+                                    deltas[0] = distance;
+                                    break;
+                                case View.FOCUS_UP:
+                                    deltas[1] = -distance;
+                                    break;
+                                case View.FOCUS_DOWN:
+                                    deltas[1] = distance;
+                                    break;
+                            }
+                        }
+                    }
+                }
+                return closest;
+            }
+            isTouchCandidate(x, y, destRect, direction) {
+                switch (direction) {
+                    case View.FOCUS_LEFT:
+                        return destRect.left <= x && destRect.top <= y && y <= destRect.bottom;
+                    case View.FOCUS_RIGHT:
+                        return destRect.left >= x && destRect.top <= y && y <= destRect.bottom;
+                    case View.FOCUS_UP:
+                        return destRect.top <= y && destRect.left <= x && x <= destRect.right;
+                    case View.FOCUS_DOWN:
+                        return destRect.top >= y && destRect.left <= x && x <= destRect.right;
+                }
+                throw new Error("direction must be one of "
+                    + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
+            }
+        }
+        view_3.FocusFinder = FocusFinder;
+        class SequentialFocusComparator {
+            constructor() {
+                this.mFirstRect = new Rect();
+                this.mSecondRect = new Rect();
+                this.mIsLayoutRtl = false;
+                this.compareFn = (first, second) => {
+                    if (first == second) {
+                        return 0;
+                    }
+                    this.getRect(first, this.mFirstRect);
+                    this.getRect(second, this.mSecondRect);
+                    if (this.mFirstRect.top < this.mSecondRect.top) {
+                        return -1;
+                    }
+                    else if (this.mFirstRect.top > this.mSecondRect.top) {
+                        return 1;
+                    }
+                    else if (this.mFirstRect.left < this.mSecondRect.left) {
+                        return this.mIsLayoutRtl ? 1 : -1;
+                    }
+                    else if (this.mFirstRect.left > this.mSecondRect.left) {
+                        return this.mIsLayoutRtl ? -1 : 1;
+                    }
+                    else if (this.mFirstRect.bottom < this.mSecondRect.bottom) {
+                        return -1;
+                    }
+                    else if (this.mFirstRect.bottom > this.mSecondRect.bottom) {
+                        return 1;
+                    }
+                    else if (this.mFirstRect.right < this.mSecondRect.right) {
+                        return this.mIsLayoutRtl ? 1 : -1;
+                    }
+                    else if (this.mFirstRect.right > this.mSecondRect.right) {
+                        return this.mIsLayoutRtl ? -1 : 1;
+                    }
+                    else {
+                        return 0;
+                    }
+                };
+            }
+            recycle() {
+                this.mRoot = null;
+            }
+            setRoot(root) {
+                this.mRoot = root;
+            }
+            getRect(view, rect) {
+                view.getDrawingRect(rect);
+                this.mRoot.offsetDescendantRectToMyCoords(view, rect);
+            }
+            sort(array) {
+                array.sort(this.compareFn);
+            }
+        }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
@@ -7554,14 +8761,16 @@ var android;
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
+///<reference path="FocusFinder.ts"/>
 var android;
 (function (android) {
     var view;
-    (function (view_3) {
+    (function (view_4) {
         var Rect = android.graphics.Rect;
         var SystemClock = android.os.SystemClock;
         var TypedValue = android.util.TypedValue;
-        class ViewGroup extends view_3.View {
+        var System = java.lang.System;
+        class ViewGroup extends view_4.View {
             constructor() {
                 super();
                 this.mLastTouchDownTime = 0;
@@ -7573,6 +8782,7 @@ var android;
                 this.mChildren = [];
                 this.mSuppressLayout = false;
                 this.mLayoutCalledWhileSuppressed = false;
+                this.mChildCountWithTransientState = 0;
                 this.initViewGroup();
             }
             get mChildrenCount() {
@@ -7583,13 +8793,13 @@ var android;
                 let viewGroup = this;
                 mergeHandler.add({
                     set clipChildren(value) {
-                        viewGroup.setClipChildren(view_3.View.AttrChangeHandler.parseBoolean(value));
+                        viewGroup.setClipChildren(view_4.View.AttrChangeHandler.parseBoolean(value));
                     },
                     get clipChildren() {
                         return viewGroup.getClipChildren();
                     },
                     set clipToPadding(value) {
-                        viewGroup.setClipToPadding(view_3.View.AttrChangeHandler.parseBoolean(value));
+                        viewGroup.setClipToPadding(view_4.View.AttrChangeHandler.parseBoolean(value));
                     },
                     get clipToPadding() {
                         return viewGroup.isClipToPadding();
@@ -7615,13 +8825,232 @@ var android;
                 });
             }
             initViewGroup() {
-                this.setFlags(view_3.View.WILL_NOT_DRAW, view_3.View.DRAW_MASK);
+                this.setFlags(view_4.View.WILL_NOT_DRAW, view_4.View.DRAW_MASK);
                 this.mGroupFlags |= ViewGroup.FLAG_CLIP_CHILDREN;
                 this.mGroupFlags |= ViewGroup.FLAG_CLIP_TO_PADDING;
                 this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_DONE;
                 this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_CACHE;
                 this.mGroupFlags |= ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE;
                 this.mGroupFlags |= ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
+                this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+            }
+            getDescendantFocusability() {
+                return this.mGroupFlags & ViewGroup.FLAG_MASK_FOCUSABILITY;
+            }
+            setDescendantFocusability(focusability) {
+                switch (focusability) {
+                    case ViewGroup.FOCUS_BEFORE_DESCENDANTS:
+                    case ViewGroup.FOCUS_AFTER_DESCENDANTS:
+                    case ViewGroup.FOCUS_BLOCK_DESCENDANTS:
+                        break;
+                    default:
+                        throw new Error("must be one of FOCUS_BEFORE_DESCENDANTS, "
+                            + "FOCUS_AFTER_DESCENDANTS, FOCUS_BLOCK_DESCENDANTS");
+                }
+                this.mGroupFlags &= ~ViewGroup.FLAG_MASK_FOCUSABILITY;
+                this.mGroupFlags |= (focusability & ViewGroup.FLAG_MASK_FOCUSABILITY);
+            }
+            handleFocusGainInternal(direction, previouslyFocusedRect) {
+                if (this.mFocused != null) {
+                    this.mFocused.unFocus();
+                    this.mFocused = null;
+                }
+                super.handleFocusGainInternal(direction, previouslyFocusedRect);
+            }
+            requestChildFocus(child, focused) {
+                if (view_4.View.DBG) {
+                    System.out.println(this + " requestChildFocus()");
+                }
+                if (this.getDescendantFocusability() == ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                    return;
+                }
+                super.unFocus();
+                if (this.mFocused != child) {
+                    if (this.mFocused != null) {
+                        this.mFocused.unFocus();
+                    }
+                    this.mFocused = child;
+                }
+                if (this.mParent != null) {
+                    this.mParent.requestChildFocus(this, focused);
+                }
+            }
+            focusableViewAvailable(v) {
+                if (this.mParent != null
+                    && (this.getDescendantFocusability() != ViewGroup.FOCUS_BLOCK_DESCENDANTS)
+                    && !(this.isFocused() && this.getDescendantFocusability() != ViewGroup.FOCUS_AFTER_DESCENDANTS)) {
+                    this.mParent.focusableViewAvailable(v);
+                }
+            }
+            focusSearch(focused, direction) {
+                if (this.isRootNamespace()) {
+                    return view_4.FocusFinder.getInstance().findNextFocus(this, focused, direction);
+                }
+                else if (this.mParent != null) {
+                    return this.mParent.focusSearch(focused, direction);
+                }
+                return null;
+            }
+            requestChildRectangleOnScreen(child, rectangle, immediate) {
+                return false;
+            }
+            childHasTransientStateChanged(child, childHasTransientState) {
+                const oldHasTransientState = this.hasTransientState();
+                if (childHasTransientState) {
+                    this.mChildCountWithTransientState++;
+                }
+                else {
+                    this.mChildCountWithTransientState--;
+                }
+                const newHasTransientState = this.hasTransientState();
+                if (this.mParent != null && oldHasTransientState != newHasTransientState) {
+                    this.mParent.childHasTransientStateChanged(this, newHasTransientState);
+                }
+            }
+            hasTransientState() {
+                return this.mChildCountWithTransientState > 0 || super.hasTransientState();
+            }
+            dispatchUnhandledMove(focused, direction) {
+                return this.mFocused != null && this.mFocused.dispatchUnhandledMove(focused, direction);
+            }
+            clearChildFocus(child) {
+                if (view_4.View.DBG) {
+                    System.out.println(this + " clearChildFocus()");
+                }
+                this.mFocused = null;
+                if (this.mParent != null) {
+                    this.mParent.clearChildFocus(this);
+                }
+            }
+            clearFocus() {
+                if (view_4.View.DBG) {
+                    System.out.println(this + " clearFocus()");
+                }
+                if (this.mFocused == null) {
+                    super.clearFocus();
+                }
+                else {
+                    let focused = this.mFocused;
+                    this.mFocused = null;
+                    focused.clearFocus();
+                }
+            }
+            unFocus() {
+                if (view_4.View.DBG) {
+                    System.out.println(this + " unFocus()");
+                }
+                if (this.mFocused == null) {
+                    super.unFocus();
+                }
+                else {
+                    this.mFocused.unFocus();
+                    this.mFocused = null;
+                }
+            }
+            getFocusedChild() {
+                return this.mFocused;
+            }
+            hasFocus() {
+                return (this.mPrivateFlags & view_4.View.PFLAG_FOCUSED) != 0 || this.mFocused != null;
+            }
+            findFocus() {
+                if (ViewGroup.DBG) {
+                    System.out.println("Find focus in " + this + ": flags=" + this.isFocused() + ", child=" + this.mFocused);
+                }
+                if (this.isFocused()) {
+                    return this;
+                }
+                if (this.mFocused != null) {
+                    return this.mFocused.findFocus();
+                }
+                return null;
+            }
+            hasFocusable() {
+                if ((this.mViewFlags & view_4.View.VISIBILITY_MASK) != view_4.View.VISIBLE) {
+                    return false;
+                }
+                if (this.isFocusable()) {
+                    return true;
+                }
+                const descendantFocusability = this.getDescendantFocusability();
+                if (descendantFocusability != ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                    const count = this.mChildrenCount;
+                    const children = this.mChildren;
+                    for (let i = 0; i < count; i++) {
+                        const child = children[i];
+                        if (child.hasFocusable()) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            addFocusables(views, direction, focusableMode = view_4.View.FOCUSABLES_TOUCH_MODE) {
+                const focusableCount = views.size();
+                const descendantFocusability = this.getDescendantFocusability();
+                if (descendantFocusability != ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                    const count = this.mChildrenCount;
+                    const children = this.mChildren;
+                    for (let i = 0; i < count; i++) {
+                        const child = children[i];
+                        if ((child.mViewFlags & view_4.View.VISIBILITY_MASK) == view_4.View.VISIBLE) {
+                            child.addFocusables(views, direction, focusableMode);
+                        }
+                    }
+                }
+                if (descendantFocusability != ViewGroup.FOCUS_AFTER_DESCENDANTS
+                    || (focusableCount == views.size())) {
+                    super.addFocusables(views, direction, focusableMode);
+                }
+            }
+            requestFocus(direction, previouslyFocusedRect) {
+                if (view_4.View.DBG) {
+                    System.out.println(this + " ViewGroup.requestFocus direction="
+                        + direction);
+                }
+                let descendantFocusability = this.getDescendantFocusability();
+                switch (descendantFocusability) {
+                    case ViewGroup.FOCUS_BLOCK_DESCENDANTS:
+                        return super.requestFocus(direction, previouslyFocusedRect);
+                    case ViewGroup.FOCUS_BEFORE_DESCENDANTS: {
+                        const took = super.requestFocus(direction, previouslyFocusedRect);
+                        return took ? took : this.onRequestFocusInDescendants(direction, previouslyFocusedRect);
+                    }
+                    case ViewGroup.FOCUS_AFTER_DESCENDANTS: {
+                        const took = this.onRequestFocusInDescendants(direction, previouslyFocusedRect);
+                        return took ? took : super.requestFocus(direction, previouslyFocusedRect);
+                    }
+                    default:
+                        throw new Error("descendant focusability must be "
+                            + "one of FOCUS_BEFORE_DESCENDANTS, FOCUS_AFTER_DESCENDANTS, FOCUS_BLOCK_DESCENDANTS "
+                            + "but is " + descendantFocusability);
+                }
+            }
+            onRequestFocusInDescendants(direction, previouslyFocusedRect) {
+                let index;
+                let increment;
+                let end;
+                let count = this.mChildrenCount;
+                if ((direction & view_4.View.FOCUS_FORWARD) != 0) {
+                    index = 0;
+                    increment = 1;
+                    end = count;
+                }
+                else {
+                    index = count - 1;
+                    increment = -1;
+                    end = -1;
+                }
+                const children = this.mChildren;
+                for (let i = index; i != end; i += increment) {
+                    let child = children[i];
+                    if ((child.mViewFlags & view_4.View.VISIBILITY_MASK) == view_4.View.VISIBLE) {
+                        if (child.requestFocus(direction, previouslyFocusedRect)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
             addView(...args) {
                 let child = args[0];
@@ -7682,7 +9111,7 @@ var android;
                 return true;
             }
             cleanupLayoutState(child) {
-                child.mPrivateFlags &= ~view_3.View.PFLAG_FORCE_LAYOUT;
+                child.mPrivateFlags &= ~view_4.View.PFLAG_FORCE_LAYOUT;
             }
             addViewInner(child, index, params, preventRequestLayout) {
                 if (child.getParent() != null) {
@@ -7708,6 +9137,9 @@ var android;
                 }
                 else {
                     child.mParent = this;
+                }
+                if (child.hasFocus()) {
+                    this.requestChildFocus(child, child.findFocus());
                 }
                 let ai = this.mAttachInfo;
                 if (ai != null && (this.mGroupFlags & ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW) == 0) {
@@ -7786,17 +9218,30 @@ var android;
                 }
             }
             removeViewsInternal(start, count) {
+                let focused = this.mFocused;
+                let clearChildFocus = false;
                 const detach = this.mAttachInfo != null;
                 const children = this.mChildren;
                 const end = start + count;
                 for (let i = start; i < end; i++) {
                     const view = children[i];
+                    if (view == focused) {
+                        view.unFocus();
+                        clearChildFocus = true;
+                    }
+                    this.cancelTouchTarget(view);
                     if (detach) {
                         view.dispatchDetachedFromWindow();
                     }
                     this.onViewRemoved(view);
                 }
                 this.removeFromArray(start, count);
+                if (clearChildFocus) {
+                    this.clearChildFocus(focused);
+                    if (!this.rootViewRequestFocus()) {
+                        this.notifyGlobalFocusCleared(focused);
+                    }
+                }
             }
             removeAllViews() {
                 this.removeAllViewsInLayout();
@@ -7844,7 +9289,19 @@ var android;
                 }
             }
             dispatchKeyEvent(event) {
-                return super.dispatchKeyEvent(event);
+                if ((this.mPrivateFlags & (view_4.View.PFLAG_FOCUSED | view_4.View.PFLAG_HAS_BOUNDS))
+                    == (view_4.View.PFLAG_FOCUSED | view_4.View.PFLAG_HAS_BOUNDS)) {
+                    if (super.dispatchKeyEvent(event)) {
+                        return true;
+                    }
+                }
+                else if (this.mFocused != null && (this.mFocused.mPrivateFlags & view_4.View.PFLAG_HAS_BOUNDS)
+                    == view_4.View.PFLAG_HAS_BOUNDS) {
+                    if (this.mFocused.dispatchKeyEvent(event)) {
+                        return true;
+                    }
+                }
+                return false;
             }
             addTouchables(views) {
                 super.addTouchables(views);
@@ -7852,7 +9309,7 @@ var android;
                 const children = this.mChildren;
                 for (let i = 0; i < count; i++) {
                     const child = children[i];
-                    if ((child.mViewFlags & view_3.View.VISIBILITY_MASK) == view_3.View.VISIBLE) {
+                    if ((child.mViewFlags & view_4.View.VISIBILITY_MASK) == view_4.View.VISIBLE) {
                         child.addTouchables(views);
                     }
                 }
@@ -7864,13 +9321,13 @@ var android;
                 let handled = false;
                 if (this.onFilterTouchEventForSecurity(ev)) {
                     let action = ev.getAction();
-                    let actionMasked = action & view_3.MotionEvent.ACTION_MASK;
-                    if (actionMasked == view_3.MotionEvent.ACTION_DOWN) {
+                    let actionMasked = action & view_4.MotionEvent.ACTION_MASK;
+                    if (actionMasked == view_4.MotionEvent.ACTION_DOWN) {
                         this.cancelAndClearTouchTargets(ev);
                         this.resetTouchState();
                     }
                     let intercepted;
-                    if (actionMasked == view_3.MotionEvent.ACTION_DOWN
+                    if (actionMasked == view_4.MotionEvent.ACTION_DOWN
                         || this.mFirstTouchTarget != null) {
                         let disallowIntercept = (this.mGroupFlags & ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0;
                         if (!disallowIntercept) {
@@ -7885,14 +9342,14 @@ var android;
                         intercepted = true;
                     }
                     let canceled = ViewGroup.resetCancelNextUpFlag(this)
-                        || actionMasked == view_3.MotionEvent.ACTION_CANCEL;
+                        || actionMasked == view_4.MotionEvent.ACTION_CANCEL;
                     let split = (this.mGroupFlags & ViewGroup.FLAG_SPLIT_MOTION_EVENTS) != 0;
                     let newTouchTarget = null;
                     let alreadyDispatchedToNewTouchTarget = false;
                     if (!canceled && !intercepted) {
-                        if (actionMasked == view_3.MotionEvent.ACTION_DOWN
-                            || (split && actionMasked == view_3.MotionEvent.ACTION_POINTER_DOWN)
-                            || actionMasked == view_3.MotionEvent.ACTION_HOVER_MOVE) {
+                        if (actionMasked == view_4.MotionEvent.ACTION_DOWN
+                            || (split && actionMasked == view_4.MotionEvent.ACTION_POINTER_DOWN)
+                            || actionMasked == view_4.MotionEvent.ACTION_HOVER_MOVE) {
                             let actionIndex = ev.getActionIndex();
                             let idBitsToAssign = split ? 1 << ev.getPointerId(actionIndex)
                                 : TouchTarget.ALL_POINTER_IDS;
@@ -7970,11 +9427,11 @@ var android;
                         }
                     }
                     if (canceled
-                        || actionMasked == view_3.MotionEvent.ACTION_UP
-                        || actionMasked == view_3.MotionEvent.ACTION_HOVER_MOVE) {
+                        || actionMasked == view_4.MotionEvent.ACTION_UP
+                        || actionMasked == view_4.MotionEvent.ACTION_HOVER_MOVE) {
                         this.resetTouchState();
                     }
-                    else if (split && actionMasked == view_3.MotionEvent.ACTION_POINTER_UP) {
+                    else if (split && actionMasked == view_4.MotionEvent.ACTION_POINTER_UP) {
                         let actionIndex = ev.getActionIndex();
                         let idBitsToRemove = 1 << ev.getPointerId(actionIndex);
                         this.removePointersFromTouchTargets(idBitsToRemove);
@@ -7988,8 +9445,8 @@ var android;
                 this.mGroupFlags &= ~ViewGroup.FLAG_DISALLOW_INTERCEPT;
             }
             static resetCancelNextUpFlag(view) {
-                if ((view.mPrivateFlags & view_3.View.PFLAG_CANCEL_NEXT_UP_EVENT) != 0) {
-                    view.mPrivateFlags &= ~view_3.View.PFLAG_CANCEL_NEXT_UP_EVENT;
+                if ((view.mPrivateFlags & view_4.View.PFLAG_CANCEL_NEXT_UP_EVENT) != 0) {
+                    view.mPrivateFlags &= ~view_4.View.PFLAG_CANCEL_NEXT_UP_EVENT;
                     return true;
                 }
                 return false;
@@ -8010,7 +9467,7 @@ var android;
                     let syntheticEvent = false;
                     if (event == null) {
                         let now = SystemClock.uptimeMillis();
-                        event = view_3.MotionEvent.obtainWithAction(now, now, view_3.MotionEvent.ACTION_CANCEL, 0, 0);
+                        event = view_4.MotionEvent.obtainWithAction(now, now, view_4.MotionEvent.ACTION_CANCEL, 0, 0);
                         syntheticEvent = true;
                     }
                     for (let target = this.mFirstTouchTarget; target != null; target = target.next) {
@@ -8074,7 +9531,7 @@ var android;
                         }
                         target.recycle();
                         let now = SystemClock.uptimeMillis();
-                        let event = view_3.MotionEvent.obtainWithAction(now, now, view_3.MotionEvent.ACTION_CANCEL, 0, 0);
+                        let event = view_4.MotionEvent.obtainWithAction(now, now, view_4.MotionEvent.ACTION_CANCEL, 0, 0);
                         view.dispatchTouchEvent(event);
                         event.recycle();
                         return;
@@ -8084,7 +9541,7 @@ var android;
                 }
             }
             static canViewReceivePointerEvents(child) {
-                return (child.mViewFlags & view_3.View.VISIBILITY_MASK) == view_3.View.VISIBLE;
+                return (child.mViewFlags & view_4.View.VISIBILITY_MASK) == view_4.View.VISIBLE;
             }
             isTransformedTouchPointInView(x, y, child, outLocalPoint) {
                 let localX = x + this.mScrollX - child.mLeft;
@@ -8098,8 +9555,8 @@ var android;
             dispatchTransformedTouchEvent(event, cancel, child, desiredPointerIdBits) {
                 let handled;
                 const oldAction = event.getAction();
-                if (cancel || oldAction == view_3.MotionEvent.ACTION_CANCEL) {
-                    event.setAction(view_3.MotionEvent.ACTION_CANCEL);
+                if (cancel || oldAction == view_4.MotionEvent.ACTION_CANCEL) {
+                    event.setAction(view_4.MotionEvent.ACTION_CANCEL);
                     if (child == null) {
                         handled = super.dispatchTouchEvent(event);
                     }
@@ -8129,7 +9586,7 @@ var android;
                         }
                         return handled;
                     }
-                    transformedEvent = view_3.MotionEvent.obtain(event);
+                    transformedEvent = view_4.MotionEvent.obtain(event);
                 }
                 else {
                     transformedEvent = event.split(newPointerIdBits);
@@ -8165,7 +9622,7 @@ var android;
                 const size = this.mChildren.length;
                 for (let i = 0; i < size; ++i) {
                     const child = this.mChildren[i];
-                    if ((child.mViewFlags & view_3.View.VISIBILITY_MASK) != view_3.View.GONE) {
+                    if ((child.mViewFlags & view_4.View.VISIBILITY_MASK) != view_4.View.GONE) {
                         this.measureChild(child, widthMeasureSpec, heightMeasureSpec);
                     }
                 }
@@ -8195,7 +9652,7 @@ var android;
                 lp._measuringParentHeightMeasureSpec = null;
             }
             static getChildMeasureSpec(spec, padding, childDimension) {
-                let MeasureSpec = view_3.View.MeasureSpec;
+                let MeasureSpec = view_4.View.MeasureSpec;
                 let specMode = MeasureSpec.getMode(spec);
                 let specSize = MeasureSpec.getSize(spec);
                 let size = Math.max(0, specSize - padding);
@@ -8255,7 +9712,7 @@ var android;
                 const children = this.mChildren;
                 for (let i = 0; i < count; i++) {
                     const child = children[i];
-                    child.dispatchAttachedToWindow(info, visibility | (child.mViewFlags & view_3.View.VISIBILITY_MASK));
+                    child.dispatchAttachedToWindow(info, visibility | (child.mViewFlags & view_4.View.VISIBILITY_MASK));
                 }
             }
             onAttachedToWindow() {
@@ -8316,7 +9773,7 @@ var android;
                 }
                 let theParent = descendant.mParent;
                 while ((theParent != null)
-                    && (theParent instanceof view_3.View)
+                    && (theParent instanceof view_4.View)
                     && (theParent != this)) {
                     if (offsetFromChildToParent) {
                         rect.offset(descendant.mLeft - descendant.mScrollX, descendant.mTop - descendant.mScrollY);
@@ -8412,7 +9869,7 @@ var android;
                 let customOrder = this.isChildrenDrawingOrderEnabled();
                 for (let i = 0; i < count; i++) {
                     let child = children[customOrder ? this.getChildDrawingOrder(count, i) : i];
-                    if ((child.mViewFlags & view_3.View.VISIBILITY_MASK) == view_3.View.VISIBLE) {
+                    if ((child.mViewFlags & view_4.View.VISIBILITY_MASK) == view_4.View.VISIBLE) {
                         more = more || this.drawChild(canvas, child, drawingTime);
                     }
                 }
@@ -8438,7 +9895,7 @@ var android;
                     const count = this.mChildrenCount;
                     for (let i = 0; i < count; i++) {
                         const child = children[i];
-                        if ((child.mViewFlags & view_3.View.DUPLICATE_PARENT_STATE) != 0) {
+                        if ((child.mViewFlags & view_4.View.DUPLICATE_PARENT_STATE) != 0) {
                             child.refreshDrawableState();
                         }
                     }
@@ -8468,7 +9925,7 @@ var android;
                 for (let i = 0; i < n; i++) {
                     let childState = this.getChildAt(i).getDrawableState();
                     if (childState != null) {
-                        state = view_3.View.mergeDrawableStates(state, childState);
+                        state = view_4.View.mergeDrawableStates(state, childState);
                     }
                 }
                 return state;
@@ -8509,28 +9966,28 @@ var android;
                 let parent = this;
                 const attachInfo = this.mAttachInfo;
                 if (attachInfo != null) {
-                    const drawAnimation = (child.mPrivateFlags & view_3.View.PFLAG_DRAW_ANIMATION)
-                        == view_3.View.PFLAG_DRAW_ANIMATION;
+                    const drawAnimation = (child.mPrivateFlags & view_4.View.PFLAG_DRAW_ANIMATION)
+                        == view_4.View.PFLAG_DRAW_ANIMATION;
                     let childMatrix = child.getMatrix();
                     const isOpaque = child.isOpaque() && !drawAnimation &&
                         child.getAnimation() == null && childMatrix.isIdentity();
-                    let opaqueFlag = isOpaque ? view_3.View.PFLAG_DIRTY_OPAQUE : view_3.View.PFLAG_DIRTY;
-                    if (child.mLayerType != view_3.View.LAYER_TYPE_NONE) {
-                        this.mPrivateFlags |= view_3.View.PFLAG_INVALIDATED;
-                        this.mPrivateFlags &= ~view_3.View.PFLAG_DRAWING_CACHE_VALID;
+                    let opaqueFlag = isOpaque ? view_4.View.PFLAG_DIRTY_OPAQUE : view_4.View.PFLAG_DIRTY;
+                    if (child.mLayerType != view_4.View.LAYER_TYPE_NONE) {
+                        this.mPrivateFlags |= view_4.View.PFLAG_INVALIDATED;
+                        this.mPrivateFlags &= ~view_4.View.PFLAG_DRAWING_CACHE_VALID;
                     }
                     const location = attachInfo.mInvalidateChildLocation;
                     location[0] = child.mLeft;
                     location[1] = child.mTop;
                     do {
                         let view = null;
-                        if (parent instanceof view_3.View) {
+                        if (parent instanceof view_4.View) {
                             view = parent;
                         }
                         if (view != null) {
-                            opaqueFlag = view_3.View.PFLAG_DIRTY;
-                            if ((view.mPrivateFlags & view_3.View.PFLAG_DIRTY_MASK) != view_3.View.PFLAG_DIRTY) {
-                                view.mPrivateFlags = (view.mPrivateFlags & ~view_3.View.PFLAG_DIRTY_MASK) | opaqueFlag;
+                            opaqueFlag = view_4.View.PFLAG_DIRTY;
+                            if ((view.mPrivateFlags & view_4.View.PFLAG_DIRTY_MASK) != view_4.View.PFLAG_DIRTY) {
+                                view.mPrivateFlags = (view.mPrivateFlags & ~view_4.View.PFLAG_DIRTY_MASK) | opaqueFlag;
                             }
                         }
                         parent = parent.invalidateChildInParent(location, dirty);
@@ -8547,8 +10004,8 @@ var android;
                 }
             }
             invalidateChildInParent(location, dirty) {
-                if ((this.mPrivateFlags & view_3.View.PFLAG_DRAWN) == view_3.View.PFLAG_DRAWN ||
-                    (this.mPrivateFlags & view_3.View.PFLAG_DRAWING_CACHE_VALID) == view_3.View.PFLAG_DRAWING_CACHE_VALID) {
+                if ((this.mPrivateFlags & view_4.View.PFLAG_DRAWN) == view_4.View.PFLAG_DRAWN ||
+                    (this.mPrivateFlags & view_4.View.PFLAG_DRAWING_CACHE_VALID) == view_4.View.PFLAG_DRAWING_CACHE_VALID) {
                     if ((this.mGroupFlags & (ViewGroup.FLAG_OPTIMIZE_INVALIDATE | ViewGroup.FLAG_ANIMATION_DONE)) !=
                         ViewGroup.FLAG_OPTIMIZE_INVALIDATE) {
                         dirty.offset(location[0] - this.mScrollX, location[1] - this.mScrollY);
@@ -8562,16 +10019,16 @@ var android;
                                 dirty.setEmpty();
                             }
                         }
-                        this.mPrivateFlags &= ~view_3.View.PFLAG_DRAWING_CACHE_VALID;
+                        this.mPrivateFlags &= ~view_4.View.PFLAG_DRAWING_CACHE_VALID;
                         location[0] = left;
                         location[1] = top;
-                        if (this.mLayerType != view_3.View.LAYER_TYPE_NONE) {
-                            this.mPrivateFlags |= view_3.View.PFLAG_INVALIDATED;
+                        if (this.mLayerType != view_4.View.LAYER_TYPE_NONE) {
+                            this.mPrivateFlags |= view_4.View.PFLAG_INVALIDATED;
                         }
                         return this.mParent;
                     }
                     else {
-                        this.mPrivateFlags &= ~view_3.View.PFLAG_DRAWN & ~view_3.View.PFLAG_DRAWING_CACHE_VALID;
+                        this.mPrivateFlags &= ~view_4.View.PFLAG_DRAWN & ~view_4.View.PFLAG_DRAWING_CACHE_VALID;
                         location[0] = this.mLeft;
                         location[1] = this.mTop;
                         if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == ViewGroup.FLAG_CLIP_CHILDREN) {
@@ -8580,8 +10037,8 @@ var android;
                         else {
                             dirty.union(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
                         }
-                        if (this.mLayerType != view_3.View.LAYER_TYPE_NONE) {
-                            this.mPrivateFlags |= view_3.View.PFLAG_INVALIDATED;
+                        if (this.mLayerType != view_4.View.LAYER_TYPE_NONE) {
+                            this.mPrivateFlags |= view_4.View.PFLAG_INVALIDATED;
                         }
                         return this.mParent;
                     }
@@ -8600,7 +10057,7 @@ var android;
                     do {
                         if (parent instanceof ViewGroup) {
                             let parentVG = parent;
-                            if (parentVG.mLayerType != view_3.View.LAYER_TYPE_NONE) {
+                            if (parentVG.mLayerType != view_4.View.LAYER_TYPE_NONE) {
                                 parentVG.invalidate();
                                 parent = null;
                             }
@@ -8620,15 +10077,15 @@ var android;
                 }
             }
             invalidateChildInParentFast(left, top, dirty) {
-                if ((this.mPrivateFlags & view_3.View.PFLAG_DRAWN) == view_3.View.PFLAG_DRAWN ||
-                    (this.mPrivateFlags & view_3.View.PFLAG_DRAWING_CACHE_VALID) == view_3.View.PFLAG_DRAWING_CACHE_VALID) {
+                if ((this.mPrivateFlags & view_4.View.PFLAG_DRAWN) == view_4.View.PFLAG_DRAWN ||
+                    (this.mPrivateFlags & view_4.View.PFLAG_DRAWING_CACHE_VALID) == view_4.View.PFLAG_DRAWING_CACHE_VALID) {
                     dirty.offset(left - this.mScrollX, top - this.mScrollY);
                     if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == 0) {
                         dirty.union(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
                     }
                     if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == 0 ||
                         dirty.intersect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop)) {
-                        if (this.mLayerType != view_3.View.LAYER_TYPE_NONE) {
+                        if (this.mLayerType != view_4.View.LAYER_TYPE_NONE) {
                         }
                         if (!this.getMatrix().isIdentity()) {
                             this.transformRect(dirty);
@@ -8638,16 +10095,22 @@ var android;
                 }
                 return null;
             }
-            requestTransparentRegion(child) {
-            }
-            requestChildFocus(child, focused) {
-            }
-            clearChildFocus(child) {
-            }
-            focusSearch(v, direction) {
-                return undefined;
-            }
-            focusableViewAvailable(v) {
+            findViewByPredicateTraversal(predicate, childToSkip) {
+                if (predicate.apply(this)) {
+                    return this;
+                }
+                const where = this.mChildren;
+                const len = this.mChildrenCount;
+                for (let i = 0; i < len; i++) {
+                    let v = where[i];
+                    if (v != childToSkip && (v.mPrivateFlags & view_4.View.PFLAG_IS_ROOT_NAMESPACE) == 0) {
+                        v = v.findViewByPredicate(predicate);
+                        if (v != null) {
+                            return v;
+                        }
+                    }
+                }
+                return null;
             }
             requestDisallowInterceptTouchEvent(disallowIntercept) {
                 if (disallowIntercept == ((this.mGroupFlags & ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0)) {
@@ -8662,11 +10125,6 @@ var android;
                 if (this.mParent != null) {
                     this.mParent.requestDisallowInterceptTouchEvent(disallowIntercept);
                 }
-            }
-            requestChildRectangleOnScreen(child, rectangle, immediate) {
-                return undefined;
-            }
-            childHasTransientStateChanged(child, hasTransientState) {
             }
             shouldDelayChildPressedState() {
                 return true;
@@ -8703,7 +10161,7 @@ var android;
         ViewGroup.LAYOUT_MODE_CLIP_BOUNDS = 0;
         ViewGroup.LAYOUT_MODE_DEFAULT = ViewGroup.LAYOUT_MODE_CLIP_BOUNDS;
         ViewGroup.CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
-        view_3.ViewGroup = ViewGroup;
+        view_4.ViewGroup = ViewGroup;
         (function (ViewGroup) {
             class LayoutParams {
                 constructor(...args) {
@@ -8711,7 +10169,7 @@ var android;
                     this._height = 0;
                     this._measuringParentWidthMeasureSpec = 0;
                     this._measuringParentHeightMeasureSpec = 0;
-                    this._attrChangeHandler = new view_3.View.AttrChangeHandler(null);
+                    this._attrChangeHandler = new view_4.View.AttrChangeHandler(null);
                     if (args.length === 1) {
                         let src = args[0];
                         this.width = src._width;
@@ -8736,7 +10194,7 @@ var android;
                     else if (up === 'WRAP_CONTENT')
                         this._width = -2;
                     else {
-                        let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                        let parentWidth = view_4.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                         try {
                             this._width = TypedValue.complexToDimensionPixelSize(this._width, parentWidth, this._measuringMeasureSpec);
                         }
@@ -8759,7 +10217,7 @@ var android;
                     else if (up === 'WRAP_CONTENT')
                         this._height = -2;
                     else {
-                        let parentHeight = view_3.View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
+                        let parentHeight = view_4.View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
                         try {
                             this._height = TypedValue.complexToDimensionPixelSize(this._height, parentHeight, this._measuringMeasureSpec);
                         }
@@ -8828,7 +10286,7 @@ var android;
                 get leftMargin() {
                     if (typeof this._leftMargin === 'number')
                         return this._leftMargin;
-                    let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    let parentWidth = view_4.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
                         this._leftMargin = TypedValue.complexToDimensionPixelSize(this._leftMargin, parentWidth, this._measuringMeasureSpec);
                     }
@@ -8841,7 +10299,7 @@ var android;
                 get topMargin() {
                     if (typeof this._topMargin === 'number')
                         return this._topMargin;
-                    let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    let parentWidth = view_4.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
                         this._topMargin = TypedValue.complexToDimensionPixelSize(this._topMargin, parentWidth, this._measuringMeasureSpec);
                     }
@@ -8854,7 +10312,7 @@ var android;
                 get rightMargin() {
                     if (typeof this._rightMargin === 'number')
                         return this._rightMargin;
-                    let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    let parentWidth = view_4.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
                         this._rightMargin = TypedValue.complexToDimensionPixelSize(this._rightMargin, parentWidth, this._measuringMeasureSpec);
                     }
@@ -8867,7 +10325,7 @@ var android;
                 get bottomMargin() {
                     if (typeof this._bottomMargin === 'number')
                         return this._bottomMargin;
-                    let parentWidth = view_3.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
+                    let parentWidth = view_4.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
                         this._bottomMargin = TypedValue.complexToDimensionPixelSize(this._bottomMargin, parentWidth, this._measuringMeasureSpec);
                     }
@@ -8922,7 +10380,7 @@ var android;
                         set margin(value) {
                             if (value == null)
                                 value = 0;
-                            let [left, top, right, bottom] = view_3.View.AttrChangeHandler.parsePaddingMarginLTRB(value);
+                            let [left, top, right, bottom] = view_4.View.AttrChangeHandler.parsePaddingMarginLTRB(value);
                             params.leftMargin = left;
                             params.topMargin = top;
                             params.rightMargin = right;
@@ -8932,7 +10390,7 @@ var android;
                 }
             }
             ViewGroup.MarginLayoutParams = MarginLayoutParams;
-        })(ViewGroup = view_3.ViewGroup || (view_3.ViewGroup = {}));
+        })(ViewGroup = view_4.ViewGroup || (view_4.ViewGroup = {}));
         class TouchTarget {
             static obtain(child, pointerIdBits) {
                 let target;
@@ -9021,6 +10479,8 @@ var android;
                 }
                 isEmpty() {
                     return true;
+                }
+                onLayout(changed, l, t, r, b) {
                 }
             }
             ViewOverlay.OverlayViewGroup = OverlayViewGroup;
@@ -10145,6 +11605,8 @@ var android;
             }
             initScrollView() {
                 this.mScroller = new OverScroller();
+                this.setFocusable(true);
+                this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
                 this.setWillNotDraw(false);
                 const configuration = ViewConfiguration.get();
                 this.mTouchSlop = configuration.getScaledTouchSlop();
@@ -10152,6 +11614,7 @@ var android;
                 this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
                 this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
                 this.mOverflingDistance = configuration.getScaledOverflingDistance();
+                this.initScrollCache();
                 this.setVerticalScrollBarEnabled(true);
             }
             addView(...args) {
@@ -13202,6 +14665,7 @@ var android;
             }
             _initDefaultStyle() {
                 let density = Resources.getDisplayMetrics().density;
+                this.setFocusable(true);
                 this.setClickable(true);
                 this.setTextSize(18);
                 this.setMinimumHeight(48 * density);
@@ -13708,7 +15172,7 @@ var android;
         var v4;
         (function (v4) {
             var view;
-            (function (view_4) {
+            (function (view_5) {
                 var DataSetObservable = android.database.DataSetObservable;
                 class PagerAdapter {
                     constructor() {
@@ -13747,7 +15211,7 @@ var android;
                 }
                 PagerAdapter.POSITION_UNCHANGED = -1;
                 PagerAdapter.POSITION_NONE = -2;
-                view_4.PagerAdapter = PagerAdapter;
+                view_5.PagerAdapter = PagerAdapter;
             })(view = v4.view || (v4.view = {}));
         })(v4 = support.v4 || (support.v4 = {}));
     })(support = android.support || (android.support = {}));
@@ -13773,7 +15237,7 @@ var android;
         var v4;
         (function (v4) {
             var view;
-            (function (view_5) {
+            (function (view_6) {
                 var View = android.view.View;
                 var Gravity = android.view.Gravity;
                 var MeasureSpec = View.MeasureSpec;
@@ -13844,6 +15308,8 @@ var android;
                     }
                     initViewPager() {
                         this.setWillNotDraw(false);
+                        this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+                        this.setFocusable(true);
                         this.mScroller = new OverScroller(ViewPager.sInterpolator);
                         let density = Resources.getDisplayMetrics().density;
                         this.mTouchSlop = ViewConfiguration.get().getScaledPagingTouchSlop();
@@ -15423,7 +16889,7 @@ var android;
                             }
                         }
                         let handled = false;
-                        let nextFocused = null;
+                        let nextFocused = android.view.FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
                         if (nextFocused != null && nextFocused != currentFocused) {
                             if (direction == View.FOCUS_LEFT) {
                                 const nextLeft = this.getChildRectInPagerCoordinates(this.mTempRect, nextFocused).left;
@@ -15502,6 +16968,34 @@ var android;
                             }
                         }
                     }
+                    onRequestFocusInDescendants(direction, previouslyFocusedRect) {
+                        let index;
+                        let increment;
+                        let end;
+                        let count = this.getChildCount();
+                        if ((direction & View.FOCUS_FORWARD) != 0) {
+                            index = 0;
+                            increment = 1;
+                            end = count;
+                        }
+                        else {
+                            index = count - 1;
+                            increment = -1;
+                            end = -1;
+                        }
+                        for (let i = index; i != end; i += increment) {
+                            let child = this.getChildAt(i);
+                            if (child.getVisibility() == View.VISIBLE) {
+                                let ii = this.infoForChild(child);
+                                if (ii != null && ii.position == this.mCurItem) {
+                                    if (child.requestFocus(direction, previouslyFocusedRect)) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                        return false;
+                    }
                     generateDefaultLayoutParams() {
                         return new ViewPager.LayoutParams();
                     }
@@ -15549,7 +17043,7 @@ var android;
                 ViewPager.SCROLL_STATE_IDLE = 0;
                 ViewPager.SCROLL_STATE_DRAGGING = 1;
                 ViewPager.SCROLL_STATE_SETTLING = 2;
-                view_5.ViewPager = ViewPager;
+                view_6.ViewPager = ViewPager;
                 (function (ViewPager) {
                     class SimpleOnPageChangeListener {
                         onPageScrolled(position, positionOffset, positionOffsetPixels) {
@@ -15584,7 +17078,7 @@ var android;
                         }
                     }
                     ViewPager.LayoutParams = LayoutParams;
-                })(ViewPager = view_5.ViewPager || (view_5.ViewPager = {}));
+                })(ViewPager = view_6.ViewPager || (view_6.ViewPager = {}));
                 class ItemInfo {
                     constructor() {
                         this.position = 0;
@@ -15780,10 +17274,11 @@ var androidui;
     var FrameLayout = android.widget.FrameLayout;
     var MotionEvent = android.view.MotionEvent;
     var KeyEvent = android.view.KeyEvent;
-    let AndroidIDCreator = 0;
+    let sNextAndroidID = 0;
     class AndroidUI {
         constructor(element) {
             this._windowBound = new android.graphics.Rect();
+            this.tempRect = new android.graphics.Rect();
             this.motionEvent = new MotionEvent();
             this.ketEvent = new KeyEvent();
             this.element = element;
@@ -15797,12 +17292,12 @@ var androidui;
             return this._windowBound;
         }
         init() {
-            this.AndroidID = AndroidIDCreator++;
+            this.AndroidID = sNextAndroidID++;
             this.element.classList.add(AndroidUI.DomClassName);
             this.element.classList.add('id-' + this.AndroidID);
             this._viewRootImpl = new ViewRootImpl();
             this._viewRootImpl.rootElement = this.element;
-            this._rootLayout = new RootLayout(this);
+            this._rootLayout = new RootLayout();
             this._canvas = document.createElement("canvas");
             this.initInflateView();
             this.element.innerHTML = '';
@@ -15877,25 +17372,25 @@ var androidui;
                 e.stopPropagation();
                 this.element.focus();
                 this.motionEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(e, MotionEvent.ACTION_MOVE, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(e, MotionEvent.ACTION_UP, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('touchcancel', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(e, MotionEvent.ACTION_CANCEL, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
         }
         initMouseEvent() {
@@ -15925,7 +17420,7 @@ var androidui;
                 e.stopPropagation();
                 this.element.focus();
                 this.motionEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('mousemove', (e) => {
                 if (!isMouseDown)
@@ -15933,14 +17428,14 @@ var androidui;
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('mouseup', (e) => {
                 isMouseDown = false;
                 e.preventDefault();
                 e.stopPropagation();
                 this.motionEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
-                this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                this._viewRootImpl.dispatchInputEvent(this.motionEvent);
             }, true);
             this.element.addEventListener('mouseleave', (e) => {
                 if (e.fromElement === this.element) {
@@ -15948,23 +17443,21 @@ var androidui;
                     e.preventDefault();
                     e.stopPropagation();
                     this.motionEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
-                    this._rootLayout.dispatchTouchEvent(this.motionEvent);
+                    this._viewRootImpl.dispatchInputEvent(this.motionEvent);
                 }
             }, true);
         }
         initKeyEvent() {
             this.element.addEventListener('keydown', (e) => {
                 this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_DOWN);
-                let focus = this._rootLayout.findFocus();
-                if (focus && focus.dispatchKeyEvent(this.ketEvent)) {
+                if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
             }, true);
             this.element.addEventListener('keyup', (e) => {
                 this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_UP);
-                let focus = this._rootLayout.findFocus();
-                if (focus && focus.dispatchKeyEvent(this.ketEvent)) {
+                if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -16000,14 +17493,14 @@ var androidui;
         notifySizeChange() {
             this.refreshWindowBound();
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            this._viewRootImpl.mWinFrame.set(this._windowBound.left * density, this._windowBound.top * density, this._windowBound.right * density, this._windowBound.bottom * density);
+            this.tempRect.set(this._windowBound.left * density, this._windowBound.top * density, this._windowBound.right * density, this._windowBound.bottom * density);
+            this._viewRootImpl.dispatchResized(this.tempRect);
             let width = this._windowBound.width();
             let height = this._windowBound.height();
             this._canvas.width = width * density;
             this._canvas.height = height * density;
             this._canvas.style.width = width + "px";
             this._canvas.style.height = height + "px";
-            this._viewRootImpl.requestLayout();
         }
         setContentView(view) {
             this._rootLayout.removeAllViews();
@@ -16051,17 +17544,6 @@ var androidui;
         `;
     document.head.appendChild(styleElement);
     class RootLayout extends FrameLayout {
-        constructor(ui) {
-            super();
-            this.AndroidUI_this = ui;
-        }
-        dispatchTouchEvent(ev) {
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            let offsetX = -this.AndroidUI_this.windowBound.left * density;
-            let offsetY = -this.AndroidUI_this.windowBound.top * density;
-            ev.offsetLocation(offsetX, offsetY);
-            return super.dispatchTouchEvent(ev);
-        }
     }
 })(androidui || (androidui = {}));
 /**
