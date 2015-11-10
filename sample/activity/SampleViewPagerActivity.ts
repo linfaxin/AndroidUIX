@@ -1,7 +1,7 @@
 /**
  * Created by linfaxin on 15/10/26.
  */
-///<reference path="../../dist/android-web-widget.d.ts"/>
+///<reference path="../../dist/android-ui.d.ts"/>
 
 module sample.activity {
     import Activity = android.app.Activity;

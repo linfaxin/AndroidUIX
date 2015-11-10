@@ -1,7 +1,7 @@
 /**
  * Created by linfaxin on 15/10/26.
  */
-///<reference path="../../dist/android-web-widget.d.ts"/>
+///<reference path="../../dist/android-ui.d.ts"/>
 'use strict';
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -56,7 +56,7 @@ var sample;
 /**
  * Created by linfaxin on 15/10/26.
  */
-///<reference path="../../dist/android-web-widget.d.ts"/>
+///<reference path="../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var activity;
@@ -120,7 +120,7 @@ var sample;
         })(com.jakewharton.salvage.RecyclingPagerAdapter);
     })(activity = sample.activity || (sample.activity = {}));
 })(sample || (sample = {}));
-///<reference path="../dist/android-web-widget.d.ts"/>
+///<reference path="../dist/android-ui.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
 ///<reference path="activity/SampleViewPagerActivity.ts"/>
 

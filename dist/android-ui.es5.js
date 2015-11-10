@@ -343,4 +343,4 @@ var android;(function(android){var app;(function(app){var AndroidUI=androidui.An
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 window["android"] = android;window["java"] = java;
 
-//# sourceMappingURL=android-web-widget.es5.js.map
+//# sourceMappingURL=android-ui.es5.js.map

@@ -1,2 +1,2 @@
 tsc -p ./
-babel ../dist/android-web-widget.js -o ../dist/android-web-widget.es5.js -s
+babel ../dist/android-ui.js -o ../dist/android-ui.es5.js -s

@@ -1,7 +1,7 @@
 /**
  * Created by linfaxin on 15/10/26.
  */
-///<reference path="../../dist/android-web-widget.d.ts"/>
+///<reference path="../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var activity;
@@ -31,7 +31,7 @@ var sample;
 /**
  * Created by linfaxin on 15/10/26.
  */
-///<reference path="../../dist/android-web-widget.d.ts"/>
+///<reference path="../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var activity;
@@ -64,6 +64,6 @@ var sample;
         }
     })(activity = sample.activity || (sample.activity = {}));
 })(sample || (sample = {}));
-///<reference path="../dist/android-web-widget.d.ts"/>
+///<reference path="../dist/android-ui.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
 ///<reference path="activity/SampleViewPagerActivity.ts"/>

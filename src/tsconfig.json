@@ -2,7 +2,7 @@
   "compilerOptions": {
     "removeComments": true,
     "target":"ES6",
-    "outFile": "../dist/android-web-widget.js",
+    "outFile": "../dist/android-ui.js",
     "declaration" : true,
     "sourceMap": false
   },
