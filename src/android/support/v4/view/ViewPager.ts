@@ -2392,9 +2392,46 @@ module android.support.v4.view {
             return false;
         }
 
-        //TODO impl when focus ok
-        //addFocusables
 
+        addFocusables(views:ArrayList<View>, direction:number, focusableMode:number):void {
+            const focusableCount = views.size();
+
+            const descendantFocusability = this.getDescendantFocusability();
+
+            if (descendantFocusability != ViewGroup.FOCUS_BLOCK_DESCENDANTS) {
+                for (let i = 0; i < this.getChildCount(); i++) {
+                    const child = this.getChildAt(i);
+                    if (child.getVisibility() == View.VISIBLE) {
+                        let ii = this.infoForChild(child);
+                        if (ii != null && ii.position == this.mCurItem) {
+                            child.addFocusables(views, direction, focusableMode);
+                        }
+                    }
+                }
+            }
+
+            // we add ourselves (if focusable) in all cases except for when we are
+            // FOCUS_AFTER_DESCENDANTS and there are some descendants focusable.  this is
+            // to avoid the focus search finding layouts when a more precise search
+            // among the focusable children would be more interesting.
+            if (
+                descendantFocusability != ViewGroup.FOCUS_AFTER_DESCENDANTS ||
+                    // No focusable descendants
+                (focusableCount == views.size())) {
+                // Note that we can't call the superclass here, because it will
+                // add all views in.  So we need to do the same thing View does.
+                if (!this.isFocusable()) {
+                    return;
+                }
+                if ((focusableMode & ViewGroup.FOCUSABLES_TOUCH_MODE) == ViewGroup.FOCUSABLES_TOUCH_MODE &&
+                    this.isInTouchMode() && !this.isFocusableInTouchMode()) {
+                    return;
+                }
+                if (views != null) {
+                    views.add(this);
+                }
+            }
+        }
 
         /**
          * We only want the current page that is being shown to be touchable.

@@ -1340,6 +1340,16 @@ module android.view {
             this.handleFocusGainInternal(direction, previouslyFocusedRect);
             return true;
         }
+        requestFocusFromTouch():boolean {
+            // Leave touch mode if we need to
+            if (this.isInTouchMode()) {
+                let viewRoot = this.getViewRootImpl();
+                if (viewRoot != null) {
+                    viewRoot.ensureTouchMode(false);
+                }
+            }
+            return this.requestFocus(View.FOCUS_DOWN);
+        }
         private hasAncestorThatBlocksDescendantFocus():boolean {
             let ancestor = this.mParent;
             while (ancestor instanceof ViewGroup) {
@@ -1397,7 +1407,11 @@ module android.view {
 
 
         isInTouchMode():boolean{
-            return this.mAttachInfo.mInTouchMode;
+            if (this.mAttachInfo != null) {
+                return this.mAttachInfo.mInTouchMode;
+            } else {
+                return false;
+            }
         }
 
         isShown():boolean {
