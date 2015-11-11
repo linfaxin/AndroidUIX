@@ -210,7 +210,13 @@ module android.view {
                 this.mParent.focusableViewAvailable(v);
             }
         }
-        focusSearch(focused:View, direction:number) {
+        focusSearch(direction:number):View;
+        focusSearch(focused:View, direction:number):View;
+        focusSearch(...args):View {
+            if(arguments.length===1){
+                return super.focusSearch(args[0]);
+            }
+            let [focused, direction] = args;
             if (this.isRootNamespace()) {
                 // root namespace means we should consider ourselves the top of the
                 // tree for focus searching; otherwise we could be focus searching

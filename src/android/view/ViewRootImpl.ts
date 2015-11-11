@@ -1372,7 +1372,7 @@ module android.view {
                 if (direction != 0) {
                     let focused = mView.findFocus();
                     if (focused != null) {
-                        let v = focused.focusSearchView(direction);
+                        let v = focused.focusSearch(direction);
                         if (v != null && v != focused) {
                             // do the math the get the interesting rect
                             // of previous focused into the coord system of

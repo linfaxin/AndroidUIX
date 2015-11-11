@@ -1237,7 +1237,7 @@ module android.view {
             }
         }
 
-        focusSearchView(direction:number):View {
+        focusSearch(direction:number):View {
             if (this.mParent != null) {
                 return this.mParent.focusSearch(this, direction);
             } else {
