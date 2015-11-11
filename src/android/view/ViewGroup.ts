@@ -1512,7 +1512,7 @@ module android.view {
                 if ((child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE
                     //|| child.getAnimation() != null
                 ) {
-                    more = more || this.drawChild(canvas, child, drawingTime);
+                    more = this.drawChild(canvas, child, drawingTime) || more;
                 }
             }
 
