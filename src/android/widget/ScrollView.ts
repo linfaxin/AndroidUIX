@@ -513,26 +513,25 @@ module android.widget {
             }
         }
 
-        onGenericMotionEvent(event:Event):boolean {
-            if(event instanceof WheelEvent){
-                if (!this.mIsBeingDragged) {
-                    if (!this.mScroller.isFinished()) {
-                        this.mScroller.abortAnimation();
-                    }
-                    let vScroll:number = -event.deltaY;//nature scroll
-                    if(vScroll){
-                        const delta = Math.floor(vScroll * this.getVerticalScrollFactor());
-                        const range = this.getScrollRange();
-                        let oldScrollY = this.mScrollY;
-                        let newScrollY = oldScrollY - delta;
-                        if (newScrollY < 0) {
-                            newScrollY = 0;
-                        } else if (newScrollY > range) {
-                            newScrollY = range;
-                        }
-                        if (newScrollY != oldScrollY) {
-                            super.scrollTo(this.mScrollX, newScrollY);
-                            return true;
+        onGenericMotionEvent(event:MotionEvent):boolean {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_SCROLL: {
+                    if (!this.mIsBeingDragged) {
+                        const vscroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+                        if (vscroll != 0) {
+                            const delta = Math.floor(vscroll * this.getVerticalScrollFactor());
+                            const range = this.getScrollRange();
+                            let oldScrollY = this.mScrollY;
+                            let newScrollY = oldScrollY - delta;
+                            if (newScrollY < 0) {
+                                newScrollY = 0;
+                            } else if (newScrollY > range) {
+                                newScrollY = range;
+                            }
+                            if (newScrollY != oldScrollY) {
+                                super.scrollTo(this.mScrollX, newScrollY);
+                                return true;
+                            }
                         }
                     }
                 }

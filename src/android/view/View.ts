@@ -1473,7 +1473,29 @@ module android.view {
             //}
         }
 
-        dispatchGenericMotionEvent(event:Event){
+        dispatchGenericMotionEvent(event:MotionEvent):boolean{
+            if (event.isPointerEvent()) {
+                const action = event.getAction();
+                if (action == MotionEvent.ACTION_HOVER_ENTER
+                    || action == MotionEvent.ACTION_HOVER_MOVE
+                    || action == MotionEvent.ACTION_HOVER_EXIT) {
+                    //if (dispatchHoverEvent(event)) {//TODO when hover impl
+                    //    return true;
+                    //}
+                } else if (this.dispatchGenericPointerEvent(event)) {
+                    return true;
+                }
+            }
+            //else if (dispatchGenericFocusedEvent(event)) {
+            //    return true;
+            //}
+
+            if (this.dispatchGenericMotionEventInternal(event)) {
+                return true;
+            }
+            return false;
+        }
+        private dispatchGenericMotionEventInternal(event:MotionEvent):boolean {
             //noinspection SimplifiableIfStatement
             let li = this.mListenerInfo;
             if (li != null && li.mOnGenericMotionListener != null
@@ -1489,7 +1511,10 @@ module android.view {
             return false;
         }
 
-        onGenericMotionEvent(event:Event) {
+        onGenericMotionEvent(event:MotionEvent):boolean {
+            return false;
+        }
+        dispatchGenericPointerEvent(event:MotionEvent):boolean{
             return false;
         }
 
@@ -3962,7 +3987,7 @@ module android.view {
             onKey(v:View, keyCode:number, event:KeyEvent);
         }
         export interface OnGenericMotionListener{
-            onGenericMotion(v:View, event:Event);
+            onGenericMotion(v:View, event:MotionEvent);
         }
 
         export interface Predicate<T>{

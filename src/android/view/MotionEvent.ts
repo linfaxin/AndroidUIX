@@ -59,6 +59,9 @@ module android.view {
         static ACTION_POINTER_INDEX_MASK = 0xff00;
         static ACTION_POINTER_INDEX_SHIFT = 8;
 
+        static AXIS_VSCROLL = 9;
+        static AXIS_HSCROLL = 10;
+
         static HistoryMaxSize = 10;
 
         private static TouchMoveRecord = new Map<number, Array<Touch>>();// (id, [])
@@ -74,6 +77,7 @@ module android.view {
         mYOffset = 0;
 
         _activeTouch:any;
+        private _axisValues = new Map<number, number>();
 
         static obtainWithTouchEvent(e, action:number):MotionEvent {
             let event = new MotionEvent();
@@ -212,13 +216,34 @@ module android.view {
             this.mEdgeFlags = edgeFlag;
         }
 
+        initWithMouseWheel(e:WheelEvent){
+            this.mAction = MotionEvent.ACTION_SCROLL;
+            this.mActivePointerId = 0;
+            let touch:Touch = {
+                identifier: 0,
+                target: null,
+                screenX: e.screenX,
+                screenY: e.screenY,
+                clientX: e.clientX,
+                clientY: e.clientY,
+                pageX: e.pageX,
+                pageY: e.pageY
+            };
+            this.mTouchingPointers = [touch];
+            this.mDownTime = e.timeStamp;
+            this.mEventTime = e.timeStamp;
+            this.mXOffset = this.mYOffset = 0;
+            this._axisValues.clear();
+            this._axisValues.set(MotionEvent.AXIS_VSCROLL, -e.deltaY);
+            this._axisValues.set(MotionEvent.AXIS_HSCROLL, -e.deltaX);
+        }
 
         /**
          * Recycle the MotionEvent, to be re-used by a later caller.  After calling
          * this function you must not ever touch the event again.
          */
         recycle() {
-            //no need recycle, only one object trigger event
+            //TODO recycle motionEvent
         }
 
         /**
@@ -354,6 +379,23 @@ module android.view {
         setAction(action:number) {
             this.mAction = action;
         }
+        isTouchEvent():boolean{
+            let action = this.getActionMasked();
+            switch (action){
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_MOVE:
+                case MotionEvent.ACTION_CANCEL:
+                case MotionEvent.ACTION_OUTSIDE:
+                case MotionEvent.ACTION_POINTER_DOWN:
+                case MotionEvent.ACTION_POINTER_UP:
+                    return true;
+            }
+            return false;
+        }
+        isPointerEvent():boolean{
+            return true;//all event was pointer event now
+        }
 
         offsetLocation(deltaX:number, deltaY:number) {
             this.mXOffset += deltaX;
@@ -416,6 +458,11 @@ module android.view {
             });
 
             return ev;
+        }
+
+        getAxisValue(axis:number):number{
+            let value = this._axisValues.get(axis);
+            return value ? value : 0;
         }
 
         toString() {

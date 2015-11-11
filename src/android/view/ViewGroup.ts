@@ -25,7 +25,8 @@ module android.view {
     import System = java.lang.System;
     import ArrayList = java.util.ArrayList;
 
-    export abstract class ViewGroup extends View implements ViewParent {
+    export abstract
+    class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN = 0x1;
         static FLAG_CLIP_TO_PADDING = 0x2;
         static FLAG_INVALIDATE_REQUIRED = 0x4;
@@ -713,6 +714,54 @@ module android.view {
                 this.mGroupFlags &= ~flag;
             }
         }
+
+        dispatchGenericPointerEvent(event:MotionEvent):boolean{
+            // Send the event to the child under the pointer.
+            const childrenCount = this.mChildrenCount;
+            if (childrenCount != 0) {
+                const children = this.mChildren;
+                const x = event.getX();
+                const y = event.getY();
+
+                const customOrder = this.isChildrenDrawingOrderEnabled();
+                for (let i = childrenCount - 1; i >= 0; i--) {
+                    const childIndex = customOrder ? this.getChildDrawingOrder(childrenCount, i) : i;
+                    const child = children[childIndex];
+                    if (!ViewGroup.canViewReceivePointerEvents(child)
+                        || !this.isTransformedTouchPointInView(x, y, child, null)) {
+                        continue;
+                    }
+
+                    if (this.dispatchTransformedGenericPointerEvent(event, child)) {
+                        return true;
+                    }
+                }
+            }
+
+            // No child handled the event.  Send it to this view group.
+            return super.dispatchGenericPointerEvent(event);
+        }
+
+        private dispatchTransformedGenericPointerEvent(event:MotionEvent, child:View):boolean {
+            const offsetX = this.mScrollX - child.mLeft;
+            const offsetY = this.mScrollY - child.mTop;
+
+            let handled:boolean;
+            if (!child.hasIdentityMatrix()) {
+                //TODO when matrix ok
+                //let transformedEvent = MotionEvent.obtain(event);
+                //transformedEvent.offsetLocation(offsetX, offsetY);
+                //transformedEvent.transform(child.getInverseMatrix());
+                //handled = child.dispatchGenericMotionEvent(transformedEvent);
+                //transformedEvent.recycle();
+            } else {
+                event.offsetLocation(offsetX, offsetY);
+                handled = child.dispatchGenericMotionEvent(event);
+                event.offsetLocation(-offsetX, -offsetY);
+            }
+            return handled;
+        }
+
 
         dispatchKeyEvent(event:android.view.KeyEvent):boolean {
             if ((this.mPrivateFlags & (View.PFLAG_FOCUSED | View.PFLAG_HAS_BOUNDS))

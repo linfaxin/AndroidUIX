@@ -1298,10 +1298,13 @@ module android.view {
         onProcess(event):number {
             if (event instanceof KeyEvent) {
                 return this.processKeyEvent(event);
+
             }else if (event instanceof MotionEvent){
-                return this.processTouchEvent(event);
-            }else if(event instanceof Event){//origin web event
-                return this.processGenericMotionEvent(event);
+                if(event.isTouchEvent()){
+                    return this.processTouchEvent(event);
+                }else{
+                    return this.processGenericMotionEvent(event);
+                }
             }
             return InputStage.FORWARD;
         }
@@ -1407,7 +1410,7 @@ module android.view {
             return InputStage.FORWARD;
         }
 
-        private processGenericMotionEvent(event:Event){
+        private processGenericMotionEvent(event:MotionEvent){
             // Deliver the event to the view.
             if ((<any>this.ViewRootImpl_this).mView.dispatchGenericMotionEvent(event)) {
                 return InputStage.FINISH_HANDLED;
