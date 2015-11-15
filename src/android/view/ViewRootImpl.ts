@@ -851,15 +851,19 @@ module android.view {
             this.mWinFrame.set(frame.left, frame.top, frame.right, frame.bottom);
             this.requestLayout();
         }
-        dispatchInputEvent(event:MotionEvent|KeyEvent|Event) {
+        dispatchInputEvent(event:MotionEvent|KeyEvent|Event):boolean {
             this.deliverInputEvent(event);
+            let result = event[InputStage.FLAG_FINISHED_HANDLED];
+            event[InputStage.FLAG_FINISHED] = false;
+            event[InputStage.FLAG_FINISHED_HANDLED] = false;
+            return result;
         }
         private deliverInputEvent(event) {
             this.mFirstInputStage.deliver(event);
         }
         private finishInputEvent(event){
-            event[InputStage.FLAG_FINISHED] = false;
-            event[InputStage.FLAG_FINISHED_HANDLED] = false;
+            //event[InputStage.FLAG_FINISHED] = false;
+            //event[InputStage.FLAG_FINISHED_HANDLED] = false;
         }
 
         private checkForLeavingTouchModeAndConsume(event:KeyEvent) {

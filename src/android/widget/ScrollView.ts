@@ -768,7 +768,7 @@ module android.widget {
 
             return scrollRange;
         }
-        protected computeVerticalScrollOffset() {
+        computeVerticalScrollOffset() {
             return Math.max(0, super.computeVerticalScrollOffset());
         }
         measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {
