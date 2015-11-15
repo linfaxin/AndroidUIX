@@ -1494,7 +1494,7 @@ export class GridView extends AbsListView {
         let endOfRowPos:number;
         let moved:boolean = false;
         if (!this.mStackFromBottom) {
-            startOfRowPos = (selectedPosition / numColumns) * numColumns;
+            startOfRowPos = Math.floor(selectedPosition / numColumns) * numColumns;
             endOfRowPos = Math.min(startOfRowPos + numColumns - 1, this.mItemCount - 1);
         } else {
             const invertedSelection:number = this.mItemCount - 1 - selectedPosition;
