@@ -917,7 +917,7 @@ export class ListView extends AbsListView {
         super.onSizeChanged(w, h, oldw, oldh);
     }
 
-    onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
+    protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
         // Sets up mListPadding
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         let widthMode:number = ListView.MeasureSpec.getMode(widthMeasureSpec);

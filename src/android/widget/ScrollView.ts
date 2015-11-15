@@ -130,7 +130,7 @@ module android.widget {
             this.mSmoothScrollingEnabled = smoothScrollingEnabled;
         }
 
-        onMeasure(widthMeasureSpec:number, heightMeasureSpec:number) {
+        protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
             if (!this.mFillViewport) {
@@ -750,7 +750,7 @@ module android.widget {
         smoothScrollTo(x:number, y:number) {
             this.smoothScrollBy(x - this.mScrollX, y - this.mScrollY);
         }
-        computeVerticalScrollRange() {
+        protected computeVerticalScrollRange() {
             const count = this.getChildCount();
             const contentHeight = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
             if (count == 0) {
@@ -768,7 +768,7 @@ module android.widget {
 
             return scrollRange;
         }
-        computeVerticalScrollOffset() {
+        protected computeVerticalScrollOffset() {
             return Math.max(0, super.computeVerticalScrollOffset());
         }
         measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {

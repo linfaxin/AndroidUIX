@@ -194,19 +194,84 @@ var sample;
         })(BaseAdapter);
     })(activity = sample.activity || (sample.activity = {}));
 })(sample || (sample = {}));
+/**
+ * Created by linfaxin on 15/10/26.
+ */
+///<reference path="../../dist/android-ui.d.ts"/>
+var sample;
+(function (sample) {
+    var activity;
+    (function (activity) {
+        var Activity = android.app.Activity;
+        var View = android.view.View;
+        var BaseAdapter = android.widget.BaseAdapter;
+
+        var SampleGridViewActivity = (function (_Activity4) {
+            _inherits(SampleGridViewActivity, _Activity4);
+
+            function SampleGridViewActivity() {
+                _classCallCheck(this, SampleGridViewActivity);
+
+                _get(Object.getPrototypeOf(SampleGridViewActivity.prototype), 'constructor', this).apply(this, arguments);
+            }
+
+            _createClass(SampleGridViewActivity, [{
+                key: 'onCreate',
+                value: function onCreate() {
+                    var listView = this.findViewById('gridView');
+                    listView.setAdapter(new MyAdapter());
+                }
+            }]);
+
+            return SampleGridViewActivity;
+        })(Activity);
+
+        activity.SampleGridViewActivity = SampleGridViewActivity;
+        SampleGridViewActivity.registerCustomElement();
+
+        var MyAdapter = (function (_BaseAdapter2) {
+            _inherits(MyAdapter, _BaseAdapter2);
+
+            function MyAdapter() {
+                _classCallCheck(this, MyAdapter);
+
+                _get(Object.getPrototypeOf(MyAdapter.prototype), 'constructor', this).apply(this, arguments);
+            }
+
+            _createClass(MyAdapter, [{
+                key: 'getView',
+                value: function getView(position, convertView, parent) {
+                    if (convertView == null) {
+                        convertView = View.inflate('@layout/item', parent.rootElement);
+                    }
+                    convertView.findViewById('item_text').setText(this.getItem(position));
+                    return convertView;
+                }
+            }, {
+                key: 'getCount',
+                value: function getCount() {
+                    return 200;
+                }
+            }, {
+                key: 'getItem',
+                value: function getItem(position) {
+                    return 1 + position + '/' + this.getCount();
+                }
+            }, {
+                key: 'getItemId',
+                value: function getItemId(position) {
+                    return -1;
+                }
+            }]);
+
+            return MyAdapter;
+        })(BaseAdapter);
+    })(activity = sample.activity || (sample.activity = {}));
+})(sample || (sample = {}));
 ///<reference path="../dist/android-ui.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
 ///<reference path="activity/SampleViewPagerActivity.ts"/>
 ///<reference path="activity/SampleListViewActivity.ts"/>
-
-var A = function A() {
-    _classCallCheck(this, A);
-};
-
-var B = function B() {
-    _classCallCheck(this, B);
-
-    this.A_this.a = '';
-};
+///<reference path="activity/SampleGridViewActivity.ts"/>
 
 //# sourceMappingURL=main.es5.js.map

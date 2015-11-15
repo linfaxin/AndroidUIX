@@ -394,7 +394,7 @@ module android.widget{
         }
 
 
-        onMeasure(widthMeasureSpec, heightMeasureSpec) {
+        protected onMeasure(widthMeasureSpec, heightMeasureSpec) {
             if (this.mOrientation == LinearLayout.VERTICAL) {
                 this.measureVertical(widthMeasureSpec, heightMeasureSpec);
             } else {

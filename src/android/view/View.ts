@@ -1567,7 +1567,7 @@ module android.view {
         hasFocus():boolean{
             return (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0;
         }
-        onFocusChanged(gainFocus:boolean, direction:number, previouslyFocusedRect:Rect) {
+        protected onFocusChanged(gainFocus:boolean, direction:number, previouslyFocusedRect:Rect) {
             if (!gainFocus) {
                 if (this.isPressed()) {
                     this.setPressed(false);
@@ -2707,7 +2707,7 @@ module android.view {
             this.mMeasureCache.put(key, (this.mMeasuredWidth) << 32 | this.mMeasuredHeight & 0xffffffff); // suppress sign extension
         }
 
-        onMeasure(widthMeasureSpec, heightMeasureSpec):void {
+        protected onMeasure(widthMeasureSpec, heightMeasureSpec):void {
             this.setMeasuredDimension(View.getDefaultSize(this.getSuggestedMinimumWidth(), widthMeasureSpec),
                 View.getDefaultSize(this.getSuggestedMinimumHeight(), heightMeasureSpec));
         }
@@ -3612,22 +3612,22 @@ module android.view {
             return null;
         }
 
-        computeHorizontalScrollRange():number {
+        protected computeHorizontalScrollRange():number {
             return this.getWidth();
         }
-        computeHorizontalScrollOffset():number {
+        protected computeHorizontalScrollOffset():number {
             return this.mScrollX;
         }
-        computeHorizontalScrollExtent():number {
+        protected computeHorizontalScrollExtent():number {
             return this.getWidth();
         }
-        computeVerticalScrollRange():number {
+        protected computeVerticalScrollRange():number {
             return this.getHeight();
         }
-        computeVerticalScrollOffset():number {
+        protected computeVerticalScrollOffset():number {
             return this.mScrollY;
         }
-        computeVerticalScrollExtent():number {
+        protected computeVerticalScrollExtent():number {
             return this.getHeight();
         }
         canScrollHorizontally(direction:number):boolean {

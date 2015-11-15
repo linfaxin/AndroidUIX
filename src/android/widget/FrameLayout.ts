@@ -164,7 +164,7 @@ module android.widget {
             this.mPaddingBottom + this.mForegroundPaddingBottom;
         }
 
-        onMeasure(widthMeasureSpec:number, heightMeasureSpec:number) {
+        protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number) {
             let count = this.getChildCount();
 
             let measureMatchParentChildren =

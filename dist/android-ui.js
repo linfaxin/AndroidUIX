@@ -22569,6 +22569,1441 @@ var android;
         })(ListView = widget.ListView || (widget.ListView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/os/Trace.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/SoundEffectConstants.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../android/widget/AbsListView.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/Checkable.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Rect = android.graphics.Rect;
+        var Trace = android.os.Trace;
+        var Gravity = android.view.Gravity;
+        var KeyEvent = android.view.KeyEvent;
+        var SoundEffectConstants = android.view.SoundEffectConstants;
+        var View = android.view.View;
+        var ViewGroup = android.view.ViewGroup;
+        var Integer = java.lang.Integer;
+        var AbsListView = android.widget.AbsListView;
+        class GridView extends AbsListView {
+            constructor() {
+                super();
+                this.mNumColumns = GridView.AUTO_FIT;
+                this.mHorizontalSpacing = 0;
+                this.mRequestedHorizontalSpacing = 0;
+                this.mVerticalSpacing = 0;
+                this.mStretchMode = GridView.STRETCH_COLUMN_WIDTH;
+                this.mColumnWidth = 0;
+                this.mRequestedColumnWidth = 0;
+                this.mRequestedNumColumns = 0;
+                this.mReferenceView = null;
+                this.mReferenceViewInSelectedRow = null;
+                this.mGravity = Gravity.LEFT;
+                this.mTempRect = new Rect();
+                this.setNumColumns(1);
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let gridView = this;
+                mergeHandler.add({
+                    set horizontalSpacing(value) {
+                        gridView.setHorizontalSpacing(mergeHandler.parseNumber(value, 0));
+                    },
+                    get horizontalSpacing() {
+                        return gridView.mHorizontalSpacing;
+                    },
+                    set verticalSpacing(value) {
+                        gridView.setVerticalSpacing(mergeHandler.parseNumber(value, 0));
+                    },
+                    get verticalSpacing() {
+                        return gridView.mVerticalSpacing;
+                    },
+                    set stretchMode(value) {
+                        let strechMode = mergeHandler.parseNumber(value, -1);
+                        if (strechMode >= 0) {
+                            gridView.setStretchMode(strechMode);
+                        }
+                    },
+                    get stretchMode() {
+                        return gridView.mStretchMode;
+                    },
+                    set columnWidth(value) {
+                        let columnWidth = mergeHandler.parseNumber(value, -1);
+                        if (columnWidth > 0) {
+                            gridView.setColumnWidth(columnWidth);
+                        }
+                    },
+                    get columnWidth() {
+                        return gridView.mColumnWidth;
+                    },
+                    set numColumns(value) {
+                        gridView.setNumColumns(mergeHandler.parseNumber(value, 1));
+                    },
+                    get numColumns() {
+                        return gridView.mNumColumns;
+                    },
+                    set gravity(value) {
+                        let gravity = mergeHandler.parseGravity(value, -1);
+                        if (gravity >= 0)
+                            gridView.setGravity(gravity);
+                    },
+                    get gravity() {
+                        return gridView.mGravity;
+                    },
+                });
+            }
+            getAdapter() {
+                return this.mAdapter;
+            }
+            setAdapter(adapter) {
+                if (this.mAdapter != null && this.mDataSetObserver != null) {
+                    this.mAdapter.unregisterDataSetObserver(this.mDataSetObserver);
+                }
+                this.resetList();
+                this.mRecycler.clear();
+                this.mAdapter = adapter;
+                this.mOldSelectedPosition = GridView.INVALID_POSITION;
+                this.mOldSelectedRowId = GridView.INVALID_ROW_ID;
+                super.setAdapter(adapter);
+                if (this.mAdapter != null) {
+                    this.mOldItemCount = this.mItemCount;
+                    this.mItemCount = this.mAdapter.getCount();
+                    this.mDataChanged = true;
+                    this.checkFocus();
+                    this.mDataSetObserver = new AbsListView.AdapterDataSetObserver(this);
+                    this.mAdapter.registerDataSetObserver(this.mDataSetObserver);
+                    this.mRecycler.setViewTypeCount(this.mAdapter.getViewTypeCount());
+                    let position;
+                    if (this.mStackFromBottom) {
+                        position = this.lookForSelectablePosition(this.mItemCount - 1, false);
+                    }
+                    else {
+                        position = this.lookForSelectablePosition(0, true);
+                    }
+                    this.setSelectedPositionInt(position);
+                    this.setNextSelectedPositionInt(position);
+                    this.checkSelectionChanged();
+                }
+                else {
+                    this.checkFocus();
+                    this.checkSelectionChanged();
+                }
+                this.requestLayout();
+            }
+            lookForSelectablePosition(position, lookDown) {
+                const adapter = this.mAdapter;
+                if (adapter == null || this.isInTouchMode()) {
+                    return GridView.INVALID_POSITION;
+                }
+                if (position < 0 || position >= this.mItemCount) {
+                    return GridView.INVALID_POSITION;
+                }
+                return position;
+            }
+            fillGap(down) {
+                const numColumns = this.mNumColumns;
+                const verticalSpacing = this.mVerticalSpacing;
+                const count = this.getChildCount();
+                if (down) {
+                    let paddingTop = 0;
+                    if ((this.mGroupFlags & GridView.CLIP_TO_PADDING_MASK) == GridView.CLIP_TO_PADDING_MASK) {
+                        paddingTop = this.getListPaddingTop();
+                    }
+                    const startOffset = count > 0 ? this.getChildAt(count - 1).getBottom() + verticalSpacing : paddingTop;
+                    let position = this.mFirstPosition + count;
+                    if (this.mStackFromBottom) {
+                        position += numColumns - 1;
+                    }
+                    this.fillDown(position, startOffset);
+                    this.correctTooHigh(numColumns, verticalSpacing, this.getChildCount());
+                }
+                else {
+                    let paddingBottom = 0;
+                    if ((this.mGroupFlags & GridView.CLIP_TO_PADDING_MASK) == GridView.CLIP_TO_PADDING_MASK) {
+                        paddingBottom = this.getListPaddingBottom();
+                    }
+                    const startOffset = count > 0 ? this.getChildAt(0).getTop() - verticalSpacing : this.getHeight() - paddingBottom;
+                    let position = this.mFirstPosition;
+                    if (!this.mStackFromBottom) {
+                        position -= numColumns;
+                    }
+                    else {
+                        position--;
+                    }
+                    this.fillUp(position, startOffset);
+                    this.correctTooLow(numColumns, verticalSpacing, this.getChildCount());
+                }
+            }
+            fillDown(pos, nextTop) {
+                let selectedView = null;
+                let end = (this.mBottom - this.mTop);
+                if ((this.mGroupFlags & GridView.CLIP_TO_PADDING_MASK) == GridView.CLIP_TO_PADDING_MASK) {
+                    end -= this.mListPadding.bottom;
+                }
+                while (nextTop < end && pos < this.mItemCount) {
+                    let temp = this.makeRow(pos, nextTop, true);
+                    if (temp != null) {
+                        selectedView = temp;
+                    }
+                    nextTop = this.mReferenceView.getBottom() + this.mVerticalSpacing;
+                    pos += this.mNumColumns;
+                }
+                this.setVisibleRangeHint(this.mFirstPosition, this.mFirstPosition + this.getChildCount() - 1);
+                return selectedView;
+            }
+            makeRow(startPos, y, flow) {
+                const columnWidth = this.mColumnWidth;
+                const horizontalSpacing = this.mHorizontalSpacing;
+                const isLayoutRtl = this.isLayoutRtl();
+                let last;
+                let nextLeft;
+                if (isLayoutRtl) {
+                    nextLeft = this.getWidth() - this.mListPadding.right - columnWidth - ((this.mStretchMode == GridView.STRETCH_SPACING_UNIFORM) ? horizontalSpacing : 0);
+                }
+                else {
+                    nextLeft = this.mListPadding.left + ((this.mStretchMode == GridView.STRETCH_SPACING_UNIFORM) ? horizontalSpacing : 0);
+                }
+                if (!this.mStackFromBottom) {
+                    last = Math.min(startPos + this.mNumColumns, this.mItemCount);
+                }
+                else {
+                    last = startPos + 1;
+                    startPos = Math.max(0, startPos - this.mNumColumns + 1);
+                    if (last - startPos < this.mNumColumns) {
+                        const deltaLeft = (this.mNumColumns - (last - startPos)) * (columnWidth + horizontalSpacing);
+                        nextLeft += (isLayoutRtl ? -1 : +1) * deltaLeft;
+                    }
+                }
+                let selectedView = null;
+                const hasFocus = this.shouldShowSelector();
+                const inClick = this.touchModeDrawsInPressedState();
+                const selectedPosition = this.mSelectedPosition;
+                let child = null;
+                for (let pos = startPos; pos < last; pos++) {
+                    let selected = pos == selectedPosition;
+                    const where = flow ? -1 : pos - startPos;
+                    child = this.makeAndAddView(pos, y, flow, nextLeft, selected, where);
+                    nextLeft += (isLayoutRtl ? -1 : +1) * columnWidth;
+                    if (pos < last - 1) {
+                        nextLeft += horizontalSpacing;
+                    }
+                    if (selected && (hasFocus || inClick)) {
+                        selectedView = child;
+                    }
+                }
+                this.mReferenceView = child;
+                if (selectedView != null) {
+                    this.mReferenceViewInSelectedRow = this.mReferenceView;
+                }
+                return selectedView;
+            }
+            fillUp(pos, nextBottom) {
+                let selectedView = null;
+                let end = 0;
+                if ((this.mGroupFlags & GridView.CLIP_TO_PADDING_MASK) == GridView.CLIP_TO_PADDING_MASK) {
+                    end = this.mListPadding.top;
+                }
+                while (nextBottom > end && pos >= 0) {
+                    let temp = this.makeRow(pos, nextBottom, false);
+                    if (temp != null) {
+                        selectedView = temp;
+                    }
+                    nextBottom = this.mReferenceView.getTop() - this.mVerticalSpacing;
+                    this.mFirstPosition = pos;
+                    pos -= this.mNumColumns;
+                }
+                if (this.mStackFromBottom) {
+                    this.mFirstPosition = Math.max(0, pos + 1);
+                }
+                this.setVisibleRangeHint(this.mFirstPosition, this.mFirstPosition + this.getChildCount() - 1);
+                return selectedView;
+            }
+            fillFromTop(nextTop) {
+                this.mFirstPosition = Math.min(this.mFirstPosition, this.mSelectedPosition);
+                this.mFirstPosition = Math.min(this.mFirstPosition, this.mItemCount - 1);
+                if (this.mFirstPosition < 0) {
+                    this.mFirstPosition = 0;
+                }
+                this.mFirstPosition -= this.mFirstPosition % this.mNumColumns;
+                return this.fillDown(this.mFirstPosition, nextTop);
+            }
+            fillFromBottom(lastPosition, nextBottom) {
+                lastPosition = Math.max(lastPosition, this.mSelectedPosition);
+                lastPosition = Math.min(lastPosition, this.mItemCount - 1);
+                const invertedPosition = this.mItemCount - 1 - lastPosition;
+                lastPosition = this.mItemCount - 1 - (invertedPosition - (invertedPosition % this.mNumColumns));
+                return this.fillUp(lastPosition, nextBottom);
+            }
+            fillSelection(childrenTop, childrenBottom) {
+                const selectedPosition = this.reconcileSelectedPosition();
+                const numColumns = this.mNumColumns;
+                const verticalSpacing = this.mVerticalSpacing;
+                let rowStart;
+                let rowEnd = -1;
+                if (!this.mStackFromBottom) {
+                    rowStart = selectedPosition - (selectedPosition % numColumns);
+                }
+                else {
+                    const invertedSelection = this.mItemCount - 1 - selectedPosition;
+                    rowEnd = this.mItemCount - 1 - (invertedSelection - (invertedSelection % numColumns));
+                    rowStart = Math.max(0, rowEnd - numColumns + 1);
+                }
+                const fadingEdgeLength = this.getVerticalFadingEdgeLength();
+                const topSelectionPixel = this.getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
+                const sel = this.makeRow(this.mStackFromBottom ? rowEnd : rowStart, topSelectionPixel, true);
+                this.mFirstPosition = rowStart;
+                const referenceView = this.mReferenceView;
+                if (!this.mStackFromBottom) {
+                    this.fillDown(rowStart + numColumns, referenceView.getBottom() + verticalSpacing);
+                    this.pinToBottom(childrenBottom);
+                    this.fillUp(rowStart - numColumns, referenceView.getTop() - verticalSpacing);
+                    this.adjustViewsUpOrDown();
+                }
+                else {
+                    const bottomSelectionPixel = this.getBottomSelectionPixel(childrenBottom, fadingEdgeLength, numColumns, rowStart);
+                    const offset = bottomSelectionPixel - referenceView.getBottom();
+                    this.offsetChildrenTopAndBottom(offset);
+                    this.fillUp(rowStart - 1, referenceView.getTop() - verticalSpacing);
+                    this.pinToTop(childrenTop);
+                    this.fillDown(rowEnd + numColumns, referenceView.getBottom() + verticalSpacing);
+                    this.adjustViewsUpOrDown();
+                }
+                return sel;
+            }
+            pinToTop(childrenTop) {
+                if (this.mFirstPosition == 0) {
+                    const top = this.getChildAt(0).getTop();
+                    const offset = childrenTop - top;
+                    if (offset < 0) {
+                        this.offsetChildrenTopAndBottom(offset);
+                    }
+                }
+            }
+            pinToBottom(childrenBottom) {
+                const count = this.getChildCount();
+                if (this.mFirstPosition + count == this.mItemCount) {
+                    const bottom = this.getChildAt(count - 1).getBottom();
+                    const offset = childrenBottom - bottom;
+                    if (offset > 0) {
+                        this.offsetChildrenTopAndBottom(offset);
+                    }
+                }
+            }
+            findMotionRow(y) {
+                const childCount = this.getChildCount();
+                if (childCount > 0) {
+                    const numColumns = this.mNumColumns;
+                    if (!this.mStackFromBottom) {
+                        for (let i = 0; i < childCount; i += numColumns) {
+                            if (y <= this.getChildAt(i).getBottom()) {
+                                return this.mFirstPosition + i;
+                            }
+                        }
+                    }
+                    else {
+                        for (let i = childCount - 1; i >= 0; i -= numColumns) {
+                            if (y >= this.getChildAt(i).getTop()) {
+                                return this.mFirstPosition + i;
+                            }
+                        }
+                    }
+                }
+                return GridView.INVALID_POSITION;
+            }
+            fillSpecific(position, top) {
+                const numColumns = this.mNumColumns;
+                let motionRowStart;
+                let motionRowEnd = -1;
+                if (!this.mStackFromBottom) {
+                    motionRowStart = position - (position % numColumns);
+                }
+                else {
+                    const invertedSelection = this.mItemCount - 1 - position;
+                    motionRowEnd = this.mItemCount - 1 - (invertedSelection - (invertedSelection % numColumns));
+                    motionRowStart = Math.max(0, motionRowEnd - numColumns + 1);
+                }
+                const temp = this.makeRow(this.mStackFromBottom ? motionRowEnd : motionRowStart, top, true);
+                this.mFirstPosition = motionRowStart;
+                const referenceView = this.mReferenceView;
+                if (referenceView == null) {
+                    return null;
+                }
+                const verticalSpacing = this.mVerticalSpacing;
+                let above;
+                let below;
+                if (!this.mStackFromBottom) {
+                    above = this.fillUp(motionRowStart - numColumns, referenceView.getTop() - verticalSpacing);
+                    this.adjustViewsUpOrDown();
+                    below = this.fillDown(motionRowStart + numColumns, referenceView.getBottom() + verticalSpacing);
+                    const childCount = this.getChildCount();
+                    if (childCount > 0) {
+                        this.correctTooHigh(numColumns, verticalSpacing, childCount);
+                    }
+                }
+                else {
+                    below = this.fillDown(motionRowEnd + numColumns, referenceView.getBottom() + verticalSpacing);
+                    this.adjustViewsUpOrDown();
+                    above = this.fillUp(motionRowStart - 1, referenceView.getTop() - verticalSpacing);
+                    const childCount = this.getChildCount();
+                    if (childCount > 0) {
+                        this.correctTooLow(numColumns, verticalSpacing, childCount);
+                    }
+                }
+                if (temp != null) {
+                    return temp;
+                }
+                else if (above != null) {
+                    return above;
+                }
+                else {
+                    return below;
+                }
+            }
+            correctTooHigh(numColumns, verticalSpacing, childCount) {
+                const lastPosition = this.mFirstPosition + childCount - 1;
+                if (lastPosition == this.mItemCount - 1 && childCount > 0) {
+                    const lastChild = this.getChildAt(childCount - 1);
+                    const lastBottom = lastChild.getBottom();
+                    const end = (this.mBottom - this.mTop) - this.mListPadding.bottom;
+                    let bottomOffset = end - lastBottom;
+                    const firstChild = this.getChildAt(0);
+                    const firstTop = firstChild.getTop();
+                    if (bottomOffset > 0 && (this.mFirstPosition > 0 || firstTop < this.mListPadding.top)) {
+                        if (this.mFirstPosition == 0) {
+                            bottomOffset = Math.min(bottomOffset, this.mListPadding.top - firstTop);
+                        }
+                        this.offsetChildrenTopAndBottom(bottomOffset);
+                        if (this.mFirstPosition > 0) {
+                            this.fillUp(this.mFirstPosition - (this.mStackFromBottom ? 1 : numColumns), firstChild.getTop() - verticalSpacing);
+                            this.adjustViewsUpOrDown();
+                        }
+                    }
+                }
+            }
+            correctTooLow(numColumns, verticalSpacing, childCount) {
+                if (this.mFirstPosition == 0 && childCount > 0) {
+                    const firstChild = this.getChildAt(0);
+                    const firstTop = firstChild.getTop();
+                    const start = this.mListPadding.top;
+                    const end = (this.mBottom - this.mTop) - this.mListPadding.bottom;
+                    let topOffset = firstTop - start;
+                    const lastChild = this.getChildAt(childCount - 1);
+                    const lastBottom = lastChild.getBottom();
+                    const lastPosition = this.mFirstPosition + childCount - 1;
+                    if (topOffset > 0 && (lastPosition < this.mItemCount - 1 || lastBottom > end)) {
+                        if (lastPosition == this.mItemCount - 1) {
+                            topOffset = Math.min(topOffset, lastBottom - end);
+                        }
+                        this.offsetChildrenTopAndBottom(-topOffset);
+                        if (lastPosition < this.mItemCount - 1) {
+                            this.fillDown(lastPosition + (!this.mStackFromBottom ? 1 : numColumns), lastChild.getBottom() + verticalSpacing);
+                            this.adjustViewsUpOrDown();
+                        }
+                    }
+                }
+            }
+            fillFromSelection(selectedTop, childrenTop, childrenBottom) {
+                const fadingEdgeLength = this.getVerticalFadingEdgeLength();
+                const selectedPosition = this.mSelectedPosition;
+                const numColumns = this.mNumColumns;
+                const verticalSpacing = this.mVerticalSpacing;
+                let rowStart;
+                let rowEnd = -1;
+                if (!this.mStackFromBottom) {
+                    rowStart = selectedPosition - (selectedPosition % numColumns);
+                }
+                else {
+                    let invertedSelection = this.mItemCount - 1 - selectedPosition;
+                    rowEnd = this.mItemCount - 1 - (invertedSelection - (invertedSelection % numColumns));
+                    rowStart = Math.max(0, rowEnd - numColumns + 1);
+                }
+                let sel;
+                let referenceView;
+                let topSelectionPixel = this.getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
+                let bottomSelectionPixel = this.getBottomSelectionPixel(childrenBottom, fadingEdgeLength, numColumns, rowStart);
+                sel = this.makeRow(this.mStackFromBottom ? rowEnd : rowStart, selectedTop, true);
+                this.mFirstPosition = rowStart;
+                referenceView = this.mReferenceView;
+                this.adjustForTopFadingEdge(referenceView, topSelectionPixel, bottomSelectionPixel);
+                this.adjustForBottomFadingEdge(referenceView, topSelectionPixel, bottomSelectionPixel);
+                if (!this.mStackFromBottom) {
+                    this.fillUp(rowStart - numColumns, referenceView.getTop() - verticalSpacing);
+                    this.adjustViewsUpOrDown();
+                    this.fillDown(rowStart + numColumns, referenceView.getBottom() + verticalSpacing);
+                }
+                else {
+                    this.fillDown(rowEnd + numColumns, referenceView.getBottom() + verticalSpacing);
+                    this.adjustViewsUpOrDown();
+                    this.fillUp(rowStart - 1, referenceView.getTop() - verticalSpacing);
+                }
+                return sel;
+            }
+            getBottomSelectionPixel(childrenBottom, fadingEdgeLength, numColumns, rowStart) {
+                let bottomSelectionPixel = childrenBottom;
+                if (rowStart + numColumns - 1 < this.mItemCount - 1) {
+                    bottomSelectionPixel -= fadingEdgeLength;
+                }
+                return bottomSelectionPixel;
+            }
+            getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart) {
+                let topSelectionPixel = childrenTop;
+                if (rowStart > 0) {
+                    topSelectionPixel += fadingEdgeLength;
+                }
+                return topSelectionPixel;
+            }
+            adjustForBottomFadingEdge(childInSelectedRow, topSelectionPixel, bottomSelectionPixel) {
+                if (childInSelectedRow.getBottom() > bottomSelectionPixel) {
+                    let spaceAbove = childInSelectedRow.getTop() - topSelectionPixel;
+                    let spaceBelow = childInSelectedRow.getBottom() - bottomSelectionPixel;
+                    let offset = Math.min(spaceAbove, spaceBelow);
+                    this.offsetChildrenTopAndBottom(-offset);
+                }
+            }
+            adjustForTopFadingEdge(childInSelectedRow, topSelectionPixel, bottomSelectionPixel) {
+                if (childInSelectedRow.getTop() < topSelectionPixel) {
+                    let spaceAbove = topSelectionPixel - childInSelectedRow.getTop();
+                    let spaceBelow = bottomSelectionPixel - childInSelectedRow.getBottom();
+                    let offset = Math.min(spaceAbove, spaceBelow);
+                    this.offsetChildrenTopAndBottom(offset);
+                }
+            }
+            smoothScrollToPosition(position) {
+                super.smoothScrollToPosition(position);
+            }
+            smoothScrollByOffset(offset) {
+                super.smoothScrollByOffset(offset);
+            }
+            moveSelection(delta, childrenTop, childrenBottom) {
+                const fadingEdgeLength = this.getVerticalFadingEdgeLength();
+                const selectedPosition = this.mSelectedPosition;
+                const numColumns = this.mNumColumns;
+                const verticalSpacing = this.mVerticalSpacing;
+                let oldRowStart;
+                let rowStart;
+                let rowEnd = -1;
+                if (!this.mStackFromBottom) {
+                    oldRowStart = (selectedPosition - delta) - ((selectedPosition - delta) % numColumns);
+                    rowStart = selectedPosition - (selectedPosition % numColumns);
+                }
+                else {
+                    let invertedSelection = this.mItemCount - 1 - selectedPosition;
+                    rowEnd = this.mItemCount - 1 - (invertedSelection - (invertedSelection % numColumns));
+                    rowStart = Math.max(0, rowEnd - numColumns + 1);
+                    invertedSelection = this.mItemCount - 1 - (selectedPosition - delta);
+                    oldRowStart = this.mItemCount - 1 - (invertedSelection - (invertedSelection % numColumns));
+                    oldRowStart = Math.max(0, oldRowStart - numColumns + 1);
+                }
+                const rowDelta = rowStart - oldRowStart;
+                const topSelectionPixel = this.getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
+                const bottomSelectionPixel = this.getBottomSelectionPixel(childrenBottom, fadingEdgeLength, numColumns, rowStart);
+                this.mFirstPosition = rowStart;
+                let sel;
+                let referenceView;
+                if (rowDelta > 0) {
+                    const oldBottom = this.mReferenceViewInSelectedRow == null ? 0 : this.mReferenceViewInSelectedRow.getBottom();
+                    sel = this.makeRow(this.mStackFromBottom ? rowEnd : rowStart, oldBottom + verticalSpacing, true);
+                    referenceView = this.mReferenceView;
+                    this.adjustForBottomFadingEdge(referenceView, topSelectionPixel, bottomSelectionPixel);
+                }
+                else if (rowDelta < 0) {
+                    const oldTop = this.mReferenceViewInSelectedRow == null ? 0 : this.mReferenceViewInSelectedRow.getTop();
+                    sel = this.makeRow(this.mStackFromBottom ? rowEnd : rowStart, oldTop - verticalSpacing, false);
+                    referenceView = this.mReferenceView;
+                    this.adjustForTopFadingEdge(referenceView, topSelectionPixel, bottomSelectionPixel);
+                }
+                else {
+                    const oldTop = this.mReferenceViewInSelectedRow == null ? 0 : this.mReferenceViewInSelectedRow.getTop();
+                    sel = this.makeRow(this.mStackFromBottom ? rowEnd : rowStart, oldTop, true);
+                    referenceView = this.mReferenceView;
+                }
+                if (!this.mStackFromBottom) {
+                    this.fillUp(rowStart - numColumns, referenceView.getTop() - verticalSpacing);
+                    this.adjustViewsUpOrDown();
+                    this.fillDown(rowStart + numColumns, referenceView.getBottom() + verticalSpacing);
+                }
+                else {
+                    this.fillDown(rowEnd + numColumns, referenceView.getBottom() + verticalSpacing);
+                    this.adjustViewsUpOrDown();
+                    this.fillUp(rowStart - 1, referenceView.getTop() - verticalSpacing);
+                }
+                return sel;
+            }
+            determineColumns(availableSpace) {
+                const requestedHorizontalSpacing = this.mRequestedHorizontalSpacing;
+                const stretchMode = this.mStretchMode;
+                const requestedColumnWidth = this.mRequestedColumnWidth;
+                let didNotInitiallyFit = false;
+                if (this.mRequestedNumColumns == GridView.AUTO_FIT) {
+                    if (requestedColumnWidth > 0) {
+                        this.mNumColumns = (availableSpace + requestedHorizontalSpacing) / (requestedColumnWidth + requestedHorizontalSpacing);
+                    }
+                    else {
+                        this.mNumColumns = 2;
+                    }
+                }
+                else {
+                    this.mNumColumns = this.mRequestedNumColumns;
+                }
+                if (this.mNumColumns <= 0) {
+                    this.mNumColumns = 1;
+                }
+                switch (stretchMode) {
+                    case GridView.NO_STRETCH:
+                        this.mColumnWidth = requestedColumnWidth;
+                        this.mHorizontalSpacing = requestedHorizontalSpacing;
+                        break;
+                    default:
+                        let spaceLeftOver = availableSpace - (this.mNumColumns * requestedColumnWidth) - ((this.mNumColumns - 1) * requestedHorizontalSpacing);
+                        if (spaceLeftOver < 0) {
+                            didNotInitiallyFit = true;
+                        }
+                        switch (stretchMode) {
+                            case GridView.STRETCH_COLUMN_WIDTH:
+                                this.mColumnWidth = requestedColumnWidth + spaceLeftOver / this.mNumColumns;
+                                this.mHorizontalSpacing = requestedHorizontalSpacing;
+                                break;
+                            case GridView.STRETCH_SPACING:
+                                this.mColumnWidth = requestedColumnWidth;
+                                if (this.mNumColumns > 1) {
+                                    this.mHorizontalSpacing = requestedHorizontalSpacing + spaceLeftOver / (this.mNumColumns - 1);
+                                }
+                                else {
+                                    this.mHorizontalSpacing = requestedHorizontalSpacing + spaceLeftOver;
+                                }
+                                break;
+                            case GridView.STRETCH_SPACING_UNIFORM:
+                                this.mColumnWidth = requestedColumnWidth;
+                                if (this.mNumColumns > 1) {
+                                    this.mHorizontalSpacing = requestedHorizontalSpacing + spaceLeftOver / (this.mNumColumns + 1);
+                                }
+                                else {
+                                    this.mHorizontalSpacing = requestedHorizontalSpacing + spaceLeftOver;
+                                }
+                                break;
+                        }
+                        break;
+                }
+                return didNotInitiallyFit;
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                let widthMode = GridView.MeasureSpec.getMode(widthMeasureSpec);
+                let heightMode = GridView.MeasureSpec.getMode(heightMeasureSpec);
+                let widthSize = GridView.MeasureSpec.getSize(widthMeasureSpec);
+                let heightSize = GridView.MeasureSpec.getSize(heightMeasureSpec);
+                if (widthMode == GridView.MeasureSpec.UNSPECIFIED) {
+                    if (this.mColumnWidth > 0) {
+                        widthSize = this.mColumnWidth + this.mListPadding.left + this.mListPadding.right;
+                    }
+                    else {
+                        widthSize = this.mListPadding.left + this.mListPadding.right;
+                    }
+                    widthSize += this.getVerticalScrollbarWidth();
+                }
+                let childWidth = widthSize - this.mListPadding.left - this.mListPadding.right;
+                let didNotInitiallyFit = this.determineColumns(childWidth);
+                let childHeight = 0;
+                let childState = 0;
+                this.mItemCount = this.mAdapter == null ? 0 : this.mAdapter.getCount();
+                const count = this.mItemCount;
+                if (count > 0) {
+                    const child = this.obtainView(0, this.mIsScrap);
+                    let p = child.getLayoutParams();
+                    if (p == null) {
+                        p = this.generateDefaultLayoutParams();
+                        child.setLayoutParams(p);
+                    }
+                    p.viewType = this.mAdapter.getItemViewType(0);
+                    p.forceAdd = true;
+                    let childHeightSpec = GridView.getChildMeasureSpec(GridView.MeasureSpec.makeMeasureSpec(0, GridView.MeasureSpec.UNSPECIFIED), 0, p.height);
+                    let childWidthSpec = GridView.getChildMeasureSpec(GridView.MeasureSpec.makeMeasureSpec(this.mColumnWidth, GridView.MeasureSpec.EXACTLY), 0, p.width);
+                    child.measure(childWidthSpec, childHeightSpec);
+                    childHeight = child.getMeasuredHeight();
+                    childState = GridView.combineMeasuredStates(childState, child.getMeasuredState());
+                    if (this.mRecycler.shouldRecycleViewType(p.viewType)) {
+                        this.mRecycler.addScrapView(child, -1);
+                    }
+                }
+                if (heightMode == GridView.MeasureSpec.UNSPECIFIED) {
+                    heightSize = this.mListPadding.top + this.mListPadding.bottom + childHeight + this.getVerticalFadingEdgeLength() * 2;
+                }
+                if (heightMode == GridView.MeasureSpec.AT_MOST) {
+                    let ourSize = this.mListPadding.top + this.mListPadding.bottom;
+                    const numColumns = this.mNumColumns;
+                    for (let i = 0; i < count; i += numColumns) {
+                        ourSize += childHeight;
+                        if (i + numColumns < count) {
+                            ourSize += this.mVerticalSpacing;
+                        }
+                        if (ourSize >= heightSize) {
+                            ourSize = heightSize;
+                            break;
+                        }
+                    }
+                    heightSize = ourSize;
+                }
+                if (widthMode == GridView.MeasureSpec.AT_MOST && this.mRequestedNumColumns != GridView.AUTO_FIT) {
+                    let ourSize = (this.mRequestedNumColumns * this.mColumnWidth) + ((this.mRequestedNumColumns - 1) * this.mHorizontalSpacing) + this.mListPadding.left + this.mListPadding.right;
+                    if (ourSize > widthSize || didNotInitiallyFit) {
+                        widthSize |= GridView.MEASURED_STATE_TOO_SMALL;
+                    }
+                }
+                this.setMeasuredDimension(widthSize, heightSize);
+                this.mWidthMeasureSpec = widthMeasureSpec;
+            }
+            layoutChildren() {
+                const blockLayoutRequests = this.mBlockLayoutRequests;
+                if (!blockLayoutRequests) {
+                    this.mBlockLayoutRequests = true;
+                }
+                try {
+                    super.layoutChildren();
+                    this.invalidate();
+                    if (this.mAdapter == null) {
+                        this.resetList();
+                        this.invokeOnItemScrollListener();
+                        return;
+                    }
+                    const childrenTop = this.mListPadding.top;
+                    const childrenBottom = this.mBottom - this.mTop - this.mListPadding.bottom;
+                    let childCount = this.getChildCount();
+                    let index;
+                    let delta = 0;
+                    let sel;
+                    let oldSel = null;
+                    let oldFirst = null;
+                    let newSel = null;
+                    switch (this.mLayoutMode) {
+                        case GridView.LAYOUT_SET_SELECTION:
+                            index = this.mNextSelectedPosition - this.mFirstPosition;
+                            if (index >= 0 && index < childCount) {
+                                newSel = this.getChildAt(index);
+                            }
+                            break;
+                        case GridView.LAYOUT_FORCE_TOP:
+                        case GridView.LAYOUT_FORCE_BOTTOM:
+                        case GridView.LAYOUT_SPECIFIC:
+                        case GridView.LAYOUT_SYNC:
+                            break;
+                        case GridView.LAYOUT_MOVE_SELECTION:
+                            if (this.mNextSelectedPosition >= 0) {
+                                delta = this.mNextSelectedPosition - this.mSelectedPosition;
+                            }
+                            break;
+                        default:
+                            index = this.mSelectedPosition - this.mFirstPosition;
+                            if (index >= 0 && index < childCount) {
+                                oldSel = this.getChildAt(index);
+                            }
+                            oldFirst = this.getChildAt(0);
+                    }
+                    let dataChanged = this.mDataChanged;
+                    if (dataChanged) {
+                        this.handleDataChanged();
+                    }
+                    if (this.mItemCount == 0) {
+                        this.resetList();
+                        this.invokeOnItemScrollListener();
+                        return;
+                    }
+                    this.setSelectedPositionInt(this.mNextSelectedPosition);
+                    const firstPosition = this.mFirstPosition;
+                    const recycleBin = this.mRecycler;
+                    if (dataChanged) {
+                        for (let i = 0; i < childCount; i++) {
+                            recycleBin.addScrapView(this.getChildAt(i), firstPosition + i);
+                        }
+                    }
+                    else {
+                        recycleBin.fillActiveViews(childCount, firstPosition);
+                    }
+                    this.detachAllViewsFromParent();
+                    recycleBin.removeSkippedScrap();
+                    switch (this.mLayoutMode) {
+                        case GridView.LAYOUT_SET_SELECTION:
+                            if (newSel != null) {
+                                sel = this.fillFromSelection(newSel.getTop(), childrenTop, childrenBottom);
+                            }
+                            else {
+                                sel = this.fillSelection(childrenTop, childrenBottom);
+                            }
+                            break;
+                        case GridView.LAYOUT_FORCE_TOP:
+                            this.mFirstPosition = 0;
+                            sel = this.fillFromTop(childrenTop);
+                            this.adjustViewsUpOrDown();
+                            break;
+                        case GridView.LAYOUT_FORCE_BOTTOM:
+                            sel = this.fillUp(this.mItemCount - 1, childrenBottom);
+                            this.adjustViewsUpOrDown();
+                            break;
+                        case GridView.LAYOUT_SPECIFIC:
+                            sel = this.fillSpecific(this.mSelectedPosition, this.mSpecificTop);
+                            break;
+                        case GridView.LAYOUT_SYNC:
+                            sel = this.fillSpecific(this.mSyncPosition, this.mSpecificTop);
+                            break;
+                        case GridView.LAYOUT_MOVE_SELECTION:
+                            sel = this.moveSelection(delta, childrenTop, childrenBottom);
+                            break;
+                        default:
+                            if (childCount == 0) {
+                                if (!this.mStackFromBottom) {
+                                    this.setSelectedPositionInt(this.mAdapter == null || this.isInTouchMode() ? GridView.INVALID_POSITION : 0);
+                                    sel = this.fillFromTop(childrenTop);
+                                }
+                                else {
+                                    const last = this.mItemCount - 1;
+                                    this.setSelectedPositionInt(this.mAdapter == null || this.isInTouchMode() ? GridView.INVALID_POSITION : last);
+                                    sel = this.fillFromBottom(last, childrenBottom);
+                                }
+                            }
+                            else {
+                                if (this.mSelectedPosition >= 0 && this.mSelectedPosition < this.mItemCount) {
+                                    sel = this.fillSpecific(this.mSelectedPosition, oldSel == null ? childrenTop : oldSel.getTop());
+                                }
+                                else if (this.mFirstPosition < this.mItemCount) {
+                                    sel = this.fillSpecific(this.mFirstPosition, oldFirst == null ? childrenTop : oldFirst.getTop());
+                                }
+                                else {
+                                    sel = this.fillSpecific(0, childrenTop);
+                                }
+                            }
+                            break;
+                    }
+                    recycleBin.scrapActiveViews();
+                    if (sel != null) {
+                        this.positionSelector(GridView.INVALID_POSITION, sel);
+                        this.mSelectedTop = sel.getTop();
+                    }
+                    else if (this.mTouchMode > GridView.TOUCH_MODE_DOWN && this.mTouchMode < GridView.TOUCH_MODE_SCROLL) {
+                        let child = this.getChildAt(this.mMotionPosition - this.mFirstPosition);
+                        if (child != null)
+                            this.positionSelector(this.mMotionPosition, child);
+                    }
+                    else {
+                        this.mSelectedTop = 0;
+                        this.mSelectorRect.setEmpty();
+                    }
+                    this.mLayoutMode = GridView.LAYOUT_NORMAL;
+                    this.mDataChanged = false;
+                    if (this.mPositionScrollAfterLayout != null) {
+                        this.post(this.mPositionScrollAfterLayout);
+                        this.mPositionScrollAfterLayout = null;
+                    }
+                    this.mNeedSync = false;
+                    this.setNextSelectedPositionInt(this.mSelectedPosition);
+                    this.updateScrollIndicators();
+                    if (this.mItemCount > 0) {
+                        this.checkSelectionChanged();
+                    }
+                    this.invokeOnItemScrollListener();
+                }
+                finally {
+                    if (!blockLayoutRequests) {
+                        this.mBlockLayoutRequests = false;
+                    }
+                }
+            }
+            makeAndAddView(position, y, flow, childrenLeft, selected, where) {
+                let child;
+                if (!this.mDataChanged) {
+                    child = this.mRecycler.getActiveView(position);
+                    if (child != null) {
+                        this.setupChild(child, position, y, flow, childrenLeft, selected, true, where);
+                        return child;
+                    }
+                }
+                child = this.obtainView(position, this.mIsScrap);
+                this.setupChild(child, position, y, flow, childrenLeft, selected, this.mIsScrap[0], where);
+                return child;
+            }
+            setupChild(child, position, y, flow, childrenLeft, selected, recycled, where) {
+                Trace.traceBegin(Trace.TRACE_TAG_VIEW, "setupGridItem");
+                let isSelected = selected && this.shouldShowSelector();
+                const updateChildSelected = isSelected != child.isSelected();
+                const mode = this.mTouchMode;
+                const isPressed = mode > GridView.TOUCH_MODE_DOWN && mode < GridView.TOUCH_MODE_SCROLL && this.mMotionPosition == position;
+                const updateChildPressed = isPressed != child.isPressed();
+                let needToMeasure = !recycled || updateChildSelected || child.isLayoutRequested();
+                let p = child.getLayoutParams();
+                if (p == null) {
+                    p = this.generateDefaultLayoutParams();
+                }
+                p.viewType = this.mAdapter.getItemViewType(position);
+                if (recycled && !p.forceAdd) {
+                    this.attachViewToParent(child, where, p);
+                }
+                else {
+                    p.forceAdd = false;
+                    this.addViewInLayout(child, where, p, true);
+                }
+                if (updateChildSelected) {
+                    child.setSelected(isSelected);
+                    if (isSelected) {
+                        this.requestFocus();
+                    }
+                }
+                if (updateChildPressed) {
+                    child.setPressed(isPressed);
+                }
+                if (this.mChoiceMode != GridView.CHOICE_MODE_NONE && this.mCheckStates != null) {
+                    if (child['setChecked']) {
+                        child.setChecked(this.mCheckStates.get(position));
+                    }
+                    else {
+                        child.setActivated(this.mCheckStates.get(position));
+                    }
+                }
+                if (needToMeasure) {
+                    let childHeightSpec = ViewGroup.getChildMeasureSpec(GridView.MeasureSpec.makeMeasureSpec(0, GridView.MeasureSpec.UNSPECIFIED), 0, p.height);
+                    let childWidthSpec = ViewGroup.getChildMeasureSpec(GridView.MeasureSpec.makeMeasureSpec(this.mColumnWidth, GridView.MeasureSpec.EXACTLY), 0, p.width);
+                    child.measure(childWidthSpec, childHeightSpec);
+                }
+                else {
+                    this.cleanupLayoutState(child);
+                }
+                const w = child.getMeasuredWidth();
+                const h = child.getMeasuredHeight();
+                let childLeft;
+                const childTop = flow ? y : y - h;
+                const absoluteGravity = this.mGravity;
+                switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                    case Gravity.LEFT:
+                        childLeft = childrenLeft;
+                        break;
+                    case Gravity.CENTER_HORIZONTAL:
+                        childLeft = childrenLeft + ((this.mColumnWidth - w) / 2);
+                        break;
+                    case Gravity.RIGHT:
+                        childLeft = childrenLeft + this.mColumnWidth - w;
+                        break;
+                    default:
+                        childLeft = childrenLeft;
+                        break;
+                }
+                if (needToMeasure) {
+                    const childRight = childLeft + w;
+                    const childBottom = childTop + h;
+                    child.layout(childLeft, childTop, childRight, childBottom);
+                }
+                else {
+                    child.offsetLeftAndRight(childLeft - child.getLeft());
+                    child.offsetTopAndBottom(childTop - child.getTop());
+                }
+                if (this.mCachingStarted) {
+                    child.setDrawingCacheEnabled(true);
+                }
+                if (recycled && (child.getLayoutParams().scrappedFromPosition) != position) {
+                    child.jumpDrawablesToCurrentState();
+                }
+                Trace.traceEnd(Trace.TRACE_TAG_VIEW);
+            }
+            setSelection(position) {
+                if (!this.isInTouchMode()) {
+                    this.setNextSelectedPositionInt(position);
+                }
+                else {
+                    this.mResurrectToPosition = position;
+                }
+                this.mLayoutMode = GridView.LAYOUT_SET_SELECTION;
+                if (this.mPositionScroller != null) {
+                    this.mPositionScroller.stop();
+                }
+                this.requestLayout();
+            }
+            setSelectionInt(position) {
+                let previousSelectedPosition = this.mNextSelectedPosition;
+                if (this.mPositionScroller != null) {
+                    this.mPositionScroller.stop();
+                }
+                this.setNextSelectedPositionInt(position);
+                this.layoutChildren();
+                const next = this.mStackFromBottom ? this.mItemCount - 1 - this.mNextSelectedPosition : this.mNextSelectedPosition;
+                const previous = this.mStackFromBottom ? this.mItemCount - 1 - previousSelectedPosition : previousSelectedPosition;
+                const nextRow = next / this.mNumColumns;
+                const previousRow = previous / this.mNumColumns;
+                if (nextRow != previousRow) {
+                    this.awakenScrollBars();
+                }
+            }
+            onKeyDown(keyCode, event) {
+                return this.commonKey(keyCode, 1, event);
+            }
+            onKeyMultiple(keyCode, repeatCount, event) {
+                return this.commonKey(keyCode, repeatCount, event);
+            }
+            onKeyUp(keyCode, event) {
+                return this.commonKey(keyCode, 1, event);
+            }
+            commonKey(keyCode, count, event) {
+                if (this.mAdapter == null) {
+                    return false;
+                }
+                if (this.mDataChanged) {
+                    this.layoutChildren();
+                }
+                let handled = false;
+                let action = event.getAction();
+                if (action != KeyEvent.ACTION_UP) {
+                    switch (keyCode) {
+                        case KeyEvent.KEYCODE_DPAD_LEFT:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.arrowScroll(GridView.FOCUS_LEFT);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_DPAD_RIGHT:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.arrowScroll(GridView.FOCUS_RIGHT);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_DPAD_UP:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.arrowScroll(GridView.FOCUS_UP);
+                            }
+                            else if (event.hasModifiers(KeyEvent.META_ALT_ON)) {
+                                handled = this.resurrectSelectionIfNeeded() || this.fullScroll(GridView.FOCUS_UP);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_DPAD_DOWN:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.arrowScroll(GridView.FOCUS_DOWN);
+                            }
+                            else if (event.hasModifiers(KeyEvent.META_ALT_ON)) {
+                                handled = this.resurrectSelectionIfNeeded() || this.fullScroll(GridView.FOCUS_DOWN);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_DPAD_CENTER:
+                        case KeyEvent.KEYCODE_ENTER:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded();
+                                if (!handled && event.getRepeatCount() == 0 && this.getChildCount() > 0) {
+                                    this.keyPressed();
+                                    handled = true;
+                                }
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_SPACE:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.pageScroll(GridView.FOCUS_DOWN);
+                            }
+                            else if (event.hasModifiers(KeyEvent.META_SHIFT_ON)) {
+                                handled = this.resurrectSelectionIfNeeded() || this.pageScroll(GridView.FOCUS_UP);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_PAGE_UP:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.pageScroll(GridView.FOCUS_UP);
+                            }
+                            else if (event.hasModifiers(KeyEvent.META_ALT_ON)) {
+                                handled = this.resurrectSelectionIfNeeded() || this.fullScroll(GridView.FOCUS_UP);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_PAGE_DOWN:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.pageScroll(GridView.FOCUS_DOWN);
+                            }
+                            else if (event.hasModifiers(KeyEvent.META_ALT_ON)) {
+                                handled = this.resurrectSelectionIfNeeded() || this.fullScroll(GridView.FOCUS_DOWN);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_MOVE_HOME:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.fullScroll(GridView.FOCUS_UP);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_MOVE_END:
+                            if (event.hasNoModifiers()) {
+                                handled = this.resurrectSelectionIfNeeded() || this.fullScroll(GridView.FOCUS_DOWN);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_TAB:
+                            if (false) {
+                                if (event.hasNoModifiers()) {
+                                    handled = this.resurrectSelectionIfNeeded() || this.sequenceScroll(GridView.FOCUS_FORWARD);
+                                }
+                                else if (event.hasModifiers(KeyEvent.META_SHIFT_ON)) {
+                                    handled = this.resurrectSelectionIfNeeded() || this.sequenceScroll(GridView.FOCUS_BACKWARD);
+                                }
+                            }
+                            break;
+                    }
+                }
+                if (handled) {
+                    return true;
+                }
+                switch (action) {
+                    case KeyEvent.ACTION_DOWN:
+                        return super.onKeyDown(keyCode, event);
+                    case KeyEvent.ACTION_UP:
+                        return super.onKeyUp(keyCode, event);
+                    default:
+                        return false;
+                }
+            }
+            pageScroll(direction) {
+                let nextPage = -1;
+                if (direction == GridView.FOCUS_UP) {
+                    nextPage = Math.max(0, this.mSelectedPosition - this.getChildCount());
+                }
+                else if (direction == GridView.FOCUS_DOWN) {
+                    nextPage = Math.min(this.mItemCount - 1, this.mSelectedPosition + this.getChildCount());
+                }
+                if (nextPage >= 0) {
+                    this.setSelectionInt(nextPage);
+                    this.invokeOnItemScrollListener();
+                    this.awakenScrollBars();
+                    return true;
+                }
+                return false;
+            }
+            fullScroll(direction) {
+                let moved = false;
+                if (direction == GridView.FOCUS_UP) {
+                    this.mLayoutMode = GridView.LAYOUT_SET_SELECTION;
+                    this.setSelectionInt(0);
+                    this.invokeOnItemScrollListener();
+                    moved = true;
+                }
+                else if (direction == GridView.FOCUS_DOWN) {
+                    this.mLayoutMode = GridView.LAYOUT_SET_SELECTION;
+                    this.setSelectionInt(this.mItemCount - 1);
+                    this.invokeOnItemScrollListener();
+                    moved = true;
+                }
+                if (moved) {
+                    this.awakenScrollBars();
+                }
+                return moved;
+            }
+            arrowScroll(direction) {
+                const selectedPosition = this.mSelectedPosition;
+                const numColumns = this.mNumColumns;
+                let startOfRowPos;
+                let endOfRowPos;
+                let moved = false;
+                if (!this.mStackFromBottom) {
+                    startOfRowPos = (selectedPosition / numColumns) * numColumns;
+                    endOfRowPos = Math.min(startOfRowPos + numColumns - 1, this.mItemCount - 1);
+                }
+                else {
+                    const invertedSelection = this.mItemCount - 1 - selectedPosition;
+                    endOfRowPos = this.mItemCount - 1 - (invertedSelection / numColumns) * numColumns;
+                    startOfRowPos = Math.max(0, endOfRowPos - numColumns + 1);
+                }
+                switch (direction) {
+                    case GridView.FOCUS_UP:
+                        if (startOfRowPos > 0) {
+                            this.mLayoutMode = GridView.LAYOUT_MOVE_SELECTION;
+                            this.setSelectionInt(Math.max(0, selectedPosition - numColumns));
+                            moved = true;
+                        }
+                        break;
+                    case GridView.FOCUS_DOWN:
+                        if (endOfRowPos < this.mItemCount - 1) {
+                            this.mLayoutMode = GridView.LAYOUT_MOVE_SELECTION;
+                            this.setSelectionInt(Math.min(selectedPosition + numColumns, this.mItemCount - 1));
+                            moved = true;
+                        }
+                        break;
+                    case GridView.FOCUS_LEFT:
+                        if (selectedPosition > startOfRowPos) {
+                            this.mLayoutMode = GridView.LAYOUT_MOVE_SELECTION;
+                            this.setSelectionInt(Math.max(0, selectedPosition - 1));
+                            moved = true;
+                        }
+                        break;
+                    case GridView.FOCUS_RIGHT:
+                        if (selectedPosition < endOfRowPos) {
+                            this.mLayoutMode = GridView.LAYOUT_MOVE_SELECTION;
+                            this.setSelectionInt(Math.min(selectedPosition + 1, this.mItemCount - 1));
+                            moved = true;
+                        }
+                        break;
+                }
+                if (moved) {
+                    this.playSoundEffect(SoundEffectConstants.getContantForFocusDirection(direction));
+                    this.invokeOnItemScrollListener();
+                }
+                if (moved) {
+                    this.awakenScrollBars();
+                }
+                return moved;
+            }
+            sequenceScroll(direction) {
+                let selectedPosition = this.mSelectedPosition;
+                let numColumns = this.mNumColumns;
+                let count = this.mItemCount;
+                let startOfRow;
+                let endOfRow;
+                if (!this.mStackFromBottom) {
+                    startOfRow = (selectedPosition / numColumns) * numColumns;
+                    endOfRow = Math.min(startOfRow + numColumns - 1, count - 1);
+                }
+                else {
+                    let invertedSelection = count - 1 - selectedPosition;
+                    endOfRow = count - 1 - (invertedSelection / numColumns) * numColumns;
+                    startOfRow = Math.max(0, endOfRow - numColumns + 1);
+                }
+                let moved = false;
+                let showScroll = false;
+                switch (direction) {
+                    case GridView.FOCUS_FORWARD:
+                        if (selectedPosition < count - 1) {
+                            this.mLayoutMode = GridView.LAYOUT_MOVE_SELECTION;
+                            this.setSelectionInt(selectedPosition + 1);
+                            moved = true;
+                            showScroll = selectedPosition == endOfRow;
+                        }
+                        break;
+                    case GridView.FOCUS_BACKWARD:
+                        if (selectedPosition > 0) {
+                            this.mLayoutMode = GridView.LAYOUT_MOVE_SELECTION;
+                            this.setSelectionInt(selectedPosition - 1);
+                            moved = true;
+                            showScroll = selectedPosition == startOfRow;
+                        }
+                        break;
+                }
+                if (moved) {
+                    this.playSoundEffect(SoundEffectConstants.getContantForFocusDirection(direction));
+                    this.invokeOnItemScrollListener();
+                }
+                if (showScroll) {
+                    this.awakenScrollBars();
+                }
+                return moved;
+            }
+            onFocusChanged(gainFocus, direction, previouslyFocusedRect) {
+                super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+                let closestChildIndex = -1;
+                if (gainFocus && previouslyFocusedRect != null) {
+                    previouslyFocusedRect.offset(this.mScrollX, this.mScrollY);
+                    let otherRect = this.mTempRect;
+                    let minDistance = Integer.MAX_VALUE;
+                    const childCount = this.getChildCount();
+                    for (let i = 0; i < childCount; i++) {
+                        if (!this.isCandidateSelection(i, direction)) {
+                            continue;
+                        }
+                        const other = this.getChildAt(i);
+                        other.getDrawingRect(otherRect);
+                        this.offsetDescendantRectToMyCoords(other, otherRect);
+                        let distance = GridView.getDistance(previouslyFocusedRect, otherRect, direction);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestChildIndex = i;
+                        }
+                    }
+                }
+                if (closestChildIndex >= 0) {
+                    this.setSelection(closestChildIndex + this.mFirstPosition);
+                }
+                else {
+                    this.requestLayout();
+                }
+            }
+            isCandidateSelection(childIndex, direction) {
+                const count = this.getChildCount();
+                const invertedIndex = count - 1 - childIndex;
+                let rowStart;
+                let rowEnd;
+                if (!this.mStackFromBottom) {
+                    rowStart = childIndex - (childIndex % this.mNumColumns);
+                    rowEnd = Math.max(rowStart + this.mNumColumns - 1, count);
+                }
+                else {
+                    rowEnd = count - 1 - (invertedIndex - (invertedIndex % this.mNumColumns));
+                    rowStart = Math.max(0, rowEnd - this.mNumColumns + 1);
+                }
+                switch (direction) {
+                    case View.FOCUS_RIGHT:
+                        return childIndex == rowStart;
+                    case View.FOCUS_DOWN:
+                        return rowStart == 0;
+                    case View.FOCUS_LEFT:
+                        return childIndex == rowEnd;
+                    case View.FOCUS_UP:
+                        return rowEnd == count - 1;
+                    case View.FOCUS_FORWARD:
+                        return childIndex == rowStart && rowStart == 0;
+                    case View.FOCUS_BACKWARD:
+                        return childIndex == rowEnd && rowEnd == count - 1;
+                    default:
+                        throw Error(`new IllegalArgumentException("direction must be one of " + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT, " + "FOCUS_FORWARD, FOCUS_BACKWARD}.")`);
+                }
+            }
+            setGravity(gravity) {
+                if (this.mGravity != gravity) {
+                    this.mGravity = gravity;
+                    this.requestLayoutIfNecessary();
+                }
+            }
+            getGravity() {
+                return this.mGravity;
+            }
+            setHorizontalSpacing(horizontalSpacing) {
+                if (horizontalSpacing != this.mRequestedHorizontalSpacing) {
+                    this.mRequestedHorizontalSpacing = horizontalSpacing;
+                    this.requestLayoutIfNecessary();
+                }
+            }
+            getHorizontalSpacing() {
+                return this.mHorizontalSpacing;
+            }
+            getRequestedHorizontalSpacing() {
+                return this.mRequestedHorizontalSpacing;
+            }
+            setVerticalSpacing(verticalSpacing) {
+                if (verticalSpacing != this.mVerticalSpacing) {
+                    this.mVerticalSpacing = verticalSpacing;
+                    this.requestLayoutIfNecessary();
+                }
+            }
+            getVerticalSpacing() {
+                return this.mVerticalSpacing;
+            }
+            setStretchMode(stretchMode) {
+                if (stretchMode != this.mStretchMode) {
+                    this.mStretchMode = stretchMode;
+                    this.requestLayoutIfNecessary();
+                }
+            }
+            getStretchMode() {
+                return this.mStretchMode;
+            }
+            setColumnWidth(columnWidth) {
+                if (columnWidth != this.mRequestedColumnWidth) {
+                    this.mRequestedColumnWidth = columnWidth;
+                    this.requestLayoutIfNecessary();
+                }
+            }
+            getColumnWidth() {
+                return this.mColumnWidth;
+            }
+            getRequestedColumnWidth() {
+                return this.mRequestedColumnWidth;
+            }
+            setNumColumns(numColumns) {
+                if (numColumns != this.mRequestedNumColumns) {
+                    this.mRequestedNumColumns = numColumns;
+                    this.requestLayoutIfNecessary();
+                }
+            }
+            getNumColumns() {
+                return this.mNumColumns;
+            }
+            adjustViewsUpOrDown() {
+                const childCount = this.getChildCount();
+                if (childCount > 0) {
+                    let delta;
+                    let child;
+                    if (!this.mStackFromBottom) {
+                        child = this.getChildAt(0);
+                        delta = child.getTop() - this.mListPadding.top;
+                        if (this.mFirstPosition != 0) {
+                            delta -= this.mVerticalSpacing;
+                        }
+                        if (delta < 0) {
+                            delta = 0;
+                        }
+                    }
+                    else {
+                        child = this.getChildAt(childCount - 1);
+                        delta = child.getBottom() - (this.getHeight() - this.mListPadding.bottom);
+                        if (this.mFirstPosition + childCount < this.mItemCount) {
+                            delta += this.mVerticalSpacing;
+                        }
+                        if (delta > 0) {
+                            delta = 0;
+                        }
+                    }
+                    if (delta != 0) {
+                        this.offsetChildrenTopAndBottom(-delta);
+                    }
+                }
+            }
+            computeVerticalScrollExtent() {
+                const count = this.getChildCount();
+                if (count > 0) {
+                    const numColumns = this.mNumColumns;
+                    const rowCount = (count + numColumns - 1) / numColumns;
+                    let extent = rowCount * 100;
+                    let view = this.getChildAt(0);
+                    const top = view.getTop();
+                    let height = view.getHeight();
+                    if (height > 0) {
+                        extent += (top * 100) / height;
+                    }
+                    view = this.getChildAt(count - 1);
+                    const bottom = view.getBottom();
+                    height = view.getHeight();
+                    if (height > 0) {
+                        extent -= ((bottom - this.getHeight()) * 100) / height;
+                    }
+                    return extent;
+                }
+                return 0;
+            }
+            computeVerticalScrollOffset() {
+                if (this.mFirstPosition >= 0 && this.getChildCount() > 0) {
+                    const view = this.getChildAt(0);
+                    const top = view.getTop();
+                    let height = view.getHeight();
+                    if (height > 0) {
+                        const numColumns = this.mNumColumns;
+                        const rowCount = (this.mItemCount + numColumns - 1) / numColumns;
+                        const oddItemsOnFirstRow = this.isStackFromBottom() ? ((rowCount * numColumns) - this.mItemCount) : 0;
+                        const whichRow = (this.mFirstPosition + oddItemsOnFirstRow) / numColumns;
+                        return Math.max(whichRow * 100 - (top * 100) / height + Math.floor((this.mScrollY / this.getHeight() * rowCount * 100)), 0);
+                    }
+                }
+                return 0;
+            }
+            computeVerticalScrollRange() {
+                const numColumns = this.mNumColumns;
+                const rowCount = (this.mItemCount + numColumns - 1) / numColumns;
+                let result = Math.max(rowCount * 100, 0);
+                if (this.mScrollY != 0) {
+                    result += Math.abs(Math.floor((this.mScrollY / this.getHeight() * rowCount * 100)));
+                }
+                return result;
+            }
+        }
+        GridView.NO_STRETCH = 0;
+        GridView.STRETCH_SPACING = 1;
+        GridView.STRETCH_COLUMN_WIDTH = 2;
+        GridView.STRETCH_SPACING_UNIFORM = 3;
+        GridView.AUTO_FIT = -1;
+        widget.GridView = GridView;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/5.
  */
@@ -25063,6 +26498,7 @@ var android;
 ///<reference path="android/widget/Button.ts"/>
 ///<reference path="android/widget/ImageView.ts"/>
 ///<reference path="android/widget/ListView.ts"/>
+///<reference path="android/widget/GridView.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="android/app/Activity.ts"/>

@@ -1495,7 +1495,7 @@ module android.widget {
         //    return null;
         //}
 
-        onFocusChanged(gainFocus:boolean, direction:number, previouslyFocusedRect:Rect):void {
+        protected onFocusChanged(gainFocus:boolean, direction:number, previouslyFocusedRect:Rect):void {
             super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
             if (gainFocus && this.mSelectedPosition < 0 && !this.isInTouchMode()) {
                 if (!this.isAttachedToWindow() && this.mAdapter != null) {
@@ -1535,7 +1535,7 @@ module android.widget {
             this.invalidate();
         }
 
-        computeVerticalScrollExtent():number {
+        protected computeVerticalScrollExtent():number {
             const count:number = this.getChildCount();
             if (count > 0) {
                 if (this.mSmoothScrollbarEnabled) {
@@ -1560,7 +1560,7 @@ module android.widget {
             return 0;
         }
 
-        computeVerticalScrollOffset():number {
+        protected computeVerticalScrollOffset():number {
             const firstPosition:number = this.mFirstPosition;
             const childCount:number = this.getChildCount();
             if (firstPosition >= 0 && childCount > 0) {
@@ -1587,7 +1587,7 @@ module android.widget {
             return 0;
         }
 
-        computeVerticalScrollRange():number {
+        protected computeVerticalScrollRange():number {
             let result:number;
             if (this.mSmoothScrollbarEnabled) {
                 result = Math.max(this.mItemCount * 100, 0);
@@ -1632,7 +1632,7 @@ module android.widget {
             }
         }
 
-        onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void {
+        protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void {
             if (this.mSelector == null) {
                 this.useDefaultSelector();
             }
@@ -1694,7 +1694,7 @@ module android.widget {
         /**
          * Subclasses must override this method to layout their children.
          */
-        layoutChildren():void {
+        protected layoutChildren():void {
         }
 
         updateScrollIndicators():void {

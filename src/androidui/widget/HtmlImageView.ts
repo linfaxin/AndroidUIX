@@ -147,7 +147,7 @@ module androidui.widget{
         }
 
 
-        onMeasure(widthMeasureSpec, heightMeasureSpec):void {
+        protected onMeasure(widthMeasureSpec, heightMeasureSpec):void {
             let w:number;
             let h:number;
 

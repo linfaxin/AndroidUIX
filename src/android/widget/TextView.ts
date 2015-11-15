@@ -231,7 +231,7 @@ module android.widget{
             });
         }
 
-        onMeasure(widthMeasureSpec:any, heightMeasureSpec:any):void {
+        protected onMeasure(widthMeasureSpec:any, heightMeasureSpec:any):void {
             let widthMode = MeasureSpec.getMode(widthMeasureSpec);
             let heightMode = MeasureSpec.getMode(heightMeasureSpec);
             let widthSize = MeasureSpec.getSize(widthMeasureSpec);

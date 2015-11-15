@@ -1103,7 +1103,7 @@ module android.support.v4.view {
             this.mFirstLayout = true;
         }
 
-        onMeasure(widthMeasureSpec, heightMeasureSpec):void {
+        protected onMeasure(widthMeasureSpec, heightMeasureSpec):void {
             // For simple implementation, our internal size is always 0.
             // We depend on the container to specify the layout size of
             // our view.  We can't really know what it is since we will be
