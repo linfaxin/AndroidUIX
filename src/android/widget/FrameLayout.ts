@@ -253,7 +253,7 @@ module android.widget {
         }
 
 
-        onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
+        protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
             this.layoutChildren(left, top, right, bottom, false /* no force left gravity */);
         }
 
@@ -323,7 +323,7 @@ module android.widget {
             }
         }
 
-        onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
+        protected onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
             super.onSizeChanged(w, h, oldw, oldh);
             this.mForegroundBoundsChanged = true;
         }

@@ -1655,7 +1655,7 @@ module android.widget {
          * Subclasses should NOT override this method but
          *  {@link #layoutChildren()} instead.
          */
-        onLayout(changed:boolean, l:number, t:number, r:number, b:number):void {
+        protected onLayout(changed:boolean, l:number, t:number, r:number, b:number):void {
             super.onLayout(changed, l, t, r, b);
             this.mInLayout = true;
             if (changed) {
@@ -1963,7 +1963,7 @@ module android.widget {
             return (this.mGroupFlags & AbsListView.CLIP_TO_PADDING_MASK) == AbsListView.CLIP_TO_PADDING_MASK ? 0 : this.mPaddingBottom;
         }
 
-        onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
+        protected onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
             if (this.getChildCount() > 0) {
                 this.mDataChanged = true;
                 this.rememberSyncState();
@@ -2930,6 +2930,7 @@ module android.widget {
                     velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                     const initialVelocity:number = Math.floor(velocityTracker.getYVelocity(this.mActivePointerId));
                     this.reportScrollStateChange(AbsListView.OnScrollListener.SCROLL_STATE_FLING);
+                    //FIXME overdrag springback
                     if (Math.abs(initialVelocity) > this.mMinimumVelocity) {
                         this.mFlingRunnable.startOverfling(-initialVelocity);
                     } else {
@@ -2988,7 +2989,7 @@ module android.widget {
             this.mActivePointerId = AbsListView.INVALID_POINTER;
         }
 
-        onOverScrolled(scrollX:number, scrollY:number, clampedX:boolean, clampedY:boolean):void {
+        protected onOverScrolled(scrollX:number, scrollY:number, clampedX:boolean, clampedY:boolean):void {
             if (this.mScrollY != scrollY) {
                 this.onScrollChanged(this.mScrollX, scrollY, this.mScrollX, this.mScrollY);
                 this.mScrollY = scrollY;

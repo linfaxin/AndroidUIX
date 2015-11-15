@@ -3619,6 +3619,18 @@ var android;
                 if ((modifiers & KeyEvent.META_CTRL_ON) === KeyEvent.META_CTRL_ON && this.isCtrlPressed())
                     return true;
             }
+            getMetaState() {
+                let meta = 0;
+                if (this.isAltPressed())
+                    meta |= KeyEvent.META_ALT_ON;
+                if (this.isShiftPressed())
+                    meta |= KeyEvent.META_SHIFT_ON;
+                if (this.isCtrlPressed())
+                    meta |= KeyEvent.META_CTRL_ON;
+                if (this.isMetaPressed())
+                    meta |= KeyEvent.META_META_ON;
+                return meta;
+            }
             toString() {
                 return JSON.stringify(this._activeKeyEvent);
             }
@@ -8129,13 +8141,15 @@ var android;
             }
             dispatchInputEvent(event) {
                 this.deliverInputEvent(event);
+                let result = event[InputStage.FLAG_FINISHED_HANDLED];
+                event[InputStage.FLAG_FINISHED] = false;
+                event[InputStage.FLAG_FINISHED_HANDLED] = false;
+                return result;
             }
             deliverInputEvent(event) {
                 this.mFirstInputStage.deliver(event);
             }
             finishInputEvent(event) {
-                event[InputStage.FLAG_FINISHED] = false;
-                event[InputStage.FLAG_FINISHED_HANDLED] = false;
             }
             checkForLeavingTouchModeAndConsume(event) {
                 if (!this.mAttachInfo.mInTouchMode) {
@@ -12299,7 +12313,7 @@ var android;
                             let initialVelocity = velocityTracker.getYVelocity(this.mActivePointerId);
                             if (this.getChildCount() > 0) {
                                 let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.getScrollRange();
-                                if ((Math.abs(initialVelocity) > this.mMinimumVelocity) && !isOverDrag) {
+                                if (!isOverDrag && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
                                     this.fling(-initialVelocity);
                                 }
                                 else {
@@ -17988,7 +18002,9 @@ var android;
                         velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                         const initialVelocity = Math.floor(velocityTracker.getYVelocity(this.mActivePointerId));
                         this.reportScrollStateChange(AbsListView.OnScrollListener.SCROLL_STATE_FLING);
-                        if (Math.abs(initialVelocity) > this.mMinimumVelocity) {
+                        let scrollY = this.mScrollY;
+                        let isOverDrag = scrollY < 0 || scrollY > this.computeVerticalScrollRange();
+                        if (!isOverDrag && Math.abs(initialVelocity) > this.mMinimumVelocity) {
                             this.mFlingRunnable.startOverfling(-initialVelocity);
                         }
                         else {
@@ -19071,7 +19087,7 @@ var android;
                     }
                 }
                 startSpringback() {
-                    if (this.mScroller.springBack(0, this._AbsListView_this.mScrollY, 0, 0, 0, 0)) {
+                    if (this.mScroller.springBack(0, this._AbsListView_this.mScrollY, 0, 0, 0, this._AbsListView_this.computeVerticalScrollRange())) {
                         this._AbsListView_this.mTouchMode = AbsListView.TOUCH_MODE_OVERFLING;
                         this._AbsListView_this.invalidate();
                         this._AbsListView_this.postOnAnimation(this);
@@ -20407,6 +20423,57 @@ var android;
                 this.mArrowScrollFocusResult = new ListView.ArrowScrollFocusResult();
                 this.setDivider(android.R.drawable.list_divider);
                 this.setDividerHeight(1);
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                const listView = this;
+                mergeHandler.add({
+                    set divider(value) {
+                        let divider = mergeHandler.parseDrawable(value);
+                        if (divider)
+                            listView.setDivider(divider);
+                    },
+                    get divider() {
+                        return listView.mDivider;
+                    },
+                    set overScrollHeader(value) {
+                        let header = mergeHandler.parseDrawable(value);
+                        if (header)
+                            listView.setOverscrollHeader(header);
+                    },
+                    get overScrollHeader() {
+                        return listView.mOverScrollHeader;
+                    },
+                    set overScrollFooter(value) {
+                        let footer = mergeHandler.parseDrawable(value);
+                        if (footer)
+                            listView.setOverscrollFooter(footer);
+                    },
+                    get overScrollFooter() {
+                        return listView.mOverScrollFooter;
+                    },
+                    set dividerHeight(value) {
+                        let dividerHeight = mergeHandler.parseNumber(value, 0);
+                        if (dividerHeight > 0) {
+                            listView.setDividerHeight(dividerHeight);
+                        }
+                    },
+                    get dividerHeight() {
+                        return listView.mDividerHeight;
+                    },
+                    set headerDividersEnabled(value) {
+                        listView.setHeaderDividersEnabled(mergeHandler.parseBoolean(value, true));
+                    },
+                    get headerDividersEnabled() {
+                        return listView.mHeaderDividersEnabled;
+                    },
+                    set footerDividersEnabled(value) {
+                        listView.setFooterDividersEnabled(mergeHandler.parseBoolean(value, true));
+                    },
+                    get footerDividersEnabled() {
+                        return listView.mFooterDividersEnabled;
+                    },
+                });
             }
             getMaxScrollAmount() {
                 return Math.floor((ListView.MAX_SCROLL_FACTOR * (this.mBottom - this.mTop)));
@@ -23709,7 +23776,7 @@ var android;
                 let endOfRowPos;
                 let moved = false;
                 if (!this.mStackFromBottom) {
-                    startOfRowPos = (selectedPosition / numColumns) * numColumns;
+                    startOfRowPos = Math.floor(selectedPosition / numColumns) * numColumns;
                     endOfRowPos = Math.min(startOfRowPos + numColumns - 1, this.mItemCount - 1);
                 }
                 else {
@@ -24002,6 +24069,913 @@ var android;
         GridView.STRETCH_SPACING_UNIFORM = 3;
         GridView.AUTO_FIT = -1;
         widget.GridView = GridView;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/view/FocusFinder.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/VelocityTracker.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/view/ViewParent.ts"/>
+///<reference path="../../android/view/animation/AnimationUtils.ts"/>
+///<reference path="../../java/util/List.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../android/widget/FrameLayout.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/widget/OverScroller.ts"/>
+///<reference path="../../android/widget/ScrollView.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Rect = android.graphics.Rect;
+        var Log = android.util.Log;
+        var FocusFinder = android.view.FocusFinder;
+        var KeyEvent = android.view.KeyEvent;
+        var MotionEvent = android.view.MotionEvent;
+        var VelocityTracker = android.view.VelocityTracker;
+        var View = android.view.View;
+        var ViewConfiguration = android.view.ViewConfiguration;
+        var ViewGroup = android.view.ViewGroup;
+        var AnimationUtils = android.view.animation.AnimationUtils;
+        var FrameLayout = android.widget.FrameLayout;
+        var OverScroller = android.widget.OverScroller;
+        var ScrollView = android.widget.ScrollView;
+        class HorizontalScrollView extends FrameLayout {
+            constructor() {
+                super();
+                this.mLastScroll = 0;
+                this.mTempRect = new Rect();
+                this.mLastMotionX = 0;
+                this.mIsLayoutDirty = true;
+                this.mChildToScrollTo = null;
+                this.mIsBeingDragged = false;
+                this.mSmoothScrollingEnabled = true;
+                this.mMinimumVelocity = 0;
+                this.mMaximumVelocity = 0;
+                this.mOverscrollDistance = 0;
+                this.mOverflingDistance = 0;
+                this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
+                this.initScrollView();
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let scrollView = this;
+                mergeHandler.add({
+                    set fillViewport(value) {
+                        scrollView.setFillViewport(View.AttrChangeHandler.parseBoolean(value));
+                    },
+                    get fillViewport() {
+                        return scrollView.mFillViewport;
+                    }
+                });
+            }
+            getLeftFadingEdgeStrength() {
+                if (this.getChildCount() == 0) {
+                    return 0.0;
+                }
+                const length = this.getHorizontalFadingEdgeLength();
+                if (this.mScrollX < length) {
+                    return this.mScrollX / length;
+                }
+                return 1.0;
+            }
+            getRightFadingEdgeStrength() {
+                if (this.getChildCount() == 0) {
+                    return 0.0;
+                }
+                const length = this.getHorizontalFadingEdgeLength();
+                const rightEdge = this.getWidth() - this.mPaddingRight;
+                const span = this.getChildAt(0).getRight() - this.mScrollX - rightEdge;
+                if (span < length) {
+                    return span / length;
+                }
+                return 1.0;
+            }
+            getMaxScrollAmount() {
+                return Math.floor((HorizontalScrollView.MAX_SCROLL_FACTOR * (this.mRight - this.mLeft)));
+            }
+            initScrollView() {
+                this.mScroller = new OverScroller();
+                this.setFocusable(true);
+                this.setDescendantFocusability(HorizontalScrollView.FOCUS_AFTER_DESCENDANTS);
+                this.setWillNotDraw(false);
+                const configuration = ViewConfiguration.get();
+                this.mTouchSlop = configuration.getScaledTouchSlop();
+                this.mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
+                this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
+                this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
+                this.mOverflingDistance = configuration.getScaledOverflingDistance();
+                this.initScrollCache();
+                this.setHorizontalScrollBarEnabled(true);
+            }
+            addView(...args) {
+                if (this.getChildCount() > 0) {
+                    throw new Error("ScrollView can host only one direct child");
+                }
+                return super.addView(...args);
+            }
+            canScroll() {
+                let child = this.getChildAt(0);
+                if (child != null) {
+                    let childWidth = child.getWidth();
+                    return this.getWidth() < childWidth + this.mPaddingLeft + this.mPaddingRight;
+                }
+                return false;
+            }
+            isFillViewport() {
+                return this.mFillViewport;
+            }
+            setFillViewport(fillViewport) {
+                if (fillViewport != this.mFillViewport) {
+                    this.mFillViewport = fillViewport;
+                    this.requestLayout();
+                }
+            }
+            isSmoothScrollingEnabled() {
+                return this.mSmoothScrollingEnabled;
+            }
+            setSmoothScrollingEnabled(smoothScrollingEnabled) {
+                this.mSmoothScrollingEnabled = smoothScrollingEnabled;
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                if (!this.mFillViewport) {
+                    return;
+                }
+                const widthMode = HorizontalScrollView.MeasureSpec.getMode(widthMeasureSpec);
+                if (widthMode == HorizontalScrollView.MeasureSpec.UNSPECIFIED) {
+                    return;
+                }
+                if (this.getChildCount() > 0) {
+                    const child = this.getChildAt(0);
+                    let width = this.getMeasuredWidth();
+                    if (child.getMeasuredWidth() < width) {
+                        const lp = child.getLayoutParams();
+                        let childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(heightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
+                        width -= this.mPaddingLeft;
+                        width -= this.mPaddingRight;
+                        let childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(width, HorizontalScrollView.MeasureSpec.EXACTLY);
+                        child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+                    }
+                }
+            }
+            dispatchKeyEvent(event) {
+                return super.dispatchKeyEvent(event) || this.executeKeyEvent(event);
+            }
+            executeKeyEvent(event) {
+                this.mTempRect.setEmpty();
+                if (!this.canScroll()) {
+                    if (this.isFocused()) {
+                        let currentFocused = this.findFocus();
+                        if (currentFocused == this)
+                            currentFocused = null;
+                        let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, View.FOCUS_RIGHT);
+                        return nextFocused != null && nextFocused != this && nextFocused.requestFocus(View.FOCUS_RIGHT);
+                    }
+                    return false;
+                }
+                let handled = false;
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    switch (event.getKeyCode()) {
+                        case KeyEvent.KEYCODE_DPAD_LEFT:
+                            if (!event.isAltPressed()) {
+                                handled = this.arrowScroll(View.FOCUS_LEFT);
+                            }
+                            else {
+                                handled = this.fullScroll(View.FOCUS_LEFT);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_DPAD_RIGHT:
+                            if (!event.isAltPressed()) {
+                                handled = this.arrowScroll(View.FOCUS_RIGHT);
+                            }
+                            else {
+                                handled = this.fullScroll(View.FOCUS_RIGHT);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_SPACE:
+                            this.pageScroll(event.isShiftPressed() ? View.FOCUS_LEFT : View.FOCUS_RIGHT);
+                            break;
+                    }
+                }
+                return handled;
+            }
+            inChild(x, y) {
+                if (this.getChildCount() > 0) {
+                    const scrollX = this.mScrollX;
+                    const child = this.getChildAt(0);
+                    return !(y < child.getTop() || y >= child.getBottom() || x < child.getLeft() - scrollX || x >= child.getRight() - scrollX);
+                }
+                return false;
+            }
+            initOrResetVelocityTracker() {
+                if (this.mVelocityTracker == null) {
+                    this.mVelocityTracker = VelocityTracker.obtain();
+                }
+                else {
+                    this.mVelocityTracker.clear();
+                }
+            }
+            initVelocityTrackerIfNotExists() {
+                if (this.mVelocityTracker == null) {
+                    this.mVelocityTracker = VelocityTracker.obtain();
+                }
+            }
+            recycleVelocityTracker() {
+                if (this.mVelocityTracker != null) {
+                    this.mVelocityTracker.recycle();
+                    this.mVelocityTracker = null;
+                }
+            }
+            requestDisallowInterceptTouchEvent(disallowIntercept) {
+                if (disallowIntercept) {
+                    this.recycleVelocityTracker();
+                }
+                super.requestDisallowInterceptTouchEvent(disallowIntercept);
+            }
+            onInterceptTouchEvent(ev) {
+                const action = ev.getAction();
+                if ((action == MotionEvent.ACTION_MOVE) && (this.mIsBeingDragged)) {
+                    return true;
+                }
+                switch (action & MotionEvent.ACTION_MASK) {
+                    case MotionEvent.ACTION_MOVE:
+                        {
+                            const activePointerId = this.mActivePointerId;
+                            if (activePointerId == HorizontalScrollView.INVALID_POINTER) {
+                                break;
+                            }
+                            const pointerIndex = ev.findPointerIndex(activePointerId);
+                            if (pointerIndex == -1) {
+                                Log.e(HorizontalScrollView.TAG, "Invalid pointerId=" + activePointerId + " in onInterceptTouchEvent");
+                                break;
+                            }
+                            const x = Math.floor(ev.getX(pointerIndex));
+                            const xDiff = Math.floor(Math.abs(x - this.mLastMotionX));
+                            if (xDiff > this.mTouchSlop) {
+                                this.mIsBeingDragged = true;
+                                this.mLastMotionX = x;
+                                this.initVelocityTrackerIfNotExists();
+                                this.mVelocityTracker.addMovement(ev);
+                                if (this.mParent != null)
+                                    this.mParent.requestDisallowInterceptTouchEvent(true);
+                            }
+                            break;
+                        }
+                    case MotionEvent.ACTION_DOWN:
+                        {
+                            const x = Math.floor(ev.getX());
+                            if (!this.inChild(Math.floor(x), Math.floor(ev.getY()))) {
+                                this.mIsBeingDragged = false;
+                                this.recycleVelocityTracker();
+                                break;
+                            }
+                            this.mLastMotionX = x;
+                            this.mActivePointerId = ev.getPointerId(0);
+                            this.initOrResetVelocityTracker();
+                            this.mVelocityTracker.addMovement(ev);
+                            this.mIsBeingDragged = !this.mScroller.isFinished();
+                            break;
+                        }
+                    case MotionEvent.ACTION_CANCEL:
+                    case MotionEvent.ACTION_UP:
+                        this.mIsBeingDragged = false;
+                        this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
+                        if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
+                            this.postInvalidateOnAnimation();
+                        }
+                        break;
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                        {
+                            const index = ev.getActionIndex();
+                            this.mLastMotionX = Math.floor(ev.getX(index));
+                            this.mActivePointerId = ev.getPointerId(index);
+                            break;
+                        }
+                    case MotionEvent.ACTION_POINTER_UP:
+                        this.onSecondaryPointerUp(ev);
+                        this.mLastMotionX = Math.floor(ev.getX(ev.findPointerIndex(this.mActivePointerId)));
+                        break;
+                }
+                return this.mIsBeingDragged;
+            }
+            onTouchEvent(ev) {
+                this.initVelocityTrackerIfNotExists();
+                this.mVelocityTracker.addMovement(ev);
+                const action = ev.getAction();
+                switch (action & MotionEvent.ACTION_MASK) {
+                    case MotionEvent.ACTION_DOWN:
+                        {
+                            if (this.getChildCount() == 0) {
+                                return false;
+                            }
+                            if ((this.mIsBeingDragged = !this.mScroller.isFinished())) {
+                                const parent = this.getParent();
+                                if (parent != null) {
+                                    parent.requestDisallowInterceptTouchEvent(true);
+                                }
+                            }
+                            if (!this.mScroller.isFinished()) {
+                                this.mScroller.abortAnimation();
+                            }
+                            this.mLastMotionX = Math.floor(ev.getX());
+                            this.mActivePointerId = ev.getPointerId(0);
+                            break;
+                        }
+                    case MotionEvent.ACTION_MOVE:
+                        const activePointerIndex = ev.findPointerIndex(this.mActivePointerId);
+                        if (activePointerIndex == -1) {
+                            Log.e(HorizontalScrollView.TAG, "Invalid pointerId=" + this.mActivePointerId + " in onTouchEvent");
+                            break;
+                        }
+                        const x = Math.floor(ev.getX(activePointerIndex));
+                        let deltaX = this.mLastMotionX - x;
+                        if (!this.mIsBeingDragged && Math.abs(deltaX) > this.mTouchSlop) {
+                            const parent = this.getParent();
+                            if (parent != null) {
+                                parent.requestDisallowInterceptTouchEvent(true);
+                            }
+                            this.mIsBeingDragged = true;
+                            if (deltaX > 0) {
+                                deltaX -= this.mTouchSlop;
+                            }
+                            else {
+                                deltaX += this.mTouchSlop;
+                            }
+                        }
+                        if (this.mIsBeingDragged) {
+                            this.mLastMotionX = x;
+                            const oldX = this.mScrollX;
+                            const oldY = this.mScrollY;
+                            const range = this.getScrollRange();
+                            const overscrollMode = this.getOverScrollMode();
+                            const canOverscroll = overscrollMode == HorizontalScrollView.OVER_SCROLL_ALWAYS || (overscrollMode == HorizontalScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
+                            if (this.overScrollBy(deltaX, 0, this.mScrollX, 0, range, 0, this.mOverscrollDistance, 0, true)) {
+                                this.mVelocityTracker.clear();
+                            }
+                            if (canOverscroll) {
+                            }
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if (this.mIsBeingDragged) {
+                            const velocityTracker = this.mVelocityTracker;
+                            velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
+                            let initialVelocity = Math.floor(velocityTracker.getXVelocity(this.mActivePointerId));
+                            if (this.getChildCount() > 0) {
+                                let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.getScrollRange();
+                                if (!isOverDrag && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
+                                    this.fling(-initialVelocity);
+                                }
+                                else {
+                                    if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
+                                        this.postInvalidateOnAnimation();
+                                    }
+                                }
+                            }
+                            this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
+                            this.mIsBeingDragged = false;
+                            this.recycleVelocityTracker();
+                        }
+                        break;
+                    case MotionEvent.ACTION_CANCEL:
+                        if (this.mIsBeingDragged && this.getChildCount() > 0) {
+                            if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
+                                this.postInvalidateOnAnimation();
+                            }
+                            this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
+                            this.mIsBeingDragged = false;
+                            this.recycleVelocityTracker();
+                        }
+                        break;
+                    case MotionEvent.ACTION_POINTER_UP:
+                        this.onSecondaryPointerUp(ev);
+                        break;
+                }
+                return true;
+            }
+            onSecondaryPointerUp(ev) {
+                const pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                const pointerId = ev.getPointerId(pointerIndex);
+                if (pointerId == this.mActivePointerId) {
+                    const newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                    this.mLastMotionX = Math.floor(ev.getX(newPointerIndex));
+                    this.mActivePointerId = ev.getPointerId(newPointerIndex);
+                    if (this.mVelocityTracker != null) {
+                        this.mVelocityTracker.clear();
+                    }
+                }
+            }
+            onGenericMotionEvent(event) {
+                if (event.isPointerEvent()) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_SCROLL:
+                            {
+                                if (!this.mIsBeingDragged) {
+                                    let hscroll;
+                                    hscroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+                                    if (hscroll != 0) {
+                                        const delta = Math.floor((hscroll * this.getHorizontalScrollFactor()));
+                                        const range = this.getScrollRange();
+                                        let oldScrollX = this.mScrollX;
+                                        let newScrollX = oldScrollX + delta;
+                                        if (newScrollX < 0) {
+                                            newScrollX = 0;
+                                        }
+                                        else if (newScrollX > range) {
+                                            newScrollX = range;
+                                        }
+                                        if (newScrollX != oldScrollX) {
+                                            super.scrollTo(newScrollX, this.mScrollY);
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
+                return super.onGenericMotionEvent(event);
+            }
+            shouldDelayChildPressedState() {
+                return true;
+            }
+            onOverScrolled(scrollX, scrollY, clampedX, clampedY) {
+                if (!this.mScroller.isFinished()) {
+                    const oldX = this.mScrollX;
+                    const oldY = this.mScrollY;
+                    this.mScrollX = scrollX;
+                    this.mScrollY = scrollY;
+                    this.invalidateParentIfNeeded();
+                    this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
+                    if (clampedX) {
+                        this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0);
+                    }
+                }
+                else {
+                    super.scrollTo(scrollX, scrollY);
+                }
+                this.awakenScrollBars();
+            }
+            getScrollRange() {
+                let scrollRange = 0;
+                if (this.getChildCount() > 0) {
+                    let child = this.getChildAt(0);
+                    scrollRange = Math.max(0, child.getWidth() - (this.getWidth() - this.mPaddingLeft - this.mPaddingRight));
+                }
+                return scrollRange;
+            }
+            findFocusableViewInMyBounds(leftFocus, left, preferredFocusable) {
+                const fadingEdgeLength = this.getHorizontalFadingEdgeLength() / 2;
+                const leftWithoutFadingEdge = left + fadingEdgeLength;
+                const rightWithoutFadingEdge = left + this.getWidth() - fadingEdgeLength;
+                if ((preferredFocusable != null) && (preferredFocusable.getLeft() < rightWithoutFadingEdge) && (preferredFocusable.getRight() > leftWithoutFadingEdge)) {
+                    return preferredFocusable;
+                }
+                return this.findFocusableViewInBounds(leftFocus, leftWithoutFadingEdge, rightWithoutFadingEdge);
+            }
+            findFocusableViewInBounds(leftFocus, left, right) {
+                let focusables = this.getFocusables(View.FOCUS_FORWARD);
+                let focusCandidate = null;
+                let foundFullyContainedFocusable = false;
+                let count = focusables.size();
+                for (let i = 0; i < count; i++) {
+                    let view = focusables.get(i);
+                    let viewLeft = view.getLeft();
+                    let viewRight = view.getRight();
+                    if (left < viewRight && viewLeft < right) {
+                        const viewIsFullyContained = (left < viewLeft) && (viewRight < right);
+                        if (focusCandidate == null) {
+                            focusCandidate = view;
+                            foundFullyContainedFocusable = viewIsFullyContained;
+                        }
+                        else {
+                            const viewIsCloserToBoundary = (leftFocus && viewLeft < focusCandidate.getLeft()) || (!leftFocus && viewRight > focusCandidate.getRight());
+                            if (foundFullyContainedFocusable) {
+                                if (viewIsFullyContained && viewIsCloserToBoundary) {
+                                    focusCandidate = view;
+                                }
+                            }
+                            else {
+                                if (viewIsFullyContained) {
+                                    focusCandidate = view;
+                                    foundFullyContainedFocusable = true;
+                                }
+                                else if (viewIsCloserToBoundary) {
+                                    focusCandidate = view;
+                                }
+                            }
+                        }
+                    }
+                }
+                return focusCandidate;
+            }
+            pageScroll(direction) {
+                let right = direction == View.FOCUS_RIGHT;
+                let width = this.getWidth();
+                if (right) {
+                    this.mTempRect.left = this.getScrollX() + width;
+                    let count = this.getChildCount();
+                    if (count > 0) {
+                        let view = this.getChildAt(0);
+                        if (this.mTempRect.left + width > view.getRight()) {
+                            this.mTempRect.left = view.getRight() - width;
+                        }
+                    }
+                }
+                else {
+                    this.mTempRect.left = this.getScrollX() - width;
+                    if (this.mTempRect.left < 0) {
+                        this.mTempRect.left = 0;
+                    }
+                }
+                this.mTempRect.right = this.mTempRect.left + width;
+                return this.scrollAndFocus(direction, this.mTempRect.left, this.mTempRect.right);
+            }
+            fullScroll(direction) {
+                let right = direction == View.FOCUS_RIGHT;
+                let width = this.getWidth();
+                this.mTempRect.left = 0;
+                this.mTempRect.right = width;
+                if (right) {
+                    let count = this.getChildCount();
+                    if (count > 0) {
+                        let view = this.getChildAt(0);
+                        this.mTempRect.right = view.getRight();
+                        this.mTempRect.left = this.mTempRect.right - width;
+                    }
+                }
+                return this.scrollAndFocus(direction, this.mTempRect.left, this.mTempRect.right);
+            }
+            scrollAndFocus(direction, left, right) {
+                let handled = true;
+                let width = this.getWidth();
+                let containerLeft = this.getScrollX();
+                let containerRight = containerLeft + width;
+                let goLeft = direction == View.FOCUS_LEFT;
+                let newFocused = this.findFocusableViewInBounds(goLeft, left, right);
+                if (newFocused == null) {
+                    newFocused = this;
+                }
+                if (left >= containerLeft && right <= containerRight) {
+                    handled = false;
+                }
+                else {
+                    let delta = goLeft ? (left - containerLeft) : (right - containerRight);
+                    this.doScrollX(delta);
+                }
+                if (newFocused != this.findFocus())
+                    newFocused.requestFocus(direction);
+                return handled;
+            }
+            arrowScroll(direction) {
+                let currentFocused = this.findFocus();
+                if (currentFocused == this)
+                    currentFocused = null;
+                let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
+                const maxJump = this.getMaxScrollAmount();
+                if (nextFocused != null && this.isWithinDeltaOfScreen(nextFocused, maxJump)) {
+                    nextFocused.getDrawingRect(this.mTempRect);
+                    this.offsetDescendantRectToMyCoords(nextFocused, this.mTempRect);
+                    let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
+                    this.doScrollX(scrollDelta);
+                    nextFocused.requestFocus(direction);
+                }
+                else {
+                    let scrollDelta = maxJump;
+                    if (direction == View.FOCUS_LEFT && this.getScrollX() < scrollDelta) {
+                        scrollDelta = this.getScrollX();
+                    }
+                    else if (direction == View.FOCUS_RIGHT && this.getChildCount() > 0) {
+                        let daRight = this.getChildAt(0).getRight();
+                        let screenRight = this.getScrollX() + this.getWidth();
+                        if (daRight - screenRight < maxJump) {
+                            scrollDelta = daRight - screenRight;
+                        }
+                    }
+                    if (scrollDelta == 0) {
+                        return false;
+                    }
+                    this.doScrollX(direction == View.FOCUS_RIGHT ? scrollDelta : -scrollDelta);
+                }
+                if (currentFocused != null && currentFocused.isFocused() && this.isOffScreen(currentFocused)) {
+                    const descendantFocusability = this.getDescendantFocusability();
+                    this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                    this.requestFocus();
+                    this.setDescendantFocusability(descendantFocusability);
+                }
+                return true;
+            }
+            isOffScreen(descendant) {
+                return !this.isWithinDeltaOfScreen(descendant, 0);
+            }
+            isWithinDeltaOfScreen(descendant, delta) {
+                descendant.getDrawingRect(this.mTempRect);
+                this.offsetDescendantRectToMyCoords(descendant, this.mTempRect);
+                return (this.mTempRect.right + delta) >= this.getScrollX() && (this.mTempRect.left - delta) <= (this.getScrollX() + this.getWidth());
+            }
+            doScrollX(delta) {
+                if (delta != 0) {
+                    if (this.mSmoothScrollingEnabled) {
+                        this.smoothScrollBy(delta, 0);
+                    }
+                    else {
+                        this.scrollBy(delta, 0);
+                    }
+                }
+            }
+            smoothScrollBy(dx, dy) {
+                if (this.getChildCount() == 0) {
+                    return;
+                }
+                let duration = AnimationUtils.currentAnimationTimeMillis() - this.mLastScroll;
+                if (duration > HorizontalScrollView.ANIMATED_SCROLL_GAP) {
+                    const width = this.getWidth() - this.mPaddingRight - this.mPaddingLeft;
+                    const right = this.getChildAt(0).getWidth();
+                    const maxX = Math.max(0, right - width);
+                    const scrollX = this.mScrollX;
+                    dx = Math.max(0, Math.min(scrollX + dx, maxX)) - scrollX;
+                    this.mScroller.startScroll(scrollX, this.mScrollY, dx, 0);
+                    this.postInvalidateOnAnimation();
+                }
+                else {
+                    if (!this.mScroller.isFinished()) {
+                        this.mScroller.abortAnimation();
+                    }
+                    this.scrollBy(dx, dy);
+                }
+                this.mLastScroll = AnimationUtils.currentAnimationTimeMillis();
+            }
+            smoothScrollTo(x, y) {
+                this.smoothScrollBy(x - this.mScrollX, y - this.mScrollY);
+            }
+            computeHorizontalScrollRange() {
+                const count = this.getChildCount();
+                const contentWidth = this.getWidth() - this.mPaddingLeft - this.mPaddingRight;
+                if (count == 0) {
+                    return contentWidth;
+                }
+                let scrollRange = this.getChildAt(0).getRight();
+                const scrollX = this.mScrollX;
+                const overscrollRight = Math.max(0, scrollRange - contentWidth);
+                if (scrollX < 0) {
+                    scrollRange -= scrollX;
+                }
+                else if (scrollX > overscrollRight) {
+                    scrollRange += scrollX - overscrollRight;
+                }
+                return scrollRange;
+            }
+            computeHorizontalScrollOffset() {
+                return Math.max(0, super.computeHorizontalScrollOffset());
+            }
+            measureChild(child, parentWidthMeasureSpec, parentHeightMeasureSpec) {
+                let lp = child.getLayoutParams();
+                let childWidthMeasureSpec;
+                let childHeightMeasureSpec;
+                childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
+                childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(0, HorizontalScrollView.MeasureSpec.UNSPECIFIED);
+                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+            }
+            measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed) {
+                const lp = child.getLayoutParams();
+                const childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom + lp.topMargin + lp.bottomMargin + heightUsed, lp.height);
+                const childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(lp.leftMargin + lp.rightMargin, HorizontalScrollView.MeasureSpec.UNSPECIFIED);
+                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+            }
+            computeScroll() {
+                if (this.mScroller.computeScrollOffset()) {
+                    let oldX = this.mScrollX;
+                    let oldY = this.mScrollY;
+                    let x = this.mScroller.getCurrX();
+                    let y = this.mScroller.getCurrY();
+                    if (oldX != x || oldY != y) {
+                        const range = this.getScrollRange();
+                        const overscrollMode = this.getOverScrollMode();
+                        const canOverscroll = overscrollMode == HorizontalScrollView.OVER_SCROLL_ALWAYS || (overscrollMode == HorizontalScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
+                        this.overScrollBy(x - oldX, y - oldY, oldX, oldY, range, 0, this.mOverflingDistance, 0, false);
+                        this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
+                        if (canOverscroll) {
+                        }
+                    }
+                    if (!this.awakenScrollBars()) {
+                        this.postInvalidateOnAnimation();
+                    }
+                }
+            }
+            scrollToChild(child) {
+                child.getDrawingRect(this.mTempRect);
+                this.offsetDescendantRectToMyCoords(child, this.mTempRect);
+                let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
+                if (scrollDelta != 0) {
+                    this.scrollBy(scrollDelta, 0);
+                }
+            }
+            scrollToChildRect(rect, immediate) {
+                const delta = this.computeScrollDeltaToGetChildRectOnScreen(rect);
+                const scroll = delta != 0;
+                if (scroll) {
+                    if (immediate) {
+                        this.scrollBy(delta, 0);
+                    }
+                    else {
+                        this.smoothScrollBy(delta, 0);
+                    }
+                }
+                return scroll;
+            }
+            computeScrollDeltaToGetChildRectOnScreen(rect) {
+                if (this.getChildCount() == 0)
+                    return 0;
+                let width = this.getWidth();
+                let screenLeft = this.getScrollX();
+                let screenRight = screenLeft + width;
+                let fadingEdge = this.getHorizontalFadingEdgeLength();
+                if (rect.left > 0) {
+                    screenLeft += fadingEdge;
+                }
+                if (rect.right < this.getChildAt(0).getWidth()) {
+                    screenRight -= fadingEdge;
+                }
+                let scrollXDelta = 0;
+                if (rect.right > screenRight && rect.left > screenLeft) {
+                    if (rect.width() > width) {
+                        scrollXDelta += (rect.left - screenLeft);
+                    }
+                    else {
+                        scrollXDelta += (rect.right - screenRight);
+                    }
+                    let right = this.getChildAt(0).getRight();
+                    let distanceToRight = right - screenRight;
+                    scrollXDelta = Math.min(scrollXDelta, distanceToRight);
+                }
+                else if (rect.left < screenLeft && rect.right < screenRight) {
+                    if (rect.width() > width) {
+                        scrollXDelta -= (screenRight - rect.right);
+                    }
+                    else {
+                        scrollXDelta -= (screenLeft - rect.left);
+                    }
+                    scrollXDelta = Math.max(scrollXDelta, -this.getScrollX());
+                }
+                return scrollXDelta;
+            }
+            requestChildFocus(child, focused) {
+                if (!this.mIsLayoutDirty) {
+                    this.scrollToChild(focused);
+                }
+                else {
+                    this.mChildToScrollTo = focused;
+                }
+                super.requestChildFocus(child, focused);
+            }
+            onRequestFocusInDescendants(direction, previouslyFocusedRect) {
+                if (direction == View.FOCUS_FORWARD) {
+                    direction = View.FOCUS_RIGHT;
+                }
+                else if (direction == View.FOCUS_BACKWARD) {
+                    direction = View.FOCUS_LEFT;
+                }
+                const nextFocus = previouslyFocusedRect == null ? FocusFinder.getInstance().findNextFocus(this, null, direction) : FocusFinder.getInstance().findNextFocusFromRect(this, previouslyFocusedRect, direction);
+                if (nextFocus == null) {
+                    return false;
+                }
+                if (this.isOffScreen(nextFocus)) {
+                    return false;
+                }
+                return nextFocus.requestFocus(direction, previouslyFocusedRect);
+            }
+            requestChildRectangleOnScreen(child, rectangle, immediate) {
+                rectangle.offset(child.getLeft() - child.getScrollX(), child.getTop() - child.getScrollY());
+                return this.scrollToChildRect(rectangle, immediate);
+            }
+            requestLayout() {
+                this.mIsLayoutDirty = true;
+                super.requestLayout();
+            }
+            onLayout(changed, l, t, r, b) {
+                let childWidth = 0;
+                let childMargins = 0;
+                if (this.getChildCount() > 0) {
+                    childWidth = this.getChildAt(0).getMeasuredWidth();
+                    let childParams = this.getChildAt(0).getLayoutParams();
+                    childMargins = childParams.leftMargin + childParams.rightMargin;
+                }
+                const available = r - l - this.getPaddingLeftWithForeground() - this.getPaddingRightWithForeground() - childMargins;
+                const forceLeftGravity = (childWidth > available);
+                this.layoutChildren(l, t, r, b, forceLeftGravity);
+                this.mIsLayoutDirty = false;
+                if (this.mChildToScrollTo != null && HorizontalScrollView.isViewDescendantOf(this.mChildToScrollTo, this)) {
+                    this.scrollToChild(this.mChildToScrollTo);
+                }
+                this.mChildToScrollTo = null;
+                if (!this.isLaidOut()) {
+                    const scrollRange = Math.max(0, childWidth - (r - l - this.mPaddingLeft - this.mPaddingRight));
+                    {
+                        if (this.isLayoutRtl()) {
+                            this.mScrollX = scrollRange - this.mScrollX;
+                        }
+                    }
+                    if (this.mScrollX > scrollRange) {
+                        this.mScrollX = scrollRange;
+                    }
+                    else if (this.mScrollX < 0) {
+                        this.mScrollX = 0;
+                    }
+                }
+                this.scrollTo(this.mScrollX, this.mScrollY);
+            }
+            onSizeChanged(w, h, oldw, oldh) {
+                super.onSizeChanged(w, h, oldw, oldh);
+                let currentFocused = this.findFocus();
+                if (null == currentFocused || this == currentFocused)
+                    return;
+                const maxJump = this.mRight - this.mLeft;
+                if (this.isWithinDeltaOfScreen(currentFocused, maxJump)) {
+                    currentFocused.getDrawingRect(this.mTempRect);
+                    this.offsetDescendantRectToMyCoords(currentFocused, this.mTempRect);
+                    let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
+                    this.doScrollX(scrollDelta);
+                }
+            }
+            static isViewDescendantOf(child, parent) {
+                if (child == parent) {
+                    return true;
+                }
+                const theParent = child.getParent();
+                return (theParent instanceof ViewGroup) && HorizontalScrollView.isViewDescendantOf(theParent, parent);
+            }
+            fling(velocityX) {
+                if (this.getChildCount() > 0) {
+                    let width = this.getWidth() - this.mPaddingRight - this.mPaddingLeft;
+                    let right = this.getChildAt(0).getWidth();
+                    this.mScroller.fling(this.mScrollX, this.mScrollY, velocityX, 0, 0, Math.max(0, right - width), 0, 0, width / 2, 0);
+                    const movingRight = velocityX > 0;
+                    let currentFocused = this.findFocus();
+                    let newFocused = this.findFocusableViewInMyBounds(movingRight, this.mScroller.getFinalX(), currentFocused);
+                    if (newFocused == null) {
+                        newFocused = this;
+                    }
+                    if (newFocused != currentFocused) {
+                        newFocused.requestFocus(movingRight ? View.FOCUS_RIGHT : View.FOCUS_LEFT);
+                    }
+                    this.postInvalidateOnAnimation();
+                }
+            }
+            scrollTo(x, y) {
+                if (this.getChildCount() > 0) {
+                    let child = this.getChildAt(0);
+                    x = HorizontalScrollView.clamp(x, this.getWidth() - this.mPaddingRight - this.mPaddingLeft, child.getWidth());
+                    y = HorizontalScrollView.clamp(y, this.getHeight() - this.mPaddingBottom - this.mPaddingTop, child.getHeight());
+                    if (x != this.mScrollX || y != this.mScrollY) {
+                        super.scrollTo(x, y);
+                    }
+                }
+            }
+            setOverScrollMode(mode) {
+                super.setOverScrollMode(mode);
+            }
+            draw(canvas) {
+                super.draw(canvas);
+            }
+            static clamp(n, my, child) {
+                if (my >= child || n < 0) {
+                    return 0;
+                }
+                if ((my + n) > child) {
+                    return child - my;
+                }
+                return n;
+            }
+        }
+        HorizontalScrollView.ANIMATED_SCROLL_GAP = ScrollView.ANIMATED_SCROLL_GAP;
+        HorizontalScrollView.MAX_SCROLL_FACTOR = ScrollView.MAX_SCROLL_FACTOR;
+        HorizontalScrollView.TAG = "HorizontalScrollView";
+        HorizontalScrollView.INVALID_POINTER = -1;
+        widget.HorizontalScrollView = HorizontalScrollView;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
@@ -26499,6 +27473,7 @@ var android;
 ///<reference path="android/widget/ImageView.ts"/>
 ///<reference path="android/widget/ListView.ts"/>
 ///<reference path="android/widget/GridView.ts"/>
+///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="android/app/Activity.ts"/>

@@ -950,7 +950,7 @@ export class ListView extends AbsListView {
 
 
 
-    onSizeChanged(w:number, h:number, oldw:number, oldh:number):void  {
+    protected onSizeChanged(w:number, h:number, oldw:number, oldh:number):void  {
         if (this.getChildCount() > 0) {
             let focusedChild:View = this.getFocusedChild();
             if (focusedChild != null) {

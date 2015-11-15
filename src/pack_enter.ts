@@ -13,6 +13,7 @@
 ///<reference path="android/widget/ImageView.ts"/>
 ///<reference path="android/widget/ListView.ts"/>
 ///<reference path="android/widget/GridView.ts"/>
+///<reference path="android/widget/HorizontalScrollView.ts"/>
 
 
 ///<reference path="android/support/v4/view/ViewPager.ts"/>

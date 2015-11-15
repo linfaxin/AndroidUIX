@@ -299,6 +299,14 @@ module android.view{
             if( (modifiers & KeyEvent.META_META_ON)===KeyEvent.META_META_ON && this.isMetaPressed()) return true;
             if( (modifiers & KeyEvent.META_CTRL_ON)===KeyEvent.META_CTRL_ON && this.isCtrlPressed()) return true;
         }
+        getMetaState():number {
+            let meta = 0;
+            if(this.isAltPressed()) meta |= KeyEvent.META_ALT_ON;
+            if(this.isShiftPressed()) meta |= KeyEvent.META_SHIFT_ON;
+            if(this.isCtrlPressed()) meta |= KeyEvent.META_CTRL_ON;
+            if(this.isMetaPressed()) meta |= KeyEvent.META_META_ON;
+            return meta;
+        }
 
         toString() {
             return JSON.stringify(this._activeKeyEvent);

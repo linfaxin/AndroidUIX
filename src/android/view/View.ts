@@ -1418,7 +1418,7 @@ module android.view {
                 ai.mViewScrollChanged = true;
             }
         }
-        onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
+        protected onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
 
         }
 
@@ -2515,7 +2515,7 @@ module android.view {
             this.mPrivateFlags &= ~View.PFLAG_FORCE_LAYOUT;
             this.mPrivateFlags3 |= View.PFLAG3_IS_LAID_OUT;
         }
-        onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
+        protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
         }
 
         setFrame(left:number, top:number, right:number, bottom:number) {
@@ -3715,7 +3715,7 @@ module android.view {
 
             return clampedX || clampedY;
         }
-        onOverScrolled(scrollX:number, scrollY:number, clampedX:boolean, clampedY:boolean) {
+        protected onOverScrolled(scrollX:number, scrollY:number, clampedX:boolean, clampedY:boolean) {
             // Intentionally empty.
         }
         getOverScrollMode() {
@@ -3907,10 +3907,10 @@ module android.view {
         getBottomFadingEdgeStrength():number{
             return 0;//no fading edge
         }
-        getLeftFadingEdgeStrength():number{
+        protected getLeftFadingEdgeStrength():number{
             return 0;//no fading edge
         }
-        getRightFadingEdgeStrength():number{
+        protected getRightFadingEdgeStrength():number{
             return 0;//no fading edge
         }
         isScrollbarFadingEnabled():boolean {

@@ -458,7 +458,7 @@ module android.widget {
 
                         if (this.getChildCount() > 0) {
                             let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.getScrollRange();
-                            if ((Math.abs(initialVelocity) > this.mMinimumVelocity) && !isOverDrag) {
+                            if (!isOverDrag && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
                                 this.fling(-initialVelocity);
                             } else {
                                 if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, 0, 0,
@@ -539,7 +539,7 @@ module android.widget {
             return super.onGenericMotionEvent(event);
         }
 
-        onOverScrolled(scrollX:number, scrollY:number, clampedX:boolean, clampedY:boolean) {
+        protected onOverScrolled(scrollX:number, scrollY:number, clampedX:boolean, clampedY:boolean) {
             // Treat animating scrolls differently; see #computeScroll() for why.
             if (!this.mScroller.isFinished()) {
                 const oldX = this.mScrollX;
@@ -768,10 +768,10 @@ module android.widget {
 
             return scrollRange;
         }
-        computeVerticalScrollOffset() {
+        protected computeVerticalScrollOffset() {
             return Math.max(0, super.computeVerticalScrollOffset());
         }
-        measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {
+        protected measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {
             let lp = child.getLayoutParams();
             lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
             lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
@@ -790,7 +790,7 @@ module android.widget {
             lp._measuringParentHeightMeasureSpec = null;
         }
 
-        measureChildWithMargins(child:View, parentWidthMeasureSpec:number, widthUsed:number,
+        protected measureChildWithMargins(child:View, parentWidthMeasureSpec:number, widthUsed:number,
                                 parentHeightMeasureSpec:number, heightUsed:number) {
             const lp = <ViewGroup.MarginLayoutParams>child.getLayoutParams();
             lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
@@ -949,7 +949,7 @@ module android.widget {
             super.requestChildFocus(child, focused);
         }
 
-        onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
+        protected onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
             //TODO when focus impl
             return false;
         }
@@ -968,7 +968,7 @@ module android.widget {
         }
 
 
-        onLayout(changed:boolean, l:number, t:number, r:number, b:number):void {
+        protected onLayout(changed:boolean, l:number, t:number, r:number, b:number):void {
             super.onLayout(changed, l, t, r, b);
             this.mIsLayoutDirty = false;
             // Give a child focus if it needs it
@@ -997,7 +997,7 @@ module android.widget {
         }
 
 
-        onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
+        protected onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
             super.onSizeChanged(w, h, oldw, oldh);
             let currentFocused = this.findFocus();
             if (null == currentFocused || this == currentFocused) return;

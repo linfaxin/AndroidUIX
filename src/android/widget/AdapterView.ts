@@ -364,7 +364,7 @@ module android.widget {
             throw Error(`new UnsupportedOperationException("removeAllViews() is not supported in AdapterView")`);
         }
 
-        onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void  {
+        protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void  {
             this.mLayoutHeight = this.getHeight();
         }
 

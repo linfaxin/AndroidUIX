@@ -950,6 +950,7 @@ declare module android.view {
         dispatch(receiver: KeyEvent.Callback, state?: KeyEvent.DispatcherState, target?: any): boolean;
         hasNoModifiers(): boolean;
         hasModifiers(modifiers: number): boolean;
+        getMetaState(): number;
         toString(): string;
         static actionToString(action: number): string;
         static keyCodeToString(keyCode: number): string;
@@ -1220,7 +1221,7 @@ declare module android.view {
         setFlags(flags: number, mask: number): void;
         bringToFront(): void;
         onScrollChanged(l: number, t: number, oldl: number, oldt: number): void;
-        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         getTouchables(): ArrayList<View>;
         addTouchables(views: ArrayList<View>): void;
         onFocusLost(): void;
@@ -1341,7 +1342,7 @@ declare module android.view {
         forceLayout(): void;
         isLaidOut(): boolean;
         layout(l: number, t: number, r: number, b: number): void;
-        onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         setFrame(left: number, top: number, right: number, bottom: number): boolean;
         private sizeChange(newWidth, newHeight, oldWidth, oldHeight);
         getHitRect(outRect: Rect): void;
@@ -1426,7 +1427,7 @@ declare module android.view {
         canScrollHorizontally(direction: number): boolean;
         canScrollVertically(direction: number): boolean;
         overScrollBy(deltaX: number, deltaY: number, scrollX: number, scrollY: number, scrollRangeX: number, scrollRangeY: number, maxOverScrollX: number, maxOverScrollY: number, isTouchEvent: boolean): boolean;
-        onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
+        protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
         getOverScrollMode(): number;
         setOverScrollMode(overScrollMode: number): void;
         getVerticalScrollFactor(): number;
@@ -1454,8 +1455,8 @@ declare module android.view {
         setScrollBarStyle(position: number): void;
         getTopFadingEdgeStrength(): number;
         getBottomFadingEdgeStrength(): number;
-        getLeftFadingEdgeStrength(): number;
-        getRightFadingEdgeStrength(): number;
+        protected getLeftFadingEdgeStrength(): number;
+        protected getRightFadingEdgeStrength(): number;
         isScrollbarFadingEnabled(): boolean;
         getScrollBarDefaultDelayBeforeFade(): number;
         setScrollBarDefaultDelayBeforeFade(scrollBarDefaultDelayBeforeFade: number): void;
@@ -1769,7 +1770,7 @@ declare module android.view {
         requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
         childHasTransientStateChanged(child: View, hasTransientState: boolean): void;
         dispatchResized(frame: Rect): void;
-        dispatchInputEvent(event: MotionEvent | KeyEvent | Event): void;
+        dispatchInputEvent(event: MotionEvent | KeyEvent | Event): boolean;
         private deliverInputEvent(event);
         private finishInputEvent(event);
         private checkForLeavingTouchModeAndConsume(event);
@@ -1908,7 +1909,7 @@ declare module android.view {
         hasFocusable(): boolean;
         addFocusables(views: ArrayList<View>, direction: number, focusableMode?: number): void;
         requestFocus(direction?: number, previouslyFocusedRect?: Rect): boolean;
-        onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
+        protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
         addView(view: View): any;
         addView(view: View, index: number): any;
         addView(view: View, params: ViewGroup.LayoutParams): any;
@@ -1977,8 +1978,8 @@ declare module android.view {
         generateLayoutParams(p: ViewGroup.LayoutParams): ViewGroup.LayoutParams;
         generateDefaultLayoutParams(): ViewGroup.LayoutParams;
         measureChildren(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
-        measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
+        protected measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
+        protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
         static getChildMeasureSpec(spec: number, padding: number, childDimension: number): number;
         dispatchAttachedToWindow(info: View.AttachInfo, visibility: number): void;
         onAttachedToWindow(): void;
@@ -1999,7 +2000,7 @@ declare module android.view {
         isLayoutSuppressed(): boolean;
         layout(l: number, t: number, r: number, b: number): void;
         canAnimate(): boolean;
-        abstract onLayout(changed: boolean, l: number, t: number, r: number, b: number): any;
+        protected abstract onLayout(changed: boolean, l: number, t: number, r: number, b: number): any;
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
         dispatchDraw(canvas: Canvas): void;
         drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
@@ -2089,7 +2090,7 @@ declare module android.view {
             add(child: View): any;
             clear(): void;
             isEmpty(): boolean;
-            onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+            protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         }
     }
 }
@@ -2126,9 +2127,9 @@ declare module android.widget {
         getPaddingTopWithForeground(): number;
         getPaddingBottomWithForeground(): number;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         layoutChildren(left: number, top: number, right: number, bottom: number, forceLeftGravity: boolean): void;
-        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         draw(canvas: Canvas): void;
         setMeasureAllChildren(measureAll: boolean): void;
         getMeasureAllChildren(): boolean;
@@ -2262,7 +2263,7 @@ declare module android.widget {
         onTouchEvent(ev: MotionEvent): boolean;
         private onSecondaryPointerUp(ev);
         onGenericMotionEvent(event: MotionEvent): boolean;
-        onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
+        protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
         private getScrollRange();
         private findFocusableViewInBounds(topFocus, top, bottom);
         pageScroll(direction: number): boolean;
@@ -2276,18 +2277,18 @@ declare module android.widget {
         smoothScrollTo(x: number, y: number): void;
         protected computeVerticalScrollRange(): number;
         protected computeVerticalScrollOffset(): number;
-        measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
-        measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
+        protected measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
+        protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
         computeScroll(): void;
         private scrollToChild(child);
         private scrollToChildRect(rect, immediate);
         computeScrollDeltaToGetChildRectOnScreen(rect: Rect): number;
         requestChildFocus(child: View, focused: View): void;
-        onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
+        protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
         requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
         requestLayout(): void;
-        onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
-        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         private static isViewDescendantOf(child, parent);
         private getOverflingDistance();
         fling(velocityY: number): void;
@@ -2365,7 +2366,7 @@ declare module android.widget {
         measureChildBeforeLayout(child: View, childIndex: number, widthMeasureSpec: number, totalWidth: number, heightMeasureSpec: number, totalHeight: number): void;
         getLocationOffset(child: View): number;
         getNextLocationOffset(child: View): number;
-        onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         layoutVertical(left: number, top: number, right: number, bottom: number): void;
         layoutHorizontal(left: number, top: number, right: number, bottom: number): void;
         private setChildFrame(child, left, top, width, height);
@@ -2535,7 +2536,7 @@ declare module android.widget {
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         private initTextElement();
         initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
-        onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         onFinishInflate(): void;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         private getDesiredHeight();
@@ -2861,7 +2862,7 @@ declare module android.widget {
         removeView(child: View): void;
         removeViewAt(index: number): void;
         removeAllViews(): void;
-        onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         getSelectedItemPosition(): number;
         getSelectedItemId(): number;
         abstract getSelectedView(): View;
@@ -3128,7 +3129,7 @@ declare module android.widget {
         getTopFadingEdgeStrength(): number;
         getBottomFadingEdgeStrength(): number;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         setFrame(left: number, top: number, right: number, bottom: number): boolean;
         protected layoutChildren(): void;
         updateScrollIndicators(): void;
@@ -3146,7 +3147,7 @@ declare module android.widget {
         getTopPaddingOffset(): number;
         getRightPaddingOffset(): number;
         getBottomPaddingOffset(): number;
-        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         private touchModeDrawsInPressedState();
         shouldShowSelector(): boolean;
         private drawSelector(canvas);
@@ -3178,7 +3179,7 @@ declare module android.widget {
         private onTouchMove(ev);
         private onTouchUp(ev);
         private onTouchCancel();
-        onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
+        protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
         onGenericMotionEvent(event: MotionEvent): boolean;
         draw(canvas: Canvas): void;
         setOverScrollEffectPadding(leftPadding: number, rightPadding: number): void;
@@ -3492,6 +3493,7 @@ declare module android.widget {
         private mArrowScrollFocusResult;
         private mFocusSelector;
         constructor();
+        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         getMaxScrollAmount(): number;
         private adjustViewsUpOrDown();
         addHeaderView(v: View, data?: any, isSelectable?: boolean): void;
@@ -3520,7 +3522,7 @@ declare module android.widget {
         smoothScrollToPosition(position: number): void;
         smoothScrollByOffset(offset: number): void;
         private moveSelection(oldSel, newSel, delta, childrenTop, childrenBottom);
-        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         private measureScrapChild(child, position, widthMeasureSpec);
         recycleOnMeasure(): boolean;
@@ -3705,6 +3707,93 @@ declare module android.widget {
         protected computeVerticalScrollRange(): number;
     }
 }
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import FrameLayout = android.widget.FrameLayout;
+    class HorizontalScrollView extends FrameLayout {
+        private static ANIMATED_SCROLL_GAP;
+        private static MAX_SCROLL_FACTOR;
+        private static TAG;
+        private mLastScroll;
+        private mTempRect;
+        private mScroller;
+        private mLastMotionX;
+        private mIsLayoutDirty;
+        private mChildToScrollTo;
+        private mIsBeingDragged;
+        private mVelocityTracker;
+        private mFillViewport;
+        private mSmoothScrollingEnabled;
+        private mMinimumVelocity;
+        private mMaximumVelocity;
+        private mOverscrollDistance;
+        private mOverflingDistance;
+        private mActivePointerId;
+        private static INVALID_POINTER;
+        constructor();
+        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
+        protected getLeftFadingEdgeStrength(): number;
+        protected getRightFadingEdgeStrength(): number;
+        getMaxScrollAmount(): number;
+        private initScrollView();
+        addView(...args: any[]): any;
+        private canScroll();
+        isFillViewport(): boolean;
+        setFillViewport(fillViewport: boolean): void;
+        isSmoothScrollingEnabled(): boolean;
+        setSmoothScrollingEnabled(smoothScrollingEnabled: boolean): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        executeKeyEvent(event: KeyEvent): boolean;
+        private inChild(x, y);
+        private initOrResetVelocityTracker();
+        private initVelocityTrackerIfNotExists();
+        private recycleVelocityTracker();
+        requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
+        onInterceptTouchEvent(ev: MotionEvent): boolean;
+        onTouchEvent(ev: MotionEvent): boolean;
+        private onSecondaryPointerUp(ev);
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        shouldDelayChildPressedState(): boolean;
+        protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
+        private getScrollRange();
+        private findFocusableViewInMyBounds(leftFocus, left, preferredFocusable);
+        private findFocusableViewInBounds(leftFocus, left, right);
+        pageScroll(direction: number): boolean;
+        fullScroll(direction: number): boolean;
+        private scrollAndFocus(direction, left, right);
+        arrowScroll(direction: number): boolean;
+        private isOffScreen(descendant);
+        private isWithinDeltaOfScreen(descendant, delta);
+        private doScrollX(delta);
+        smoothScrollBy(dx: number, dy: number): void;
+        smoothScrollTo(x: number, y: number): void;
+        protected computeHorizontalScrollRange(): number;
+        protected computeHorizontalScrollOffset(): number;
+        protected measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
+        protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
+        computeScroll(): void;
+        private scrollToChild(child);
+        private scrollToChildRect(rect, immediate);
+        protected computeScrollDeltaToGetChildRectOnScreen(rect: Rect): number;
+        requestChildFocus(child: View, focused: View): void;
+        protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
+        requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
+        requestLayout(): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        private static isViewDescendantOf(child, parent);
+        fling(velocityX: number): void;
+        scrollTo(x: number, y: number): void;
+        setOverScrollMode(mode: number): void;
+        draw(canvas: Canvas): void;
+        private static clamp(n, my, child);
+    }
+}
 declare module android.support.v4.view {
     import DataSetObserver = android.database.DataSetObserver;
     import ViewGroup = android.view.ViewGroup;
@@ -3852,9 +3941,9 @@ declare module android.support.v4.view {
         private infoForPosition(position);
         onAttachedToWindow(): void;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
-        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         private recomputeScrollPosition(width, oldWidth, margin, oldMargin);
-        onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         computeScroll(): void;
         private pageScrolled(xpos);
         onPageScrolled(position: number, offset: number, offsetPixels: number): void;
@@ -3890,7 +3979,7 @@ declare module android.support.v4.view {
         pageRight(): boolean;
         addFocusables(views: ArrayList<View>, direction: number, focusableMode: number): void;
         addTouchables(views: java.util.ArrayList<android.view.View>): void;
-        onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
+        protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
         generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
         generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
         checkLayoutParams(p: android.view.ViewGroup.LayoutParams): boolean;

@@ -412,7 +412,7 @@ module android.view {
             }
         }
 
-        onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
+        protected onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
             let index;
             let increment;
             let end;
@@ -1472,7 +1472,7 @@ module android.view {
             }
         }
 
-        measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {
+        protected measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {
             let lp = child.getLayoutParams();
             lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
             lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
@@ -1488,7 +1488,7 @@ module android.view {
             lp._measuringParentHeightMeasureSpec = null;
         }
 
-        measureChildWithMargins(child:View, parentWidthMeasureSpec:number, widthUsed:number,
+        protected measureChildWithMargins(child:View, parentWidthMeasureSpec:number, widthUsed:number,
                                 parentHeightMeasureSpec:number, heightUsed:number) {
             let lp = child.getLayoutParams();
             lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
@@ -1806,7 +1806,7 @@ module android.view {
             //layout animation no impl
             return false;
         }
-        abstract
+        protected abstract
         onLayout(changed:boolean, l:number, t:number, r:number, b:number);
 
         getChildVisibleRect(child:View, r:Rect, offset:Point):boolean{

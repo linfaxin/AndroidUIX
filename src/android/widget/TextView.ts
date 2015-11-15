@@ -217,7 +217,7 @@ module android.widget{
             this.bindElement.appendChild(this.mTextElement);
         }
 
-        onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
+        protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
             super.onLayout(changed, left, top, right, bottom);
             this.mTextElement.style.opacity = "";//layout ok
         }

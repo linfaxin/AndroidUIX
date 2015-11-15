@@ -1156,7 +1156,7 @@ module android.widget{
             return 0;
         }
 
-        onLayout(changed:boolean, l:number, t:number, r:number, b:number):void {
+        protected onLayout(changed:boolean, l:number, t:number, r:number, b:number):void {
             if (this.mOrientation == LinearLayout.VERTICAL) {
                 this.layoutVertical(l, t, r, b);
             } else {

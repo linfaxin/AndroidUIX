@@ -1196,7 +1196,7 @@ module android.support.v4.view {
             }
         }
 
-        onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
+        protected onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
             super.onSizeChanged(w, h, oldw, oldh);
             // Make sure scroll position is set correctly.
             if (w != oldw) {
@@ -1232,7 +1232,7 @@ module android.support.v4.view {
             }
         }
 
-        onLayout(changed:boolean, l:number, t:number, r:number, b:number):void {
+        protected onLayout(changed:boolean, l:number, t:number, r:number, b:number):void {
             const count = this.getChildCount();
             let width = r - l;
             let height = b - t;
@@ -2454,7 +2454,7 @@ module android.support.v4.view {
             }
         }
 
-        onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
+        protected onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
             let index;
             let increment;
             let end;
