@@ -7,6 +7,7 @@
 ///<reference path="../graphics/Color.ts"/>
 ///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
+///<reference path="../R/color.ts"/>
 
 module android.widget{
     import View = android.view.View;
@@ -45,7 +46,7 @@ module android.widget{
             this.initTextElement();
             this.setTextSize(TextView.Default_TextSize);
             this.setGravity(Gravity.TOP | Gravity.LEFT);
-            this.setTextColor(new DefaultStyleTextColor());
+            this.setTextColor(android.R.color.textView_textColor);
         }
 
 
@@ -556,11 +557,4 @@ module android.widget{
 
     }
 
-    let _defaultStates = [[-View.VIEW_STATE_ENABLED], []];
-    let _defaultColors = [0xffc0c0c0, 0xff333333];
-    class DefaultStyleTextColor extends ColorStateList{
-        constructor() {
-            super(_defaultStates, _defaultColors);
-        }
-    }
 }

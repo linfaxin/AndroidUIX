@@ -120,8 +120,93 @@ var sample;
         })(com.jakewharton.salvage.RecyclingPagerAdapter);
     })(activity = sample.activity || (sample.activity = {}));
 })(sample || (sample = {}));
+/**
+ * Created by linfaxin on 15/10/26.
+ */
+///<reference path="../../dist/android-ui.d.ts"/>
+var sample;
+(function (sample) {
+    var activity;
+    (function (activity) {
+        var Activity = android.app.Activity;
+        var View = android.view.View;
+        var BaseAdapter = android.widget.BaseAdapter;
+
+        var SampleListViewActivity = (function (_Activity3) {
+            _inherits(SampleListViewActivity, _Activity3);
+
+            function SampleListViewActivity() {
+                _classCallCheck(this, SampleListViewActivity);
+
+                _get(Object.getPrototypeOf(SampleListViewActivity.prototype), 'constructor', this).apply(this, arguments);
+            }
+
+            _createClass(SampleListViewActivity, [{
+                key: 'onCreate',
+                value: function onCreate() {
+                    var listView = this.findViewById('listView');
+                    listView.setAdapter(new MyListAdapter());
+                }
+            }]);
+
+            return SampleListViewActivity;
+        })(Activity);
+
+        activity.SampleListViewActivity = SampleListViewActivity;
+        SampleListViewActivity.registerCustomElement();
+
+        var MyListAdapter = (function (_BaseAdapter) {
+            _inherits(MyListAdapter, _BaseAdapter);
+
+            function MyListAdapter() {
+                _classCallCheck(this, MyListAdapter);
+
+                _get(Object.getPrototypeOf(MyListAdapter.prototype), 'constructor', this).apply(this, arguments);
+            }
+
+            _createClass(MyListAdapter, [{
+                key: 'getView',
+                value: function getView(position, convertView, parent) {
+                    if (convertView == null) {
+                        convertView = View.inflate('@layout/item', parent.rootElement);
+                    }
+                    convertView.findViewById('item_text').setText(this.getItem(position));
+                    return convertView;
+                }
+            }, {
+                key: 'getCount',
+                value: function getCount() {
+                    return 200;
+                }
+            }, {
+                key: 'getItem',
+                value: function getItem(position) {
+                    return 1 + position + '/' + this.getCount();
+                }
+            }, {
+                key: 'getItemId',
+                value: function getItemId(position) {
+                    return -1;
+                }
+            }]);
+
+            return MyListAdapter;
+        })(BaseAdapter);
+    })(activity = sample.activity || (sample.activity = {}));
+})(sample || (sample = {}));
 ///<reference path="../dist/android-ui.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
 ///<reference path="activity/SampleViewPagerActivity.ts"/>
+///<reference path="activity/SampleListViewActivity.ts"/>
+
+var A = function A() {
+    _classCallCheck(this, A);
+};
+
+var B = function B() {
+    _classCallCheck(this, B);
+
+    this.A_this.a = '';
+};
 
 //# sourceMappingURL=main.es5.js.map

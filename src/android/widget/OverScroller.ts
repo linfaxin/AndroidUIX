@@ -32,6 +32,11 @@ module android.widget{
             this.mScrollerX = new SplineOverScroller();
             this.mScrollerY = new SplineOverScroller();
         }
+
+        setInterpolator(interpolator:Interpolator):void  {
+            this.mInterpolator = interpolator;
+        }
+
         setFriction(friction:number) {
             this.mScrollerX.setFriction(friction);
             this.mScrollerY.setFriction(friction);

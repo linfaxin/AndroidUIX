@@ -53,6 +53,33 @@ module android.view {
         static FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW = 0x400000;
         static FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET = 0x800000;
 
+        /**
+         * Indicates which types of drawing caches are to be kept in memory.
+         * This field should be made private, so it is hidden from the SDK.
+         * {@hide}
+         */
+        mPersistentDrawingCache:number;
+
+        /**
+         * Used to indicate that no drawing cache should be kept in memory.
+         */
+        static PERSISTENT_NO_CACHE:number = 0x0;
+
+        /**
+         * Used to indicate that the animation drawing cache should be kept in memory.
+         */
+        static PERSISTENT_ANIMATION_CACHE:number = 0x1;
+
+        /**
+         * Used to indicate that the scrolling drawing cache should be kept in memory.
+         */
+        static PERSISTENT_SCROLLING_CACHE:number = 0x2;
+
+        /**
+         * Used to indicate that all drawing caches should be kept in memory.
+         */
+        static PERSISTENT_ALL_CACHES:number = 0x3;
+
         static LAYOUT_MODE_UNDEFINED = -1;
         static LAYOUT_MODE_CLIP_BOUNDS = 0;
         //static LAYOUT_MODE_OPTICAL_BOUNDS = 1;
@@ -145,7 +172,7 @@ module android.view {
 
             this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
 
-            //this.mPersistentDrawingCache = PERSISTENT_SCROLLING_CACHE;
+            this.mPersistentDrawingCache = ViewGroup.PERSISTENT_SCROLLING_CACHE;
         }
 
         getDescendantFocusability():number {
@@ -677,6 +704,143 @@ module android.view {
         }
 
 
+        detachViewFromParent(child:View|number):void  {
+            if(child instanceof View) child = this.indexOfChild(<View>child);
+            this.removeFromArray(<number>child);
+        }
+
+        /**
+         * Finishes the removal of a detached view. This method will dispatch the detached from
+         * window event and notify the hierarchy change listener.
+         * <p>
+         * This method is intended to be lightweight and makes no assumptions about whether the
+         * parent or child should be redrawn. Proper use of this method will include also making
+         * any appropriate {@link #requestLayout()} or {@link #invalidate()} calls.
+         * For example, callers can {@link #post(Runnable) post} a {@link Runnable}
+         * which performs a {@link #requestLayout()} on the next frame, after all detach/remove
+         * calls are finished, causing layout to be run prior to redrawing the view hierarchy.
+         *
+         * @param child the child to be definitely removed from the view hierarchy
+         * @param animate if true and the view has an animation, the view is placed in the
+         *                disappearing views list, otherwise, it is detached from the window
+         *
+         * @see #attachViewToParent(View, int, android.view.ViewGroup.LayoutParams)
+         * @see #detachAllViewsFromParent()
+         * @see #detachViewFromParent(View)
+         * @see #detachViewFromParent(int)
+         */
+        removeDetachedView(child:View, animate:boolean):void  {
+            //if (this.mTransition != null) {
+            //    this.mTransition.removeChild(this, child);
+            //}
+            if (child == this.mFocused) {
+                child.clearFocus();
+            }
+            //child.clearAccessibilityFocus();
+            this.cancelTouchTarget(child);
+            //TODO impl when hover
+            //this.cancelHoverTarget(child);
+            if ((animate && child.getAnimation() != null)
+                //|| (this.mTransitioningViews != null && this.mTransitioningViews.contains(child))
+            ) {
+                //this.addDisappearingView(child);
+            } else if (child.mAttachInfo != null) {
+                child.dispatchDetachedFromWindow();
+            }
+            if (child.hasTransientState()) {
+                this.childHasTransientStateChanged(child, false);
+            }
+            this.onViewRemoved(child);
+        }
+        /**
+         * Attaches a view to this view group. Attaching a view assigns this group as the parent,
+         * sets the layout parameters and puts the view in the list of children so that
+         * it can be retrieved by calling {@link #getChildAt(int)}.
+         * <p>
+         * This method is intended to be lightweight and makes no assumptions about whether the
+         * parent or child should be redrawn. Proper use of this method will include also making
+         * any appropriate {@link #requestLayout()} or {@link #invalidate()} calls.
+         * For example, callers can {@link #post(Runnable) post} a {@link Runnable}
+         * which performs a {@link #requestLayout()} on the next frame, after all detach/attach
+         * calls are finished, causing layout to be run prior to redrawing the view hierarchy.
+         * <p>
+         * This method should be called only for views which were detached from their parent.
+         *
+         * @param child the child to attach
+         * @param index the index at which the child should be attached
+         * @param params the layout parameters of the child
+         *
+         * @see #removeDetachedView(View, boolean)
+         * @see #detachAllViewsFromParent()
+         * @see #detachViewFromParent(View)
+         * @see #detachViewFromParent(int)
+         */
+        attachViewToParent(child:View, index:number, params:ViewGroup.LayoutParams):void  {
+            child.mLayoutParams = params;
+            if (index < 0) {
+                index = this.mChildrenCount;
+            }
+            this.addInArray(child, index);
+            child.mParent = this;
+            child.mPrivateFlags = (child.mPrivateFlags & ~ViewGroup.PFLAG_DIRTY_MASK & ~ViewGroup.PFLAG_DRAWING_CACHE_VALID) | ViewGroup.PFLAG_DRAWN | ViewGroup.PFLAG_INVALIDATED;
+            this.mPrivateFlags |= ViewGroup.PFLAG_INVALIDATED;
+            if (child.hasFocus()) {
+                this.requestChildFocus(child, child.findFocus());
+            }
+        }
+
+        /**
+         * Detaches a range of views from their parents. Detaching a view should be followed
+         * either by a call to
+         * {@link #attachViewToParent(View, int, android.view.ViewGroup.LayoutParams)}
+         * or a call to {@link #removeDetachedView(View, boolean)}. Detachment should only be
+         * temporary; reattachment or removal should happen within the same drawing cycle as
+         * detachment. When a view is detached, its parent is null and cannot be retrieved by a
+         * call to {@link #getChildAt(int)}.
+         *
+         * @param start the first index of the childrend range to detach
+         * @param count the number of children to detach
+         *
+         * @see #detachViewFromParent(View)
+         * @see #detachViewFromParent(int)
+         * @see #detachAllViewsFromParent()
+         * @see #attachViewToParent(View, int, android.view.ViewGroup.LayoutParams)
+         * @see #removeDetachedView(View, boolean)
+         */
+        detachViewsFromParent(start:number, count:number=1):void  {
+            this.removeFromArray(start, count);
+        }
+
+        /**
+         * Detaches all views from the parent. Detaching a view should be followed
+         * either by a call to
+         * {@link #attachViewToParent(View, int, android.view.ViewGroup.LayoutParams)}
+         * or a call to {@link #removeDetachedView(View, boolean)}. Detachment should only be
+         * temporary; reattachment or removal should happen within the same drawing cycle as
+         * detachment. When a view is detached, its parent is null and cannot be retrieved by a
+         * call to {@link #getChildAt(int)}.
+         *
+         * @see #detachViewFromParent(View)
+         * @see #detachViewFromParent(int)
+         * @see #detachViewsFromParent(int, int)
+         * @see #attachViewToParent(View, int, android.view.ViewGroup.LayoutParams)
+         * @see #removeDetachedView(View, boolean)
+         */
+        detachAllViewsFromParent():void  {
+            const count:number = this.mChildrenCount;
+            if (count <= 0) {
+                return;
+            }
+            const children:View[] = this.mChildren;
+            //this.mChildrenCount = 0;
+            this.mChildren = [];
+            for (let i:number = count - 1; i >= 0; i--) {
+                children[i].mParent = null;
+                children[i] = null;
+            }
+
+        }
+
         indexOfChild(child:View):number {
             return this.mChildren.indexOf(child);
         }
@@ -776,6 +940,18 @@ module android.view {
                 }
             }
             return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        dispatchWindowFocusChanged(hasFocus:boolean):void  {
+            super.dispatchWindowFocusChanged(hasFocus);
+            const count:number = this.mChildrenCount;
+            const children:View[] = this.mChildren;
+            for (let i:number = 0; i < count; i++) {
+                children[i].dispatchWindowFocusChanged(hasFocus);
+            }
         }
 
         addTouchables(views:java.util.ArrayList<android.view.View>):void {
@@ -1158,6 +1334,115 @@ module android.view {
         }
 
 
+        /**
+         * Indicates whether this ViewGroup will always try to draw its children using their
+         * drawing cache. By default this property is enabled.
+         *
+         * @return true if the animation cache is enabled, false otherwise
+         *
+         * @see #setAlwaysDrawnWithCacheEnabled(boolean)
+         * @see #setChildrenDrawnWithCacheEnabled(boolean)
+         * @see View#setDrawingCacheEnabled(boolean)
+         */
+        isAlwaysDrawnWithCacheEnabled():boolean  {
+            return (this.mGroupFlags & ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) == ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE;
+        }
+
+        /**
+         * Indicates whether this ViewGroup will always try to draw its children using their
+         * drawing cache. This property can be set to true when the cache rendering is
+         * slightly different from the children's normal rendering. Renderings can be different,
+         * for instance, when the cache's quality is set to low.
+         *
+         * When this property is disabled, the ViewGroup will use the drawing cache of its
+         * children only when asked to. It's usually the task of subclasses to tell ViewGroup
+         * when to start using the drawing cache and when to stop using it.
+         *
+         * @param always true to always draw with the drawing cache, false otherwise
+         *
+         * @see #isAlwaysDrawnWithCacheEnabled()
+         * @see #setChildrenDrawnWithCacheEnabled(boolean)
+         * @see View#setDrawingCacheEnabled(boolean)
+         * @see View#setDrawingCacheQuality(int)
+         */
+        setAlwaysDrawnWithCacheEnabled(always:boolean):void  {
+            this.setBooleanFlag(ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE, always);
+        }
+
+        /**
+         * Indicates whether the ViewGroup is currently drawing its children using
+         * their drawing cache.
+         *
+         * @return true if children should be drawn with their cache, false otherwise
+         *
+         * @see #setAlwaysDrawnWithCacheEnabled(boolean)
+         * @see #setChildrenDrawnWithCacheEnabled(boolean)
+         */
+        isChildrenDrawnWithCacheEnabled():boolean  {
+            return (this.mGroupFlags & ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) == ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE;
+        }
+
+        /**
+         * Tells the ViewGroup to draw its children using their drawing cache. This property
+         * is ignored when {@link #isAlwaysDrawnWithCacheEnabled()} is true. A child's drawing cache
+         * will be used only if it has been enabled.
+         *
+         * Subclasses should call this method to start and stop using the drawing cache when
+         * they perform performance sensitive operations, like scrolling or animating.
+         *
+         * @param enabled true if children should be drawn with their cache, false otherwise
+         *
+         * @see #setAlwaysDrawnWithCacheEnabled(boolean)
+         * @see #isChildrenDrawnWithCacheEnabled()
+         */
+        setChildrenDrawnWithCacheEnabled(enabled:boolean):void  {
+            this.setBooleanFlag(ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE, enabled);
+        }
+
+        /**
+         * Enables or disables the drawing cache for each child of this view group.
+         *
+         * @param enabled true to enable the cache, false to dispose of it
+         */
+        setChildrenDrawingCacheEnabled(enabled:boolean):void  {
+            if (enabled || (this.mPersistentDrawingCache & ViewGroup.PERSISTENT_ALL_CACHES) != ViewGroup.PERSISTENT_ALL_CACHES) {
+                const children:View[] = this.mChildren;
+                const count:number = this.mChildrenCount;
+                for (let i:number = 0; i < count; i++) {
+                    children[i].setDrawingCacheEnabled(enabled);
+                }
+            }
+        }
+
+        /**
+         * Returns an integer indicating what types of drawing caches are kept in memory.
+         *
+         * @see #setPersistentDrawingCache(int)
+         * @see #setAnimationCacheEnabled(boolean)
+         *
+         * @return one or a combination of {@link #PERSISTENT_NO_CACHE},
+         *         {@link #PERSISTENT_ANIMATION_CACHE}, {@link #PERSISTENT_SCROLLING_CACHE}
+         *         and {@link #PERSISTENT_ALL_CACHES}
+         */
+        getPersistentDrawingCache():number  {
+            return this.mPersistentDrawingCache;
+        }
+
+        /**
+         * Indicates what types of drawing caches should be kept in memory after
+         * they have been created.
+         *
+         * @see #getPersistentDrawingCache()
+         * @see #setAnimationCacheEnabled(boolean)
+         *
+         * @param drawingCacheToKeep one or a combination of {@link #PERSISTENT_NO_CACHE},
+         *        {@link #PERSISTENT_ANIMATION_CACHE}, {@link #PERSISTENT_SCROLLING_CACHE}
+         *        and {@link #PERSISTENT_ALL_CACHES}
+         */
+        setPersistentDrawingCache(drawingCacheToKeep:number):void  {
+            this.mPersistentDrawingCache = drawingCacheToKeep & ViewGroup.PERSISTENT_ALL_CACHES;
+        }
+
         isChildrenDrawingOrderEnabled():boolean {
             return (this.mGroupFlags & ViewGroup.FLAG_USE_CHILD_DRAWING_ORDER) == ViewGroup.FLAG_USE_CHILD_DRAWING_ORDER;
         }
@@ -1339,6 +1624,50 @@ module android.view {
             super.dispatchDetachedFromWindow();
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        dispatchDisplayHint(hint:number):void  {
+            super.dispatchDisplayHint(hint);
+            const count:number = this.mChildrenCount;
+            const children:View[] = this.mChildren;
+            for (let i:number = 0; i < count; i++) {
+                children[i].dispatchDisplayHint(hint);
+            }
+        }
+
+        /**
+         * Called when a view's visibility has changed. Notify the parent to take any appropriate
+         * action.
+         *
+         * @param child The view whose visibility has changed
+         * @param oldVisibility The previous visibility value (GONE, INVISIBLE, or VISIBLE).
+         * @param newVisibility The new visibility value (GONE, INVISIBLE, or VISIBLE).
+         * @hide
+         */
+        onChildVisibilityChanged(child:View, oldVisibility:number, newVisibility:number):void  {
+            //if (this.mTransition != null) {
+            //    if (newVisibility == ViewGroup.VISIBLE) {
+            //        this.mTransition.showChild(this, child, oldVisibility);
+            //    } else {
+            //        this.mTransition.hideChild(this, child, newVisibility);
+            //        if (this.mTransitioningViews != null && this.mTransitioningViews.contains(child)) {
+            //            // and don't need special handling during drawChild()
+            //            if (this.mVisibilityChangingChildren == null) {
+            //                this.mVisibilityChangingChildren = new ArrayList<View>();
+            //            }
+            //            this.mVisibilityChangingChildren.add(child);
+            //            this.addDisappearingView(child);
+            //        }
+            //    }
+            //}
+            //// in all cases, for drags
+            //if (this.mCurrentDrag != null) {
+            //    if (newVisibility == ViewGroup.VISIBLE) {
+            //        this.notifyChildOfDrag(child);
+            //    }
+            //}
+        }
         dispatchVisibilityChanged(changedView:View, visibility:number) {
             super.dispatchVisibilityChanged(changedView, visibility);
             const count = this.mChildrenCount;
@@ -1372,6 +1701,15 @@ module android.view {
                 if (!pressed || (!child.isClickable() && !child.isLongClickable())) {
                     child.setPressed(pressed);
                 }
+            }
+        }
+
+        dispatchCancelPendingInputEvents():void  {
+            super.dispatchCancelPendingInputEvents();
+            const children:View[] = this.mChildren;
+            const count:number = this.mChildrenCount;
+            for (let i:number = 0; i < count; i++) {
+                children[i].dispatchCancelPendingInputEvents();
             }
         }
 
@@ -1464,6 +1802,10 @@ module android.view {
             }
         }
 
+        canAnimate():boolean {
+            //layout animation no impl
+            return false;
+        }
         abstract
         onLayout(changed:boolean, l:number, t:number, r:number, b:number);
 
@@ -1986,7 +2328,7 @@ module android.view {
             _measuringParentWidthMeasureSpec = 0;
             _measuringParentHeightMeasureSpec = 0;
             _measuringMeasureSpec:android.util.DisplayMetrics;
-            _attrChangeHandler = new View.AttrChangeHandler(null);
+            _attrChangeHandler:View.AttrChangeHandler;
 
 
             constructor();
@@ -2003,10 +2345,12 @@ module android.view {
                     this.height = height;
                 }
 
-
-                this._createAttrChangeHandler(this._attrChangeHandler);
-                if(!this._attrChangeHandler.isCallSuper){
-                    throw Error('must call super when override createAttrChangeHandler!');
+                if(!this._attrChangeHandler) {
+                    this._attrChangeHandler = new View.AttrChangeHandler(null);
+                    this._createAttrChangeHandler(this._attrChangeHandler);
+                    if (!this._attrChangeHandler.isCallSuper) {
+                        throw Error('must call super when override createAttrChangeHandler!');
+                    }
                 }
             }
 

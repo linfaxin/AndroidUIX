@@ -41,7 +41,7 @@ module android.view{
         private static OVERFLING_DISTANCE = 100;//default 6
 
         static instance : ViewConfiguration;
-        static get():ViewConfiguration{
+        static get(arg?:any):ViewConfiguration{
             if(!ViewConfiguration.instance){
                 ViewConfiguration.instance = new ViewConfiguration();
             }

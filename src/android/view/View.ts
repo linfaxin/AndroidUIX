@@ -59,6 +59,7 @@ module android.view {
     import Handler = android.os.Handler;
     import Log = android.util.Log;
     import Rect = android.graphics.Rect;
+    import Point = android.graphics.Point;
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import ArrayList = java.util.ArrayList;
@@ -76,6 +77,14 @@ module android.view {
 
 
     export class View implements Drawable.Callback, KeyEvent.Callback{
+        static get class(){
+            let name = this.name;
+            return {
+                getName():string{
+                    return name;
+                }
+            }
+        }
         static DBG = Log.View_DBG;
         static VIEW_LOG_TAG = "View";
 
@@ -127,7 +136,7 @@ module android.view {
         private static FOCUSABLE_MASK = 0x00000001;
 
 
-
+        static NO_ID;//undefined
         static OVER_SCROLL_ALWAYS = 0;
         static OVER_SCROLL_IF_CONTENT_SCROLLS = 1;
         static OVER_SCROLL_NEVER = 2;
@@ -163,6 +172,308 @@ module android.view {
         static FOCUS_DOWN = 0x00000082;
 
 
+
+        /**
+         * Base View state sets
+         */
+        // Singles
+        /**
+         * Indicates the view has no states set. States are used with
+         * {@link android.graphics.drawable.Drawable} to change the drawing of the
+         * view depending on its state.
+         *
+         * @see android.graphics.drawable.Drawable
+         * @see #getDrawableState()
+         */
+        static EMPTY_STATE_SET:number[];
+
+        /**
+         * Indicates the view is enabled. States are used with
+         * {@link android.graphics.drawable.Drawable} to change the drawing of the
+         * view depending on its state.
+         *
+         * @see android.graphics.drawable.Drawable
+         * @see #getDrawableState()
+         */
+        static ENABLED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is focused. States are used with
+         * {@link android.graphics.drawable.Drawable} to change the drawing of the
+         * view depending on its state.
+         *
+         * @see android.graphics.drawable.Drawable
+         * @see #getDrawableState()
+         */
+        static FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is selected. States are used with
+         * {@link android.graphics.drawable.Drawable} to change the drawing of the
+         * view depending on its state.
+         *
+         * @see android.graphics.drawable.Drawable
+         * @see #getDrawableState()
+         */
+        static SELECTED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed. States are used with
+         * {@link android.graphics.drawable.Drawable} to change the drawing of the
+         * view depending on its state.
+         *
+         * @see android.graphics.drawable.Drawable
+         * @see #getDrawableState()
+         */
+        static PRESSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view's window has focus. States are used with
+         * {@link android.graphics.drawable.Drawable} to change the drawing of the
+         * view depending on its state.
+         *
+         * @see android.graphics.drawable.Drawable
+         * @see #getDrawableState()
+         */
+        static WINDOW_FOCUSED_STATE_SET:number[];
+
+        // Doubles
+        /**
+         * Indicates the view is enabled and has the focus.
+         *
+         * @see #ENABLED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         */
+        static ENABLED_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is enabled and selected.
+         *
+         * @see #ENABLED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         */
+        static ENABLED_SELECTED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is enabled and that its window has focus.
+         *
+         * @see #ENABLED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static ENABLED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is focused and selected.
+         *
+         * @see #FOCUSED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         */
+        static FOCUSED_SELECTED_STATE_SET:number[];
+
+        /**
+         * Indicates the view has the focus and that its window has the focus.
+         *
+         * @see #FOCUSED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static FOCUSED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is selected and that its window has the focus.
+         *
+         * @see #SELECTED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static SELECTED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        // Triples
+        /**
+         * Indicates the view is enabled, focused and selected.
+         *
+         * @see #ENABLED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         */
+        static ENABLED_FOCUSED_SELECTED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is enabled, focused and its window has the focus.
+         *
+         * @see #ENABLED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static ENABLED_FOCUSED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is enabled, selected and its window has the focus.
+         *
+         * @see #ENABLED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static ENABLED_SELECTED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is focused, selected and its window has the focus.
+         *
+         * @see #FOCUSED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is enabled, focused, selected and its window
+         * has the focus.
+         *
+         * @see #ENABLED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static ENABLED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed and its window has the focus.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static PRESSED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed and selected.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         */
+        static PRESSED_SELECTED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, selected and its window has the focus.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static PRESSED_SELECTED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed and focused.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         */
+        static PRESSED_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, focused and its window has the focus.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static PRESSED_FOCUSED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, focused and selected.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         */
+        static PRESSED_FOCUSED_SELECTED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, focused, selected and its window has the focus.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static PRESSED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed and enabled.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #ENABLED_STATE_SET
+         */
+        static PRESSED_ENABLED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, enabled and its window has the focus.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #ENABLED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static PRESSED_ENABLED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, enabled and selected.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #ENABLED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         */
+        static PRESSED_ENABLED_SELECTED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, enabled, selected and its window has the
+         * focus.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #ENABLED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static PRESSED_ENABLED_SELECTED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, enabled and focused.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #ENABLED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         */
+        static PRESSED_ENABLED_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, enabled, focused and its window has the
+         * focus.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #ENABLED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static PRESSED_ENABLED_FOCUSED_WINDOW_FOCUSED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, enabled, focused and selected.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #ENABLED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         */
+        static PRESSED_ENABLED_FOCUSED_SELECTED_STATE_SET:number[];
+
+        /**
+         * Indicates the view is pressed, enabled, focused, selected and its window
+         * has the focus.
+         *
+         * @see #PRESSED_STATE_SET
+         * @see #ENABLED_STATE_SET
+         * @see #SELECTED_STATE_SET
+         * @see #FOCUSED_STATE_SET
+         * @see #WINDOW_FOCUSED_STATE_SET
+         */
+        static PRESSED_ENABLED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET:number[];
+
         static VIEW_STATE_SETS:Array<Array<number>>;
         static VIEW_STATE_WINDOW_FOCUSED = 1;
         static VIEW_STATE_SELECTED = 1 << 1;
@@ -172,7 +483,7 @@ module android.view {
         static VIEW_STATE_PRESSED = 1 << 4;
         static VIEW_STATE_ACTIVATED = 1 << 5;
         //static VIEW_STATE_ACCELERATED = 1 << 6;
-        //static VIEW_STATE_HOVERED = 1 << 7;
+        static VIEW_STATE_HOVERED = 1 << 7;
         //static VIEW_STATE_DRAG_CAN_ACCEPT = 1 << 8;
         //static VIEW_STATE_DRAG_HOVERED = 1 << 9;
         //android default use attr id, there use state value as id
@@ -184,7 +495,7 @@ module android.view {
             View.VIEW_STATE_PRESSED,           View.VIEW_STATE_PRESSED,
             View.VIEW_STATE_ACTIVATED,         View.VIEW_STATE_ACTIVATED,
             //View.VIEW_STATE_ACCELERATED,       View.VIEW_STATE_ACCELERATED,
-            //View.VIEW_STATE_HOVERED,           View.VIEW_STATE_HOVERED,
+            View.VIEW_STATE_HOVERED,           View.VIEW_STATE_HOVERED,
             //View.VIEW_STATE_DRAG_CAN_ACCEPT,   View.VIEW_STATE_DRAG_CAN_ACCEPT,
             //View.VIEW_STATE_DRAG_HOVERED,      View.VIEW_STATE_DRAG_HOVERED
         ];
@@ -213,6 +524,38 @@ module android.view {
                 }
                 View.VIEW_STATE_SETS[i] = stataSet;
             }
+            View.EMPTY_STATE_SET = View.VIEW_STATE_SETS[0];
+            View.WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED];
+            View.SELECTED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_SELECTED];
+            View.SELECTED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_SELECTED];
+            View.FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_FOCUSED];
+            View.FOCUSED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_FOCUSED];
+            View.FOCUSED_SELECTED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_SELECTED | View.VIEW_STATE_FOCUSED];
+            View.FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_SELECTED | View.VIEW_STATE_FOCUSED];
+            View.ENABLED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_ENABLED];
+            View.ENABLED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_ENABLED];
+            View.ENABLED_SELECTED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_SELECTED | View.VIEW_STATE_ENABLED];
+            View.ENABLED_SELECTED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_SELECTED | View.VIEW_STATE_ENABLED];
+            View.ENABLED_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_FOCUSED | View.VIEW_STATE_ENABLED];
+            View.ENABLED_FOCUSED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_ENABLED];
+            View.ENABLED_FOCUSED_SELECTED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_SELECTED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_ENABLED];
+            View.ENABLED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_SELECTED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_ENABLED];
+            View.PRESSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_PRESSED];
+            View.PRESSED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_SELECTED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_SELECTED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_SELECTED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_SELECTED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_FOCUSED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_FOCUSED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_FOCUSED_SELECTED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_SELECTED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_SELECTED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_ENABLED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_ENABLED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_ENABLED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_ENABLED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_ENABLED_SELECTED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_SELECTED | View.VIEW_STATE_ENABLED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_ENABLED_SELECTED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_SELECTED | View.VIEW_STATE_ENABLED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_ENABLED_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_FOCUSED | View.VIEW_STATE_ENABLED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_ENABLED_FOCUSED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_ENABLED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_ENABLED_FOCUSED_SELECTED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_SELECTED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_ENABLED | View.VIEW_STATE_PRESSED];
+            View.PRESSED_ENABLED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET = View.VIEW_STATE_SETS[View.VIEW_STATE_WINDOW_FOCUSED | View.VIEW_STATE_SELECTED | View.VIEW_STATE_FOCUSED | View.VIEW_STATE_ENABLED | View.VIEW_STATE_PRESSED];
         })();
 
         static CLICKABLE = 0x00004000;
@@ -259,6 +602,11 @@ module android.view {
         mMinHeight = 0;
         private mTouchDelegate : TouchDelegate;
         private mFloatingTreeObserver : ViewTreeObserver;
+        /**
+         * Solid color to use as a background when creating the drawing cache. Enables
+         * the cache to use 16 bit bitmaps instead of 32 bit.
+         */
+        private mDrawingCacheBackgroundColor = 0;
         mTouchSlop = 0;
         private mVerticalScrollFactor = 0;
         private mOverScrollMode = 0;
@@ -1452,6 +1800,31 @@ module android.view {
                 }
             }
         }
+
+        /**
+         * Dispatch a hint about whether this view is displayed. For instance, when
+         * a View moves out of the screen, it might receives a display hint indicating
+         * the view is not displayed. Applications should not <em>rely</em> on this hint
+         * as there is no guarantee that they will receive one.
+         *
+         * @param hint A hint about whether or not this view is displayed:
+         * {@link #VISIBLE} or {@link #INVISIBLE}.
+         */
+        dispatchDisplayHint(hint:number):void  {
+            this.onDisplayHint(hint);
+        }
+
+        /**
+         * Gives this view a hint about whether is displayed or not. For instance, when
+         * a View moves out of the screen, it might receives a display hint indicating
+         * the view is not displayed. Applications should not <em>rely</em> on this hint
+         * as there is no guarantee that they will receive one.
+         *
+         * @param hint A hint about whether or not this view is displayed:
+         * {@link #VISIBLE} or {@link #INVISIBLE}.
+         */
+        onDisplayHint(hint:number):void  {
+        }
         dispatchWindowVisibilityChanged(visibility:number) {
             this.onWindowVisibilityChanged(visibility);
         }
@@ -1748,6 +2121,61 @@ module android.view {
             }
             return false;
         }
+
+        /**
+         * Cancel any deferred high-level input events that were previously posted to the event queue.
+         *
+         * <p>Many views post high-level events such as click handlers to the event queue
+         * to run deferred in order to preserve a desired user experience - clearing visible
+         * pressed states before executing, etc. This method will abort any events of this nature
+         * that are currently in flight.</p>
+         *
+         * <p>Custom views that generate their own high-level deferred input events should override
+         * {@link #onCancelPendingInputEvents()} and remove those pending events from the queue.</p>
+         *
+         * <p>This will also cancel pending input events for any child views.</p>
+         *
+         * <p>Note that this may not be sufficient as a debouncing strategy for clicks in all cases.
+         * This will not impact newer events posted after this call that may occur as a result of
+         * lower-level input events still waiting in the queue. If you are trying to prevent
+         * double-submitted  events for the duration of some sort of asynchronous transaction
+         * you should also take other steps to protect against unexpected double inputs e.g. calling
+         * {@link #setEnabled(boolean) setEnabled(false)} and re-enabling the view when
+         * the transaction completes, tracking already submitted transaction IDs, etc.</p>
+         */
+        cancelPendingInputEvents():void  {
+            this.dispatchCancelPendingInputEvents();
+        }
+
+        /**
+         * Called by {@link #cancelPendingInputEvents()} to cancel input events in flight.
+         * Overridden by ViewGroup to dispatch. Package scoped to prevent app-side meddling.
+         */
+        dispatchCancelPendingInputEvents():void  {
+            this.mPrivateFlags3 &= ~View.PFLAG3_CALLED_SUPER;
+            this.onCancelPendingInputEvents();
+            if ((this.mPrivateFlags3 & View.PFLAG3_CALLED_SUPER) != View.PFLAG3_CALLED_SUPER) {
+                throw Error(`new SuperNotCalledException("View " + this.getClass().getSimpleName() + " did not call through to super.onCancelPendingInputEvents()")`);
+            }
+        }
+
+        /**
+         * Called as the result of a call to {@link #cancelPendingInputEvents()} on this view or
+         * a parent view.
+         *
+         * <p>This method is responsible for removing any pending high-level input events that were
+         * posted to the event queue to run later. Custom view classes that post their own deferred
+         * high-level events via {@link #post(Runnable)}, {@link #postDelayed(Runnable, long)} or
+         * {@link android.os.Handler} should override this method, call
+         * <code>super.onCancelPendingInputEvents()</code> and remove those callbacks as appropriate.
+         * </p>
+         */
+        onCancelPendingInputEvents():void  {
+            this.removePerformClickCallback();
+            this.cancelLongPress();
+            this.mPrivateFlags3 |= View.PFLAG3_CALLED_SUPER;
+        }
+
         private removeLongPressCallback() {
             if (this.mPendingCheckForLongPress != null) {
                 this.removeCallbacks(this.mPendingCheckForLongPress);
@@ -1843,6 +2271,15 @@ module android.view {
             }
             this.getListenerInfo().mOnLongClickListener = l;
         }
+        playSoundEffect(soundConstant:number){
+            //no impl
+        }
+
+        performHapticFeedback(feedbackConstant:number):boolean  {
+            //no impl
+            return false;
+        }
+
         performClick(event?:MotionEvent):boolean {
             this._sendClickToBindElement(event);
 
@@ -1884,6 +2321,23 @@ module android.view {
                 handled = li.mOnLongClickListener.onLongClick(this);
             }
             return handled;
+        }
+        /**
+         * Performs button-related actions during a touch down event.
+         *
+         * @param event The event.
+         * @return True if the down was consumed.
+         *
+         * @hide
+         */
+        performButtonActionOnTouchDown(event:MotionEvent):boolean  {
+            //no impl
+            //if ((event.getButtonState() & MotionEvent.BUTTON_SECONDARY) != 0) {
+            //    if (this.showContextMenu(event.getX(), event.getY(), event.getMetaState())) {
+            //        return true;
+            //    }
+            //}
+            return false;
         }
 
         private checkForLongClick(delayOffset=0) {
@@ -2134,6 +2588,26 @@ module android.view {
                 this.mOverlay.getOverlayView().setBottom(newHeight);
             }
         }
+
+        /**
+         * Hit rectangle in parent's coordinates
+         *
+         * @param outRect The hit rectangle of the view.
+         */
+        getHitRect(outRect:Rect):void  {
+            //TODO when transformation impl
+            //this.updateMatrix();
+            //const info:View.TransformationInfo = this.mTransformationInfo;
+            //if (info == null || info.mMatrixIsIdentity || this.mAttachInfo == null) {
+                outRect.set(this.mLeft, this.mTop, this.mRight, this.mBottom);
+            //}
+            //else {
+            //    const tmpRect:RectF = this.mAttachInfo.mTmpTransformRect;
+            //    tmpRect.set(0, 0, this.getWidth(), this.getHeight());
+            //    info.mMatrix.mapRect(tmpRect);
+            //    outRect.set(Math.floor(tmpRect.left) + this.mLeft, Math.floor(tmpRect.top) + this.mTop, Math.floor(tmpRect.right) + this.mLeft, Math.floor(tmpRect.bottom) + this.mTop);
+            //}
+        }
         getFocusedRect(r:Rect) {
             this.getDrawingRect(r);
         }
@@ -2143,6 +2617,34 @@ module android.view {
             outRect.right = this.mScrollX + (this.mRight - this.mLeft);
             outRect.bottom = this.mScrollY + (this.mBottom - this.mTop);
         }
+
+        /**
+         * If some part of this view is not clipped by any of its parents, then
+         * return that area in r in global (root) coordinates. To convert r to local
+         * coordinates (without taking possible View rotations into account), offset
+         * it by -globalOffset (e.g. r.offset(-globalOffset.x, -globalOffset.y)).
+         * If the view is completely clipped or translated out, return false.
+         *
+         * @param r If true is returned, r holds the global coordinates of the
+         *        visible portion of this view.
+         * @param globalOffset If true is returned, globalOffset holds the dx,dy
+         *        between this view and its root. globalOffet may be null.
+         * @return true if r is non-empty (i.e. part of the view is visible at the
+         *         root level.
+         */
+        getGlobalVisibleRect(r:Rect, globalOffset:Point = null):boolean  {
+            let width:number = this.mRight - this.mLeft;
+            let height:number = this.mBottom - this.mTop;
+            if (width > 0 && height > 0) {
+                r.set(0, 0, width, height);
+                if (globalOffset != null) {
+                    globalOffset.set(-this.mScrollX, -this.mScrollY);
+                }
+                return this.mParent == null || this.mParent.getChildVisibleRect(this, r, globalOffset);
+            }
+            return false;
+        }
+
         getMeasuredWidth():number {
             return this.mMeasuredWidth & View.MEASURED_SIZE_MASK;
         }
@@ -2815,6 +3317,10 @@ module android.view {
             scrollBar.draw(canvas);
         }
 
+        isHardwareAccelerated():boolean{
+            return false;//Hardware Accelerate not impl (may use webgl accelerate later?)
+        }
+
         setDrawingCacheEnabled(enabled:boolean) {
             this.mCachingFailed = false;
             this.setFlags(enabled ? View.DRAWING_CACHE_ENABLED : 0, View.DRAWING_CACHE_ENABLED);
@@ -2823,6 +3329,32 @@ module android.view {
             return (this.mViewFlags & View.DRAWING_CACHE_ENABLED) == View.DRAWING_CACHE_ENABLED;
         }
 
+        /**
+         * Setting a solid background color for the drawing cache's bitmaps will improve
+         * performance and memory usage. Note, though that this should only be used if this
+         * view will always be drawn on top of a solid color.
+         *
+         * @param color The background color to use for the drawing cache's bitmap
+         *
+         * @see #setDrawingCacheEnabled(boolean)
+         * @see #buildDrawingCache()
+         * @see #getDrawingCache()
+         */
+        setDrawingCacheBackgroundColor(color:number):void  {
+            if (color != this.mDrawingCacheBackgroundColor) {
+                this.mDrawingCacheBackgroundColor = color;
+                this.mPrivateFlags &= ~View.PFLAG_DRAWING_CACHE_VALID;
+            }
+        }
+
+        /**
+         * @see #setDrawingCacheBackgroundColor(int)
+         *
+         * @return The background color to used for the drawing cache's bitmap
+         */
+        getDrawingCacheBackgroundColor():number  {
+            return this.mDrawingCacheBackgroundColor;
+        }
         destroyDrawingCache() {
             //TODO impl draw cache
         }
@@ -3317,6 +3849,9 @@ module android.view {
             return 0;
         }
 
+        initializeScrollbars(a?):void {
+            this.initScrollCache();
+        }
         initScrollCache() {
             if (this.mScrollCache == null) {
                 this.mScrollCache = new ScrollabilityCache(this);
@@ -3357,6 +3892,27 @@ module android.view {
                 scrollabilityCache.state = ScrollabilityCache.ON;
             }
         }
+        setVerticalScrollbarPosition(position:number){
+            //scrollbar position not impl
+        }
+        setHorizontalScrollbarPosition(position:number){
+            //scrollbar position not impl
+        }
+        setScrollBarStyle(position:number){
+            //scrollbar style not impl
+        }
+        getTopFadingEdgeStrength():number{
+            return 0;//no fading edge
+        }
+        getBottomFadingEdgeStrength():number{
+            return 0;//no fading edge
+        }
+        getLeftFadingEdgeStrength():number{
+            return 0;//no fading edge
+        }
+        getRightFadingEdgeStrength():number{
+            return 0;//no fading edge
+        }
         isScrollbarFadingEnabled():boolean {
             return this.mScrollCache != null && this.mScrollCache.fadeScrollBars;
         }
@@ -3381,6 +3937,9 @@ module android.view {
         setScrollBarSize(scrollBarSize:number) {
             this.getScrollCache().scrollBarSize = scrollBarSize;
         }
+        hasOpaqueScrollbars():boolean{
+            return true;
+        }
 
         /*
          * Caller is responsible for calling requestLayout if necessary.
@@ -3400,6 +3959,96 @@ module android.view {
         onFinishInflate() {
         }
 
+
+        /**
+         * @hide
+         */
+        dispatchStartTemporaryDetach():void  {
+            //this.clearDisplayList();
+            this.onStartTemporaryDetach();
+        }
+
+        /**
+         * This is called when a container is going to temporarily detach a child, with
+         * {@link ViewGroup#detachViewFromParent(View) ViewGroup.detachViewFromParent}.
+         * It will either be followed by {@link #onFinishTemporaryDetach()} or
+         * {@link #onDetachedFromWindow()} when the container is done.
+         */
+        onStartTemporaryDetach():void  {
+            this.removeUnsetPressCallback();
+            this.mPrivateFlags |= View.PFLAG_CANCEL_NEXT_UP_EVENT;
+        }
+
+        /**
+         * @hide
+         */
+        dispatchFinishTemporaryDetach():void  {
+            this.onFinishTemporaryDetach();
+        }
+
+        /**
+         * Called after {@link #onStartTemporaryDetach} when the container is done
+         * changing the view.
+         */
+        onFinishTemporaryDetach():void  {
+        }
+
+        /**
+         * Called when the window containing this view gains or loses window focus.
+         * ViewGroups should override to route to their children.
+         *
+         * @param hasFocus True if the window containing this view now has focus,
+         *        false otherwise.
+         */
+        dispatchWindowFocusChanged(hasFocus:boolean):void  {
+            this.onWindowFocusChanged(hasFocus);
+        }
+
+        /**
+         * Called when the window containing this view gains or loses focus.  Note
+         * that this is separate from view focus: to receive key events, both
+         * your view and its window must have focus.  If a window is displayed
+         * on top of yours that takes input focus, then your own window will lose
+         * focus but the view focus will remain unchanged.
+         *
+         * @param hasWindowFocus True if the window containing this view now has
+         *        focus, false otherwise.
+         */
+        onWindowFocusChanged(hasWindowFocus:boolean):void  {
+            //let imm:InputMethodManager = InputMethodManager.peekInstance();
+            if (!hasWindowFocus) {
+                if (this.isPressed()) {
+                    this.setPressed(false);
+                }
+                //if (imm != null && (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0) {
+                //    imm.focusOut(this);
+                //}
+                this.removeLongPressCallback();
+                this.removeTapCallback();
+                this.onFocusLost();
+            }
+            //else if (imm != null && (this.mPrivateFlags & View.PFLAG_FOCUSED) != 0) {
+            //    imm.focusIn(this);
+            //}
+            this.refreshDrawableState();
+        }
+
+        /**
+         * Returns true if this view is in a window that currently has window focus.
+         * Note that this is not the same as the view itself having focus.
+         *
+         * @return True if this view is in a window that currently has window focus.
+         */
+        hasWindowFocus():boolean  {
+            return this.mAttachInfo != null && this.mAttachInfo.mHasWindowFocus;
+        }
+
+        /**
+         * @return The number of times this view has been attached to a window
+         */
+        getWindowAttachCount():number  {
+            return this.mWindowAttachCount;
+        }
         /**
          * Returns true if this view is currently attached to a window.
          */
@@ -3552,9 +4201,13 @@ module android.view {
             return null;
         }
         findViewById(id:string):View{
+            if(!id) return null;
             if (id == this.bindElement.id) {
                 return this;
             }
+            return this.findViewTraversal(id);
+        }
+        findViewTraversal(id:string):View  {
             let bindEle = this.bindElement.querySelector('#'+id);
             return bindEle ? bindEle[View.AndroidViewProperty] : null;
         }
@@ -3598,7 +4251,7 @@ module android.view {
         static inflate(eleOrRef:HTMLElement|string, rootElement:HTMLElement, viewParent?:ViewGroup):View{
             let domtree : HTMLElement;
             if(typeof eleOrRef === "string"){
-                let ref = <HTMLElement>View.findReference('@layout/page', rootElement);
+                let ref = <HTMLElement>View.findReference(eleOrRef, rootElement);
                 if(ref==null){
                     console.warn('not find Reference :'+ eleOrRef);
                     return null;

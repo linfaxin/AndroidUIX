@@ -47,6 +47,7 @@ module android.view{
 
 
 
+
         /**
          * {@link #getAction} value: the key has been pressed down.
          */
@@ -65,6 +66,12 @@ module android.view{
          * this is a sequence of characters as returned by {@link #getCharacters}.
          */
         //static ACTION_MULTIPLE         = 2;
+
+
+        static META_ALT_ON:number = 0x02;
+        static META_SHIFT_ON:number = 0x1;
+        static META_CTRL_ON:number = 0x1000;
+        static META_META_ON:number = 0x10000;
 
         static FLAG_CANCELED = 0x20;
         static FLAG_CANCELED_LONG_PRESS = 0x100;
@@ -279,6 +286,19 @@ module android.view{
             return false;
         }
 
+        hasNoModifiers(){
+            if(this.isAltPressed()) return false;
+            if(this.isShiftPressed()) return false;
+            if(this.isCtrlPressed()) return false;
+            if(this.isMetaPressed()) return false;
+            return true;
+        }
+        hasModifiers(modifiers:number){
+            if( (modifiers & KeyEvent.META_ALT_ON)===KeyEvent.META_ALT_ON && this.isAltPressed()) return true;
+            if( (modifiers & KeyEvent.META_SHIFT_ON)===KeyEvent.META_SHIFT_ON && this.isShiftPressed()) return true;
+            if( (modifiers & KeyEvent.META_META_ON)===KeyEvent.META_META_ON && this.isMetaPressed()) return true;
+            if( (modifiers & KeyEvent.META_CTRL_ON)===KeyEvent.META_CTRL_ON && this.isCtrlPressed()) return true;
+        }
 
         toString() {
             return JSON.stringify(this._activeKeyEvent);

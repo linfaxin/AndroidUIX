@@ -1,9 +1,11 @@
 /**
  * Created by linfaxin on 15/10/28.
  */
+///<reference path="List.ts"/>
+
 module java.util{
-    export class ArrayList<T>{
-        private array : Array<T> = [];
+    export class ArrayList<T> implements List<T>{
+        array : Array<T> = [];
 
         constructor(initialCapacity=0) {
         }

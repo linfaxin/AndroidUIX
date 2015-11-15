@@ -176,14 +176,17 @@ module android.support.v4.view {
          */
         static SCROLL_STATE_SETTLING = 2
 
-
-        private mEndScrollRunnable:Runnable = <any>{
-            ViewPager_this: this,
-            run() {
-                this.ViewPager_this.setScrollState(ViewPager.SCROLL_STATE_IDLE);
-                this.ViewPager_this.populate();
+        private mEndScrollRunnable = (()=>{
+            let ViewPager_this = this;
+            class InnerClass implements Runnable{
+                run() {
+                    (<any>ViewPager_this).setScrollState(ViewPager.SCROLL_STATE_IDLE);
+                    (<any>ViewPager_this).populate();
+                }
             }
-        };
+            return new InnerClass();
+        })();
+
         private mScrollState = ViewPager.SCROLL_STATE_IDLE;
 
         constructor() {

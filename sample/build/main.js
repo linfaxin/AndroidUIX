@@ -64,6 +64,53 @@ var sample;
         }
     })(activity = sample.activity || (sample.activity = {}));
 })(sample || (sample = {}));
+/**
+ * Created by linfaxin on 15/10/26.
+ */
+///<reference path="../../dist/android-ui.d.ts"/>
+var sample;
+(function (sample) {
+    var activity;
+    (function (activity) {
+        var Activity = android.app.Activity;
+        var View = android.view.View;
+        var BaseAdapter = android.widget.BaseAdapter;
+        class SampleListViewActivity extends Activity {
+            onCreate() {
+                let listView = this.findViewById('listView');
+                listView.setAdapter(new MyListAdapter());
+            }
+        }
+        activity.SampleListViewActivity = SampleListViewActivity;
+        SampleListViewActivity.registerCustomElement();
+        class MyListAdapter extends BaseAdapter {
+            getView(position, convertView, parent) {
+                if (convertView == null) {
+                    convertView = View.inflate('@layout/item', parent.rootElement);
+                }
+                convertView.findViewById('item_text').setText(this.getItem(position));
+                return convertView;
+            }
+            getCount() {
+                return 200;
+            }
+            getItem(position) {
+                return (1 + position) + '/' + this.getCount();
+            }
+            getItemId(position) {
+                return -1;
+            }
+        }
+    })(activity = sample.activity || (sample.activity = {}));
+})(sample || (sample = {}));
 ///<reference path="../dist/android-ui.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
 ///<reference path="activity/SampleViewPagerActivity.ts"/>
+///<reference path="activity/SampleListViewActivity.ts"/>
+class A {
+}
+class B {
+    constructor() {
+        this.A_this.a = '';
+    }
+}

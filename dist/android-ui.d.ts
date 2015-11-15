@@ -400,8 +400,30 @@ declare module java.lang.util.concurrent {
     }
 }
 declare module java.util {
-    class ArrayList<T> {
-        private array;
+    interface List<T> {
+        size(): number;
+        isEmpty(): boolean;
+        contains(o: T): any;
+        indexOf(o: T): any;
+        lastIndexOf(o: T): any;
+        clone(): List<T>;
+        toArray(a: Array<T>): Array<T>;
+        get(index: number): T;
+        set(index: number, element: T): T;
+        add(t: T): any;
+        add(index: number, t: T): any;
+        remove(o: number | T): any;
+        clear(): any;
+        addAll(list: List<T>): any;
+        addAll(index: number, list: List<T>): any;
+        removeAll(list: List<T>): boolean;
+        subList(fromIndex: number, toIndex: number): List<T>;
+        sort(compareFn?: (a: T, b: T) => number): any;
+    }
+}
+declare module java.util {
+    class ArrayList<T> implements List<T> {
+        array: Array<T>;
         constructor(initialCapacity?: number);
         size(): number;
         isEmpty(): boolean;
@@ -558,7 +580,7 @@ declare module android.view {
         private static OVERSCROLL_DISTANCE;
         private static OVERFLING_DISTANCE;
         static instance: ViewConfiguration;
-        static get(): ViewConfiguration;
+        static get(arg?: any): ViewConfiguration;
         mEdgeSlop: number;
         mFadingEdgeLength: number;
         mMinimumFlingVelocity: number;
@@ -615,6 +637,8 @@ declare module android.view {
         static EDGE_RIGHT: number;
         static ACTION_POINTER_INDEX_MASK: number;
         static ACTION_POINTER_INDEX_SHIFT: number;
+        static AXIS_VSCROLL: number;
+        static AXIS_HSCROLL: number;
         static HistoryMaxSize: number;
         private static TouchMoveRecord;
         mAction: number;
@@ -626,11 +650,13 @@ declare module android.view {
         mXOffset: number;
         mYOffset: number;
         _activeTouch: any;
+        private _axisValues;
         static obtainWithTouchEvent(e: any, action: number): MotionEvent;
         static obtain(event: MotionEvent): MotionEvent;
         static obtainWithAction(downTime: number, eventTime: number, action: number, x: number, y: number, metaState?: number): MotionEvent;
         private static IdIndexCache;
         initWithTouch(event: any, baseAction: number, windowBound?: Rect): void;
+        initWithMouseWheel(e: WheelEvent): void;
         recycle(): void;
         getAction(): number;
         getActionMasked(): number;
@@ -652,10 +678,13 @@ declare module android.view {
         getEdgeFlags(): number;
         setEdgeFlags(flags: number): void;
         setAction(action: number): void;
+        isTouchEvent(): boolean;
+        isPointerEvent(): boolean;
         offsetLocation(deltaX: number, deltaY: number): void;
         setLocation(x: number, y: number): void;
         getPointerIdBits(): number;
         split(idBits: number): MotionEvent;
+        getAxisValue(axis: number): number;
         toString(): string;
     }
 }
@@ -890,6 +919,10 @@ declare module android.view {
         static KEYCODE_MOVE_END: number;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
+        static META_ALT_ON: number;
+        static META_SHIFT_ON: number;
+        static META_CTRL_ON: number;
+        static META_META_ON: number;
         static FLAG_CANCELED: number;
         static FLAG_CANCELED_LONG_PRESS: number;
         private static FLAG_LONG_PRESS;
@@ -915,6 +948,8 @@ declare module android.view {
         getDownTime(): number;
         getEventTime(): number;
         dispatch(receiver: KeyEvent.Callback, state?: KeyEvent.DispatcherState, target?: any): boolean;
+        hasNoModifiers(): boolean;
+        hasModifiers(modifiers: number): boolean;
         toString(): string;
         static actionToString(action: number): string;
         static keyCodeToString(keyCode: number): string;
@@ -944,12 +979,16 @@ declare module android.view {
     import ViewParent = android.view.ViewParent;
     import Handler = android.os.Handler;
     import Rect = android.graphics.Rect;
+    import Point = android.graphics.Point;
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import ArrayList = java.util.ArrayList;
     import ColorStateList = android.content.res.ColorStateList;
     import KeyEvent = android.view.KeyEvent;
     class View implements Drawable.Callback, KeyEvent.Callback {
+        static class: {
+            getName(): string;
+        };
         static DBG: boolean;
         static VIEW_LOG_TAG: string;
         static PFLAG_WANTS_FOCUS: number;
@@ -995,6 +1034,7 @@ declare module android.view {
         private static NOT_FOCUSABLE;
         private static FOCUSABLE;
         private static FOCUSABLE_MASK;
+        static NO_ID: any;
         static OVER_SCROLL_ALWAYS: number;
         static OVER_SCROLL_IF_CONTENT_SCROLLS: number;
         static OVER_SCROLL_NEVER: number;
@@ -1023,6 +1063,38 @@ declare module android.view {
         static FOCUS_UP: number;
         static FOCUS_RIGHT: number;
         static FOCUS_DOWN: number;
+        static EMPTY_STATE_SET: number[];
+        static ENABLED_STATE_SET: number[];
+        static FOCUSED_STATE_SET: number[];
+        static SELECTED_STATE_SET: number[];
+        static PRESSED_STATE_SET: number[];
+        static WINDOW_FOCUSED_STATE_SET: number[];
+        static ENABLED_FOCUSED_STATE_SET: number[];
+        static ENABLED_SELECTED_STATE_SET: number[];
+        static ENABLED_WINDOW_FOCUSED_STATE_SET: number[];
+        static FOCUSED_SELECTED_STATE_SET: number[];
+        static FOCUSED_WINDOW_FOCUSED_STATE_SET: number[];
+        static SELECTED_WINDOW_FOCUSED_STATE_SET: number[];
+        static ENABLED_FOCUSED_SELECTED_STATE_SET: number[];
+        static ENABLED_FOCUSED_WINDOW_FOCUSED_STATE_SET: number[];
+        static ENABLED_SELECTED_WINDOW_FOCUSED_STATE_SET: number[];
+        static FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET: number[];
+        static ENABLED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET: number[];
+        static PRESSED_WINDOW_FOCUSED_STATE_SET: number[];
+        static PRESSED_SELECTED_STATE_SET: number[];
+        static PRESSED_SELECTED_WINDOW_FOCUSED_STATE_SET: number[];
+        static PRESSED_FOCUSED_STATE_SET: number[];
+        static PRESSED_FOCUSED_WINDOW_FOCUSED_STATE_SET: number[];
+        static PRESSED_FOCUSED_SELECTED_STATE_SET: number[];
+        static PRESSED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET: number[];
+        static PRESSED_ENABLED_STATE_SET: number[];
+        static PRESSED_ENABLED_WINDOW_FOCUSED_STATE_SET: number[];
+        static PRESSED_ENABLED_SELECTED_STATE_SET: number[];
+        static PRESSED_ENABLED_SELECTED_WINDOW_FOCUSED_STATE_SET: number[];
+        static PRESSED_ENABLED_FOCUSED_STATE_SET: number[];
+        static PRESSED_ENABLED_FOCUSED_WINDOW_FOCUSED_STATE_SET: number[];
+        static PRESSED_ENABLED_FOCUSED_SELECTED_STATE_SET: number[];
+        static PRESSED_ENABLED_FOCUSED_SELECTED_WINDOW_FOCUSED_STATE_SET: number[];
         static VIEW_STATE_SETS: Array<Array<number>>;
         static VIEW_STATE_WINDOW_FOCUSED: number;
         static VIEW_STATE_SELECTED: number;
@@ -1031,6 +1103,7 @@ declare module android.view {
         static VIEW_STATE_DISABLE: number;
         static VIEW_STATE_PRESSED: number;
         static VIEW_STATE_ACTIVATED: number;
+        static VIEW_STATE_HOVERED: number;
         static VIEW_STATE_IDS: number[];
         private static _static;
         static CLICKABLE: number;
@@ -1067,6 +1140,7 @@ declare module android.view {
         mMinHeight: number;
         private mTouchDelegate;
         private mFloatingTreeObserver;
+        private mDrawingCacheBackgroundColor;
         mTouchSlop: number;
         private mVerticalScrollFactor;
         private mOverScrollMode;
@@ -1175,7 +1249,7 @@ declare module android.view {
         unFocus(): void;
         hasFocus(): boolean;
         onFocusChanged(gainFocus: boolean, direction: number, previouslyFocusedRect: Rect): void;
-        focusSearchView(direction: number): View;
+        focusSearch(direction: number): View;
         dispatchUnhandledMove(focused: View, direction: number): boolean;
         findUserSetNextFocus(root: View, direction: number): View;
         private findViewInsideOutShouldExist(root, id);
@@ -1185,6 +1259,7 @@ declare module android.view {
         getOnFocusChangeListener(): View.OnFocusChangeListener;
         requestFocus(direction?: number, previouslyFocusedRect?: any): boolean;
         private requestFocusNoSearch(direction, previouslyFocusedRect);
+        requestFocusFromTouch(): boolean;
         private hasAncestorThatBlocksDescendantFocus();
         handleFocusGainInternal(direction: number, previouslyFocusedRect: Rect): void;
         hasTransientState(): boolean;
@@ -1195,13 +1270,17 @@ declare module android.view {
         setVisibility(visibility: number): void;
         dispatchVisibilityChanged(changedView: View, visibility: number): void;
         onVisibilityChanged(changedView: View, visibility: number): void;
+        dispatchDisplayHint(hint: number): void;
+        onDisplayHint(hint: number): void;
         dispatchWindowVisibilityChanged(visibility: number): void;
         onWindowVisibilityChanged(visibility: number): void;
         getWindowVisibility(): number;
         isEnabled(): boolean;
         setEnabled(enabled: boolean): void;
-        dispatchGenericMotionEvent(event: Event): boolean;
-        onGenericMotionEvent(event: Event): boolean;
+        dispatchGenericMotionEvent(event: MotionEvent): boolean;
+        private dispatchGenericMotionEventInternal(event);
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        dispatchGenericPointerEvent(event: MotionEvent): boolean;
         dispatchKeyEvent(event: KeyEvent): boolean;
         setOnKeyListener(l: View.OnKeyListener): void;
         getKeyDispatcherState(): KeyEvent.DispatcherState;
@@ -1212,6 +1291,9 @@ declare module android.view {
         onFilterTouchEventForSecurity(event: MotionEvent): boolean;
         onTouchEvent(event: MotionEvent): boolean;
         isInScrollingContainer(): boolean;
+        cancelPendingInputEvents(): void;
+        dispatchCancelPendingInputEvents(): void;
+        onCancelPendingInputEvents(): void;
         private removeLongPressCallback();
         private removePerformClickCallback();
         private removeUnsetPressCallback();
@@ -1227,10 +1309,13 @@ declare module android.view {
         setOnClickListener(l: View.OnClickListener): void;
         hasOnClickListeners(): boolean;
         setOnLongClickListener(l: View.OnLongClickListener): void;
+        playSoundEffect(soundConstant: number): void;
+        performHapticFeedback(feedbackConstant: number): boolean;
         performClick(event?: MotionEvent): boolean;
         private _sendClickToBindElement(event?);
         callOnClick(): boolean;
         performLongClick(): boolean;
+        performButtonActionOnTouchDown(event: MotionEvent): boolean;
         private checkForLongClick(delayOffset?);
         setOnTouchListener(l: View.OnTouchListener): void;
         isClickable(): boolean;
@@ -1259,8 +1344,10 @@ declare module android.view {
         onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         setFrame(left: number, top: number, right: number, bottom: number): boolean;
         private sizeChange(newWidth, newHeight, oldWidth, oldHeight);
+        getHitRect(outRect: Rect): void;
         getFocusedRect(r: Rect): void;
         getDrawingRect(outRect: Rect): void;
+        getGlobalVisibleRect(r: Rect, globalOffset?: Point): boolean;
         getMeasuredWidth(): number;
         getMeasuredWidthAndState(): number;
         getMeasuredHeight(): number;
@@ -1306,8 +1393,11 @@ declare module android.view {
         isVerticalScrollBarHidden(): boolean;
         onDrawHorizontalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
         onDrawVerticalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
+        isHardwareAccelerated(): boolean;
         setDrawingCacheEnabled(enabled: boolean): void;
         isDrawingCacheEnabled(): boolean;
+        setDrawingCacheBackgroundColor(color: number): void;
+        getDrawingCacheBackgroundColor(): number;
         destroyDrawingCache(): void;
         setWillNotDraw(willNotDraw: boolean): void;
         willNotDraw(): boolean;
@@ -1351,6 +1441,7 @@ declare module android.view {
         getHorizontalFadingEdgeLength(): number;
         getVerticalScrollbarWidth(): number;
         getHorizontalScrollbarHeight(): number;
+        initializeScrollbars(a?: any): void;
         initScrollCache(): void;
         private getScrollCache();
         isHorizontalScrollBarEnabled(): boolean;
@@ -1358,6 +1449,13 @@ declare module android.view {
         isVerticalScrollBarEnabled(): boolean;
         setVerticalScrollBarEnabled(verticalScrollBarEnabled: boolean): void;
         setScrollbarFadingEnabled(fadeScrollbars: boolean): void;
+        setVerticalScrollbarPosition(position: number): void;
+        setHorizontalScrollbarPosition(position: number): void;
+        setScrollBarStyle(position: number): void;
+        getTopFadingEdgeStrength(): number;
+        getBottomFadingEdgeStrength(): number;
+        getLeftFadingEdgeStrength(): number;
+        getRightFadingEdgeStrength(): number;
         isScrollbarFadingEnabled(): boolean;
         getScrollBarDefaultDelayBeforeFade(): number;
         setScrollBarDefaultDelayBeforeFade(scrollBarDefaultDelayBeforeFade: number): void;
@@ -1365,8 +1463,17 @@ declare module android.view {
         setScrollBarFadeDuration(scrollBarFadeDuration: number): void;
         getScrollBarSize(): number;
         setScrollBarSize(scrollBarSize: number): void;
+        hasOpaqueScrollbars(): boolean;
         assignParent(parent: ViewParent): void;
         onFinishInflate(): void;
+        dispatchStartTemporaryDetach(): void;
+        onStartTemporaryDetach(): void;
+        dispatchFinishTemporaryDetach(): void;
+        onFinishTemporaryDetach(): void;
+        dispatchWindowFocusChanged(hasFocus: boolean): void;
+        onWindowFocusChanged(hasWindowFocus: boolean): void;
+        hasWindowFocus(): boolean;
+        getWindowAttachCount(): number;
         isAttachedToWindow(): boolean;
         dispatchAttachedToWindow(info: View.AttachInfo, visibility: number): void;
         onAttachedToWindow(): void;
@@ -1378,6 +1485,7 @@ declare module android.view {
         getRootView(): View;
         findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
         findViewById(id: string): View;
+        findViewTraversal(id: string): View;
         findViewByPredicate(predicate: View.Predicate<View>): View;
         findViewByPredicateInsideOut(start: View, predicate: View.Predicate<View>): View;
         setId(id: string): void;
@@ -1479,7 +1587,7 @@ declare module android.view {
             onKey(v: View, keyCode: number, event: KeyEvent): any;
         }
         interface OnGenericMotionListener {
-            onGenericMotion(v: View, event: Event): any;
+            onGenericMotion(v: View, event: MotionEvent): any;
         }
         interface Predicate<T> {
             apply(t: T): boolean;
@@ -1754,6 +1862,11 @@ declare module android.view {
         static FLAG_SPLIT_MOTION_EVENTS: number;
         static FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW: number;
         static FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET: number;
+        mPersistentDrawingCache: number;
+        static PERSISTENT_NO_CACHE: number;
+        static PERSISTENT_ANIMATION_CACHE: number;
+        static PERSISTENT_SCROLLING_CACHE: number;
+        static PERSISTENT_ALL_CACHES: number;
         static LAYOUT_MODE_UNDEFINED: number;
         static LAYOUT_MODE_CLIP_BOUNDS: number;
         static LAYOUT_MODE_DEFAULT: number;
@@ -1780,6 +1893,7 @@ declare module android.view {
         handleFocusGainInternal(direction: number, previouslyFocusedRect: Rect): void;
         requestChildFocus(child: View, focused: View): void;
         focusableViewAvailable(v: View): void;
+        focusSearch(direction: number): View;
         focusSearch(focused: View, direction: number): View;
         requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
         childHasTransientStateChanged(child: View, childHasTransientState: boolean): void;
@@ -1821,13 +1935,21 @@ declare module android.view {
         private removeViewsInternal(start, count);
         removeAllViews(): void;
         removeAllViewsInLayout(): void;
+        detachViewFromParent(child: View | number): void;
+        removeDetachedView(child: View, animate: boolean): void;
+        attachViewToParent(child: View, index: number, params: ViewGroup.LayoutParams): void;
+        detachViewsFromParent(start: number, count?: number): void;
+        detachAllViewsFromParent(): void;
         indexOfChild(child: View): number;
         getChildCount(): number;
         getChildAt(index: number): View;
         bringChildToFront(child: View): void;
         hasBooleanFlag(flag: number): boolean;
         setBooleanFlag(flag: number, value: boolean): void;
+        dispatchGenericPointerEvent(event: MotionEvent): boolean;
+        private dispatchTransformedGenericPointerEvent(event, child);
         dispatchKeyEvent(event: android.view.KeyEvent): boolean;
+        dispatchWindowFocusChanged(hasFocus: boolean): void;
         addTouchables(views: java.util.ArrayList<android.view.View>): void;
         onInterceptTouchEvent(ev: MotionEvent): boolean;
         dispatchTouchEvent(ev: MotionEvent): boolean;
@@ -1842,6 +1964,13 @@ declare module android.view {
         private static canViewReceivePointerEvents(child);
         isTransformedTouchPointInView(x: number, y: number, child: View, outLocalPoint: Point): boolean;
         private dispatchTransformedTouchEvent(event, cancel, child, desiredPointerIdBits);
+        isAlwaysDrawnWithCacheEnabled(): boolean;
+        setAlwaysDrawnWithCacheEnabled(always: boolean): void;
+        isChildrenDrawnWithCacheEnabled(): boolean;
+        setChildrenDrawnWithCacheEnabled(enabled: boolean): void;
+        setChildrenDrawingCacheEnabled(enabled: boolean): void;
+        getPersistentDrawingCache(): number;
+        setPersistentDrawingCache(drawingCacheToKeep: number): void;
         isChildrenDrawingOrderEnabled(): boolean;
         setChildrenDrawingOrderEnabled(enabled: boolean): void;
         getChildDrawingOrder(childCount: number, i: number): number;
@@ -1855,10 +1984,13 @@ declare module android.view {
         onAttachedToWindow(): void;
         onDetachedFromWindow(): void;
         dispatchDetachedFromWindow(): void;
+        dispatchDisplayHint(hint: number): void;
+        onChildVisibilityChanged(child: View, oldVisibility: number, newVisibility: number): void;
         dispatchVisibilityChanged(changedView: View, visibility: number): void;
         dispatchSetSelected(selected: boolean): void;
         dispatchSetActivated(activated: boolean): void;
         dispatchSetPressed(pressed: boolean): void;
+        dispatchCancelPendingInputEvents(): void;
         offsetDescendantRectToMyCoords(descendant: View, rect: Rect): void;
         offsetRectIntoDescendantCoords(descendant: View, rect: Rect): void;
         offsetRectBetweenParentAndChild(descendant: View, rect: Rect, offsetFromChildToParent: boolean, clipToBounds: boolean): void;
@@ -1866,6 +1998,7 @@ declare module android.view {
         suppressLayout(suppress: boolean): void;
         isLayoutSuppressed(): boolean;
         layout(l: number, t: number, r: number, b: number): void;
+        canAnimate(): boolean;
         abstract onLayout(changed: boolean, l: number, t: number, r: number, b: number): any;
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
         dispatchDraw(canvas: Canvas): void;
@@ -2025,6 +2158,7 @@ declare module android.widget {
         static SCROLL_MODE: number;
         static FLING_MODE: number;
         constructor(interpolator?: Interpolator, flywheel?: boolean);
+        setInterpolator(interpolator: Interpolator): void;
         setFriction(friction: number): void;
         isFinished(): boolean;
         forceFinished(finished: boolean): void;
@@ -2127,7 +2261,7 @@ declare module android.widget {
         onInterceptTouchEvent(ev: MotionEvent): boolean;
         onTouchEvent(ev: MotionEvent): boolean;
         private onSecondaryPointerUp(ev);
-        onGenericMotionEvent(event: Event): boolean;
+        onGenericMotionEvent(event: MotionEvent): boolean;
         onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
         private getScrollRange();
         private findFocusableViewInBounds(topFocus, top, bottom);
@@ -2255,68 +2389,6 @@ declare module android.widget {
         }
     }
 }
-declare module android.widget {
-    import View = android.view.View;
-    import ColorStateList = android.content.res.ColorStateList;
-    class TextView extends View {
-        private static Default_TextSize;
-        private mText;
-        private mHint;
-        private mGravity;
-        private mSingleLine;
-        private mTextSize;
-        private mTextColor;
-        private mCurTextColor;
-        private mHintColor;
-        private mSpacingMult;
-        private mSpacingAdd;
-        private mMaxWidth;
-        private mMaxHeight;
-        private mMaxLineCount;
-        private mMinLineCount;
-        private mTextElement;
-        constructor();
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
-        private initTextElement();
-        initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
-        onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
-        onFinishInflate(): void;
-        onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
-        private getDesiredHeight();
-        onDraw(canvas: android.graphics.Canvas): void;
-        setTextColor(color: number | ColorStateList): void;
-        getTextColors(): ColorStateList;
-        getCurrentTextColor(): number;
-        private updateTextColors();
-        drawableStateChanged(): void;
-        getCompoundPaddingTop(): number;
-        getCompoundPaddingBottom(): number;
-        getCompoundPaddingLeft(): number;
-        getCompoundPaddingRight(): number;
-        setGravity(gravity: number): void;
-        setLineSpacing(add: number, mult: number): void;
-        setTextSizeInPx(sizeInPx: number): void;
-        setTextSize(size: number): void;
-        getLineHeight(): number;
-        setHeight(pixels: number): void;
-        setMaxLines(max: number): void;
-        getMaxLines(): number;
-        setMaxHeight(maxHeight: number): void;
-        getMaxHeight(): number;
-        setMaxWidth(maxpixels: number): void;
-        getMaxWidth(): number;
-        setWidth(pixels: number): void;
-        setMinLines(min: number): void;
-        getMinLines(): number;
-        setSingleLine(singleLine?: boolean): void;
-        setLines(lines: number): void;
-        setText(text?: string): void;
-        getText(): string;
-        setHtml(html: string): void;
-        getHtml(): string;
-        getTextElement(): HTMLElement;
-    }
-}
 declare module android.graphics.drawable {
     import Canvas = android.graphics.Canvas;
     import Rect = android.graphics.Rect;
@@ -2433,6 +2505,82 @@ declare module android.graphics.drawable {
         mutate(): Drawable;
     }
 }
+declare module android.R {
+    import ColorStateList = android.content.res.ColorStateList;
+    class color {
+        static textView_textColor: ColorStateList;
+    }
+}
+declare module android.widget {
+    import View = android.view.View;
+    import ColorStateList = android.content.res.ColorStateList;
+    class TextView extends View {
+        private static Default_TextSize;
+        private mText;
+        private mHint;
+        private mGravity;
+        private mSingleLine;
+        private mTextSize;
+        private mTextColor;
+        private mCurTextColor;
+        private mHintColor;
+        private mSpacingMult;
+        private mSpacingAdd;
+        private mMaxWidth;
+        private mMaxHeight;
+        private mMaxLineCount;
+        private mMinLineCount;
+        private mTextElement;
+        constructor();
+        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
+        private initTextElement();
+        initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
+        onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        onFinishInflate(): void;
+        onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        private getDesiredHeight();
+        onDraw(canvas: android.graphics.Canvas): void;
+        setTextColor(color: number | ColorStateList): void;
+        getTextColors(): ColorStateList;
+        getCurrentTextColor(): number;
+        private updateTextColors();
+        drawableStateChanged(): void;
+        getCompoundPaddingTop(): number;
+        getCompoundPaddingBottom(): number;
+        getCompoundPaddingLeft(): number;
+        getCompoundPaddingRight(): number;
+        setGravity(gravity: number): void;
+        setLineSpacing(add: number, mult: number): void;
+        setTextSizeInPx(sizeInPx: number): void;
+        setTextSize(size: number): void;
+        getLineHeight(): number;
+        setHeight(pixels: number): void;
+        setMaxLines(max: number): void;
+        getMaxLines(): number;
+        setMaxHeight(maxHeight: number): void;
+        getMaxHeight(): number;
+        setMaxWidth(maxpixels: number): void;
+        getMaxWidth(): number;
+        setWidth(pixels: number): void;
+        setMinLines(min: number): void;
+        getMinLines(): number;
+        setSingleLine(singleLine?: boolean): void;
+        setLines(lines: number): void;
+        setText(text?: string): void;
+        getText(): string;
+        setHtml(html: string): void;
+        getHtml(): string;
+        getTextElement(): HTMLElement;
+    }
+}
+declare module android.R {
+    import Drawable = android.graphics.drawable.Drawable;
+    class drawable {
+        static button_background: Drawable;
+        static list_selector_background: Drawable;
+        static list_divider: Drawable;
+    }
+}
 declare module android.widget {
     class Button extends TextView {
         constructor();
@@ -2494,6 +2642,775 @@ declare module android.widget {
         }
     }
 }
+declare module android.util {
+    class MathUtils {
+        private static DEG_TO_RAD;
+        private static RAD_TO_DEG;
+        constructor();
+        static abs(v: number): number;
+        static constrain(amount: number, low: number, high: number): number;
+        static log(a: number): number;
+        static exp(a: number): number;
+        static pow(a: number, b: number): number;
+        static max(a: number, b: number, c?: number): number;
+        static min(a: number, b: number, c?: number): number;
+        static dist(x1: number, y1: number, x2: number, y2: number): number;
+        static dist3(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number): number;
+        static mag(a: number, b: number, c?: number): number;
+        static sq(v: number): number;
+        static radians(degrees: number): number;
+        static degrees(radians: number): number;
+        static acos(value: number): number;
+        static asin(value: number): number;
+        static atan(value: number): number;
+        static atan2(a: number, b: number): number;
+        static tan(angle: number): number;
+        static lerp(start: number, stop: number, amount: number): number;
+        static norm(start: number, stop: number, value: number): number;
+        static map(minStart: number, minStop: number, maxStart: number, maxStop: number, value: number): number;
+        static random(howbig: number): number;
+        static random(howsmall: number, howbig: number): number;
+    }
+}
+declare module android.util {
+    class SparseBooleanArray extends SparseArray<boolean> {
+    }
+}
+declare module android.view {
+    class SoundEffectConstants {
+        static CLICK: number;
+        static NAVIGATION_LEFT: number;
+        static NAVIGATION_UP: number;
+        static NAVIGATION_RIGHT: number;
+        static NAVIGATION_DOWN: number;
+        static getContantForFocusDirection(direction: number): number;
+    }
+}
+declare module android.os {
+    class Trace {
+        private static TAG;
+        static TRACE_TAG_NEVER: number;
+        static TRACE_TAG_ALWAYS: number;
+        static TRACE_TAG_GRAPHICS: number;
+        static TRACE_TAG_INPUT: number;
+        static TRACE_TAG_VIEW: number;
+        static TRACE_TAG_WEBVIEW: number;
+        static TRACE_TAG_WINDOW_MANAGER: number;
+        static TRACE_TAG_ACTIVITY_MANAGER: number;
+        static TRACE_TAG_SYNC_MANAGER: number;
+        static TRACE_TAG_AUDIO: number;
+        static TRACE_TAG_VIDEO: number;
+        static TRACE_TAG_CAMERA: number;
+        static TRACE_TAG_HAL: number;
+        static TRACE_TAG_APP: number;
+        static TRACE_TAG_RESOURCES: number;
+        static TRACE_TAG_DALVIK: number;
+        static TRACE_TAG_RS: number;
+        private static TRACE_TAG_NOT_READY;
+        private static MAX_SECTION_NAME_LEN;
+        private static sEnabledTags;
+        private static nativeGetEnabledTags();
+        private static nativeTraceCounter(tag, name, value);
+        private static nativeTraceBegin(tag, name);
+        private static nativeTraceEnd(tag);
+        private static nativeAsyncTraceBegin(tag, name, cookie);
+        private static nativeAsyncTraceEnd(tag, name, cookie);
+        private static nativeSetAppTracingAllowed(allowed);
+        private static nativeSetTracingEnabled(allowed);
+        private static cacheEnabledTags();
+        static isTagEnabled(traceTag: number): boolean;
+        static traceCounter(traceTag: number, counterName: string, counterValue: number): void;
+        static setAppTracingAllowed(allowed: boolean): void;
+        static setTracingEnabled(enabled: boolean): void;
+        static traceBegin(traceTag: number, methodName: string): void;
+        static traceEnd(traceTag: number): void;
+        static asyncTraceBegin(traceTag: number, methodName: string, cookie: number): void;
+        static asyncTraceEnd(traceTag: number, methodName: string, cookie: number): void;
+        static beginSection(sectionName: string): void;
+        static endSection(): void;
+    }
+}
+declare module java.lang {
+    class Integer {
+        static MIN_VALUE: number;
+        static MAX_VALUE: number;
+    }
+}
+declare module android.text {
+    class InputType {
+        static TYPE_MASK_CLASS: number;
+        static TYPE_MASK_VARIATION: number;
+        static TYPE_MASK_FLAGS: number;
+        static TYPE_NULL: number;
+        static TYPE_CLASS_TEXT: number;
+        static TYPE_TEXT_FLAG_CAP_CHARACTERS: number;
+        static TYPE_TEXT_FLAG_CAP_WORDS: number;
+        static TYPE_TEXT_FLAG_CAP_SENTENCES: number;
+        static TYPE_TEXT_FLAG_AUTO_CORRECT: number;
+        static TYPE_TEXT_FLAG_AUTO_COMPLETE: number;
+        static TYPE_TEXT_FLAG_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_IME_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_NO_SUGGESTIONS: number;
+        static TYPE_TEXT_VARIATION_NORMAL: number;
+        static TYPE_TEXT_VARIATION_URI: number;
+        static TYPE_TEXT_VARIATION_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_EMAIL_SUBJECT: number;
+        static TYPE_TEXT_VARIATION_SHORT_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_LONG_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_PERSON_NAME: number;
+        static TYPE_TEXT_VARIATION_POSTAL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_VISIBLE_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_WEB_EDIT_TEXT: number;
+        static TYPE_TEXT_VARIATION_FILTER: number;
+        static TYPE_TEXT_VARIATION_PHONETIC: number;
+        static TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_WEB_PASSWORD: number;
+        static TYPE_CLASS_NUMBER: number;
+        static TYPE_NUMBER_FLAG_SIGNED: number;
+        static TYPE_NUMBER_FLAG_DECIMAL: number;
+        static TYPE_NUMBER_VARIATION_NORMAL: number;
+        static TYPE_NUMBER_VARIATION_PASSWORD: number;
+        static TYPE_CLASS_PHONE: number;
+        static TYPE_CLASS_DATETIME: number;
+        static TYPE_DATETIME_VARIATION_NORMAL: number;
+        static TYPE_DATETIME_VARIATION_DATE: number;
+        static TYPE_DATETIME_VARIATION_TIME: number;
+    }
+}
+declare module android.text {
+    class TextUtils {
+        static isEmpty(str: string): boolean;
+    }
+}
+declare module android.util {
+    class LongSparseArray<T> extends SparseArray<T> {
+    }
+}
+declare module android.view {
+    class HapticFeedbackConstants {
+        static LONG_PRESS: number;
+        static VIRTUAL_KEY: number;
+        static KEYBOARD_TAP: number;
+        static SAFE_MODE_DISABLED: number;
+        static SAFE_MODE_ENABLED: number;
+        static FLAG_IGNORE_VIEW_SETTING: number;
+        static FLAG_IGNORE_GLOBAL_SETTING: number;
+    }
+}
+declare module android.database {
+    class DataSetObserver {
+        onChanged(): void;
+        onInvalidated(): void;
+    }
+}
+declare module java.lang {
+    class Long {
+        static MIN_VALUE: number;
+        static MAX_VALUE: number;
+    }
+}
+declare module android.widget {
+    import DataSetObserver = android.database.DataSetObserver;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    abstract class AdapterView<T extends Adapter> extends ViewGroup {
+        static ITEM_VIEW_TYPE_IGNORE: number;
+        static ITEM_VIEW_TYPE_HEADER_OR_FOOTER: number;
+        mFirstPosition: number;
+        mSpecificTop: number;
+        mSyncPosition: number;
+        mSyncRowId: number;
+        mSyncHeight: number;
+        mNeedSync: boolean;
+        mSyncMode: number;
+        private mLayoutHeight;
+        static SYNC_SELECTED_POSITION: number;
+        static SYNC_FIRST_POSITION: number;
+        static SYNC_MAX_DURATION_MILLIS: number;
+        mInLayout: boolean;
+        private mOnItemSelectedListener;
+        private mOnItemClickListener;
+        mOnItemLongClickListener: AdapterView.OnItemLongClickListener;
+        mDataChanged: boolean;
+        mNextSelectedPosition: number;
+        mNextSelectedRowId: number;
+        mSelectedPosition: number;
+        mSelectedRowId: number;
+        private mEmptyView;
+        mItemCount: number;
+        mOldItemCount: number;
+        static INVALID_POSITION: number;
+        static INVALID_ROW_ID: number;
+        mOldSelectedPosition: number;
+        mOldSelectedRowId: number;
+        private mDesiredFocusableState;
+        private mDesiredFocusableInTouchModeState;
+        private mSelectionNotifier;
+        mBlockLayoutRequests: boolean;
+        setOnItemClickListener(listener: AdapterView.OnItemClickListener): void;
+        getOnItemClickListener(): AdapterView.OnItemClickListener;
+        performItemClick(view: View, position: number, id: number): boolean;
+        setOnItemLongClickListener(listener: AdapterView.OnItemLongClickListener): void;
+        getOnItemLongClickListener(): AdapterView.OnItemLongClickListener;
+        setOnItemSelectedListener(listener: AdapterView.OnItemSelectedListener): void;
+        getOnItemSelectedListener(): AdapterView.OnItemSelectedListener;
+        abstract getAdapter(): T;
+        abstract setAdapter(adapter: T): void;
+        addView(...args: any[]): void;
+        removeView(child: View): void;
+        removeViewAt(index: number): void;
+        removeAllViews(): void;
+        onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        getSelectedItemPosition(): number;
+        getSelectedItemId(): number;
+        abstract getSelectedView(): View;
+        getSelectedItem(): any;
+        getCount(): number;
+        getPositionForView(view: View): number;
+        getFirstVisiblePosition(): number;
+        getLastVisiblePosition(): number;
+        abstract setSelection(position: number): void;
+        setEmptyView(emptyView: View): void;
+        getEmptyView(): View;
+        isInFilterMode(): boolean;
+        setFocusable(focusable: boolean): void;
+        setFocusableInTouchMode(focusable: boolean): void;
+        checkFocus(): void;
+        private updateEmptyStatus(empty);
+        getItemAtPosition(position: number): any;
+        getItemIdAtPosition(position: number): number;
+        setOnClickListener(l: View.OnClickListener): void;
+        onDetachedFromWindow(): void;
+        private selectionChanged();
+        private fireOnSelected();
+        private performAccessibilityActionsOnSelected();
+        private isScrollableForAccessibility();
+        canAnimate(): boolean;
+        handleDataChanged(): void;
+        checkSelectionChanged(): void;
+        findSyncPosition(): number;
+        lookForSelectablePosition(position: number, lookDown: boolean): number;
+        setSelectedPositionInt(position: number): void;
+        setNextSelectedPositionInt(position: number): void;
+        rememberSyncState(): void;
+    }
+    module AdapterView {
+        interface OnItemClickListener {
+            onItemClick(parent: AdapterView<any>, view: View, position: number, id: number): void;
+        }
+        interface OnItemLongClickListener {
+            onItemLongClick(parent: AdapterView<any>, view: View, position: number, id: number): boolean;
+        }
+        interface OnItemSelectedListener {
+            onItemSelected(parent: AdapterView<any>, view: View, position: number, id: number): void;
+            onNothingSelected(parent: AdapterView<any>): void;
+        }
+        class AdapterDataSetObserver extends DataSetObserver {
+            AdapterView_this: AdapterView<any>;
+            constructor(AdapterView_this: AdapterView<any>);
+            onChanged(): void;
+            onInvalidated(): void;
+            clearSavedState(): void;
+        }
+    }
+}
+declare module android.widget {
+    import DataSetObserver = android.database.DataSetObserver;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    interface Adapter {
+        registerDataSetObserver(observer: DataSetObserver): void;
+        unregisterDataSetObserver(observer: DataSetObserver): void;
+        getCount(): number;
+        getItem(position: number): any;
+        getItemId(position: number): number;
+        hasStableIds(): boolean;
+        getView(position: number, convertView: View, parent: ViewGroup): View;
+        getItemViewType(position: number): number;
+        getViewTypeCount(): number;
+        isEmpty(): boolean;
+    }
+    module Adapter {
+        var IGNORE_ITEM_VIEW_TYPE: number;
+        var NO_SELECTION: number;
+    }
+}
+declare module android.widget {
+    interface Checkable {
+        setChecked(checked: boolean): void;
+        isChecked(): boolean;
+        toggle(): void;
+    }
+}
+declare module android.widget {
+    import Adapter = android.widget.Adapter;
+    interface ListAdapter extends Adapter {
+        areAllItemsEnabled(): boolean;
+        isEnabled(position: number): boolean;
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import Drawable = android.graphics.drawable.Drawable;
+    import SparseBooleanArray = android.util.SparseBooleanArray;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import ViewTreeObserver = android.view.ViewTreeObserver;
+    import Interpolator = android.view.animation.Interpolator;
+    import ArrayList = java.util.ArrayList;
+    import List = java.util.List;
+    import Runnable = java.lang.Runnable;
+    import AdapterView = android.widget.AdapterView;
+    import ListAdapter = android.widget.ListAdapter;
+    import OverScroller = android.widget.OverScroller;
+    abstract class AbsListView extends AdapterView<ListAdapter> implements ViewTreeObserver.OnGlobalLayoutListener, ViewTreeObserver.OnTouchModeChangeListener {
+        static TAG_AbsListView: string;
+        static TRANSCRIPT_MODE_DISABLED: number;
+        static TRANSCRIPT_MODE_NORMAL: number;
+        static TRANSCRIPT_MODE_ALWAYS_SCROLL: number;
+        static TOUCH_MODE_REST: number;
+        static TOUCH_MODE_DOWN: number;
+        static TOUCH_MODE_TAP: number;
+        static TOUCH_MODE_DONE_WAITING: number;
+        static TOUCH_MODE_SCROLL: number;
+        static TOUCH_MODE_FLING: number;
+        private static TOUCH_MODE_OVERSCROLL;
+        static TOUCH_MODE_OVERFLING: number;
+        static LAYOUT_NORMAL: number;
+        static LAYOUT_FORCE_TOP: number;
+        static LAYOUT_SET_SELECTION: number;
+        static LAYOUT_FORCE_BOTTOM: number;
+        static LAYOUT_SPECIFIC: number;
+        static LAYOUT_SYNC: number;
+        static LAYOUT_MOVE_SELECTION: number;
+        static CHOICE_MODE_NONE: number;
+        static CHOICE_MODE_SINGLE: number;
+        static CHOICE_MODE_MULTIPLE: number;
+        static CHOICE_MODE_MULTIPLE_MODAL: number;
+        mChoiceMode: number;
+        private mChoiceActionMode;
+        private mCheckedItemCount;
+        mCheckStates: SparseBooleanArray;
+        private mCheckedIdStates;
+        mDataSetObserver: AbsListView.AdapterDataSetObserver;
+        mAdapter: ListAdapter;
+        private mAdapterHasStableIds;
+        private mDeferNotifyDataSetChanged;
+        private mDrawSelectorOnTop;
+        private mSelector;
+        private mSelectorPosition;
+        mSelectorRect: Rect;
+        mRecycler: AbsListView.RecycleBin;
+        private mSelectionLeftPadding;
+        private mSelectionTopPadding;
+        private mSelectionRightPadding;
+        private mSelectionBottomPadding;
+        mListPadding: Rect;
+        mWidthMeasureSpec: number;
+        private mScrollUp;
+        private mScrollDown;
+        mCachingStarted: boolean;
+        mCachingActive: boolean;
+        mMotionPosition: number;
+        private mMotionViewOriginalTop;
+        private mMotionViewNewTop;
+        private mMotionX;
+        private mMotionY;
+        mTouchMode: number;
+        private mLastY;
+        private mMotionCorrection;
+        private mVelocityTracker;
+        mFlingRunnable: AbsListView.FlingRunnable;
+        mPositionScroller: AbsListView.PositionScroller;
+        mSelectedTop: number;
+        mStackFromBottom: boolean;
+        private mScrollingCacheEnabled;
+        private mFastScrollEnabled;
+        private mFastScrollAlwaysVisible;
+        private mOnScrollListener;
+        private mSmoothScrollbarEnabled;
+        private mTextFilterEnabled;
+        private mFiltered;
+        private mTouchFrame;
+        mResurrectToPosition: number;
+        private mOverscrollMax;
+        private static OVERSCROLL_LIMIT_DIVISOR;
+        private static CHECK_POSITION_SEARCH_DISTANCE;
+        private static TOUCH_MODE_UNKNOWN;
+        private static TOUCH_MODE_ON;
+        private static TOUCH_MODE_OFF;
+        private mLastTouchMode;
+        private static PROFILE_SCROLLING;
+        private mScrollProfilingStarted;
+        static PROFILE_FLINGING: boolean;
+        private mFlingProfilingStarted;
+        private mPendingCheckForLongPress_List;
+        private mPendingCheckForTap_;
+        private mPendingCheckForKeyLongPress;
+        private mPerformClick_;
+        mTouchModeReset: Runnable;
+        private mTranscriptMode;
+        private mCacheColorHint;
+        private mIsChildViewEnabled;
+        private mLastScrollState;
+        private mGlobalLayoutListenerAddedFilter;
+        private mDensityScale;
+        private mClearScrollingCache;
+        mPositionScrollAfterLayout: Runnable;
+        private mMinimumVelocity;
+        private mMaximumVelocity;
+        private mVelocityScale;
+        mIsScrap: boolean[];
+        private mPopupHidden;
+        private mActivePointerId;
+        static INVALID_POINTER: number;
+        private mOverscrollDistance;
+        private mOverflingDistance;
+        private mFirstPositionDistanceGuess;
+        private mLastPositionDistanceGuess;
+        private mDirection;
+        private mForceTranscriptScroll;
+        private mGlowPaddingLeft;
+        private mGlowPaddingRight;
+        private mLastHandledItemCount;
+        static sLinearInterpolator: Interpolator;
+        private mPendingSync;
+        constructor();
+        private initAbsListView();
+        setOverScrollMode(mode: number): void;
+        setAdapter(adapter: ListAdapter): void;
+        getCheckedItemCount(): number;
+        isItemChecked(position: number): boolean;
+        getCheckedItemPosition(): number;
+        getCheckedItemPositions(): SparseBooleanArray;
+        getCheckedItemIds(): number[];
+        clearChoices(): void;
+        setItemChecked(position: number, value: boolean): void;
+        performItemClick(view: View, position: number, id: number): boolean;
+        private updateOnScreenCheckedViews();
+        getChoiceMode(): number;
+        setChoiceMode(choiceMode: number): void;
+        private contentFits();
+        setFastScrollEnabled(enabled: boolean): void;
+        private setFastScrollerEnabledUiThread(enabled);
+        setFastScrollAlwaysVisible(alwaysShow: boolean): void;
+        private setFastScrollerAlwaysVisibleUiThread(alwaysShow);
+        private isOwnerThread();
+        isFastScrollAlwaysVisible(): boolean;
+        getVerticalScrollbarWidth(): number;
+        isFastScrollEnabled(): boolean;
+        setVerticalScrollbarPosition(position: number): void;
+        setScrollBarStyle(style: number): void;
+        isVerticalScrollBarHidden(): boolean;
+        setSmoothScrollbarEnabled(enabled: boolean): void;
+        isSmoothScrollbarEnabled(): boolean;
+        setOnScrollListener(l: AbsListView.OnScrollListener): void;
+        invokeOnItemScrollListener(): void;
+        isScrollingCacheEnabled(): boolean;
+        setScrollingCacheEnabled(enabled: boolean): void;
+        setTextFilterEnabled(textFilterEnabled: boolean): void;
+        isTextFilterEnabled(): boolean;
+        getFocusedRect(r: Rect): void;
+        private useDefaultSelector();
+        isStackFromBottom(): boolean;
+        setStackFromBottom(stackFromBottom: boolean): void;
+        private requestLayoutIfNecessary();
+        onFocusChanged(gainFocus: boolean, direction: number, previouslyFocusedRect: Rect): void;
+        requestLayout(): void;
+        resetList(): void;
+        computeVerticalScrollExtent(): number;
+        computeVerticalScrollOffset(): number;
+        computeVerticalScrollRange(): number;
+        getTopFadingEdgeStrength(): number;
+        getBottomFadingEdgeStrength(): number;
+        onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        setFrame(left: number, top: number, right: number, bottom: number): boolean;
+        layoutChildren(): void;
+        updateScrollIndicators(): void;
+        getSelectedView(): View;
+        getListPaddingTop(): number;
+        getListPaddingBottom(): number;
+        getListPaddingLeft(): number;
+        getListPaddingRight(): number;
+        obtainView(position: number, isScrap: boolean[]): View;
+        positionSelector(l: number, t: number, r: number, b: number): void;
+        positionSelector(position: number, sel: View): void;
+        dispatchDraw(canvas: Canvas): void;
+        isPaddingOffsetRequired(): boolean;
+        getLeftPaddingOffset(): number;
+        getTopPaddingOffset(): number;
+        getRightPaddingOffset(): number;
+        getBottomPaddingOffset(): number;
+        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        private touchModeDrawsInPressedState();
+        shouldShowSelector(): boolean;
+        private drawSelector(canvas);
+        setDrawSelectorOnTop(onTop: boolean): void;
+        setSelector(sel: Drawable): void;
+        getSelector(): Drawable;
+        keyPressed(): void;
+        setScrollIndicators(up: View, down: View): void;
+        private updateSelectorState();
+        drawableStateChanged(): void;
+        onCreateDrawableState(extraSpace: number): number[];
+        verifyDrawable(dr: Drawable): boolean;
+        jumpDrawablesToCurrentState(): void;
+        onAttachedToWindow(): void;
+        onDetachedFromWindow(): void;
+        onWindowFocusChanged(hasWindowFocus: boolean): void;
+        onCancelPendingInputEvents(): void;
+        private performLongPress(child, longPressPosition, longPressId);
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+        dispatchSetPressed(pressed: boolean): void;
+        pointToPosition(x: number, y: number): number;
+        pointToRowId(x: number, y: number): number;
+        private startScrollIfNeeded(y);
+        private scrollIfNeeded(y);
+        onTouchModeChanged(isInTouchMode: boolean): void;
+        onTouchEvent(ev: MotionEvent): boolean;
+        private onTouchDown(ev);
+        private onTouchMove(ev);
+        private onTouchUp(ev);
+        private onTouchCancel();
+        onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        draw(canvas: Canvas): void;
+        setOverScrollEffectPadding(leftPadding: number, rightPadding: number): void;
+        private initOrResetVelocityTracker();
+        private initVelocityTrackerIfNotExists();
+        private recycleVelocityTracker();
+        requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
+        onInterceptTouchEvent(ev: MotionEvent): boolean;
+        private onSecondaryPointerUp(ev);
+        addTouchables(views: ArrayList<View>): void;
+        private reportScrollStateChange(newState);
+        setFriction(friction: number): void;
+        setVelocityScale(scale: number): void;
+        smoothScrollToPositionFromTop(position: number, offset: number, duration?: number): void;
+        smoothScrollToPosition(position: number, boundPosition?: number): void;
+        smoothScrollBy(distance: number, duration: number, linear?: boolean): void;
+        smoothScrollByOffset(position: number): void;
+        private createScrollingCache();
+        private clearScrollingCache();
+        scrollListBy(y: number): void;
+        canScrollList(direction: number): boolean;
+        private trackMotionScroll(deltaY, incrementalDeltaY);
+        getHeaderViewsCount(): number;
+        getFooterViewsCount(): number;
+        abstract fillGap(down: boolean): void;
+        hideSelector(): void;
+        reconcileSelectedPosition(): number;
+        abstract findMotionRow(y: number): number;
+        private findClosestMotionRow(y);
+        invalidateViews(): void;
+        resurrectSelectionIfNeeded(): boolean;
+        abstract setSelectionInt(position: number): void;
+        private resurrectSelection();
+        private confirmCheckedPositionsById();
+        handleDataChanged(): void;
+        onDisplayHint(hint: number): void;
+        private dismissPopup();
+        private showPopup();
+        private positionPopup();
+        static getDistance(source: Rect, dest: Rect, direction: number): number;
+        isInFilterMode(): boolean;
+        hasTextFilter(): boolean;
+        onGlobalLayout(): void;
+        generateDefaultLayoutParams(): ViewGroup.LayoutParams;
+        generateLayoutParams(p: ViewGroup.LayoutParams): ViewGroup.LayoutParams;
+        checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
+        setTranscriptMode(mode: number): void;
+        getTranscriptMode(): number;
+        getSolidColor(): number;
+        setCacheColorHint(color: number): void;
+        getCacheColorHint(): number;
+        reclaimViews(views: List<View>): void;
+        private finishGlows();
+        setVisibleRangeHint(start: number, end: number): void;
+        setRecyclerListener(listener: AbsListView.RecyclerListener): void;
+        static retrieveFromScrap(scrapViews: ArrayList<View>, position: number): View;
+    }
+    module AbsListView {
+        interface OnScrollListener {
+            onScrollStateChanged(view: AbsListView, scrollState: number): void;
+            onScroll(view: AbsListView, firstVisibleItem: number, visibleItemCount: number, totalItemCount: number): void;
+        }
+        module OnScrollListener {
+            var SCROLL_STATE_IDLE: number;
+            var SCROLL_STATE_TOUCH_SCROLL: number;
+            var SCROLL_STATE_FLING: number;
+        }
+        interface SelectionBoundsAdjuster {
+            adjustListItemSelectionBounds(bounds: Rect): void;
+        }
+        class WindowRunnnable {
+            _AbsListView_this: AbsListView;
+            constructor(arg: AbsListView);
+            private mOriginalAttachCount;
+            rememberWindowAttachCount(): void;
+            sameWindow(): boolean;
+        }
+        class PerformClick extends AbsListView.WindowRunnnable implements Runnable {
+            _AbsListView_this: AbsListView;
+            constructor(arg: AbsListView);
+            mClickMotionPosition: number;
+            run(): void;
+        }
+        class CheckForLongPress extends AbsListView.WindowRunnnable implements Runnable {
+            _AbsListView_this: AbsListView;
+            constructor(arg: AbsListView);
+            run(): void;
+        }
+        class CheckForKeyLongPress extends AbsListView.WindowRunnnable implements Runnable {
+            _AbsListView_this: AbsListView;
+            constructor(arg: AbsListView);
+            run(): void;
+        }
+        class CheckForTap implements Runnable {
+            _AbsListView_this: AbsListView;
+            constructor(arg: AbsListView);
+            run(): void;
+        }
+        class FlingRunnable implements Runnable {
+            _AbsListView_this: AbsListView;
+            constructor(arg: AbsListView);
+            mScroller: OverScroller;
+            private mLastFlingY;
+            private mCheckFlywheel;
+            static FLYWHEEL_TIMEOUT: number;
+            start(initialVelocity: number): void;
+            startSpringback(): void;
+            startOverfling(initialVelocity: number): void;
+            private edgeReached(delta);
+            startScroll(distance: number, duration: number, linear: boolean): void;
+            endFling(): void;
+            flywheelTouch(): void;
+            run(): void;
+        }
+        class PositionScroller implements Runnable {
+            _AbsListView_this: AbsListView;
+            constructor(arg: AbsListView);
+            private static SCROLL_DURATION;
+            private static MOVE_DOWN_POS;
+            private static MOVE_UP_POS;
+            private static MOVE_DOWN_BOUND;
+            private static MOVE_UP_BOUND;
+            private static MOVE_OFFSET;
+            private mMode;
+            private mTargetPos;
+            private mBoundPos;
+            private mLastSeenPos;
+            private mScrollDuration;
+            private mExtraScroll;
+            private mOffsetFromTop;
+            start(position: number): void;
+            start(position: number, boundPosition: number): void;
+            private _start_1(position);
+            private _start_2(position, boundPosition);
+            startWithOffset(position: number, offset: number, duration?: number): void;
+            private scrollToVisible(targetPos, boundPos, duration);
+            stop(): void;
+            run(): void;
+        }
+        class AdapterDataSetObserver extends AdapterView.AdapterDataSetObserver {
+            _AbsListView_this: AbsListView;
+            constructor(arg: any);
+            onChanged(): void;
+            onInvalidated(): void;
+        }
+        class LayoutParams extends ViewGroup.LayoutParams {
+            viewType: number;
+            recycledHeaderFooter: boolean;
+            forceAdd: boolean;
+            scrappedFromPosition: number;
+            itemId: number;
+            constructor();
+            constructor(w: number, h: number);
+            constructor(w: number, h: number, viewType: number);
+            constructor(source: ViewGroup.LayoutParams);
+        }
+        interface RecyclerListener {
+            onMovedToScrapHeap(view: View): void;
+        }
+        class RecycleBin {
+            _AbsListView_this: AbsListView;
+            constructor(arg: AbsListView);
+            mRecyclerListener: AbsListView.RecyclerListener;
+            private mFirstActivePosition;
+            mActiveViews: View[];
+            private mScrapViews;
+            private mViewTypeCount;
+            private mCurrentScrap;
+            private mSkippedScrap;
+            private mTransientStateViews;
+            private mTransientStateViewsById;
+            setViewTypeCount(viewTypeCount: number): void;
+            markChildrenDirty(): void;
+            shouldRecycleViewType(viewType: number): boolean;
+            clear(): void;
+            fillActiveViews(childCount: number, firstActivePosition: number): void;
+            getActiveView(position: number): View;
+            getTransientStateView(position: number): View;
+            clearTransientStateViews(): void;
+            getScrapView(position: number): View;
+            addScrapView(scrap: View, position: number): void;
+            removeSkippedScrap(): void;
+            scrapActiveViews(): void;
+            private pruneScrapViews();
+            reclaimScrapViews(views: List<View>): void;
+            setCacheColorHint(color: number): void;
+        }
+    }
+}
+declare module android.widget {
+    import ListAdapter = android.widget.ListAdapter;
+    interface WrapperListAdapter extends ListAdapter {
+        getWrappedAdapter(): ListAdapter;
+    }
+}
+declare module android.widget {
+    import DataSetObserver = android.database.DataSetObserver;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import ArrayList = java.util.ArrayList;
+    import ListAdapter = android.widget.ListAdapter;
+    import ListView = android.widget.ListView;
+    import WrapperListAdapter = android.widget.WrapperListAdapter;
+    class HeaderViewListAdapter implements WrapperListAdapter {
+        private mAdapter;
+        mHeaderViewInfos: ArrayList<ListView.FixedViewInfo>;
+        mFooterViewInfos: ArrayList<ListView.FixedViewInfo>;
+        static EMPTY_INFO_LIST: ArrayList<ListView.FixedViewInfo>;
+        mAreAllFixedViewsSelectable: boolean;
+        private mIsFilterable;
+        constructor(headerViewInfos: ArrayList<ListView.FixedViewInfo>, footerViewInfos: ArrayList<ListView.FixedViewInfo>, adapter: ListAdapter);
+        getHeadersCount(): number;
+        getFootersCount(): number;
+        isEmpty(): boolean;
+        private areAllListInfosSelectable(infos);
+        removeHeader(v: View): boolean;
+        removeFooter(v: View): boolean;
+        getCount(): number;
+        areAllItemsEnabled(): boolean;
+        isEnabled(position: number): boolean;
+        getItem(position: number): any;
+        getItemId(position: number): number;
+        hasStableIds(): boolean;
+        getView(position: number, convertView: View, parent: ViewGroup): View;
+        getItemViewType(position: number): number;
+        getViewTypeCount(): number;
+        registerDataSetObserver(observer: DataSetObserver): void;
+        unregisterDataSetObserver(observer: DataSetObserver): void;
+        getFilter(): any;
+        getWrappedAdapter(): ListAdapter;
+    }
+}
 declare module android.database {
     import ArrayList = java.util.ArrayList;
     abstract class Observable<T> {
@@ -2504,17 +3421,202 @@ declare module android.database {
     }
 }
 declare module android.database {
-    class DataSetObserver {
-        onChanged(): void;
-        onInvalidated(): void;
-    }
-}
-declare module android.database {
     import Observable = android.database.Observable;
     import DataSetObserver = android.database.DataSetObserver;
     class DataSetObservable extends Observable<DataSetObserver> {
         notifyChanged(): void;
         notifyInvalidated(): void;
+    }
+}
+declare module android.widget {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Adapter = android.widget.Adapter;
+    interface SpinnerAdapter extends Adapter {
+        getDropDownView(position: number, convertView: View, parent: ViewGroup): View;
+    }
+}
+declare module android.widget {
+    import DataSetObserver = android.database.DataSetObserver;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import ListAdapter = android.widget.ListAdapter;
+    import SpinnerAdapter = android.widget.SpinnerAdapter;
+    abstract class BaseAdapter implements ListAdapter, SpinnerAdapter {
+        private mDataSetObservable;
+        hasStableIds(): boolean;
+        registerDataSetObserver(observer: DataSetObserver): void;
+        unregisterDataSetObserver(observer: DataSetObserver): void;
+        notifyDataSetChanged(): void;
+        notifyDataSetInvalidated(): void;
+        areAllItemsEnabled(): boolean;
+        isEnabled(position: number): boolean;
+        getDropDownView(position: number, convertView: View, parent: ViewGroup): View;
+        getItemViewType(position: number): number;
+        getViewTypeCount(): number;
+        isEmpty(): boolean;
+        abstract getView(position: number, convertView: View, parent: ViewGroup): View;
+        abstract getCount(): number;
+        abstract getItem(position: number): any;
+        abstract getItemId(position: number): number;
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import Drawable = android.graphics.drawable.Drawable;
+    import KeyEvent = android.view.KeyEvent;
+    import View = android.view.View;
+    import ArrayList = java.util.ArrayList;
+    import Runnable = java.lang.Runnable;
+    import AbsListView = android.widget.AbsListView;
+    import ListAdapter = android.widget.ListAdapter;
+    class ListView extends AbsListView {
+        static NO_POSITION: number;
+        private static MAX_SCROLL_FACTOR;
+        private static MIN_SCROLL_PREVIEW_PIXELS;
+        private mHeaderViewInfos;
+        private mFooterViewInfos;
+        mDivider: Drawable;
+        mDividerHeight: number;
+        mOverScrollHeader: Drawable;
+        mOverScrollFooter: Drawable;
+        private mIsCacheColorOpaque;
+        private mDividerIsOpaque;
+        private mHeaderDividersEnabled;
+        private mFooterDividersEnabled;
+        private mAreAllItemsSelectable;
+        private mItemsCanFocus;
+        private mTempRect;
+        private mDividerPaint;
+        private mArrowScrollFocusResult;
+        private mFocusSelector;
+        constructor();
+        getMaxScrollAmount(): number;
+        private adjustViewsUpOrDown();
+        addHeaderView(v: View, data?: any, isSelectable?: boolean): void;
+        getHeaderViewsCount(): number;
+        removeHeaderView(v: View): boolean;
+        private removeFixedViewInfo(v, where);
+        addFooterView(v: View, data?: any, isSelectable?: boolean): void;
+        getFooterViewsCount(): number;
+        removeFooterView(v: View): boolean;
+        getAdapter(): ListAdapter;
+        setAdapter(adapter: ListAdapter): void;
+        resetList(): void;
+        private clearRecycledState(infos);
+        private showingTopFadingEdge();
+        private showingBottomFadingEdge();
+        requestChildRectangleOnScreen(child: View, rect: Rect, immediate: boolean): boolean;
+        fillGap(down: boolean): void;
+        private fillDown(pos, nextTop);
+        private fillUp(pos, nextBottom);
+        private fillFromTop(nextTop);
+        private fillFromMiddle(childrenTop, childrenBottom);
+        private fillAboveAndBelow(sel, position);
+        private fillFromSelection(selectedTop, childrenTop, childrenBottom);
+        private getBottomSelectionPixel(childrenBottom, fadingEdgeLength, selectedPosition);
+        private getTopSelectionPixel(childrenTop, fadingEdgeLength, selectedPosition);
+        smoothScrollToPosition(position: number): void;
+        smoothScrollByOffset(offset: number): void;
+        private moveSelection(oldSel, newSel, delta, childrenTop, childrenBottom);
+        onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        private measureScrapChild(child, position, widthMeasureSpec);
+        recycleOnMeasure(): boolean;
+        measureHeightOfChildren(widthMeasureSpec: number, startPosition: number, endPosition: number, maxHeight: number, disallowPartialChildPosition: number): number;
+        findMotionRow(y: number): number;
+        private fillSpecific(position, top);
+        private correctTooHigh(childCount);
+        private correctTooLow(childCount);
+        layoutChildren(): void;
+        private makeAndAddView(position, y, flow, childrenLeft, selected);
+        private setupChild(child, position, y, flowDown, childrenLeft, selected, recycled);
+        canAnimate(): boolean;
+        setSelection(position: number): void;
+        setSelectionFromTop(position: number, y: number): void;
+        setSelectionInt(position: number): void;
+        lookForSelectablePosition(position: number, lookDown: boolean): number;
+        lookForSelectablePositionAfter(current: number, position: number, lookDown: boolean): number;
+        setSelectionAfterHeaderView(): void;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        onKeyMultiple(keyCode: number, repeatCount: number, event: KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+        private commonKey(keyCode, count, event);
+        pageScroll(direction: number): boolean;
+        fullScroll(direction: number): boolean;
+        private handleHorizontalFocusWithinListItem(direction);
+        arrowScroll(direction: number): boolean;
+        private nextSelectedPositionForDirection(selectedView, selectedPos, direction);
+        private arrowScrollImpl(direction);
+        private handleNewSelectionChange(selectedView, direction, newSelectedPosition, newFocusAssigned);
+        private measureAndAdjustDown(child, childIndex, numChildren);
+        private measureItem(child);
+        private relayoutMeasuredItem(child);
+        private getArrowScrollPreviewLength();
+        private amountToScroll(direction, nextSelectedPosition);
+        private lookForSelectablePositionOnScreen(direction);
+        private arrowScrollFocused(direction);
+        private positionOfNewFocus(newFocus);
+        private isViewAncestorOf(child, parent);
+        private amountToScrollToNewFocus(direction, newFocus, positionOfNewFocus);
+        private distanceToView(descendant);
+        private scrollListItemsBy(amount);
+        private addViewAbove(theView, position);
+        private addViewBelow(theView, position);
+        setItemsCanFocus(itemsCanFocus: boolean): void;
+        getItemsCanFocus(): boolean;
+        isOpaque(): boolean;
+        setCacheColorHint(color: number): void;
+        drawOverscrollHeader(canvas: Canvas, drawable: Drawable, bounds: Rect): void;
+        drawOverscrollFooter(canvas: Canvas, drawable: Drawable, bounds: Rect): void;
+        dispatchDraw(canvas: Canvas): void;
+        drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
+        drawDivider(canvas: Canvas, bounds: Rect, childIndex: number): void;
+        getDivider(): Drawable;
+        setDivider(divider: Drawable): void;
+        getDividerHeight(): number;
+        setDividerHeight(height: number): void;
+        setHeaderDividersEnabled(headerDividersEnabled: boolean): void;
+        areHeaderDividersEnabled(): boolean;
+        setFooterDividersEnabled(footerDividersEnabled: boolean): void;
+        areFooterDividersEnabled(): boolean;
+        setOverscrollHeader(header: Drawable): void;
+        getOverscrollHeader(): Drawable;
+        setOverscrollFooter(footer: Drawable): void;
+        getOverscrollFooter(): Drawable;
+        onFocusChanged(gainFocus: boolean, direction: number, previouslyFocusedRect: Rect): void;
+        onFinishInflate(): void;
+        findViewTraversal(id: string): View;
+        findViewInHeadersOrFooters(where: ArrayList<ListView.FixedViewInfo>, id: string): View;
+        findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
+        findViewByPredicateInHeadersOrFooters(where: ArrayList<ListView.FixedViewInfo>, predicate: View.Predicate<View>, childToSkip: View): View;
+        getCheckItemIds(): number[];
+    }
+    module ListView {
+        class FixedViewInfo {
+            _ListView_this: ListView;
+            constructor(arg: ListView);
+            view: View;
+            data: any;
+            isSelectable: boolean;
+        }
+        class FocusSelector implements Runnable {
+            _ListView_this: ListView;
+            constructor(arg: ListView);
+            private mPosition;
+            private mPositionTop;
+            setup(position: number, top: number): ListView.FocusSelector;
+            run(): void;
+        }
+        class ArrowScrollFocusResult {
+            private mSelectedPosition;
+            private mAmountToScroll;
+            populate(selectedPosition: number, amountToScroll: number): void;
+            getSelectedPosition(): number;
+            getAmountToScroll(): number;
+        }
     }
 }
 declare module android.support.v4.view {
@@ -2543,6 +3645,7 @@ declare module android.support.v4.view {
 declare module android.support.v4.view {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
+    import ArrayList = java.util.ArrayList;
     import Rect = android.graphics.Rect;
     import PagerAdapter = android.support.v4.view.PagerAdapter;
     import Drawable = android.graphics.drawable.Drawable;
@@ -2699,6 +3802,7 @@ declare module android.support.v4.view {
         private getChildRectInPagerCoordinates(outRect, child);
         pageLeft(): boolean;
         pageRight(): boolean;
+        addFocusables(views: ArrayList<View>, direction: number, focusableMode: number): void;
         addTouchables(views: java.util.ArrayList<android.view.View>): void;
         onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
         generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
@@ -2768,7 +3872,7 @@ declare module androidui {
         private _windowBound;
         private tempRect;
         windowBound: android.graphics.Rect;
-        private motionEvent;
+        private touchEvent;
         private ketEvent;
         private AndroidID;
         constructor(element: HTMLElement);

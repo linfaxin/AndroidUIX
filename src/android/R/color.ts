@@ -1,19 +1,18 @@
 /**
- * Created by linfaxin on 15/11/2.
+ * Created by linfaxin on 15/11/15.
  */
-///<reference path="TextView.ts"/>
 ///<reference path="../view/View.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
+///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../graphics/Color.ts"/>
 ///<reference path="../graphics/drawable/Drawable.ts"/>
 ///<reference path="../graphics/drawable/InsetDrawable.ts"/>
 ///<reference path="../graphics/drawable/ColorDrawable.ts"/>
 ///<reference path="../graphics/drawable/StateListDrawable.ts"/>
-///<reference path="../R/drawable.ts"/>
-
-module android.widget{
+module android.R{
     import View = android.view.View;
     import Resources = android.content.res.Resources;
+    import ColorStateList = android.content.res.ColorStateList;
     import Color = android.graphics.Color;
     import Drawable = android.graphics.drawable.Drawable;
     import InsetDrawable = android.graphics.drawable.InsetDrawable;
@@ -21,20 +20,16 @@ module android.widget{
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     import Gravity = android.view.Gravity;
 
-    export class Button extends TextView{
-        constructor() {
-            super();
-            this._initDefaultStyle();
-        }
-        private _initDefaultStyle(){
-            let density = Resources.getDisplayMetrics().density;
-            this.setFocusable(true);
-            this.setClickable(true);
-            this.setTextSize(18);
-            this.setMinimumHeight(48 * density);
-            this.setMinimumWidth(64 * density);
-            this.setBackground(android.R.drawable.button_background);
-            this.setGravity(Gravity.CENTER);
+    export class color{
+        static get textView_textColor():ColorStateList {
+            let _defaultStates = [[-View.VIEW_STATE_ENABLED], []];
+            let _defaultColors = [0xffc0c0c0, 0xff333333];
+            class DefaultStyleTextColor extends ColorStateList{
+                constructor() {
+                    super(_defaultStates, _defaultColors);
+                }
+            }
+            return new DefaultStyleTextColor();
         }
     }
 }
