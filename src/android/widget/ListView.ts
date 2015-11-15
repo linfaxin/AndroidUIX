@@ -146,7 +146,57 @@ export class ListView extends AbsListView {
         this.setDividerHeight(1);
     }
 
-    // constructor(context:Context, attrs:AttributeSet, defStyle:number) {
+
+    createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
+        super.createAttrChangeHandler(mergeHandler);
+        const listView = this;
+        mergeHandler.add({
+            set divider(value){
+                let divider = mergeHandler.parseDrawable(value);
+                if(divider) listView.setDivider(divider);
+            },
+            get divider():any{
+                return listView.mDivider;
+            },
+            set overScrollHeader(value){
+                let header = mergeHandler.parseDrawable(value);
+                if(header) listView.setOverscrollHeader(header);
+            },
+            get overScrollHeader():any{
+                return listView.mOverScrollHeader;
+            },
+            set overScrollFooter(value){
+                let footer = mergeHandler.parseDrawable(value);
+                if(footer) listView.setOverscrollFooter(footer);
+            },
+            get overScrollFooter():any{
+                return listView.mOverScrollFooter;
+            },
+            set dividerHeight(value){
+                let dividerHeight = mergeHandler.parseNumber(value, 0);
+                if(dividerHeight > 0 ){
+                    listView.setDividerHeight(dividerHeight);
+                }
+            },
+            get dividerHeight():any{
+                return listView.mDividerHeight;
+            },
+            set headerDividersEnabled(value){
+                listView.setHeaderDividersEnabled(mergeHandler.parseBoolean(value, true));
+            },
+            get headerDividersEnabled():any{
+                return listView.mHeaderDividersEnabled;
+            },
+            set footerDividersEnabled(value){
+                listView.setFooterDividersEnabled(mergeHandler.parseBoolean(value, true));
+            },
+            get footerDividersEnabled():any{
+                return listView.mFooterDividersEnabled;
+            },
+        });
+    }
+
+// constructor(context:Context, attrs:AttributeSet, defStyle:number) {
     //    super(context, attrs, defStyle);
     //    let a:TypedArray = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.ListView, defStyle, 0);
     //    let entries:CharSequence[] = a.getTextArray(com.android.internal.R.styleable.ListView_entries);
