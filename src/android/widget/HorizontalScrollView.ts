@@ -144,7 +144,16 @@ export class HorizontalScrollView extends FrameLayout {
 
     private mOverscrollDistance:number = 0;
 
-    private mOverflingDistance:number = 0;
+    private _mOverflingDistance:number = 0;
+    private get mOverflingDistance():number {
+        if (this.mScrollX < -this._mOverflingDistance) return -this.mScrollX;
+        let overDistance = this.mScrollX - this.getScrollRange();
+        if (overDistance > this._mOverflingDistance) return overDistance;
+        return this._mOverflingDistance;
+    }
+    private set mOverflingDistance(value:number) {
+        this._mOverflingDistance = value;
+    }
 
     /**
      * ID of the active pointer. This is used to retain consistency during
@@ -229,7 +238,7 @@ export class HorizontalScrollView extends FrameLayout {
         this.mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
         this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
         this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
-        this.mOverflingDistance = configuration.getScaledOverflingDistance();
+        this._mOverflingDistance = configuration.getScaledOverflingDistance();
 
         this.initScrollCache();
         this.setHorizontalScrollBarEnabled(true);
@@ -593,7 +602,7 @@ export class HorizontalScrollView extends FrameLayout {
                     velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                     let initialVelocity:number = Math.floor(velocityTracker.getXVelocity(this.mActivePointerId));
                     if (this.getChildCount() > 0) {
-                        let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.getScrollRange();
+                        let isOverDrag = this.mScrollX < 0 || this.mScrollX > this.getScrollRange();
                         if (!isOverDrag && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
                             this.fling(-initialVelocity);
                         } else {

@@ -563,8 +563,7 @@ module android.widget {
             let scrollRange = 0;
             if (this.getChildCount() > 0) {
                 let child = this.getChildAt(0);
-                scrollRange = Math.max(0,
-                    child.getHeight() - (this.getHeight() - this.mPaddingBottom - this.mPaddingTop));
+                scrollRange = Math.max(0, child.getHeight() - (this.getHeight() - this.mPaddingBottom - this.mPaddingTop));
             }
             return scrollRange;
         }

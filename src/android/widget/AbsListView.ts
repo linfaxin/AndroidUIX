@@ -609,7 +609,19 @@ module android.widget {
         /**
          * Maximum distance to overfling during edge effects
          */
-        private mOverflingDistance:number = 0;
+        private _mOverflingDistance:number = 0;
+        private get mOverflingDistance():number {
+            if(this.mScrollY <= 0){
+                if (this.mScrollY < -this._mOverflingDistance) return -this.mScrollY;
+                return this._mOverflingDistance;
+            }
+            let overDistance = this.mScrollY;
+            if (overDistance > this._mOverflingDistance) return overDistance;
+            return this._mOverflingDistance;
+        }
+        private set mOverflingDistance(value:number) {
+            this._mOverflingDistance = value;
+        }
 
         // These two EdgeGlows are always set and used together.
         // Checking one for null is as good as checking both.
@@ -2930,8 +2942,8 @@ module android.widget {
                     velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                     const initialVelocity:number = Math.floor(velocityTracker.getYVelocity(this.mActivePointerId));
                     this.reportScrollStateChange(AbsListView.OnScrollListener.SCROLL_STATE_FLING);
-                    //FIXME overdrag springback
-                    if (Math.abs(initialVelocity) > this.mMinimumVelocity) {
+                    let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.computeVerticalScrollRange();
+                    if (!isOverDrag && Math.abs(initialVelocity) > this.mMinimumVelocity) {
                         this.mFlingRunnable.startOverfling(-initialVelocity);
                     } else {
                         this.mFlingRunnable.startSpringback();
