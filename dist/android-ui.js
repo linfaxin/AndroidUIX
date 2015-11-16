@@ -1647,6 +1647,9 @@ var java;
                 }
                 return a;
             }
+            getArray() {
+                return this.array;
+            }
             get(index) {
                 return this.array[index];
             }
@@ -2159,6 +2162,9 @@ var android;
             }
             getScaledTouchSlop() {
                 return this.mTouchSlop;
+            }
+            getScaledDoubleTapTouchSlop() {
+                return this.mDoubleTapTouchSlop;
             }
             getScaledPagingTouchSlop() {
                 return this.mPagingTouchSlop;
@@ -6692,6 +6698,7 @@ var android;
                 let rootView = new rootViewClass();
                 if (rootView['onInflateAdapter']) {
                     rootView.onInflateAdapter(domtree, rootElement, viewParent);
+                    domtree.parentNode.removeChild(domtree);
                 }
                 if (!(rootView instanceof View))
                     return rootView;
@@ -6780,6 +6787,7 @@ var android;
                 if (this._bindElement)
                     this._bindElement[View.AndroidViewProperty] = null;
                 this._bindElement = bindElement || document.createElement(this.tagName());
+                this._bindElement.style.position = 'absolute';
                 let oldBindView = this._bindElement[View.AndroidViewProperty];
                 if (oldBindView) {
                     if (oldBindView._AttrObserver)
@@ -6793,10 +6801,8 @@ var android;
             }
             syncBoundToElement() {
                 let bind = this.bindElement;
-                bind.style.position = 'absolute';
-                bind.style.boxSizing = 'border-box';
-                bind.style.left = this.mLeft + 'px';
-                bind.style.top = this.mTop + 'px';
+                bind.style.cssText += `transform: translate(${this.mLeft}px, ${this.mTop}px);
+            -webkit-transform: translate(${this.mLeft}px, ${this.mTop}px);`;
                 bind.style.width = this.getWidth() + 'px';
                 bind.style.height = this.getHeight() + 'px';
             }
@@ -6808,14 +6814,8 @@ var android;
                     for (let i = 0, count = group.getChildCount(); i < count; i++) {
                         let child = group.getChildAt(i);
                         let item = child.bindElement;
-                        if (sx !== 0)
-                            item.style.left = (child.mLeft - sx) + 'px';
-                        else
-                            item.style.left = child.mLeft + "px";
-                        if (sy !== 0)
-                            item.style.top = (child.mTop - sy) + 'px';
-                        else
-                            item.style.top = child.mTop + "px";
+                        item.style.cssText += `transform: translate(${child.mLeft - sx}px, ${child.mTop - sy}px);
+                    -webkit-transform: translate(${child.mLeft - sx}px, ${child.mTop - sy}px);`;
                     }
                 }
             }
@@ -10930,6 +10930,602 @@ var android;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/10/17.
+ */
+///<reference path="../util/Log.ts"/>
+///<reference path="../util/Pools.ts"/>
+///<reference path="MotionEvent.ts"/>
+///<reference path="KeyEvent.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var Log = android.util.Log;
+        var Pools = android.util.Pools;
+        class VelocityTracker {
+            constructor() {
+                this.mLastTouchIndex = 0;
+                this.mGeneration = 0;
+                this.clear();
+            }
+            static obtain() {
+                let instance = VelocityTracker.sPool.acquire();
+                return (instance != null) ? instance : new VelocityTracker();
+            }
+            recycle() {
+                this.clear();
+                VelocityTracker.sPool.release(this);
+            }
+            setNextPoolable(element) {
+                this.mNext = element;
+            }
+            getNextPoolable() {
+                return this.mNext;
+            }
+            clear() {
+                VelocityTracker.releasePointerList(this.mPointerListHead);
+                this.mPointerListHead = null;
+                this.mLastTouchIndex = 0;
+            }
+            addMovement(ev) {
+                let historySize = ev.getHistorySize();
+                const pointerCount = ev.getPointerCount();
+                const lastTouchIndex = this.mLastTouchIndex;
+                const nextTouchIndex = (lastTouchIndex + 1) % VelocityTracker.NUM_PAST;
+                const finalTouchIndex = (nextTouchIndex + historySize) % VelocityTracker.NUM_PAST;
+                const generation = this.mGeneration++;
+                this.mLastTouchIndex = finalTouchIndex;
+                let previousPointer = null;
+                for (let i = 0; i < pointerCount; i++) {
+                    const pointerId = ev.getPointerId(i);
+                    let nextPointer;
+                    if (previousPointer == null || pointerId < previousPointer.id) {
+                        previousPointer = null;
+                        nextPointer = this.mPointerListHead;
+                    }
+                    else {
+                        nextPointer = previousPointer.next;
+                    }
+                    let pointer;
+                    for (;;) {
+                        if (nextPointer != null) {
+                            const nextPointerId = nextPointer.id;
+                            if (nextPointerId == pointerId) {
+                                pointer = nextPointer;
+                                break;
+                            }
+                            if (nextPointerId < pointerId) {
+                                nextPointer = nextPointer.next;
+                                continue;
+                            }
+                        }
+                        pointer = VelocityTracker.obtainPointer();
+                        pointer.id = pointerId;
+                        pointer.pastTime[lastTouchIndex] = Number.MIN_VALUE;
+                        pointer.next = nextPointer;
+                        if (previousPointer == null) {
+                            this.mPointerListHead = pointer;
+                        }
+                        else {
+                            previousPointer.next = pointer;
+                        }
+                        break;
+                    }
+                    pointer.generation = generation;
+                    previousPointer = pointer;
+                    const pastX = pointer.pastX;
+                    const pastY = pointer.pastY;
+                    const pastTime = pointer.pastTime;
+                    historySize = ev.getHistorySize(pointerId);
+                    for (let j = 0; j < historySize; j++) {
+                        const touchIndex = (nextTouchIndex + j) % VelocityTracker.NUM_PAST;
+                        pastX[touchIndex] = ev.getHistoricalX(i, j);
+                        pastY[touchIndex] = ev.getHistoricalY(i, j);
+                        pastTime[touchIndex] = ev.getHistoricalEventTime(i, j);
+                    }
+                    pastX[finalTouchIndex] = ev.getX(i);
+                    pastY[finalTouchIndex] = ev.getY(i);
+                    pastTime[finalTouchIndex] = ev.getEventTime();
+                }
+                previousPointer = null;
+                for (let pointer = this.mPointerListHead; pointer != null;) {
+                    const nextPointer = pointer.next;
+                    if (pointer.generation != generation) {
+                        if (previousPointer == null) {
+                            this.mPointerListHead = nextPointer;
+                        }
+                        else {
+                            previousPointer.next = nextPointer;
+                        }
+                        VelocityTracker.releasePointer(pointer);
+                    }
+                    else {
+                        previousPointer = pointer;
+                    }
+                    pointer = nextPointer;
+                }
+            }
+            computeCurrentVelocity(units, maxVelocity = Number.MAX_SAFE_INTEGER) {
+                const lastTouchIndex = this.mLastTouchIndex;
+                for (let pointer = this.mPointerListHead; pointer != null; pointer = pointer.next) {
+                    const pastTime = pointer.pastTime;
+                    let oldestTouchIndex = lastTouchIndex;
+                    let numTouches = 1;
+                    const minTime = pastTime[lastTouchIndex] - VelocityTracker.MAX_AGE_MILLISECONDS;
+                    while (numTouches < VelocityTracker.NUM_PAST) {
+                        const nextOldestTouchIndex = (oldestTouchIndex + VelocityTracker.NUM_PAST - 1) % VelocityTracker.NUM_PAST;
+                        const nextOldestTime = pastTime[nextOldestTouchIndex];
+                        if (nextOldestTime < minTime) {
+                            break;
+                        }
+                        oldestTouchIndex = nextOldestTouchIndex;
+                        numTouches += 1;
+                    }
+                    if (numTouches > 3) {
+                        numTouches -= 1;
+                    }
+                    const pastX = pointer.pastX;
+                    const pastY = pointer.pastY;
+                    const oldestX = pastX[oldestTouchIndex];
+                    const oldestY = pastY[oldestTouchIndex];
+                    const oldestTime = pastTime[oldestTouchIndex];
+                    let accumX = 0;
+                    let accumY = 0;
+                    for (let i = 1; i < numTouches; i++) {
+                        const touchIndex = (oldestTouchIndex + i) % VelocityTracker.NUM_PAST;
+                        const duration = (pastTime[touchIndex] - oldestTime);
+                        if (duration == 0)
+                            continue;
+                        let delta = pastX[touchIndex] - oldestX;
+                        let velocity = (delta / duration) * units;
+                        accumX = (accumX == 0) ? velocity : (accumX + velocity) * .5;
+                        delta = pastY[touchIndex] - oldestY;
+                        velocity = (delta / duration) * units;
+                        accumY = (accumY == 0) ? velocity : (accumY + velocity) * .5;
+                    }
+                    if (accumX < -maxVelocity) {
+                        accumX = -maxVelocity;
+                    }
+                    else if (accumX > maxVelocity) {
+                        accumX = maxVelocity;
+                    }
+                    if (accumY < -maxVelocity) {
+                        accumY = -maxVelocity;
+                    }
+                    else if (accumY > maxVelocity) {
+                        accumY = maxVelocity;
+                    }
+                    pointer.xVelocity = accumX;
+                    pointer.yVelocity = accumY;
+                    if (VelocityTracker.localLOGV) {
+                        Log.v(VelocityTracker.TAG, "Pointer " + pointer.id
+                            + ": Y velocity=" + accumX + " X velocity=" + accumY + " N=" + numTouches);
+                    }
+                }
+            }
+            getXVelocity(id = 0) {
+                let pointer = this.getPointer(id);
+                return pointer != null ? pointer.xVelocity : 0;
+            }
+            getYVelocity(id = 0) {
+                let pointer = this.getPointer(id);
+                return pointer != null ? pointer.yVelocity : 0;
+            }
+            getPointer(id) {
+                for (let pointer = this.mPointerListHead; pointer != null; pointer = pointer.next) {
+                    if (pointer.id == id) {
+                        return pointer;
+                    }
+                }
+                return null;
+            }
+            static obtainPointer() {
+                if (VelocityTracker.sRecycledPointerCount != 0) {
+                    let element = VelocityTracker.sRecycledPointerListHead;
+                    VelocityTracker.sRecycledPointerCount -= 1;
+                    VelocityTracker.sRecycledPointerListHead = element.next;
+                    element.next = null;
+                    return element;
+                }
+                return new Pointer();
+            }
+            static releasePointer(pointer) {
+                if (VelocityTracker.sRecycledPointerCount < VelocityTracker.POINTER_POOL_CAPACITY) {
+                    pointer.next = VelocityTracker.sRecycledPointerListHead;
+                    VelocityTracker.sRecycledPointerCount += 1;
+                    VelocityTracker.sRecycledPointerListHead = pointer;
+                }
+            }
+            static releasePointerList(pointer) {
+                if (pointer != null) {
+                    let count = VelocityTracker.sRecycledPointerCount;
+                    if (count >= VelocityTracker.POINTER_POOL_CAPACITY) {
+                        return;
+                    }
+                    let tail = pointer;
+                    for (;;) {
+                        count += 1;
+                        if (count >= VelocityTracker.POINTER_POOL_CAPACITY) {
+                            break;
+                        }
+                        let next = tail.next;
+                        if (next == null) {
+                            break;
+                        }
+                        tail = next;
+                    }
+                    tail.next = VelocityTracker.sRecycledPointerListHead;
+                    VelocityTracker.sRecycledPointerCount = count;
+                    VelocityTracker.sRecycledPointerListHead = pointer;
+                }
+            }
+        }
+        VelocityTracker.TAG = "VelocityTracker";
+        VelocityTracker.DEBUG = Log.VelocityTracker_DBG;
+        VelocityTracker.localLOGV = VelocityTracker.DEBUG;
+        VelocityTracker.NUM_PAST = 10;
+        VelocityTracker.MAX_AGE_MILLISECONDS = 200;
+        VelocityTracker.POINTER_POOL_CAPACITY = 20;
+        VelocityTracker.sPool = new Pools.SynchronizedPool(2);
+        VelocityTracker.sRecycledPointerCount = 0;
+        view.VelocityTracker = VelocityTracker;
+        class Pointer {
+            constructor() {
+                this.id = 0;
+                this.xVelocity = 0;
+                this.yVelocity = 0;
+                this.pastX = new Array(VelocityTracker.NUM_PAST);
+                this.pastY = new Array(VelocityTracker.NUM_PAST);
+                this.pastTime = new Array(VelocityTracker.NUM_PAST);
+                this.generation = 0;
+            }
+        }
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/os/Handler.ts"/>
+///<reference path="../../android/os/Message.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/VelocityTracker.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var Handler = android.os.Handler;
+        var MotionEvent = android.view.MotionEvent;
+        var VelocityTracker = android.view.VelocityTracker;
+        var ViewConfiguration = android.view.ViewConfiguration;
+        class GestureDetector {
+            constructor(listener, handler) {
+                this.mTouchSlopSquare = 0;
+                this.mDoubleTapTouchSlopSquare = 0;
+                this.mDoubleTapSlopSquare = 0;
+                this.mMinimumFlingVelocity = 0;
+                this.mMaximumFlingVelocity = 0;
+                this.mLastFocusX = 0;
+                this.mLastFocusY = 0;
+                this.mDownFocusX = 0;
+                this.mDownFocusY = 0;
+                this.mHandler = new GestureDetector.GestureHandler(this);
+                this.mListener = listener;
+                if (listener['setOnDoubleTapListener']) {
+                    this.setOnDoubleTapListener(listener);
+                }
+                this.init();
+            }
+            init() {
+                if (this.mListener == null) {
+                    throw Error(`new NullPointerException("OnGestureListener must not be null")`);
+                }
+                this.mIsLongpressEnabled = true;
+                let touchSlop, doubleTapSlop, doubleTapTouchSlop;
+                const configuration = ViewConfiguration.get();
+                touchSlop = configuration.getScaledTouchSlop();
+                doubleTapTouchSlop = configuration.getScaledDoubleTapTouchSlop();
+                doubleTapSlop = configuration.getScaledDoubleTapSlop();
+                this.mMinimumFlingVelocity = configuration.getScaledMinimumFlingVelocity();
+                this.mMaximumFlingVelocity = configuration.getScaledMaximumFlingVelocity();
+                this.mTouchSlopSquare = touchSlop * touchSlop;
+                this.mDoubleTapTouchSlopSquare = doubleTapTouchSlop * doubleTapTouchSlop;
+                this.mDoubleTapSlopSquare = doubleTapSlop * doubleTapSlop;
+            }
+            setOnDoubleTapListener(onDoubleTapListener) {
+                this.mDoubleTapListener = onDoubleTapListener;
+            }
+            setIsLongpressEnabled(isLongpressEnabled) {
+                this.mIsLongpressEnabled = isLongpressEnabled;
+            }
+            isLongpressEnabled() {
+                return this.mIsLongpressEnabled;
+            }
+            onTouchEvent(ev) {
+                const action = ev.getAction();
+                if (this.mVelocityTracker == null) {
+                    this.mVelocityTracker = VelocityTracker.obtain();
+                }
+                this.mVelocityTracker.addMovement(ev);
+                const pointerUp = (action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_UP;
+                const skipIndex = pointerUp ? ev.getActionIndex() : -1;
+                let sumX = 0, sumY = 0;
+                const count = ev.getPointerCount();
+                for (let i = 0; i < count; i++) {
+                    if (skipIndex == i)
+                        continue;
+                    sumX += ev.getX(i);
+                    sumY += ev.getY(i);
+                }
+                const div = pointerUp ? count - 1 : count;
+                const focusX = sumX / div;
+                const focusY = sumY / div;
+                let handled = false;
+                switch (action & MotionEvent.ACTION_MASK) {
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                        this.mDownFocusX = this.mLastFocusX = focusX;
+                        this.mDownFocusY = this.mLastFocusY = focusY;
+                        this.cancelTaps();
+                        break;
+                    case MotionEvent.ACTION_POINTER_UP:
+                        this.mDownFocusX = this.mLastFocusX = focusX;
+                        this.mDownFocusY = this.mLastFocusY = focusY;
+                        this.mVelocityTracker.computeCurrentVelocity(1000, this.mMaximumFlingVelocity);
+                        const upIndex = ev.getActionIndex();
+                        const id1 = ev.getPointerId(upIndex);
+                        const x1 = this.mVelocityTracker.getXVelocity(id1);
+                        const y1 = this.mVelocityTracker.getYVelocity(id1);
+                        for (let i = 0; i < count; i++) {
+                            if (i == upIndex)
+                                continue;
+                            const id2 = ev.getPointerId(i);
+                            const x = x1 * this.mVelocityTracker.getXVelocity(id2);
+                            const y = y1 * this.mVelocityTracker.getYVelocity(id2);
+                            const dot = x + y;
+                            if (dot < 0) {
+                                this.mVelocityTracker.clear();
+                                break;
+                            }
+                        }
+                        break;
+                    case MotionEvent.ACTION_DOWN:
+                        if (this.mDoubleTapListener != null) {
+                            let hadTapMessage = this.mHandler.hasMessages(GestureDetector.TAP);
+                            if (hadTapMessage)
+                                this.mHandler.removeMessages(GestureDetector.TAP);
+                            if ((this.mCurrentDownEvent != null) && (this.mPreviousUpEvent != null) && hadTapMessage && this.isConsideredDoubleTap(this.mCurrentDownEvent, this.mPreviousUpEvent, ev)) {
+                                this.mIsDoubleTapping = true;
+                                handled = this.mDoubleTapListener.onDoubleTap(this.mCurrentDownEvent) || handled;
+                                handled = this.mDoubleTapListener.onDoubleTapEvent(ev) || handled;
+                            }
+                            else {
+                                this.mHandler.sendEmptyMessageDelayed(GestureDetector.TAP, GestureDetector.DOUBLE_TAP_TIMEOUT);
+                            }
+                        }
+                        this.mDownFocusX = this.mLastFocusX = focusX;
+                        this.mDownFocusY = this.mLastFocusY = focusY;
+                        if (this.mCurrentDownEvent != null) {
+                            this.mCurrentDownEvent.recycle();
+                        }
+                        this.mCurrentDownEvent = MotionEvent.obtain(ev);
+                        this.mAlwaysInTapRegion = true;
+                        this.mAlwaysInBiggerTapRegion = true;
+                        this.mStillDown = true;
+                        this.mInLongPress = false;
+                        this.mDeferConfirmSingleTap = false;
+                        if (this.mIsLongpressEnabled) {
+                            this.mHandler.removeMessages(GestureDetector.LONG_PRESS);
+                            this.mHandler.sendEmptyMessageAtTime(GestureDetector.LONG_PRESS, this.mCurrentDownEvent.getDownTime() + GestureDetector.TAP_TIMEOUT + GestureDetector.LONGPRESS_TIMEOUT);
+                        }
+                        this.mHandler.sendEmptyMessageAtTime(GestureDetector.SHOW_PRESS, this.mCurrentDownEvent.getDownTime() + GestureDetector.TAP_TIMEOUT);
+                        handled = this.mListener.onDown(ev) || handled;
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        if (this.mInLongPress) {
+                            break;
+                        }
+                        const scrollX = this.mLastFocusX - focusX;
+                        const scrollY = this.mLastFocusY - focusY;
+                        if (this.mIsDoubleTapping) {
+                            handled = this.mDoubleTapListener.onDoubleTapEvent(ev) || handled;
+                        }
+                        else if (this.mAlwaysInTapRegion) {
+                            const deltaX = Math.floor((focusX - this.mDownFocusX));
+                            const deltaY = Math.floor((focusY - this.mDownFocusY));
+                            let distance = (deltaX * deltaX) + (deltaY * deltaY);
+                            if (distance > this.mTouchSlopSquare) {
+                                handled = this.mListener.onScroll(this.mCurrentDownEvent, ev, scrollX, scrollY);
+                                this.mLastFocusX = focusX;
+                                this.mLastFocusY = focusY;
+                                this.mAlwaysInTapRegion = false;
+                                this.mHandler.removeMessages(GestureDetector.TAP);
+                                this.mHandler.removeMessages(GestureDetector.SHOW_PRESS);
+                                this.mHandler.removeMessages(GestureDetector.LONG_PRESS);
+                            }
+                            if (distance > this.mDoubleTapTouchSlopSquare) {
+                                this.mAlwaysInBiggerTapRegion = false;
+                            }
+                        }
+                        else if ((Math.abs(scrollX) >= 1) || (Math.abs(scrollY) >= 1)) {
+                            handled = this.mListener.onScroll(this.mCurrentDownEvent, ev, scrollX, scrollY);
+                            this.mLastFocusX = focusX;
+                            this.mLastFocusY = focusY;
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        this.mStillDown = false;
+                        let currentUpEvent = MotionEvent.obtain(ev);
+                        if (this.mIsDoubleTapping) {
+                            handled = this.mDoubleTapListener.onDoubleTapEvent(ev) || handled;
+                        }
+                        else if (this.mInLongPress) {
+                            this.mHandler.removeMessages(GestureDetector.TAP);
+                            this.mInLongPress = false;
+                        }
+                        else if (this.mAlwaysInTapRegion) {
+                            handled = this.mListener.onSingleTapUp(ev);
+                            if (this.mDeferConfirmSingleTap && this.mDoubleTapListener != null) {
+                                this.mDoubleTapListener.onSingleTapConfirmed(ev);
+                            }
+                        }
+                        else {
+                            const velocityTracker = this.mVelocityTracker;
+                            const pointerId = ev.getPointerId(0);
+                            velocityTracker.computeCurrentVelocity(1000, this.mMaximumFlingVelocity);
+                            const velocityY = velocityTracker.getYVelocity(pointerId);
+                            const velocityX = velocityTracker.getXVelocity(pointerId);
+                            if ((Math.abs(velocityY) > this.mMinimumFlingVelocity) || (Math.abs(velocityX) > this.mMinimumFlingVelocity)) {
+                                handled = this.mListener.onFling(this.mCurrentDownEvent, ev, velocityX, velocityY);
+                            }
+                        }
+                        if (this.mPreviousUpEvent != null) {
+                            this.mPreviousUpEvent.recycle();
+                        }
+                        this.mPreviousUpEvent = currentUpEvent;
+                        if (this.mVelocityTracker != null) {
+                            this.mVelocityTracker.recycle();
+                            this.mVelocityTracker = null;
+                        }
+                        this.mIsDoubleTapping = false;
+                        this.mDeferConfirmSingleTap = false;
+                        this.mHandler.removeMessages(GestureDetector.SHOW_PRESS);
+                        this.mHandler.removeMessages(GestureDetector.LONG_PRESS);
+                        break;
+                    case MotionEvent.ACTION_CANCEL:
+                        this.cancel();
+                        break;
+                }
+                return handled;
+            }
+            cancel() {
+                this.mHandler.removeMessages(GestureDetector.SHOW_PRESS);
+                this.mHandler.removeMessages(GestureDetector.LONG_PRESS);
+                this.mHandler.removeMessages(GestureDetector.TAP);
+                this.mVelocityTracker.recycle();
+                this.mVelocityTracker = null;
+                this.mIsDoubleTapping = false;
+                this.mStillDown = false;
+                this.mAlwaysInTapRegion = false;
+                this.mAlwaysInBiggerTapRegion = false;
+                this.mDeferConfirmSingleTap = false;
+                if (this.mInLongPress) {
+                    this.mInLongPress = false;
+                }
+            }
+            cancelTaps() {
+                this.mHandler.removeMessages(GestureDetector.SHOW_PRESS);
+                this.mHandler.removeMessages(GestureDetector.LONG_PRESS);
+                this.mHandler.removeMessages(GestureDetector.TAP);
+                this.mIsDoubleTapping = false;
+                this.mAlwaysInTapRegion = false;
+                this.mAlwaysInBiggerTapRegion = false;
+                this.mDeferConfirmSingleTap = false;
+                if (this.mInLongPress) {
+                    this.mInLongPress = false;
+                }
+            }
+            isConsideredDoubleTap(firstDown, firstUp, secondDown) {
+                if (!this.mAlwaysInBiggerTapRegion) {
+                    return false;
+                }
+                const deltaTime = secondDown.getEventTime() - firstUp.getEventTime();
+                if (deltaTime > GestureDetector.DOUBLE_TAP_TIMEOUT || deltaTime < GestureDetector.DOUBLE_TAP_MIN_TIME) {
+                    return false;
+                }
+                let deltaX = Math.floor(firstDown.getX()) - Math.floor(secondDown.getX());
+                let deltaY = Math.floor(firstDown.getY()) - Math.floor(secondDown.getY());
+                return (deltaX * deltaX + deltaY * deltaY < this.mDoubleTapSlopSquare);
+            }
+            dispatchLongPress() {
+                this.mHandler.removeMessages(GestureDetector.TAP);
+                this.mDeferConfirmSingleTap = false;
+                this.mInLongPress = true;
+                this.mListener.onLongPress(this.mCurrentDownEvent);
+            }
+        }
+        GestureDetector.LONGPRESS_TIMEOUT = ViewConfiguration.getLongPressTimeout();
+        GestureDetector.TAP_TIMEOUT = ViewConfiguration.getTapTimeout();
+        GestureDetector.DOUBLE_TAP_TIMEOUT = ViewConfiguration.getDoubleTapTimeout();
+        GestureDetector.DOUBLE_TAP_MIN_TIME = ViewConfiguration.getDoubleTapMinTime();
+        GestureDetector.SHOW_PRESS = 1;
+        GestureDetector.LONG_PRESS = 2;
+        GestureDetector.TAP = 3;
+        view.GestureDetector = GestureDetector;
+        (function (GestureDetector) {
+            class SimpleOnGestureListener {
+                onSingleTapUp(e) {
+                    return false;
+                }
+                onLongPress(e) {
+                }
+                onScroll(e1, e2, distanceX, distanceY) {
+                    return false;
+                }
+                onFling(e1, e2, velocityX, velocityY) {
+                    return false;
+                }
+                onShowPress(e) {
+                }
+                onDown(e) {
+                    return false;
+                }
+                onDoubleTap(e) {
+                    return false;
+                }
+                onDoubleTapEvent(e) {
+                    return false;
+                }
+                onSingleTapConfirmed(e) {
+                    return false;
+                }
+            }
+            GestureDetector.SimpleOnGestureListener = SimpleOnGestureListener;
+            class GestureHandler extends Handler {
+                constructor(arg) {
+                    super();
+                    this._GestureDetector_this = arg;
+                }
+                handleMessage(msg) {
+                    switch (msg.what) {
+                        case GestureDetector.SHOW_PRESS:
+                            this._GestureDetector_this.mListener.onShowPress(this._GestureDetector_this.mCurrentDownEvent);
+                            break;
+                        case GestureDetector.LONG_PRESS:
+                            this._GestureDetector_this.dispatchLongPress();
+                            break;
+                        case GestureDetector.TAP:
+                            if (this._GestureDetector_this.mDoubleTapListener != null) {
+                                if (!this._GestureDetector_this.mStillDown) {
+                                    this._GestureDetector_this.mDoubleTapListener.onSingleTapConfirmed(this._GestureDetector_this.mCurrentDownEvent);
+                                }
+                                else {
+                                    this._GestureDetector_this.mDeferConfirmSingleTap = true;
+                                }
+                            }
+                            break;
+                        default:
+                            throw Error(`new RuntimeException("Unknown message " + msg)`);
+                    }
+                }
+            }
+            GestureDetector.GestureHandler = GestureHandler;
+        })(GestureDetector = view.GestureDetector || (view.GestureDetector = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
  * Created by linfaxin on 15/10/9.
  */
 ///<reference path="../view/Gravity.ts"/>
@@ -11731,259 +12327,6 @@ var android;
         }
         sViscousFluidNormalize = 1 / Scroller_viscousFluid(1);
     })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/17.
- */
-///<reference path="../util/Log.ts"/>
-///<reference path="../util/Pools.ts"/>
-///<reference path="MotionEvent.ts"/>
-///<reference path="KeyEvent.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var Log = android.util.Log;
-        var Pools = android.util.Pools;
-        class VelocityTracker {
-            constructor() {
-                this.mLastTouchIndex = 0;
-                this.mGeneration = 0;
-                this.clear();
-            }
-            static obtain() {
-                let instance = VelocityTracker.sPool.acquire();
-                return (instance != null) ? instance : new VelocityTracker();
-            }
-            recycle() {
-                this.clear();
-                VelocityTracker.sPool.release(this);
-            }
-            setNextPoolable(element) {
-                this.mNext = element;
-            }
-            getNextPoolable() {
-                return this.mNext;
-            }
-            clear() {
-                VelocityTracker.releasePointerList(this.mPointerListHead);
-                this.mPointerListHead = null;
-                this.mLastTouchIndex = 0;
-            }
-            addMovement(ev) {
-                let historySize = ev.getHistorySize();
-                const pointerCount = ev.getPointerCount();
-                const lastTouchIndex = this.mLastTouchIndex;
-                const nextTouchIndex = (lastTouchIndex + 1) % VelocityTracker.NUM_PAST;
-                const finalTouchIndex = (nextTouchIndex + historySize) % VelocityTracker.NUM_PAST;
-                const generation = this.mGeneration++;
-                this.mLastTouchIndex = finalTouchIndex;
-                let previousPointer = null;
-                for (let i = 0; i < pointerCount; i++) {
-                    const pointerId = ev.getPointerId(i);
-                    let nextPointer;
-                    if (previousPointer == null || pointerId < previousPointer.id) {
-                        previousPointer = null;
-                        nextPointer = this.mPointerListHead;
-                    }
-                    else {
-                        nextPointer = previousPointer.next;
-                    }
-                    let pointer;
-                    for (;;) {
-                        if (nextPointer != null) {
-                            const nextPointerId = nextPointer.id;
-                            if (nextPointerId == pointerId) {
-                                pointer = nextPointer;
-                                break;
-                            }
-                            if (nextPointerId < pointerId) {
-                                nextPointer = nextPointer.next;
-                                continue;
-                            }
-                        }
-                        pointer = VelocityTracker.obtainPointer();
-                        pointer.id = pointerId;
-                        pointer.pastTime[lastTouchIndex] = Number.MIN_VALUE;
-                        pointer.next = nextPointer;
-                        if (previousPointer == null) {
-                            this.mPointerListHead = pointer;
-                        }
-                        else {
-                            previousPointer.next = pointer;
-                        }
-                        break;
-                    }
-                    pointer.generation = generation;
-                    previousPointer = pointer;
-                    const pastX = pointer.pastX;
-                    const pastY = pointer.pastY;
-                    const pastTime = pointer.pastTime;
-                    historySize = ev.getHistorySize(pointerId);
-                    for (let j = 0; j < historySize; j++) {
-                        const touchIndex = (nextTouchIndex + j) % VelocityTracker.NUM_PAST;
-                        pastX[touchIndex] = ev.getHistoricalX(i, j);
-                        pastY[touchIndex] = ev.getHistoricalY(i, j);
-                        pastTime[touchIndex] = ev.getHistoricalEventTime(i, j);
-                    }
-                    pastX[finalTouchIndex] = ev.getX(i);
-                    pastY[finalTouchIndex] = ev.getY(i);
-                    pastTime[finalTouchIndex] = ev.getEventTime();
-                }
-                previousPointer = null;
-                for (let pointer = this.mPointerListHead; pointer != null;) {
-                    const nextPointer = pointer.next;
-                    if (pointer.generation != generation) {
-                        if (previousPointer == null) {
-                            this.mPointerListHead = nextPointer;
-                        }
-                        else {
-                            previousPointer.next = nextPointer;
-                        }
-                        VelocityTracker.releasePointer(pointer);
-                    }
-                    else {
-                        previousPointer = pointer;
-                    }
-                    pointer = nextPointer;
-                }
-            }
-            computeCurrentVelocity(units, maxVelocity = Number.MAX_SAFE_INTEGER) {
-                const lastTouchIndex = this.mLastTouchIndex;
-                for (let pointer = this.mPointerListHead; pointer != null; pointer = pointer.next) {
-                    const pastTime = pointer.pastTime;
-                    let oldestTouchIndex = lastTouchIndex;
-                    let numTouches = 1;
-                    const minTime = pastTime[lastTouchIndex] - VelocityTracker.MAX_AGE_MILLISECONDS;
-                    while (numTouches < VelocityTracker.NUM_PAST) {
-                        const nextOldestTouchIndex = (oldestTouchIndex + VelocityTracker.NUM_PAST - 1) % VelocityTracker.NUM_PAST;
-                        const nextOldestTime = pastTime[nextOldestTouchIndex];
-                        if (nextOldestTime < minTime) {
-                            break;
-                        }
-                        oldestTouchIndex = nextOldestTouchIndex;
-                        numTouches += 1;
-                    }
-                    if (numTouches > 3) {
-                        numTouches -= 1;
-                    }
-                    const pastX = pointer.pastX;
-                    const pastY = pointer.pastY;
-                    const oldestX = pastX[oldestTouchIndex];
-                    const oldestY = pastY[oldestTouchIndex];
-                    const oldestTime = pastTime[oldestTouchIndex];
-                    let accumX = 0;
-                    let accumY = 0;
-                    for (let i = 1; i < numTouches; i++) {
-                        const touchIndex = (oldestTouchIndex + i) % VelocityTracker.NUM_PAST;
-                        const duration = (pastTime[touchIndex] - oldestTime);
-                        if (duration == 0)
-                            continue;
-                        let delta = pastX[touchIndex] - oldestX;
-                        let velocity = (delta / duration) * units;
-                        accumX = (accumX == 0) ? velocity : (accumX + velocity) * .5;
-                        delta = pastY[touchIndex] - oldestY;
-                        velocity = (delta / duration) * units;
-                        accumY = (accumY == 0) ? velocity : (accumY + velocity) * .5;
-                    }
-                    if (accumX < -maxVelocity) {
-                        accumX = -maxVelocity;
-                    }
-                    else if (accumX > maxVelocity) {
-                        accumX = maxVelocity;
-                    }
-                    if (accumY < -maxVelocity) {
-                        accumY = -maxVelocity;
-                    }
-                    else if (accumY > maxVelocity) {
-                        accumY = maxVelocity;
-                    }
-                    pointer.xVelocity = accumX;
-                    pointer.yVelocity = accumY;
-                    if (VelocityTracker.localLOGV) {
-                        Log.v(VelocityTracker.TAG, "Pointer " + pointer.id
-                            + ": Y velocity=" + accumX + " X velocity=" + accumY + " N=" + numTouches);
-                    }
-                }
-            }
-            getXVelocity(id = 0) {
-                let pointer = this.getPointer(id);
-                return pointer != null ? pointer.xVelocity : 0;
-            }
-            getYVelocity(id = 0) {
-                let pointer = this.getPointer(id);
-                return pointer != null ? pointer.yVelocity : 0;
-            }
-            getPointer(id) {
-                for (let pointer = this.mPointerListHead; pointer != null; pointer = pointer.next) {
-                    if (pointer.id == id) {
-                        return pointer;
-                    }
-                }
-                return null;
-            }
-            static obtainPointer() {
-                if (VelocityTracker.sRecycledPointerCount != 0) {
-                    let element = VelocityTracker.sRecycledPointerListHead;
-                    VelocityTracker.sRecycledPointerCount -= 1;
-                    VelocityTracker.sRecycledPointerListHead = element.next;
-                    element.next = null;
-                    return element;
-                }
-                return new Pointer();
-            }
-            static releasePointer(pointer) {
-                if (VelocityTracker.sRecycledPointerCount < VelocityTracker.POINTER_POOL_CAPACITY) {
-                    pointer.next = VelocityTracker.sRecycledPointerListHead;
-                    VelocityTracker.sRecycledPointerCount += 1;
-                    VelocityTracker.sRecycledPointerListHead = pointer;
-                }
-            }
-            static releasePointerList(pointer) {
-                if (pointer != null) {
-                    let count = VelocityTracker.sRecycledPointerCount;
-                    if (count >= VelocityTracker.POINTER_POOL_CAPACITY) {
-                        return;
-                    }
-                    let tail = pointer;
-                    for (;;) {
-                        count += 1;
-                        if (count >= VelocityTracker.POINTER_POOL_CAPACITY) {
-                            break;
-                        }
-                        let next = tail.next;
-                        if (next == null) {
-                            break;
-                        }
-                        tail = next;
-                    }
-                    tail.next = VelocityTracker.sRecycledPointerListHead;
-                    VelocityTracker.sRecycledPointerCount = count;
-                    VelocityTracker.sRecycledPointerListHead = pointer;
-                }
-            }
-        }
-        VelocityTracker.TAG = "VelocityTracker";
-        VelocityTracker.DEBUG = Log.VelocityTracker_DBG;
-        VelocityTracker.localLOGV = VelocityTracker.DEBUG;
-        VelocityTracker.NUM_PAST = 10;
-        VelocityTracker.MAX_AGE_MILLISECONDS = 200;
-        VelocityTracker.POINTER_POOL_CAPACITY = 20;
-        VelocityTracker.sPool = new Pools.SynchronizedPool(2);
-        VelocityTracker.sRecycledPointerCount = 0;
-        view.VelocityTracker = VelocityTracker;
-        class Pointer {
-            constructor() {
-                this.id = 0;
-                this.xVelocity = 0;
-                this.yVelocity = 0;
-                this.pastX = new Array(VelocityTracker.NUM_PAST);
-                this.pastY = new Array(VelocityTracker.NUM_PAST);
-                this.pastTime = new Array(VelocityTracker.NUM_PAST);
-                this.generation = 0;
-            }
-        }
-    })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/17.
@@ -16685,6 +17028,47 @@ var android;
             set mOverflingDistance(value) {
                 this._mOverflingDistance = value;
             }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                let absListView = this;
+                mergeHandler.add({
+                    set listSelector(value) {
+                        let d = mergeHandler.parseDrawable(value);
+                        if (d)
+                            absListView.setSelector(d);
+                    },
+                    set drawSelectorOnTop(value) {
+                        absListView.mDrawSelectorOnTop = mergeHandler.parseBoolean(value, false);
+                    },
+                    set stackFromBottom(value) {
+                        absListView.setStackFromBottom(mergeHandler.parseBoolean(value, false));
+                    },
+                    set scrollingCache(value) {
+                        this.setScrollingCacheEnabled(mergeHandler.parseBoolean(value, true));
+                    },
+                    set transcriptMode(value) {
+                        let transcriptMode = mergeHandler.parseNumber(value, AbsListView.TRANSCRIPT_MODE_DISABLED);
+                        absListView.setTranscriptMode(transcriptMode);
+                    },
+                    set cacheColorHint(value) {
+                        let color = mergeHandler.parseNumber(value, 0);
+                        absListView.setCacheColorHint(color);
+                    },
+                    set fastScrollEnabled(value) {
+                        let enableFastScroll = mergeHandler.parseBoolean(value, false);
+                    },
+                    set fastScrollAlwaysVisible(value) {
+                        let fastScrollAlwaysVisible = mergeHandler.parseBoolean(value, false);
+                    },
+                    set smoothScrollbar(value) {
+                        let smoothScrollbar = mergeHandler.parseBoolean(value, true);
+                        absListView.setSmoothScrollbarEnabled(smoothScrollbar);
+                    },
+                    set choiceMode(value) {
+                        absListView.setChoiceMode(mergeHandler.parseNumber(value, AbsListView.CHOICE_MODE_NONE));
+                    }
+                });
+            }
             initAbsListView() {
                 this.setClickable(true);
                 this.setFocusableInTouchMode(true);
@@ -20457,24 +20841,15 @@ var android;
                         if (divider)
                             listView.setDivider(divider);
                     },
-                    get divider() {
-                        return listView.mDivider;
-                    },
                     set overScrollHeader(value) {
                         let header = mergeHandler.parseDrawable(value);
                         if (header)
                             listView.setOverscrollHeader(header);
                     },
-                    get overScrollHeader() {
-                        return listView.mOverScrollHeader;
-                    },
                     set overScrollFooter(value) {
                         let footer = mergeHandler.parseDrawable(value);
                         if (footer)
                             listView.setOverscrollFooter(footer);
-                    },
-                    get overScrollFooter() {
-                        return listView.mOverScrollFooter;
                     },
                     set dividerHeight(value) {
                         let dividerHeight = mergeHandler.parseNumber(value, 0);
@@ -20482,20 +20857,11 @@ var android;
                             listView.setDividerHeight(dividerHeight);
                         }
                     },
-                    get dividerHeight() {
-                        return listView.mDividerHeight;
-                    },
                     set headerDividersEnabled(value) {
                         listView.setHeaderDividersEnabled(mergeHandler.parseBoolean(value, true));
                     },
-                    get headerDividersEnabled() {
-                        return listView.mHeaderDividersEnabled;
-                    },
                     set footerDividersEnabled(value) {
                         listView.setFooterDividersEnabled(mergeHandler.parseBoolean(value, true));
-                    },
-                    get footerDividersEnabled() {
-                        return listView.mFooterDividersEnabled;
                     },
                 });
             }
@@ -22725,14 +23091,8 @@ var android;
                     set horizontalSpacing(value) {
                         gridView.setHorizontalSpacing(mergeHandler.parseNumber(value, 0));
                     },
-                    get horizontalSpacing() {
-                        return gridView.mHorizontalSpacing;
-                    },
                     set verticalSpacing(value) {
                         gridView.setVerticalSpacing(mergeHandler.parseNumber(value, 0));
-                    },
-                    get verticalSpacing() {
-                        return gridView.mVerticalSpacing;
                     },
                     set stretchMode(value) {
                         let strechMode = mergeHandler.parseNumber(value, -1);
@@ -22740,31 +23100,19 @@ var android;
                             gridView.setStretchMode(strechMode);
                         }
                     },
-                    get stretchMode() {
-                        return gridView.mStretchMode;
-                    },
                     set columnWidth(value) {
                         let columnWidth = mergeHandler.parseNumber(value, -1);
                         if (columnWidth > 0) {
                             gridView.setColumnWidth(columnWidth);
                         }
                     },
-                    get columnWidth() {
-                        return gridView.mColumnWidth;
-                    },
                     set numColumns(value) {
                         gridView.setNumColumns(mergeHandler.parseNumber(value, 1));
-                    },
-                    get numColumns() {
-                        return gridView.mNumColumns;
                     },
                     set gravity(value) {
                         let gravity = mergeHandler.parseGravity(value, -1);
                         if (gravity >= 0)
                             gridView.setGravity(gravity);
-                    },
-                    get gravity() {
-                        return gridView.mGravity;
                     },
                 });
             }
@@ -26989,6 +27337,789 @@ var android;
         })(v4 = support.v4 || (support.v4 = {}));
     })(support = android.support || (android.support = {}));
 })(android || (android = {}));
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../../android/view/MotionEvent.ts"/>
+///<reference path="../../../../android/view/VelocityTracker.ts"/>
+///<reference path="../../../../android/view/View.ts"/>
+///<reference path="../../../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../../../android/view/ViewGroup.ts"/>
+///<reference path="../../../../android/widget/OverScroller.ts"/>
+///<reference path="../../../../android/view/animation/Interpolator.ts"/>
+///<reference path="../../../../java/lang/System.ts"/>
+var android;
+(function (android) {
+    var support;
+    (function (support) {
+        var v4;
+        (function (v4) {
+            var widget;
+            (function (widget) {
+                var MotionEvent = android.view.MotionEvent;
+                var VelocityTracker = android.view.VelocityTracker;
+                var ViewConfiguration = android.view.ViewConfiguration;
+                var ViewGroup = android.view.ViewGroup;
+                var OverScroller = android.widget.OverScroller;
+                var System = java.lang.System;
+                class ViewDragHelper {
+                    constructor(forParent, cb) {
+                        this.mDragState = 0;
+                        this.mTouchSlop = 0;
+                        this.mActivePointerId = ViewDragHelper.INVALID_POINTER;
+                        this.mPointersDown = 0;
+                        this.mMaxVelocity = 0;
+                        this.mMinVelocity = 0;
+                        this.mEdgeSize = 0;
+                        this.mTrackingEdges = 0;
+                        this.mSetIdleRunnable = (() => {
+                            const _this = this;
+                            class _Inner {
+                                run() {
+                                    _this.setDragState(ViewDragHelper.STATE_IDLE);
+                                }
+                            }
+                            return new _Inner();
+                        })();
+                        if (forParent == null) {
+                            throw Error(`new IllegalArgumentException("Parent view may not be null")`);
+                        }
+                        if (cb == null) {
+                            throw Error(`new IllegalArgumentException("Callback may not be null")`);
+                        }
+                        this.mParentView = forParent;
+                        this.mCallback = cb;
+                        const vc = ViewConfiguration.get();
+                        const density = android.content.res.Resources.getDisplayMetrics().density;
+                        this.mEdgeSize = Math.floor((ViewDragHelper.EDGE_SIZE * density + 0.5));
+                        this.mTouchSlop = vc.getScaledTouchSlop();
+                        this.mMaxVelocity = vc.getScaledMaximumFlingVelocity();
+                        this.mMinVelocity = vc.getScaledMinimumFlingVelocity();
+                        this.mScroller = new OverScroller(ViewDragHelper.sInterpolator);
+                    }
+                    static create(...args) {
+                        if (args.length === 2)
+                            return new ViewDragHelper(args[0], args[1]);
+                        else if (args.length === 3) {
+                            let [forParent, sensitivity, cb] = args;
+                            const helper = ViewDragHelper.create(forParent, cb);
+                            helper.mTouchSlop = Math.floor((helper.mTouchSlop * (1 / sensitivity)));
+                            return helper;
+                        }
+                    }
+                    setMinVelocity(minVel) {
+                        this.mMinVelocity = minVel;
+                    }
+                    getMinVelocity() {
+                        return this.mMinVelocity;
+                    }
+                    getViewDragState() {
+                        return this.mDragState;
+                    }
+                    setEdgeTrackingEnabled(edgeFlags) {
+                        this.mTrackingEdges = edgeFlags;
+                    }
+                    getEdgeSize() {
+                        return this.mEdgeSize;
+                    }
+                    captureChildView(childView, activePointerId) {
+                        if (childView.getParent() != this.mParentView) {
+                            throw Error(`new IllegalArgumentException("captureChildView: parameter must be a descendant " + "of the ViewDragHelper's tracked parent view (" + this.mParentView + ")")`);
+                        }
+                        this.mCapturedView = childView;
+                        this.mActivePointerId = activePointerId;
+                        this.mCallback.onViewCaptured(childView, activePointerId);
+                        this.setDragState(ViewDragHelper.STATE_DRAGGING);
+                    }
+                    getCapturedView() {
+                        return this.mCapturedView;
+                    }
+                    getActivePointerId() {
+                        return this.mActivePointerId;
+                    }
+                    getTouchSlop() {
+                        return this.mTouchSlop;
+                    }
+                    cancel() {
+                        this.mActivePointerId = ViewDragHelper.INVALID_POINTER;
+                        this.clearMotionHistory();
+                        if (this.mVelocityTracker != null) {
+                            this.mVelocityTracker.recycle();
+                            this.mVelocityTracker = null;
+                        }
+                    }
+                    abort() {
+                        this.cancel();
+                        if (this.mDragState == ViewDragHelper.STATE_SETTLING) {
+                            const oldX = this.mScroller.getCurrX();
+                            const oldY = this.mScroller.getCurrY();
+                            this.mScroller.abortAnimation();
+                            const newX = this.mScroller.getCurrX();
+                            const newY = this.mScroller.getCurrY();
+                            this.mCallback.onViewPositionChanged(this.mCapturedView, newX, newY, newX - oldX, newY - oldY);
+                        }
+                        this.setDragState(ViewDragHelper.STATE_IDLE);
+                    }
+                    smoothSlideViewTo(child, finalLeft, finalTop) {
+                        this.mCapturedView = child;
+                        this.mActivePointerId = ViewDragHelper.INVALID_POINTER;
+                        return this.forceSettleCapturedViewAt(finalLeft, finalTop, 0, 0);
+                    }
+                    settleCapturedViewAt(finalLeft, finalTop) {
+                        if (!this.mReleaseInProgress) {
+                            throw Error(`new IllegalStateException("Cannot settleCapturedViewAt outside of a call to " + "Callback#onViewReleased")`);
+                        }
+                        return this.forceSettleCapturedViewAt(finalLeft, finalTop, Math.floor(this.mVelocityTracker.getXVelocity(this.mActivePointerId)), Math.floor(this.mVelocityTracker.getYVelocity(this.mActivePointerId)));
+                    }
+                    forceSettleCapturedViewAt(finalLeft, finalTop, xvel, yvel) {
+                        const startLeft = this.mCapturedView.getLeft();
+                        const startTop = this.mCapturedView.getTop();
+                        const dx = finalLeft - startLeft;
+                        const dy = finalTop - startTop;
+                        if (dx == 0 && dy == 0) {
+                            this.mScroller.abortAnimation();
+                            this.setDragState(ViewDragHelper.STATE_IDLE);
+                            return false;
+                        }
+                        const duration = this.computeSettleDuration(this.mCapturedView, dx, dy, xvel, yvel);
+                        this.mScroller.startScroll(startLeft, startTop, dx, dy, duration);
+                        this.setDragState(ViewDragHelper.STATE_SETTLING);
+                        return true;
+                    }
+                    computeSettleDuration(child, dx, dy, xvel, yvel) {
+                        xvel = this.clampMag(xvel, Math.floor(this.mMinVelocity), Math.floor(this.mMaxVelocity));
+                        yvel = this.clampMag(yvel, Math.floor(this.mMinVelocity), Math.floor(this.mMaxVelocity));
+                        const absDx = Math.abs(dx);
+                        const absDy = Math.abs(dy);
+                        const absXVel = Math.abs(xvel);
+                        const absYVel = Math.abs(yvel);
+                        const addedVel = absXVel + absYVel;
+                        const addedDistance = absDx + absDy;
+                        const xweight = xvel != 0 ? absXVel / addedVel : absDx / addedDistance;
+                        const yweight = yvel != 0 ? absYVel / addedVel : absDy / addedDistance;
+                        let xduration = this.computeAxisDuration(dx, xvel, this.mCallback.getViewHorizontalDragRange(child));
+                        let yduration = this.computeAxisDuration(dy, yvel, this.mCallback.getViewVerticalDragRange(child));
+                        return Math.floor((xduration * xweight + yduration * yweight));
+                    }
+                    computeAxisDuration(delta, velocity, motionRange) {
+                        if (delta == 0) {
+                            return 0;
+                        }
+                        const width = this.mParentView.getWidth();
+                        const halfWidth = width / 2;
+                        const distanceRatio = Math.min(1, Math.abs(delta) / width);
+                        const distance = halfWidth + halfWidth * this.distanceInfluenceForSnapDuration(distanceRatio);
+                        let duration;
+                        velocity = Math.abs(velocity);
+                        if (velocity > 0) {
+                            duration = 4 * Math.round(1000 * Math.abs(distance / velocity));
+                        }
+                        else {
+                            const range = Math.abs(delta) / motionRange;
+                            duration = Math.floor(((range + 1) * ViewDragHelper.BASE_SETTLE_DURATION));
+                        }
+                        return Math.min(duration, ViewDragHelper.MAX_SETTLE_DURATION);
+                    }
+                    clampMag(value, absMin, absMax) {
+                        const absValue = Math.abs(value);
+                        if (absValue < absMin)
+                            return 0;
+                        if (absValue > absMax)
+                            return value > 0 ? absMax : -absMax;
+                        return value;
+                    }
+                    distanceInfluenceForSnapDuration(f) {
+                        f -= 0.5;
+                        f *= 0.3 * Math.PI / 2.0;
+                        return Math.sin(f);
+                    }
+                    flingCapturedView(minLeft, minTop, maxLeft, maxTop) {
+                        if (!this.mReleaseInProgress) {
+                            throw Error(`new IllegalStateException("Cannot flingCapturedView outside of a call to " + "Callback#onViewReleased")`);
+                        }
+                        this.mScroller.fling(this.mCapturedView.getLeft(), this.mCapturedView.getTop(), Math.floor(this.mVelocityTracker.getXVelocity(this.mActivePointerId)), Math.floor(this.mVelocityTracker.getYVelocity(this.mActivePointerId)), minLeft, maxLeft, minTop, maxTop);
+                        this.setDragState(ViewDragHelper.STATE_SETTLING);
+                    }
+                    continueSettling(deferCallbacks) {
+                        if (this.mDragState == ViewDragHelper.STATE_SETTLING) {
+                            let keepGoing = this.mScroller.computeScrollOffset();
+                            const x = this.mScroller.getCurrX();
+                            const y = this.mScroller.getCurrY();
+                            const dx = x - this.mCapturedView.getLeft();
+                            const dy = y - this.mCapturedView.getTop();
+                            if (dx != 0) {
+                                this.mCapturedView.offsetLeftAndRight(dx);
+                            }
+                            if (dy != 0) {
+                                this.mCapturedView.offsetTopAndBottom(dy);
+                            }
+                            if (dx != 0 || dy != 0) {
+                                this.mCallback.onViewPositionChanged(this.mCapturedView, x, y, dx, dy);
+                            }
+                            if (keepGoing && x == this.mScroller.getFinalX() && y == this.mScroller.getFinalY()) {
+                                this.mScroller.abortAnimation();
+                                keepGoing = this.mScroller.isFinished();
+                            }
+                            if (!keepGoing) {
+                                if (deferCallbacks) {
+                                    this.mParentView.post(this.mSetIdleRunnable);
+                                }
+                                else {
+                                    this.setDragState(ViewDragHelper.STATE_IDLE);
+                                }
+                            }
+                        }
+                        return this.mDragState == ViewDragHelper.STATE_SETTLING;
+                    }
+                    dispatchViewReleased(xvel, yvel) {
+                        this.mReleaseInProgress = true;
+                        this.mCallback.onViewReleased(this.mCapturedView, xvel, yvel);
+                        this.mReleaseInProgress = false;
+                        if (this.mDragState == ViewDragHelper.STATE_DRAGGING) {
+                            this.setDragState(ViewDragHelper.STATE_IDLE);
+                        }
+                    }
+                    clearMotionHistory(pointerId) {
+                        if (this.mInitialMotionX == null) {
+                            return;
+                        }
+                        if (pointerId == null) {
+                            this.mInitialMotionX = [];
+                            this.mInitialMotionY = [];
+                            this.mLastMotionX = [];
+                            this.mLastMotionY = [];
+                            this.mInitialEdgesTouched = [];
+                            this.mEdgeDragsInProgress = [];
+                            this.mEdgeDragsLocked = [];
+                            this.mPointersDown = 0;
+                        }
+                        else {
+                            this.mInitialMotionX[pointerId] = 0;
+                            this.mInitialMotionY[pointerId] = 0;
+                            this.mLastMotionX[pointerId] = 0;
+                            this.mLastMotionY[pointerId] = 0;
+                            this.mInitialEdgesTouched[pointerId] = 0;
+                            this.mEdgeDragsInProgress[pointerId] = 0;
+                            this.mEdgeDragsLocked[pointerId] = 0;
+                            this.mPointersDown &= ~(1 << pointerId);
+                        }
+                    }
+                    ensureMotionHistorySizeForId(pointerId) {
+                        if (this.mInitialMotionX == null || this.mInitialMotionX.length <= pointerId) {
+                            let imx = new Array(pointerId + 1);
+                            let imy = new Array(pointerId + 1);
+                            let lmx = new Array(pointerId + 1);
+                            let lmy = new Array(pointerId + 1);
+                            let iit = new Array(pointerId + 1);
+                            let edip = new Array(pointerId + 1);
+                            let edl = new Array(pointerId + 1);
+                            if (this.mInitialMotionX != null) {
+                                System.arraycopy(this.mInitialMotionX, 0, imx, 0, this.mInitialMotionX.length);
+                                System.arraycopy(this.mInitialMotionY, 0, imy, 0, this.mInitialMotionY.length);
+                                System.arraycopy(this.mLastMotionX, 0, lmx, 0, this.mLastMotionX.length);
+                                System.arraycopy(this.mLastMotionY, 0, lmy, 0, this.mLastMotionY.length);
+                                System.arraycopy(this.mInitialEdgesTouched, 0, iit, 0, this.mInitialEdgesTouched.length);
+                                System.arraycopy(this.mEdgeDragsInProgress, 0, edip, 0, this.mEdgeDragsInProgress.length);
+                                System.arraycopy(this.mEdgeDragsLocked, 0, edl, 0, this.mEdgeDragsLocked.length);
+                            }
+                            this.mInitialMotionX = imx;
+                            this.mInitialMotionY = imy;
+                            this.mLastMotionX = lmx;
+                            this.mLastMotionY = lmy;
+                            this.mInitialEdgesTouched = iit;
+                            this.mEdgeDragsInProgress = edip;
+                            this.mEdgeDragsLocked = edl;
+                        }
+                    }
+                    saveInitialMotion(x, y, pointerId) {
+                        this.ensureMotionHistorySizeForId(pointerId);
+                        this.mInitialMotionX[pointerId] = this.mLastMotionX[pointerId] = x;
+                        this.mInitialMotionY[pointerId] = this.mLastMotionY[pointerId] = y;
+                        this.mInitialEdgesTouched[pointerId] = this.getEdgesTouched(Math.floor(x), Math.floor(y));
+                        this.mPointersDown |= 1 << pointerId;
+                    }
+                    saveLastMotion(ev) {
+                        const pointerCount = ev.getPointerCount();
+                        for (let i = 0; i < pointerCount; i++) {
+                            const pointerId = ev.getPointerId(i);
+                            const x = ev.getX(i);
+                            const y = ev.getY(i);
+                            this.mLastMotionX[pointerId] = x;
+                            this.mLastMotionY[pointerId] = y;
+                        }
+                    }
+                    isPointerDown(pointerId) {
+                        return (this.mPointersDown & 1 << pointerId) != 0;
+                    }
+                    setDragState(state) {
+                        if (this.mDragState != state) {
+                            this.mDragState = state;
+                            this.mCallback.onViewDragStateChanged(state);
+                            if (state == ViewDragHelper.STATE_IDLE) {
+                                this.mCapturedView = null;
+                            }
+                        }
+                    }
+                    tryCaptureViewForDrag(toCapture, pointerId) {
+                        if (toCapture == this.mCapturedView && this.mActivePointerId == pointerId) {
+                            return true;
+                        }
+                        if (toCapture != null && this.mCallback.tryCaptureView(toCapture, pointerId)) {
+                            this.mActivePointerId = pointerId;
+                            this.captureChildView(toCapture, pointerId);
+                            return true;
+                        }
+                        return false;
+                    }
+                    canScroll(v, checkV, dx, dy, x, y) {
+                        if (v instanceof ViewGroup) {
+                            const group = v;
+                            const scrollX = v.getScrollX();
+                            const scrollY = v.getScrollY();
+                            const count = group.getChildCount();
+                            for (let i = count - 1; i >= 0; i--) {
+                                const child = group.getChildAt(i);
+                                if (x + scrollX >= child.getLeft() && x + scrollX < child.getRight()
+                                    && y + scrollY >= child.getTop() && y + scrollY < child.getBottom()
+                                    && this.canScroll(child, true, dx, dy, x + scrollX - child.getLeft(), y + scrollY - child.getTop())) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return checkV && (v.canScrollHorizontally(-dx) || v.canScrollVertically(-dy));
+                    }
+                    shouldInterceptTouchEvent(ev) {
+                        const action = ev.getActionMasked();
+                        const actionIndex = ev.getActionIndex();
+                        if (action == MotionEvent.ACTION_DOWN) {
+                            this.cancel();
+                        }
+                        if (this.mVelocityTracker == null) {
+                            this.mVelocityTracker = VelocityTracker.obtain();
+                        }
+                        this.mVelocityTracker.addMovement(ev);
+                        switch (action) {
+                            case MotionEvent.ACTION_DOWN:
+                                {
+                                    const x = ev.getX();
+                                    const y = ev.getY();
+                                    const pointerId = ev.getPointerId(0);
+                                    this.saveInitialMotion(x, y, pointerId);
+                                    const toCapture = this.findTopChildUnder(Math.floor(x), Math.floor(y));
+                                    if (toCapture == this.mCapturedView && this.mDragState == ViewDragHelper.STATE_SETTLING) {
+                                        this.tryCaptureViewForDrag(toCapture, pointerId);
+                                    }
+                                    const edgesTouched = this.mInitialEdgesTouched[pointerId];
+                                    if ((edgesTouched & this.mTrackingEdges) != 0) {
+                                        this.mCallback.onEdgeTouched(edgesTouched & this.mTrackingEdges, pointerId);
+                                    }
+                                    break;
+                                }
+                            case MotionEvent.ACTION_POINTER_DOWN:
+                                {
+                                    const pointerId = ev.getPointerId(actionIndex);
+                                    const x = ev.getX(actionIndex);
+                                    const y = ev.getY(actionIndex);
+                                    this.saveInitialMotion(x, y, pointerId);
+                                    if (this.mDragState == ViewDragHelper.STATE_IDLE) {
+                                        const edgesTouched = this.mInitialEdgesTouched[pointerId];
+                                        if ((edgesTouched & this.mTrackingEdges) != 0) {
+                                            this.mCallback.onEdgeTouched(edgesTouched & this.mTrackingEdges, pointerId);
+                                        }
+                                    }
+                                    else if (this.mDragState == ViewDragHelper.STATE_SETTLING) {
+                                        const toCapture = this.findTopChildUnder(Math.floor(x), Math.floor(y));
+                                        if (toCapture == this.mCapturedView) {
+                                            this.tryCaptureViewForDrag(toCapture, pointerId);
+                                        }
+                                    }
+                                    break;
+                                }
+                            case MotionEvent.ACTION_MOVE:
+                                {
+                                    const pointerCount = ev.getPointerCount();
+                                    for (let i = 0; i < pointerCount; i++) {
+                                        const pointerId = ev.getPointerId(i);
+                                        const x = ev.getX(i);
+                                        const y = ev.getY(i);
+                                        const dx = x - this.mInitialMotionX[pointerId];
+                                        const dy = y - this.mInitialMotionY[pointerId];
+                                        this.reportNewEdgeDrags(dx, dy, pointerId);
+                                        if (this.mDragState == ViewDragHelper.STATE_DRAGGING) {
+                                            break;
+                                        }
+                                        const toCapture = this.findTopChildUnder(Math.floor(x), Math.floor(y));
+                                        if (toCapture != null && this.checkTouchSlop(toCapture, dx, dy) && this.tryCaptureViewForDrag(toCapture, pointerId)) {
+                                            break;
+                                        }
+                                    }
+                                    this.saveLastMotion(ev);
+                                    break;
+                                }
+                            case MotionEvent.ACTION_POINTER_UP:
+                                {
+                                    const pointerId = ev.getPointerId(actionIndex);
+                                    this.clearMotionHistory(pointerId);
+                                    break;
+                                }
+                            case MotionEvent.ACTION_UP:
+                            case MotionEvent.ACTION_CANCEL:
+                                {
+                                    this.cancel();
+                                    break;
+                                }
+                        }
+                        return this.mDragState == ViewDragHelper.STATE_DRAGGING;
+                    }
+                    processTouchEvent(ev) {
+                        const action = ev.getActionMasked();
+                        const actionIndex = ev.getActionIndex();
+                        if (action == MotionEvent.ACTION_DOWN) {
+                            this.cancel();
+                        }
+                        if (this.mVelocityTracker == null) {
+                            this.mVelocityTracker = VelocityTracker.obtain();
+                        }
+                        this.mVelocityTracker.addMovement(ev);
+                        switch (action) {
+                            case MotionEvent.ACTION_DOWN:
+                                {
+                                    const x = ev.getX();
+                                    const y = ev.getY();
+                                    const pointerId = ev.getPointerId(0);
+                                    const toCapture = this.findTopChildUnder(Math.floor(x), Math.floor(y));
+                                    this.saveInitialMotion(x, y, pointerId);
+                                    this.tryCaptureViewForDrag(toCapture, pointerId);
+                                    const edgesTouched = this.mInitialEdgesTouched[pointerId];
+                                    if ((edgesTouched & this.mTrackingEdges) != 0) {
+                                        this.mCallback.onEdgeTouched(edgesTouched & this.mTrackingEdges, pointerId);
+                                    }
+                                    break;
+                                }
+                            case MotionEvent.ACTION_POINTER_DOWN:
+                                {
+                                    const pointerId = ev.getPointerId(actionIndex);
+                                    const x = ev.getX(actionIndex);
+                                    const y = ev.getY(actionIndex);
+                                    this.saveInitialMotion(x, y, pointerId);
+                                    if (this.mDragState == ViewDragHelper.STATE_IDLE) {
+                                        const toCapture = this.findTopChildUnder(Math.floor(x), Math.floor(y));
+                                        this.tryCaptureViewForDrag(toCapture, pointerId);
+                                        const edgesTouched = this.mInitialEdgesTouched[pointerId];
+                                        if ((edgesTouched & this.mTrackingEdges) != 0) {
+                                            this.mCallback.onEdgeTouched(edgesTouched & this.mTrackingEdges, pointerId);
+                                        }
+                                    }
+                                    else if (this.isCapturedViewUnder(Math.floor(x), Math.floor(y))) {
+                                        this.tryCaptureViewForDrag(this.mCapturedView, pointerId);
+                                    }
+                                    break;
+                                }
+                            case MotionEvent.ACTION_MOVE:
+                                {
+                                    if (this.mDragState == ViewDragHelper.STATE_DRAGGING) {
+                                        const index = ev.findPointerIndex(this.mActivePointerId);
+                                        const x = ev.getX(index);
+                                        const y = ev.getY(index);
+                                        const idx = Math.floor((x - this.mLastMotionX[this.mActivePointerId]));
+                                        const idy = Math.floor((y - this.mLastMotionY[this.mActivePointerId]));
+                                        this.dragTo(this.mCapturedView.getLeft() + idx, this.mCapturedView.getTop() + idy, idx, idy);
+                                        this.saveLastMotion(ev);
+                                    }
+                                    else {
+                                        const pointerCount = ev.getPointerCount();
+                                        for (let i = 0; i < pointerCount; i++) {
+                                            const pointerId = ev.getPointerId(i);
+                                            const x = ev.getX(i);
+                                            const y = ev.getY(i);
+                                            const dx = x - this.mInitialMotionX[pointerId];
+                                            const dy = y - this.mInitialMotionY[pointerId];
+                                            this.reportNewEdgeDrags(dx, dy, pointerId);
+                                            if (this.mDragState == ViewDragHelper.STATE_DRAGGING) {
+                                                break;
+                                            }
+                                            const toCapture = this.findTopChildUnder(Math.floor(x), Math.floor(y));
+                                            if (this.checkTouchSlop(toCapture, dx, dy) && this.tryCaptureViewForDrag(toCapture, pointerId)) {
+                                                break;
+                                            }
+                                        }
+                                        this.saveLastMotion(ev);
+                                    }
+                                    break;
+                                }
+                            case MotionEvent.ACTION_POINTER_UP:
+                                {
+                                    const pointerId = ev.getPointerId(actionIndex);
+                                    if (this.mDragState == ViewDragHelper.STATE_DRAGGING && pointerId == this.mActivePointerId) {
+                                        let newActivePointer = ViewDragHelper.INVALID_POINTER;
+                                        const pointerCount = ev.getPointerCount();
+                                        for (let i = 0; i < pointerCount; i++) {
+                                            const id = ev.getPointerId(i);
+                                            if (id == this.mActivePointerId) {
+                                                continue;
+                                            }
+                                            const x = ev.getX(i);
+                                            const y = ev.getY(i);
+                                            if (this.findTopChildUnder(Math.floor(x), Math.floor(y)) == this.mCapturedView && this.tryCaptureViewForDrag(this.mCapturedView, id)) {
+                                                newActivePointer = this.mActivePointerId;
+                                                break;
+                                            }
+                                        }
+                                        if (newActivePointer == ViewDragHelper.INVALID_POINTER) {
+                                            this.releaseViewForPointerUp();
+                                        }
+                                    }
+                                    this.clearMotionHistory(pointerId);
+                                    break;
+                                }
+                            case MotionEvent.ACTION_UP:
+                                {
+                                    if (this.mDragState == ViewDragHelper.STATE_DRAGGING) {
+                                        this.releaseViewForPointerUp();
+                                    }
+                                    this.cancel();
+                                    break;
+                                }
+                            case MotionEvent.ACTION_CANCEL:
+                                {
+                                    if (this.mDragState == ViewDragHelper.STATE_DRAGGING) {
+                                        this.dispatchViewReleased(0, 0);
+                                    }
+                                    this.cancel();
+                                    break;
+                                }
+                        }
+                    }
+                    reportNewEdgeDrags(dx, dy, pointerId) {
+                        let dragsStarted = 0;
+                        if (this.checkNewEdgeDrag(dx, dy, pointerId, ViewDragHelper.EDGE_LEFT)) {
+                            dragsStarted |= ViewDragHelper.EDGE_LEFT;
+                        }
+                        if (this.checkNewEdgeDrag(dy, dx, pointerId, ViewDragHelper.EDGE_TOP)) {
+                            dragsStarted |= ViewDragHelper.EDGE_TOP;
+                        }
+                        if (this.checkNewEdgeDrag(dx, dy, pointerId, ViewDragHelper.EDGE_RIGHT)) {
+                            dragsStarted |= ViewDragHelper.EDGE_RIGHT;
+                        }
+                        if (this.checkNewEdgeDrag(dy, dx, pointerId, ViewDragHelper.EDGE_BOTTOM)) {
+                            dragsStarted |= ViewDragHelper.EDGE_BOTTOM;
+                        }
+                        if (dragsStarted != 0) {
+                            this.mEdgeDragsInProgress[pointerId] |= dragsStarted;
+                            this.mCallback.onEdgeDragStarted(dragsStarted, pointerId);
+                        }
+                    }
+                    checkNewEdgeDrag(delta, odelta, pointerId, edge) {
+                        const absDelta = Math.abs(delta);
+                        const absODelta = Math.abs(odelta);
+                        if ((this.mInitialEdgesTouched[pointerId] & edge) != edge || (this.mTrackingEdges & edge) == 0 || (this.mEdgeDragsLocked[pointerId] & edge) == edge || (this.mEdgeDragsInProgress[pointerId] & edge) == edge || (absDelta <= this.mTouchSlop && absODelta <= this.mTouchSlop)) {
+                            return false;
+                        }
+                        if (absDelta < absODelta * 0.5 && this.mCallback.onEdgeLock(edge)) {
+                            this.mEdgeDragsLocked[pointerId] |= edge;
+                            return false;
+                        }
+                        return (this.mEdgeDragsInProgress[pointerId] & edge) == 0 && absDelta > this.mTouchSlop;
+                    }
+                    checkTouchSlop(...args) {
+                        if (args.length === 1)
+                            return this._checkTouchSlop_1(args[0]);
+                        if (args.length === 2)
+                            return this._checkTouchSlop_2(args[0], args[1]);
+                        if (args.length === 3)
+                            return this._checkTouchSlop_3(args[0], args[2], args[3]);
+                        return false;
+                    }
+                    _checkTouchSlop_3(child, dx, dy) {
+                        if (child == null) {
+                            return false;
+                        }
+                        const checkHorizontal = this.mCallback.getViewHorizontalDragRange(child) > 0;
+                        const checkVertical = this.mCallback.getViewVerticalDragRange(child) > 0;
+                        if (checkHorizontal && checkVertical) {
+                            return dx * dx + dy * dy > this.mTouchSlop * this.mTouchSlop;
+                        }
+                        else if (checkHorizontal) {
+                            return Math.abs(dx) > this.mTouchSlop;
+                        }
+                        else if (checkVertical) {
+                            return Math.abs(dy) > this.mTouchSlop;
+                        }
+                        return false;
+                    }
+                    _checkTouchSlop_1(directions) {
+                        const count = this.mInitialMotionX.length;
+                        for (let i = 0; i < count; i++) {
+                            if (this.checkTouchSlop(directions, i)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    _checkTouchSlop_2(directions, pointerId) {
+                        if (!this.isPointerDown(pointerId)) {
+                            return false;
+                        }
+                        const checkHorizontal = (directions & ViewDragHelper.DIRECTION_HORIZONTAL) == ViewDragHelper.DIRECTION_HORIZONTAL;
+                        const checkVertical = (directions & ViewDragHelper.DIRECTION_VERTICAL) == ViewDragHelper.DIRECTION_VERTICAL;
+                        const dx = this.mLastMotionX[pointerId] - this.mInitialMotionX[pointerId];
+                        const dy = this.mLastMotionY[pointerId] - this.mInitialMotionY[pointerId];
+                        if (checkHorizontal && checkVertical) {
+                            return dx * dx + dy * dy > this.mTouchSlop * this.mTouchSlop;
+                        }
+                        else if (checkHorizontal) {
+                            return Math.abs(dx) > this.mTouchSlop;
+                        }
+                        else if (checkVertical) {
+                            return Math.abs(dy) > this.mTouchSlop;
+                        }
+                        return false;
+                    }
+                    isEdgeTouched(edges, pointerId) {
+                        if (pointerId == null) {
+                            const count = this.mInitialEdgesTouched.length;
+                            for (let i = 0; i < count; i++) {
+                                if (this.isEdgeTouched(edges, i)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return this.isPointerDown(pointerId) && (this.mInitialEdgesTouched[pointerId] & edges) != 0;
+                    }
+                    releaseViewForPointerUp() {
+                        this.mVelocityTracker.computeCurrentVelocity(1000, this.mMaxVelocity);
+                        const xvel = this.clampMag(this.mVelocityTracker.getXVelocity(this.mActivePointerId), this.mMinVelocity, this.mMaxVelocity);
+                        const yvel = this.clampMag(this.mVelocityTracker.getYVelocity(this.mActivePointerId), this.mMinVelocity, this.mMaxVelocity);
+                        this.dispatchViewReleased(xvel, yvel);
+                    }
+                    dragTo(left, top, dx, dy) {
+                        let clampedX = left;
+                        let clampedY = top;
+                        const oldLeft = this.mCapturedView.getLeft();
+                        const oldTop = this.mCapturedView.getTop();
+                        if (dx != 0) {
+                            clampedX = this.mCallback.clampViewPositionHorizontal(this.mCapturedView, left, dx);
+                            this.mCapturedView.offsetLeftAndRight(clampedX - oldLeft);
+                        }
+                        if (dy != 0) {
+                            clampedY = this.mCallback.clampViewPositionVertical(this.mCapturedView, top, dy);
+                            this.mCapturedView.offsetTopAndBottom(clampedY - oldTop);
+                        }
+                        if (dx != 0 || dy != 0) {
+                            const clampedDx = clampedX - oldLeft;
+                            const clampedDy = clampedY - oldTop;
+                            this.mCallback.onViewPositionChanged(this.mCapturedView, clampedX, clampedY, clampedDx, clampedDy);
+                        }
+                    }
+                    isCapturedViewUnder(x, y) {
+                        return this.isViewUnder(this.mCapturedView, x, y);
+                    }
+                    isViewUnder(view, x, y) {
+                        if (view == null) {
+                            return false;
+                        }
+                        return x >= view.getLeft() && x < view.getRight() && y >= view.getTop() && y < view.getBottom();
+                    }
+                    findTopChildUnder(x, y) {
+                        const childCount = this.mParentView.getChildCount();
+                        for (let i = childCount - 1; i >= 0; i--) {
+                            const child = this.mParentView.getChildAt(this.mCallback.getOrderedChildIndex(i));
+                            if (x >= child.getLeft() && x < child.getRight() && y >= child.getTop() && y < child.getBottom()) {
+                                return child;
+                            }
+                        }
+                        return null;
+                    }
+                    getEdgesTouched(x, y) {
+                        let result = 0;
+                        if (x < this.mParentView.getLeft() + this.mEdgeSize)
+                            result |= ViewDragHelper.EDGE_LEFT;
+                        if (y < this.mParentView.getTop() + this.mEdgeSize)
+                            result |= ViewDragHelper.EDGE_TOP;
+                        if (x > this.mParentView.getRight() - this.mEdgeSize)
+                            result |= ViewDragHelper.EDGE_RIGHT;
+                        if (y > this.mParentView.getBottom() - this.mEdgeSize)
+                            result |= ViewDragHelper.EDGE_BOTTOM;
+                        return result;
+                    }
+                }
+                ViewDragHelper.TAG = "ViewDragHelper";
+                ViewDragHelper.INVALID_POINTER = -1;
+                ViewDragHelper.STATE_IDLE = 0;
+                ViewDragHelper.STATE_DRAGGING = 1;
+                ViewDragHelper.STATE_SETTLING = 2;
+                ViewDragHelper.EDGE_LEFT = 1 << 0;
+                ViewDragHelper.EDGE_RIGHT = 1 << 1;
+                ViewDragHelper.EDGE_TOP = 1 << 2;
+                ViewDragHelper.EDGE_BOTTOM = 1 << 3;
+                ViewDragHelper.EDGE_ALL = ViewDragHelper.EDGE_LEFT | ViewDragHelper.EDGE_TOP | ViewDragHelper.EDGE_RIGHT | ViewDragHelper.EDGE_BOTTOM;
+                ViewDragHelper.DIRECTION_HORIZONTAL = 1 << 0;
+                ViewDragHelper.DIRECTION_VERTICAL = 1 << 1;
+                ViewDragHelper.DIRECTION_ALL = ViewDragHelper.DIRECTION_HORIZONTAL | ViewDragHelper.DIRECTION_VERTICAL;
+                ViewDragHelper.EDGE_SIZE = 20;
+                ViewDragHelper.BASE_SETTLE_DURATION = 256;
+                ViewDragHelper.MAX_SETTLE_DURATION = 600;
+                ViewDragHelper.sInterpolator = (() => {
+                    class _Inner {
+                        getInterpolation(t) {
+                            t -= 1.0;
+                            return t * t * t * t * t + 1.0;
+                        }
+                    }
+                    return new _Inner();
+                })();
+                widget.ViewDragHelper = ViewDragHelper;
+                (function (ViewDragHelper) {
+                    class Callback {
+                        onViewDragStateChanged(state) {
+                        }
+                        onViewPositionChanged(changedView, left, top, dx, dy) {
+                        }
+                        onViewCaptured(capturedChild, activePointerId) {
+                        }
+                        onViewReleased(releasedChild, xvel, yvel) {
+                        }
+                        onEdgeTouched(edgeFlags, pointerId) {
+                        }
+                        onEdgeLock(edgeFlags) {
+                            return false;
+                        }
+                        onEdgeDragStarted(edgeFlags, pointerId) {
+                        }
+                        getOrderedChildIndex(index) {
+                            return index;
+                        }
+                        getViewHorizontalDragRange(child) {
+                            return 0;
+                        }
+                        getViewVerticalDragRange(child) {
+                            return 0;
+                        }
+                        clampViewPositionHorizontal(child, left, dx) {
+                            return 0;
+                        }
+                        clampViewPositionVertical(child, top, dy) {
+                            return 0;
+                        }
+                    }
+                    ViewDragHelper.Callback = Callback;
+                })(ViewDragHelper = widget.ViewDragHelper || (widget.ViewDragHelper = {}));
+            })(widget = v4.widget || (v4.widget = {}));
+        })(v4 = support.v4 || (support.v4 = {}));
+    })(support = android.support || (android.support = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/6.
  */
@@ -27534,10 +28665,7 @@ var androidui;
             getView(position, convertView, parent) {
                 let element = this.getItem(position);
                 let view = element[View.AndroidViewProperty];
-                if (!view) {
-                    view = View.inflate(element.cloneNode(true), this.rootElement, parent);
-                    element[View.AndroidViewProperty] = view;
-                }
+                view = View.inflate(element.cloneNode(true), this.rootElement, parent);
                 return view;
             }
             getCount() {
@@ -27622,6 +28750,7 @@ var androidui;
  */
 //use the deepest sub class as enter
 ///<reference path="android/view/ViewOverlay.ts"/>
+///<reference path="android/view/GestureDetector.ts"/>
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
 ///<reference path="android/widget/LinearLayout.ts"/>
@@ -27632,6 +28761,7 @@ var androidui;
 ///<reference path="android/widget/GridView.ts"/>
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
+///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>

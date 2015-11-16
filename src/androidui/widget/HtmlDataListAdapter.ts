@@ -49,10 +49,10 @@ module androidui.widget{
         getView(position:number, convertView:View, parent:ViewGroup):View{
             let element = this.getItem(position);
             let view:View = element[View.AndroidViewProperty];
-            if(!view){
+            //if(!view){
                 view = View.inflate(<HTMLElement>element.cloneNode(true), this.rootElement, parent);
-                element[View.AndroidViewProperty] = view;
-            }
+                //element[View.AndroidViewProperty] = view;
+            //}
             return view;
         }
 

@@ -39,10 +39,10 @@ module androidui.widget{
         instantiateItem(container:android.view.ViewGroup, position:number):any {
             let element = this.bindElement.children[position];
             let view:View = element[View.AndroidViewProperty];
-            if(!view){
+            //if(!view){
                 view = View.inflate(<HTMLElement>element.cloneNode(true), this.rootElement, container);
-                element[View.AndroidViewProperty] = view;
-            }
+                //element[View.AndroidViewProperty] = view;
+            //}
             container.addView(view);
             return view;
         }

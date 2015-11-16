@@ -408,6 +408,7 @@ declare module java.util {
         lastIndexOf(o: T): any;
         clone(): List<T>;
         toArray(a: Array<T>): Array<T>;
+        getArray(): Array<T>;
         get(index: number): T;
         set(index: number, element: T): T;
         add(t: T): any;
@@ -432,6 +433,7 @@ declare module java.util {
         lastIndexOf(o: T): number;
         clone(): ArrayList<T>;
         toArray(a?: T[]): Array<T>;
+        getArray(): Array<T>;
         get(index: number): T;
         set(index: number, element: T): T;
         add(t: T): any;
@@ -606,6 +608,7 @@ declare module android.view {
         static getDoubleTapMinTime(): number;
         getScaledEdgeSlop(): number;
         getScaledTouchSlop(): number;
+        getScaledDoubleTapTouchSlop(): number;
         getScaledPagingTouchSlop(): number;
         getScaledDoubleTapSlop(): number;
         getScaledWindowTouchSlop(): number;
@@ -1483,9 +1486,9 @@ declare module android.view {
         getWindowAttachCount(): number;
         isAttachedToWindow(): boolean;
         dispatchAttachedToWindow(info: View.AttachInfo, visibility: number): void;
-        onAttachedToWindow(): void;
+        protected onAttachedToWindow(): void;
         dispatchDetachedFromWindow(): void;
-        onDetachedFromWindow(): void;
+        protected onDetachedFromWindow(): void;
         cleanupDraw(): void;
         debug(depth?: number): void;
         toString(): String;
@@ -1924,8 +1927,8 @@ declare module android.view {
         addView(...args: any[]): any;
         checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
         setOnHierarchyChangeListener(listener: ViewGroup.OnHierarchyChangeListener): void;
-        onViewAdded(child: View): void;
-        onViewRemoved(child: View): void;
+        protected onViewAdded(child: View): void;
+        protected onViewRemoved(child: View): void;
         clearCachedLayoutMode(): void;
         addViewInLayout(child: View, index: number, params: ViewGroup.LayoutParams, preventRequestLayout?: boolean): boolean;
         cleanupLayoutState(child: View): void;
@@ -1988,8 +1991,8 @@ declare module android.view {
         protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
         static getChildMeasureSpec(spec: number, padding: number, childDimension: number): number;
         dispatchAttachedToWindow(info: View.AttachInfo, visibility: number): void;
-        onAttachedToWindow(): void;
-        onDetachedFromWindow(): void;
+        protected onAttachedToWindow(): void;
+        protected onDetachedFromWindow(): void;
         dispatchDetachedFromWindow(): void;
         dispatchDisplayHint(hint: number): void;
         onChildVisibilityChanged(child: View, oldVisibility: number, newVisibility: number): void;
@@ -2100,6 +2103,115 @@ declare module android.view {
         }
     }
 }
+declare module android.view {
+    import MotionEvent = android.view.MotionEvent;
+    class VelocityTracker {
+        private static TAG;
+        private static DEBUG;
+        private static localLOGV;
+        private static NUM_PAST;
+        private static MAX_AGE_MILLISECONDS;
+        private static POINTER_POOL_CAPACITY;
+        private static sPool;
+        private static sRecycledPointerListHead;
+        private static sRecycledPointerCount;
+        private mPointerListHead;
+        private mLastTouchIndex;
+        private mGeneration;
+        private mNext;
+        static obtain(): VelocityTracker;
+        recycle(): void;
+        setNextPoolable(element: VelocityTracker): void;
+        getNextPoolable(): VelocityTracker;
+        constructor();
+        clear(): void;
+        addMovement(ev: MotionEvent): void;
+        computeCurrentVelocity(units: number, maxVelocity?: number): void;
+        getXVelocity(id?: number): number;
+        getYVelocity(id?: number): number;
+        private getPointer(id);
+        private static obtainPointer();
+        private static releasePointer(pointer);
+        private static releasePointerList(pointer);
+    }
+}
+declare module android.view {
+    import Handler = android.os.Handler;
+    import Message = android.os.Message;
+    import MotionEvent = android.view.MotionEvent;
+    class GestureDetector {
+        private mTouchSlopSquare;
+        private mDoubleTapTouchSlopSquare;
+        private mDoubleTapSlopSquare;
+        private mMinimumFlingVelocity;
+        private mMaximumFlingVelocity;
+        private static LONGPRESS_TIMEOUT;
+        private static TAP_TIMEOUT;
+        private static DOUBLE_TAP_TIMEOUT;
+        private static DOUBLE_TAP_MIN_TIME;
+        private static SHOW_PRESS;
+        private static LONG_PRESS;
+        private static TAP;
+        private mHandler;
+        private mListener;
+        private mDoubleTapListener;
+        private mStillDown;
+        private mDeferConfirmSingleTap;
+        private mInLongPress;
+        private mAlwaysInTapRegion;
+        private mAlwaysInBiggerTapRegion;
+        private mCurrentDownEvent;
+        private mPreviousUpEvent;
+        private mIsDoubleTapping;
+        private mLastFocusX;
+        private mLastFocusY;
+        private mDownFocusX;
+        private mDownFocusY;
+        private mIsLongpressEnabled;
+        private mVelocityTracker;
+        constructor(listener: GestureDetector.OnGestureListener, handler?: any);
+        private init();
+        setOnDoubleTapListener(onDoubleTapListener: GestureDetector.OnDoubleTapListener): void;
+        setIsLongpressEnabled(isLongpressEnabled: boolean): void;
+        isLongpressEnabled(): boolean;
+        onTouchEvent(ev: MotionEvent): boolean;
+        private cancel();
+        private cancelTaps();
+        private isConsideredDoubleTap(firstDown, firstUp, secondDown);
+        private dispatchLongPress();
+    }
+    module GestureDetector {
+        interface OnGestureListener {
+            onDown(e: MotionEvent): boolean;
+            onShowPress(e: MotionEvent): void;
+            onSingleTapUp(e: MotionEvent): boolean;
+            onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: number, distanceY: number): boolean;
+            onLongPress(e: MotionEvent): void;
+            onFling(e1: MotionEvent, e2: MotionEvent, velocityX: number, velocityY: number): boolean;
+        }
+        interface OnDoubleTapListener {
+            onSingleTapConfirmed(e: MotionEvent): boolean;
+            onDoubleTap(e: MotionEvent): boolean;
+            onDoubleTapEvent(e: MotionEvent): boolean;
+        }
+        class SimpleOnGestureListener implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
+            onSingleTapUp(e: MotionEvent): boolean;
+            onLongPress(e: MotionEvent): void;
+            onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: number, distanceY: number): boolean;
+            onFling(e1: MotionEvent, e2: MotionEvent, velocityX: number, velocityY: number): boolean;
+            onShowPress(e: MotionEvent): void;
+            onDown(e: MotionEvent): boolean;
+            onDoubleTap(e: MotionEvent): boolean;
+            onDoubleTapEvent(e: MotionEvent): boolean;
+            onSingleTapConfirmed(e: MotionEvent): boolean;
+        }
+        class GestureHandler extends Handler {
+            _GestureDetector_this: GestureDetector;
+            constructor(arg: GestureDetector);
+            handleMessage(msg: Message): void;
+        }
+    }
+}
 declare module android.widget {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
@@ -2187,38 +2299,6 @@ declare module android.widget {
         abortAnimation(): void;
         timePassed(): number;
         isScrollingInDirection(xvel: number, yvel: number): boolean;
-    }
-}
-declare module android.view {
-    import MotionEvent = android.view.MotionEvent;
-    class VelocityTracker {
-        private static TAG;
-        private static DEBUG;
-        private static localLOGV;
-        private static NUM_PAST;
-        private static MAX_AGE_MILLISECONDS;
-        private static POINTER_POOL_CAPACITY;
-        private static sPool;
-        private static sRecycledPointerListHead;
-        private static sRecycledPointerCount;
-        private mPointerListHead;
-        private mLastTouchIndex;
-        private mGeneration;
-        private mNext;
-        static obtain(): VelocityTracker;
-        recycle(): void;
-        setNextPoolable(element: VelocityTracker): void;
-        getNextPoolable(): VelocityTracker;
-        constructor();
-        clear(): void;
-        addMovement(ev: MotionEvent): void;
-        computeCurrentVelocity(units: number, maxVelocity?: number): void;
-        getXVelocity(id?: number): number;
-        getYVelocity(id?: number): number;
-        private getPointer(id);
-        private static obtainPointer();
-        private static releasePointer(pointer);
-        private static releasePointerList(pointer);
     }
 }
 declare module android.widget {
@@ -2888,7 +2968,7 @@ declare module android.widget {
         getItemAtPosition(position: number): any;
         getItemIdAtPosition(position: number): number;
         setOnClickListener(l: View.OnClickListener): void;
-        onDetachedFromWindow(): void;
+        protected onDetachedFromWindow(): void;
         private selectionChanged();
         private fireOnSelected();
         private performAccessibilityActionsOnSelected();
@@ -3088,6 +3168,7 @@ declare module android.widget {
         static sLinearInterpolator: Interpolator;
         private mPendingSync;
         constructor();
+        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         private initAbsListView();
         setOverScrollMode(mode: number): void;
         setAdapter(adapter: ListAdapter): void;
@@ -3168,8 +3249,8 @@ declare module android.widget {
         onCreateDrawableState(extraSpace: number): number[];
         verifyDrawable(dr: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
-        onAttachedToWindow(): void;
-        onDetachedFromWindow(): void;
+        protected onAttachedToWindow(): void;
+        protected onDetachedFromWindow(): void;
         onWindowFocusChanged(hasWindowFocus: boolean): void;
         onCancelPendingInputEvents(): void;
         private performLongPress(child, longPressPosition, longPressId);
@@ -3904,7 +3985,7 @@ declare module android.support.v4.view {
         private mScrollState;
         constructor();
         private initViewPager();
-        onDetachedFromWindow(): void;
+        protected onDetachedFromWindow(): void;
         private setScrollState(newState);
         setAdapter(adapter: PagerAdapter): void;
         private removeNonDecorViews();
@@ -3947,7 +4028,7 @@ declare module android.support.v4.view {
         private infoForChild(child);
         private infoForAnyChild(child);
         private infoForPosition(position);
-        onAttachedToWindow(): void;
+        protected onAttachedToWindow(): void;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         private recomputeScrollPosition(width, oldWidth, margin, oldMargin);
@@ -4020,6 +4101,118 @@ declare module android.support.v4.view {
             childIndex: number;
             constructor();
             _createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
+        }
+    }
+}
+declare module android.support.v4.widget {
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    class ViewDragHelper {
+        private static TAG;
+        static INVALID_POINTER: number;
+        static STATE_IDLE: number;
+        static STATE_DRAGGING: number;
+        static STATE_SETTLING: number;
+        static EDGE_LEFT: number;
+        static EDGE_RIGHT: number;
+        static EDGE_TOP: number;
+        static EDGE_BOTTOM: number;
+        static EDGE_ALL: number;
+        static DIRECTION_HORIZONTAL: number;
+        static DIRECTION_VERTICAL: number;
+        static DIRECTION_ALL: number;
+        private static EDGE_SIZE;
+        private static BASE_SETTLE_DURATION;
+        private static MAX_SETTLE_DURATION;
+        private mDragState;
+        private mTouchSlop;
+        private mActivePointerId;
+        private mInitialMotionX;
+        private mInitialMotionY;
+        private mLastMotionX;
+        private mLastMotionY;
+        private mInitialEdgesTouched;
+        private mEdgeDragsInProgress;
+        private mEdgeDragsLocked;
+        private mPointersDown;
+        private mVelocityTracker;
+        private mMaxVelocity;
+        private mMinVelocity;
+        private mEdgeSize;
+        private mTrackingEdges;
+        private mScroller;
+        private mCallback;
+        private mCapturedView;
+        private mReleaseInProgress;
+        private mParentView;
+        private static sInterpolator;
+        private mSetIdleRunnable;
+        static create(forParent: ViewGroup, cb: ViewDragHelper.Callback): ViewDragHelper;
+        static create(forParent: ViewGroup, sensitivity: number, cb: ViewDragHelper.Callback): ViewDragHelper;
+        constructor(forParent: ViewGroup, cb: ViewDragHelper.Callback);
+        setMinVelocity(minVel: number): void;
+        getMinVelocity(): number;
+        getViewDragState(): number;
+        setEdgeTrackingEnabled(edgeFlags: number): void;
+        getEdgeSize(): number;
+        captureChildView(childView: View, activePointerId: number): void;
+        getCapturedView(): View;
+        getActivePointerId(): number;
+        getTouchSlop(): number;
+        cancel(): void;
+        abort(): void;
+        smoothSlideViewTo(child: View, finalLeft: number, finalTop: number): boolean;
+        settleCapturedViewAt(finalLeft: number, finalTop: number): boolean;
+        private forceSettleCapturedViewAt(finalLeft, finalTop, xvel, yvel);
+        private computeSettleDuration(child, dx, dy, xvel, yvel);
+        private computeAxisDuration(delta, velocity, motionRange);
+        private clampMag(value, absMin, absMax);
+        private distanceInfluenceForSnapDuration(f);
+        flingCapturedView(minLeft: number, minTop: number, maxLeft: number, maxTop: number): void;
+        continueSettling(deferCallbacks: boolean): boolean;
+        private dispatchViewReleased(xvel, yvel);
+        private clearMotionHistory(pointerId?);
+        private ensureMotionHistorySizeForId(pointerId);
+        private saveInitialMotion(x, y, pointerId);
+        private saveLastMotion(ev);
+        isPointerDown(pointerId: number): boolean;
+        setDragState(state: number): void;
+        tryCaptureViewForDrag(toCapture: View, pointerId: number): boolean;
+        protected canScroll(v: View, checkV: boolean, dx: number, dy: number, x: number, y: number): boolean;
+        shouldInterceptTouchEvent(ev: MotionEvent): boolean;
+        processTouchEvent(ev: MotionEvent): void;
+        private reportNewEdgeDrags(dx, dy, pointerId);
+        private checkNewEdgeDrag(delta, odelta, pointerId, edge);
+        checkTouchSlop(child: View, dx: number, dy: number): boolean;
+        checkTouchSlop(directions: number): boolean;
+        checkTouchSlop(directions: number, pointerId: number): boolean;
+        private _checkTouchSlop_3(child, dx, dy);
+        private _checkTouchSlop_1(directions);
+        private _checkTouchSlop_2(directions, pointerId);
+        isEdgeTouched(edges: number, pointerId?: number): boolean;
+        private releaseViewForPointerUp();
+        private dragTo(left, top, dx, dy);
+        isCapturedViewUnder(x: number, y: number): boolean;
+        isViewUnder(view: View, x: number, y: number): boolean;
+        findTopChildUnder(x: number, y: number): View;
+        private getEdgesTouched(x, y);
+    }
+    module ViewDragHelper {
+        abstract class Callback {
+            onViewDragStateChanged(state: number): void;
+            onViewPositionChanged(changedView: View, left: number, top: number, dx: number, dy: number): void;
+            onViewCaptured(capturedChild: View, activePointerId: number): void;
+            onViewReleased(releasedChild: View, xvel: number, yvel: number): void;
+            onEdgeTouched(edgeFlags: number, pointerId: number): void;
+            onEdgeLock(edgeFlags: number): boolean;
+            onEdgeDragStarted(edgeFlags: number, pointerId: number): void;
+            getOrderedChildIndex(index: number): number;
+            getViewHorizontalDragRange(child: View): number;
+            getViewVerticalDragRange(child: View): number;
+            abstract tryCaptureView(child: View, pointerId: number): boolean;
+            clampViewPositionHorizontal(child: View, left: number, dx: number): number;
+            clampViewPositionVertical(child: View, top: number, dy: number): number;
         }
     }
 }
