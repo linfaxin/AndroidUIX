@@ -4101,7 +4101,7 @@ module android.view {
             }
             //needGlobalAttributesUpdate(false);
         }
-        onAttachedToWindow() {
+        protected onAttachedToWindow() {
             //if ((this.mPrivateFlags & View.PFLAG_REQUEST_TRANSPARENT_REGIONS) != 0) {
             //    this.mParent.requestTransparentRegion(this);
             //}
@@ -4149,7 +4149,7 @@ module android.view {
                 this.mOverlay.getOverlayView().dispatchDetachedFromWindow();
             }
         }
-        onDetachedFromWindow() {
+        protected onDetachedFromWindow() {
             this.mPrivateFlags &= ~View.PFLAG_CANCEL_NEXT_UP_EVENT;
             this.mPrivateFlags3 &= ~View.PFLAG3_IS_LAID_OUT;
 
@@ -4282,6 +4282,7 @@ module android.view {
             let rootView:View = new rootViewClass();
             if(rootView['onInflateAdapter']){//inflate a adapter.
                 (<HtmlDataAdapter><any>rootView).onInflateAdapter(domtree, rootElement, viewParent);
+                domtree.parentNode.removeChild(domtree);
             }
             if(!(rootView instanceof View)) return rootView;
             rootView.initBindElement(domtree, rootElement);
@@ -4380,6 +4381,8 @@ module android.view {
         initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
             if(this._bindElement) this._bindElement[View.AndroidViewProperty] = null;
             this._bindElement = bindElement || document.createElement(this.tagName());
+            this._bindElement.style.position = 'absolute';
+
             let oldBindView:View = this._bindElement[View.AndroidViewProperty];
             if(oldBindView){
                 if(oldBindView._AttrObserver) oldBindView._AttrObserver.disconnect();
@@ -4394,10 +4397,12 @@ module android.view {
 
         syncBoundToElement(){
             let bind = this.bindElement;
-            bind.style.position = 'absolute';
-            bind.style.boxSizing = 'border-box';
-            bind.style.left = this.mLeft + 'px';
-            bind.style.top = this.mTop + 'px';
+
+            //bind.style.left = this.mLeft + 'px';
+            //bind.style.top = this.mTop + 'px';
+            bind.style.cssText += `transform: translate(${this.mLeft}px, ${this.mTop}px);
+            -webkit-transform: translate(${this.mLeft}px, ${this.mTop}px);`;
+
             bind.style.width = this.getWidth() + 'px';
             bind.style.height = this.getHeight() + 'px';
             //bind.style.paddingLeft = this.mPaddingLeft + 'px';
@@ -4414,18 +4419,18 @@ module android.view {
                     let child = group.getChildAt(i);
                     let item = child.bindElement;
 
-                    //if(sx!==0) item.style.marginLeft = -sx+'px';
-                    //else item.style.marginLeft = "";
-                    if(sx!==0) item.style.left =  (child.mLeft-sx)+'px';
-                    else item.style.left = child.mLeft + "px";
+                    item.style.cssText += `transform: translate(${child.mLeft-sx}px, ${child.mTop-sy}px);
+                    -webkit-transform: translate(${child.mLeft-sx}px, ${child.mTop-sy}px);`;
+
+                    //if(sx!==0) item.style.left =  (child.mLeft-sx)+'px';
+                    //else item.style.left = child.mLeft + "px";
+
 
 
                     //if(sy!==0) item.style.transform = `translate3d(0px, ${-sy}px, 0px)`;
                     //else item.style.transform = '';
-                    if(sy!==0) item.style.top =  (child.mTop-sy)+'px';
-                    else item.style.top = child.mTop + "px";
-                    //if(sy!==0) item.style.marginTop = -sy+'px';
-                    //else item.style.marginTop = "";
+                    //if(sy!==0) item.style.top =  (child.mTop-sy)+'px';
+                    //else item.style.top = child.mTop + "px";
                 }
             }
         }

@@ -155,44 +155,44 @@ export class ListView extends AbsListView {
                 let divider = mergeHandler.parseDrawable(value);
                 if(divider) listView.setDivider(divider);
             },
-            get divider():any{
-                return listView.mDivider;
-            },
+            //get divider():any{
+                //return listView.mDivider;
+            //},
             set overScrollHeader(value){
                 let header = mergeHandler.parseDrawable(value);
                 if(header) listView.setOverscrollHeader(header);
             },
-            get overScrollHeader():any{
-                return listView.mOverScrollHeader;
-            },
+            //get overScrollHeader():any{
+                //return listView.mOverScrollHeader;
+            //},
             set overScrollFooter(value){
                 let footer = mergeHandler.parseDrawable(value);
                 if(footer) listView.setOverscrollFooter(footer);
             },
-            get overScrollFooter():any{
-                return listView.mOverScrollFooter;
-            },
+            //get overScrollFooter():any{
+                //return listView.mOverScrollFooter;
+            //},
             set dividerHeight(value){
                 let dividerHeight = mergeHandler.parseNumber(value, 0);
                 if(dividerHeight > 0 ){
                     listView.setDividerHeight(dividerHeight);
                 }
             },
-            get dividerHeight():any{
-                return listView.mDividerHeight;
-            },
+            //get dividerHeight():any{
+            //    return listView.mDividerHeight;
+            //},
             set headerDividersEnabled(value){
                 listView.setHeaderDividersEnabled(mergeHandler.parseBoolean(value, true));
             },
-            get headerDividersEnabled():any{
-                return listView.mHeaderDividersEnabled;
-            },
+            //get headerDividersEnabled():any{
+            //    return listView.mHeaderDividersEnabled;
+            //},
             set footerDividersEnabled(value){
                 listView.setFooterDividersEnabled(mergeHandler.parseBoolean(value, true));
             },
-            get footerDividersEnabled():any{
-                return listView.mFooterDividersEnabled;
-            },
+            //get footerDividersEnabled():any{
+            //    return listView.mFooterDividersEnabled;
+            //},
         });
     }
 

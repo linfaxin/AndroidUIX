@@ -3,7 +3,6 @@
  */
 module java.util{
     export interface List<T>{
-
         size():number;
         isEmpty():boolean;
         contains(o:T);
@@ -11,6 +10,7 @@ module java.util{
         lastIndexOf(o:T);
         clone():List<T>;
         toArray(a:Array<T>):Array<T>;
+        getArray():Array<T>;
         get(index:number):T;
         set(index:number, element:T):T;
 

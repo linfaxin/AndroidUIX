@@ -38,6 +38,9 @@ module java.util{
             }
             return a;
         }
+        getArray():Array<T>{
+            return this.array;
+        }
         get(index:number):T {
             return this.array[index];
         }

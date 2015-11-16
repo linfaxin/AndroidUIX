@@ -155,46 +155,46 @@ export class GridView extends AbsListView {
             set horizontalSpacing(value){
                 gridView.setHorizontalSpacing(mergeHandler.parseNumber(value, 0));
             },
-            get horizontalSpacing():any{
-                return gridView.mHorizontalSpacing;
-            },
+            //get horizontalSpacing():any{
+            //    return gridView.mHorizontalSpacing;
+            //},
             set verticalSpacing(value){
                 gridView.setVerticalSpacing(mergeHandler.parseNumber(value, 0));
             },
-            get verticalSpacing():any{
-                return gridView.mVerticalSpacing;
-            },
+            //get verticalSpacing():any{
+            //    return gridView.mVerticalSpacing;
+            //},
             set stretchMode(value){
                 let strechMode = mergeHandler.parseNumber(value, -1);
                 if(strechMode >= 0 ){
                     gridView.setStretchMode(strechMode);
                 }
             },
-            get stretchMode():any{
-                return gridView.mStretchMode;
-            },
+            //get stretchMode():any{
+                //return gridView.mStretchMode;
+            //},
             set columnWidth(value){
                 let columnWidth = mergeHandler.parseNumber(value, -1);
                 if(columnWidth > 0 ){
                     gridView.setColumnWidth(columnWidth);
                 }
             },
-            get columnWidth():any{
-                return gridView.mColumnWidth;
-            },
+            //get columnWidth():any{
+                //return gridView.mColumnWidth;
+            //},
             set numColumns(value){
                 gridView.setNumColumns(mergeHandler.parseNumber(value, 1));
             },
-            get numColumns():any{
-                return gridView.mNumColumns;
-            },
+            //get numColumns():any{
+                //return gridView.mNumColumns;
+            //},
             set gravity(value){
                 let gravity = mergeHandler.parseGravity(value, -1);
                 if(gravity>=0) gridView.setGravity(gravity);
             },
-            get gravity():any{
-                return gridView.mGravity;
-            },
+            //get gravity():any{
+                //return gridView.mGravity;
+            //},
         });
     }
 

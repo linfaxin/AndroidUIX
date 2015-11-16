@@ -486,13 +486,13 @@ module android.view {
             this.mOnHierarchyChangeListener = listener;
         }
 
-        onViewAdded(child:View) {
+        protected onViewAdded(child:View) {
             if (this.mOnHierarchyChangeListener != null) {
                 this.mOnHierarchyChangeListener.onChildViewAdded(this, child);
             }
         }
 
-        onViewRemoved(child:View) {
+        protected onViewRemoved(child:View) {
             if (this.mOnHierarchyChangeListener != null) {
                 this.mOnHierarchyChangeListener.onChildViewRemoved(this, child);
             }
@@ -1597,12 +1597,12 @@ module android.view {
             }
         }
 
-        onAttachedToWindow() {
+        protected onAttachedToWindow() {
             super.onAttachedToWindow();
             this.clearCachedLayoutMode();
         }
 
-        onDetachedFromWindow() {
+        protected onDetachedFromWindow() {
             super.onDetachedFromWindow();
             this.clearCachedLayoutMode();
         }

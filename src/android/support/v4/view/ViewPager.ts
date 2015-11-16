@@ -220,7 +220,7 @@ module android.support.v4.view {
             //}
         }
 
-        onDetachedFromWindow():void {
+        protected onDetachedFromWindow():void {
             this.removeCallbacks(this.mEndScrollRunnable);
             super.onDetachedFromWindow();
         }
@@ -1098,7 +1098,7 @@ module android.support.v4.view {
             return null;
         }
 
-        onAttachedToWindow():void {
+        protected onAttachedToWindow():void {
             super.onAttachedToWindow();
             this.mFirstLayout = true;
         }

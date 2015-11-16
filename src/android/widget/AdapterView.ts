@@ -607,7 +607,7 @@ module android.widget {
 
 
 
-        onDetachedFromWindow():void  {
+        protected onDetachedFromWindow():void  {
             super.onDetachedFromWindow();
             this.removeCallbacks(this.mSelectionNotifier);
         }

@@ -97,8 +97,16 @@ module android.view{
         getScaledEdgeSlop():number {
             return this.mEdgeSlop;
         }
-        getScaledTouchSlop() {
+        getScaledTouchSlop():number {
             return this.mTouchSlop;
+        }
+        /**
+         * @return Distance in pixels the first touch can wander before we do not consider this a
+         * potential double tap event
+         * @hide
+         */
+        getScaledDoubleTapTouchSlop():number {
+            return this.mDoubleTapTouchSlop;
         }
         getScaledPagingTouchSlop() {
             return this.mPagingTouchSlop;

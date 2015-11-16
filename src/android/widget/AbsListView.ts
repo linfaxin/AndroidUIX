@@ -728,6 +728,50 @@ module android.widget {
         //    a.recycle();
         //}
 
+
+        createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
+            super.createAttrChangeHandler(mergeHandler);
+            let absListView = this;
+            mergeHandler.add({
+                set listSelector(value){
+                    let d = mergeHandler.parseDrawable(value);
+                    if(d) absListView.setSelector(d);
+                },
+                set drawSelectorOnTop(value){
+                    absListView.mDrawSelectorOnTop = mergeHandler.parseBoolean(value, false);
+                },
+                set stackFromBottom(value){
+                    absListView.setStackFromBottom(mergeHandler.parseBoolean(value, false));
+                },
+                set scrollingCache(value){
+                    this.setScrollingCacheEnabled(mergeHandler.parseBoolean(value, true));
+                },
+                set transcriptMode(value){
+                    let transcriptMode:number = mergeHandler.parseNumber(value, AbsListView.TRANSCRIPT_MODE_DISABLED);
+                    absListView.setTranscriptMode(transcriptMode);
+                },
+                set cacheColorHint(value){
+                    let color:number = mergeHandler.parseNumber(value, 0);
+                    absListView.setCacheColorHint(color);
+                },
+                set fastScrollEnabled(value){
+                    let enableFastScroll:boolean = mergeHandler.parseBoolean(value, false);
+                    //this.setFastScrollEnabled(enableFastScroll);
+                },
+                set fastScrollAlwaysVisible(value){
+                    let fastScrollAlwaysVisible:boolean = mergeHandler.parseBoolean(value, false);
+                    //this.setFastScrollAlwaysVisible(fastScrollAlwaysVisible);
+                },
+                set smoothScrollbar(value){
+                    let smoothScrollbar:boolean = mergeHandler.parseBoolean(value, true);
+                    absListView.setSmoothScrollbarEnabled(smoothScrollbar);
+                },
+                set choiceMode(value){
+                    absListView.setChoiceMode(mergeHandler.parseNumber(value, AbsListView.CHOICE_MODE_NONE))
+                }
+            });
+        }
+
         private initAbsListView():void {
             // Setting focusable in touch mode will set the focusable property to true
             this.setClickable(true);
@@ -2167,7 +2211,7 @@ module android.widget {
                 this.mSelector.jumpToCurrentState();
         }
 
-        onAttachedToWindow():void {
+        protected onAttachedToWindow():void {
             super.onAttachedToWindow();
             const treeObserver:ViewTreeObserver = this.getViewTreeObserver();
             treeObserver.addOnTouchModeChangeListener(this);
@@ -2184,7 +2228,7 @@ module android.widget {
             }
         }
 
-        onDetachedFromWindow():void {
+        protected onDetachedFromWindow():void {
             super.onDetachedFromWindow();
             // Dismiss the popup in case onSaveInstanceState() was not invoked
             this.dismissPopup();
