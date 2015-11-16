@@ -25,6 +25,9 @@
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
+///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
+///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
 
 window[`android`] = android;
 window[`java`] = java;
+window[`AndroidUI`] = androidui.AndroidUI;

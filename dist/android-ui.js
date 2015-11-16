@@ -3483,6 +3483,11 @@ var androidui;
         util.ClassFinder = ClassFinder;
     })(util = androidui.util || (androidui.util = {}));
 })(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/11/16.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../view/ViewConfiguration.ts"/>
@@ -3773,6 +3778,7 @@ var android;
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
+///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
 ///<reference path="KeyEvent.ts"/>
 var android;
 (function (android) {
@@ -6684,6 +6690,11 @@ var android;
                     return null;
                 }
                 let rootView = new rootViewClass();
+                if (rootView['onInflateAdapter']) {
+                    rootView.onInflateAdapter(domtree, rootElement, viewParent);
+                }
+                if (!(rootView instanceof View))
+                    return rootView;
                 rootView.initBindElement(domtree, rootElement);
                 let params;
                 if (viewParent) {
@@ -6700,7 +6711,7 @@ var android;
                     Array.from(domtree.children).forEach((item) => {
                         if (item instanceof HTMLElement) {
                             let view = View.inflate(item, rootElement, parent);
-                            if (view)
+                            if (view instanceof View)
                                 parent.addView(view);
                         }
                     });
@@ -9587,7 +9598,7 @@ var android;
                 this.mChildren = [];
                 for (let i = count - 1; i >= 0; i--) {
                     children[i].mParent = null;
-                    children[i] = null;
+                    this.bindElement.removeChild(children[i].bindElement);
                 }
             }
             indexOfChild(child) {
@@ -16649,7 +16660,7 @@ var android;
                 this.mIsScrap = new Array(1);
                 this.mActivePointerId = AbsListView.INVALID_POINTER;
                 this.mOverscrollDistance = 0;
-                this.mOverflingDistance = 0;
+                this._mOverflingDistance = 0;
                 this.mFirstPositionDistanceGuess = 0;
                 this.mLastPositionDistanceGuess = 0;
                 this.mDirection = 0;
@@ -16659,6 +16670,20 @@ var android;
                 this.initAbsListView();
                 this.setVerticalScrollBarEnabled(true);
                 this.initializeScrollbars();
+            }
+            get mOverflingDistance() {
+                if (this.mScrollY <= 0) {
+                    if (this.mScrollY < -this._mOverflingDistance)
+                        return -this.mScrollY;
+                    return this._mOverflingDistance;
+                }
+                let overDistance = this.mScrollY;
+                if (overDistance > this._mOverflingDistance)
+                    return overDistance;
+                return this._mOverflingDistance;
+            }
+            set mOverflingDistance(value) {
+                this._mOverflingDistance = value;
             }
             initAbsListView() {
                 this.setClickable(true);
@@ -18002,8 +18027,7 @@ var android;
                         velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                         const initialVelocity = Math.floor(velocityTracker.getYVelocity(this.mActivePointerId));
                         this.reportScrollStateChange(AbsListView.OnScrollListener.SCROLL_STATE_FLING);
-                        let scrollY = this.mScrollY;
-                        let isOverDrag = scrollY < 0 || scrollY > this.computeVerticalScrollRange();
+                        let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.computeVerticalScrollRange();
                         if (!isOverDrag && Math.abs(initialVelocity) > this.mMinimumVelocity) {
                             this.mFlingRunnable.startOverfling(-initialVelocity);
                         }
@@ -19087,7 +19111,7 @@ var android;
                     }
                 }
                 startSpringback() {
-                    if (this.mScroller.springBack(0, this._AbsListView_this.mScrollY, 0, 0, 0, this._AbsListView_this.computeVerticalScrollRange())) {
+                    if (this.mScroller.springBack(0, this._AbsListView_this.mScrollY, 0, 0, 0, 0)) {
                         this._AbsListView_this.mTouchMode = AbsListView.TOUCH_MODE_OVERFLING;
                         this._AbsListView_this.invalidate();
                         this._AbsListView_this.postOnAnimation(this);
@@ -24137,9 +24161,20 @@ var android;
                 this.mMinimumVelocity = 0;
                 this.mMaximumVelocity = 0;
                 this.mOverscrollDistance = 0;
-                this.mOverflingDistance = 0;
+                this._mOverflingDistance = 0;
                 this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
                 this.initScrollView();
+            }
+            get mOverflingDistance() {
+                if (this.mScrollX < -this._mOverflingDistance)
+                    return -this.mScrollX;
+                let overDistance = this.mScrollX - this.getScrollRange();
+                if (overDistance > this._mOverflingDistance)
+                    return overDistance;
+                return this._mOverflingDistance;
+            }
+            set mOverflingDistance(value) {
+                this._mOverflingDistance = value;
             }
             createAttrChangeHandler(mergeHandler) {
                 super.createAttrChangeHandler(mergeHandler);
@@ -24188,7 +24223,7 @@ var android;
                 this.mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
                 this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
                 this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
-                this.mOverflingDistance = configuration.getScaledOverflingDistance();
+                this._mOverflingDistance = configuration.getScaledOverflingDistance();
                 this.initScrollCache();
                 this.setHorizontalScrollBarEnabled(true);
             }
@@ -24447,7 +24482,7 @@ var android;
                             velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                             let initialVelocity = Math.floor(velocityTracker.getXVelocity(this.mActivePointerId));
                             if (this.getChildCount() > 0) {
-                                let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.getScrollRange();
+                                let isOverDrag = this.mScrollX < 0 || this.mScrollX > this.getScrollRange();
                                 if (!isOverDrag && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
                                     this.fling(-initialVelocity);
                                 }
@@ -27461,6 +27496,128 @@ var android;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/11/16.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/widget/AbsListView.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/BaseAdapter.ts"/>
+///<reference path="../../android/widget/SpinnerAdapter.ts"/>
+///<reference path="../../android/database/DataSetObservable.ts"/>
+///<reference path="../../android/database/DataSetObserver.ts"/>
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var View = android.view.View;
+        var AbsListView = android.widget.AbsListView;
+        var BaseAdapter = android.widget.BaseAdapter;
+        class HtmlDataListAdapter extends BaseAdapter {
+            onInflateAdapter(bindElement, rootElement, parent) {
+                this.bindElement = bindElement;
+                this.rootElement = rootElement;
+                if (parent instanceof AbsListView) {
+                    parent.setAdapter(this);
+                }
+                bindElement[View.AndroidViewProperty] = this;
+                this.registerHtmlDataObserver();
+            }
+            registerHtmlDataObserver() {
+                const adapter = this;
+                function callBack(arr, observer) {
+                    adapter.notifyDataSetChanged();
+                }
+                let observer = new MutationObserver(callBack);
+                observer.observe(this.bindElement, { childList: true });
+            }
+            getView(position, convertView, parent) {
+                let element = this.getItem(position);
+                let view = element[View.AndroidViewProperty];
+                if (!view) {
+                    view = View.inflate(element.cloneNode(true), this.rootElement, parent);
+                    element[View.AndroidViewProperty] = view;
+                }
+                return view;
+            }
+            getCount() {
+                return this.bindElement.children.length;
+            }
+            getItem(position) {
+                return this.bindElement.children[position];
+            }
+            getItemId(position) {
+                let id = this.getItem(position).id;
+                let idNumber = Number.parseInt(id);
+                if (Number.isInteger(idNumber))
+                    return idNumber;
+                return -1;
+            }
+        }
+        widget.HtmlDataListAdapter = HtmlDataListAdapter;
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/11/16.
+ */
+///<reference path="../../android/database/DataSetObservable.ts"/>
+///<reference path="../../android/database/Observable.ts"/>
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/support/v4/view/ViewPager.ts"/>
+///<reference path="../../android/support/v4/view/PagerAdapter.ts"/>
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var View = android.view.View;
+        var ViewPager = android.support.v4.view.ViewPager;
+        var PagerAdapter = android.support.v4.view.PagerAdapter;
+        class HtmlDataPagerAdapter extends PagerAdapter {
+            onInflateAdapter(bindElement, rootElement, parent) {
+                this.bindElement = bindElement;
+                this.rootElement = rootElement;
+                if (parent instanceof ViewPager) {
+                    parent.setAdapter(this);
+                }
+            }
+            getCount() {
+                return this.bindElement.children.length;
+            }
+            instantiateItem(container, position) {
+                let element = this.bindElement.children[position];
+                let view = element[View.AndroidViewProperty];
+                if (!view) {
+                    view = View.inflate(element.cloneNode(true), this.rootElement, container);
+                    element[View.AndroidViewProperty] = view;
+                }
+                container.addView(view);
+                return view;
+            }
+            destroyItem(container, position, object) {
+                let view = object;
+                container.removeView(view);
+            }
+            isViewFromObject(view, object) {
+                return view === object;
+            }
+            getItemPosition(object) {
+                let position = PagerAdapter.POSITION_NONE;
+                if (object == null)
+                    return position;
+                for (let i = 0, count = this.getCount(); i < count; i++) {
+                    if (object === this.bindElement.children[i][View.AndroidViewProperty]) {
+                        position = i;
+                        break;
+                    }
+                }
+                return position;
+            }
+        }
+        widget.HtmlDataPagerAdapter = HtmlDataPagerAdapter;
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
+/**
  * Created by linfaxin on 15/10/6.
  */
 //use the deepest sub class as enter
@@ -27479,5 +27636,8 @@ var android;
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
+///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
+///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
 window[`android`] = android;
 window[`java`] = java;
+window[`AndroidUI`] = androidui.AndroidUI;

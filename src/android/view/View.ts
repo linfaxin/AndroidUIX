@@ -37,6 +37,7 @@
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
+///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
 ///<reference path="KeyEvent.ts"/>
 
 
@@ -73,6 +74,7 @@ module android.view {
     import StateAttrList = androidui.attr.StateAttrList;
     import StateAttr = androidui.attr.StateAttr;
     import ClassFinder = androidui.util.ClassFinder;
+    import HtmlDataAdapter = androidui.widget.HtmlDataAdapter;
     import KeyEvent = android.view.KeyEvent;
 
 
@@ -4278,6 +4280,10 @@ module android.view {
                 return null;
             }
             let rootView:View = new rootViewClass();
+            if(rootView['onInflateAdapter']){//inflate a adapter.
+                (<HtmlDataAdapter><any>rootView).onInflateAdapter(domtree, rootElement, viewParent);
+            }
+            if(!(rootView instanceof View)) return rootView;
             rootView.initBindElement(domtree, rootElement);
 
             let params;
@@ -4296,7 +4302,7 @@ module android.view {
                 Array.from(domtree.children).forEach((item)=>{
                     if(item instanceof HTMLElement){
                         let view = View.inflate(item, rootElement, parent);
-                        if(view) parent.addView(view);
+                        if(view instanceof View) parent.addView(view);
                     }
                 });
             }

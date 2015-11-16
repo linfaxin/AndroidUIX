@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>ViewPager展示</title>
+    <script>
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+
+        }
+    </style>
+
+</head>
+<body>
+<android-Activity style="width: 100%; height:100%;display: none;">
+    <resources>
+        <android-style id="page_text"
+                  android:padding="12dp"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:background="#55000000"
+                  android:textColor="white"
+                  android:layout_gravity="center"
+                >
+        </android-style>
+    </resources>
+    <android.support.v4.view.ViewPager>
+        <androidui.widget.HtmlDataPagerAdapter>
+            <FrameLayout
+                    android:background="#11000000">
+                <TextView android:style="@style/page_text"
+                        android:text="Page1">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout
+                    android:background="#22000000">
+                <TextView android:style="@style/page_text"
+                          android:text="Page2">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout
+                    android:background="#33000000">
+                <TextView android:style="@style/page_text"
+                          android:text="Page3">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout
+                    android:background="#44000000">
+                <TextView android:style="@style/page_text"
+                          android:text="Page4">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout
+                    android:background="#55000000">
+                <TextView android:style="@style/page_text"
+                          android:text="Page5">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout
+                    android:background="#66000000">
+                <TextView android:style="@style/page_text"
+                          android:text="Page6">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout
+                    android:background="#77000000">
+                <TextView android:style="@style/page_text"
+                          android:text="Page7">
+                </TextView>
+            </FrameLayout>
+        </androidui.widget.HtmlDataPagerAdapter>
+    </android.support.v4.view.ViewPager>
+    <TextView
+            android:padding="12dp"
+            android:layout_gravity="bottom"
+            android:layout_height="wrap_content"
+            android:background="#55000000"
+            android:textColor="white"
+            >
+        ViewPager的数据也可以直接定义在Html中
+    </TextView>
+</android-Activity>
+
+<script src="../../node_modules/babel-core/browser-polyfill.min.js"></script>
+<script src="../lib/CustomElements.min.js"></script>
+<script src="../../dist/android-ui.es5.js"></script>
+<script src="../build/main.es5.js"></script>
+
+</body>
+</html>

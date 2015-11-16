@@ -902,6 +902,12 @@ declare module androidui.util {
         static findClass(classFullName: string, findInRoot?: any): any;
     }
 }
+declare module androidui.widget {
+    import ViewGroup = android.view.ViewGroup;
+    interface HtmlDataAdapter {
+        onInflateAdapter(bindElement: HTMLElement, rootElement?: HTMLElement, parent?: ViewGroup): void;
+    }
+}
 declare module android.view {
     class KeyEvent {
         static KEYCODE_DPAD_UP: number;
@@ -3070,6 +3076,7 @@ declare module android.widget {
         private mActivePointerId;
         static INVALID_POINTER: number;
         private mOverscrollDistance;
+        private _mOverflingDistance;
         private mOverflingDistance;
         private mFirstPositionDistanceGuess;
         private mLastPositionDistanceGuess;
@@ -3731,6 +3738,7 @@ declare module android.widget {
         private mMinimumVelocity;
         private mMaximumVelocity;
         private mOverscrollDistance;
+        private _mOverflingDistance;
         private mOverflingDistance;
         private mActivePointerId;
         private static INVALID_POINTER;
@@ -4081,5 +4089,33 @@ declare module android.app {
         addContentView(view: View): void;
         findViewById(id: string): View;
         static registerCustomElement(): void;
+    }
+}
+declare module androidui.widget {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import BaseAdapter = android.widget.BaseAdapter;
+    class HtmlDataListAdapter extends BaseAdapter implements HtmlDataAdapter {
+        bindElement: HTMLElement;
+        rootElement: HTMLElement;
+        onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
+        private registerHtmlDataObserver();
+        getView(position: number, convertView: View, parent: ViewGroup): View;
+        getCount(): number;
+        getItem(position: number): Element;
+        getItemId(position: number): number;
+    }
+}
+declare module androidui.widget {
+    import PagerAdapter = android.support.v4.view.PagerAdapter;
+    class HtmlDataPagerAdapter extends PagerAdapter implements HtmlDataAdapter {
+        bindElement: HTMLElement;
+        rootElement: HTMLElement;
+        onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
+        getCount(): number;
+        instantiateItem(container: android.view.ViewGroup, position: number): any;
+        destroyItem(container: android.view.ViewGroup, position: number, object: any): void;
+        isViewFromObject(view: android.view.View, object: any): boolean;
+        getItemPosition(object: any): number;
     }
 }
