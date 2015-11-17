@@ -21,18 +21,20 @@ module androidui.widget{
     import DataSetObserver = android.database.DataSetObserver;
 
     export class HtmlDataListAdapter extends BaseAdapter implements HtmlDataAdapter{
+        static RefElementTag = "ref-element".toUpperCase();
+        static RefElementProperty = "RefElement";
+        static BindAdapterProperty = "BindAdapter";
 
         bindElement:HTMLElement;
         rootElement:HTMLElement;
 
         onInflateAdapter(bindElement:HTMLElement, rootElement:HTMLElement, parent:android.view.ViewGroup):void {
-
             this.bindElement = bindElement;
             this.rootElement = rootElement;
             if(parent instanceof AbsListView){
                 parent.setAdapter(this);
             }
-            bindElement[View.AndroidViewProperty] = this;
+            bindElement[HtmlDataListAdapter.BindAdapterProperty] = this;
             this.registerHtmlDataObserver();
         }
 
@@ -49,10 +51,11 @@ module androidui.widget{
         getView(position:number, convertView:View, parent:ViewGroup):View{
             let element = this.getItem(position);
             let view:View = element[View.AndroidViewProperty];
-            //if(!view){
-                view = View.inflate(<HTMLElement>element.cloneNode(true), this.rootElement, parent);
-                //element[View.AndroidViewProperty] = view;
-            //}
+            if(!view){
+                this.replaceChildWithRef(element);
+                view = View.inflate(<HTMLElement>element, this.rootElement, parent);
+                element[View.AndroidViewProperty] = view;
+            }
             return view;
         }
 
@@ -62,7 +65,25 @@ module androidui.widget{
         }
 
         getItem(position:number):Element{
-            return this.bindElement.children[position]
+            let element = this.bindElement.children[position];
+            if(element.tagName === HtmlDataListAdapter.RefElementTag){
+                element = element[HtmlDataListAdapter.RefElementProperty];
+                if(!element) throw Error('Reference element is '+element);
+            }
+            return element;
+        }
+
+        /**
+         * create a ref element replace the element
+         * @param element
+         * @return ref element
+         */
+        private replaceChildWithRef(element):HTMLElement {
+            let refElement = document.createElement(HtmlDataListAdapter.RefElementTag);
+            refElement[HtmlDataListAdapter.RefElementProperty] = element;
+            this.bindElement.insertBefore(refElement, element);
+            this.bindElement.removeChild(element);
+            return refElement;
         }
 
         getItemId(position:number):number {

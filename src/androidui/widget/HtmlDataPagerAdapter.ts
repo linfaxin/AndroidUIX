@@ -20,6 +20,9 @@ module androidui.widget{
     import PagerAdapter = android.support.v4.view.PagerAdapter;
 
     export class HtmlDataPagerAdapter extends PagerAdapter implements HtmlDataAdapter{
+        static RefElementTag = "ref-element".toUpperCase();
+        static RefElementProperty = "RefElement";
+        static BindAdapterProperty = "BindAdapter";
         bindElement:HTMLElement;
         rootElement:HTMLElement;
 
@@ -29,6 +32,17 @@ module androidui.widget{
             if(parent instanceof ViewPager){
                 parent.setAdapter(this);
             }
+            bindElement[HtmlDataListAdapter.BindAdapterProperty] = this;
+            this.registerHtmlDataObserver();
+        }
+
+        private registerHtmlDataObserver(){
+            const adapter = this;
+            function callBack(arr: MutationRecord[], observer: MutationObserver){
+                adapter.notifyDataSetChanged();
+            }
+            let observer:MutationObserver = new MutationObserver(callBack);
+            observer.observe(this.bindElement, {childList:true});
         }
 
 
@@ -37,14 +51,36 @@ module androidui.widget{
         }
 
         instantiateItem(container:android.view.ViewGroup, position:number):any {
-            let element = this.bindElement.children[position];
+            let element = this.getItem(position);
             let view:View = element[View.AndroidViewProperty];
-            //if(!view){
-                view = View.inflate(<HTMLElement>element.cloneNode(true), this.rootElement, container);
-                //element[View.AndroidViewProperty] = view;
-            //}
+            if(!view){
+                this.replaceChildWithRef(element);
+                view = View.inflate(<HTMLElement>element, this.rootElement, container);
+                element[View.AndroidViewProperty] = view;
+            }
             container.addView(view);
             return view;
+        }
+
+        getItem(position:number):Element{
+            let element = this.bindElement.children[position];
+            if(element.tagName === HtmlDataListAdapter.RefElementTag){
+                element = element[HtmlDataListAdapter.RefElementProperty];
+                if(!element) throw Error('Reference element is '+element);
+            }
+            return element;
+        }
+        /**
+         * create a ref element replace the element
+         * @param element
+         * @return ref element
+         */
+        private replaceChildWithRef(element):HTMLElement {
+            let refElement = document.createElement(HtmlDataListAdapter.RefElementTag);
+            refElement[HtmlDataListAdapter.RefElementProperty] = element;
+            this.bindElement.insertBefore(refElement, element);
+            this.bindElement.removeChild(element);
+            return refElement;
         }
 
         destroyItem(container:android.view.ViewGroup, position:number, object:any):void {
