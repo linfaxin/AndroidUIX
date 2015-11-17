@@ -4289,6 +4289,9 @@ declare module androidui.widget {
     import ViewGroup = android.view.ViewGroup;
     import BaseAdapter = android.widget.BaseAdapter;
     class HtmlDataListAdapter extends BaseAdapter implements HtmlDataAdapter {
+        static RefElementTag: string;
+        static RefElementProperty: string;
+        static BindAdapterProperty: string;
         bindElement: HTMLElement;
         rootElement: HTMLElement;
         onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
@@ -4296,17 +4299,24 @@ declare module androidui.widget {
         getView(position: number, convertView: View, parent: ViewGroup): View;
         getCount(): number;
         getItem(position: number): Element;
+        private replaceChildWithRef(element);
         getItemId(position: number): number;
     }
 }
 declare module androidui.widget {
     import PagerAdapter = android.support.v4.view.PagerAdapter;
     class HtmlDataPagerAdapter extends PagerAdapter implements HtmlDataAdapter {
+        static RefElementTag: string;
+        static RefElementProperty: string;
+        static BindAdapterProperty: string;
         bindElement: HTMLElement;
         rootElement: HTMLElement;
         onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
+        private registerHtmlDataObserver();
         getCount(): number;
         instantiateItem(container: android.view.ViewGroup, position: number): any;
+        getItem(position: number): Element;
+        private replaceChildWithRef(element);
         destroyItem(container: android.view.ViewGroup, position: number, object: any): void;
         isViewFromObject(view: android.view.View, object: any): boolean;
         getItemPosition(object: any): number;

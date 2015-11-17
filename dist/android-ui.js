@@ -15586,6 +15586,8 @@ var androidui;
                     this.mImgElement.style.height = '';
                     this.mDrawableWidth = this.mImgElement.width;
                     this.mDrawableHeight = this.mImgElement.height;
+                    this.mImgElement.style.display = 'none';
+                    this.mImgElement.style.opacity = '';
                     this.requestLayout();
                 });
             }
@@ -15653,6 +15655,7 @@ var androidui;
             setImageURI(uri) {
                 this.mDrawableWidth = -1;
                 this.mDrawableHeight = -1;
+                this.mImgElement.style.opacity = '0';
                 this.mImgElement.src = uri;
             }
             setScaleType(scaleType) {
@@ -15763,6 +15766,7 @@ var androidui;
                 let changed = super.setFrame(left, top, right, bottom);
                 this.mHaveFrame = true;
                 this.configureBounds();
+                this.mImgElement.style.display = '';
                 return changed;
             }
             configureBounds() {
@@ -28651,7 +28655,7 @@ var androidui;
                 if (parent instanceof AbsListView) {
                     parent.setAdapter(this);
                 }
-                bindElement[View.AndroidViewProperty] = this;
+                bindElement[HtmlDataListAdapter.BindAdapterProperty] = this;
                 this.registerHtmlDataObserver();
             }
             registerHtmlDataObserver() {
@@ -28665,14 +28669,31 @@ var androidui;
             getView(position, convertView, parent) {
                 let element = this.getItem(position);
                 let view = element[View.AndroidViewProperty];
-                view = View.inflate(element.cloneNode(true), this.rootElement, parent);
+                if (!view) {
+                    this.replaceChildWithRef(element);
+                    view = View.inflate(element, this.rootElement, parent);
+                    element[View.AndroidViewProperty] = view;
+                }
                 return view;
             }
             getCount() {
                 return this.bindElement.children.length;
             }
             getItem(position) {
-                return this.bindElement.children[position];
+                let element = this.bindElement.children[position];
+                if (element.tagName === HtmlDataListAdapter.RefElementTag) {
+                    element = element[HtmlDataListAdapter.RefElementProperty];
+                    if (!element)
+                        throw Error('Reference element is ' + element);
+                }
+                return element;
+            }
+            replaceChildWithRef(element) {
+                let refElement = document.createElement(HtmlDataListAdapter.RefElementTag);
+                refElement[HtmlDataListAdapter.RefElementProperty] = element;
+                this.bindElement.insertBefore(refElement, element);
+                this.bindElement.removeChild(element);
+                return refElement;
             }
             getItemId(position) {
                 let id = this.getItem(position).id;
@@ -28682,6 +28703,9 @@ var androidui;
                 return -1;
             }
         }
+        HtmlDataListAdapter.RefElementTag = "ref-element".toUpperCase();
+        HtmlDataListAdapter.RefElementProperty = "RefElement";
+        HtmlDataListAdapter.BindAdapterProperty = "BindAdapter";
         widget.HtmlDataListAdapter = HtmlDataListAdapter;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
@@ -28708,19 +28732,46 @@ var androidui;
                 if (parent instanceof ViewPager) {
                     parent.setAdapter(this);
                 }
+                bindElement[widget.HtmlDataListAdapter.BindAdapterProperty] = this;
+                this.registerHtmlDataObserver();
+            }
+            registerHtmlDataObserver() {
+                const adapter = this;
+                function callBack(arr, observer) {
+                    adapter.notifyDataSetChanged();
+                }
+                let observer = new MutationObserver(callBack);
+                observer.observe(this.bindElement, { childList: true });
             }
             getCount() {
                 return this.bindElement.children.length;
             }
             instantiateItem(container, position) {
-                let element = this.bindElement.children[position];
+                let element = this.getItem(position);
                 let view = element[View.AndroidViewProperty];
                 if (!view) {
-                    view = View.inflate(element.cloneNode(true), this.rootElement, container);
+                    this.replaceChildWithRef(element);
+                    view = View.inflate(element, this.rootElement, container);
                     element[View.AndroidViewProperty] = view;
                 }
                 container.addView(view);
                 return view;
+            }
+            getItem(position) {
+                let element = this.bindElement.children[position];
+                if (element.tagName === widget.HtmlDataListAdapter.RefElementTag) {
+                    element = element[widget.HtmlDataListAdapter.RefElementProperty];
+                    if (!element)
+                        throw Error('Reference element is ' + element);
+                }
+                return element;
+            }
+            replaceChildWithRef(element) {
+                let refElement = document.createElement(widget.HtmlDataListAdapter.RefElementTag);
+                refElement[widget.HtmlDataListAdapter.RefElementProperty] = element;
+                this.bindElement.insertBefore(refElement, element);
+                this.bindElement.removeChild(element);
+                return refElement;
             }
             destroyItem(container, position, object) {
                 let view = object;
@@ -28742,6 +28793,9 @@ var androidui;
                 return position;
             }
         }
+        HtmlDataPagerAdapter.RefElementTag = "ref-element".toUpperCase();
+        HtmlDataPagerAdapter.RefElementProperty = "RefElement";
+        HtmlDataPagerAdapter.BindAdapterProperty = "BindAdapter";
         widget.HtmlDataPagerAdapter = HtmlDataPagerAdapter;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));

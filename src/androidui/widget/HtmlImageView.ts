@@ -50,6 +50,8 @@ module androidui.widget{
                 this.mImgElement.style.height = '';
                 this.mDrawableWidth = this.mImgElement.width;
                 this.mDrawableHeight = this.mImgElement.height;
+                this.mImgElement.style.display = 'none';
+                this.mImgElement.style.opacity = '';
                 this.requestLayout();
             });
         }
@@ -125,6 +127,7 @@ module androidui.widget{
         setImageURI(uri:string){
             this.mDrawableWidth = -1;
             this.mDrawableHeight = -1;
+            this.mImgElement.style.opacity = '0';
             this.mImgElement.src = uri;
         }
         setScaleType(scaleType:ImageView.ScaleType) {
@@ -292,6 +295,7 @@ module androidui.widget{
             let changed = super.setFrame(left, top, right, bottom);
             this.mHaveFrame = true;
             this.configureBounds();
+            this.mImgElement.style.display = '';
             return changed;
         }
 
