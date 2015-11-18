@@ -23,11 +23,11 @@ module androidui.widget{
         static RefElementTag = "ref-element".toUpperCase();
         static RefElementProperty = "RefElement";
         static BindAdapterProperty = "BindAdapter";
-        bindElement:HTMLElement;
+        bindElementData:HTMLElement;
         rootElement:HTMLElement;
 
         onInflateAdapter(bindElement:HTMLElement, rootElement:HTMLElement, parent:android.view.ViewGroup):void {
-            this.bindElement = bindElement;
+            this.bindElementData = bindElement;
             this.rootElement = rootElement;
             if(parent instanceof ViewPager){
                 parent.setAdapter(this);
@@ -42,19 +42,19 @@ module androidui.widget{
                 adapter.notifyDataSetChanged();
             }
             let observer:MutationObserver = new MutationObserver(callBack);
-            observer.observe(this.bindElement, {childList:true});
+            observer.observe(this.bindElementData, {childList:true});
         }
 
 
         getCount():number {
-            return this.bindElement.children.length;
+            return this.bindElementData.children.length;
         }
 
         instantiateItem(container:android.view.ViewGroup, position:number):any {
             let element = this.getItem(position);
             let view:View = element[View.AndroidViewProperty];
+            this.checkReplaceWithRef(element);
             if(!view){
-                this.replaceChildWithRef(element);
                 view = View.inflate(<HTMLElement>element, this.rootElement, container);
                 element[View.AndroidViewProperty] = view;
             }
@@ -63,24 +63,55 @@ module androidui.widget{
         }
 
         getItem(position:number):Element{
-            let element = this.bindElement.children[position];
+            let element = this.bindElementData.children[position];
             if(element.tagName === HtmlDataListAdapter.RefElementTag){
                 element = element[HtmlDataListAdapter.RefElementProperty];
                 if(!element) throw Error('Reference element is '+element);
             }
             return element;
         }
+
         /**
          * create a ref element replace the element
          * @param element
          * @return ref element
          */
-        private replaceChildWithRef(element):HTMLElement {
-            let refElement = document.createElement(HtmlDataListAdapter.RefElementTag);
+        private checkReplaceWithRef(element):HTMLElement {
+            let refElement = element[HtmlDataListAdapter.RefElementProperty] || document.createElement(HtmlDataListAdapter.RefElementTag);
             refElement[HtmlDataListAdapter.RefElementProperty] = element;
-            this.bindElement.insertBefore(refElement, element);
-            this.bindElement.removeChild(element);
+            element[HtmlDataListAdapter.RefElementProperty] = refElement;
+            if(element.parentNode === this.bindElementData) {
+                this.bindElementData.insertBefore(refElement, element);
+                this.bindElementData.removeChild(element);
+            }
             return refElement;
+        }
+
+        private removeElementRefAndRestoreToAdapter(elOrRefEl:Element){
+            let element:Element;
+            let refElement:Element;
+            if(elOrRefEl.tagName === HtmlDataListAdapter.RefElementTag){
+                element = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
+                refElement = elOrRefEl;
+
+            }else if(elOrRefEl[HtmlDataListAdapter.RefElementProperty]){
+                refElement = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
+                element = elOrRefEl;
+            }
+            if(element && refElement){
+                this.bindElementData.insertBefore(element, refElement);
+                this.bindElementData.removeChild(refElement);
+            }
+        }
+
+        /**
+         * restore real element to ref element, so the bindElement's children was origin children
+         */
+        notifyDataSizeMayChange(){
+            for(let i = 0, count=this.bindElementData.children.length; i<count; i++){
+                this.removeElementRefAndRestoreToAdapter(this.bindElementData.children[i]);
+            }
+            this.notifyDataSetChanged();
         }
 
         destroyItem(container:android.view.ViewGroup, position:number, object:any):void {
@@ -96,7 +127,7 @@ module androidui.widget{
             let position = PagerAdapter.POSITION_NONE;
             if(object==null) return position;
             for(let i=0, count = this.getCount(); i<count; i++){
-                if(object === this.bindElement.children[i][View.AndroidViewProperty]){
+                if(object === this.getItem(i)[View.AndroidViewProperty]){
                     position = i;
                     break;
                 }

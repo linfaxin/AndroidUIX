@@ -837,7 +837,10 @@ module android.view {
             for (let i:number = count - 1; i >= 0; i--) {
                 children[i].mParent = null;
                 //children[i] = null;
-                this.bindElement.removeChild(children[i].bindElement);//remove from dom
+                try {
+                    this.bindElement.removeChild(children[i].bindElement);//remove from dom
+                } catch (e) {
+                }
             }
 
         }
