@@ -66,7 +66,7 @@ module androidui {
             this.element.innerHTML = '';
 
             this.initElementStyle();
-            this.element.appendChild(this.rootResourceElement);
+            if(this.rootResourceElement) this.element.appendChild(this.rootResourceElement);
             if(this.rootStyleElement) this.element.appendChild(this.rootStyleElement);
             this.element.appendChild(this._canvas);
             this.element.appendChild(this._rootLayout.bindElement);
