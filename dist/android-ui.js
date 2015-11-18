@@ -3790,7 +3790,6 @@ var android;
 (function (android) {
     var view;
     (function (view_1) {
-        var SparseArray = android.util.SparseArray;
         var ColorDrawable = android.graphics.drawable.ColorDrawable;
         var ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
         var InsetDrawable = android.graphics.drawable.InsetDrawable;
@@ -5480,22 +5479,20 @@ var android;
                         & (View.MEASURED_STATE_MASK >> View.MEASURED_HEIGHT_STATE_SHIFT));
             }
             measure(widthMeasureSpec, heightMeasureSpec) {
-                let key = widthMeasureSpec << 32 | heightMeasureSpec & 0xffffffff;
+                let key = widthMeasureSpec + ',' + heightMeasureSpec;
                 if (this.mMeasureCache == null)
-                    this.mMeasureCache = new SparseArray();
+                    this.mMeasureCache = new Map();
                 if ((this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT ||
                     widthMeasureSpec != this.mOldWidthMeasureSpec ||
                     heightMeasureSpec != this.mOldHeightMeasureSpec) {
                     this.mPrivateFlags &= ~View.PFLAG_MEASURED_DIMENSION_SET;
-                    let cacheIndex = (this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT ? -1 :
-                        this.mMeasureCache.indexOfKey(key);
-                    if (cacheIndex < 0) {
+                    let cacheValue = (this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT ? null : this.mMeasureCache.get(key);
+                    if (cacheValue == null) {
                         this.onMeasure(widthMeasureSpec, heightMeasureSpec);
                         this.mPrivateFlags3 &= ~View.PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
                     }
                     else {
-                        let value = this.mMeasureCache.valueAt(cacheIndex);
-                        this.setMeasuredDimension(value >> 32, value);
+                        this.setMeasuredDimension(cacheValue[0], cacheValue[1]);
                         this.mPrivateFlags3 |= View.PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
                     }
                     if ((this.mPrivateFlags & View.PFLAG_MEASURED_DIMENSION_SET) != View.PFLAG_MEASURED_DIMENSION_SET) {
@@ -5507,7 +5504,7 @@ var android;
                 }
                 this.mOldWidthMeasureSpec = widthMeasureSpec;
                 this.mOldHeightMeasureSpec = heightMeasureSpec;
-                this.mMeasureCache.put(key, (this.mMeasuredWidth) << 32 | this.mMeasuredHeight & 0xffffffff);
+                this.mMeasureCache.set(key, [this.mMeasuredWidth, this.mMeasuredHeight]);
             }
             onMeasure(widthMeasureSpec, heightMeasureSpec) {
                 this.setMeasuredDimension(View.getDefaultSize(this.getSuggestedMinimumWidth(), widthMeasureSpec), View.getDefaultSize(this.getSuggestedMinimumHeight(), heightMeasureSpec));
@@ -9598,7 +9595,11 @@ var android;
                 this.mChildren = [];
                 for (let i = count - 1; i >= 0; i--) {
                     children[i].mParent = null;
-                    this.bindElement.removeChild(children[i].bindElement);
+                    try {
+                        this.bindElement.removeChild(children[i].bindElement);
+                    }
+                    catch (e) {
+                    }
                 }
             }
             indexOfChild(child) {
@@ -28323,7 +28324,8 @@ var androidui;
             this.initInflateView();
             this.element.innerHTML = '';
             this.initElementStyle();
-            this.element.appendChild(this.rootResourceElement);
+            if (this.rootResourceElement)
+                this.element.appendChild(this.rootResourceElement);
             if (this.rootStyleElement)
                 this.element.appendChild(this.rootStyleElement);
             this.element.appendChild(this._canvas);
@@ -28638,6 +28640,7 @@ var android;
 ///<reference path="../../android/widget/AbsListView.ts"/>
 ///<reference path="../../android/widget/ListAdapter.ts"/>
 ///<reference path="../../android/widget/BaseAdapter.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
 ///<reference path="../../android/widget/SpinnerAdapter.ts"/>
 ///<reference path="../../android/database/DataSetObservable.ts"/>
 ///<reference path="../../android/database/DataSetObserver.ts"/>
@@ -28648,9 +28651,10 @@ var androidui;
         var View = android.view.View;
         var AbsListView = android.widget.AbsListView;
         var BaseAdapter = android.widget.BaseAdapter;
+        var AdapterView = android.widget.AdapterView;
         class HtmlDataListAdapter extends BaseAdapter {
             onInflateAdapter(bindElement, rootElement, parent) {
-                this.bindElement = bindElement;
+                this.bindElementData = bindElement;
                 this.rootElement = rootElement;
                 if (parent instanceof AbsListView) {
                     parent.setAdapter(this);
@@ -28664,23 +28668,26 @@ var androidui;
                     adapter.notifyDataSetChanged();
                 }
                 let observer = new MutationObserver(callBack);
-                observer.observe(this.bindElement, { childList: true });
+                observer.observe(this.bindElementData, { childList: true });
+            }
+            getItemViewType(position) {
+                return AdapterView.ITEM_VIEW_TYPE_IGNORE;
             }
             getView(position, convertView, parent) {
                 let element = this.getItem(position);
                 let view = element[View.AndroidViewProperty];
+                this.checkReplaceWithRef(element);
                 if (!view) {
-                    this.replaceChildWithRef(element);
                     view = View.inflate(element, this.rootElement, parent);
                     element[View.AndroidViewProperty] = view;
                 }
                 return view;
             }
             getCount() {
-                return this.bindElement.children.length;
+                return this.bindElementData.children.length;
             }
             getItem(position) {
-                let element = this.bindElement.children[position];
+                let element = this.bindElementData.children[position];
                 if (element.tagName === HtmlDataListAdapter.RefElementTag) {
                     element = element[HtmlDataListAdapter.RefElementProperty];
                     if (!element)
@@ -28688,12 +28695,37 @@ var androidui;
                 }
                 return element;
             }
-            replaceChildWithRef(element) {
-                let refElement = document.createElement(HtmlDataListAdapter.RefElementTag);
+            checkReplaceWithRef(element) {
+                let refElement = element[HtmlDataListAdapter.RefElementProperty] || document.createElement(HtmlDataListAdapter.RefElementTag);
                 refElement[HtmlDataListAdapter.RefElementProperty] = element;
-                this.bindElement.insertBefore(refElement, element);
-                this.bindElement.removeChild(element);
+                element[HtmlDataListAdapter.RefElementProperty] = refElement;
+                if (element.parentNode === this.bindElementData) {
+                    this.bindElementData.insertBefore(refElement, element);
+                    this.bindElementData.removeChild(element);
+                }
                 return refElement;
+            }
+            removeElementRefAndRestoreToAdapter(elOrRefEl) {
+                let element;
+                let refElement;
+                if (elOrRefEl.tagName === HtmlDataListAdapter.RefElementTag) {
+                    element = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
+                    refElement = elOrRefEl;
+                }
+                else if (elOrRefEl[HtmlDataListAdapter.RefElementProperty]) {
+                    refElement = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
+                    element = elOrRefEl;
+                }
+                if (element && refElement) {
+                    this.bindElementData.insertBefore(element, refElement);
+                    this.bindElementData.removeChild(refElement);
+                }
+            }
+            notifyDataSizeMayChange() {
+                for (let i = 0, count = this.bindElementData.children.length; i < count; i++) {
+                    this.removeElementRefAndRestoreToAdapter(this.bindElementData.children[i]);
+                }
+                this.notifyDataSetChanged();
             }
             getItemId(position) {
                 let id = this.getItem(position).id;
@@ -28727,7 +28759,7 @@ var androidui;
         var PagerAdapter = android.support.v4.view.PagerAdapter;
         class HtmlDataPagerAdapter extends PagerAdapter {
             onInflateAdapter(bindElement, rootElement, parent) {
-                this.bindElement = bindElement;
+                this.bindElementData = bindElement;
                 this.rootElement = rootElement;
                 if (parent instanceof ViewPager) {
                     parent.setAdapter(this);
@@ -28741,16 +28773,16 @@ var androidui;
                     adapter.notifyDataSetChanged();
                 }
                 let observer = new MutationObserver(callBack);
-                observer.observe(this.bindElement, { childList: true });
+                observer.observe(this.bindElementData, { childList: true });
             }
             getCount() {
-                return this.bindElement.children.length;
+                return this.bindElementData.children.length;
             }
             instantiateItem(container, position) {
                 let element = this.getItem(position);
                 let view = element[View.AndroidViewProperty];
+                this.checkReplaceWithRef(element);
                 if (!view) {
-                    this.replaceChildWithRef(element);
                     view = View.inflate(element, this.rootElement, container);
                     element[View.AndroidViewProperty] = view;
                 }
@@ -28758,7 +28790,7 @@ var androidui;
                 return view;
             }
             getItem(position) {
-                let element = this.bindElement.children[position];
+                let element = this.bindElementData.children[position];
                 if (element.tagName === widget.HtmlDataListAdapter.RefElementTag) {
                     element = element[widget.HtmlDataListAdapter.RefElementProperty];
                     if (!element)
@@ -28766,12 +28798,37 @@ var androidui;
                 }
                 return element;
             }
-            replaceChildWithRef(element) {
-                let refElement = document.createElement(widget.HtmlDataListAdapter.RefElementTag);
+            checkReplaceWithRef(element) {
+                let refElement = element[widget.HtmlDataListAdapter.RefElementProperty] || document.createElement(widget.HtmlDataListAdapter.RefElementTag);
                 refElement[widget.HtmlDataListAdapter.RefElementProperty] = element;
-                this.bindElement.insertBefore(refElement, element);
-                this.bindElement.removeChild(element);
+                element[widget.HtmlDataListAdapter.RefElementProperty] = refElement;
+                if (element.parentNode === this.bindElementData) {
+                    this.bindElementData.insertBefore(refElement, element);
+                    this.bindElementData.removeChild(element);
+                }
                 return refElement;
+            }
+            removeElementRefAndRestoreToAdapter(elOrRefEl) {
+                let element;
+                let refElement;
+                if (elOrRefEl.tagName === widget.HtmlDataListAdapter.RefElementTag) {
+                    element = elOrRefEl[widget.HtmlDataListAdapter.RefElementProperty];
+                    refElement = elOrRefEl;
+                }
+                else if (elOrRefEl[widget.HtmlDataListAdapter.RefElementProperty]) {
+                    refElement = elOrRefEl[widget.HtmlDataListAdapter.RefElementProperty];
+                    element = elOrRefEl;
+                }
+                if (element && refElement) {
+                    this.bindElementData.insertBefore(element, refElement);
+                    this.bindElementData.removeChild(refElement);
+                }
+            }
+            notifyDataSizeMayChange() {
+                for (let i = 0, count = this.bindElementData.children.length; i < count; i++) {
+                    this.removeElementRefAndRestoreToAdapter(this.bindElementData.children[i]);
+                }
+                this.notifyDataSetChanged();
             }
             destroyItem(container, position, object) {
                 let view = object;
@@ -28785,7 +28842,7 @@ var androidui;
                 if (object == null)
                     return position;
                 for (let i = 0, count = this.getCount(); i < count; i++) {
-                    if (object === this.bindElement.children[i][View.AndroidViewProperty]) {
+                    if (object === this.getItem(i)[View.AndroidViewProperty]) {
                         position = i;
                         break;
                     }

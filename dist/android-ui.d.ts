@@ -4292,14 +4292,17 @@ declare module androidui.widget {
         static RefElementTag: string;
         static RefElementProperty: string;
         static BindAdapterProperty: string;
-        bindElement: HTMLElement;
+        bindElementData: HTMLElement;
         rootElement: HTMLElement;
         onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
         private registerHtmlDataObserver();
+        getItemViewType(position: number): number;
         getView(position: number, convertView: View, parent: ViewGroup): View;
         getCount(): number;
         getItem(position: number): Element;
-        private replaceChildWithRef(element);
+        private checkReplaceWithRef(element);
+        private removeElementRefAndRestoreToAdapter(elOrRefEl);
+        notifyDataSizeMayChange(): void;
         getItemId(position: number): number;
     }
 }
@@ -4309,14 +4312,16 @@ declare module androidui.widget {
         static RefElementTag: string;
         static RefElementProperty: string;
         static BindAdapterProperty: string;
-        bindElement: HTMLElement;
+        bindElementData: HTMLElement;
         rootElement: HTMLElement;
         onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
         private registerHtmlDataObserver();
         getCount(): number;
         instantiateItem(container: android.view.ViewGroup, position: number): any;
         getItem(position: number): Element;
-        private replaceChildWithRef(element);
+        private checkReplaceWithRef(element);
+        private removeElementRefAndRestoreToAdapter(elOrRefEl);
+        notifyDataSizeMayChange(): void;
         destroyItem(container: android.view.ViewGroup, position: number, object: any): void;
         isViewFromObject(view: android.view.View, object: any): boolean;
         getItemPosition(object: any): number;

@@ -613,7 +613,7 @@ module android.view {
         private mVerticalScrollFactor = 0;
         private mOverScrollMode = 0;
         mParent:ViewParent;
-        private mMeasureCache:SparseArray<number>;
+        private mMeasureCache:Map<string, number[]>;
         mAttachInfo:View.AttachInfo;
         mLayoutParams:ViewGroup.LayoutParams;
         mViewFlags=0;
@@ -2667,8 +2667,8 @@ module android.view {
         measure(widthMeasureSpec:number, heightMeasureSpec:number) {
 
             // Suppress sign extension for the low bytes
-            let key = widthMeasureSpec << 32 | heightMeasureSpec & 0xffffffff;
-            if (this.mMeasureCache == null) this.mMeasureCache = new SparseArray<number>();
+            let key = widthMeasureSpec + ',' + heightMeasureSpec;
+            if (this.mMeasureCache == null) this.mMeasureCache = new Map<string, number[]>();
 
             if ((this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT ||
                 widthMeasureSpec != this.mOldWidthMeasureSpec ||
@@ -2679,16 +2679,15 @@ module android.view {
 
                 //resolveRtlPropertiesIfNeeded();
 
-                let cacheIndex = (this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT ? -1 :
-                    this.mMeasureCache.indexOfKey(key);
-                if (cacheIndex < 0) {
+                let cacheValue:number[] =
+                    (this.mPrivateFlags & View.PFLAG_FORCE_LAYOUT) == View.PFLAG_FORCE_LAYOUT ? null : this.mMeasureCache.get(key);
+                if (cacheValue==null) {
                     // measure ourselves, this should set the measured dimension flag back
                     this.onMeasure(widthMeasureSpec, heightMeasureSpec);
                     this.mPrivateFlags3 &= ~View.PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
                 } else {
-                    let value = this.mMeasureCache.valueAt(cacheIndex);
                     // Casting a long to int drops the high 32 bits, no mask needed
-                    this.setMeasuredDimension(value >> 32, value);
+                    this.setMeasuredDimension(cacheValue[0], cacheValue[1]);
                     this.mPrivateFlags3 |= View.PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
                 }
 
@@ -2706,7 +2705,7 @@ module android.view {
             this.mOldWidthMeasureSpec = widthMeasureSpec;
             this.mOldHeightMeasureSpec = heightMeasureSpec;
 
-            this.mMeasureCache.put(key, (this.mMeasuredWidth) << 32 | this.mMeasuredHeight & 0xffffffff); // suppress sign extension
+            this.mMeasureCache.set(key, [this.mMeasuredWidth, this.mMeasuredHeight]); // suppress sign extension
         }
 
         protected onMeasure(widthMeasureSpec, heightMeasureSpec):void {
