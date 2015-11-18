@@ -105,7 +105,7 @@ module androidui.widget{
         /**
          * restore real element to ref element, so the bindElement's children was origin children
          */
-        notifyDataSizeMayChange(){
+        notifyDataSizeWillChange(){
             for(let i = 0, count=this.bindElementData.children.length; i<count; i++){
                 this.removeElementRefAndRestoreToAdapter(this.bindElementData.children[i]);
             }
