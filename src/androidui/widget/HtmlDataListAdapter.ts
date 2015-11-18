@@ -94,20 +94,11 @@ module androidui.widget{
             return refElement;
         }
 
-        private removeElementRefAndRestoreToAdapter(elOrRefEl:Element){
-            let element:Element;
-            let refElement:Element;
-            if(elOrRefEl.tagName === HtmlDataListAdapter.RefElementTag){
-                element = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
-                refElement = elOrRefEl;
-
-            }else if(elOrRefEl[HtmlDataListAdapter.RefElementProperty]){
-                refElement = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
-                element = elOrRefEl;
-            }
-            if(element && refElement){
-                this.bindElementData.insertBefore(element, refElement);
-                this.bindElementData.removeChild(refElement);
+        private removeElementRefAndRestoreToAdapter(childElement:Element){
+            if(childElement.tagName === HtmlDataListAdapter.RefElementTag){
+                let element = childElement[HtmlDataListAdapter.RefElementProperty];
+                this.bindElementData.insertBefore(element, childElement);
+                this.bindElementData.removeChild(childElement);
             }
         }
 

@@ -1935,6 +1935,7 @@ declare module android.view {
         addViewInner(child: View, index: number, params: ViewGroup.LayoutParams, preventRequestLayout: boolean): void;
         private addInArray(child, index);
         private addToBindElement(childElement, insertBeforeElement);
+        private removeChildElement(childElement);
         private removeFromArray(index, count?);
         removeView(view: View): void;
         removeViewInLayout(view: View): void;
@@ -4301,7 +4302,7 @@ declare module androidui.widget {
         getCount(): number;
         getItem(position: number): Element;
         private checkReplaceWithRef(element);
-        private removeElementRefAndRestoreToAdapter(elOrRefEl);
+        private removeElementRefAndRestoreToAdapter(childElement);
         notifyDataSizeMayChange(): void;
         getItemId(position: number): number;
     }
@@ -4320,7 +4321,7 @@ declare module androidui.widget {
         instantiateItem(container: android.view.ViewGroup, position: number): any;
         getItem(position: number): Element;
         private checkReplaceWithRef(element);
-        private removeElementRefAndRestoreToAdapter(elOrRefEl);
+        private removeElementRefAndRestoreToAdapter(childElement);
         notifyDataSizeMayChange(): void;
         destroyItem(container: android.view.ViewGroup, position: number, object: any): void;
         isViewFromObject(view: android.view.View, object: any): boolean;

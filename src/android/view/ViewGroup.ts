@@ -596,6 +596,12 @@ module android.view {
                 this.bindElement.insertBefore(childElement, insertBeforeElement);//insert to dom
             }
         }
+        private removeChildElement(childElement:HTMLElement){
+            try {
+                this.bindElement.removeChild(childElement);//remove from dom
+            } catch (e) {
+            }
+        }
 
         private removeFromArray(index:number, count = 1) {
             let start = Math.max(0, index);
@@ -606,7 +612,7 @@ module android.view {
             }
             for (let i = start; i < end; i++) {
                 this.mChildren[i].mParent = null;
-                this.bindElement.removeChild(this.mChildren[i].bindElement);//remove from dom
+                this.removeChildElement(this.mChildren[i].bindElement);//remove from dom
             }
             this.mChildren.splice(index, end - start);
         }
@@ -837,10 +843,7 @@ module android.view {
             for (let i:number = count - 1; i >= 0; i--) {
                 children[i].mParent = null;
                 //children[i] = null;
-                try {
-                    this.bindElement.removeChild(children[i].bindElement);//remove from dom
-                } catch (e) {
-                }
+                this.removeChildElement(children[i].bindElement);//remove from dom
             }
 
         }

@@ -9473,6 +9473,13 @@ var android;
                     this.bindElement.insertBefore(childElement, insertBeforeElement);
                 }
             }
+            removeChildElement(childElement) {
+                try {
+                    this.bindElement.removeChild(childElement);
+                }
+                catch (e) {
+                }
+            }
             removeFromArray(index, count = 1) {
                 let start = Math.max(0, index);
                 let end = Math.min(this.mChildrenCount, start + count);
@@ -9481,7 +9488,7 @@ var android;
                 }
                 for (let i = start; i < end; i++) {
                     this.mChildren[i].mParent = null;
-                    this.bindElement.removeChild(this.mChildren[i].bindElement);
+                    this.removeChildElement(this.mChildren[i].bindElement);
                 }
                 this.mChildren.splice(index, end - start);
             }
@@ -9595,11 +9602,7 @@ var android;
                 this.mChildren = [];
                 for (let i = count - 1; i >= 0; i--) {
                     children[i].mParent = null;
-                    try {
-                        this.bindElement.removeChild(children[i].bindElement);
-                    }
-                    catch (e) {
-                    }
+                    this.removeChildElement(children[i].bindElement);
                 }
             }
             indexOfChild(child) {
@@ -28705,20 +28708,11 @@ var androidui;
                 }
                 return refElement;
             }
-            removeElementRefAndRestoreToAdapter(elOrRefEl) {
-                let element;
-                let refElement;
-                if (elOrRefEl.tagName === HtmlDataListAdapter.RefElementTag) {
-                    element = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
-                    refElement = elOrRefEl;
-                }
-                else if (elOrRefEl[HtmlDataListAdapter.RefElementProperty]) {
-                    refElement = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
-                    element = elOrRefEl;
-                }
-                if (element && refElement) {
-                    this.bindElementData.insertBefore(element, refElement);
-                    this.bindElementData.removeChild(refElement);
+            removeElementRefAndRestoreToAdapter(childElement) {
+                if (childElement.tagName === HtmlDataListAdapter.RefElementTag) {
+                    let element = childElement[HtmlDataListAdapter.RefElementProperty];
+                    this.bindElementData.insertBefore(element, childElement);
+                    this.bindElementData.removeChild(childElement);
                 }
             }
             notifyDataSizeMayChange() {
@@ -28764,7 +28758,7 @@ var androidui;
                 if (parent instanceof ViewPager) {
                     parent.setAdapter(this);
                 }
-                bindElement[widget.HtmlDataListAdapter.BindAdapterProperty] = this;
+                bindElement[HtmlDataPagerAdapter.BindAdapterProperty] = this;
                 this.registerHtmlDataObserver();
             }
             registerHtmlDataObserver() {
@@ -28791,37 +28785,28 @@ var androidui;
             }
             getItem(position) {
                 let element = this.bindElementData.children[position];
-                if (element.tagName === widget.HtmlDataListAdapter.RefElementTag) {
-                    element = element[widget.HtmlDataListAdapter.RefElementProperty];
+                if (element.tagName === HtmlDataPagerAdapter.RefElementTag) {
+                    element = element[HtmlDataPagerAdapter.RefElementProperty];
                     if (!element)
                         throw Error('Reference element is ' + element);
                 }
                 return element;
             }
             checkReplaceWithRef(element) {
-                let refElement = element[widget.HtmlDataListAdapter.RefElementProperty] || document.createElement(widget.HtmlDataListAdapter.RefElementTag);
-                refElement[widget.HtmlDataListAdapter.RefElementProperty] = element;
-                element[widget.HtmlDataListAdapter.RefElementProperty] = refElement;
+                let refElement = element[HtmlDataPagerAdapter.RefElementProperty] || document.createElement(HtmlDataPagerAdapter.RefElementTag);
+                refElement[HtmlDataPagerAdapter.RefElementProperty] = element;
+                element[HtmlDataPagerAdapter.RefElementProperty] = refElement;
                 if (element.parentNode === this.bindElementData) {
                     this.bindElementData.insertBefore(refElement, element);
                     this.bindElementData.removeChild(element);
                 }
                 return refElement;
             }
-            removeElementRefAndRestoreToAdapter(elOrRefEl) {
-                let element;
-                let refElement;
-                if (elOrRefEl.tagName === widget.HtmlDataListAdapter.RefElementTag) {
-                    element = elOrRefEl[widget.HtmlDataListAdapter.RefElementProperty];
-                    refElement = elOrRefEl;
-                }
-                else if (elOrRefEl[widget.HtmlDataListAdapter.RefElementProperty]) {
-                    refElement = elOrRefEl[widget.HtmlDataListAdapter.RefElementProperty];
-                    element = elOrRefEl;
-                }
-                if (element && refElement) {
-                    this.bindElementData.insertBefore(element, refElement);
-                    this.bindElementData.removeChild(refElement);
+            removeElementRefAndRestoreToAdapter(childElement) {
+                if (childElement.tagName === HtmlDataPagerAdapter.RefElementTag) {
+                    let element = childElement[HtmlDataPagerAdapter.RefElementProperty];
+                    this.bindElementData.insertBefore(element, childElement);
+                    this.bindElementData.removeChild(childElement);
                 }
             }
             notifyDataSizeMayChange() {

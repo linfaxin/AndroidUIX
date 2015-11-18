@@ -32,7 +32,7 @@ module androidui.widget{
             if(parent instanceof ViewPager){
                 parent.setAdapter(this);
             }
-            bindElement[HtmlDataListAdapter.BindAdapterProperty] = this;
+            bindElement[HtmlDataPagerAdapter.BindAdapterProperty] = this;
             this.registerHtmlDataObserver();
         }
 
@@ -64,8 +64,8 @@ module androidui.widget{
 
         getItem(position:number):Element{
             let element = this.bindElementData.children[position];
-            if(element.tagName === HtmlDataListAdapter.RefElementTag){
-                element = element[HtmlDataListAdapter.RefElementProperty];
+            if(element.tagName === HtmlDataPagerAdapter.RefElementTag){
+                element = element[HtmlDataPagerAdapter.RefElementProperty];
                 if(!element) throw Error('Reference element is '+element);
             }
             return element;
@@ -77,9 +77,9 @@ module androidui.widget{
          * @return ref element
          */
         private checkReplaceWithRef(element):HTMLElement {
-            let refElement = element[HtmlDataListAdapter.RefElementProperty] || document.createElement(HtmlDataListAdapter.RefElementTag);
-            refElement[HtmlDataListAdapter.RefElementProperty] = element;
-            element[HtmlDataListAdapter.RefElementProperty] = refElement;
+            let refElement = element[HtmlDataPagerAdapter.RefElementProperty] || document.createElement(HtmlDataPagerAdapter.RefElementTag);
+            refElement[HtmlDataPagerAdapter.RefElementProperty] = element;
+            element[HtmlDataPagerAdapter.RefElementProperty] = refElement;
             if(element.parentNode === this.bindElementData) {
                 this.bindElementData.insertBefore(refElement, element);
                 this.bindElementData.removeChild(element);
@@ -87,20 +87,11 @@ module androidui.widget{
             return refElement;
         }
 
-        private removeElementRefAndRestoreToAdapter(elOrRefEl:Element){
-            let element:Element;
-            let refElement:Element;
-            if(elOrRefEl.tagName === HtmlDataListAdapter.RefElementTag){
-                element = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
-                refElement = elOrRefEl;
-
-            }else if(elOrRefEl[HtmlDataListAdapter.RefElementProperty]){
-                refElement = elOrRefEl[HtmlDataListAdapter.RefElementProperty];
-                element = elOrRefEl;
-            }
-            if(element && refElement){
-                this.bindElementData.insertBefore(element, refElement);
-                this.bindElementData.removeChild(refElement);
+        private removeElementRefAndRestoreToAdapter(childElement:Element){
+            if(childElement.tagName === HtmlDataPagerAdapter.RefElementTag){
+                let element = childElement[HtmlDataPagerAdapter.RefElementProperty];
+                this.bindElementData.insertBefore(element, childElement);
+                this.bindElementData.removeChild(childElement);
             }
         }
 
