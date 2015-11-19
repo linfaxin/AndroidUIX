@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="format-detection" content="telephone=no">
     <meta charset="UTF-8">
-    <title>android-components-sample</title>
+    <title>AndroidUI4Web</title>
     <style>
         *{
             -webkit-tap-highlight-color: rgba(0,0,0,0);
@@ -30,13 +30,23 @@
 
 </head>
 <body>
-<android-Activity style="width: 100%; height:100%;display: none;">
+<android-Activity style="width: 100%; height:100%;display: none;" oncreate="onCreate">
     <ScrollView>
         <LinearLayout
                 android:orientation="vertical"
+                android:padding="12dp"
                 android:gravity="center">
-            <Button>
-            </Button>
+            <TextView id="android_tip" android:visibility="gone">注:Android端建议在Chrome浏览器体验</TextView>
+            <Button onclick="location.href='activity/sample_textview.html'">TextView文本组件</Button>
+            <Button onclick="location.href='activity/sample_button.html'">Button按钮组件</Button>
+            <Button onclick="location.href='activity/sample_imageview.html'">ImageView图片组件</Button>
+            <Button onclick="location.href='activity/sample_listview.html'">ListView列表组件</Button>
+            <Button onclick="location.href='activity/sample_gridview.html'">GridView列表组件</Button>
+            <Button onclick="location.href='activity/sample_listview_htmldata.html'">ListView列表组件(纯标签)</Button>
+            <Button onclick="location.href='activity/sample_viewpager.html'">ViewPager页卡组件</Button>
+            <Button onclick="location.href='activity/sample_viewpager_htmldata.html'">ViewPager页卡组件(纯标签)</Button>
+            <Button onclick="location.href='activity/sample_horizontalscrollview.html'">HorizontalScrollView横向滑动组件</Button>
+            <Button onclick="location.href='activity/sample_more_widget.html'">...更多组件</Button>
         </LinearLayout>
     </ScrollView>
 </android-Activity>
@@ -45,6 +55,12 @@
 <script src="lib/CustomElements.min.js"></script>
 <script src="../dist/android-ui.es5.js"></script>
 <script src="build/main.es5.js"></script>
-
+<script>
+    function onCreate(activity){
+        if(navigator.userAgent.match('Android')){
+            activity.findViewById('android_tip').setVisibility(android.view.View.VISIBLE);
+        }
+    }
+</script>
 </body>
 </html>

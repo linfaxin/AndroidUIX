@@ -1435,7 +1435,7 @@ declare module android.view {
         protected computeVerticalScrollExtent(): number;
         canScrollHorizontally(direction: number): boolean;
         canScrollVertically(direction: number): boolean;
-        overScrollBy(deltaX: number, deltaY: number, scrollX: number, scrollY: number, scrollRangeX: number, scrollRangeY: number, maxOverScrollX: number, maxOverScrollY: number, isTouchEvent: boolean): boolean;
+        protected overScrollBy(deltaX: number, deltaY: number, scrollX: number, scrollY: number, scrollRangeX: number, scrollRangeY: number, maxOverScrollX: number, maxOverScrollY: number, isTouchEvent: boolean): boolean;
         protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
         getOverScrollMode(): number;
         setOverScrollMode(overScrollMode: number): void;
@@ -2010,7 +2010,7 @@ declare module android.view {
         isLayoutSuppressed(): boolean;
         layout(l: number, t: number, r: number, b: number): void;
         canAnimate(): boolean;
-        protected abstract onLayout(changed: boolean, l: number, t: number, r: number, b: number): any;
+        protected abstract onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
         dispatchDraw(canvas: Canvas): void;
         drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
@@ -4303,7 +4303,7 @@ declare module androidui.widget {
         getItem(position: number): Element;
         private checkReplaceWithRef(element);
         private removeElementRefAndRestoreToAdapter(childElement);
-        notifyDataSizeMayChange(): void;
+        notifyDataSizeWillChange(): void;
         getItemId(position: number): number;
     }
 }
@@ -4322,7 +4322,7 @@ declare module androidui.widget {
         getItem(position: number): Element;
         private checkReplaceWithRef(element);
         private removeElementRefAndRestoreToAdapter(childElement);
-        notifyDataSizeMayChange(): void;
+        notifyDataSizeWillChange(): void;
         destroyItem(container: android.view.ViewGroup, position: number, object: any): void;
         isViewFromObject(view: android.view.View, object: any): boolean;
         getItemPosition(object: any): number;

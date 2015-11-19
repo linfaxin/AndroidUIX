@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>更多组件</title>
+    <script>
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+</head>
+<body>
+    <android-Activity style="width: 100%; height:100%;display: none;">
+        <resources>
+            <android-style id="textStyle"
+                   android:textSize="16sp"
+                   android:textColor="#333"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                    ></android-style>
+        </resources>
+        <LinearLayout
+                android:orientation="vertical"
+                android:padding="16dp">
+            <TextView android:style="@style/textStyle">
+                AndroidUI4Web完整移植了Android的View层的API.所有现有Android组件都可以轻易的移植来.有能力的话自己动手移植然后PR吧<br>˚
+            </TextView>
+        </LinearLayout>
+    </android-Activity>
+
+    <script src="../../node_modules/babel-core/browser-polyfill.min.js"></script>
+    <script src="../lib/CustomElements.min.js"></script>
+    <script src="../../dist/android-ui.es5.js"></script>
+    <script src="../build/main.es5.js"></script>
+
+</body>
+</html>

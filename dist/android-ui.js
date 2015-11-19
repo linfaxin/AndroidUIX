@@ -3847,7 +3847,7 @@ var android;
                 this.mPaddingBottom = 0;
                 this._attrChangeHandler = new View.AttrChangeHandler(this);
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
-                this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+                this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
             }
             static get class() {
                 let name = this.name;
@@ -28715,7 +28715,7 @@ var androidui;
                     this.bindElementData.removeChild(childElement);
                 }
             }
-            notifyDataSizeMayChange() {
+            notifyDataSizeWillChange() {
                 for (let i = 0, count = this.bindElementData.children.length; i < count; i++) {
                     this.removeElementRefAndRestoreToAdapter(this.bindElementData.children[i]);
                 }
@@ -28809,7 +28809,7 @@ var androidui;
                     this.bindElementData.removeChild(childElement);
                 }
             }
-            notifyDataSizeMayChange() {
+            notifyDataSizeWillChange() {
                 for (let i = 0, count = this.bindElementData.children.length; i < count; i++) {
                     this.removeElementRefAndRestoreToAdapter(this.bindElementData.children[i]);
                 }
