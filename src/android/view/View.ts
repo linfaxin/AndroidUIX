@@ -661,7 +661,7 @@ module android.view {
 
         constructor(){
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
-            this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+            this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
         }
 
         //parse xml attr & callback when xml attr change
@@ -3652,7 +3652,7 @@ module android.view {
             }
         }
 
-        overScrollBy(deltaX:number, deltaY:number, scrollX:number, scrollY:number,
+        protected overScrollBy(deltaX:number, deltaY:number, scrollX:number, scrollY:number,
                      scrollRangeX:number, scrollRangeY:number, maxOverScrollX:number, maxOverScrollY:number,
                      isTouchEvent:boolean):boolean {
             const overScrollMode = this.mOverScrollMode;
