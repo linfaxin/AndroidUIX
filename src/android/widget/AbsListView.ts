@@ -2987,7 +2987,7 @@ module android.widget {
                     velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                     const initialVelocity:number = Math.floor(velocityTracker.getYVelocity(this.mActivePointerId));
                     this.reportScrollStateChange(AbsListView.OnScrollListener.SCROLL_STATE_FLING);
-                    let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.computeVerticalScrollRange();
+                    let isOverDrag = this.mScrollY !== 0;
                     if (!isOverDrag && Math.abs(initialVelocity) > this.mMinimumVelocity) {
                         this.mFlingRunnable.startOverfling(-initialVelocity);
                     } else {
@@ -4870,7 +4870,7 @@ module android.widget {
                 const overscrollMode:number = this._AbsListView_this.getOverScrollMode();
                 if (overscrollMode == AbsListView.OVER_SCROLL_ALWAYS || (overscrollMode == AbsListView.OVER_SCROLL_IF_CONTENT_SCROLLS && !this._AbsListView_this.contentFits())) {
                     this._AbsListView_this.mTouchMode = AbsListView.TOUCH_MODE_OVERFLING;
-                    const vel:number = Math.floor(this.mScroller.getCurrVelocity());
+                    //const vel:number = Math.floor(this.mScroller.getCurrVelocity());
                     //if (delta > 0) {
                     //    this._AbsListView_this.mEdgeGlowTop.onAbsorb(vel);
                     //} else {
