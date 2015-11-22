@@ -270,10 +270,10 @@ module androidui.widget{
 
         private setFooterViewAppearDistance(distance:number){
             if(!this.contentView) return;
-            let bottomToParentBottom = this.overScrollLocker.getScrollContentBottom() - this.footerView.getBottom();
+            let bottomToParentBottom = Math.min(this.overScrollLocker.getScrollContentBottom(),this.contentView.getHeight()) - this.footerView.getBottom();
             if(this.contentOverY<0) bottomToParentBottom -= this.contentOverY;
-            let offset = this.footerView.getHeight() + bottomToParentBottom - distance);
-            this.footerView.offsetTopAndBottom(Math.min(this.footerView.getHeight(), offset);
+            let offset = this.footerView.getHeight() + bottomToParentBottom - distance;
+            this.footerView.offsetTopAndBottom(Math.min(this.footerView.getHeight(), offset));
         }
 
 

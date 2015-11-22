@@ -29096,7 +29096,7 @@ var androidui;
             constructor() {
                 super();
                 this.state = 0;
-                this.autoLoadMoreWhenScroll = false;
+                this.autoLoadMoreWhenScroll = true;
                 this.footerViewReadyDistance = 36 * android.content.res.Resources.getDisplayMetrics().density;
                 this.contentOverY = 0;
             }
@@ -29298,15 +29298,17 @@ var androidui;
                 }
             }
             setHeaderViewAppearDistance(distance) {
-                this.headerView.offsetTopAndBottom(-this.headerView.getHeight() - this.headerView.getTop() + distance);
+                let offset = -this.headerView.getHeight() - this.headerView.getTop() + distance;
+                this.headerView.offsetTopAndBottom(Math.max(offset, -this.headerView.getHeight()));
             }
             setFooterViewAppearDistance(distance) {
                 if (!this.contentView)
                     return;
-                let bottomToParentBottom = this.overScrollLocker.getScrollContentBottom() - this.footerView.getBottom();
+                let bottomToParentBottom = Math.min(this.overScrollLocker.getScrollContentBottom(), this.contentView.getHeight()) - this.footerView.getBottom();
                 if (this.contentOverY < 0)
                     bottomToParentBottom -= this.contentOverY;
-                this.footerView.offsetTopAndBottom(this.footerView.getHeight() + bottomToParentBottom - distance);
+                let offset = this.footerView.getHeight() + bottomToParentBottom - distance;
+                this.footerView.offsetTopAndBottom(Math.min(this.footerView.getHeight(), offset));
             }
             onLayout(changed, left, top, right, bottom) {
                 super.onLayout(changed, left, top, right, bottom);
