@@ -23,6 +23,7 @@ module androidui.widget {
     export interface OverScrollLocker {
         lockOverScrollTop(lockTop:number):void;
         lockOverScrollBottom(lockBottom:number):void;
+        getScrollContentBottom():number;
     }
 
     export module OverScrollLocker{
@@ -83,6 +84,9 @@ module androidui.widget {
             getOverScrollY():number;
 
             abstract
+            getScrollContentBottom():number;
+
+            abstract
             springBackToLockTop():void;
 
             abstract
@@ -139,6 +143,21 @@ module androidui.widget {
                 };
             }
 
+            getScrollContentBottom():number {
+                let childCount = this.listView.getChildCount();
+                let maxBottom = 0;
+                for(let i=0; i<childCount; i++){
+                    let childButton = this.listView.getChildAt(i).getBottom();
+                    if(childButton > maxBottom){
+                        maxBottom = childButton;
+                    }
+                }
+                if(this.listView.getAdapter()){
+                    return maxBottom * this.listView.getAdapter().getCount() / childCount;
+                }
+                return maxBottom;
+            }
+
             getOverScrollY():number {
                 return this.listView.mScrollY;
             }
@@ -184,6 +203,13 @@ module androidui.widget {
                     maxY += this.lockBottom;
                     oldFling.call(scroller, startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX, overY);
                 };
+            }
+
+            getScrollContentBottom():number {
+                if (this.scrollView.getChildCount() > 0) {
+                    return this.scrollView.getChildAt(0).getBottom();
+                }
+                return this.scrollView.getPaddingTop();
             }
 
             getOverScrollY():number {

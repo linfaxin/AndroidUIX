@@ -18247,6 +18247,9 @@ var android;
                             }
                             this.postDelayed(this.mPendingCheckForTap_, ViewConfiguration.getTapTimeout());
                         }
+                        else if (motionPosition < 0) {
+                            this.mTouchMode = AbsListView.TOUCH_MODE_DOWN;
+                        }
                     }
                     if (motionPosition >= 0) {
                         const v = this.getChildAt(motionPosition - this.mFirstPosition);
@@ -28983,6 +28986,20 @@ var androidui;
                         oldFling.call(scroller, startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX, overY);
                     };
                 }
+                getScrollContentBottom() {
+                    let childCount = this.listView.getChildCount();
+                    let maxBottom = 0;
+                    for (let i = 0; i < childCount; i++) {
+                        let childButton = this.listView.getChildAt(i).getBottom();
+                        if (childButton > maxBottom) {
+                            maxBottom = childButton;
+                        }
+                    }
+                    if (this.listView.getAdapter()) {
+                        return maxBottom * this.listView.getAdapter().getCount() / childCount;
+                    }
+                    return maxBottom;
+                }
                 getOverScrollY() {
                     return this.listView.mScrollY;
                 }
@@ -29020,6 +29037,12 @@ var androidui;
                         maxY += this.lockBottom;
                         oldFling.call(scroller, startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX, overY);
                     };
+                }
+                getScrollContentBottom() {
+                    if (this.scrollView.getChildCount() > 0) {
+                        return this.scrollView.getChildAt(0).getBottom();
+                    }
+                    return this.scrollView.getPaddingTop();
                 }
                 getOverScrollY() {
                     let scrollY = this.scrollView.getScrollY();
@@ -29121,7 +29144,8 @@ var androidui;
             configContentView() {
                 let contentView = this.contentView;
                 let params = contentView.getLayoutParams();
-                params.height = params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                params.width = ViewGroup.LayoutParams.MATCH_PARENT;
                 contentView.setLayoutParams(params);
                 this.overScrollLocker = widget.OverScrollLocker.getFrom(contentView);
                 const overScrollByFunc = contentView.overScrollBy;
@@ -29277,7 +29301,11 @@ var androidui;
                 this.headerView.offsetTopAndBottom(-this.headerView.getHeight() - this.headerView.getTop() + distance);
             }
             setFooterViewAppearDistance(distance) {
-                const bottomToParentBottom = this.getHeight() - this.footerView.getBottom();
+                if (!this.contentView)
+                    return;
+                let bottomToParentBottom = this.overScrollLocker.getScrollContentBottom() - this.footerView.getBottom();
+                if (this.contentOverY < 0)
+                    bottomToParentBottom -= this.contentOverY;
                 this.footerView.offsetTopAndBottom(this.footerView.getHeight() + bottomToParentBottom - distance);
             }
             onLayout(changed, left, top, right, bottom) {

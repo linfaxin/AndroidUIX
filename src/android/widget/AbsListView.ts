@@ -2809,6 +2809,10 @@ module android.widget {
                         }
                         this.postDelayed(this.mPendingCheckForTap_, ViewConfiguration.getTapTimeout());
                     }
+                    //AndroidUI added. so listView can drag even not touch on item (item count is less)
+                    else if(motionPosition < 0){
+                        this.mTouchMode = AbsListView.TOUCH_MODE_DOWN;
+                    }
                 }
                 if (motionPosition >= 0) {
                     // Remember where the motion event started

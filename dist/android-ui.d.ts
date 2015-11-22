@@ -4347,6 +4347,7 @@ declare module androidui.widget {
     interface OverScrollLocker {
         lockOverScrollTop(lockTop: number): void;
         lockOverScrollBottom(lockBottom: number): void;
+        getScrollContentBottom(): number;
     }
     module OverScrollLocker {
         function getFrom(view: View): OverScrollLocker;

@@ -112,7 +112,8 @@ module androidui.widget{
         private configContentView(){
             let contentView = this.contentView;
             let params = <FrameLayout.LayoutParams>contentView.getLayoutParams();
-            params.height = params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
             contentView.setLayoutParams(params);
 
             this.overScrollLocker = OverScrollLocker.getFrom(contentView);
@@ -263,12 +264,16 @@ module androidui.widget{
         }
 
         private setHeaderViewAppearDistance(distance:number){
-            this.headerView.offsetTopAndBottom(-this.headerView.getHeight() - this.headerView.getTop() + distance);
+            let offset = -this.headerView.getHeight() - this.headerView.getTop() + distance;
+            this.headerView.offsetTopAndBottom(Math.max(offset, -this.headerView.getHeight()));
         }
 
         private setFooterViewAppearDistance(distance:number){
-            const bottomToParentBottom = this.getHeight() - this.footerView.getBottom();
-            this.footerView.offsetTopAndBottom(this.footerView.getHeight() + bottomToParentBottom - distance);
+            if(!this.contentView) return;
+            let bottomToParentBottom = this.overScrollLocker.getScrollContentBottom() - this.footerView.getBottom();
+            if(this.contentOverY<0) bottomToParentBottom -= this.contentOverY;
+            let offset = this.footerView.getHeight() + bottomToParentBottom - distance);
+            this.footerView.offsetTopAndBottom(Math.min(this.footerView.getHeight(), offset);
         }
 
 
