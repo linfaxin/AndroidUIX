@@ -2619,22 +2619,22 @@ module android.widget {
                     }
                     if (overScrollDistance != 0) {
                         this.overScrollBy(0, overScrollDistance, 0, this.mScrollY, 0, 0, 0, this.mOverscrollDistance, true);
-                        const overscrollMode:number = this.getOverScrollMode();
-                        if (overscrollMode == AbsListView.OVER_SCROLL_ALWAYS || (overscrollMode == AbsListView.OVER_SCROLL_IF_CONTENT_SCROLLS && !this.contentFits())) {
-                            if (rawDeltaY > 0) {
+                        //const overscrollMode:number = this.getOverScrollMode();
+                        //if (overscrollMode == AbsListView.OVER_SCROLL_ALWAYS || (overscrollMode == AbsListView.OVER_SCROLL_IF_CONTENT_SCROLLS && !this.contentFits())) {
+                        //    if (rawDeltaY > 0) {
                                 //this.mEdgeGlowTop.onPull(<number> overScrollDistance / this.getHeight());
                                 //if (!this.mEdgeGlowBottom.isFinished()) {
                                 //    this.mEdgeGlowBottom.onRelease();
                                 //}
                                 //this.invalidate(this.mEdgeGlowTop.getBounds(false));
-                            } else if (rawDeltaY < 0) {
+                            //} else if (rawDeltaY < 0) {
                                 //this.mEdgeGlowBottom.onPull(<number> overScrollDistance / this.getHeight());
                                 //if (!this.mEdgeGlowTop.isFinished()) {
                                 //    this.mEdgeGlowTop.onRelease();
                                 //}
                                 //this.invalidate(this.mEdgeGlowBottom.getBounds(true));
-                            }
-                        }
+                            //}
+                        //}
                     }
                     if (incrementalDeltaY != 0) {
                         // Coming back to 'real' list scrolling
@@ -2987,8 +2987,7 @@ module android.widget {
                     velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
                     const initialVelocity:number = Math.floor(velocityTracker.getYVelocity(this.mActivePointerId));
                     this.reportScrollStateChange(AbsListView.OnScrollListener.SCROLL_STATE_FLING);
-                    let isOverDrag = this.mScrollY !== 0;
-                    if (!isOverDrag && Math.abs(initialVelocity) > this.mMinimumVelocity) {
+                    if (Math.abs(initialVelocity) > this.mMinimumVelocity) {
                         this.mFlingRunnable.startOverfling(-initialVelocity);
                     } else {
                         this.mFlingRunnable.startSpringback();
@@ -4859,7 +4858,12 @@ module android.widget {
 
             startOverfling(initialVelocity:number):void {
                 this.mScroller.setInterpolator(null);
-                this.mScroller.fling(0, this._AbsListView_this.mScrollY, 0, initialVelocity, 0, 0, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, this._AbsListView_this.getHeight());
+
+                let minY = Integer.MIN_VALUE, maxY = Integer.MAX_VALUE;
+                if(this._AbsListView_this.mScrollY < 0) minY = 0;
+                else if(this._AbsListView_this.mScrollY > 0) maxY = 0;
+
+                this.mScroller.fling(0, this._AbsListView_this.mScrollY, 0, initialVelocity, 0, 0, minY, maxY, 0, this._AbsListView_this.getHeight());
                 this._AbsListView_this.mTouchMode = AbsListView.TOUCH_MODE_OVERFLING;
                 this._AbsListView_this.invalidate();
                 this._AbsListView_this.postOnAnimation(this);
@@ -5000,20 +5004,34 @@ module android.widget {
                         if (scroller.computeScrollOffset()) {
                             const scrollY:number = this._AbsListView_this.mScrollY;
                             const currY:number = scroller.getCurrY();
-                            const deltaY:number = currY - scrollY;
+                            let deltaY:number = currY - scrollY;
+
+                            //fix android bug: check cross scroll here, not in overScrollBy, it always false.
+                            const crossDown:boolean = scrollY <= 0 && currY > 0;
+                            const crossUp:boolean = scrollY >= 0 && currY < 0;
+                            if (crossDown || crossUp) {
+                                let velocity:number = Math.floor(scroller.getCurrVelocity());
+                                if (crossUp) velocity = -velocity;
+                                // Don't flywheel from this; we're just continuing things.
+                                scroller.abortAnimation();
+                                this.start(velocity);
+                                deltaY = -scrollY;
+                            }
+
+
                             if (this._AbsListView_this.overScrollBy(0, deltaY, 0, scrollY, 0, 0, 0, this._AbsListView_this.mOverflingDistance, false)) {
-                                const crossDown:boolean = scrollY <= 0 && currY > 0;
-                                const crossUp:boolean = scrollY >= 0 && currY < 0;
-                                if (crossDown || crossUp) {
-                                    let velocity:number = Math.floor(scroller.getCurrVelocity());
-                                    if (crossUp)
-                                        velocity = -velocity;
-                                    // Don't flywheel from this; we're just continuing things.
-                                    scroller.abortAnimation();
-                                    this.start(velocity);
-                                } else {
+                                //const crossDown:boolean = scrollY <= 0 && currY > 0;
+                                //const crossUp:boolean = scrollY >= 0 && currY < 0;
+                                //if (crossDown || crossUp) {
+                                //    let velocity:number = Math.floor(scroller.getCurrVelocity());
+                                //    if (crossUp)
+                                //        velocity = -velocity;
+                                //    // Don't flywheel from this; we're just continuing things.
+                                //    scroller.abortAnimation();
+                                //    this.start(velocity);
+                                //} else {
                                     this.startSpringback();
-                                }
+                                //}
                             } else {
                                 this._AbsListView_this.invalidate();
                                 this._AbsListView_this.postOnAnimation(this);

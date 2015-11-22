@@ -47,7 +47,23 @@ module android.widget {
         private  mMinimumVelocity = 0;
         private  mMaximumVelocity = 0;
         private  mOverscrollDistance = 0;
-        private  mOverflingDistance = 0;
+        private _mOverflingDistance:number = 0;
+        private get mOverflingDistance():number {
+                let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
+                let bottom = this.getChildAt(0).getHeight();
+                let minOverY = this.mScrollY < 0 ? -this.mScrollY : this.mScrollY - (bottom - height);
+                return Math.max(this._mOverflingDistance, minOverY+this._mOverflingDistance);
+        }
+        private set mOverflingDistance(value:number) {
+            this._mOverflingDistance = value;
+        }
+
+        //private getOverflingDistance():number{
+        //    let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
+        //    let bottom = this.getChildAt(0).getHeight();
+        //    let minOverY = this.mScrollY < 0 ? -this.mScrollY : this.mScrollY - (bottom - height);
+        //    return Math.max(this.mOverflingDistance, minOverY);
+        //}
 
         private mActivePointerId = ScrollView.INVALID_POINTER;
 
@@ -457,8 +473,9 @@ module android.widget {
                         let initialVelocity = velocityTracker.getYVelocity(this.mActivePointerId);
 
                         if (this.getChildCount() > 0) {
-                            let isOverDrag = this.mScrollY < 0 || this.mScrollY > this.getScrollRange();
-                            if (!isOverDrag && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
+                            let forceSpringBack = (this.mScrollY<-this._mOverflingDistance && initialVelocity>0)
+                                || (this.mScrollY > (this.getScrollRange() + this._mOverflingDistance) && initialVelocity<0);
+                            if (!forceSpringBack && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
                                 this.fling(-initialVelocity);
                             } else {
                                 if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, 0, 0,
@@ -836,7 +853,7 @@ module android.widget {
                         (overscrollMode == ScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
                     this.overScrollBy(x - oldX, y - oldY, oldX, oldY, 0, range,
-                        0, this.getOverflingDistance(), false);
+                        0, this.mOverflingDistance, false);
                     this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
 
                     if (canOverscroll) {
@@ -1020,18 +1037,12 @@ module android.widget {
             const theParent = child.getParent();
             return (theParent instanceof ViewGroup) && ScrollView.isViewDescendantOf(<any>theParent, parent);
         }
-        private getOverflingDistance():number{
-            let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
-            let bottom = this.getChildAt(0).getHeight();
-            let minOverY = this.mScrollY < 0 ? -this.mScrollY : this.mScrollY - (bottom - height);
-            return Math.max(this.mOverflingDistance, minOverY + this.mOverflingDistance);
-        }
         fling(velocityY:number){
             if (this.getChildCount() > 0) {
                 let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
                 let bottom = this.getChildAt(0).getHeight();
                 this.mScroller.fling(this.mScrollX, this.mScrollY, 0, velocityY, 0, 0, 0,
-                    Math.max(0, bottom - height), 0, this.getOverflingDistance());
+                    Math.max(0, bottom - height), 0, this.mOverflingDistance);
 
                 this.postInvalidateOnAnimation();
             }

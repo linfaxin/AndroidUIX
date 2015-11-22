@@ -29,6 +29,7 @@
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
+///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
 
 window[`android`] = android;
 window[`java`] = java;

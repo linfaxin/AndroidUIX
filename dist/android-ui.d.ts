@@ -2325,6 +2325,7 @@ declare module android.widget {
         private mMinimumVelocity;
         private mMaximumVelocity;
         private mOverscrollDistance;
+        private _mOverflingDistance;
         private mOverflingDistance;
         private mActivePointerId;
         constructor();
@@ -2377,7 +2378,6 @@ declare module android.widget {
         protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         private static isViewDescendantOf(child, parent);
-        private getOverflingDistance();
         fling(velocityY: number): void;
         private endDrag();
         scrollTo(x: number, y: number): void;
@@ -4326,5 +4326,93 @@ declare module androidui.widget {
         destroyItem(container: android.view.ViewGroup, position: number, object: any): void;
         isViewFromObject(view: android.view.View, object: any): boolean;
         getItemPosition(object: any): number;
+    }
+}
+declare module android.R {
+    class string_ {
+        static prll_header_state_normal: string;
+        static prll_header_state_ready: string;
+        static prll_header_state_loading: string;
+        static prll_header_state_fail: string;
+        static prll_footer_state_normal: string;
+        static prll_footer_state_loading: string;
+        static prll_footer_state_ready: string;
+        static prll_footer_state_fail: string;
+        static prll_footer_state_no_more: string;
+        static zh(): void;
+    }
+}
+declare module androidui.widget {
+    import View = android.view.View;
+    interface OverScrollLocker {
+        lockOverScrollTop(lockTop: number): void;
+        lockOverScrollBottom(lockBottom: number): void;
+    }
+    module OverScrollLocker {
+        function getFrom(view: View): OverScrollLocker;
+    }
+}
+declare module androidui.widget {
+    import View = android.view.View;
+    import FrameLayout = android.widget.FrameLayout;
+    import TextView = android.widget.TextView;
+    class PullRefreshLoadLayout extends FrameLayout {
+        static State_Normal: number;
+        static State_Refreshing: number;
+        static State_ReadToRefresh: number;
+        static State_RefreshFail: number;
+        static State_Loading: number;
+        static State_ReadyToLoad: number;
+        static State_LoadFail: number;
+        static State_NoMoreToLoad: number;
+        static StateChangeLimit: {};
+        private state;
+        private autoLoadMoreWhenScroll;
+        private headerView;
+        private footerView;
+        private footerViewReadyDistance;
+        private contentView;
+        private contentOverY;
+        private overScrollLocker;
+        private stateChangeListener;
+        constructor();
+        protected onViewAdded(child: View): void;
+        protected onAttachedToWindow(): void;
+        private configHeaderView();
+        private configFooterView();
+        private configContentView();
+        setHeaderView(headerView: PullRefreshLoadLayout.HeaderView): void;
+        setFooterView(footerView: PullRefreshLoadLayout.FooterView): void;
+        setContentView(contentView: View): void;
+        private onContentOverScroll(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+        setState(newState: number): void;
+        private setStateInner(newState);
+        setStateChangeListener(listener: PullRefreshLoadLayout.StateChangeListener): void;
+        private checkHeaderFooterPosition();
+        private setHeaderViewAppearDistance(distance);
+        private setFooterViewAppearDistance(distance);
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        setAutoLoadMoreWhenScroll(autoLoadMoreWhenScroll: boolean): void;
+    }
+    module PullRefreshLoadLayout {
+        interface StateChangeListener {
+            onStateChange(pullRefreshLoadLayout: PullRefreshLoadLayout, newState: number, oldState: number): void;
+        }
+        abstract class HeaderView extends FrameLayout {
+            abstract onStateChange(newState: number, oldState: number): void;
+        }
+        abstract class FooterView extends FrameLayout {
+            abstract onStateChange(newState: number, oldState: number): void;
+        }
+        class DefaultHeaderView extends HeaderView {
+            textView: TextView;
+            constructor();
+            onStateChange(newState: number, oldState: number): void;
+        }
+        class DefaultFooterView extends FooterView {
+            textView: TextView;
+            constructor();
+            onStateChange(newState: number, oldState: number): void;
+        }
     }
 }

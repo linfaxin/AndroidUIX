@@ -1814,7 +1814,7 @@ module android.view {
             return false;
         }
         protected abstract
-        onLayout(changed:boolean, l:number, t:number, r:number, b:number);
+        onLayout(changed:boolean, l:number, t:number, r:number, b:number):void;
 
         getChildVisibleRect(child:View, r:Rect, offset:Point):boolean{
             // It doesn't make a whole lot of sense to call this on a view that isn't attached,
