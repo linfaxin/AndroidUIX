@@ -1514,7 +1514,7 @@ declare module android.view {
         bindElement: HTMLElement;
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
-        initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
+        protected initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
         syncBoundToElement(): void;
         syncScrollToElement(): void;
         syncVisibleToElement(): void;
@@ -2622,7 +2622,7 @@ declare module android.widget {
         constructor();
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         private initTextElement();
-        initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
+        protected initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         onFinishInflate(): void;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
@@ -2691,7 +2691,7 @@ declare module androidui.widget {
         private mImgElement;
         constructor();
         private initImageView();
-        initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
+        protected initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;
@@ -4358,30 +4358,28 @@ declare module androidui.widget {
     import FrameLayout = android.widget.FrameLayout;
     import TextView = android.widget.TextView;
     class PullRefreshLoadLayout extends FrameLayout {
-        static State_Normal: number;
-        static State_Refreshing: number;
-        static State_ReadToRefresh: number;
-        static State_RefreshFail: number;
-        static State_Loading: number;
-        static State_ReadyToLoad: number;
-        static State_LoadFail: number;
-        static State_NoMoreToLoad: number;
+        static State_Disable: number;
+        static State_Header_Normal: number;
+        static State_Header_Refreshing: number;
+        static State_Header_ReadyToRefresh: number;
+        static State_Header_RefreshFail: number;
+        static State_Footer_Normal: number;
+        static State_Footer_Loading: number;
+        static State_Footer_ReadyToLoad: number;
+        static State_Footer_LoadFail: number;
+        static State_Footer_NoMoreToLoad: number;
         static StateChangeLimit: {};
-        private state;
-        private autoLoadMoreWhenScrollBottom;
-        private isRefreshEnable;
-        private isLoadEnable;
+        private autoLoadScrollAtBottom;
         private headerView;
         private footerView;
         private footerViewReadyDistance;
         private contentView;
         private contentOverY;
         private overScrollLocker;
-        private stateChangeListener;
+        private refreshLoadListener;
         constructor();
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         protected onViewAdded(child: View): void;
-        protected onAttachedToWindow(): void;
         private configHeaderView();
         private configFooterView();
         private configContentView();
@@ -4389,9 +4387,10 @@ declare module androidui.widget {
         setFooterView(footerView: PullRefreshLoadLayout.FooterView): void;
         setContentView(contentView: View): void;
         private onContentOverScroll(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
-        setState(newState: number): void;
-        private setStateInner(newState);
-        setStateChangeListener(listener: PullRefreshLoadLayout.StateChangeListener): void;
+        setHeaderState(newState: number): void;
+        getHeaderState(): number;
+        setFooterState(newState: number): void;
+        getFooterState(): number;
         private checkLockOverScroll();
         private checkHeaderFooterPosition();
         private setHeaderViewAppearDistance(distance);
@@ -4400,15 +4399,25 @@ declare module androidui.widget {
         setAutoLoadMoreWhenScrollBottom(autoLoad: boolean): void;
         setRefreshEnable(enable: boolean): void;
         setLoadEnable(enable: boolean): void;
+        setRefreshLoadListener(refreshLoadListener: PullRefreshLoadLayout.RefreshLoadListener): void;
+        startRefresh(): void;
+        startLoadMore(): void;
     }
     module PullRefreshLoadLayout {
-        interface StateChangeListener {
-            onStateChange(pullRefreshLoadLayout: PullRefreshLoadLayout, newState: number, oldState: number): void;
+        interface RefreshLoadListener {
+            onRefresh(prll: PullRefreshLoadLayout): void;
+            onLoadMore(prll: PullRefreshLoadLayout): void;
         }
         abstract class HeaderView extends FrameLayout {
+            private state;
+            private stateBeforeReady;
+            protected setStateInner(prll: PullRefreshLoadLayout, state: number): void;
             abstract onStateChange(newState: number, oldState: number): void;
         }
         abstract class FooterView extends FrameLayout {
+            private state;
+            private stateBeforeReady;
+            protected setStateInner(prll: PullRefreshLoadLayout, state: number): void;
             abstract onStateChange(newState: number, oldState: number): void;
         }
         class DefaultHeaderView extends HeaderView {

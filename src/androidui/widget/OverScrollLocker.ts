@@ -176,7 +176,7 @@ module androidui.widget {
                     }
                 }
                 if(minTop>0) minTop = 0;
-                if(this.listView.getAdapter()){
+                if(this.listView.getAdapter() && childCount>0){
                     return (maxBottom - minTop) * this.listView.getAdapter().getCount() / childCount;
                 }
                 return 0;
