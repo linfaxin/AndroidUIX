@@ -120,6 +120,23 @@ module androidui.widget {
                     listView.postOnAnimation(listView.mFlingRunnable);
                 };
 
+                const layoutChildrenFunc = listView.layoutChildren;
+                listView.layoutChildren = () => {
+                    const overScrollY = this.getOverScrollY();
+                    layoutChildrenFunc.call(listView);
+                    if(overScrollY!==0){
+                        listView.overScrollBy(0, -overScrollY, 0, listView.mScrollY, 0, 0, 0, listView.mOverscrollDistance, false);
+
+                        const atEdge:boolean = listView.trackMotionScroll(-overScrollY, -overScrollY);
+                        if(atEdge){
+                            listView.overScrollBy(0, overScrollY, 0, listView.mScrollY, 0, 0, 0, listView.mOverscrollDistance, false);
+                        }else{
+                            //listView.mTouchMode = AbsListView.TOUCH_MODE_SCROLL;
+                            listView.mFlingRunnable.mScroller.abortAnimation();
+                        }
+                    }
+                };
+
 
                 listView.mFlingRunnable.edgeReached = (delta:number)=>{
                     let initialVelocity = listView.mFlingRunnable.mScroller.getCurrVelocity();
@@ -146,16 +163,23 @@ module androidui.widget {
             getScrollContentBottom():number {
                 let childCount = this.listView.getChildCount();
                 let maxBottom = 0;
+                let minTop = 0;
                 for(let i=0; i<childCount; i++){
-                    let childButton = this.listView.getChildAt(i).getBottom();
-                    if(childButton > maxBottom){
-                        maxBottom = childButton;
+                    let child = this.listView.getChildAt(i);
+                    let childBottom = child.getBottom();
+                    let childTop = child.getTop();
+                    if(childBottom > maxBottom){
+                        maxBottom = childBottom;
+                    }
+                    if(childTop < minTop){
+                        minTop = childTop;
                     }
                 }
+                if(minTop>0) minTop = 0;
                 if(this.listView.getAdapter()){
-                    return maxBottom * this.listView.getAdapter().getCount() / childCount;
+                    return (maxBottom - minTop) * this.listView.getAdapter().getCount() / childCount;
                 }
-                return maxBottom;
+                return 0;
             }
 
             getOverScrollY():number {
@@ -203,6 +227,29 @@ module androidui.widget {
                     maxY += this.lockBottom;
                     oldFling.call(scroller, startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX, overY);
                 };
+                this.listenScrollContentHeightChange();
+            }
+
+            private listenScrollContentHeightChange(){
+                const listenHeightChange = (v:View)=>{
+                    const onSizeChangedFunc = v.onSizeChanged;
+                    v.onSizeChanged = (w: number, h: number, oldw: number, oldh: number): void =>{
+                        onSizeChangedFunc.call(v, w, h, oldw, oldh);
+                        //awake the scroll bar & check the footer header position
+                        this.scrollView.overScrollBy(0, 0, 0, this.scrollView.mScrollY, 0,
+                            this.scrollView.getScrollRange(), 0, this.scrollView.mOverscrollDistance, false);
+                    }
+
+                };
+                if(this.scrollView.getChildCount()>0){
+                    listenHeightChange(this.scrollView.getChildAt(0));
+                }else{
+                    const onViewAddedFunc = this.scrollView.onViewAdded;
+                    this.scrollView.onViewAdded = (v:View):void =>{
+                        onViewAddedFunc.call(this.scrollView, v);
+                        listenHeightChange(v);
+                    }
+                }
             }
 
             getScrollContentBottom():number {

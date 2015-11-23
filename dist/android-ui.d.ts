@@ -4368,7 +4368,9 @@ declare module androidui.widget {
         static State_NoMoreToLoad: number;
         static StateChangeLimit: {};
         private state;
-        private autoLoadMoreWhenScroll;
+        private autoLoadMoreWhenScrollBottom;
+        private isRefreshEnable;
+        private isLoadEnable;
         private headerView;
         private footerView;
         private footerViewReadyDistance;
@@ -4377,6 +4379,7 @@ declare module androidui.widget {
         private overScrollLocker;
         private stateChangeListener;
         constructor();
+        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         protected onViewAdded(child: View): void;
         protected onAttachedToWindow(): void;
         private configHeaderView();
@@ -4389,11 +4392,14 @@ declare module androidui.widget {
         setState(newState: number): void;
         private setStateInner(newState);
         setStateChangeListener(listener: PullRefreshLoadLayout.StateChangeListener): void;
+        private checkLockOverScroll();
         private checkHeaderFooterPosition();
         private setHeaderViewAppearDistance(distance);
         private setFooterViewAppearDistance(distance);
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
-        setAutoLoadMoreWhenScroll(autoLoadMoreWhenScroll: boolean): void;
+        setAutoLoadMoreWhenScrollBottom(autoLoad: boolean): void;
+        setRefreshEnable(enable: boolean): void;
+        setLoadEnable(enable: boolean): void;
     }
     module PullRefreshLoadLayout {
         interface StateChangeListener {

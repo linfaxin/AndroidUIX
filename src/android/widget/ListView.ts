@@ -1090,8 +1090,8 @@ export class ListView extends AbsListView {
             returnedHeight += child.getMeasuredHeight();
             if (returnedHeight >= maxHeight) {
                 // then the i'th position did not fit completely.
-                return // Disallowing is enabled (> -1)
-                (disallowPartialChildPosition >= 0) && // We've past the min pos
+                // Disallowing is enabled (> -1)
+                return (disallowPartialChildPosition >= 0) && // We've past the min pos
                 (i > disallowPartialChildPosition) && // We have a prev height
                 (prevHeightWithoutPartialChild > 0) && // i'th child did not fit completely
                 (returnedHeight != maxHeight) ? prevHeightWithoutPartialChild : maxHeight;

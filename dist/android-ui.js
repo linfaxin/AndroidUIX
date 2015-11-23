@@ -21411,8 +21411,7 @@ var android;
                     }
                     returnedHeight += child.getMeasuredHeight();
                     if (returnedHeight >= maxHeight) {
-                        return;
-                        (disallowPartialChildPosition >= 0) &&
+                        return (disallowPartialChildPosition >= 0) &&
                             (i > disallowPartialChildPosition) &&
                             (prevHeightWithoutPartialChild > 0) &&
                             (returnedHeight != maxHeight) ? prevHeightWithoutPartialChild : maxHeight;
@@ -28965,6 +28964,21 @@ var androidui;
                         listView.invalidate();
                         listView.postOnAnimation(listView.mFlingRunnable);
                     };
+                    const layoutChildrenFunc = listView.layoutChildren;
+                    listView.layoutChildren = () => {
+                        const overScrollY = this.getOverScrollY();
+                        layoutChildrenFunc.call(listView);
+                        if (overScrollY !== 0) {
+                            listView.overScrollBy(0, -overScrollY, 0, listView.mScrollY, 0, 0, 0, listView.mOverscrollDistance, false);
+                            const atEdge = listView.trackMotionScroll(-overScrollY, -overScrollY);
+                            if (atEdge) {
+                                listView.overScrollBy(0, overScrollY, 0, listView.mScrollY, 0, 0, 0, listView.mOverscrollDistance, false);
+                            }
+                            else {
+                                listView.mFlingRunnable.mScroller.abortAnimation();
+                            }
+                        }
+                    };
                     listView.mFlingRunnable.edgeReached = (delta) => {
                         let initialVelocity = listView.mFlingRunnable.mScroller.getCurrVelocity();
                         if (delta > 0)
@@ -28989,16 +29003,24 @@ var androidui;
                 getScrollContentBottom() {
                     let childCount = this.listView.getChildCount();
                     let maxBottom = 0;
+                    let minTop = 0;
                     for (let i = 0; i < childCount; i++) {
-                        let childButton = this.listView.getChildAt(i).getBottom();
-                        if (childButton > maxBottom) {
-                            maxBottom = childButton;
+                        let child = this.listView.getChildAt(i);
+                        let childBottom = child.getBottom();
+                        let childTop = child.getTop();
+                        if (childBottom > maxBottom) {
+                            maxBottom = childBottom;
+                        }
+                        if (childTop < minTop) {
+                            minTop = childTop;
                         }
                     }
+                    if (minTop > 0)
+                        minTop = 0;
                     if (this.listView.getAdapter()) {
-                        return maxBottom * this.listView.getAdapter().getCount() / childCount;
+                        return (maxBottom - minTop) * this.listView.getAdapter().getCount() / childCount;
                     }
-                    return maxBottom;
+                    return 0;
                 }
                 getOverScrollY() {
                     return this.listView.mScrollY;
@@ -29037,6 +29059,26 @@ var androidui;
                         maxY += this.lockBottom;
                         oldFling.call(scroller, startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX, overY);
                     };
+                    this.listenScrollContentHeightChange();
+                }
+                listenScrollContentHeightChange() {
+                    const listenHeightChange = (v) => {
+                        const onSizeChangedFunc = v.onSizeChanged;
+                        v.onSizeChanged = (w, h, oldw, oldh) => {
+                            onSizeChangedFunc.call(v, w, h, oldw, oldh);
+                            this.scrollView.overScrollBy(0, 0, 0, this.scrollView.mScrollY, 0, this.scrollView.getScrollRange(), 0, this.scrollView.mOverscrollDistance, false);
+                        };
+                    };
+                    if (this.scrollView.getChildCount() > 0) {
+                        listenHeightChange(this.scrollView.getChildAt(0));
+                    }
+                    else {
+                        const onViewAddedFunc = this.scrollView.onViewAdded;
+                        this.scrollView.onViewAdded = (v) => {
+                            onViewAddedFunc.call(this.scrollView, v);
+                            listenHeightChange(v);
+                        };
+                    }
                 }
                 getScrollContentBottom() {
                     if (this.scrollView.getChildCount() > 0) {
@@ -29095,10 +29137,24 @@ var androidui;
         class PullRefreshLoadLayout extends FrameLayout {
             constructor() {
                 super();
-                this.state = 0;
-                this.autoLoadMoreWhenScroll = true;
+                this.state = PullRefreshLoadLayout.State_Normal;
+                this.autoLoadMoreWhenScrollBottom = true;
+                this.isRefreshEnable = true;
+                this.isLoadEnable = true;
                 this.footerViewReadyDistance = 36 * android.content.res.Resources.getDisplayMetrics().density;
                 this.contentOverY = 0;
+            }
+            createAttrChangeHandler(mergeHandler) {
+                super.createAttrChangeHandler(mergeHandler);
+                const prll = this;
+                mergeHandler.add({
+                    set refreshEnable(value) {
+                        prll.setRefreshEnable(mergeHandler.parseBoolean(value, true));
+                    },
+                    set loadEnable(value) {
+                        prll.setLoadEnable(mergeHandler.parseBoolean(value, true));
+                    }
+                });
             }
             onViewAdded(child) {
                 super.onViewAdded(child);
@@ -29117,13 +29173,12 @@ var androidui;
             }
             onAttachedToWindow() {
                 super.onAttachedToWindow();
-                if (this.headerView == null) {
+                if (this.headerView == null && this.isRefreshEnable) {
                     this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView());
                 }
-                if (this.footerView == null) {
+                if (this.footerView == null && this.isLoadEnable) {
                     this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView());
                 }
-                this.setStateInner(PullRefreshLoadLayout.State_Normal);
             }
             configHeaderView() {
                 let headerView = this.headerView;
@@ -29195,7 +29250,7 @@ var androidui;
                     this.contentOverY = 0;
                 }
                 this.checkHeaderFooterPosition();
-                if (this.contentOverY < -this.headerView.getHeight()) {
+                if (this.headerView && this.contentOverY < -this.headerView.getHeight()) {
                     if (isTouchEvent) {
                         this.setState(PullRefreshLoadLayout.State_ReadToRefresh);
                     }
@@ -29203,7 +29258,7 @@ var androidui;
                         this.setState(PullRefreshLoadLayout.State_Refreshing);
                     }
                 }
-                else if (this.contentOverY > this.footerView.getHeight() + this.footerViewReadyDistance) {
+                else if (this.footerView && this.contentOverY > this.footerView.getHeight() + this.footerViewReadyDistance) {
                     if (isTouchEvent) {
                         this.setState(PullRefreshLoadLayout.State_ReadyToLoad);
                     }
@@ -29215,7 +29270,7 @@ var androidui;
                     if (this.state === PullRefreshLoadLayout.State_ReadToRefresh || this.state === PullRefreshLoadLayout.State_ReadyToLoad) {
                         this.setState(PullRefreshLoadLayout.State_Normal);
                     }
-                    if (this.contentOverY > 0 && this.autoLoadMoreWhenScroll) {
+                    if (this.contentOverY > 0 && this.autoLoadMoreWhenScrollBottom && this.isLoadEnable) {
                         this.setState(PullRefreshLoadLayout.State_Loading);
                     }
                 }
@@ -29232,22 +29287,9 @@ var androidui;
                 const oldState = this.state;
                 this.state = newState;
                 const PullRefreshLoadLayout_this = this;
+                this.checkLockOverScroll();
                 switch (newState) {
-                    case PullRefreshLoadLayout.State_Normal:
-                        if (this.overScrollLocker)
-                            this.overScrollLocker.lockOverScrollTop(0);
-                        break;
-                    case PullRefreshLoadLayout.State_Refreshing:
-                        if (this.overScrollLocker)
-                            this.overScrollLocker.lockOverScrollTop(this.headerView.getHeight());
-                        break;
-                    case PullRefreshLoadLayout.State_ReadToRefresh:
-                        if (this.overScrollLocker)
-                            this.overScrollLocker.lockOverScrollTop(this.headerView.getHeight());
-                        break;
                     case PullRefreshLoadLayout.State_RefreshFail:
-                        if (this.overScrollLocker)
-                            this.overScrollLocker.lockOverScrollTop(this.headerView.getHeight());
                         this.postDelayed({
                             run() {
                                 if (newState === PullRefreshLoadLayout_this.state) {
@@ -29255,22 +29297,6 @@ var androidui;
                                 }
                             }
                         }, 1000);
-                        break;
-                    case PullRefreshLoadLayout.State_Loading:
-                        if (this.overScrollLocker)
-                            this.overScrollLocker.lockOverScrollTop(0);
-                        break;
-                    case PullRefreshLoadLayout.State_ReadyToLoad:
-                        if (this.overScrollLocker)
-                            this.overScrollLocker.lockOverScrollTop(0);
-                        break;
-                    case PullRefreshLoadLayout.State_LoadFail:
-                        if (this.overScrollLocker)
-                            this.overScrollLocker.lockOverScrollTop(0);
-                        break;
-                    case PullRefreshLoadLayout.State_NoMoreToLoad:
-                        if (this.overScrollLocker)
-                            this.overScrollLocker.lockOverScrollTop(0);
                         break;
                 }
                 if (this.headerView)
@@ -29282,6 +29308,37 @@ var androidui;
             }
             setStateChangeListener(listener) {
                 this.stateChangeListener = listener;
+            }
+            checkLockOverScroll() {
+                if (!this.overScrollLocker)
+                    return;
+                switch (this.state) {
+                    case PullRefreshLoadLayout.State_Normal:
+                        this.overScrollLocker.lockOverScrollTop(0);
+                        break;
+                    case PullRefreshLoadLayout.State_Refreshing:
+                        this.overScrollLocker.lockOverScrollTop(this.headerView ? this.headerView.getHeight() : 0);
+                        break;
+                    case PullRefreshLoadLayout.State_ReadToRefresh:
+                        this.overScrollLocker.lockOverScrollTop(this.headerView ? this.headerView.getHeight() : 0);
+                        break;
+                    case PullRefreshLoadLayout.State_RefreshFail:
+                        this.overScrollLocker.lockOverScrollTop(this.headerView ? this.headerView.getHeight() : 0);
+                        break;
+                    case PullRefreshLoadLayout.State_Loading:
+                        this.overScrollLocker.lockOverScrollTop(0);
+                        break;
+                    case PullRefreshLoadLayout.State_ReadyToLoad:
+                        this.overScrollLocker.lockOverScrollTop(0);
+                        break;
+                    case PullRefreshLoadLayout.State_LoadFail:
+                        this.overScrollLocker.lockOverScrollTop(0);
+                        break;
+                    case PullRefreshLoadLayout.State_NoMoreToLoad:
+                        this.overScrollLocker.lockOverScrollTop(0);
+                        break;
+                }
+                this.overScrollLocker.lockOverScrollBottom(this.footerView ? this.footerView.getHeight() : 0);
             }
             checkHeaderFooterPosition() {
                 if (this.contentOverY > 0) {
@@ -29298,11 +29355,13 @@ var androidui;
                 }
             }
             setHeaderViewAppearDistance(distance) {
+                if (!this.headerView)
+                    return;
                 let offset = -this.headerView.getHeight() - this.headerView.getTop() + distance;
                 this.headerView.offsetTopAndBottom(Math.max(offset, -this.headerView.getHeight()));
             }
             setFooterViewAppearDistance(distance) {
-                if (!this.contentView)
+                if (!this.contentView || !this.footerView)
                     return;
                 let bottomToParentBottom = Math.min(this.overScrollLocker.getScrollContentBottom(), this.contentView.getHeight()) - this.footerView.getBottom();
                 if (this.contentOverY < 0)
@@ -29313,17 +29372,44 @@ var androidui;
             onLayout(changed, left, top, right, bottom) {
                 super.onLayout(changed, left, top, right, bottom);
                 this.checkHeaderFooterPosition();
-                if (this.overScrollLocker) {
-                    if (this.state === PullRefreshLoadLayout.State_Refreshing
-                        || this.state === PullRefreshLoadLayout.State_RefreshFail
-                        || this.state === PullRefreshLoadLayout.State_ReadToRefresh) {
-                        this.overScrollLocker.lockOverScrollTop(this.headerView.getHeight());
+                this.checkLockOverScroll();
+            }
+            setAutoLoadMoreWhenScrollBottom(autoLoad) {
+                this.autoLoadMoreWhenScrollBottom = autoLoad;
+            }
+            setRefreshEnable(enable) {
+                if (enable === this.isRefreshEnable)
+                    return;
+                this.isRefreshEnable = enable;
+                if (!enable) {
+                    if (this.headerView) {
+                        this.removeView(this.headerView);
+                        this.headerView = null;
                     }
-                    this.overScrollLocker.lockOverScrollBottom(this.footerView.getHeight());
+                    if (this.overScrollLocker)
+                        this.overScrollLocker.lockOverScrollTop(0);
+                }
+                else {
+                    if (!this.headerView)
+                        this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView());
                 }
             }
-            setAutoLoadMoreWhenScroll(autoLoadMoreWhenScroll) {
-                this.autoLoadMoreWhenScroll = autoLoadMoreWhenScroll;
+            setLoadEnable(enable) {
+                if (enable === this.isLoadEnable)
+                    return;
+                this.isLoadEnable = enable;
+                if (!enable) {
+                    if (this.footerView) {
+                        this.removeView(this.footerView);
+                        this.footerView = null;
+                    }
+                    if (this.overScrollLocker)
+                        this.overScrollLocker.lockOverScrollBottom(0);
+                }
+                else {
+                    if (!this.footerView)
+                        this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView());
+                }
             }
         }
         PullRefreshLoadLayout.State_Normal = 0;

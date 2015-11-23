@@ -55,8 +55,10 @@ module androidui.widget{
         };
 
 
-        private state = 0;
-        private autoLoadMoreWhenScroll = true;
+        private state = PullRefreshLoadLayout.State_Normal;
+        private autoLoadMoreWhenScrollBottom = true;
+        private isRefreshEnable = true;
+        private isLoadEnable = true;
         private headerView:PullRefreshLoadLayout.HeaderView;
         private footerView:PullRefreshLoadLayout.FooterView;
         private footerViewReadyDistance = 36 * android.content.res.Resources.getDisplayMetrics().density;
@@ -66,6 +68,19 @@ module androidui.widget{
         private stateChangeListener:PullRefreshLoadLayout.StateChangeListener;
         constructor(){
             super();
+        }
+
+        createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
+            super.createAttrChangeHandler(mergeHandler);
+            const prll = this;
+            mergeHandler.add({
+                set refreshEnable(value){
+                    prll.setRefreshEnable(mergeHandler.parseBoolean(value, true));
+                },
+                set loadEnable(value){
+                    prll.setLoadEnable(mergeHandler.parseBoolean(value, true));
+                }
+            });
         }
 
         protected onViewAdded(child:View):void {
@@ -84,13 +99,12 @@ module androidui.widget{
 
         protected onAttachedToWindow():void {
             super.onAttachedToWindow();
-            if(this.headerView==null){
+            if(this.headerView==null && this.isRefreshEnable){
                 this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView());
             }
-            if(this.footerView==null){
+            if(this.footerView==null && this.isLoadEnable){
                 this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView());
             }
-            this.setStateInner(PullRefreshLoadLayout.State_Normal);
         }
 
         private configHeaderView(){
@@ -173,14 +187,14 @@ module androidui.widget{
             }
             this.checkHeaderFooterPosition();
 
-            if(this.contentOverY < -this.headerView.getHeight()){
+            if(this.headerView && this.contentOverY < -this.headerView.getHeight()){
                 if(isTouchEvent){
                     this.setState(PullRefreshLoadLayout.State_ReadToRefresh);
                 }else if(this.state === PullRefreshLoadLayout.State_ReadToRefresh){
                     this.setState(PullRefreshLoadLayout.State_Refreshing);
                 }
 
-            }else if(this.contentOverY > this.footerView.getHeight() + this.footerViewReadyDistance){
+            }else if(this.footerView && this.contentOverY > this.footerView.getHeight() + this.footerViewReadyDistance){
                 if(isTouchEvent){
                     this.setState(PullRefreshLoadLayout.State_ReadyToLoad);
                 }else if(this.state === PullRefreshLoadLayout.State_ReadyToLoad){
@@ -191,7 +205,7 @@ module androidui.widget{
                 if(this.state === PullRefreshLoadLayout.State_ReadToRefresh || this.state === PullRefreshLoadLayout.State_ReadyToLoad){
                     this.setState(PullRefreshLoadLayout.State_Normal);
                 }
-                if(this.contentOverY>0 && this.autoLoadMoreWhenScroll){
+                if(this.contentOverY>0 && this.autoLoadMoreWhenScrollBottom && this.isLoadEnable){
                     this.setState(PullRefreshLoadLayout.State_Loading);
                 }
             }
@@ -207,18 +221,9 @@ module androidui.widget{
             const oldState = this.state;
             this.state = newState;
             const PullRefreshLoadLayout_this = this;
+            this.checkLockOverScroll();
             switch (newState){
-                case PullRefreshLoadLayout.State_Normal :
-                    if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(0);
-                    break;
-                case PullRefreshLoadLayout.State_Refreshing :
-                    if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(this.headerView.getHeight());
-                    break;
-                case PullRefreshLoadLayout.State_ReadToRefresh :
-                    if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(this.headerView.getHeight());
-                    break;
                 case PullRefreshLoadLayout.State_RefreshFail :
-                    if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(this.headerView.getHeight());
                     this.postDelayed({
                         run(){
                             if(newState===PullRefreshLoadLayout_this.state){
@@ -227,18 +232,6 @@ module androidui.widget{
                         }
                     }, 1000);
                     break;
-                case PullRefreshLoadLayout.State_Loading :
-                    if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(0);
-                    break;
-                case PullRefreshLoadLayout.State_ReadyToLoad :
-                    if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(0);
-                    break;
-                case PullRefreshLoadLayout.State_LoadFail :
-                    if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(0);
-                    break;
-                case PullRefreshLoadLayout.State_NoMoreToLoad :
-                    if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(0);
-                    break;
             }
             if(this.headerView) this.headerView.onStateChange(newState, oldState);
             if(this.footerView) this.footerView.onStateChange(newState, oldState);
@@ -246,6 +239,37 @@ module androidui.widget{
         }
         public setStateChangeListener(listener:PullRefreshLoadLayout.StateChangeListener){
             this.stateChangeListener = listener;
+        }
+
+        private checkLockOverScroll(){
+            if(!this.overScrollLocker) return;
+            switch (this.state){
+                case PullRefreshLoadLayout.State_Normal :
+                    this.overScrollLocker.lockOverScrollTop(0);
+                    break;
+                case PullRefreshLoadLayout.State_Refreshing :
+                    this.overScrollLocker.lockOverScrollTop(this.headerView ? this.headerView.getHeight() : 0);
+                    break;
+                case PullRefreshLoadLayout.State_ReadToRefresh :
+                    this.overScrollLocker.lockOverScrollTop(this.headerView ? this.headerView.getHeight() : 0);
+                    break;
+                case PullRefreshLoadLayout.State_RefreshFail :
+                    this.overScrollLocker.lockOverScrollTop(this.headerView ? this.headerView.getHeight() : 0);
+                    break;
+                case PullRefreshLoadLayout.State_Loading :
+                    this.overScrollLocker.lockOverScrollTop(0);
+                    break;
+                case PullRefreshLoadLayout.State_ReadyToLoad :
+                    this.overScrollLocker.lockOverScrollTop(0);
+                    break;
+                case PullRefreshLoadLayout.State_LoadFail :
+                    this.overScrollLocker.lockOverScrollTop(0);
+                    break;
+                case PullRefreshLoadLayout.State_NoMoreToLoad :
+                    this.overScrollLocker.lockOverScrollTop(0);
+                    break;
+            }
+            this.overScrollLocker.lockOverScrollBottom(this.footerView ? this.footerView.getHeight() : 0);
         }
 
         private checkHeaderFooterPosition(){
@@ -264,12 +288,13 @@ module androidui.widget{
         }
 
         private setHeaderViewAppearDistance(distance:number){
+            if(!this.headerView) return;
             let offset = -this.headerView.getHeight() - this.headerView.getTop() + distance;
             this.headerView.offsetTopAndBottom(Math.max(offset, -this.headerView.getHeight()));
         }
 
         private setFooterViewAppearDistance(distance:number){
-            if(!this.contentView) return;
+            if(!this.contentView || !this.footerView) return;
             let bottomToParentBottom = Math.min(this.overScrollLocker.getScrollContentBottom(),this.contentView.getHeight()) - this.footerView.getBottom();
             if(this.contentOverY<0) bottomToParentBottom -= this.contentOverY;
             let offset = this.footerView.getHeight() + bottomToParentBottom - distance;
@@ -280,18 +305,38 @@ module androidui.widget{
         protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
             super.onLayout(changed, left, top, right, bottom);
             this.checkHeaderFooterPosition();
-            if(this.overScrollLocker) {
-                if (this.state === PullRefreshLoadLayout.State_Refreshing
-                    || this.state === PullRefreshLoadLayout.State_RefreshFail
-                    || this.state === PullRefreshLoadLayout.State_ReadToRefresh) {
-                    this.overScrollLocker.lockOverScrollTop(this.headerView.getHeight());
-                }
-                this.overScrollLocker.lockOverScrollBottom(this.footerView.getHeight());
-            }
+            this.checkLockOverScroll();
         }
 
-        setAutoLoadMoreWhenScroll(autoLoadMoreWhenScroll:boolean):void {
-            this.autoLoadMoreWhenScroll = autoLoadMoreWhenScroll;
+        setAutoLoadMoreWhenScrollBottom(autoLoad:boolean):void {
+            this.autoLoadMoreWhenScrollBottom = autoLoad;
+        }
+
+        setRefreshEnable(enable:boolean):void {
+            if(enable === this.isRefreshEnable) return;
+            this.isRefreshEnable = enable;
+            if(!enable){
+                if(this.headerView){
+                    this.removeView(this.headerView);
+                    this.headerView = null;
+                }
+                if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(0);
+            }else{
+                if(!this.headerView) this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView());
+            }
+        }
+        setLoadEnable(enable:boolean):void {
+            if(enable === this.isLoadEnable) return;
+            this.isLoadEnable = enable;
+            if(!enable){
+                if(this.footerView){
+                    this.removeView(this.footerView);
+                    this.footerView = null;
+                }
+                if(this.overScrollLocker) this.overScrollLocker.lockOverScrollBottom(0);
+            }else{
+                if(!this.footerView) this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView());
+            }
         }
 
     }
