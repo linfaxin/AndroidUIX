@@ -591,9 +591,9 @@ module android.view {
                 childElement.parentElement.removeChild(childElement);
             }
             if (insertBeforeElement) {
-                this.bindElement.appendChild(childElement);//append to dom
-            }else{
                 this.bindElement.insertBefore(childElement, insertBeforeElement);//insert to dom
+            }else{
+                this.bindElement.appendChild(childElement);//append to dom
             }
         }
         private removeChildElement(childElement:HTMLElement){
