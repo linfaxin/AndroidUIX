@@ -2266,6 +2266,13 @@ declare module android.widget {
         }
     }
 }
+declare module androidui.util {
+    class NumberChecker {
+        static warnNotNumber(...n: number[]): boolean;
+        static assetNotNumber(...ns: number[]): void;
+        static checkIsNumber(...ns: number[]): boolean;
+    }
+}
 declare module android.widget {
     import Interpolator = android.view.animation.Interpolator;
     class OverScroller {

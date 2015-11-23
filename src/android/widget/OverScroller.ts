@@ -6,6 +6,7 @@
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/Log.ts"/>
+///<reference path="../../androidui/util/NumberChecker.ts"/>
 
 module android.widget{
     import ViewConfiguration = android.view.ViewConfiguration;
@@ -13,6 +14,7 @@ module android.widget{
     import Resources = android.content.res.Resources;
     import SystemClock = android.os.SystemClock;
     import Log = android.util.Log;
+    import NumberChecker = androidui.util.NumberChecker;
 
     export class OverScroller{
         private mMode = 0;
@@ -38,6 +40,7 @@ module android.widget{
         }
 
         setFriction(friction:number) {
+            NumberChecker.warnNotNumber(friction);
             this.mScrollerX.setFriction(friction);
             this.mScrollerY.setFriction(friction);
         }
@@ -145,11 +148,13 @@ module android.widget{
             return true;
         }
         startScroll(startX:number, startY:number, dx:number, dy:number, duration=OverScroller.DEFAULT_DURATION) {
+            NumberChecker.warnNotNumber(startX, startY, dx, dy, duration);
             this.mMode = OverScroller.SCROLL_MODE;
             this.mScrollerX.startScroll(startX, dx, duration);
             this.mScrollerY.startScroll(startY, dy, duration);
         }
         springBack(startX:number, startY:number, minX:number, maxX:number, minY:number, maxY:number):boolean {
+            NumberChecker.warnNotNumber(startX, startY, minX, maxX, minY, maxY);
             this.mMode = OverScroller.FLING_MODE;
 
             // Make sure both methods are called.
@@ -159,6 +164,7 @@ module android.widget{
         }
         fling(startX:number, startY:number, velocityX:number, velocityY:number,
               minX:number, maxX:number, minY:number, maxY:number, overX=0, overY=0) {
+            NumberChecker.warnNotNumber(startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX, overY);
             // Continue a scroll or fling in progress
             if (this.mFlywheel && !this.isFinished()) {
                 let oldVelocityX = this.mScrollerX.mCurrVelocity;
@@ -175,9 +181,11 @@ module android.widget{
             this.mScrollerY.fling(startY, velocityY, minY, maxY, overY);
         }
         notifyHorizontalEdgeReached(startX:number, finalX:number, overX:number) {
+            NumberChecker.warnNotNumber(startX, finalX, overX);
             this.mScrollerX.notifyEdgeReached(startX, finalX, overX);
         }
         notifyVerticalEdgeReached(startY:number, finalY:number, overY:number) {
+            NumberChecker.warnNotNumber(startY, finalY, overY);
             this.mScrollerY.notifyEdgeReached(startY, finalY, overY);
         }
         isOverScrolled():boolean {
@@ -234,7 +242,16 @@ module android.widget{
         mVelocity = 0;
 
         // Current velocity
-        mCurrVelocity = 0;
+        private _mCurrVelocity = 0;
+        get mCurrVelocity():number{
+            return this._mCurrVelocity;
+        }
+        set mCurrVelocity(value:number){
+            if(!NumberChecker.checkIsNumber(value)){
+                value = 0;
+            }
+            this._mCurrVelocity = value;
+        }
 
         // Constant current deceleration
         mDeceleration = 0;
@@ -560,7 +577,7 @@ module android.widget{
             switch (this.mState) {
                 case SplineOverScroller.SPLINE: {
                     const t = currentTime / this.mSplineDuration;
-                    const index = Number.parseInt(<any>(SplineOverScroller.NB_SAMPLES * t));
+                    const index = Math.floor(SplineOverScroller.NB_SAMPLES * t);
                     let distanceCoef = 1;
                     let velocityCoef = 0;
                     if (index < SplineOverScroller.NB_SAMPLES) {

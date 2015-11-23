@@ -3875,7 +3875,13 @@ var android;
             get mScrollX() { return this._mScrollX; }
             set mScrollX(value) { this._mScrollX = Math.floor(value); }
             get mScrollY() { return this._mScrollY; }
-            set mScrollY(value) { this._mScrollY = Math.floor(value); }
+            set mScrollY(value) {
+                if (Number.isNaN(value) || value == null) {
+                    console.error('set mScrollY value is ' + value);
+                    value = 0;
+                }
+                this._mScrollY = Math.floor(value);
+            }
             createAttrChangeHandler(mergeHandler) {
                 let view = this;
                 mergeHandler.add({
@@ -11844,6 +11850,39 @@ var android;
         })(FrameLayout = widget.FrameLayout || (widget.FrameLayout = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
+var androidui;
+(function (androidui) {
+    var util;
+    (function (util) {
+        class NumberChecker {
+            static warnNotNumber(...n) {
+                try {
+                    this.assetNotNumber(...n);
+                }
+                catch (e) {
+                    console.error(e);
+                    return true;
+                }
+                return false;
+            }
+            static assetNotNumber(...ns) {
+                if (!this.checkIsNumber()) {
+                    throw Error('assetNotNumber : ' + ns);
+                }
+            }
+            static checkIsNumber(...ns) {
+                if (ns == null)
+                    return false;
+                for (let n of ns) {
+                    if (n == null || Number.isNaN(n))
+                        return false;
+                }
+                return true;
+            }
+        }
+        util.NumberChecker = NumberChecker;
+    })(util = androidui.util || (androidui.util = {}));
+})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/10/17.
  */
@@ -11852,6 +11891,7 @@ var android;
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/Log.ts"/>
+///<reference path="../../androidui/util/NumberChecker.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -11860,6 +11900,7 @@ var android;
         var Resources = android.content.res.Resources;
         var SystemClock = android.os.SystemClock;
         var Log = android.util.Log;
+        var NumberChecker = androidui.util.NumberChecker;
         class OverScroller {
             constructor(interpolator, flywheel = true) {
                 this.mMode = 0;
@@ -11873,6 +11914,7 @@ var android;
                 this.mInterpolator = interpolator;
             }
             setFriction(friction) {
+                NumberChecker.warnNotNumber(friction);
                 this.mScrollerX.setFriction(friction);
                 this.mScrollerY.setFriction(friction);
             }
@@ -11952,17 +11994,20 @@ var android;
                 return true;
             }
             startScroll(startX, startY, dx, dy, duration = OverScroller.DEFAULT_DURATION) {
+                NumberChecker.warnNotNumber(startX, startY, dx, dy, duration);
                 this.mMode = OverScroller.SCROLL_MODE;
                 this.mScrollerX.startScroll(startX, dx, duration);
                 this.mScrollerY.startScroll(startY, dy, duration);
             }
             springBack(startX, startY, minX, maxX, minY, maxY) {
+                NumberChecker.warnNotNumber(startX, startY, minX, maxX, minY, maxY);
                 this.mMode = OverScroller.FLING_MODE;
                 const spingbackX = this.mScrollerX.springback(startX, minX, maxX);
                 const spingbackY = this.mScrollerY.springback(startY, minY, maxY);
                 return spingbackX || spingbackY;
             }
             fling(startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX = 0, overY = 0) {
+                NumberChecker.warnNotNumber(startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX, overY);
                 if (this.mFlywheel && !this.isFinished()) {
                     let oldVelocityX = this.mScrollerX.mCurrVelocity;
                     let oldVelocityY = this.mScrollerY.mCurrVelocity;
@@ -11977,9 +12022,11 @@ var android;
                 this.mScrollerY.fling(startY, velocityY, minY, maxY, overY);
             }
             notifyHorizontalEdgeReached(startX, finalX, overX) {
+                NumberChecker.warnNotNumber(startX, finalX, overX);
                 this.mScrollerX.notifyEdgeReached(startX, finalX, overX);
             }
             notifyVerticalEdgeReached(startY, finalY, overY) {
+                NumberChecker.warnNotNumber(startY, finalY, overY);
                 this.mScrollerY.notifyEdgeReached(startY, finalY, overY);
             }
             isOverScrolled() {
@@ -12014,7 +12061,7 @@ var android;
                 this.mCurrentPosition = 0;
                 this.mFinal = 0;
                 this.mVelocity = 0;
-                this.mCurrVelocity = 0;
+                this._mCurrVelocity = 0;
                 this.mDeceleration = 0;
                 this.mStartTime = 0;
                 this.mDuration = 0;
@@ -12031,6 +12078,15 @@ var android;
                     * 39.37
                     * ppi
                     * 0.84;
+            }
+            get mCurrVelocity() {
+                return this._mCurrVelocity;
+            }
+            set mCurrVelocity(value) {
+                if (!NumberChecker.checkIsNumber(value)) {
+                    value = 0;
+                }
+                this._mCurrVelocity = value;
             }
             setFriction(friction) {
                 this.mFlingFriction = friction;
@@ -12234,7 +12290,7 @@ var android;
                 switch (this.mState) {
                     case SplineOverScroller.SPLINE: {
                         const t = currentTime / this.mSplineDuration;
-                        const index = Number.parseInt((SplineOverScroller.NB_SAMPLES * t));
+                        const index = Math.floor(SplineOverScroller.NB_SAMPLES * t);
                         let distanceCoef = 1;
                         let velocityCoef = 0;
                         if (index < SplineOverScroller.NB_SAMPLES) {

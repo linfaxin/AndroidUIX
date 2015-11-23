@@ -650,7 +650,13 @@ module android.view {
         get mScrollX():number{return this._mScrollX;}
         set mScrollX(value:number){this._mScrollX = Math.floor(value);}
         get mScrollY():number{return this._mScrollY;}
-        set mScrollY(value:number){this._mScrollY = Math.floor(value);}
+        set mScrollY(value:number){
+            if(Number.isNaN(value) || value == null){
+                console.error('set mScrollY value is ' + value);
+                value = 0;
+            }
+            this._mScrollY = Math.floor(value);
+        }
 
 
 
