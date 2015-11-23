@@ -1118,6 +1118,8 @@ module android.view {
 
                 this.mTop += offset;
                 this.mBottom += offset;
+                this.syncBoundToElement();
+
 //            if (mDisplayList != null) {
 //                mDisplayList.offsetTopAndBottom(offset);
 //                invalidateViewProperty(false, false);
@@ -1168,6 +1170,7 @@ module android.view {
 
                 this.mLeft += offset;
                 this.mRight += offset;
+                this.syncBoundToElement();
 //            if (mDisplayList != null) {
 //                mDisplayList.offsetLeftAndRight(offset);
 //                invalidateViewProperty(false, false);

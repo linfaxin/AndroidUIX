@@ -4313,6 +4313,7 @@ var android;
                     }
                     this.mTop += offset;
                     this.mBottom += offset;
+                    this.syncBoundToElement();
                     if (!matrixIsIdentity) {
                         this.invalidateViewProperty(false, true);
                     }
@@ -4346,6 +4347,7 @@ var android;
                     }
                     this.mLeft += offset;
                     this.mRight += offset;
+                    this.syncBoundToElement();
                     if (!matrixIsIdentity) {
                         this.invalidateViewProperty(false, true);
                     }
@@ -29261,40 +29263,13 @@ var androidui;
                 contentView.overScrollBy = (deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent) => {
                     let result = overScrollByFunc.call(contentView, deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
                     if (contentView === this.contentView) {
-                        this.onContentOverScroll(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+                        this.onContentOverScroll(scrollRangeY, maxOverScrollY, isTouchEvent);
                     }
                     return result;
                 };
             }
-            setHeaderView(headerView) {
-                if (this.headerView) {
-                    this.removeView(this.headerView);
-                }
-                this.headerView = headerView;
-                if (headerView.getParent() == null)
-                    this.addView(headerView);
-                this.configHeaderView();
-            }
-            setFooterView(footerView) {
-                if (this.footerView) {
-                    this.removeView(this.footerView);
-                }
-                this.footerView = footerView;
-                if (footerView.getParent() == null)
-                    this.addView(footerView);
-                this.configFooterView();
-            }
-            setContentView(contentView) {
-                if (this.contentView) {
-                    this.removeView(this.contentView);
-                }
-                this.contentView = contentView;
-                if (contentView.getParent() == null)
-                    this.addView(contentView);
-                this.configContentView();
-            }
-            onContentOverScroll(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent) {
-                let newScrollY = scrollY + deltaY;
+            onContentOverScroll(scrollRangeY, maxOverScrollY, isTouchEvent) {
+                let newScrollY = this.contentView.mScrollY;
                 const top = 0;
                 const bottom = scrollRangeY;
                 if (newScrollY > bottom) {
@@ -29338,6 +29313,33 @@ var androidui;
                         this.setFooterState(PullRefreshLoadLayout.State_Footer_Loading);
                     }
                 }
+            }
+            setHeaderView(headerView) {
+                if (this.headerView) {
+                    this.removeView(this.headerView);
+                }
+                this.headerView = headerView;
+                if (headerView.getParent() == null)
+                    this.addView(headerView);
+                this.configHeaderView();
+            }
+            setFooterView(footerView) {
+                if (this.footerView) {
+                    this.removeView(this.footerView);
+                }
+                this.footerView = footerView;
+                if (footerView.getParent() == null)
+                    this.addView(footerView);
+                this.configFooterView();
+            }
+            setContentView(contentView) {
+                if (this.contentView) {
+                    this.removeView(this.contentView);
+                }
+                this.contentView = contentView;
+                if (contentView.getParent() == null)
+                    this.addView(contentView);
+                this.configContentView();
             }
             setHeaderState(newState) {
                 if (!this.headerView)
@@ -29419,7 +29421,7 @@ var androidui;
                 if (!this.headerView)
                     return;
                 let offset = -this.headerView.getHeight() - this.headerView.getTop() + distance;
-                this.headerView.offsetTopAndBottom(Math.max(offset, -this.headerView.getHeight()));
+                this.headerView.offsetTopAndBottom(offset);
             }
             setFooterViewAppearDistance(distance) {
                 if (!this.contentView || !this.footerView)
@@ -29428,7 +29430,7 @@ var androidui;
                 if (this.contentOverY < 0)
                     bottomToParentBottom -= this.contentOverY;
                 let offset = this.footerView.getHeight() + bottomToParentBottom - distance;
-                this.footerView.offsetTopAndBottom(Math.min(this.footerView.getHeight(), offset));
+                this.footerView.offsetTopAndBottom(offset);
             }
             onLayout(changed, left, top, right, bottom) {
                 super.onLayout(changed, left, top, right, bottom);

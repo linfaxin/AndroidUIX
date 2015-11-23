@@ -124,42 +124,14 @@ module androidui.widget{
                 let result = overScrollByFunc.call(contentView,
                     deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
                 if(contentView === this.contentView){
-                    this.onContentOverScroll(deltaX, deltaY, scrollX, scrollY,
-                        scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+                    this.onContentOverScroll(scrollRangeY, maxOverScrollY, isTouchEvent);
                 }
                 return result;
             }
         }
 
-        setHeaderView(headerView:PullRefreshLoadLayout.HeaderView):void{
-            if(this.headerView){
-                this.removeView(this.headerView);
-            }
-            this.headerView = headerView;
-            if(headerView.getParent()==null) this.addView(headerView);
-            this.configHeaderView();
-        }
-        setFooterView(footerView:PullRefreshLoadLayout.FooterView):void{
-            if(this.footerView){
-                this.removeView(this.footerView);
-            }
-            this.footerView = footerView;
-            if(footerView.getParent()==null) this.addView(footerView);
-            this.configFooterView();
-        }
-        setContentView(contentView:View):void{
-            if(this.contentView){
-                this.removeView(this.contentView);
-            }
-            this.contentView = contentView;
-            if(contentView.getParent()==null) this.addView(contentView);
-            this.configContentView();
-        }
-
-        private onContentOverScroll(deltaX:number, deltaY:number, scrollX:number, scrollY:number,
-                                    scrollRangeX:number, scrollRangeY:number, maxOverScrollX:number, maxOverScrollY:number,
-                                    isTouchEvent:boolean):void{
-            let newScrollY = scrollY + deltaY;
+        private onContentOverScroll(scrollRangeY:number, maxOverScrollY:number, isTouchEvent:boolean):void{
+            let newScrollY = this.contentView.mScrollY;
             const top = 0;
             const bottom = scrollRangeY;
 
@@ -200,7 +172,31 @@ module androidui.widget{
                     this.setFooterState(PullRefreshLoadLayout.State_Footer_Loading);
                 }
             }
+        }
 
+        setHeaderView(headerView:PullRefreshLoadLayout.HeaderView):void{
+            if(this.headerView){
+                this.removeView(this.headerView);
+            }
+            this.headerView = headerView;
+            if(headerView.getParent()==null) this.addView(headerView);
+            this.configHeaderView();
+        }
+        setFooterView(footerView:PullRefreshLoadLayout.FooterView):void{
+            if(this.footerView){
+                this.removeView(this.footerView);
+            }
+            this.footerView = footerView;
+            if(footerView.getParent()==null) this.addView(footerView);
+            this.configFooterView();
+        }
+        setContentView(contentView:View):void{
+            if(this.contentView){
+                this.removeView(this.contentView);
+            }
+            this.contentView = contentView;
+            if(contentView.getParent()==null) this.addView(contentView);
+            this.configContentView();
         }
 
         setHeaderState(newState:number):void {
@@ -279,7 +275,7 @@ module androidui.widget{
         private setHeaderViewAppearDistance(distance:number){
             if(!this.headerView) return;
             let offset = -this.headerView.getHeight() - this.headerView.getTop() + distance;
-            this.headerView.offsetTopAndBottom(Math.max(offset, -this.headerView.getHeight()));
+            this.headerView.offsetTopAndBottom(offset);
         }
 
         private setFooterViewAppearDistance(distance:number){
@@ -287,7 +283,7 @@ module androidui.widget{
             let bottomToParentBottom = Math.min(this.overScrollLocker.getScrollContentBottom(),this.contentView.getHeight()) - this.footerView.getBottom();
             if(this.contentOverY<0) bottomToParentBottom -= this.contentOverY;
             let offset = this.footerView.getHeight() + bottomToParentBottom - distance;
-            this.footerView.offsetTopAndBottom(Math.min(this.footerView.getHeight(), offset));
+            this.footerView.offsetTopAndBottom(offset);
         }
 
 

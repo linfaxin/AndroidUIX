@@ -4390,10 +4390,10 @@ declare module androidui.widget {
         private configHeaderView();
         private configFooterView();
         private configContentView();
+        private onContentOverScroll(scrollRangeY, maxOverScrollY, isTouchEvent);
         setHeaderView(headerView: PullRefreshLoadLayout.HeaderView): void;
         setFooterView(footerView: PullRefreshLoadLayout.FooterView): void;
         setContentView(contentView: View): void;
-        private onContentOverScroll(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
         setHeaderState(newState: number): void;
         getHeaderState(): number;
         setFooterState(newState: number): void;
