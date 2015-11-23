@@ -212,7 +212,7 @@ module android.widget{
         }
 
 
-        initBindElement(bindElement:HTMLElement, rootElement:HTMLElement):void {
+        protected initBindElement(bindElement:HTMLElement, rootElement:HTMLElement):void {
             super.initBindElement(bindElement, rootElement);
             this.bindElement.appendChild(this.mTextElement);
         }

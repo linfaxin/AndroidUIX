@@ -4284,6 +4284,7 @@ module android.view {
                 domtree.parentNode.removeChild(domtree);
             }
             if(!(rootView instanceof View)) return rootView;
+            const children = Array.from(domtree.children);//children more change in initBindElement()
             rootView.initBindElement(domtree, rootElement);
 
             let params;
@@ -4299,7 +4300,7 @@ module android.view {
 
             if(rootView instanceof ViewGroup){
                 let parent = <ViewGroup><any>rootView;
-                Array.from(domtree.children).forEach((item)=>{
+                children.forEach((item)=>{
                     if(item instanceof HTMLElement){
                         let view = View.inflate(item, rootElement, parent);
                         if(view instanceof View) parent.addView(view);
@@ -4377,8 +4378,17 @@ module android.view {
             });
         }
 
-        initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
-            if(this._bindElement) this._bindElement[View.AndroidViewProperty] = null;
+        protected initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
+            if(this._bindElement){
+                this._bindElement[View.AndroidViewProperty] = null;
+                if(bindElement) {
+                    //move old bindElement children to new bindElement
+                    Array.from(this._bindElement.children).forEach((el:Element)=> {
+                        this._bindElement.removeChild(el);
+                        bindElement.insertBefore(el, bindElement.children[0]);
+                    });
+                }
+            }
             this._bindElement = bindElement || document.createElement(this.tagName());
             this._bindElement.style.position = 'absolute';
 
