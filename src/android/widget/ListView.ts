@@ -173,8 +173,8 @@ export class ListView extends AbsListView {
                 //return listView.mOverScrollFooter;
             //},
             set dividerHeight(value){
-                let dividerHeight = mergeHandler.parseNumber(value, 0);
-                if(dividerHeight > 0 ){
+                let dividerHeight = mergeHandler.parseNumber(value, -1);
+                if(dividerHeight >= 0 ){
                     listView.setDividerHeight(dividerHeight);
                 }
             },
