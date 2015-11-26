@@ -4306,9 +4306,12 @@ module android.view {
             if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android['widget']);
             if(!rootViewClass) rootViewClass = ClassFinder.findClass(className);
             if(!rootViewClass){
-                console.warn('not find class ' + className);
+                if(document.createElement(className) instanceof HTMLUnknownElement){
+                    console.warn('inflate: not find class ' + className);
+                }
                 return null;
             }
+            let children = Array.from(domtree.children);//children may change when new the view
             let rootView:View = new rootViewClass(domtree, rootElement);
             if(rootView['onInflateAdapter']){//inflate a adapter.
                 (<HtmlDataAdapter><any>rootView).onInflateAdapter(domtree, rootElement, viewParent);
@@ -4330,7 +4333,7 @@ module android.view {
 
             if(rootView instanceof ViewGroup){
                 let parent = <ViewGroup><any>rootView;
-                Array.from(domtree.children).forEach((item)=>{
+                children.forEach((item)=>{
                     if(item instanceof HTMLElement){
                         let view = View.inflate(item, rootElement, parent);
                         if(view instanceof View) parent.addView(view);

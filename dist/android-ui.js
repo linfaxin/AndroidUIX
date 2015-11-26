@@ -6929,9 +6929,12 @@ var android;
                 if (!rootViewClass)
                     rootViewClass = ClassFinder.findClass(className);
                 if (!rootViewClass) {
-                    console.warn('not find class ' + className);
+                    if (document.createElement(className) instanceof HTMLUnknownElement) {
+                        console.warn('inflate: not find class ' + className);
+                    }
                     return null;
                 }
+                let children = Array.from(domtree.children);
                 let rootView = new rootViewClass(domtree, rootElement);
                 if (rootView['onInflateAdapter']) {
                     rootView.onInflateAdapter(domtree, rootElement, viewParent);
@@ -6950,7 +6953,7 @@ var android;
                 rootView._fireInitedAttributeChange();
                 if (rootView instanceof view_1.ViewGroup) {
                     let parent = rootView;
-                    Array.from(domtree.children).forEach((item) => {
+                    children.forEach((item) => {
                         if (item instanceof HTMLElement) {
                             let view = View.inflate(item, rootElement, parent);
                             if (view instanceof View)
