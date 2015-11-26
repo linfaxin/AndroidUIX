@@ -15705,9 +15705,6 @@ var androidui;
                     this.mImgElement.style.opacity = '';
                     this.requestLayout();
                 });
-            }
-            initBindElement(bindElement, rootElement) {
-                super.initBindElement(bindElement, rootElement);
                 this.bindElement.appendChild(this.mImgElement);
             }
             createAttrChangeHandler(mergeHandler) {

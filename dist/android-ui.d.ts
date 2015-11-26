@@ -2718,7 +2718,6 @@ declare module androidui.widget {
         private mImgElement;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         private initImageView();
-        protected initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;

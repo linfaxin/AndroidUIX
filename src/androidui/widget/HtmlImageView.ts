@@ -54,10 +54,7 @@ module androidui.widget{
                 this.mImgElement.style.opacity = '';
                 this.requestLayout();
             });
-        }
 
-        protected initBindElement(bindElement:HTMLElement, rootElement:HTMLElement):void {
-            super.initBindElement(bindElement, rootElement);
             this.bindElement.appendChild(this.mImgElement);
         }
 
