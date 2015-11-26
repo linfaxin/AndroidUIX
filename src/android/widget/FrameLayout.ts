@@ -32,18 +32,13 @@ module android.widget {
         mForegroundBoundsChanged = false;
         private mMatchParentChildren = new Array<View>(1);
 
-        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
-            super.createAttrChangeHandler(mergeHandler);
-
-            let frameLayout = this;
-            mergeHandler.add({
-                set foregroundGravity(value){
-                    frameLayout.mForegroundGravity = View.AttrChangeHandler.parseGravity(value, frameLayout.mForegroundGravity);
-                },
-                get foregroundGravity():any{
-                    return frameLayout.mForegroundGravity;
-                }
-            });
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
+            this._attrBinder.addAttr('foregroundGravity', (value)=>{
+                this.mForegroundGravity = this._attrBinder.parseGravity(value, this.mForegroundGravity);
+            }, ()=>{
+                return this.mForegroundGravity;
+            })
         }
 
         getForegroundGravity():number {
@@ -391,19 +386,12 @@ module android.widget {
                     super(width, height);
                     this.gravity = gravity;
                 }
-            }
 
-            _createAttrChangeHandler(mergeHandler:View.AttrChangeHandler){
-                super._createAttrChangeHandler(mergeHandler);
-                let params = this;
-                mergeHandler.add({
-                    set gravity(value) {
-                        params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
-                    },
-                    get gravity():any{
-                        return params.gravity;
-                    }
-                });
+                this._attrBinder.addAttr('gravity', (value)=>{
+                    this.gravity = this._attrBinder.parseGravity(value, this.gravity);
+                }, ()=>{
+                    return this.gravity;
+                })
             }
 
         }

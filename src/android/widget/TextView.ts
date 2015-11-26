@@ -25,7 +25,7 @@ module android.widget{
         private mHint:string;
         private mGravity = Gravity.TOP | Gravity.LEFT;
         private mSingleLine = false;
-        private mTextSize; //default 14 dp
+        private mTextSize;
         private mTextColor = ColorStateList.valueOf(Color.BLACK);
         private mCurTextColor = Color.BLACK;
         private mHintColor = Color.LTGRAY;
@@ -42,6 +42,138 @@ module android.widget{
         constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
             super(bindElement, rootElement);
             this.initTextElement();
+
+            this._attrBinder.addAttr('enabled', (value)=>{
+                this.setEnabled(this._attrBinder.parseBoolean(value, true));
+            }, ()=>{
+                return this.isEnabled();
+            });
+            this._attrBinder.addAttr('textColorHighlight', (value)=>{
+            });
+            this._attrBinder.addAttr('textColor', (value)=>{
+                let colorList = this._attrBinder.parseColorList(value);
+                if(colorList instanceof ColorStateList){
+                    this.setTextColor(colorList);
+                    return;
+                }
+                let color = this._attrBinder.parseColor(value);
+                if(Number.isInteger(color)) this.setTextColor(color);
+            }, ():any=> {
+                if(this.mTextColor.isStateful()) return this.mTextColor;
+                return this.mTextColor.getDefaultColor();
+            });
+            this._attrBinder.addAttr('textColorHint', (value)=>{
+            });
+            this._attrBinder.addAttr('textSize', (value)=>{
+                if(value !== undefined && value !== null){
+                    value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
+                    this.setTextSize(value);
+                }
+            }, ()=>{
+                return this.mTextSize;
+            });
+            this._attrBinder.addAttr('textStyle', (value)=>{
+
+            });
+            this._attrBinder.addAttr('textAllCaps', (value)=>{
+
+            });
+
+            this._attrBinder.addAttr('drawableLeft', (value)=>{
+
+            });
+            this._attrBinder.addAttr('drawableTop', (value)=>{
+
+            });
+            this._attrBinder.addAttr('drawableRight', (value)=>{
+
+            });
+            this._attrBinder.addAttr('drawableBottom', (value)=>{
+
+            });
+            this._attrBinder.addAttr('drawablePadding', (value)=>{
+
+            });
+            this._attrBinder.addAttr('maxLines', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setMaxLines(value);
+            }, ():any=>{
+                return this.mMaxLineCount;
+            });
+            this._attrBinder.addAttr('maxHeight', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setMaxHeight(value);
+            }, ():any=>{
+                return this.mMaxHeight;
+            });
+            this._attrBinder.addAttr('lines', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setLines(value);
+            }, ()=>{
+                if(this.mMaxLineCount === this.mMinLineCount) return this.mMaxLineCount;
+                return null;
+            });
+            this._attrBinder.addAttr('height', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setHeight(value);
+            }, ()=>{
+                if(this.mMaxHeight === this.getMinimumHeight()) return this.mMaxHeight;
+                return null;
+            });
+            this._attrBinder.addAttr('minLines', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setMinLines(value);
+            }, ()=>{
+                return this.mMinLineCount;
+            });
+            this._attrBinder.addAttr('minHeight', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setMinimumHeight(value);
+            });
+            this._attrBinder.addAttr('maxWidth', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setMaxWidth(value);
+            }, ()=>{
+                return this.mMaxWidth;
+            });
+            this._attrBinder.addAttr('width', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setWidth(value);
+            }, ()=>{
+                if(this.mMinWidth === this.mMaxWidth) return this.mMinWidth;
+                return null;
+            });
+            this._attrBinder.addAttr('gravity', (value)=>{
+                this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
+            }, ()=>{
+                return this.mGravity;
+            });
+            this._attrBinder.addAttr('text', (value)=>{
+                this.setText(value);
+            }, ()=>{
+                return this.getText();
+            });
+            this._attrBinder.addAttr('singleLine', (value)=>{
+                if(this._attrBinder.parseBoolean(value, false)) this.setSingleLine();
+            }, ()=>{
+                if(this.mMinLineCount===1 && this.mMaxLineCount===1) return true;
+                return false;
+            });
+            this._attrBinder.addAttr('textScaleX', (value)=>{
+            });
+            this._attrBinder.addAttr('lineSpacingExtra', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setLineSpacing(value, this.mSpacingMult);
+            }, ()=>{
+                return this.mSpacingAdd;
+            });
+            this._attrBinder.addAttr('lineSpacingMultiplier', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.setLineSpacing(this.mSpacingAdd, value);
+            }, ()=>{
+                return this.mSpacingMult;
+            });
+
             this.applyDefaultAttributes(android.R.attr.textViewStyle);
         }
 
@@ -53,160 +185,6 @@ module android.widget{
             this.mTextElement.style.opacity = "0";//make context hide  before layout
             this.bindElement.appendChild(this.mTextElement);
         }
-
-        createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
-            super.createAttrChangeHandler(mergeHandler);
-            let textView = this;
-            mergeHandler.add({
-                set enabled(value){
-                    textView.setEnabled(mergeHandler.parseBoolean(value, true));
-                },
-                get enabled():any{
-                    return textView.isEnabled();
-                },
-                set textColorHighlight(value){
-                },
-                set textColor(value){
-                    let colorList = mergeHandler.parseColorList(value);
-                    if(colorList instanceof ColorStateList){
-                        textView.setTextColor(colorList);
-                        return;
-                    }
-                    let color = mergeHandler.parseColor(value);
-                    if(Number.isInteger(color)) textView.setTextColor(color);
-                },
-                get textColor():any{
-                    if(textView.mTextColor.isStateful()) return textView.mTextColor;
-                    return textView.mTextColor.getDefaultColor();
-                },
-                set textColorHint(value){
-
-                },
-                set textSize(value){
-                    if(value !== undefined && value !== null){
-                        value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
-                        textView.setTextSize(value);
-                    }
-                },
-                get textSize(){
-                    return textView.mTextSize;
-                },
-                set textStyle(value){
-
-                },
-                set textAllCaps(value){
-
-                },
-
-                set drawableLeft(value){
-
-                },
-                set drawableTop(value){
-
-                },
-                set drawableRight(value){
-
-                },
-                set drawableBottom(value){
-
-                },
-                set drawablePadding(value){
-
-                },
-                set maxLines(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setMaxLines(value);
-                },
-                get maxLines():any{
-                    return textView.mMaxLineCount;
-                },
-                set maxHeight(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setMaxHeight(value);
-                },
-                get maxHeight():any{
-                    return textView.mMaxHeight;
-                },
-                set lines(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setLines(value);
-                },
-                get lines():any{
-                    if(textView.mMaxLineCount === textView.mMinLineCount) return textView.mMaxLineCount;
-                    return null;
-                },
-                set height(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setHeight(value);
-                },
-                get height():any{
-                    if(textView.mMaxHeight === textView.getMinimumHeight()) return textView.mMaxHeight;
-                    return null;
-                },
-                set minLines(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setMinLines(value);
-                },
-                get minLines():any{
-                    return textView.mMinLineCount;
-                },
-                set minHeight(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setMinimumHeight(value);
-                },
-                set maxWidth(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setMaxWidth(value);
-                },
-                get maxWidth():any{
-                    return textView.mMaxWidth;
-                },
-                set width(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setWidth(value);
-                },
-                get width():any{
-                    if(textView.mMinWidth === textView.mMaxWidth) return textView.mMinWidth;
-                    return null;
-                },
-                set gravity(value){
-                    textView.setGravity(View.AttrChangeHandler.parseGravity(value, textView.mGravity));
-                },
-                get gravity():any{
-                    return textView.mGravity;
-                },
-                set text(value){
-                    textView.setText(value);
-                },
-                get text():any{
-                    return textView.getText();
-                },
-                set singleLine(value){
-                    if(View.AttrChangeHandler.parseBoolean(value, false)) textView.setSingleLine();
-                },
-                get singleLine(){
-                    if(textView.mMinLineCount===1 && textView.mMaxLineCount===1) return true;
-                    return false;
-                },
-                set textScaleX(value){
-                },
-                set lineSpacingExtra(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setLineSpacing(value, textView.mSpacingMult);
-                },
-                get lineSpacingExtra():any{
-                    return textView.mSpacingAdd;
-                },
-                set lineSpacingMultiplier(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) textView.setLineSpacing(textView.mSpacingAdd, value);
-                },
-                get lineSpacingMultiplier():any{
-                    return textView.mSpacingMult;
-                },
-            })
-        }
-
 
 
         protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {

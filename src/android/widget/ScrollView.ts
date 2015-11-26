@@ -70,19 +70,8 @@ module android.widget {
         constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
             super(bindElement, rootElement);
             this.initScrollView();
-        }
-
-
-        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
-            super.createAttrChangeHandler(mergeHandler);
-            let scrollView = this;
-            mergeHandler.add({
-                set fillViewport(value){
-                    scrollView.setFillViewport(View.AttrChangeHandler.parseBoolean(value));
-                },
-                get fillViewport():any{
-                    return scrollView.mFillViewport;
-                }
+            this._attrBinder.addAttr('fillViewport', (value)=>{
+                this.setFillViewport(this._attrBinder.parseBoolean(value));
             });
         }
 

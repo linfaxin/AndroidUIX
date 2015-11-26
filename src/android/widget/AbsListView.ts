@@ -697,6 +697,43 @@ module android.widget {
             this.initAbsListView();
             this.setVerticalScrollBarEnabled(true);
             this.initializeScrollbars();
+
+            this._attrBinder.addAttr('listSelector', (value)=>{
+                let d = this._attrBinder.parseDrawable(value);
+                if(d) this.setSelector(d);
+            });
+            this._attrBinder.addAttr('drawSelectorOnTop', (value)=>{
+                this.mDrawSelectorOnTop = this._attrBinder.parseBoolean(value, false);
+            });
+            this._attrBinder.addAttr('stackFromBottom', (value)=>{
+                this.setStackFromBottom(this._attrBinder.parseBoolean(value, false));
+            });
+            this._attrBinder.addAttr('scrollingCache', (value)=>{
+                this.setScrollingCacheEnabled(this._attrBinder.parseBoolean(value, true));
+            });
+            this._attrBinder.addAttr('transcriptMode', (value)=>{
+                let transcriptMode:number = this._attrBinder.parseNumber(value, AbsListView.TRANSCRIPT_MODE_DISABLED);
+                this.setTranscriptMode(transcriptMode);
+            });
+            this._attrBinder.addAttr('cacheColorHint', (value)=>{
+                let color:number = this._attrBinder.parseNumber(value, 0);
+                this.setCacheColorHint(color);
+            });
+            this._attrBinder.addAttr('fastScrollEnabled', (value)=>{
+                let enableFastScroll:boolean = this._attrBinder.parseBoolean(value, false);
+                this.setFastScrollEnabled(enableFastScroll);
+            });
+            this._attrBinder.addAttr('fastScrollAlwaysVisible', (value)=>{
+                let fastScrollAlwaysVisible:boolean = this._attrBinder.parseBoolean(value, false);
+                this.setFastScrollAlwaysVisible(fastScrollAlwaysVisible);
+            });
+            this._attrBinder.addAttr('smoothScrollbar', (value)=>{
+                let smoothScrollbar:boolean = this._attrBinder.parseBoolean(value, true);
+                this.setSmoothScrollbarEnabled(smoothScrollbar);
+            });
+            this._attrBinder.addAttr('choiceMode', (value)=>{
+                this.setChoiceMode(this._attrBinder.parseNumber(value, AbsListView.CHOICE_MODE_NONE))
+            });
         }
 
         //constructor(context:Context, attrs:AttributeSet, defStyle:number) {
@@ -727,50 +764,6 @@ module android.widget {
         //    this.setFastScrollAlwaysVisible(a.getBoolean(R.styleable.AbsListView_fastScrollAlwaysVisible, false));
         //    a.recycle();
         //}
-
-
-        createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
-            super.createAttrChangeHandler(mergeHandler);
-            let absListView = this;
-            mergeHandler.add({
-                set listSelector(value){
-                    let d = mergeHandler.parseDrawable(value);
-                    if(d) absListView.setSelector(d);
-                },
-                set drawSelectorOnTop(value){
-                    absListView.mDrawSelectorOnTop = mergeHandler.parseBoolean(value, false);
-                },
-                set stackFromBottom(value){
-                    absListView.setStackFromBottom(mergeHandler.parseBoolean(value, false));
-                },
-                set scrollingCache(value){
-                    this.setScrollingCacheEnabled(mergeHandler.parseBoolean(value, true));
-                },
-                set transcriptMode(value){
-                    let transcriptMode:number = mergeHandler.parseNumber(value, AbsListView.TRANSCRIPT_MODE_DISABLED);
-                    absListView.setTranscriptMode(transcriptMode);
-                },
-                set cacheColorHint(value){
-                    let color:number = mergeHandler.parseNumber(value, 0);
-                    absListView.setCacheColorHint(color);
-                },
-                set fastScrollEnabled(value){
-                    let enableFastScroll:boolean = mergeHandler.parseBoolean(value, false);
-                    //this.setFastScrollEnabled(enableFastScroll);
-                },
-                set fastScrollAlwaysVisible(value){
-                    let fastScrollAlwaysVisible:boolean = mergeHandler.parseBoolean(value, false);
-                    //this.setFastScrollAlwaysVisible(fastScrollAlwaysVisible);
-                },
-                set smoothScrollbar(value){
-                    let smoothScrollbar:boolean = mergeHandler.parseBoolean(value, true);
-                    absListView.setSmoothScrollbarEnabled(smoothScrollbar);
-                },
-                set choiceMode(value){
-                    absListView.setChoiceMode(mergeHandler.parseNumber(value, AbsListView.CHOICE_MODE_NONE))
-                }
-            });
-        }
 
         private initAbsListView():void {
             // Setting focusable in touch mode will set the focusable property to true

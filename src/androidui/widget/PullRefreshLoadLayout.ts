@@ -66,18 +66,12 @@ module androidui.widget{
             super(bindElement, rootElement);
             this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView());
             this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView());
-        }
 
-        createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
-            super.createAttrChangeHandler(mergeHandler);
-            const prll = this;
-            mergeHandler.add({
-                set refreshEnable(value){
-                    prll.setRefreshEnable(mergeHandler.parseBoolean(value, true));
-                },
-                set loadEnable(value){
-                    prll.setLoadEnable(mergeHandler.parseBoolean(value, true));
-                }
+            this._attrBinder.addAttr('refreshEnable', (value)=>{
+                this.setRefreshEnable(this._attrBinder.parseBoolean(value, true));
+            });
+            this._attrBinder.addAttr('loadEnable', (value)=>{
+                this.setLoadEnable(this._attrBinder.parseBoolean(value, true));
             });
         }
 

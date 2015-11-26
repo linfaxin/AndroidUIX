@@ -89,72 +89,59 @@ module android.widget{
         private mDividerPadding:number = 0;
 
 
-        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
-            super.createAttrChangeHandler(mergeHandler);
-            let linearLayout = this;
-            mergeHandler.add({
-                set orientation(value){
-                    let isVertical = (value+"").toUpperCase() === 'VERTICAL';
-                    if(isVertical){
-                        linearLayout.setOrientation(LinearLayout.VERTICAL);
-                        return;
-                    }
-                    let isHorizontal = (value+"").toUpperCase() === 'HORIZONTAL';
-                    if(isHorizontal){
-                        linearLayout.setOrientation(LinearLayout.HORIZONTAL);
-                    }
-                },
-                get orientation():any{
-                    if(linearLayout.mOrientation === LinearLayout.VERTICAL){
-                        return 'VERTICAL'
-                    }else {
-                        return 'HORIZONTAL';
-                    }
-                },
-                set gravity(value){
-                    linearLayout.setGravity(View.AttrChangeHandler.parseGravity(value, linearLayout.mGravity));
-                },
-                get gravity():any{
-                    return linearLayout.mGravity;
-                },
-                set baselineAligned(value){
-                    if(!View.AttrChangeHandler.parseBoolean(value)) linearLayout.setBaselineAligned(false);
-                },
-                set weightSum(value){
-                    let weightSum = Number.parseInt(value);
-                    if(Number.isSafeInteger(weightSum)){
-                        linearLayout.mWeightSum = weightSum;
-                    }
-                },
-                get weightSum():any{
-                    return linearLayout.mWeightSum;
-                },
-                set baselineAlignedChildIndex(value){
-                    value = Number.parseInt(value);
-                    if(Number.isSafeInteger(value)){
-                        linearLayout.mBaselineAlignedChildIndex = value;
-                    }
-                },
-                set measureWithLargestChild(value){
-                    linearLayout.mUseLargestChild = View.AttrChangeHandler.parseBoolean(value, linearLayout.mUseLargestChild);
-                },
-                set divider(value){
-                    //TODO set divider
-                },
-                set showDividers(value){
-                    let fieldName = ('SHOW_DIVIDER_' + value).toUpperCase();
-                    if(Number.isInteger(LinearLayout[fieldName])){
-                        linearLayout.mShowDividers = LinearLayout[fieldName];
-                    }
-                },
-                set dividerPadding(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)){
-                        linearLayout.mDividerPadding = value;
-                    }
-                },
-                get dividerPadding():any{
-                    return linearLayout.mDividerPadding;
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
+            super(bindElement, rootElement);
+            this._attrBinder.addAttr('orientation', (value)=>{
+                if((value+"").toUpperCase() === 'VERTICAL' || LinearLayout.VERTICAL == value){
+                    this.setOrientation(LinearLayout.VERTICAL);
+
+                }else if((value+"").toUpperCase() === 'HORIZONTAL' || LinearLayout.HORIZONTAL == value) {
+                    this.setOrientation(LinearLayout.HORIZONTAL);
+                }
+            }, ()=>{
+                return this.mOrientation;
+            });
+            this._attrBinder.addAttr('gravity', (value)=>{
+                this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
+            }, ()=>{
+                return this.mGravity;
+            });
+            this._attrBinder.addAttr('baselineAligned', (value)=>{
+                if(!this._attrBinder.parseBoolean(value)) this.setBaselineAligned(false);
+            });
+            this._attrBinder.addAttr('weightSum', (value)=>{
+                let weightSum = Number.parseFloat(value);
+                if(!Number.isNaN(weightSum) && weightSum!=null){
+                    this.setWeightSum(weightSum);
+                }
+            }, ()=>{
+                return this.mWeightSum;
+            });
+            this._attrBinder.addAttr('baselineAlignedChildIndex', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isSafeInteger(value)){
+                    this.mBaselineAlignedChildIndex = value;
+                }
+            });
+            this._attrBinder.addAttr('measureWithLargestChild', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isSafeInteger(value)){
+                    this.mUseLargestChild = this._attrBinder.parseBoolean(value, this.mUseLargestChild);
+                }
+            });
+            this._attrBinder.addAttr('divider', (value)=>{
+                this.setDividerDrawable(this._attrBinder.parseDrawable(value));
+            });
+            this._attrBinder.addAttr('showDividers', (value)=>{
+                let fieldName = ('SHOW_DIVIDER_' + value).toUpperCase();
+                if(Number.isInteger(LinearLayout[fieldName])){
+                    this.mShowDividers = LinearLayout[fieldName];
+                }
+            });
+            this._attrBinder.addAttr('dividerPadding', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)){
+                    this.mDividerPadding = value;
                 }
             });
         }
@@ -1456,25 +1443,16 @@ module android.widget{
                     super(width, height);
                     this.weight = weight;
                 }
-            }
-
-            _createAttrChangeHandler(mergeHandler:View.AttrChangeHandler){
-                super._createAttrChangeHandler(mergeHandler);
-                let params = this;
-                mergeHandler.add({
-                    set gravity(value) {
-                        params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
-                    },
-                    get gravity():any{
-                        return params.gravity;
-                    },
-                    set weight(value) {
-                        value = Number.parseInt(value);
-                        if(Number.isInteger(value)) params.weight = value;
-                    },
-                    get weight():any{
-                        return params.weight;
-                    }
+                this._attrBinder.addAttr('gravity', (value)=>{
+                    this.gravity = this._attrBinder.parseGravity(value, this.gravity);
+                }, ()=>{
+                    return this.gravity;
+                });
+                this._attrBinder.addAttr('weight', (value)=>{
+                    value = Number.parseInt(value);
+                    if(Number.isInteger(value)) this.weight = value;
+                }, ()=>{
+                    return this.weight;
                 });
             }
         }

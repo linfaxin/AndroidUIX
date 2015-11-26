@@ -35,6 +35,31 @@ module androidui.widget{
         constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
             super(bindElement, rootElement);
             this.initImageView();
+            this._attrBinder.addAttr('src', (value)=>{
+                this.setImageURI(value);
+            }, ()=>{
+                return this.mImgElement.src;
+            });
+            this._attrBinder.addAttr('adjustViewBounds', (value)=>{
+                this.setAdjustViewBounds(this._attrBinder.parseBoolean(value, false));
+            });
+            this._attrBinder.addAttr('maxWidth', (value)=>{
+                let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getWidth() : 0;
+                this.setMaxWidth(this._attrBinder.parseNumber(value, this.mMaxWidth, baseValue));
+            }, ()=>{
+                return this.mMaxWidth;
+            });
+            this._attrBinder.addAttr('maxHeight', (value)=>{
+                let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getHeight() : 0;
+                this.setMaxHeight(this._attrBinder.parseNumber(value, this.mMaxHeight, baseValue));
+            }, ()=>{
+                return this.mMaxHeight;
+            });
+            this._attrBinder.addAttr('scaleType', (value)=>{
+                this.setScaleType(ImageView.ScaleType.parseScaleType(value, this.mScaleType));
+            }, ()=>{
+                return this.mScaleType.toString();
+            });
         }
 
         private initImageView(){
@@ -56,46 +81,6 @@ module androidui.widget{
             });
 
             this.bindElement.appendChild(this.mImgElement);
-        }
-
-        createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
-            super.createAttrChangeHandler(mergeHandler);
-            let imageView = this;
-
-            mergeHandler.add({
-                set src(value){
-                    imageView.setImageURI(value);
-                },
-                get src(){
-                    return imageView.mImgElement.src;
-                },
-                set adjustViewBounds(value){
-                    imageView.setAdjustViewBounds(mergeHandler.parseBoolean(value, false));
-                },
-                get adjustViewBounds(){
-                    return imageView.mAdjustViewBounds;
-                },
-                set maxWidth(value){
-                    imageView.setMaxWidth(mergeHandler.parseNumber(value, imageView.mMaxWidth));
-                },
-                get maxWidth(){
-                    return imageView.mMaxWidth;
-                },
-                set maxHeight(value){
-                    imageView.setMaxHeight(mergeHandler.parseNumber(value, imageView.mMaxHeight));
-                },
-                get maxHeight(){
-                    return imageView.mMaxHeight;
-                },
-                set scaleType(value){
-                    imageView.setScaleType(ImageView.ScaleType.parseScaleType(value, imageView.mScaleType));
-                },
-                get scaleType(){
-                    return imageView.mScaleType.toString();
-                }
-
-
-            });
         }
 
         getAdjustViewBounds():boolean {

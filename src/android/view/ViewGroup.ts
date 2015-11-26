@@ -24,6 +24,7 @@ module android.view {
     import TypedValue = android.util.TypedValue;
     import System = java.lang.System;
     import ArrayList = java.util.ArrayList;
+    import AttrBinder = androidui.attr.AttrBinder;
 
     export abstract
     class ViewGroup extends View implements ViewParent {
@@ -109,53 +110,36 @@ module android.view {
         constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
             super(bindElement, rootElement);
             this.initViewGroup();
-        }
-
-
-        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
-            super.createAttrChangeHandler(mergeHandler);
-
-            let viewGroup = this;
-            mergeHandler.add({
-                set clipChildren(value){
-                    viewGroup.setClipChildren(View.AttrChangeHandler.parseBoolean(value));
-                },
-                get clipChildren(){
-                    return viewGroup.getClipChildren();
-                },
-                set clipToPadding(value){
-                    viewGroup.setClipToPadding(View.AttrChangeHandler.parseBoolean(value));
-                },
-                get clipToPadding(){
-                    return viewGroup.isClipToPadding();
-                },
-                set animationCache(value){
-
-                },
-                set persistentDrawingCache(value){
-
-                },
-                set addStatesFromChildren(value){
-
-                },
-                set alwaysDrawnWithCache(value){
-
-                },
-                set layoutAnimation(value){
-
-                },
-                set descendantFocusability(value){
-
-                },
-                set splitMotionEvents(value){
-
-                },
-                set animateLayoutChanges(value){
-
-                },
-                set layoutMode(value){
-
-                }
+            this._attrBinder.addAttr('clipChildren', (value)=>{
+                this.setClipChildren(this._attrBinder.parseBoolean(value));
+            }, ()=>{
+                return this.getClipChildren();
+            });
+            this._attrBinder.addAttr('clipToPadding', (value)=>{
+                this.setClipToPadding(this._attrBinder.parseBoolean(value));
+            }, ()=>{
+                return this.isClipToPadding();
+            });
+            //TODO attr
+            this._attrBinder.addAttr('animationCache', (value)=>{
+            });
+            this._attrBinder.addAttr('persistentDrawingCache', (value)=>{
+            });
+            this._attrBinder.addAttr('addStatesFromChildren', (value)=>{
+            });
+            this._attrBinder.addAttr('alwaysDrawnWithCache', (value)=>{
+            });
+            this._attrBinder.addAttr('layoutAnimation', (value)=>{
+            });
+            this._attrBinder.addAttr('descendantFocusability', (value)=>{
+            });
+            this._attrBinder.addAttr('animationCache', (value)=>{
+            });
+            this._attrBinder.addAttr('splitMotionEvents', (value)=>{
+            });
+            this._attrBinder.addAttr('animateLayoutChanges', (value)=>{
+            });
+            this._attrBinder.addAttr('layoutMode', (value)=>{
             });
         }
 
@@ -531,7 +515,6 @@ module android.view {
             } else {
                 child.setLayoutParams(params);
             }
-            params._attrChangeHandler.view = child;
 
             if (index < 0) {
                 index = this.mChildrenCount;
@@ -2335,7 +2318,7 @@ module android.view {
             _measuringParentWidthMeasureSpec = 0;
             _measuringParentHeightMeasureSpec = 0;
             _measuringMeasureSpec:android.util.DisplayMetrics;
-            _attrChangeHandler:View.AttrChangeHandler;
+            _attrBinder:AttrBinder;
 
 
             constructor();
@@ -2352,36 +2335,30 @@ module android.view {
                     this.height = height;
                 }
 
-                if(!this._attrChangeHandler) {
-                    this._attrChangeHandler = new View.AttrChangeHandler(null);
-                    this._createAttrChangeHandler(this._attrChangeHandler);
-                    if (!this._attrChangeHandler.isCallSuper) {
-                        throw Error('must call super when override createAttrChangeHandler!');
-                    }
+                if(!this._attrBinder) {
+                    this._attrBinder = new AttrBinder(this);
+
+                    this._attrBinder.addAttr('width', (value)=>{
+                        if(value==null) value = -2;
+                        this.width = value;
+                    }, ()=>{
+                        return this._widthOrig;
+                    })
+                    this._attrBinder.addAttr('height', (value)=>{
+                        if(value==null) value = -2;
+                        this.height = value;
+                    }, ()=>{
+                        return this._heightOrig;
+                    })
                 }
             }
 
-            _createAttrChangeHandler(mergeHandler:View.AttrChangeHandler){
-                let params = this;
-                mergeHandler.add({
-                    set width(value){
-                        if(value==null) value = -2;
-                        params.width = value;
-                    },
-                    get width():any{
-                        return params._widthOrig;
-                    },
-                    set height(value){
-                        if(value==null) value = -2;
-                        params.height = value;
-                    },
-                    get height():any{
-                        return params._heightOrig;
-                    }
+            parseAttributeFrom(node:Node, rootElement:HTMLElement):void {
+                Array.from(node.attributes).forEach((attr:Attr)=>{
+                    let layoutParamFiled = attr.name.split("layout_")[1];
+                    this._attrBinder.onAttrChange(layoutParamFiled, attr.value, rootElement);
                 });
-                mergeHandler.isCallSuper = true;
             }
-
         }
         export class MarginLayoutParams extends LayoutParams {
             private _leftMargin:any = 0;
@@ -2474,6 +2451,39 @@ module android.view {
                 }else if(args.length==2){
                     super(args[0], args[1]);
                 }
+
+                this._attrBinder.addAttr('marginLeft', (value)=>{
+                    if(value==null) value = 0;
+                    this.leftMargin = value;
+                }, ()=>{
+                    return this._leftMarginOrig;
+                });
+                this._attrBinder.addAttr('marginTop', (value)=>{
+                    if(value==null) value = 0;
+                    this.topMargin = value;
+                }, ()=>{
+                    return this._topMarginOrig;
+                });
+                this._attrBinder.addAttr('marginRight', (value)=>{
+                    if(value==null) value = 0;
+                    this.rightMargin = value;
+                }, ()=>{
+                    return this._rightMarginOrig;
+                });
+                this._attrBinder.addAttr('marginBottom', (value)=>{
+                    if(value==null) value = 0;
+                    this.bottomMargin = value;
+                }, ()=>{
+                    return this._bottomMargin;
+                });
+                this._attrBinder.addAttr('margin', (value)=>{
+                    if(value==null) value = 0;
+                    let [left, top, right, bottom] = this._attrBinder.parsePaddingMarginLTRB(value);
+                    this.leftMargin = <any>left;
+                    this.topMargin = <any>top;
+                    this.rightMargin = <any>right;
+                    this.bottomMargin = <any>bottom;
+                });
             }
 
             setMargins(left:number, top:number, right:number, bottom:number) {
@@ -2481,37 +2491,6 @@ module android.view {
                 this.topMargin = top;
                 this.rightMargin = right;
                 this.bottomMargin = bottom;
-            }
-
-            _createAttrChangeHandler(mergeHandler:View.AttrChangeHandler){
-                super._createAttrChangeHandler(mergeHandler);
-                let params = this;
-                mergeHandler.add({
-                    set marginLeft(value) {
-                        if(value==null) value = 0;
-                        params.leftMargin = value;
-                    },
-                    set marginTop(value) {
-                        if(value==null) value = 0;
-                        params.topMargin = value;
-                    },
-                    set marginRight(value) {
-                        if(value==null) value = 0;
-                        params.rightMargin = value;
-                    },
-                    set marginBottom(value) {
-                        if(value==null) value = 0;
-                        params.bottomMargin = value;
-                    },
-                    set margin(value) {
-                        if(value==null) value = 0;
-                        let [left, top, right, bottom] = View.AttrChangeHandler.parsePaddingMarginLTRB(value);
-                        params.leftMargin = <any>left;
-                        params.topMargin = <any>top;
-                        params.rightMargin = <any>right;
-                        params.bottomMargin = <any>bottom;
-                    },
-                });
             }
         }
         export interface OnHierarchyChangeListener {

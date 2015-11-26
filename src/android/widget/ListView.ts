@@ -143,57 +143,32 @@ export class ListView extends AbsListView {
 
     constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
         super(bindElement, rootElement);
+        this._attrBinder.addAttr('divider', (value)=>{
+            let divider = this._attrBinder.parseDrawable(value);
+            if(divider) this.setDivider(divider);
+        })
+        this._attrBinder.addAttr('overScrollHeader', (value)=>{
+            let header = this._attrBinder.parseDrawable(value);
+            if(header) this.setOverscrollHeader(header);
+        })
+        this._attrBinder.addAttr('overScrollFooter', (value)=>{
+            let footer = this._attrBinder.parseDrawable(value);
+            if(footer) this.setOverscrollFooter(footer);
+        })
+        this._attrBinder.addAttr('dividerHeight', (value)=>{
+            let dividerHeight = this._attrBinder.parseNumber(value, -1);
+            if(dividerHeight >= 0 ){
+                this.setDividerHeight(dividerHeight);
+            }
+        })
+        this._attrBinder.addAttr('headerDividersEnabled', (value)=>{
+            this.setHeaderDividersEnabled(this._attrBinder.parseBoolean(value, true));
+        })
+        this._attrBinder.addAttr('footerDividersEnabled', (value)=>{
+            this.setFooterDividersEnabled(this._attrBinder.parseBoolean(value, true));
+        })
+
         this.applyDefaultAttributes(android.R.attr.listViewStyle);
-    }
-
-
-    createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
-        super.createAttrChangeHandler(mergeHandler);
-        const listView = this;
-        mergeHandler.add({
-            set divider(value){
-                let divider = mergeHandler.parseDrawable(value);
-                if(divider) listView.setDivider(divider);
-            },
-            //get divider():any{
-                //return listView.mDivider;
-            //},
-            set overScrollHeader(value){
-                let header = mergeHandler.parseDrawable(value);
-                if(header) listView.setOverscrollHeader(header);
-            },
-            //get overScrollHeader():any{
-                //return listView.mOverScrollHeader;
-            //},
-            set overScrollFooter(value){
-                let footer = mergeHandler.parseDrawable(value);
-                if(footer) listView.setOverscrollFooter(footer);
-            },
-            //get overScrollFooter():any{
-                //return listView.mOverScrollFooter;
-            //},
-            set dividerHeight(value){
-                let dividerHeight = mergeHandler.parseNumber(value, -1);
-                if(dividerHeight >= 0 ){
-                    listView.setDividerHeight(dividerHeight);
-                }
-            },
-            //get dividerHeight():any{
-            //    return listView.mDividerHeight;
-            //},
-            set headerDividersEnabled(value){
-                listView.setHeaderDividersEnabled(mergeHandler.parseBoolean(value, true));
-            },
-            //get headerDividersEnabled():any{
-            //    return listView.mHeaderDividersEnabled;
-            //},
-            set footerDividersEnabled(value){
-                listView.setFooterDividersEnabled(mergeHandler.parseBoolean(value, true));
-            },
-            //get footerDividersEnabled():any{
-            //    return listView.mFooterDividersEnabled;
-            //},
-        });
     }
 
 // constructor(context:Context, attrs:AttributeSet, defStyle:number) {

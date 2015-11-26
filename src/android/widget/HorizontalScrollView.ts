@@ -172,6 +172,9 @@ export class HorizontalScrollView extends FrameLayout {
     constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
         super(bindElement, rootElement);
         this.initScrollView();
+        this._attrBinder.addAttr('fillViewport', (value)=>{
+            this.setFillViewport(this._attrBinder.parseBoolean(value));
+        });
     }
 
     //constructor( context:Context, attrs:AttributeSet, defStyle:number) {
@@ -182,19 +185,6 @@ export class HorizontalScrollView extends FrameLayout {
     //    a.recycle();
     //}
 
-
-    createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
-        super.createAttrChangeHandler(mergeHandler);
-        let scrollView = this;
-        mergeHandler.add({
-            set fillViewport(value){
-                scrollView.setFillViewport(View.AttrChangeHandler.parseBoolean(value));
-            },
-            get fillViewport():any{
-                return scrollView.mFillViewport;
-            }
-        });
-    }
 
     protected getLeftFadingEdgeStrength():number  {
         if (this.getChildCount() == 0) {

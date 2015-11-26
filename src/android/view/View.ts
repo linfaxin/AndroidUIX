@@ -36,6 +36,7 @@
 ///<reference path="../../java/lang/System.ts"/>
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
+///<reference path="../../androidui/attr/AttrBinder.ts"/>
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
 ///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
 ///<reference path="KeyEvent.ts"/>
@@ -73,6 +74,7 @@ module android.view {
     import AnimationUtils = android.view.animation.AnimationUtils;
     import StateAttrList = androidui.attr.StateAttrList;
     import StateAttr = androidui.attr.StateAttr;
+    import AttrBinder = androidui.attr.AttrBinder;
     import ClassFinder = androidui.util.ClassFinder;
     import HtmlDataAdapter = androidui.widget.HtmlDataAdapter;
     import KeyEvent = android.view.KeyEvent;
@@ -120,7 +122,7 @@ module android.view {
         static PFLAG_CANCEL_NEXT_UP_EVENT          = 0x04000000;
         static PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH  = 0x08000000;
         static PFLAG_HOVERED                       = 0x10000000;
-        static PFLAG_PIVOT_EXPLICITLY_SET          = 0x20000000;//TODO may not need
+        static PFLAG_PIVOT_EXPLICITLY_SET          = 0x20000000;
         static PFLAG_ACTIVATED                     = 0x40000000;
         static PFLAG_INVALIDATED                   = 0x80000000;
 
@@ -665,199 +667,186 @@ module android.view {
         mPaddingTop = 0;
         mPaddingBottom = 0;
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
             this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
-            this.initBindElement(bindElement, rootElement);
-        }
 
-        //parse xml attr & callback when xml attr change
-        createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void{
-            let view = this;
-            mergeHandler.add({
-                set background(value){
-                    let bg = mergeHandler.parseDrawable(value);
-                    view.setBackground(bg);
-                },
-                get background():any{
-                    if(view.mBackground instanceof ColorDrawable){
-                        return Color.toRGBA((<ColorDrawable>view.mBackground).getColor());
-                    }
-                    return view.mBackground;
-                },
-                set padding(value){
-                    let [left, top, right, bottom] = View.AttrChangeHandler.parsePaddingMarginLTRB(value);
-                    view._setPaddingWithUnit(left, top, right, bottom);
-                },
-                get padding(){
-                    return view.mPaddingTop + ' ' + view.mPaddingRight + ' ' + view.mPaddingBottom + ' ' + view.mPaddingLeft;
-                },
-                set paddingLeft(value){
-                    view._setPaddingWithUnit(value, view.mPaddingTop, view.mPaddingRight, view.mPaddingBottom);
-                },
-                get paddingLeft(){
-                    return view.mPaddingLeft;
-                },
-                set paddingTop(value){
-                    view._setPaddingWithUnit(view.mPaddingLeft, value, view.mPaddingRight, view.mPaddingBottom);
-                },
-                get paddingTop(){
-                    return view.mPaddingTop;
-                },
-                set paddingRight(value){
-                    view._setPaddingWithUnit(view.mPaddingLeft, view.mPaddingTop, value, view.mPaddingBottom);
-                },
-                get paddingRight(){
-                    return view.mPaddingRight;
-                },
-                set paddingBottom(value){
-                    view._setPaddingWithUnit(view.mPaddingLeft, view.mPaddingTop, view.mPaddingRight, value);
-                },
-                get paddingBottom(){
-                    return view.mPaddingBottom;
-                },
-                set scrollX(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) view.scrollTo(value, view.mScrollY);
-                },
-                set scrollY(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) view.scrollTo(view.mScrollX, value);
-                },
-                set alpha(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set transformPivotX(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set transformPivotY(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set translationX(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set translationY(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set rotation(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set rotationX(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set rotationY(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set scaleX(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set scaleY(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                },
-                set tag(value){
-                },
-                set id(value){
-                    view.setId(value);
-                },
-                set focusable(value){
-                    if(View.AttrChangeHandler.parseBoolean(value, false)){
-                        view.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
-                    }
-                },
-                set focusableInTouchMode(value){
-                    if(View.AttrChangeHandler.parseBoolean(value, false)){
-                        view.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
-                            View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
-                    }
-                },
-                set clickable(value){
-                    if(View.AttrChangeHandler.parseBoolean(value, false)){
-                        view.setFlags(View.CLICKABLE, View.CLICKABLE);
-                    }
-                },
-                set longClickable(value){
-                    if(View.AttrChangeHandler.parseBoolean(value, false)){
-                        view.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
-                    }
-                },
-                set saveEnabled(value){
-                    if(View.AttrChangeHandler.parseBoolean(value, false)){
-                        //view.setFlags(View.SAVE_DISABLED, View.SAVE_DISABLED_MASK);
-                    }
-                },
-                set duplicateParentState(value){
-                    if(View.AttrChangeHandler.parseBoolean(value, false)){
-                        view.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
-                    }
-                },
-                set visibility(value){
-                    if(value === 'gone') view.setVisibility(View.GONE);
-                    else if(value === 'invisible') view.setVisibility(View.INVISIBLE);
-                    else if(value === 'visible') view.setVisibility(View.VISIBLE);
-                },
-                set scrollbars(value){
-                    if(value==='none') {
-                        view.setHorizontalScrollBarEnabled(false);
-                        view.setVerticalScrollBarEnabled(false);
-                    }
-                },
-                set isScrollContainer(value){
-                    if(View.AttrChangeHandler.parseBoolean(value, false)){
-                        this.setScrollContainer(true);
-                    }
-                },
-                set minWidth(value){
-                    view.setMinimumWidth(mergeHandler.parseNumber(value, 0));
-                },
-                get minWidth():any{
-                    return view.mMinWidth;
-                },
-                set minHeight(value){
-                    view.setMinimumHeight(mergeHandler.parseNumber(value, 0));
-                },
-                get minHeight():any{
-                    return view.mMinHeight;
-                },
-                set onClick(value){
-                    view.setOnClickListener({
-                        onClick(v:View){
-                            let activity = view.getViewRootImpl().rootElement;
-                            if(activity && typeof activity[value] === 'function'){
-                                activity[value].call(activity, v);
-                            }
-                        }
-                    });
-                },
-                set overScrollMode(value){
-                    let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
-                    if(scrollMode===undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
-                    view.setOverScrollMode(scrollMode);
-                },
-                set layerType(value){
-
-                },
+            this._attrBinder.addAttr('background', (value)=>{
+                this.setBackground(this._attrBinder.parseDrawable(value));
+            }, ()=>{
+                if(this.mBackground instanceof ColorDrawable){
+                    return Color.toRGBA((<ColorDrawable>this.mBackground).getColor());
+                }
+                return this.mBackground;
             });
-            mergeHandler.isCallSuper = true;
+            this._attrBinder.addAttr('padding', (value)=>{
+                let [left, top, right, bottom] = this._attrBinder.parsePaddingMarginLTRB(value);
+                this._setPaddingWithUnit(left, top, right, bottom);
+            }, ()=>{
+                return this.mPaddingTop + ' ' + this.mPaddingRight + ' ' + this.mPaddingBottom + ' ' + this.mPaddingLeft;
+            }),
+            this._attrBinder.addAttr('paddingLeft', (value)=>{
+                this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
+            }, ()=>{
+                return this.mPaddingLeft;
+            }),
+            this._attrBinder.addAttr('paddingTop', (value)=>{
+                this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
+            }, ()=>{
+                return this.mPaddingTop;
+            }),
+            this._attrBinder.addAttr('paddingRight', (value)=>{
+                this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
+            }, ()=>{
+                return this.mPaddingRight;
+            }),
+            this._attrBinder.addAttr('paddingBottom', (value)=>{
+                this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
+            }, ()=>{
+                return this.mPaddingBottom;
+            }),
+            this._attrBinder.addAttr('scrollX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.scrollTo(value, this.mScrollY);
+            }),
+            this._attrBinder.addAttr('scrollY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.scrollTo(this.mScrollX, value);
+            }),
+            this._attrBinder.addAttr('alpha', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('transformPivotX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('transformPivotY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('translationX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('translationY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('rotation', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('rotationX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('rotationY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('scaleX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('scaleY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            this._attrBinder.addAttr('tag', (value)=>{
+            }),
+            this._attrBinder.addAttr('id', (value)=>{
+                this.setId(value);
+            }),
+            this._attrBinder.addAttr('focusable', (value)=>{
+                if(this._attrBinder.parseBoolean(value, false)){
+                    this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                }
+            }),
+            this._attrBinder.addAttr('focusableInTouchMode', (value)=>{
+                if(this._attrBinder.parseBoolean(value, false)){
+                    this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
+                        View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                }
+            }),
+            this._attrBinder.addAttr('clickable', (value)=>{
+                if(this._attrBinder.parseBoolean(value, false)){
+                    this.setFlags(View.CLICKABLE, View.CLICKABLE);
+                }
+            }),
+            this._attrBinder.addAttr('longClickable', (value)=>{
+                if(this._attrBinder.parseBoolean(value, false)){
+                    this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
+                }
+            }),
+            this._attrBinder.addAttr('saveEnabled', (value)=>{
+                if(this._attrBinder.parseBoolean(value, false)){
+                    //this.setFlags(View.SAVE_DISABLED, View.SAVE_DISABLED_MASK);
+                }
+            }),
+            this._attrBinder.addAttr('duplicateParentState', (value)=>{
+                if(this._attrBinder.parseBoolean(value, false)){
+                    this.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
+                }
+            }),
+            this._attrBinder.addAttr('visibility', (value)=>{
+                if(value === 'gone') this.setVisibility(View.GONE);
+                else if(value === 'invisible') this.setVisibility(View.INVISIBLE);
+                else if(value === 'visible') this.setVisibility(View.VISIBLE);
+            }),
+            this._attrBinder.addAttr('scrollbars', (value)=>{
+                if(value==='none') {
+                    this.setHorizontalScrollBarEnabled(false);
+                    this.setVerticalScrollBarEnabled(false);
+                }
+            }),
+            this._attrBinder.addAttr('isScrollContainer', (value)=>{
+                if(this._attrBinder.parseBoolean(value, false)){
+                    this.setScrollContainer(true);
+                }
+            }),
+            this._attrBinder.addAttr('minWidth', (value)=>{
+                this.setMinimumWidth(this._attrBinder.parseNumber(value, 0));
+            }, ()=>{
+                return this.mMinWidth;
+            }),
+            this._attrBinder.addAttr('minHeight', (value)=>{
+                this.setMinimumHeight(this._attrBinder.parseNumber(value, 0));
+            }, ()=>{
+                return this.mMinHeight;
+            }),
+            this._attrBinder.addAttr('onClick', (value)=>{
+                const view = this;
+                this.setOnClickListener({
+                    onClick(v:View){
+                        let activity = view.getViewRootImpl().rootElement;
+                        if(activity && typeof activity[value] === 'function'){
+                            activity[value].call(activity, v);
+                        }else{
+                            eval.call(v, value);
+                        }
+                    }
+                });
+            }),
+            this._attrBinder.addAttr('overScrollMode', (value)=>{
+                let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
+                if(scrollMode===undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                this.setOverScrollMode(scrollMode);
+            }),
+            this._attrBinder.addAttr('layerType', (value)=>{
+            }),
+
+            this.initBindElement(bindElement, rootElement);
         }
 
         getWidth():number {
@@ -1761,6 +1750,43 @@ module android.view {
                 if (this.mParent != null) {
                     this.mParent.childHasTransientStateChanged(this, hasTransientState);
                 }
+            }
+        }
+
+        /**
+         * Indicates whether this view is one of the set of scrollable containers in
+         * its window.
+         *
+         * @return whether this view is one of the set of scrollable containers in
+         * its window
+         *
+         * @attr ref android.R.styleable#View_isScrollContainer
+         */
+        isScrollContainer():boolean  {
+            return (this.mPrivateFlags & View.PFLAG_SCROLL_CONTAINER_ADDED) != 0;
+        }
+
+        /**
+         * Change whether this view is one of the set of scrollable containers in
+         * its window.  This will be used to determine whether the window can
+         * resize or must pan when a soft input area is open -- scrollable
+         * containers allow the window to use resize mode since the container
+         * will appropriately shrink.
+         *
+         * @attr ref android.R.styleable#View_isScrollContainer
+         */
+        setScrollContainer(isScrollContainer:boolean):void  {
+            if (isScrollContainer) {
+                if (this.mAttachInfo != null && (this.mPrivateFlags & View.PFLAG_SCROLL_CONTAINER_ADDED) == 0) {
+                    this.mAttachInfo.mScrollContainers.add(this);
+                    this.mPrivateFlags |= View.PFLAG_SCROLL_CONTAINER_ADDED;
+                }
+                this.mPrivateFlags |= View.PFLAG_SCROLL_CONTAINER;
+            } else {
+                if ((this.mPrivateFlags & View.PFLAG_SCROLL_CONTAINER_ADDED) != 0) {
+                    this.mAttachInfo.mScrollContainers.delete(this);
+                }
+                this.mPrivateFlags &= ~(View.PFLAG_SCROLL_CONTAINER | View.PFLAG_SCROLL_CONTAINER_ADDED);
             }
         }
 
@@ -4295,13 +4321,12 @@ module android.view {
             if(!(rootView instanceof View)) return rootView;
 
             let params;
-            if(viewParent) {
-                params = viewParent.generateDefaultLayoutParams();
-                this._generateLayoutParamsFromAttribute(domtree, params);
-
-            }else{//generate default param is no parent
-                params = this._generateLayoutParamsFromAttribute(domtree);
+            if(viewParent) params = viewParent.generateDefaultLayoutParams();
+            else {
+                //generate default param is no parent
+                params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             }
+            params.parseAttributeFrom(domtree, rootElement);
             rootView.setLayoutParams(params);
 
             //fire attr change after layout ok. So 'layout_xxx' attr will be parsed
@@ -4319,14 +4344,6 @@ module android.view {
 
             rootView.onFinishInflate();
             return rootView;
-        }
-
-        private static _generateLayoutParamsFromAttribute(node:Node, dest = new ViewGroup.LayoutParams(-2, -2)):ViewGroup.LayoutParams{
-            Array.from(node.attributes).forEach((attr:Attr)=>{
-                let layoutParamFiled = attr.name.split("layout_")[1];
-                dest._attrChangeHandler.handle(layoutParamFiled, attr.value);
-            });
-            return dest;
         }
 
         static optReferenceString(refString:string, currentElement:NodeSelector=document,
@@ -4372,6 +4389,7 @@ module android.view {
         _rootElement: HTMLElement;
         private _AttrObserver:MutationObserver;
         private _stateAttrList:StateAttrList;
+        protected _attrBinder = new AttrBinder(this);
         static AndroidViewProperty = 'AndroidView';
         get rootElement():HTMLElement{
             if(this._rootElement) return this._rootElement;
@@ -4406,7 +4424,6 @@ module android.view {
             this._rootElement = rootElement;
 
             this._stateAttrList = new StateAttrList(this.bindElement, rootElement);
-            this._initAttrChangeHandler();
             this._parseInitedAttribute();
             this._initAttrObserver();
         }
@@ -4465,13 +4482,6 @@ module android.view {
             }
         }
 
-        private _attrChangeHandler = new View.AttrChangeHandler(this);
-        private _initAttrChangeHandler(){
-            this.createAttrChangeHandler(this._attrChangeHandler);
-            if(!this._attrChangeHandler.isCallSuper){
-                throw Error('must call super when override createAttrChangeHandler!');
-            }
-        }
         private _initAttrObserver(){
             if(!this._AttrObserver) this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
             else this._AttrObserver.disconnect();
@@ -4511,10 +4521,10 @@ module android.view {
                         let params = this.getLayoutParams();
                         if(params){
                             let attrName = key.substring('layout_'.length);
-                            oldValue=params._attrChangeHandler.getViewAttrValue(attrName);
+                            oldValue=params._attrBinder.getAttrValue(attrName);
                         }
                     }else{
-                        oldValue = this._attrChangeHandler.getViewAttrValue(key);
+                        oldValue = this._attrBinder.getAttrValue(key);
                     }
                     if (oldValue != null){
                         oldMatchedAttr.setAttr(key, oldValue);
@@ -4547,13 +4557,13 @@ module android.view {
                 attrName = attrName.substring('layout_'.length);
                 let params = this.getLayoutParams();
                 if(params){
-                    params._attrChangeHandler.handle(attrName, newVal);
+                    params._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
                 }
                 this.requestLayout();
                 return;
             }
 
-            this._attrChangeHandler.handle(attrName, newVal);
+            this._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
         }
 
         hasAttributeIgnoreCase(name:string):boolean {
@@ -4571,7 +4581,7 @@ module android.view {
         applyDefaultAttributes(attrs:any){
             for(let key in attrs){
                 if(!this.hasAttributeIgnoreCase(key)){
-                    this._attrChangeHandler.handle(key, attrs[key]);
+                    this._attrBinder.onAttrChange(key, attrs[key], this.rootElement);
                 }
             }
         }
@@ -4697,182 +4707,6 @@ module android.view {
 
         export interface Predicate<T>{
             apply(t:T):boolean;
-        }
-        /**
-         * handle html element attribute change and parse the value to view
-         */
-        export class AttrChangeHandler{
-            isCallSuper = false;
-            handlers =  [];
-            view:View;
-            private objectRefs = [];
-
-            constructor(view:android.view.View) {
-                this.view = view;
-            }
-
-            add(handler){
-                this.handlers.push(handler);
-            }
-            handle(name, value){
-                if(!name) return;
-                name = name.toLowerCase();
-                for(let handler of this.handlers){
-                    for(let key in handler){
-                        if(key.toLowerCase()===name){
-                            handler[key] = value;
-                        }
-                    }
-                }
-            }
-            getViewAttrValue(attrName:string):string {
-                for(let handler of this.handlers){
-                    for(let key in handler){
-                        if(key.toLowerCase()===attrName.toLowerCase()){
-                            let value = handler[key];
-                            if(value==null) return null;
-                            if(typeof value === "number") return value+'';
-                            if(typeof value === "boolean") return value+'';
-                            if(typeof value === "string") return value;
-                            return this.setRefObject(value);
-                        }
-                    }
-                }
-                return null;
-            }
-
-            private getRefObject(ref:string, recycel=true):any{
-                if(ref && ref.startsWith('@ref/')){
-                    ref = ref.substring(5);
-                    let index = Number.parseInt(ref);
-                    if(Number.isInteger(index)){
-                        let obj = this.objectRefs[index];
-                        if(recycel) this.objectRefs[index] = null;
-                        return obj;
-                    }
-                }
-            }
-
-            private setRefObject(obj:any):string{
-                let length = this.objectRefs.length;
-                for(let i = 0; i<length; i++){
-                    if(this.objectRefs[i]==null){
-                        this.objectRefs[i] = obj;
-                        return '@ref/'+i;
-                    }
-                }
-
-                this.objectRefs.push(obj);
-                return '@ref/'+length;
-            }
-
-            /**
-             * @param value
-             * @returns {[left, top, right, bottom]}
-             */
-            static parsePaddingMarginLTRB(value):string[]{
-                value = (value + '');
-                let parts = [];
-                for(let part of value.split(' ')){
-                    if(part) parts.push(part);
-                }
-                switch (parts.length){
-                    case 1 : return [parts[0], parts[0], parts[0], parts[0]];
-                    case 2 : return [parts[1], parts[0], parts[1], parts[0]];
-                    case 3 : return [parts[1], parts[0], parts[1], parts[2]];
-                    case 4 : return [parts[3], parts[0], parts[1], parts[2]];
-                }
-                throw Error('not a padding or margin value : '+value);
-
-            }
-
-            static parseBoolean(value, defaultValue = true):boolean{
-                if(value===false || value ==='fales' || value === '0') return false;
-                else if(value===true || value ==='true' || value === '1' || value === '') return true;
-                return defaultValue;
-            }
-            parseBoolean(value, defaultValue = true):boolean{
-                return AttrChangeHandler.parseBoolean(value, defaultValue);
-            }
-            static parseGravity(s:string, defaultValue=Gravity.NO_GRAVITY):number {
-                let gravity = Number.parseInt(s);
-                if(Number.isInteger(gravity)) return gravity;
-
-                gravity = Gravity.NO_GRAVITY;
-                try {
-                    let parts = s.split("|");
-                    parts.forEach((part)=> {
-                        let g = Gravity[part.toUpperCase()];
-                        if (Number.isInteger(g)) gravity |= g;
-                    });
-                } catch (e) {
-                    console.error(e);
-                }
-                if(Number.isNaN(gravity) || gravity===Gravity.NO_GRAVITY) gravity = defaultValue;
-                return gravity;
-            }
-            parseGravity(s:string, defaultValue=Gravity.NO_GRAVITY):number {
-                return AttrChangeHandler.parseGravity(s, defaultValue);
-            }
-            parseDrawable(s:string):Drawable{
-                if(!s) return null;
-                if((<any>s) instanceof Drawable) return <Drawable><any>s;
-                if(s.startsWith('@')){
-                    let refObj = this.getRefObject(s);
-                    if(refObj) return refObj;
-                    //TODO parse ref
-
-                }else{
-                    let color = this.parseColor(s);
-                    return new ColorDrawable(color);
-                }
-            }
-            parseColor(value:string):number{
-                let color = Number.parseInt(value);
-                if(Number.isInteger(color)) return color;
-
-                if(value.startsWith('rgb(')){
-                    value = value.replace('rgb(', '').replace(')', '');
-                    let parts = value.split(',');
-                    return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
-
-                }else if(value.startsWith('rgba(')){
-                    value = value.replace('rgba(', '').replace(')', '');
-                    let parts = value.split(',');
-                    return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
-                        Number.parseInt(parts[2]), Number.parseInt(parts[2])*255);
-
-                }else {
-                    if (value.startsWith('#') && value.length === 4) {//support parse #333
-                        value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
-                    }
-                    try {
-                        return Color.parseColor(value);
-                    } catch (e) {
-                    }
-                }
-            }
-            parseColorList(value:string):ColorStateList{
-                if(!value) return null;
-                if((<any>value) instanceof ColorStateList) return <ColorStateList><any>value;
-                if(value.startsWith('@')){
-                    let refObj = this.getRefObject(value);
-                    if(refObj) return refObj;
-                    //TODO parse ref
-
-                }else {
-                    let color = this.parseColor(value);
-                    return ColorStateList.valueOf(color);
-                }
-                return null;
-            }
-            parseNumber(value, defaultValue = 0):number{
-                try {
-                    return TypedValue.complexToDimensionPixelSize(value);
-                } catch (e) {
-                    return defaultValue;
-                }
-            }
         }
     }
     export module View.AttachInfo{

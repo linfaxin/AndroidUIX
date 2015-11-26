@@ -2643,19 +2643,10 @@ module android.support.v4.view {
 
             constructor() {
                 super(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-            }
-
-            _createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
-                super._createAttrChangeHandler(mergeHandler);
-
-                let params = this;
-                mergeHandler.add({
-                    set gravity(value) {
-                        params.gravity = View.AttrChangeHandler.parseGravity(value, params.gravity);
-                    },
-                    get gravity():any{
-                        return params.gravity;
-                    }
+                this._attrBinder.addAttr('gravity', (value)=>{
+                    this.gravity = this._attrBinder.parseGravity(value, this.gravity);
+                }, ()=>{
+                    return this.gravity;
                 });
             }
         }

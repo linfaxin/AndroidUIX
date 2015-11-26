@@ -900,6 +900,32 @@ declare module androidui.attr {
         getMatchedAttr(state: number[]): StateAttr;
     }
 }
+declare module androidui.attr {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Drawable = android.graphics.drawable.Drawable;
+    import ColorStateList = android.content.res.ColorStateList;
+    class AttrBinder {
+        private host;
+        private attrChangeMap;
+        private attrStashMap;
+        private objectRefs;
+        private rootElement;
+        constructor(host: View | ViewGroup.LayoutParams);
+        addAttr(attrName: string, onAttrChange: (newValue: any) => void, stashAttrValueWhenStateChange?: () => any): void;
+        onAttrChange(attrName: string, attrValue: any, rootElement: HTMLElement): void;
+        getAttrValue(attrName: string): any;
+        private getRefObject(ref, recycel?);
+        private setRefObject(obj);
+        parsePaddingMarginLTRB(value: any): string[];
+        parseBoolean(value: any, defaultValue?: boolean): boolean;
+        parseGravity(s: string, defaultValue?: number): number;
+        parseDrawable(s: string): Drawable;
+        parseColor(value: string): number;
+        parseColorList(value: string): ColorStateList;
+        parseNumber(value: any, defaultValue?: number, baseValue?: number): number;
+    }
+}
 declare module androidui.util {
     class ClassFinder {
         static findClass(classFullName: string, findInRoot?: any): any;
@@ -993,7 +1019,7 @@ declare module android.view {
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import ArrayList = java.util.ArrayList;
-    import ColorStateList = android.content.res.ColorStateList;
+    import AttrBinder = androidui.attr.AttrBinder;
     import KeyEvent = android.view.KeyEvent;
     class View implements Drawable.Callback, KeyEvent.Callback {
         static class: {
@@ -1185,7 +1211,6 @@ declare module android.view {
         mPaddingTop: number;
         mPaddingBottom: number;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         getWidth(): number;
         getHeight(): number;
         getTop(): number;
@@ -1274,6 +1299,8 @@ declare module android.view {
         handleFocusGainInternal(direction: number, previouslyFocusedRect: Rect): void;
         hasTransientState(): boolean;
         setHasTransientState(hasTransientState: boolean): void;
+        isScrollContainer(): boolean;
+        setScrollContainer(isScrollContainer: boolean): void;
         isInTouchMode(): boolean;
         isShown(): boolean;
         getVisibility(): number;
@@ -1503,7 +1530,6 @@ declare module android.view {
         setIsRootNamespace(isRoot: boolean): void;
         isRootNamespace(): boolean;
         static inflate(eleOrRef: HTMLElement | string, rootElement: HTMLElement, viewParent?: ViewGroup): View;
-        private static _generateLayoutParamsFromAttribute(node, dest?);
         static optReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReference(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector, cloneNode?: boolean): Element;
@@ -1511,6 +1537,7 @@ declare module android.view {
         _rootElement: HTMLElement;
         private _AttrObserver;
         private _stateAttrList;
+        protected _attrBinder: AttrBinder;
         static AndroidViewProperty: string;
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
@@ -1518,8 +1545,6 @@ declare module android.view {
         syncBoundToElement(): void;
         syncScrollToElement(): void;
         syncVisibleToElement(): void;
-        private _attrChangeHandler;
-        private _initAttrChangeHandler();
         private _initAttrObserver();
         private _parseInitedAttribute();
         private _fireInitedAttributeChange();
@@ -1602,27 +1627,6 @@ declare module android.view {
         }
         interface Predicate<T> {
             apply(t: T): boolean;
-        }
-        class AttrChangeHandler {
-            isCallSuper: boolean;
-            handlers: any[];
-            view: View;
-            private objectRefs;
-            constructor(view: android.view.View);
-            add(handler: any): void;
-            handle(name: any, value: any): void;
-            getViewAttrValue(attrName: string): string;
-            private getRefObject(ref, recycel?);
-            private setRefObject(obj);
-            static parsePaddingMarginLTRB(value: any): string[];
-            static parseBoolean(value: any, defaultValue?: boolean): boolean;
-            parseBoolean(value: any, defaultValue?: boolean): boolean;
-            static parseGravity(s: string, defaultValue?: number): number;
-            parseGravity(s: string, defaultValue?: number): number;
-            parseDrawable(s: string): Drawable;
-            parseColor(value: string): number;
-            parseColorList(value: string): ColorStateList;
-            parseNumber(value: any, defaultValue?: number): number;
         }
     }
     module View.AttachInfo {
@@ -1847,6 +1851,7 @@ declare module android.view {
     import Point = android.graphics.Point;
     import Rect = android.graphics.Rect;
     import ArrayList = java.util.ArrayList;
+    import AttrBinder = androidui.attr.AttrBinder;
     abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN: number;
         static FLAG_CLIP_TO_PADDING: number;
@@ -1897,7 +1902,6 @@ declare module android.view {
         private mLayoutCalledWhileSuppressed;
         private mChildCountWithTransientState;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         private initViewGroup();
         getDescendantFocusability(): number;
         setDescendantFocusability(focusability: number): void;
@@ -2048,11 +2052,11 @@ declare module android.view {
             _measuringParentWidthMeasureSpec: number;
             _measuringParentHeightMeasureSpec: number;
             _measuringMeasureSpec: android.util.DisplayMetrics;
-            _attrChangeHandler: View.AttrChangeHandler;
+            _attrBinder: AttrBinder;
             constructor();
             constructor(src: LayoutParams);
             constructor(width: number, height: number);
-            _createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
+            parseAttributeFrom(node: Node, rootElement: HTMLElement): void;
         }
         class MarginLayoutParams extends LayoutParams {
             private _leftMargin;
@@ -2071,7 +2075,6 @@ declare module android.view {
             constructor(src: LayoutParams);
             constructor(width: number, height: number);
             setMargins(left: number, top: number, right: number, bottom: number): void;
-            _createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         }
         interface OnHierarchyChangeListener {
             onChildViewAdded(parent: View, child: View): any;
@@ -2215,7 +2218,6 @@ declare module android.view {
     }
 }
 declare module android.widget {
-    import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import Drawable = android.graphics.drawable.Drawable;
     import Canvas = android.graphics.Canvas;
@@ -2233,7 +2235,7 @@ declare module android.widget {
         mForegroundInPadding: boolean;
         mForegroundBoundsChanged: boolean;
         private mMatchParentChildren;
-        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         getForegroundGravity(): number;
         setForegroundGravity(foregroundGravity: number): void;
         verifyDrawable(who: Drawable): boolean;
@@ -2263,7 +2265,6 @@ declare module android.widget {
             constructor();
             constructor(source: ViewGroup.LayoutParams);
             constructor(width: number, height: number, gravity?: number);
-            _createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         }
     }
 }
@@ -2337,7 +2338,6 @@ declare module android.widget {
         private mOverflingDistance;
         private mActivePointerId;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         shouldDelayChildPressedState(): boolean;
         getMaxScrollAmount(): number;
         private initScrollView();
@@ -2425,7 +2425,7 @@ declare module android.widget {
         private mDividerHeight;
         private mShowDividers;
         private mDividerPadding;
-        createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         setShowDividers(showDividers: number): void;
         shouldDelayChildPressedState(): boolean;
         getShowDividers(): number;
@@ -2481,7 +2481,6 @@ declare module android.widget {
             constructor();
             constructor(source: ViewGroup.LayoutParams);
             constructor(width: number, height: number, weight?: number);
-            _createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         }
     }
 }
@@ -2658,7 +2657,6 @@ declare module android.widget {
         private mTextElement;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         private initTextElement();
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         onFinishInflate(): void;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
@@ -2718,7 +2716,6 @@ declare module androidui.widget {
         private mImgElement;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         private initImageView();
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;
         getMaxWidth(): number;
@@ -3195,7 +3192,6 @@ declare module android.widget {
         static sLinearInterpolator: Interpolator;
         private mPendingSync;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         private initAbsListView();
         setOverScrollMode(mode: number): void;
         setAdapter(adapter: ListAdapter): void;
@@ -3608,7 +3604,6 @@ declare module android.widget {
         private mArrowScrollFocusResult;
         private mFocusSelector;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         getMaxScrollAmount(): number;
         private adjustViewsUpOrDown();
         addHeaderView(v: View, data?: any, isSelectable?: boolean): void;
@@ -3760,7 +3755,6 @@ declare module android.widget {
         private mGravity;
         private mTempRect;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         getAdapter(): ListAdapter;
         setAdapter(adapter: ListAdapter): void;
         lookForSelectablePosition(position: number, lookDown: boolean): number;
@@ -3851,7 +3845,6 @@ declare module android.widget {
         private mActivePointerId;
         private static INVALID_POINTER;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         protected getLeftFadingEdgeStrength(): number;
         protected getRightFadingEdgeStrength(): number;
         getMaxScrollAmount(): number;
@@ -4127,7 +4120,6 @@ declare module android.support.v4.view {
             position: number;
             childIndex: number;
             constructor();
-            _createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         }
     }
 }
@@ -4404,7 +4396,6 @@ declare module androidui.widget {
         private overScrollLocker;
         private refreshLoadListener;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         protected onViewAdded(child: View): void;
         private configHeaderView();
         private configFooterView();

@@ -1,0 +1,192 @@
+/**
+ * Created by linfaxin on 15/11/26.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../../android/content/res/ColorStateList.ts"/>
+
+module androidui.attr {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Gravity = android.view.Gravity;
+    import Drawable = android.graphics.drawable.Drawable;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
+    import Color = android.graphics.Color;
+    import ColorStateList = android.content.res.ColorStateList;
+    import TypedValue = android.util.TypedValue;
+
+    export class AttrBinder {
+        private host:View|ViewGroup.LayoutParams;
+        private attrChangeMap = new Map<string, (newValue:any)=>void>();
+        private attrStashMap = new Map<string, ()=>any>();
+        private objectRefs = [];
+        private rootElement:HTMLElement;
+
+        constructor(host:View|ViewGroup.LayoutParams){
+            this.host = host;
+        }
+
+        addAttr(attrName:string, onAttrChange:(newValue:any)=>void, stashAttrValueWhenStateChange?:()=>any):void {
+            if(!attrName) return;
+            attrName = attrName.toLowerCase();
+            if(onAttrChange) this.attrChangeMap.set(attrName, onAttrChange);
+            if(stashAttrValueWhenStateChange) this.attrStashMap.set(attrName, stashAttrValueWhenStateChange);
+        }
+
+        onAttrChange(attrName:string, attrValue:any, rootElement:HTMLElement):void {
+            this.rootElement = rootElement;
+            if(!attrName) return;
+            attrName = attrName.toLowerCase();
+            let onAttrChangeCall = this.attrChangeMap.get(attrName);
+            if(onAttrChangeCall) onAttrChangeCall.call(this.host, attrValue);
+        }
+
+        getAttrValue(attrName:string):any {
+            if(!attrName) return null;
+            attrName = attrName.toLowerCase();
+            let getAttrCall = this.attrStashMap.get(attrName);
+            if(getAttrCall){
+                let value = getAttrCall.call(this.host);
+                if(value==null) return null;
+                if(typeof value === "number") return value+'';
+                if(typeof value === "boolean") return value+'';
+                if(typeof value === "string") return value;
+                return this.setRefObject(value);
+            }
+            return null;
+        }
+
+
+        private getRefObject(ref:string, recycel=true):any{
+            if(ref && ref.startsWith('@ref/')){
+                ref = ref.substring(5);
+                let index = Number.parseInt(ref);
+                if(Number.isInteger(index)){
+                    let obj = this.objectRefs[index];
+                    if(recycel) this.objectRefs[index] = null;
+                    return obj;
+                }
+            }
+        }
+
+        private setRefObject(obj:any):string{
+            let length = this.objectRefs.length;
+            for(let i = 0; i<length; i++){
+                if(this.objectRefs[i]==null){
+                    this.objectRefs[i] = obj;
+                    return '@ref/'+i;
+                }
+            }
+
+            this.objectRefs.push(obj);
+            return '@ref/'+length;
+        }
+
+
+        /**
+         * @param value
+         * @returns {[left, top, right, bottom]}
+         */
+        parsePaddingMarginLTRB(value):string[]{
+            value = (value + '');
+            let parts = [];
+            for(let part of value.split(' ')){
+                if(part) parts.push(part);
+            }
+            switch (parts.length){
+                case 1 : return [parts[0], parts[0], parts[0], parts[0]];
+                case 2 : return [parts[1], parts[0], parts[1], parts[0]];
+                case 3 : return [parts[1], parts[0], parts[1], parts[2]];
+                case 4 : return [parts[3], parts[0], parts[1], parts[2]];
+            }
+            throw Error('not a padding or margin value : '+value);
+
+        }
+
+        parseBoolean(value, defaultValue = true):boolean{
+            if(value===false || value ==='fales' || value === '0') return false;
+            else if(value===true || value ==='true' || value === '1' || value === '') return true;
+            return defaultValue;
+        }
+        parseGravity(s:string, defaultValue=Gravity.NO_GRAVITY):number {
+            let gravity = Number.parseInt(s);
+            if(Number.isInteger(gravity)) return gravity;
+
+            gravity = Gravity.NO_GRAVITY;
+            try {
+                let parts = s.split("|");
+                parts.forEach((part)=> {
+                    let g = Gravity[part.toUpperCase()];
+                    if (Number.isInteger(g)) gravity |= g;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+            if(Number.isNaN(gravity) || gravity===Gravity.NO_GRAVITY) gravity = defaultValue;
+            return gravity;
+        }
+        parseDrawable(s:string):Drawable{
+            if(!s) return null;
+            if((<any>s) instanceof Drawable) return <Drawable><any>s;
+            if(s.startsWith('@')){
+                let refObj = this.getRefObject(s);
+                if(refObj) return refObj;
+                //TODO parse ref like @drawable/xxx
+
+            }else{
+                let color = this.parseColor(s);
+                return new ColorDrawable(color);
+            }
+        }
+        parseColor(value:string):number{
+            let color = Number.parseInt(value);
+            if(Number.isInteger(color)) return color;
+
+            if(value.startsWith('rgb(')){
+                value = value.replace('rgb(', '').replace(')', '');
+                let parts = value.split(',');
+                return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
+
+            }else if(value.startsWith('rgba(')){
+                value = value.replace('rgba(', '').replace(')', '');
+                let parts = value.split(',');
+                return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
+                    Number.parseInt(parts[2]), Number.parseInt(parts[2])*255);
+
+            }else {
+                if (value.startsWith('#') && value.length === 4) {//support parse #333
+                    value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
+                }
+                try {
+                    return Color.parseColor(value);
+                } catch (e) {
+                }
+            }
+        }
+        parseColorList(value:string):ColorStateList{
+            if(!value) return null;
+            if((<any>value) instanceof ColorStateList) return <ColorStateList><any>value;
+            if(value.startsWith('@')){
+                let refObj = this.getRefObject(value);
+                if(refObj) return refObj;
+                //TODO parse ref
+
+            }else {
+                let color = this.parseColor(value);
+                return ColorStateList.valueOf(color);
+            }
+            return null;
+        }
+
+        parseNumber(value, defaultValue = 0, baseValue = 0):number{
+            try {
+                return TypedValue.complexToDimensionPixelSize(value, baseValue);
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+
+    }
+}

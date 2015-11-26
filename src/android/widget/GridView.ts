@@ -121,6 +121,32 @@ export class GridView extends AbsListView {
 
     constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
         super(bindElement, rootElement);
+
+        this._attrBinder.addAttr('horizontalSpacing', (value)=>{
+            this.setHorizontalSpacing(this._attrBinder.parseNumber(value, 0));
+        });
+        this._attrBinder.addAttr('verticalSpacing', (value)=>{
+            this.setVerticalSpacing(this._attrBinder.parseNumber(value, 0));
+        });
+        this._attrBinder.addAttr('stretchMode', (value)=>{
+            let strechMode = this._attrBinder.parseNumber(value, -1);
+            if(strechMode >= 0 ){
+                this.setStretchMode(strechMode);
+            }
+        });
+        this._attrBinder.addAttr('columnWidth', (value)=>{
+            let columnWidth = this._attrBinder.parseNumber(value, -1);
+            if(columnWidth > 0 ){
+                this.setColumnWidth(columnWidth);
+            }
+        });
+        this._attrBinder.addAttr('numColumns', (value)=>{
+            this.setNumColumns(this._attrBinder.parseNumber(value, 1));
+        });
+        this._attrBinder.addAttr('gravity', (value)=>{
+            this.setNumColumns(this._attrBinder.parseNumber(value, 1));
+        });
+
         this.applyDefaultAttributes(android.R.attr.gridViewStyle);
     }
 
@@ -147,57 +173,6 @@ export class GridView extends AbsListView {
     //    }
     //    a.recycle();
     //}
-
-
-    createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
-        super.createAttrChangeHandler(mergeHandler);
-        let gridView = this;
-        mergeHandler.add({
-            set horizontalSpacing(value){
-                gridView.setHorizontalSpacing(mergeHandler.parseNumber(value, 0));
-            },
-            //get horizontalSpacing():any{
-            //    return gridView.mHorizontalSpacing;
-            //},
-            set verticalSpacing(value){
-                gridView.setVerticalSpacing(mergeHandler.parseNumber(value, 0));
-            },
-            //get verticalSpacing():any{
-            //    return gridView.mVerticalSpacing;
-            //},
-            set stretchMode(value){
-                let strechMode = mergeHandler.parseNumber(value, -1);
-                if(strechMode >= 0 ){
-                    gridView.setStretchMode(strechMode);
-                }
-            },
-            //get stretchMode():any{
-                //return gridView.mStretchMode;
-            //},
-            set columnWidth(value){
-                let columnWidth = mergeHandler.parseNumber(value, -1);
-                if(columnWidth > 0 ){
-                    gridView.setColumnWidth(columnWidth);
-                }
-            },
-            //get columnWidth():any{
-                //return gridView.mColumnWidth;
-            //},
-            set numColumns(value){
-                gridView.setNumColumns(mergeHandler.parseNumber(value, 1));
-            },
-            //get numColumns():any{
-                //return gridView.mNumColumns;
-            //},
-            set gravity(value){
-                let gravity = mergeHandler.parseGravity(value, -1);
-                if(gravity>=0) gridView.setGravity(gravity);
-            },
-            //get gravity():any{
-                //return gridView.mGravity;
-            //},
-        });
-    }
 
     getAdapter():ListAdapter  {
         return this.mAdapter;
