@@ -1521,11 +1521,12 @@ declare module android.view {
         private _attrChangeHandler;
         private _initAttrChangeHandler();
         private _initAttrObserver();
-        private _initBindElementDefaultAttribute();
-        private _fireInitBindElementAttribute();
+        private _parseInitedAttribute();
+        private _fireInitedAttributeChange();
         private _fireStateChangeToAttribute(oldState, newState);
         private onBindElementAttributeChanged(attributeName, oldVal, newVal);
         hasAttributeIgnoreCase(name: string): boolean;
+        applyDefaultAttributes(attrs: any): void;
         tagName(): string;
     }
     module View {
@@ -2601,16 +2602,45 @@ declare module android.graphics.drawable {
     }
 }
 declare module android.R {
+    import Drawable = android.graphics.drawable.Drawable;
+    class drawable {
+        static button_background: Drawable;
+        static list_selector_background: Drawable;
+        static list_divider: Drawable;
+    }
+}
+declare module android.R {
     import ColorStateList = android.content.res.ColorStateList;
     class color {
         static textView_textColor: ColorStateList;
+    }
+}
+declare module android.R {
+    class attr {
+        static buttonStyle: {
+            background: graphics.drawable.Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            textSize: string;
+            gravity: number;
+        };
+        static textViewStyle: {
+            textSize: string;
+            textColor: content.res.ColorStateList;
+        };
+        static gridViewStyle: {
+            numColumns: number;
+        };
+        static listViewStyle: {
+            divider: graphics.drawable.Drawable;
+            dividerHeight: number;
+        };
     }
 }
 declare module android.widget {
     import View = android.view.View;
     import ColorStateList = android.content.res.ColorStateList;
     class TextView extends View {
-        private static Default_TextSize;
         private mText;
         private mHint;
         private mGravity;
@@ -2665,14 +2695,6 @@ declare module android.widget {
         setHtml(html: string): void;
         getHtml(): string;
         getTextElement(): HTMLElement;
-    }
-}
-declare module android.R {
-    import Drawable = android.graphics.drawable.Drawable;
-    class drawable {
-        static button_background: Drawable;
-        static list_selector_background: Drawable;
-        static list_divider: Drawable;
     }
 }
 declare module android.widget {

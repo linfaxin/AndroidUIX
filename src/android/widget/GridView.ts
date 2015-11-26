@@ -27,6 +27,7 @@
 ///<reference path="../../android/widget/Checkable.ts"/>
 ///<reference path="../../android/widget/ListAdapter.ts"/>
 ///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/R/attr.ts"/>
 
 module android.widget {
 import Rect = android.graphics.Rect;
@@ -120,7 +121,7 @@ export class GridView extends AbsListView {
 
     constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
         super(bindElement, rootElement);
-        if(!this.hasAttributeIgnoreCase('NumColumns')) this.setNumColumns(1);
+        this.applyDefaultAttributes(android.R.attr.gridViewStyle);
     }
 
     // constructor(context:Context, attrs:AttributeSet, defStyle:number) {

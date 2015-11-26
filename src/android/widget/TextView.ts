@@ -7,7 +7,7 @@
 ///<reference path="../graphics/Color.ts"/>
 ///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
-///<reference path="../R/color.ts"/>
+///<reference path="../R/attr.ts"/>
 
 module android.widget{
     import View = android.view.View;
@@ -21,11 +21,9 @@ module android.widget{
     //FIXME current impl: use dom element to draw the text
     //FIXME may should change to draw by canvas later
     export class TextView extends View{
-        private static Default_TextSize = 14;
-
         private mText:string;
         private mHint:string;
-        private mGravity;
+        private mGravity = Gravity.TOP | Gravity.LEFT;
         private mSingleLine = false;
         private mTextSize; //default 14 dp
         private mTextColor = ColorStateList.valueOf(Color.BLACK);
@@ -44,9 +42,7 @@ module android.widget{
         constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
             super(bindElement, rootElement);
             this.initTextElement();
-            if(!this.hasAttributeIgnoreCase('TextSize')) this.setTextSize(TextView.Default_TextSize);
-            if(!this.hasAttributeIgnoreCase('gravity')) this.setGravity(Gravity.TOP | Gravity.LEFT);
-            if(!this.hasAttributeIgnoreCase('textColor')) this.setTextColor(android.R.color.textView_textColor);
+            this.applyDefaultAttributes(android.R.attr.textViewStyle);
         }
 
         private initTextElement(){

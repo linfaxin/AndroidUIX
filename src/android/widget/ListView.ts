@@ -41,6 +41,7 @@
 ///<reference path="../../android/widget/ListAdapter.ts"/>
 ///<reference path="../../android/widget/WrapperListAdapter.ts"/>
 ///<reference path="../../android/widget/BaseAdapter.ts"/>
+///<reference path="../../android/R/attr.ts"/>
 
 module android.widget {
 import Canvas = android.graphics.Canvas;
@@ -142,8 +143,7 @@ export class ListView extends AbsListView {
 
     constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
         super(bindElement, rootElement);
-        if(!this.hasAttributeIgnoreCase('divider')) this.setDivider(android.R.drawable.list_divider);
-        if(!this.hasAttributeIgnoreCase('DividerHeight')) this.setDividerHeight(1);
+        this.applyDefaultAttributes(android.R.attr.listViewStyle);
     }
 
 

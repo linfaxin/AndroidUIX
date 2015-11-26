@@ -4305,7 +4305,7 @@ module android.view {
             rootView.setLayoutParams(params);
 
             //fire attr change after layout ok. So 'layout_xxx' attr will be parsed
-            rootView._fireInitBindElementAttribute();
+            rootView._fireInitedAttributeChange();
 
             if(rootView instanceof ViewGroup){
                 let parent = <ViewGroup><any>rootView;
@@ -4407,7 +4407,7 @@ module android.view {
 
             this._stateAttrList = new StateAttrList(this.bindElement, rootElement);
             this._initAttrChangeHandler();
-            this._initBindElementDefaultAttribute();
+            this._parseInitedAttribute();
             this._initAttrObserver();
         }
 
@@ -4478,7 +4478,7 @@ module android.view {
             this._AttrObserver.observe(this.bindElement, {attributes : true, attributeOldValue : true});
         }
 
-        private _initBindElementDefaultAttribute():void{
+        private _parseInitedAttribute():void{
             for(let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()){
                 key = 'android:' + key;
                 if( (value===null || value===undefined) && this.bindElement.hasAttribute(key) ){
@@ -4490,7 +4490,7 @@ module android.view {
             let id = this.bindElement.getAttribute('android:id');
             if(id) this.bindElement.id = id;
         }
-        private _fireInitBindElementAttribute(){
+        private _fireInitedAttributeChange(){
             for(let attr of Array.from(this.bindElement.attributes)){
                 this.onBindElementAttributeChanged(attr.name, null, attr.value);
             }
@@ -4557,7 +4557,7 @@ module android.view {
         }
 
         hasAttributeIgnoreCase(name:string):boolean {
-            if(!name) return false;
+            if(!(typeof name === 'string')) return false;
             name = name.toLowerCase();
             if(name.startsWith('android:')) name = name.substring('android:'.length);
             for(let attr of Array.from(this.bindElement.attributes)){
@@ -4566,6 +4566,14 @@ module android.view {
                 if(attrName==name) return true;
             }
             return false;
+        }
+
+        applyDefaultAttributes(attrs:any){
+            for(let key in attrs){
+                if(!this.hasAttributeIgnoreCase(key)){
+                    this._attrChangeHandler.handle(key, attrs[key]);
+                }
+            }
         }
 
 
@@ -4707,6 +4715,8 @@ module android.view {
                 this.handlers.push(handler);
             }
             handle(name, value){
+                if(!name) return;
+                name = name.toLowerCase();
                 for(let handler of this.handlers){
                     for(let key in handler){
                         if(key.toLowerCase()===name){
@@ -4806,6 +4816,7 @@ module android.view {
             }
             parseDrawable(s:string):Drawable{
                 if(!s) return null;
+                if((<any>s) instanceof Drawable) return <Drawable><any>s;
                 if(s.startsWith('@')){
                     let refObj = this.getRefObject(s);
                     if(refObj) return refObj;
@@ -4843,6 +4854,7 @@ module android.view {
             }
             parseColorList(value:string):ColorStateList{
                 if(!value) return null;
+                if((<any>value) instanceof ColorStateList) return <ColorStateList><any>value;
                 if(value.startsWith('@')){
                     let refObj = this.getRefObject(value);
                     if(refObj) return refObj;

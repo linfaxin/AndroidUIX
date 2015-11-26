@@ -3790,6 +3790,7 @@ var android;
 (function (android) {
     var view;
     (function (view_1) {
+        var Drawable = android.graphics.drawable.Drawable;
         var ColorDrawable = android.graphics.drawable.ColorDrawable;
         var ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
         var InsetDrawable = android.graphics.drawable.InsetDrawable;
@@ -6715,7 +6716,7 @@ var android;
                     params = this._generateLayoutParamsFromAttribute(domtree);
                 }
                 rootView.setLayoutParams(params);
-                rootView._fireInitBindElementAttribute();
+                rootView._fireInitedAttributeChange();
                 if (rootView instanceof view_1.ViewGroup) {
                     let parent = rootView;
                     Array.from(domtree.children).forEach((item) => {
@@ -6803,7 +6804,7 @@ var android;
                 this._rootElement = rootElement;
                 this._stateAttrList = new StateAttrList(this.bindElement, rootElement);
                 this._initAttrChangeHandler();
-                this._initBindElementDefaultAttribute();
+                this._parseInitedAttribute();
                 this._initAttrObserver();
             }
             syncBoundToElement() {
@@ -6854,7 +6855,7 @@ var android;
                     this._AttrObserver.disconnect();
                 this._AttrObserver.observe(this.bindElement, { attributes: true, attributeOldValue: true });
             }
-            _initBindElementDefaultAttribute() {
+            _parseInitedAttribute() {
                 for (let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()) {
                     key = 'android:' + key;
                     if ((value === null || value === undefined) && this.bindElement.hasAttribute(key)) {
@@ -6868,7 +6869,7 @@ var android;
                 if (id)
                     this.bindElement.id = id;
             }
-            _fireInitBindElementAttribute() {
+            _fireInitedAttributeChange() {
                 for (let attr of Array.from(this.bindElement.attributes)) {
                     this.onBindElementAttributeChanged(attr.name, null, attr.value);
                 }
@@ -6931,7 +6932,7 @@ var android;
                 this._attrChangeHandler.handle(attrName, newVal);
             }
             hasAttributeIgnoreCase(name) {
-                if (!name)
+                if (!(typeof name === 'string'))
                     return false;
                 name = name.toLowerCase();
                 if (name.startsWith('android:'))
@@ -6944,6 +6945,13 @@ var android;
                         return true;
                 }
                 return false;
+            }
+            applyDefaultAttributes(attrs) {
+                for (let key in attrs) {
+                    if (!this.hasAttributeIgnoreCase(key)) {
+                        this._attrChangeHandler.handle(key, attrs[key]);
+                    }
+                }
             }
             tagName() {
                 return "ANDROID-" + this.constructor.name;
@@ -7178,6 +7186,9 @@ var android;
                     this.handlers.push(handler);
                 }
                 handle(name, value) {
+                    if (!name)
+                        return;
+                    name = name.toLowerCase();
                     for (let handler of this.handlers) {
                         for (let key in handler) {
                             if (key.toLowerCase() === name) {
@@ -7279,6 +7290,8 @@ var android;
                 parseDrawable(s) {
                     if (!s)
                         return null;
+                    if (s instanceof Drawable)
+                        return s;
                     if (s.startsWith('@')) {
                         let refObj = this.getRefObject(s);
                         if (refObj)
@@ -7317,6 +7330,8 @@ var android;
                 parseColorList(value) {
                     if (!value)
                         return null;
+                    if (value instanceof ColorStateList)
+                        return value;
                     if (value.startsWith('@')) {
                         let refObj = this.getRefObject(value);
                         if (refObj)
@@ -15012,6 +15027,76 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/15.
+ */
+///<reference path="../view/View.ts"/>
+///<reference path="../content/res/Resources.ts"/>
+///<reference path="../graphics/Color.ts"/>
+///<reference path="../graphics/drawable/Drawable.ts"/>
+///<reference path="../graphics/drawable/InsetDrawable.ts"/>
+///<reference path="../graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../graphics/drawable/StateListDrawable.ts"/>
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        var View = android.view.View;
+        var Resources = android.content.res.Resources;
+        var Color = android.graphics.Color;
+        var InsetDrawable = android.graphics.drawable.InsetDrawable;
+        var ColorDrawable = android.graphics.drawable.ColorDrawable;
+        var StateListDrawable = android.graphics.drawable.StateListDrawable;
+        const density = Resources.getDisplayMetrics().density;
+        class drawable {
+            static get button_background() {
+                class DefaultButtonBackgroundDrawable extends InsetDrawable {
+                    constructor() {
+                        super(DefaultButtonBackgroundDrawable.createStateList(), 6 * density);
+                    }
+                    static createStateList() {
+                        let stateList = new StateListDrawable();
+                        stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
+                        stateList.addState([View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
+                        stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+                        stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
+                        stateList.addState([], new ColorDrawable(Color.LTGRAY));
+                        return stateList;
+                    }
+                    getPadding(padding) {
+                        let result = super.getPadding(padding);
+                        padding.left += 12 * density;
+                        padding.right += 12 * density;
+                        padding.top += 6 * density;
+                        padding.bottom += 6 * density;
+                        return result;
+                    }
+                    getIntrinsicWidth() {
+                        return 64 * density;
+                    }
+                    getIntrinsicHeight() {
+                        return 48 * density;
+                    }
+                }
+                return new DefaultButtonBackgroundDrawable();
+            }
+            static get list_selector_background() {
+                let stateList = new StateListDrawable();
+                stateList.addState([View.VIEW_STATE_FOCUSED, -View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
+                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
+                stateList.addState([-View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
+                stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+                stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
+                return stateList;
+            }
+            static get list_divider() {
+                let divider = new ColorDrawable(0xffcccccc);
+                return divider;
+            }
+        }
+        R.drawable = drawable;
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
 ///<reference path="../view/View.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../content/res/ColorStateList.ts"/>
@@ -15042,6 +15127,48 @@ var android;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/11/26.
+ */
+///<reference path="drawable.ts"/>
+///<reference path="color.ts"/>
+///<reference path="../view/Gravity.ts"/>
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        var Gravity = android.view.Gravity;
+        class attr {
+            static get buttonStyle() {
+                return {
+                    background: R.drawable.button_background,
+                    focusable: true,
+                    clickable: true,
+                    textSize: '18sp',
+                    gravity: Gravity.CENTER
+                };
+            }
+            static get textViewStyle() {
+                return {
+                    textSize: '14sp',
+                    textColor: R.color.textView_textColor
+                };
+            }
+            static get gridViewStyle() {
+                return {
+                    numColumns: 1
+                };
+            }
+            static get listViewStyle() {
+                return {
+                    divider: android.R.drawable.list_divider,
+                    dividerHeight: 1
+                };
+            }
+        }
+        R.attr = attr;
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
+/**
  * Created by linfaxin on 15/10/26.
  */
 ///<reference path="../view/View.ts"/>
@@ -15050,7 +15177,7 @@ var android;
 ///<reference path="../graphics/Color.ts"/>
 ///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
-///<reference path="../R/color.ts"/>
+///<reference path="../R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -15065,6 +15192,7 @@ var android;
         class TextView extends View {
             constructor(bindElement, rootElement) {
                 super(bindElement, rootElement);
+                this.mGravity = Gravity.TOP | Gravity.LEFT;
                 this.mSingleLine = false;
                 this.mTextColor = ColorStateList.valueOf(Color.BLACK);
                 this.mCurTextColor = Color.BLACK;
@@ -15076,12 +15204,7 @@ var android;
                 this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
                 this.mMinLineCount = 0;
                 this.initTextElement();
-                if (!this.hasAttributeIgnoreCase('TextSize'))
-                    this.setTextSize(TextView.Default_TextSize);
-                if (!this.hasAttributeIgnoreCase('gravity'))
-                    this.setGravity(Gravity.TOP | Gravity.LEFT);
-                if (!this.hasAttributeIgnoreCase('textColor'))
-                    this.setTextColor(android.R.color.textView_textColor);
+                this.applyDefaultAttributes(android.R.attr.textViewStyle);
             }
             initTextElement() {
                 this.mTextElement = document.createElement('div');
@@ -15517,110 +15640,23 @@ var android;
                 return this.mTextElement;
             }
         }
-        TextView.Default_TextSize = 14;
         widget.TextView = TextView;
     })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/15.
- */
-///<reference path="../view/View.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Color.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/drawable/InsetDrawable.ts"/>
-///<reference path="../graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../graphics/drawable/StateListDrawable.ts"/>
-var android;
-(function (android) {
-    var R;
-    (function (R) {
-        var View = android.view.View;
-        var Resources = android.content.res.Resources;
-        var Color = android.graphics.Color;
-        var InsetDrawable = android.graphics.drawable.InsetDrawable;
-        var ColorDrawable = android.graphics.drawable.ColorDrawable;
-        var StateListDrawable = android.graphics.drawable.StateListDrawable;
-        const density = Resources.getDisplayMetrics().density;
-        class drawable {
-            static get button_background() {
-                class DefaultButtonBackgroundDrawable extends InsetDrawable {
-                    constructor() {
-                        super(DefaultButtonBackgroundDrawable.createStateList(), 6 * density);
-                    }
-                    static createStateList() {
-                        let stateList = new StateListDrawable();
-                        stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
-                        stateList.addState([View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
-                        stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
-                        stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
-                        stateList.addState([], new ColorDrawable(Color.LTGRAY));
-                        return stateList;
-                    }
-                    getPadding(padding) {
-                        let result = super.getPadding(padding);
-                        padding.left += 12 * density;
-                        padding.right += 12 * density;
-                        padding.top += 6 * density;
-                        padding.bottom += 6 * density;
-                        return result;
-                    }
-                    getIntrinsicWidth() {
-                        return 64 * density;
-                    }
-                    getIntrinsicHeight() {
-                        return 48 * density;
-                    }
-                }
-                return new DefaultButtonBackgroundDrawable();
-            }
-            static get list_selector_background() {
-                let stateList = new StateListDrawable();
-                stateList.addState([View.VIEW_STATE_FOCUSED, -View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
-                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
-                stateList.addState([-View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
-                stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
-                stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
-                return stateList;
-            }
-            static get list_divider() {
-                let divider = new ColorDrawable(0xffcccccc);
-                return divider;
-            }
-        }
-        R.drawable = drawable;
-    })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/2.
  */
 ///<reference path="TextView.ts"/>
 ///<reference path="../view/View.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Color.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/drawable/InsetDrawable.ts"/>
-///<reference path="../graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../graphics/drawable/StateListDrawable.ts"/>
-///<reference path="../R/drawable.ts"/>
+///<reference path="../R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
     (function (widget) {
-        var Gravity = android.view.Gravity;
         class Button extends widget.TextView {
             constructor(bindElement, rootElement) {
                 super(bindElement, rootElement);
-                if (!this.hasAttributeIgnoreCase('background'))
-                    this.setBackground(android.R.drawable.button_background);
-                if (!this.hasAttributeIgnoreCase('Focusable'))
-                    this.setFocusable(true);
-                if (!this.hasAttributeIgnoreCase('Clickable'))
-                    this.setClickable(true);
-                if (!this.hasAttributeIgnoreCase('TextSize'))
-                    this.setTextSize(18);
-                if (!this.hasAttributeIgnoreCase('Gravity'))
-                    this.setGravity(Gravity.CENTER);
+                this.applyDefaultAttributes(android.R.attr.buttonStyle);
             }
         }
         widget.Button = Button;
@@ -20876,6 +20912,7 @@ var android;
 ///<reference path="../../android/widget/ListAdapter.ts"/>
 ///<reference path="../../android/widget/WrapperListAdapter.ts"/>
 ///<reference path="../../android/widget/BaseAdapter.ts"/>
+///<reference path="../../android/R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -20910,10 +20947,7 @@ var android;
                 this.mItemsCanFocus = false;
                 this.mTempRect = new Rect();
                 this.mArrowScrollFocusResult = new ListView.ArrowScrollFocusResult();
-                if (!this.hasAttributeIgnoreCase('divider'))
-                    this.setDivider(android.R.drawable.list_divider);
-                if (!this.hasAttributeIgnoreCase('DividerHeight'))
-                    this.setDividerHeight(1);
+                this.applyDefaultAttributes(android.R.attr.listViewStyle);
             }
             createAttrChangeHandler(mergeHandler) {
                 super.createAttrChangeHandler(mergeHandler);
@@ -23136,6 +23170,7 @@ var android;
 ///<reference path="../../android/widget/Checkable.ts"/>
 ///<reference path="../../android/widget/ListAdapter.ts"/>
 ///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -23164,8 +23199,7 @@ var android;
                 this.mReferenceViewInSelectedRow = null;
                 this.mGravity = Gravity.LEFT;
                 this.mTempRect = new Rect();
-                if (!this.hasAttributeIgnoreCase('NumColumns'))
-                    this.setNumColumns(1);
+                this.applyDefaultAttributes(android.R.attr.gridViewStyle);
             }
             createAttrChangeHandler(mergeHandler) {
                 super.createAttrChangeHandler(mergeHandler);
