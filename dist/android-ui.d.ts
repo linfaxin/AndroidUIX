@@ -386,6 +386,21 @@ declare module android.graphics {
         mapRect(boundingRect: Rect): boolean;
     }
 }
+declare module java.lang {
+    class JavaObject {
+        static class: Class;
+        private hash;
+        private _class;
+        hashCode(): number;
+        getClass(): Class;
+        equals(o: any): boolean;
+    }
+    class Class {
+        name: string;
+        constructor(name: string);
+        getName(): string;
+    }
+}
 declare module java.lang.util.concurrent {
     class CopyOnWriteArrayList<T> {
         private mData;
@@ -1012,6 +1027,7 @@ declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
     import Runnable = java.lang.Runnable;
+    import JavaObject = java.lang.JavaObject;
     import ViewParent = android.view.ViewParent;
     import Handler = android.os.Handler;
     import Rect = android.graphics.Rect;
@@ -1021,10 +1037,7 @@ declare module android.view {
     import ArrayList = java.util.ArrayList;
     import AttrBinder = androidui.attr.AttrBinder;
     import KeyEvent = android.view.KeyEvent;
-    class View implements Drawable.Callback, KeyEvent.Callback {
-        static class: {
-            getName(): string;
-        };
+    class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback {
         static DBG: boolean;
         static VIEW_LOG_TAG: string;
         static PFLAG_WANTS_FOCUS: number;

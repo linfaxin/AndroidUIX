@@ -13,6 +13,7 @@
 ///<reference path="../graphics/Paint.ts"/>
 ///<reference path="../../java/lang/StringBuilder.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
+///<reference path="../../java/lang/Object.ts"/>
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
 ///<reference path="../../java/util/ArrayList.ts"/>
 ///<reference path="ViewRootImpl.ts"/>
@@ -54,6 +55,7 @@ module android.view {
     import Paint = android.graphics.Paint;
     import StringBuilder = java.lang.StringBuilder;
     import Runnable = java.lang.Runnable;
+    import JavaObject = java.lang.JavaObject;
     import System = java.lang.System;
     //import ViewRootImpl = android.view.ViewRootImpl;
     import ViewParent = android.view.ViewParent;
@@ -80,15 +82,7 @@ module android.view {
     import KeyEvent = android.view.KeyEvent;
 
 
-    export class View implements Drawable.Callback, KeyEvent.Callback{
-        static get class(){
-            let name = this.name;
-            return {
-                getName():string{
-                    return name;
-                }
-            }
-        }//FIXME remove to java.lang.Object
+    export class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback{
         static DBG = Log.View_DBG;
         static VIEW_LOG_TAG = "View";
 
@@ -668,6 +662,8 @@ module android.view {
         mPaddingBottom = 0;
 
         constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
+            super();
+
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
             this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
 

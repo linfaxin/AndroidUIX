@@ -1564,6 +1564,41 @@ var java;
 (function (java) {
     var lang;
     (function (lang) {
+        let hashCodeGenerator = 0;
+        class JavaObject {
+            constructor() {
+                this.hash = hashCodeGenerator++;
+                this._class = new Class(this.constructor.name);
+            }
+            static get class() {
+                return new Class(this.name);
+            }
+            hashCode() {
+                return this.hash;
+            }
+            getClass() {
+                return this._class;
+            }
+            equals(o) {
+                return this === o;
+            }
+        }
+        lang.JavaObject = JavaObject;
+        class Class {
+            constructor(name) {
+                this.name = name;
+            }
+            getName() {
+                return this.name;
+            }
+        }
+        lang.Class = Class;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
         var util;
         (function (util) {
             var concurrent;
@@ -3955,6 +3990,7 @@ var android;
 ///<reference path="../graphics/Paint.ts"/>
 ///<reference path="../../java/lang/StringBuilder.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
+///<reference path="../../java/lang/Object.ts"/>
 ///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
 ///<reference path="../../java/util/ArrayList.ts"/>
 ///<reference path="ViewRootImpl.ts"/>
@@ -3993,6 +4029,7 @@ var android;
         var Matrix = android.graphics.Matrix;
         var Color = android.graphics.Color;
         var StringBuilder = java.lang.StringBuilder;
+        var JavaObject = java.lang.JavaObject;
         var System = java.lang.System;
         var SystemClock = android.os.SystemClock;
         var Log = android.util.Log;
@@ -4008,8 +4045,9 @@ var android;
         var AttrBinder = androidui.attr.AttrBinder;
         var ClassFinder = androidui.util.ClassFinder;
         var KeyEvent = android.view.KeyEvent;
-        class View {
+        class View extends JavaObject {
             constructor(bindElement, rootElement) {
+                super();
                 this.mPrivateFlags = 0;
                 this.mPrivateFlags2 = 0;
                 this.mPrivateFlags3 = 0;
@@ -4234,14 +4272,6 @@ var android;
                     this._attrBinder.addAttr('layerType', (value) => {
                     }),
                     this.initBindElement(bindElement, rootElement);
-            }
-            static get class() {
-                let name = this.name;
-                return {
-                    getName() {
-                        return name;
-                    }
-                };
             }
             get mID() {
                 if (this.bindElement) {
