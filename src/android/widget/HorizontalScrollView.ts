@@ -169,8 +169,8 @@ export class HorizontalScrollView extends FrameLayout {
 
     //private mSavedState:HorizontalScrollView.SavedState;
 
-    constructor() {
-        super();
+    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+        super(bindElement, rootElement);
         this.initScrollView();
     }
 

@@ -67,8 +67,8 @@ module android.widget {
 
         private mActivePointerId = ScrollView.INVALID_POINTER;
 
-        constructor() {
-            super();
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
             this.initScrollView();
         }
 

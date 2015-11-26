@@ -47,6 +47,14 @@ module android.R{
                     padding.bottom += 6 * density;
                     return result;
                 }
+
+                getIntrinsicWidth():number {
+                    return 64*density;
+                }
+
+                getIntrinsicHeight():number {
+                    return 48*density;
+                }
             }
             return new DefaultButtonBackgroundDrawable();
         }

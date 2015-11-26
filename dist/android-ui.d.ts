@@ -1184,7 +1184,7 @@ declare module android.view {
         mPaddingRight: number;
         mPaddingTop: number;
         mPaddingBottom: number;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         getWidth(): number;
         getHeight(): number;
@@ -1503,15 +1503,15 @@ declare module android.view {
         setIsRootNamespace(isRoot: boolean): void;
         isRootNamespace(): boolean;
         static inflate(eleOrRef: HTMLElement | string, rootElement: HTMLElement, viewParent?: ViewGroup): View;
+        private static _generateLayoutParamsFromAttribute(node, dest?);
         static optReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReference(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector, cloneNode?: boolean): Element;
-        _bindElement: HTMLElement;
+        bindElement: HTMLElement;
         _rootElement: HTMLElement;
         private _AttrObserver;
         private _stateAttrList;
         static AndroidViewProperty: string;
-        bindElement: HTMLElement;
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
         protected initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
@@ -1525,7 +1525,7 @@ declare module android.view {
         private _fireInitBindElementAttribute();
         private _fireStateChangeToAttribute(oldState, newState);
         private onBindElementAttributeChanged(attributeName, oldVal, newVal);
-        private static _generateLayoutParamsFromAttribute(node, dest?);
+        hasAttributeIgnoreCase(name: string): boolean;
         tagName(): string;
     }
     module View {
@@ -1895,7 +1895,7 @@ declare module android.view {
         mSuppressLayout: boolean;
         private mLayoutCalledWhileSuppressed;
         private mChildCountWithTransientState;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         private initViewGroup();
         getDescendantFocusability(): number;
@@ -2335,7 +2335,7 @@ declare module android.widget {
         private _mOverflingDistance;
         private mOverflingDistance;
         private mActivePointerId;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         createAttrChangeHandler(mergeHandler: View.AttrChangeHandler): void;
         shouldDelayChildPressedState(): boolean;
         getMaxScrollAmount(): number;
@@ -2626,10 +2626,9 @@ declare module android.widget {
         private mMaxLineCount;
         private mMinLineCount;
         private mTextElement;
-        constructor();
-        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         private initTextElement();
-        protected initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
+        createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         onFinishInflate(): void;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
@@ -2678,8 +2677,7 @@ declare module android.R {
 }
 declare module android.widget {
     class Button extends TextView {
-        constructor();
-        private _initDefaultStyle();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
     }
 }
 declare module androidui.widget {
@@ -2696,7 +2694,7 @@ declare module androidui.widget {
         private mDrawableHeight;
         private mAdjustViewBoundsCompat;
         private mImgElement;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         private initImageView();
         protected initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
@@ -3175,7 +3173,7 @@ declare module android.widget {
         private mLastHandledItemCount;
         static sLinearInterpolator: Interpolator;
         private mPendingSync;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         private initAbsListView();
         setOverScrollMode(mode: number): void;
@@ -3588,7 +3586,7 @@ declare module android.widget {
         private mDividerPaint;
         private mArrowScrollFocusResult;
         private mFocusSelector;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         getMaxScrollAmount(): number;
         private adjustViewsUpOrDown();
@@ -3740,7 +3738,7 @@ declare module android.widget {
         private mReferenceViewInSelectedRow;
         private mGravity;
         private mTempRect;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         getAdapter(): ListAdapter;
         setAdapter(adapter: ListAdapter): void;
@@ -3831,7 +3829,7 @@ declare module android.widget {
         private mOverflingDistance;
         private mActivePointerId;
         private static INVALID_POINTER;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         protected getLeftFadingEdgeStrength(): number;
         protected getRightFadingEdgeStrength(): number;
@@ -3991,7 +3989,7 @@ declare module android.support.v4.view {
         static SCROLL_STATE_SETTLING: number;
         private mEndScrollRunnable;
         private mScrollState;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         private initViewPager();
         protected onDetachedFromWindow(): void;
         private setScrollState(newState);
@@ -4384,7 +4382,7 @@ declare module androidui.widget {
         private contentOverY;
         private overScrollLocker;
         private refreshLoadListener;
-        constructor();
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         createAttrChangeHandler(mergeHandler: android.view.View.AttrChangeHandler): void;
         protected onViewAdded(child: View): void;
         private configHeaderView();
@@ -4429,12 +4427,12 @@ declare module androidui.widget {
         }
         class DefaultHeaderView extends HeaderView {
             textView: TextView;
-            constructor();
+            constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
             onStateChange(newState: number, oldState: number): void;
         }
         class DefaultFooterView extends FooterView {
             textView: TextView;
-            constructor();
+            constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
             onStateChange(newState: number, oldState: number): void;
         }
     }

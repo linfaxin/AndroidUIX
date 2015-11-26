@@ -189,8 +189,8 @@ module android.support.v4.view {
 
         private mScrollState = ViewPager.SCROLL_STATE_IDLE;
 
-        constructor() {
-            super();
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
             this.initViewPager();
         }
 

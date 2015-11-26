@@ -118,9 +118,9 @@ export class GridView extends AbsListView {
 
     private mTempRect:Rect = new Rect();
 
-    constructor() {
-        super();
-        this.setNumColumns(1);
+    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+        super(bindElement, rootElement);
+        if(!this.hasAttributeIgnoreCase('NumColumns')) this.setNumColumns(1);
     }
 
     // constructor(context:Context, attrs:AttributeSet, defStyle:number) {

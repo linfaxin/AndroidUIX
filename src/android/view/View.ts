@@ -86,7 +86,7 @@ module android.view {
                     return name;
                 }
             }
-        }
+        }//FIXME remove to java.lang.Object
         static DBG = Log.View_DBG;
         static VIEW_LOG_TAG = "View";
 
@@ -571,8 +571,8 @@ module android.view {
         static LAYER_TYPE_SOFTWARE = 1;
 
         get mID():string{
-            if(this._bindElement){
-                let id = this._bindElement.id;
+            if(this.bindElement){
+                let id = this.bindElement.id;
                 return id ? id : null;
             }
             return null;
@@ -665,9 +665,10 @@ module android.view {
         mPaddingTop = 0;
         mPaddingBottom = 0;
 
-        constructor(){
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
             this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
+            this.initBindElement(bindElement, rootElement);
         }
 
         //parse xml attr & callback when xml attr change
@@ -826,14 +827,13 @@ module android.view {
                     }
                 },
                 set minWidth(value){
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) view.setMinimumWidth(value);
+                    view.setMinimumWidth(mergeHandler.parseNumber(value, 0));
                 },
                 get minWidth():any{
                     return view.mMinWidth;
                 },
                 set minHeight(value){
-                    view.mMinHeight = value;
+                    view.setMinimumHeight(mergeHandler.parseNumber(value, 0));
                 },
                 get minHeight():any{
                     return view.mMinHeight;
@@ -4242,7 +4242,7 @@ module android.view {
             }
         }
         setId(id:string) {
-            if(this._bindElement) this._bindElement.id = id;
+            if(this.bindElement) this.bindElement.id = id;
         }
         getId():string {
             return this.mID;
@@ -4287,14 +4287,12 @@ module android.view {
                 console.warn('not find class ' + className);
                 return null;
             }
-            let rootView:View = new rootViewClass();
+            let rootView:View = new rootViewClass(domtree, rootElement);
             if(rootView['onInflateAdapter']){//inflate a adapter.
                 (<HtmlDataAdapter><any>rootView).onInflateAdapter(domtree, rootElement, viewParent);
                 domtree.parentNode.removeChild(domtree);
             }
             if(!(rootView instanceof View)) return rootView;
-            const children = Array.from(domtree.children);//children more change in initBindElement()
-            rootView.initBindElement(domtree, rootElement);
 
             let params;
             if(viewParent) {
@@ -4305,11 +4303,13 @@ module android.view {
                 params = this._generateLayoutParamsFromAttribute(domtree);
             }
             rootView.setLayoutParams(params);
-            rootView._initAttrObserver();
+
+            //fire attr change after layout ok. So 'layout_xxx' attr will be parsed
+            rootView._fireInitBindElementAttribute();
 
             if(rootView instanceof ViewGroup){
                 let parent = <ViewGroup><any>rootView;
-                children.forEach((item)=>{
+                Array.from(domtree.children).forEach((item)=>{
                     if(item instanceof HTMLElement){
                         let view = View.inflate(item, rootElement, parent);
                         if(view instanceof View) parent.addView(view);
@@ -4319,6 +4319,14 @@ module android.view {
 
             rootView.onFinishInflate();
             return rootView;
+        }
+
+        private static _generateLayoutParamsFromAttribute(node:Node, dest = new ViewGroup.LayoutParams(-2, -2)):ViewGroup.LayoutParams{
+            Array.from(node.attributes).forEach((attr:Attr)=>{
+                let layoutParamFiled = attr.name.split("layout_")[1];
+                dest._attrChangeHandler.handle(layoutParamFiled, attr.value);
+            });
+            return dest;
         }
 
         static optReferenceString(refString:string, currentElement:NodeSelector=document,
@@ -4360,15 +4368,11 @@ module android.view {
 
 
         //bind Element show the layout and extra info
-        _bindElement: HTMLElement;
+        bindElement: HTMLElement;
         _rootElement: HTMLElement;
         private _AttrObserver:MutationObserver;
         private _stateAttrList:StateAttrList;
         static AndroidViewProperty = 'AndroidView';
-        get bindElement():HTMLElement{
-            if(!this._bindElement) this.initBindElement();
-            return this._bindElement;
-        }
         get rootElement():HTMLElement{
             if(this._rootElement) return this._rootElement;
             if(this.getViewRootImpl()) return this.getViewRootImpl().rootElement;
@@ -4388,29 +4392,23 @@ module android.view {
         }
 
         protected initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
-            if(this._bindElement){
-                this._bindElement[View.AndroidViewProperty] = null;
-                if(bindElement) {
-                    //move old bindElement children to new bindElement
-                    Array.from(this._bindElement.children).forEach((el:Element)=> {
-                        this._bindElement.removeChild(el);
-                        bindElement.insertBefore(el, bindElement.children[0]);
-                    });
-                }
+            if(this.bindElement){
+                this.bindElement[View.AndroidViewProperty] = null;
             }
-            this._bindElement = bindElement || document.createElement(this.tagName());
-            this._bindElement.style.position = 'absolute';
+            this.bindElement = bindElement || document.createElement(this.tagName());
+            this.bindElement.style.position = 'absolute';
 
-            let oldBindView:View = this._bindElement[View.AndroidViewProperty];
+            let oldBindView:View = this.bindElement[View.AndroidViewProperty];
             if(oldBindView){
                 if(oldBindView._AttrObserver) oldBindView._AttrObserver.disconnect();
             }
-            this._bindElement[View.AndroidViewProperty]=this;
+            this.bindElement[View.AndroidViewProperty]=this;
             this._rootElement = rootElement;
 
             this._stateAttrList = new StateAttrList(this.bindElement, rootElement);
             this._initAttrChangeHandler();
             this._initBindElementDefaultAttribute();
+            this._initAttrObserver();
         }
 
         syncBoundToElement(){
@@ -4475,10 +4473,9 @@ module android.view {
             }
         }
         private _initAttrObserver(){
-            this._fireInitBindElementAttribute();
             if(!this._AttrObserver) this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
             else this._AttrObserver.disconnect();
-            this._AttrObserver.observe(this._bindElement, {attributes : true, attributeOldValue : true});
+            this._AttrObserver.observe(this.bindElement, {attributes : true, attributeOldValue : true});
         }
 
         private _initBindElementDefaultAttribute():void{
@@ -4539,7 +4536,7 @@ module android.view {
         }
 
         private onBindElementAttributeChanged(attributeName:string, oldVal:string, newVal:string):void {
-            //remove namespace('android:')
+            //remove namespace 'android:'
             let parts = attributeName.split(":");
             let attrName = parts[parts.length-1].toLowerCase();
             if(newVal === 'true') newVal = <any>true;
@@ -4559,12 +4556,16 @@ module android.view {
             this._attrChangeHandler.handle(attrName, newVal);
         }
 
-        private static _generateLayoutParamsFromAttribute(node:Node, dest = new ViewGroup.LayoutParams(-2, -2)):ViewGroup.LayoutParams{
-            Array.from(node.attributes).forEach((attr:Attr)=>{
-                let layoutParamFiled = attr.name.split("layout_")[1];
-                dest._attrChangeHandler.handle(layoutParamFiled, attr.value);
-            });
-            return dest;
+        hasAttributeIgnoreCase(name:string):boolean {
+            if(!name) return false;
+            name = name.toLowerCase();
+            if(name.startsWith('android:')) name = name.substring('android:'.length);
+            for(let attr of Array.from(this.bindElement.attributes)){
+                let attrName = attr.name.toLowerCase();
+                if(attrName.startsWith('android:')) attrName = attrName.substring('android:'.length);
+                if(attrName==name) return true;
+            }
+            return false;
         }
 
 

@@ -62,8 +62,8 @@ module androidui.widget{
         private overScrollLocker:OverScrollLocker;
         private refreshLoadListener:PullRefreshLoadLayout.RefreshLoadListener;
 
-        constructor(){
-            super();
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
             this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView());
             this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView());
         }
@@ -390,8 +390,8 @@ module androidui.widget{
         }
         export class DefaultHeaderView extends HeaderView{
             textView:TextView;
-            constructor(){
-                super();
+            constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+                super(bindElement, rootElement);
                 this.textView = new TextView();
                 const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
                 this.textView.setPadding(pad, pad, pad, pad);
@@ -417,8 +417,8 @@ module androidui.widget{
         }
         export class DefaultFooterView extends FooterView{
             textView:TextView;
-            constructor(){
-                super();
+            constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+                super(bindElement, rootElement);
                 this.textView = new TextView();
                 const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
                 this.textView.setPadding(pad, pad, pad, pad);

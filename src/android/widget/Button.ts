@@ -22,19 +22,14 @@ module android.widget{
     import Gravity = android.view.Gravity;
 
     export class Button extends TextView{
-        constructor() {
-            super();
-            this._initDefaultStyle();
-        }
-        private _initDefaultStyle(){
-            let density = Resources.getDisplayMetrics().density;
-            this.setFocusable(true);
-            this.setClickable(true);
-            this.setTextSize(18);
-            this.setMinimumHeight(48 * density);
-            this.setMinimumWidth(64 * density);
-            this.setBackground(android.R.drawable.button_background);
-            this.setGravity(Gravity.CENTER);
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
+
+            if(!this.hasAttributeIgnoreCase('background')) this.setBackground(android.R.drawable.button_background);
+            if(!this.hasAttributeIgnoreCase('Focusable')) this.setFocusable(true);
+            if(!this.hasAttributeIgnoreCase('Clickable')) this.setClickable(true);
+            if(!this.hasAttributeIgnoreCase('TextSize')) this.setTextSize(18);
+            if(!this.hasAttributeIgnoreCase('Gravity')) this.setGravity(Gravity.CENTER);
         }
     }
 }

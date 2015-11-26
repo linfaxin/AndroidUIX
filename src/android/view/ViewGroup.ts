@@ -106,8 +106,8 @@ module android.view {
         private mLayoutCalledWhileSuppressed = false;
         private mChildCountWithTransientState = 0;
 
-        constructor() {
-            super();
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
             this.initViewGroup();
         }
 

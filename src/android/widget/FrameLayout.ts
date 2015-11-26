@@ -32,7 +32,6 @@ module android.widget {
         mForegroundBoundsChanged = false;
         private mMatchParentChildren = new Array<View>(1);
 
-
         createAttrChangeHandler(mergeHandler:View.AttrChangeHandler):void {
             super.createAttrChangeHandler(mergeHandler);
 

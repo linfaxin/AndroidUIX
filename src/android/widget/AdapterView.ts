@@ -223,8 +223,6 @@ module android.widget {
          */
         mBlockLayoutRequests:boolean = false;
 
-
-
         /**
          * Register a callback to be invoked when an item in this AdapterView has
          * been clicked.

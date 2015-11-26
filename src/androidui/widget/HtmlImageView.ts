@@ -32,8 +32,8 @@ module androidui.widget{
 
         private mImgElement:HTMLImageElement;
 
-        constructor(){
-            super();
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
             this.initImageView();
         }
 

@@ -140,10 +140,10 @@ export class ListView extends AbsListView {
     // Keeps focused children visible through resizes
     private mFocusSelector:ListView.FocusSelector;
 
-    constructor() {
-        super();
-        this.setDivider(android.R.drawable.list_divider);
-        this.setDividerHeight(1);
+    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+        super(bindElement, rootElement);
+        if(!this.hasAttributeIgnoreCase('divider')) this.setDivider(android.R.drawable.list_divider);
+        if(!this.hasAttributeIgnoreCase('DividerHeight')) this.setDividerHeight(1);
     }
 
 

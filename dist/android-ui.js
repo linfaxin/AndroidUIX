@@ -3813,7 +3813,7 @@ var android;
         var ClassFinder = androidui.util.ClassFinder;
         var KeyEvent = android.view.KeyEvent;
         class View {
-            constructor() {
+            constructor(bindElement, rootElement) {
                 this.mPrivateFlags = 0;
                 this.mPrivateFlags2 = 0;
                 this.mPrivateFlags3 = 0;
@@ -3848,6 +3848,7 @@ var android;
                 this._attrChangeHandler = new View.AttrChangeHandler(this);
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
                 this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
+                this.initBindElement(bindElement, rootElement);
             }
             static get class() {
                 let name = this.name;
@@ -3858,8 +3859,8 @@ var android;
                 };
             }
             get mID() {
-                if (this._bindElement) {
-                    let id = this._bindElement.id;
+                if (this.bindElement) {
+                    let id = this.bindElement.id;
                     return id ? id : null;
                 }
                 return null;
@@ -4050,15 +4051,13 @@ var android;
                         }
                     },
                     set minWidth(value) {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value))
-                            view.setMinimumWidth(value);
+                        view.setMinimumWidth(mergeHandler.parseNumber(value, 0));
                     },
                     get minWidth() {
                         return view.mMinWidth;
                     },
                     set minHeight(value) {
-                        view.mMinHeight = value;
+                        view.setMinimumHeight(mergeHandler.parseNumber(value, 0));
                     },
                     get minHeight() {
                         return view.mMinHeight;
@@ -6651,8 +6650,8 @@ var android;
                 }
             }
             setId(id) {
-                if (this._bindElement)
-                    this._bindElement.id = id;
+                if (this.bindElement)
+                    this.bindElement.id = id;
             }
             getId() {
                 return this.mID;
@@ -6700,15 +6699,13 @@ var android;
                     console.warn('not find class ' + className);
                     return null;
                 }
-                let rootView = new rootViewClass();
+                let rootView = new rootViewClass(domtree, rootElement);
                 if (rootView['onInflateAdapter']) {
                     rootView.onInflateAdapter(domtree, rootElement, viewParent);
                     domtree.parentNode.removeChild(domtree);
                 }
                 if (!(rootView instanceof View))
                     return rootView;
-                const children = Array.from(domtree.children);
-                rootView.initBindElement(domtree, rootElement);
                 let params;
                 if (viewParent) {
                     params = viewParent.generateDefaultLayoutParams();
@@ -6718,10 +6715,10 @@ var android;
                     params = this._generateLayoutParamsFromAttribute(domtree);
                 }
                 rootView.setLayoutParams(params);
-                rootView._initAttrObserver();
+                rootView._fireInitBindElementAttribute();
                 if (rootView instanceof view_1.ViewGroup) {
                     let parent = rootView;
-                    children.forEach((item) => {
+                    Array.from(domtree.children).forEach((item) => {
                         if (item instanceof HTMLElement) {
                             let view = View.inflate(item, rootElement, parent);
                             if (view instanceof View)
@@ -6731,6 +6728,13 @@ var android;
                 }
                 rootView.onFinishInflate();
                 return rootView;
+            }
+            static _generateLayoutParamsFromAttribute(node, dest = new view_1.ViewGroup.LayoutParams(-2, -2)) {
+                Array.from(node.attributes).forEach((attr) => {
+                    let layoutParamFiled = attr.name.split("layout_")[1];
+                    dest._attrChangeHandler.handle(layoutParamFiled, attr.value);
+                });
+                return dest;
             }
             static optReferenceString(refString, currentElement = document, rootElement = document) {
                 return View.findReferenceString(refString, currentElement, rootElement) || refString;
@@ -6763,11 +6767,6 @@ var android;
                 }
                 return null;
             }
-            get bindElement() {
-                if (!this._bindElement)
-                    this.initBindElement();
-                return this._bindElement;
-            }
             get rootElement() {
                 if (this._rootElement)
                     return this._rootElement;
@@ -6790,27 +6789,22 @@ var android;
                 });
             }
             initBindElement(bindElement, rootElement) {
-                if (this._bindElement) {
-                    this._bindElement[View.AndroidViewProperty] = null;
-                    if (bindElement) {
-                        Array.from(this._bindElement.children).forEach((el) => {
-                            this._bindElement.removeChild(el);
-                            bindElement.insertBefore(el, bindElement.children[0]);
-                        });
-                    }
+                if (this.bindElement) {
+                    this.bindElement[View.AndroidViewProperty] = null;
                 }
-                this._bindElement = bindElement || document.createElement(this.tagName());
-                this._bindElement.style.position = 'absolute';
-                let oldBindView = this._bindElement[View.AndroidViewProperty];
+                this.bindElement = bindElement || document.createElement(this.tagName());
+                this.bindElement.style.position = 'absolute';
+                let oldBindView = this.bindElement[View.AndroidViewProperty];
                 if (oldBindView) {
                     if (oldBindView._AttrObserver)
                         oldBindView._AttrObserver.disconnect();
                 }
-                this._bindElement[View.AndroidViewProperty] = this;
+                this.bindElement[View.AndroidViewProperty] = this;
                 this._rootElement = rootElement;
                 this._stateAttrList = new StateAttrList(this.bindElement, rootElement);
                 this._initAttrChangeHandler();
                 this._initBindElementDefaultAttribute();
+                this._initAttrObserver();
             }
             syncBoundToElement() {
                 let bind = this.bindElement;
@@ -6854,12 +6848,11 @@ var android;
                 }
             }
             _initAttrObserver() {
-                this._fireInitBindElementAttribute();
                 if (!this._AttrObserver)
                     this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
                 else
                     this._AttrObserver.disconnect();
-                this._AttrObserver.observe(this._bindElement, { attributes: true, attributeOldValue: true });
+                this._AttrObserver.observe(this.bindElement, { attributes: true, attributeOldValue: true });
             }
             _initBindElementDefaultAttribute() {
                 for (let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()) {
@@ -6937,12 +6930,20 @@ var android;
                 }
                 this._attrChangeHandler.handle(attrName, newVal);
             }
-            static _generateLayoutParamsFromAttribute(node, dest = new view_1.ViewGroup.LayoutParams(-2, -2)) {
-                Array.from(node.attributes).forEach((attr) => {
-                    let layoutParamFiled = attr.name.split("layout_")[1];
-                    dest._attrChangeHandler.handle(layoutParamFiled, attr.value);
-                });
-                return dest;
+            hasAttributeIgnoreCase(name) {
+                if (!name)
+                    return false;
+                name = name.toLowerCase();
+                if (name.startsWith('android:'))
+                    name = name.substring('android:'.length);
+                for (let attr of Array.from(this.bindElement.attributes)) {
+                    let attrName = attr.name.toLowerCase();
+                    if (attrName.startsWith('android:'))
+                        attrName = attrName.substring('android:'.length);
+                    if (attrName == name)
+                        return true;
+                }
+                return false;
             }
             tagName() {
                 return "ANDROID-" + this.constructor.name;
@@ -9077,8 +9078,8 @@ var android;
         var TypedValue = android.util.TypedValue;
         var System = java.lang.System;
         class ViewGroup extends view_4.View {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.mLastTouchDownTime = 0;
                 this.mLastTouchDownIndex = -1;
                 this.mLastTouchDownX = 0;
@@ -12427,8 +12428,8 @@ var android;
         var SystemClock = android.os.SystemClock;
         var KeyEvent = android.view.KeyEvent;
         class ScrollView extends widget.FrameLayout {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.mLastScroll = 0;
                 this.mTempRect = new Rect();
                 this.mLastMotionY = 0;
@@ -15062,8 +15063,8 @@ var android;
         var MeasureSpec = View.MeasureSpec;
         var TypedValue = android.util.TypedValue;
         class TextView extends View {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.mSingleLine = false;
                 this.mTextColor = ColorStateList.valueOf(Color.BLACK);
                 this.mCurTextColor = Color.BLACK;
@@ -15075,9 +15076,20 @@ var android;
                 this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
                 this.mMinLineCount = 0;
                 this.initTextElement();
-                this.setTextSize(TextView.Default_TextSize);
-                this.setGravity(Gravity.TOP | Gravity.LEFT);
-                this.setTextColor(android.R.color.textView_textColor);
+                if (!this.hasAttributeIgnoreCase('TextSize'))
+                    this.setTextSize(TextView.Default_TextSize);
+                if (!this.hasAttributeIgnoreCase('gravity'))
+                    this.setGravity(Gravity.TOP | Gravity.LEFT);
+                if (!this.hasAttributeIgnoreCase('textColor'))
+                    this.setTextColor(android.R.color.textView_textColor);
+            }
+            initTextElement() {
+                this.mTextElement = document.createElement('div');
+                this.mTextElement.style.position = "absolute";
+                this.mTextElement.style.boxSizing = "border-box";
+                this.mTextElement.style.overflow = "hidden";
+                this.mTextElement.style.opacity = "0";
+                this.bindElement.appendChild(this.mTextElement);
             }
             createAttrChangeHandler(mergeHandler) {
                 super.createAttrChangeHandler(mergeHandler);
@@ -15238,17 +15250,6 @@ var android;
                         return textView.mSpacingMult;
                     },
                 });
-            }
-            initTextElement() {
-                this.mTextElement = document.createElement('div');
-                this.mTextElement.style.position = "absolute";
-                this.mTextElement.style.boxSizing = "border-box";
-                this.mTextElement.style.overflow = "hidden";
-                this.mTextElement.style.opacity = "0";
-            }
-            initBindElement(bindElement, rootElement) {
-                super.initBindElement(bindElement, rootElement);
-                this.bindElement.appendChild(this.mTextElement);
             }
             onLayout(changed, left, top, right, bottom) {
                 super.onLayout(changed, left, top, right, bottom);
@@ -15564,6 +15565,12 @@ var android;
                         padding.bottom += 6 * density;
                         return result;
                     }
+                    getIntrinsicWidth() {
+                        return 64 * density;
+                    }
+                    getIntrinsicHeight() {
+                        return 48 * density;
+                    }
                 }
                 return new DefaultButtonBackgroundDrawable();
             }
@@ -15600,22 +15607,20 @@ var android;
 (function (android) {
     var widget;
     (function (widget) {
-        var Resources = android.content.res.Resources;
         var Gravity = android.view.Gravity;
         class Button extends widget.TextView {
-            constructor() {
-                super();
-                this._initDefaultStyle();
-            }
-            _initDefaultStyle() {
-                let density = Resources.getDisplayMetrics().density;
-                this.setFocusable(true);
-                this.setClickable(true);
-                this.setTextSize(18);
-                this.setMinimumHeight(48 * density);
-                this.setMinimumWidth(64 * density);
-                this.setBackground(android.R.drawable.button_background);
-                this.setGravity(Gravity.CENTER);
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                if (!this.hasAttributeIgnoreCase('background'))
+                    this.setBackground(android.R.drawable.button_background);
+                if (!this.hasAttributeIgnoreCase('Focusable'))
+                    this.setFocusable(true);
+                if (!this.hasAttributeIgnoreCase('Clickable'))
+                    this.setClickable(true);
+                if (!this.hasAttributeIgnoreCase('TextSize'))
+                    this.setTextSize(18);
+                if (!this.hasAttributeIgnoreCase('Gravity'))
+                    this.setGravity(Gravity.CENTER);
             }
         }
         widget.Button = Button;
@@ -15637,8 +15642,8 @@ var androidui;
             eval('ImageView = android.widget.ImageView;');
         });
         class HtmlImageView extends View {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.mHaveFrame = false;
                 this.mAdjustViewBounds = false;
                 this.mMaxWidth = Number.MAX_SAFE_INTEGER;
@@ -17041,8 +17046,8 @@ var android;
         var AdapterView = android.widget.AdapterView;
         var OverScroller = android.widget.OverScroller;
         class AbsListView extends AdapterView {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.mChoiceMode = AbsListView.CHOICE_MODE_NONE;
                 this.mCheckedItemCount = 0;
                 this.mDeferNotifyDataSetChanged = false;
@@ -20892,8 +20897,8 @@ var android;
         var AdapterView = android.widget.AdapterView;
         var HeaderViewListAdapter = android.widget.HeaderViewListAdapter;
         class ListView extends AbsListView {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.mHeaderViewInfos = new ArrayList();
                 this.mFooterViewInfos = new ArrayList();
                 this.mDividerHeight = 0;
@@ -20905,8 +20910,10 @@ var android;
                 this.mItemsCanFocus = false;
                 this.mTempRect = new Rect();
                 this.mArrowScrollFocusResult = new ListView.ArrowScrollFocusResult();
-                this.setDivider(android.R.drawable.list_divider);
-                this.setDividerHeight(1);
+                if (!this.hasAttributeIgnoreCase('divider'))
+                    this.setDivider(android.R.drawable.list_divider);
+                if (!this.hasAttributeIgnoreCase('DividerHeight'))
+                    this.setDividerHeight(1);
             }
             createAttrChangeHandler(mergeHandler) {
                 super.createAttrChangeHandler(mergeHandler);
@@ -20928,8 +20935,8 @@ var android;
                             listView.setOverscrollFooter(footer);
                     },
                     set dividerHeight(value) {
-                        let dividerHeight = mergeHandler.parseNumber(value, 0);
-                        if (dividerHeight > 0) {
+                        let dividerHeight = mergeHandler.parseNumber(value, -1);
+                        if (dividerHeight >= 0) {
                             listView.setDividerHeight(dividerHeight);
                         }
                     },
@@ -23143,8 +23150,8 @@ var android;
         var Integer = java.lang.Integer;
         var AbsListView = android.widget.AbsListView;
         class GridView extends AbsListView {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.mNumColumns = GridView.AUTO_FIT;
                 this.mHorizontalSpacing = 0;
                 this.mRequestedHorizontalSpacing = 0;
@@ -23157,7 +23164,8 @@ var android;
                 this.mReferenceViewInSelectedRow = null;
                 this.mGravity = Gravity.LEFT;
                 this.mTempRect = new Rect();
-                this.setNumColumns(1);
+                if (!this.hasAttributeIgnoreCase('NumColumns'))
+                    this.setNumColumns(1);
             }
             createAttrChangeHandler(mergeHandler) {
                 super.createAttrChangeHandler(mergeHandler);
@@ -24572,8 +24580,8 @@ var android;
         var OverScroller = android.widget.OverScroller;
         var ScrollView = android.widget.ScrollView;
         class HorizontalScrollView extends FrameLayout {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.mLastScroll = 0;
                 this.mTempRect = new Rect();
                 this.mLastMotionX = 0;
@@ -25535,8 +25543,8 @@ var android;
                 const DEBUG = false;
                 const SymbolDecor = Symbol();
                 class ViewPager extends ViewGroup {
-                    constructor() {
-                        super();
+                    constructor(bindElement, rootElement) {
+                        super(bindElement, rootElement);
                         this.mExpectedAdapterCount = 0;
                         this.mItems = new ArrayList();
                         this.mTempItem = new ItemInfo();
@@ -29201,8 +29209,8 @@ var androidui;
         var TextView = android.widget.TextView;
         var R = android.R;
         class PullRefreshLoadLayout extends FrameLayout {
-            constructor() {
-                super();
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
                 this.autoLoadScrollAtBottom = true;
                 this.footerViewReadyDistance = 36 * android.content.res.Resources.getDisplayMetrics().density;
                 this.contentOverY = 0;
@@ -29548,8 +29556,8 @@ var androidui;
             }
             PullRefreshLoadLayout.FooterView = FooterView;
             class DefaultHeaderView extends HeaderView {
-                constructor() {
-                    super();
+                constructor(bindElement, rootElement) {
+                    super(bindElement, rootElement);
                     this.textView = new TextView();
                     const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
                     this.textView.setPadding(pad, pad, pad, pad);
@@ -29575,8 +29583,8 @@ var androidui;
             }
             PullRefreshLoadLayout.DefaultHeaderView = DefaultHeaderView;
             class DefaultFooterView extends FooterView {
-                constructor() {
-                    super();
+                constructor(bindElement, rootElement) {
+                    super(bindElement, rootElement);
                     this.textView = new TextView();
                     const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
                     this.textView.setPadding(pad, pad, pad, pad);

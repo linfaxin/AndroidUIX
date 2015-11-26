@@ -41,14 +41,22 @@ module android.widget{
 
         private mTextElement : HTMLElement;//display with this element
 
-        constructor() {
-            super();
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
             this.initTextElement();
-            this.setTextSize(TextView.Default_TextSize);
-            this.setGravity(Gravity.TOP | Gravity.LEFT);
-            this.setTextColor(android.R.color.textView_textColor);
+            if(!this.hasAttributeIgnoreCase('TextSize')) this.setTextSize(TextView.Default_TextSize);
+            if(!this.hasAttributeIgnoreCase('gravity')) this.setGravity(Gravity.TOP | Gravity.LEFT);
+            if(!this.hasAttributeIgnoreCase('textColor')) this.setTextColor(android.R.color.textView_textColor);
         }
 
+        private initTextElement(){
+            this.mTextElement = document.createElement('div');
+            this.mTextElement.style.position = "absolute";
+            this.mTextElement.style.boxSizing = "border-box";
+            this.mTextElement.style.overflow = "hidden";
+            this.mTextElement.style.opacity = "0";//make context hide  before layout
+            this.bindElement.appendChild(this.mTextElement);
+        }
 
         createAttrChangeHandler(mergeHandler:android.view.View.AttrChangeHandler):void {
             super.createAttrChangeHandler(mergeHandler);
@@ -203,19 +211,7 @@ module android.widget{
             })
         }
 
-        private initTextElement(){
-            this.mTextElement = document.createElement('div');
-            this.mTextElement.style.position = "absolute";
-            this.mTextElement.style.boxSizing = "border-box";
-            this.mTextElement.style.overflow = "hidden";
-            this.mTextElement.style.opacity = "0";//make context hide  before layout
-        }
 
-
-        protected initBindElement(bindElement:HTMLElement, rootElement:HTMLElement):void {
-            super.initBindElement(bindElement, rootElement);
-            this.bindElement.appendChild(this.mTextElement);
-        }
 
         protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
             super.onLayout(changed, left, top, right, bottom);

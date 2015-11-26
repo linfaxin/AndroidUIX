@@ -692,8 +692,8 @@ module android.widget {
         private mPendingSync;//:AbsListView.SavedState;
 
 
-        constructor() {
-            super();
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+            super(bindElement, rootElement);
             this.initAbsListView();
             this.setVerticalScrollBarEnabled(true);
             this.initializeScrollbars();
