@@ -105,7 +105,7 @@ module android.os {
             //send delay
             let func = ()=> {
                 this.dispatchMessage(msg);
-                this.mQueue.recycleMessage(this, msg);
+                this.mQueue.recycleMessage(this, msg, false);
 
             };
             if(delayMillis<=17){

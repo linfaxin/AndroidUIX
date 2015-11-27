@@ -48,18 +48,18 @@ module android.os {
             this.messages.set(msg, delayHandleID);
         }
 
-        recycleMessage(handler:Handler, message:Message) {
+        recycleMessage(handler:Handler, message:Message, clearTimeoutId=true) {
             try {
                 message.recycle();
             } catch (e) {
             }
 
             let oldId = this.messages.get(message);
-            if (oldId !== undefined) {
+            if (clearTimeoutId && oldId !== undefined) {
                 if(oldId>0) clearTimeout(oldId);
                 else if(oldId<0) cancelAnimationFrame(-oldId);
-                this.messages.delete(message);
             }
+            this.messages.delete(message);
         }
 
         removeMessages(h:Handler, what:number, object:any);
