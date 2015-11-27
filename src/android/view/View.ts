@@ -822,17 +822,8 @@ module android.view {
                 return this.mMinHeight;
             }),
             this._attrBinder.addAttr('onClick', (value)=>{
-                const view = this;
-                this.setOnClickListener({
-                    onClick(v:View){
-                        let activity = view.getViewRootImpl().rootElement;
-                        if(activity && typeof activity[value] === 'function'){
-                            activity[value].call(activity, v);
-                        }else{
-                            eval.call(v, value);
-                        }
-                    }
-                });
+                this.setClickable(true);
+                //will fire on perform click
             }),
             this._attrBinder.addAttr('overScrollMode', (value)=>{
                 let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
