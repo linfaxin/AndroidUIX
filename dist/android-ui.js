@@ -964,37 +964,57 @@ var android;
         var Rect = android.graphics.Rect;
         var Color = android.graphics.Color;
         class Canvas {
-            constructor(...args) {
+            constructor(width, height) {
+                this.mWidth = 0;
+                this.mHeight = 0;
                 this._saveCount = 0;
                 this.shouldDoRectBeforeRestoreMap = new Map();
                 this.mClipStateMap = new Map();
-                this.mCanvasElement = args.length === 1 ? args[0] : document.createElement("canvas");
-                if (args.length === 1) {
-                    this.mCanvasElement = args[0];
-                }
-                else if (args.length === 2) {
-                    this.mCanvasElement = document.createElement("canvas");
-                    this.mCanvasElement.width = args[0];
-                    this.mCanvasElement.height = args[1];
-                }
+                this.mCanvasElement = document.createElement("canvas");
+                this.mCanvasElement.width = width;
+                this.mCanvasElement.height = height;
+                this.mWidth = width;
+                this.mHeight = height;
                 this.init();
+            }
+            static obtainRect(copy) {
+                let rect = Canvas.sRectPool.acquire();
+                if (!rect)
+                    rect = new Rect();
+                if (copy)
+                    rect.set(copy);
+                return rect;
+            }
+            static recycleRect(...rects) {
+                for (let rect of rects) {
+                    rect.setEmpty();
+                    Canvas.sRectPool.release(rect);
+                }
             }
             init() {
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                this.mCurrentClip = new Rect(0, 0, this.mCanvasElement.width, this.mCanvasElement.height);
+                this.mCurrentClip = Canvas.obtainRect();
+                this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
                 this._saveCount = 0;
                 this.fullRectForClip();
                 this._mCanvasContent.clip();
                 this.save();
             }
+            recycle() {
+                Canvas.recycleRect(this.mCurrentClip);
+                Canvas.recycleRect(...this.mClipStateMap.values());
+                for (let rects of this.shouldDoRectBeforeRestoreMap.values()) {
+                    Canvas.recycleRect(...rects);
+                }
+            }
             get canvasElement() {
                 return this.mCanvasElement;
             }
             getHeight() {
-                return this.mCanvasElement.height;
+                return this.mHeight;
             }
             getWidth() {
-                return this.mCanvasElement.width;
+                return this.mWidth;
             }
             translate(dx, dy) {
                 if (this.mCurrentClip)
@@ -1032,7 +1052,7 @@ var android;
             save() {
                 this._mCanvasContent.save();
                 if (this.mCurrentClip)
-                    this.mClipStateMap.set(this._saveCount, new Rect(this.mCurrentClip));
+                    this.mClipStateMap.set(this._saveCount, Canvas.obtainRect(this.mCurrentClip));
                 this._saveCount++;
                 return this._saveCount;
             }
@@ -1045,7 +1065,9 @@ var android;
                     if (doRects.length % 2 == 1) {
                         this.fullRectForClip();
                     }
-                    this.shouldDoRectBeforeRestoreMap.delete(this._saveCount);
+                    while (doRects.length > 0) {
+                        Canvas.recycleRect(doRects.pop());
+                    }
                 }
                 this._saveCount--;
                 this._mCanvasContent.restore();
@@ -1053,6 +1075,7 @@ var android;
                 if (savedClip) {
                     this.mClipStateMap.delete(this._saveCount);
                     this.mCurrentClip.set(savedClip);
+                    Canvas.recycleRect(savedClip);
                 }
             }
             restoreToCount(saveCount) {
@@ -1069,7 +1092,7 @@ var android;
                 this._mCanvasContent.rect(Canvas.FullRect.left, Canvas.FullRect.top, Canvas.FullRect.width(), Canvas.FullRect.height());
             }
             clipRect(...args) {
-                let rect = new Rect();
+                let rect = Canvas.obtainRect();
                 if (args.length === 1) {
                     rect.set(args[0]);
                 }
@@ -1091,8 +1114,8 @@ var android;
             }
             getClipBounds(bounds) {
                 if (!this.mCurrentClip)
-                    this.mCurrentClip = new Rect();
-                let rect = bounds || new Rect();
+                    this.mCurrentClip = Canvas.obtainRect();
+                let rect = bounds || Canvas.obtainRect();
                 rect.set(this.mCurrentClip);
                 return rect;
             }
@@ -1125,7 +1148,7 @@ var android;
             }
         }
         Canvas.FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
-        Canvas.sPool = new Pools.SynchronizedPool(10);
+        Canvas.sRectPool = new Pools.SynchronizedPool(100);
         graphics.Canvas = Canvas;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -2808,20 +2831,20 @@ var android;
             addMessage(handler, msg, delayHandleID) {
                 this.messages.set(msg, delayHandleID);
             }
-            recycleMessage(handler, message) {
+            recycleMessage(handler, message, clearTimeoutId = true) {
                 try {
                     message.recycle();
                 }
                 catch (e) {
                 }
                 let oldId = this.messages.get(message);
-                if (oldId !== undefined) {
+                if (clearTimeoutId && oldId !== undefined) {
                     if (oldId > 0)
                         clearTimeout(oldId);
                     else if (oldId < 0)
                         cancelAnimationFrame(-oldId);
-                    this.messages.delete(message);
                 }
+                this.messages.delete(message);
             }
             removeMessages(h, args, object) {
                 let p = this.getMessages(h, args, object);
@@ -2929,7 +2952,7 @@ var android;
                 msg.target = this;
                 let func = () => {
                     this.dispatchMessage(msg);
-                    this.mQueue.recycleMessage(this, msg);
+                    this.mQueue.recycleMessage(this, msg, false);
                 };
                 if (delayMillis <= 17) {
                     var id = -requestAnimationFrame(func);
@@ -3439,7 +3462,8 @@ var androidui;
                 if (attrName.startsWith('state_') || attrName === 'style') {
                     if (attrValue.startsWith('@')) {
                         let reference = android.view.View.findReference(attrValue, ele, rootElement, false);
-                        this._initStyleAttributes(reference, inParseState, rootElement);
+                        if (reference)
+                            this._initStyleAttributes(reference, inParseState, rootElement);
                     }
                     else {
                         for (let part of attrValue.split(';')) {
@@ -4080,6 +4104,12 @@ var android;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
                 this._attrBinder = new AttrBinder(this);
+                this._syncBoundToElementLock = false;
+                this.syncBoundToElementRun = () => {
+                    this._syncBoundToElement();
+                };
+                this._lastSyncScrollX = 0;
+                this._lastSyncScrollY = 0;
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
                 this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
                 this._attrBinder.addAttr('background', (value) => {
@@ -4250,18 +4280,8 @@ var android;
                         return this.mMinHeight;
                     }),
                     this._attrBinder.addAttr('onClick', (value) => {
-                        const view = this;
-                        this.setOnClickListener({
-                            onClick(v) {
-                                let activity = view.getViewRootImpl().rootElement;
-                                if (activity && typeof activity[value] === 'function') {
-                                    activity[value].call(activity, v);
-                                }
-                                else {
-                                    eval.call(v, value);
-                                }
-                            }
-                        });
+                        if (this._attrBinder.parseBoolean(value))
+                            this.setClickable(true);
                     }),
                     this._attrBinder.addAttr('overScrollMode', (value) => {
                         let scrollMode = View[('OVER_SCROLL_' + value).toUpperCase()];
@@ -4270,8 +4290,8 @@ var android;
                         this.setOverScrollMode(scrollMode);
                     }),
                     this._attrBinder.addAttr('layerType', (value) => {
-                    }),
-                    this.initBindElement(bindElement, rootElement);
+                    });
+                this.initBindElement(bindElement, rootElement);
             }
             get mID() {
                 if (this.bindElement) {
@@ -4281,13 +4301,25 @@ var android;
                 return null;
             }
             get mLeft() { return this._mLeft; }
-            set mLeft(value) { this._mLeft = Math.floor(value); }
+            set mLeft(value) {
+                this._mLeft = Math.floor(value);
+                this.postSyncBoundToElement();
+            }
             get mRight() { return this._mRight; }
-            set mRight(value) { this._mRight = Math.floor(value); }
+            set mRight(value) {
+                this._mRight = Math.floor(value);
+                this.postSyncBoundToElement();
+            }
             get mTop() { return this._mTop; }
-            set mTop(value) { this._mTop = Math.floor(value); }
+            set mTop(value) {
+                this._mTop = Math.floor(value);
+                this.postSyncBoundToElement();
+            }
             get mBottom() { return this._mBottom; }
-            set mBottom(value) { this._mBottom = Math.floor(value); }
+            set mBottom(value) {
+                this._mBottom = Math.floor(value);
+                this.postSyncBoundToElement();
+            }
             get mScrollX() { return this._mScrollX; }
             set mScrollX(value) { this._mScrollX = Math.floor(value); }
             get mScrollY() { return this._mScrollY; }
@@ -4527,7 +4559,6 @@ var android;
                     }
                     this.mTop += offset;
                     this.mBottom += offset;
-                    this.syncBoundToElement();
                     if (!matrixIsIdentity) {
                         this.invalidateViewProperty(false, true);
                     }
@@ -4561,7 +4592,6 @@ var android;
                     }
                     this.mLeft += offset;
                     this.mRight += offset;
-                    this.syncBoundToElement();
                     if (!matrixIsIdentity) {
                         this.invalidateViewProperty(false, true);
                     }
@@ -5617,8 +5647,6 @@ var android;
                 let oldB = this.mBottom;
                 let oldR = this.mRight;
                 let changed = this.setFrame(l, t, r, b);
-                if (changed)
-                    this.syncBoundToElement();
                 if (changed || (this.mPrivateFlags & View.PFLAG_LAYOUT_REQUIRED) == View.PFLAG_LAYOUT_REQUIRED) {
                     this.onLayout(changed, l, t, r, b);
                     this.mPrivateFlags &= ~View.PFLAG_LAYOUT_REQUIRED;
@@ -7033,23 +7061,45 @@ var android;
                 this._parseInitedAttribute();
                 this._initAttrObserver();
             }
-            syncBoundToElement() {
+            postSyncBoundToElement() {
+                if (!this._syncBoundToElementLock) {
+                    this._syncBoundToElementLock = true;
+                    requestAnimationFrame(this.syncBoundToElementRun);
+                }
+            }
+            _syncBoundToElement() {
+                this._syncBoundToElementLock = false;
+                const left = this.mLeft;
+                const top = this.mTop;
+                const width = this.getWidth();
+                const height = this.getHeight();
+                if (left === this._lastSyncLeft && top === this._lastSyncTop
+                    && width === this._lastSyncWidth && height === this._lastSyncHeight)
+                    return;
+                this._lastSyncLeft = left;
+                this._lastSyncTop = top;
+                this._lastSyncWidth = width;
+                this._lastSyncHeight = height;
                 let bind = this.bindElement;
-                bind.style.cssText += `transform: translate(${this.mLeft}px, ${this.mTop}px);
-            -webkit-transform: translate(${this.mLeft}px, ${this.mTop}px);`;
-                bind.style.width = this.getWidth() + 'px';
-                bind.style.height = this.getHeight() + 'px';
+                bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
+            -webkit-transform: translate3d(${left}px, ${top}px, 0px);`;
+                bind.style.width = width + 'px';
+                bind.style.height = height + 'px';
             }
             syncScrollToElement() {
                 let sx = this.mScrollX;
                 let sy = this.mScrollY;
+                if (this._lastSyncScrollX === sx && this._lastSyncScrollY === sy)
+                    return;
+                this._lastSyncScrollX = sx;
+                this._lastSyncScrollY = sy;
                 if (this instanceof view_1.ViewGroup) {
                     let group = this;
                     for (let i = 0, count = group.getChildCount(); i < count; i++) {
                         let child = group.getChildAt(i);
                         let item = child.bindElement;
-                        item.style.cssText += `transform: translate(${child.mLeft - sx}px, ${child.mTop - sy}px);
-                    -webkit-transform: translate(${child.mLeft - sx}px, ${child.mTop - sy}px);`;
+                        item.style.cssText += `transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);
+                    -webkit-transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);`;
                     }
                 }
             }
@@ -7585,34 +7635,31 @@ var android;
         var Canvas = android.graphics.Canvas;
         class Surface {
             constructor(canvasElement) {
-                this.mLockedCanvasMap = new WeakMap();
+                this.mLockedRect = new Rect();
                 this.mCanvasElement = canvasElement;
             }
             lockCanvas(dirty) {
                 let fullWidth = this.mCanvasElement.width;
                 let fullHeight = this.mCanvasElement.height;
-                let rect;
+                let rect = this.mLockedRect;
                 if (dirty.isEmpty()) {
-                    rect = new Rect(0, 0, fullWidth, fullHeight);
+                    rect.set(0, 0, fullWidth, fullHeight);
                 }
                 else {
-                    rect = new Rect(Math.floor(dirty.left - 1), Math.floor(dirty.top - 1), Math.ceil(dirty.right + 1), Math.ceil(dirty.bottom + 1));
+                    rect.set(Math.floor(dirty.left - 1), Math.floor(dirty.top - 1), Math.ceil(dirty.right + 1), Math.ceil(dirty.bottom + 1));
                 }
                 let width = rect.width();
                 let height = rect.height();
                 let canvas = new Canvas(width, height);
                 canvas.translate(-rect.left, -rect.top);
-                this.mLockedCanvasMap.set(canvas, rect);
                 let mCanvasContent = this.mCanvasElement.getContext('2d');
                 mCanvasContent.clearRect(rect.left, rect.top, width, height);
                 return canvas;
             }
             unlockCanvasAndPost(canvas) {
-                let rect = this.mLockedCanvasMap.get(canvas);
-                if (rect) {
-                    let mCanvasContent = this.mCanvasElement.getContext('2d');
-                    mCanvasContent.drawImage(canvas.canvasElement, rect.left, rect.top);
-                }
+                let mCanvasContent = this.mCanvasElement.getContext('2d');
+                mCanvasContent.drawImage(canvas.canvasElement, this.mLockedRect.left, this.mLockedRect.top);
+                canvas.recycle();
             }
         }
         view.Surface = Surface;
@@ -15432,14 +15479,6 @@ var android;
                 desired = Math.max(desired, this.getSuggestedMinimumHeight());
                 return desired;
             }
-            onDraw(canvas) {
-                let r = Color.red(this.mCurTextColor);
-                let g = Color.green(this.mCurTextColor);
-                let b = Color.blue(this.mCurTextColor);
-                let a = Color.alpha(this.mCurTextColor);
-                this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-                return super.onDraw(canvas);
-            }
             setTextColor(color) {
                 if (Number.isInteger(color)) {
                     this.mTextColor = ColorStateList.valueOf(color);
@@ -15463,7 +15502,12 @@ var android;
                 let color = this.mTextColor.getColorForState(this.getDrawableState(), 0);
                 if (color != this.mCurTextColor) {
                     this.mCurTextColor = color;
-                    inval = true;
+                    let r = Color.red(this.mCurTextColor);
+                    let g = Color.green(this.mCurTextColor);
+                    let b = Color.blue(this.mCurTextColor);
+                    let a = Color.alpha(this.mCurTextColor);
+                    this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                    inval = false;
                 }
                 if (inval) {
                     this.invalidate();

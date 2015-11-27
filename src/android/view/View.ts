@@ -633,13 +633,25 @@ module android.view {
         private _mTop = 0;
         private _mBottom = 0;
         get mLeft():number{return this._mLeft;}
-        set mLeft(value:number){this._mLeft = Math.floor(value);}
+        set mLeft(value:number){
+            this._mLeft = Math.floor(value);
+            this.postSyncBoundToElement();
+        }
         get mRight():number{return this._mRight;}
-        set mRight(value:number){this._mRight = Math.floor(value);}
+        set mRight(value:number){
+            this._mRight = Math.floor(value);
+            this.postSyncBoundToElement();
+        }
         get mTop():number{return this._mTop;}
-        set mTop(value:number){this._mTop = Math.floor(value);}
+        set mTop(value:number){
+            this._mTop = Math.floor(value);
+            this.postSyncBoundToElement();
+        }
         get mBottom():number{return this._mBottom;}
-        set mBottom(value:number){this._mBottom = Math.floor(value);}
+        set mBottom(value:number){
+            this._mBottom = Math.floor(value);
+            this.postSyncBoundToElement();
+        }
 
         private _mScrollX = 0;
         private _mScrollY = 0;
@@ -822,7 +834,7 @@ module android.view {
                 return this.mMinHeight;
             }),
             this._attrBinder.addAttr('onClick', (value)=>{
-                this.setClickable(true);
+                if(this._attrBinder.parseBoolean(value)) this.setClickable(true);
                 //will fire on perform click
             }),
             this._attrBinder.addAttr('overScrollMode', (value)=>{
@@ -831,7 +843,7 @@ module android.view {
                 this.setOverScrollMode(scrollMode);
             }),
             this._attrBinder.addAttr('layerType', (value)=>{
-            }),
+            });
 
             this.initBindElement(bindElement, rootElement);
         }
@@ -1094,7 +1106,6 @@ module android.view {
 
                 this.mTop += offset;
                 this.mBottom += offset;
-                this.syncBoundToElement();
 
 //            if (mDisplayList != null) {
 //                mDisplayList.offsetTopAndBottom(offset);
@@ -1146,7 +1157,6 @@ module android.view {
 
                 this.mLeft += offset;
                 this.mRight += offset;
-                this.syncBoundToElement();
 //            if (mDisplayList != null) {
 //                mDisplayList.offsetLeftAndRight(offset);
 //                invalidateViewProperty(false, false);
@@ -2519,8 +2529,6 @@ module android.view {
 
             let changed = this.setFrame(l, t, r, b);
 
-            if(changed) this.syncBoundToElement();
-
             if (changed || (this.mPrivateFlags & View.PFLAG_LAYOUT_REQUIRED) == View.PFLAG_LAYOUT_REQUIRED) {
 
                 this.onLayout(changed, l, t, r, b);
@@ -3102,6 +3110,7 @@ module android.view {
             this.computeScroll();
             let sx = this.mScrollX;
             let sy = this.mScrollY;
+
             this.syncScrollToElement();
 
             let hasNoCache = cache == null;
@@ -4418,32 +4427,72 @@ module android.view {
             this._initAttrObserver();
         }
 
-        syncBoundToElement(){
+
+        private _syncBoundToElementLock = false;
+        private syncBoundToElementRun = ()=>{
+            this._syncBoundToElement();
+        };
+        postSyncBoundToElement(){
+            if(!this._syncBoundToElementLock){
+                this._syncBoundToElementLock = true;
+                requestAnimationFrame(this.syncBoundToElementRun);
+            }
+        }
+
+        private _lastSyncLeft:number;
+        private _lastSyncTop:number;
+        private _lastSyncWidth:number;
+        private _lastSyncHeight:number;
+        private _syncBoundToElement(){
+            this._syncBoundToElementLock = false;
+            const left = this.mLeft;
+            const top = this.mTop;
+            const width = this.getWidth();
+            const height = this.getHeight();
+            if(left === this._lastSyncLeft && top === this._lastSyncTop
+                && width === this._lastSyncWidth && height === this._lastSyncHeight) return;
+            this._lastSyncLeft = left;
+            this._lastSyncTop = top;
+            this._lastSyncWidth = width;
+            this._lastSyncHeight = height;
+
+
             let bind = this.bindElement;
 
             //bind.style.left = this.mLeft + 'px';
             //bind.style.top = this.mTop + 'px';
-            bind.style.cssText += `transform: translate(${this.mLeft}px, ${this.mTop}px);
-            -webkit-transform: translate(${this.mLeft}px, ${this.mTop}px);`;
+            //bind.style.cssText += `transform: translate(${left}px, ${top}px);
+            //-webkit-transform: translate(${left}px, ${top}px);`;
+            bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
+            -webkit-transform: translate3d(${left}px, ${top}px, 0px);`;
 
-            bind.style.width = this.getWidth() + 'px';
-            bind.style.height = this.getHeight() + 'px';
+            bind.style.width = width + 'px';
+            bind.style.height = height + 'px';
             //bind.style.paddingLeft = this.mPaddingLeft + 'px';
             //bind.style.paddingTop = this.mPaddingTop + 'px';
             //bind.style.paddingRight = this.mPaddingRight + 'px';
             //bind.style.paddingBottom = this.mPaddingBottom + 'px';
         }
+
+        private _lastSyncScrollX=0;
+        private _lastSyncScrollY=0;
         syncScrollToElement(){
             let sx = this.mScrollX;
             let sy = this.mScrollY;
+            if(this._lastSyncScrollX === sx && this._lastSyncScrollY === sy) return;
+            this._lastSyncScrollX = sx;
+            this._lastSyncScrollY = sy;
             if(this instanceof ViewGroup){
                 let group = <ViewGroup><any>this;
                 for (let i = 0, count=group.getChildCount(); i < count; i++) {
                     let child = group.getChildAt(i);
                     let item = child.bindElement;
 
-                    item.style.cssText += `transform: translate(${child.mLeft-sx}px, ${child.mTop-sy}px);
-                    -webkit-transform: translate(${child.mLeft-sx}px, ${child.mTop-sy}px);`;
+                    //item.style.transform = `translate(${child.mLeft-sx}px, ${child.mTop-sy}px)`;
+                    //item.style.cssText += `transform: translate(${child.mLeft-sx}px, ${child.mTop-sy}px);
+                    //-webkit-transform: translate(${child.mLeft-sx}px, ${child.mTop-sy}px);`;
+                    item.style.cssText += `transform: translate3d(${child.mLeft-sx}px, ${child.mTop-sy}px, 0px);
+                    -webkit-transform: translate3d(${child.mLeft-sx}px, ${child.mTop-sy}px, 0px);`;
 
                     //if(sx!==0) item.style.left =  (child.mLeft-sx)+'px';
                     //else item.style.left = child.mLeft + "px";

@@ -265,15 +265,19 @@ declare module android.graphics {
     class Canvas {
         private static FullRect;
         private mCanvasElement;
+        private mWidth;
+        private mHeight;
         private _mCanvasContent;
         private _saveCount;
         mCurrentClip: Rect;
         private shouldDoRectBeforeRestoreMap;
         private mClipStateMap;
-        private static sPool;
-        constructor(canvasElement: HTMLCanvasElement);
+        private static sRectPool;
+        private static obtainRect(copy?);
+        private static recycleRect(...rects);
         constructor(width: number, height: number);
         private init();
+        recycle(): void;
         canvasElement: HTMLCanvasElement;
         getHeight(): number;
         getWidth(): number;
@@ -758,7 +762,7 @@ declare module android.os {
         hasMessages(h: Handler, r: Runnable, object: any): boolean;
         hasMessages(h: Handler, what: number, object: any): boolean;
         addMessage(handler: Handler, msg: Message, delayHandleID: number): void;
-        recycleMessage(handler: Handler, message: Message): void;
+        recycleMessage(handler: Handler, message: Message, clearTimeoutId?: boolean): void;
         removeMessages(h: Handler, what: number, object: any): any;
         removeMessages(h: Handler, r: Runnable, object: any): any;
         removeCallbacksAndMessages(h: Handler, object: any): void;
@@ -1555,7 +1559,16 @@ declare module android.view {
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
         protected initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
-        syncBoundToElement(): void;
+        private _syncBoundToElementLock;
+        private syncBoundToElementRun;
+        postSyncBoundToElement(): void;
+        private _lastSyncLeft;
+        private _lastSyncTop;
+        private _lastSyncWidth;
+        private _lastSyncHeight;
+        private _syncBoundToElement();
+        private _lastSyncScrollX;
+        private _lastSyncScrollY;
         syncScrollToElement(): void;
         syncVisibleToElement(): void;
         private _initAttrObserver();
@@ -1698,7 +1711,7 @@ declare module android.view {
     import Canvas = android.graphics.Canvas;
     class Surface {
         private mCanvasElement;
-        private mLockedCanvasMap;
+        private mLockedRect;
         constructor(canvasElement: HTMLCanvasElement);
         lockCanvas(dirty: Rect): Canvas;
         unlockCanvasAndPost(canvas: Canvas): void;
@@ -2674,7 +2687,6 @@ declare module android.widget {
         onFinishInflate(): void;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         private getDesiredHeight();
-        onDraw(canvas: android.graphics.Canvas): void;
         setTextColor(color: number | ColorStateList): void;
         getTextColors(): ColorStateList;
         getCurrentTextColor(): number;
