@@ -312,17 +312,10 @@ module android.widget{
         }
 
 
-        onDraw(canvas:android.graphics.Canvas) {
-            //update text color
-            let r = Color.red(this.mCurTextColor);
-            let g = Color.green(this.mCurTextColor);
-            let b = Color.blue(this.mCurTextColor);
-            let a = Color.alpha(this.mCurTextColor);
-            this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a/255})`;
-            //this.mTextElement.style.opacity = a / 255 + '';
-
-            return super.onDraw(canvas);
-        }
+        //onDraw(canvas:android.graphics.Canvas) {
+        //
+        //    return super.onDraw(canvas);
+        //}
 
         setTextColor(color:number|ColorStateList){
             if(Number.isInteger(<number>color)){
@@ -347,7 +340,14 @@ module android.widget{
             let color = this.mTextColor.getColorForState(this.getDrawableState(), 0);
             if (color != this.mCurTextColor) {
                 this.mCurTextColor = color;
-                inval = true;
+
+                //update text color
+                let r = Color.red(this.mCurTextColor);
+                let g = Color.green(this.mCurTextColor);
+                let b = Color.blue(this.mCurTextColor);
+                let a = Color.alpha(this.mCurTextColor);
+                this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a/255})`;
+                inval = false;//true; //no need invalidate
             }
             //if (mLinkTextColor != null) {
             //    color = mLinkTextColor.getColorForState(getDrawableState(), 0);
