@@ -70,7 +70,7 @@ module androidui.attr{
                 //attr with state
                 if(attrValue.startsWith('@')){
                     let reference = android.view.View.findReference(attrValue, ele, rootElement, false);
-                    this._initStyleAttributes(reference, inParseState, rootElement);
+                    if(reference) this._initStyleAttributes(reference, inParseState, rootElement);
 
                 }else{
                     for(let part of attrValue.split(';')){
