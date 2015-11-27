@@ -15,33 +15,41 @@ module android.graphics {
     export class Canvas {
         private static FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
         private mCanvasElement:HTMLCanvasElement;
+        private mWidth = 0;
+        private mHeight = 0;
         private _mCanvasContent:CanvasRenderingContext2D;
         private _saveCount = 0;
         mCurrentClip:Rect;
         private shouldDoRectBeforeRestoreMap = new Map<number, Array<Rect>>();
         private mClipStateMap = new Map<number, Rect>();
 
-
-        private static sPool = new Pools.SynchronizedPool<Canvas>(10);
-
-        constructor(canvasElement:HTMLCanvasElement);
-        constructor(width:number, height:number);
-        constructor(...args) {
-            this.mCanvasElement = args.length===1 ? args[0] : document.createElement("canvas");
-            if(args.length===1){
-                this.mCanvasElement = args[0];
-
-            }else if(args.length===2){
-                this.mCanvasElement = document.createElement("canvas");
-                this.mCanvasElement.width = args[0];
-                this.mCanvasElement.height = args[1];
+        private static sRectPool = new Pools.SynchronizedPool<Rect>(100);
+        private static obtainRect(copy?:Rect):Rect {
+            let rect = Canvas.sRectPool.acquire();
+            if(!rect) rect = new Rect();
+            if(copy) rect.set(copy);
+            return rect;
+        }
+        private static recycleRect(...rects:Rect[]) {
+            for(let rect of rects){
+                rect.setEmpty();
+                Canvas.sRectPool.release(rect);
             }
+        }
+
+        constructor(width:number, height:number) {
+            this.mCanvasElement = document.createElement("canvas");
+            this.mCanvasElement.width = width;
+            this.mCanvasElement.height = height;
+            this.mWidth = width;
+            this.mHeight = height;
             this.init();
         }
 
         private init() {
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
-            this.mCurrentClip = new Rect(0, 0, this.mCanvasElement.width, this.mCanvasElement.height);
+            this.mCurrentClip = Canvas.obtainRect();
+            this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
             this._saveCount = 0;
 
             //let content = this._mCanvasContent;
@@ -64,16 +72,24 @@ module android.graphics {
             this.save();
         }
 
+        recycle(){
+            Canvas.recycleRect(this.mCurrentClip);
+            Canvas.recycleRect(...this.mClipStateMap.values());
+            for(let rects of this.shouldDoRectBeforeRestoreMap.values()){
+                Canvas.recycleRect(...rects);
+            }
+        }
+
         public get canvasElement():HTMLCanvasElement {
             return this.mCanvasElement;
         }
 
         public getHeight():number {
-            return this.mCanvasElement.height;
+            return this.mHeight;
         }
 
         public getWidth():number {
-            return this.mCanvasElement.width;
+            return this.mWidth;
         }
 
 
@@ -118,7 +134,7 @@ module android.graphics {
 
         save():number {
             this._mCanvasContent.save();
-            if(this.mCurrentClip) this.mClipStateMap.set(this._saveCount, new Rect(this.mCurrentClip));
+            if(this.mCurrentClip) this.mClipStateMap.set(this._saveCount, Canvas.obtainRect(this.mCurrentClip));
             this._saveCount++;
 
             return this._saveCount;
@@ -133,7 +149,9 @@ module android.graphics {
                 if(doRects.length%2 == 1){
                     this.fullRectForClip();
                 }
-                this.shouldDoRectBeforeRestoreMap.delete(this._saveCount);
+                while(doRects.length>0){
+                    Canvas.recycleRect(doRects.pop());
+                }
             }
 
 
@@ -143,6 +161,7 @@ module android.graphics {
             if(savedClip){
                 this.mClipStateMap.delete(this._saveCount);
                 this.mCurrentClip.set(savedClip);
+                Canvas.recycleRect(savedClip);
             }
         }
 
@@ -164,7 +183,7 @@ module android.graphics {
         clipRect(rect:Rect):boolean;
         clipRect(left:number, top:number, right:number, bottom:number):boolean;
         clipRect(...args):boolean {
-            let rect = new Rect();
+            let rect = Canvas.obtainRect();
 
             if (args.length === 1) {
                 rect.set(args[0]);
@@ -192,8 +211,8 @@ module android.graphics {
         }
 
         getClipBounds(bounds?:Rect):Rect {
-            if (!this.mCurrentClip) this.mCurrentClip = new Rect();
-            let rect = bounds || new Rect();
+            if (!this.mCurrentClip) this.mCurrentClip = Canvas.obtainRect();
+            let rect = bounds || Canvas.obtainRect();
             rect.set(this.mCurrentClip);
             return rect;
         }
