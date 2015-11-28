@@ -1,7 +1,7 @@
 # AndroidUI For Web
 
 移植Android的UI组件到Web端, 以Android的方式布局和处理界面.
-[点击查看Sample](sample/main.html)
+[点击查看Sample](http://linfaxin.com/AndroidUI4Web/sample/main.html)
 
 
 ### 特点
@@ -29,7 +29,7 @@
     </ScrollView>
 </android-Activity>
 ```
-[点击查看Sample](sample/main.html)
+[点击查看Sample](http://linfaxin.com/AndroidUI4Web/sample/main.html)
 
 
 ### 最后
