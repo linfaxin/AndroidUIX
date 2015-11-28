@@ -10,7 +10,7 @@
 2. 高性能: 使用 Web Canvas 绘制UI.
 3. 可靠: UI组件由Android源码转换而来, 同Android官方组件一样的可靠.
 4. 拓展: 所有流行的Github第三方Android UI库可以轻易移植到Web端.
-5. 易用: 标签式声明组件, 与Html标签完美融合.
+5. 易用: 标签式声明组件.
 
 
 
