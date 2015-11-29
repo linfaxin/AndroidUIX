@@ -4293,15 +4293,38 @@ module android.view {
                 domtree = <HTMLElement>eleOrRef;
             }
             let className = domtree.tagName;
-            if(className.toLowerCase() === 'android-layout'){
-                let child = domtree.firstElementChild;
-                if(child) return View.inflate(<HTMLElement>child, rootElement, viewParent);
-                return null;
-            }
-
             if(className.startsWith('ANDROID-')){
                 className = className.substring('ANDROID-'.length);
             }
+            if(className === 'LAYOUT'){// android-layout defined in resources tag
+                let child = domtree.firstElementChild;
+                if(child) return View.inflate(<HTMLElement>child, rootElement, viewParent);
+                return null;
+
+            }else if(className === 'INCLUDE'){
+                let refLayoutId = domtree.getAttribute('layout');
+                let view = View.inflate(refLayoutId, rootElement, viewParent);
+                if(view){
+                    //merge attr
+                    for(let attr of Array.from(domtree.attributes)){
+                        let name = attr.name;
+                        if(name==='layout') continue;
+                        view.bindElement.setAttribute(name, attr.value);
+                    }
+                }
+                return view;
+
+            }else if(className === 'MERGE'){
+                if(!viewParent) throw Error('merge tag need ViewParent');
+                Array.from(domtree.children).forEach((item)=>{
+                    if(item instanceof HTMLElement){
+                        let view = View.inflate(item, rootElement, viewParent);
+                        if(view instanceof View) viewParent.addView(view);
+                    }
+                });
+                return viewParent;
+            }
+
             let rootViewClass = ClassFinder.findClass(className, android.view);
             if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android['widget']);
             if(!rootViewClass) rootViewClass = ClassFinder.findClass(className);
@@ -4336,7 +4359,7 @@ module android.view {
                 children.forEach((item)=>{
                     if(item instanceof HTMLElement){
                         let view = View.inflate(item, rootElement, parent);
-                        if(view instanceof View) parent.addView(view);
+                        if(view instanceof View && view!==parent) parent.addView(view);
                     }
                 });
             }
