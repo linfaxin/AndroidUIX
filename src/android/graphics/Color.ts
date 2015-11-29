@@ -110,7 +110,7 @@ module android.graphics{
             throw new Error("Unknown color");
         }
 
-        static toRGBA(color:number):string {
+        static toARGBHex(color:number):string {
             let r = Color.red(color);
             let g = Color.green(color);
             let b = Color.blue(color);
@@ -120,6 +120,13 @@ module android.graphics{
             let hB = b<16 ? '0'+b.toString(16) : b.toString(16);
             let hA = a<16 ? '0'+a.toString(16) : a.toString(16);
             return "#"+hA+hR+hG+hB;
+        }
+        static toRGBAFunc(color:number):string {
+            let r = Color.red(color);
+            let g = Color.green(color);
+            let b = Color.blue(color);
+            let a = Color.alpha(color);
+            return`rgba(${r},${g},${b},${a/255})`;
         }
 
 

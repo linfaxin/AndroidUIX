@@ -683,7 +683,7 @@ module android.view {
                 this.setBackground(this._attrBinder.parseDrawable(value));
             }, ()=>{
                 if(this.mBackground instanceof ColorDrawable){
-                    return Color.toRGBA((<ColorDrawable>this.mBackground).getColor());
+                    return Color.toARGBHex((<ColorDrawable>this.mBackground).getColor());
                 }
                 return this.mBackground;
             });
@@ -4278,6 +4278,10 @@ module android.view {
         }
         isRootNamespace():boolean {
             return (this.mPrivateFlags&View.PFLAG_IS_ROOT_NAMESPACE) != 0;
+        }
+
+        getResources():Resources {
+            return Resources.from(this);
         }
 
         static inflate(eleOrRef:HTMLElement|string, rootElement:HTMLElement, viewParent?:ViewGroup):View{
