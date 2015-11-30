@@ -18359,13 +18359,16 @@ var android;
                 }
                 return AbsListView.INVALID_ROW_ID;
             }
+            checkOverScrollStartScrollIfNeeded() {
+                return this.mScrollY != 0;
+            }
             startScrollIfNeeded(y) {
                 const deltaY = y - this.mMotionY;
                 const distance = Math.abs(deltaY);
-                const overscroll = this.mScrollY != 0;
+                const overscroll = this.checkOverScrollStartScrollIfNeeded();
                 if (overscroll || distance > this.mTouchSlop) {
                     this.createScrollingCache();
-                    if (overscroll) {
+                    if (this.mScrollY != 0) {
                         this.mTouchMode = AbsListView.TOUCH_MODE_OVERSCROLL;
                         this.mMotionCorrection = 0;
                     }
@@ -30508,6 +30511,9 @@ var androidui;
                                 listView.mFlingRunnable.mScroller.abortAnimation();
                             }
                         }
+                    };
+                    listView.checkOverScrollStartScrollIfNeeded = () => {
+                        return listView.mScrollY > this.lockBottom || listView.mScrollY < this.lockTop;
                     };
                     listView.mFlingRunnable.edgeReached = (delta) => {
                         let initialVelocity = listView.mFlingRunnable.mScroller.getCurrVelocity();

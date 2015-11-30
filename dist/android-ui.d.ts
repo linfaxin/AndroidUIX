@@ -3393,6 +3393,7 @@ declare module android.widget {
         dispatchSetPressed(pressed: boolean): void;
         pointToPosition(x: number, y: number): number;
         pointToRowId(x: number, y: number): number;
+        protected checkOverScrollStartScrollIfNeeded(): boolean;
         private startScrollIfNeeded(y);
         private scrollIfNeeded(y);
         onTouchModeChanged(isInTouchMode: boolean): void;

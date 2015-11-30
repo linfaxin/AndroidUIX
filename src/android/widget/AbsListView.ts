@@ -2479,16 +2479,19 @@ module android.widget {
             return AbsListView.INVALID_ROW_ID;
         }
 
+        protected checkOverScrollStartScrollIfNeeded():boolean {
+            return this.mScrollY != 0;
+        }
 
         private startScrollIfNeeded(y:number):boolean {
             // Check if we have moved far enough that it looks more like a
             // scroll than a tap
             const deltaY:number = y - this.mMotionY;
             const distance:number = Math.abs(deltaY);
-            const overscroll:boolean = this.mScrollY != 0;
+            const overscroll:boolean = this.checkOverScrollStartScrollIfNeeded();
             if (overscroll || distance > this.mTouchSlop) {
                 this.createScrollingCache();
-                if (overscroll) {
+                if (this.mScrollY != 0) {
                     this.mTouchMode = AbsListView.TOUCH_MODE_OVERSCROLL;
                     this.mMotionCorrection = 0;
                 } else {

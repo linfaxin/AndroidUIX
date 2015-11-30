@@ -137,6 +137,10 @@ module androidui.widget {
                     }
                 };
 
+                listView.checkOverScrollStartScrollIfNeeded = ():boolean =>{
+                    return listView.mScrollY > this.lockBottom || listView.mScrollY < this.lockTop;
+                };
+
 
                 listView.mFlingRunnable.edgeReached = (delta:number)=>{
                     let initialVelocity = listView.mFlingRunnable.mScroller.getCurrVelocity();
