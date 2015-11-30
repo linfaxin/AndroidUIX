@@ -1989,7 +1989,7 @@ module android.support.v4.view {
         }
 
 
-        onDraw(canvas:android.graphics.Canvas) {
+        protected onDraw(canvas:android.graphics.Canvas) {
             super.onDraw(canvas);
 
             // Draw the margin drawable between pages if needed.

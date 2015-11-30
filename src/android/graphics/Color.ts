@@ -171,4 +171,6 @@ module android.graphics{
     Color.sColorNameMap.set("purple", 0xFF800080);
     Color.sColorNameMap.set("silver", 0xFFC0C0C0);
     Color.sColorNameMap.set("teal", 0xFF008080);
+    //androidui add
+    Color.sColorNameMap.set("transparent", Color.TRANSPARENT);
 }

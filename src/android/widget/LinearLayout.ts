@@ -193,7 +193,7 @@ module android.widget{
             return this.mDividerWidth;
         }
 
-        onDraw(canvas:Canvas) {
+        protected onDraw(canvas:Canvas) {
             if (this.mDivider == null) {
                 return;
             }

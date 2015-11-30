@@ -6,15 +6,25 @@ module android.content.res{
     import DisplayMetrics = android.util.DisplayMetrics;
 
     export class Resources{
-        private static displayMetrics;
-        private static density = 1;
+        static instance = new Resources();
+        static globalDensity = 1;
 
-        //FIXME not static, may about to one context
+        private displayMetrics:DisplayMetrics;
+
+        static from(any){
+            return Resources.instance;
+        }
+
+
         static getDisplayMetrics():DisplayMetrics {
-            if(Resources.displayMetrics) return Resources.displayMetrics;
-            Resources.displayMetrics = new DisplayMetrics();
-            let displayMetrics = Resources.displayMetrics;
-            let density = Resources.density;
+            return Resources.instance.getDisplayMetrics();
+        }
+
+        getDisplayMetrics():DisplayMetrics {
+            if(this.displayMetrics) return this.displayMetrics;
+            this.displayMetrics = new DisplayMetrics();
+            let displayMetrics = this.displayMetrics;
+            let density = Resources.globalDensity;
 
             displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT ;
             displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
@@ -28,9 +38,5 @@ module android.content.res{
             return displayMetrics;
         }
 
-        static setDensity(density:number):void{
-            Resources.density = density;
-            Resources.displayMetrics = null;
-        }
     }
 }

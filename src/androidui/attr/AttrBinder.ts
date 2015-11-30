@@ -140,29 +140,31 @@ module androidui.attr {
                 return new ColorDrawable(color);
             }
         }
-        parseColor(value:string):number{
+        parseColor(value:string, defaultValue?:number):number{
             let color = Number.parseInt(value);
             if(Number.isInteger(color)) return color;
 
-            if(value.startsWith('rgb(')){
-                value = value.replace('rgb(', '').replace(')', '');
-                let parts = value.split(',');
-                return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
+            try {
+                if (value.startsWith('rgb(')) {
+                    value = value.replace('rgb(', '').replace(')', '');
+                    let parts = value.split(',');
+                    return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
 
-            }else if(value.startsWith('rgba(')){
-                value = value.replace('rgba(', '').replace(')', '');
-                let parts = value.split(',');
-                return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
-                    Number.parseInt(parts[2]), Number.parseInt(parts[2])*255);
+                } else if (value.startsWith('rgba(')) {
+                    value = value.replace('rgba(', '').replace(')', '');
+                    let parts = value.split(',');
+                    return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
+                        Number.parseInt(parts[2]), Number.parseInt(parts[2]) * 255);
 
-            }else {
-                if (value.startsWith('#') && value.length === 4) {//support parse #333
-                    value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
-                }
-                try {
+                } else {
+                    if (value.startsWith('#') && value.length === 4) {//support parse #333
+                        value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
+                    }
                     return Color.parseColor(value);
-                } catch (e) {
                 }
+            } catch (e) {
+                if(defaultValue==null) throw e;
+                return defaultValue;
             }
         }
         parseColorList(value:string):ColorStateList{

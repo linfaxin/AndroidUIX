@@ -250,5 +250,36 @@ module android.graphics {
             }
         }
 
+        /**
+         * Draw the text, with origin at (x,y), using the specified paint. The
+         * origin is interpreted based on the Align setting in the paint.
+         *
+         * @param text  The text to be drawn
+         * @param x     The x-coordinate of the origin of the text being drawn
+         * @param y     The y-coordinate of the origin of the text being drawn
+         * @param paint The paint used for the text (e.g. color, size, style)
+         */
+        drawText(text:string, x:number, y:number, paint:Paint):void  {
+            this._mCanvasContent.save();
+            if(paint){
+                paint._setToCanvasContent(this._mCanvasContent);
+                switch (paint.getStyle()){
+                    case Paint.Style.STROKE:
+                        this._mCanvasContent.strokeText(text, x, y);
+                        break;
+                    case Paint.Style.FILL_AND_STROKE:
+                        this._mCanvasContent.strokeText(text, x, y);
+                        this._mCanvasContent.fillText(text, x, y);
+                        break;
+                    case Paint.Style.FILL:
+                    default :
+                        this._mCanvasContent.fillText(text, x, y);
+                        break;
+                }
+            }else{
+                this._mCanvasContent.fillText(text, x, y);
+            }
+            this._mCanvasContent.restore();
+        }
     }
 }

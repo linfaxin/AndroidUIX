@@ -1651,7 +1651,7 @@ module android.widget {
             return result;
         }
 
-        getTopFadingEdgeStrength():number {
+        protected getTopFadingEdgeStrength():number {
             const count:number = this.getChildCount();
             const fadeEdge:number = super.getTopFadingEdgeStrength();
             if (count == 0) {
@@ -1666,7 +1666,7 @@ module android.widget {
             }
         }
 
-        getBottomFadingEdgeStrength():number {
+        protected getBottomFadingEdgeStrength():number {
             const count:number = this.getChildCount();
             const fadeEdge:number = super.getBottomFadingEdgeStrength();
             if (count == 0) {

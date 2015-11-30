@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>android-components-sample</title>
+    <script>
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+
+        }
+    </style>
+
+</head>
+<body>
+<android-Activity style="width: 100%; height:100%;display: none;">
+    <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center">
+        <NumberPicker id="picker"
+                      android:layout_height="280dp"
+                      android:itemCount="5"
+                      android:minValue="1"
+                      android:maxValue="9"
+                >
+            <androidui.widget.HtmlDataPickerAdapter>
+                <item>1</item>
+                <item>2</item>
+                <item>3</item>
+                <item>4</item>
+                <item>5</item>
+                <item>6</item>
+                <item>7</item>
+                <item>8</item>
+                <item>9</item>
+            </androidui.widget.HtmlDataPickerAdapter>
+        </NumberPicker>
+    </LinearLayout>
+</android-Activity>
+
+<script src="../lib/browser-polyfill.min.js"></script>
+<script src="../lib/CustomElements.min.js"></script>
+<script src="../../dist/android-ui.es5.js"></script>
+<script src="../build/main.es5.js"></script>
+
+</body>
+</html>

@@ -3111,7 +3111,7 @@ module android.view {
             let sx = this.mScrollX;
             let sy = this.mScrollY;
 
-            this.syncScrollToElement();
+            this.postSyncScrollToElement();
 
             let hasNoCache = cache == null;
             let offsetForScroll = cache == null;
@@ -3211,7 +3211,7 @@ module android.view {
             }
 
         }
-        onDraw(canvas:Canvas):void {
+        protected onDraw(canvas:Canvas):void {
         }
         dispatchDraw(canvas:Canvas):void {
         }
@@ -3843,6 +3843,12 @@ module android.view {
         getVerticalFadingEdgeLength():number{
             return 0;
         }
+        setVerticalFadingEdgeEnabled(enable:boolean){
+            //no need impl fade edge. use overscroll instead
+        }
+        setHorizontalFadingEdgeEnabled(enable:boolean){
+            //no need impl fade edge. use overscroll instead
+        }
         setFadingEdgeLength(length:number){
             //no need impl fade edge. use overscroll instead
         }
@@ -3933,10 +3939,10 @@ module android.view {
         setScrollBarStyle(position:number){
             //scrollbar style not impl
         }
-        getTopFadingEdgeStrength():number{
+        protected getTopFadingEdgeStrength():number{
             return 0;//no fading edge
         }
-        getBottomFadingEdgeStrength():number{
+        protected getBottomFadingEdgeStrength():number{
             return 0;//no fading edge
         }
         protected getLeftFadingEdgeStrength():number{
@@ -4466,73 +4472,65 @@ module android.view {
             }
         }
 
+        postSyncScrollToElement(){
+            this.postSyncBoundToElement();
+        }
+
         private _lastSyncLeft:number;
         private _lastSyncTop:number;
         private _lastSyncWidth:number;
         private _lastSyncHeight:number;
-        private _syncBoundToElement(){
+        private _lastSyncScrollX=0;
+        private _lastSyncScrollY=0;
+        protected _syncBoundToElement():boolean {
             this._syncBoundToElementLock = false;
+
+            let change = false;
+
+            //bound
             const left = this.mLeft;
             const top = this.mTop;
             const width = this.getWidth();
             const height = this.getHeight();
-            if(left === this._lastSyncLeft && top === this._lastSyncTop
-                && width === this._lastSyncWidth && height === this._lastSyncHeight) return;
-            this._lastSyncLeft = left;
-            this._lastSyncTop = top;
-            this._lastSyncWidth = width;
-            this._lastSyncHeight = height;
+            if(left !== this._lastSyncLeft || top !== this._lastSyncTop
+                || width !== this._lastSyncWidth || height !== this._lastSyncHeight) {
+                this._lastSyncLeft = left;
+                this._lastSyncTop = top;
+                this._lastSyncWidth = width;
+                this._lastSyncHeight = height;
 
 
-            let bind = this.bindElement;
+                let bind = this.bindElement;
 
-            //bind.style.left = this.mLeft + 'px';
-            //bind.style.top = this.mTop + 'px';
-            //bind.style.cssText += `transform: translate(${left}px, ${top}px);
-            //-webkit-transform: translate(${left}px, ${top}px);`;
-            bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
+                bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
             -webkit-transform: translate3d(${left}px, ${top}px, 0px);`;
 
-            bind.style.width = width + 'px';
-            bind.style.height = height + 'px';
-            //bind.style.paddingLeft = this.mPaddingLeft + 'px';
-            //bind.style.paddingTop = this.mPaddingTop + 'px';
-            //bind.style.paddingRight = this.mPaddingRight + 'px';
-            //bind.style.paddingBottom = this.mPaddingBottom + 'px';
-        }
+                bind.style.width = width + 'px';
+                bind.style.height = height + 'px';
+                change = true;
+            }
 
-        private _lastSyncScrollX=0;
-        private _lastSyncScrollY=0;
-        syncScrollToElement(){
+            //scroll
             let sx = this.mScrollX;
             let sy = this.mScrollY;
-            if(this._lastSyncScrollX === sx && this._lastSyncScrollY === sy) return;
-            this._lastSyncScrollX = sx;
-            this._lastSyncScrollY = sy;
-            if(this instanceof ViewGroup){
-                let group = <ViewGroup><any>this;
-                for (let i = 0, count=group.getChildCount(); i < count; i++) {
-                    let child = group.getChildAt(i);
-                    let item = child.bindElement;
+            if(this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
+                this._lastSyncScrollX = sx;
+                this._lastSyncScrollY = sy;
+                if (this instanceof ViewGroup) {
+                    let group = <ViewGroup><any>this;
+                    for (let i = 0, count = group.getChildCount(); i < count; i++) {
+                        let child = group.getChildAt(i);
+                        let item = child.bindElement;
 
-                    //item.style.transform = `translate(${child.mLeft-sx}px, ${child.mTop-sy}px)`;
-                    //item.style.cssText += `transform: translate(${child.mLeft-sx}px, ${child.mTop-sy}px);
-                    //-webkit-transform: translate(${child.mLeft-sx}px, ${child.mTop-sy}px);`;
-                    item.style.cssText += `transform: translate3d(${child.mLeft-sx}px, ${child.mTop-sy}px, 0px);
-                    -webkit-transform: translate3d(${child.mLeft-sx}px, ${child.mTop-sy}px, 0px);`;
-
-                    //if(sx!==0) item.style.left =  (child.mLeft-sx)+'px';
-                    //else item.style.left = child.mLeft + "px";
-
-
-
-                    //if(sy!==0) item.style.transform = `translate3d(0px, ${-sy}px, 0px)`;
-                    //else item.style.transform = '';
-                    //if(sy!==0) item.style.top =  (child.mTop-sy)+'px';
-                    //else item.style.top = child.mTop + "px";
+                        item.style.cssText += `transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);
+                    -webkit-transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);`;
+                    }
                 }
+                change = true;
             }
+            return change;
         }
+
         syncVisibleToElement(){
             let visibility = this.getVisibility();
             if(visibility === View.VISIBLE){

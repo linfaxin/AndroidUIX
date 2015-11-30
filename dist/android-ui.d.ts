@@ -244,20 +244,74 @@ declare module android.graphics {
         static argb(alpha: number, red: number, green: number, blue: number): number;
         static rgba(red: number, green: number, blue: number, alpha: number): number;
         static parseColor(colorString: string): number;
-        static toRGBA(color: number): string;
+        static toARGBHex(color: number): string;
+        static toRGBAFunc(color: number): string;
         static getHtmlColor(color: string): number;
         static sColorNameMap: Map<String, number>;
     }
 }
 declare module android.graphics {
     class Paint {
+        private mTextStyle;
         private mColor;
         private mAlpha;
+        private mStrokeWidth;
+        private align;
+        private mStrokeCap;
+        private mStrokeJoin;
+        private textSize;
+        hasShadow: boolean;
+        shadowDx: number;
+        shadowDy: number;
+        shadowRadius: number;
+        shadowColor: number;
+        getStyle(): Paint.Style;
+        setStyle(style: Paint.Style): void;
         getColor(): number;
         setColor(color: number): void;
+        setARGB(a: number, r: number, g: number, b: number): void;
         getAlpha(): number;
         setAlpha(alpha: number): void;
+        getStrokeWidth(): number;
+        setStrokeWidth(width: number): void;
+        getStrokeCap(): Paint.Cap;
+        setStrokeCap(cap: Paint.Cap): void;
+        getStrokeJoin(): Paint.Join;
+        setStrokeJoin(join: Paint.Join): void;
+        setAntiAlias(enable: boolean): void;
+        setShadowLayer(radius: number, dx: number, dy: number, color: number): void;
+        clearShadowLayer(): void;
+        getTextAlign(): Paint.Align;
+        setTextAlign(align: Paint.Align): void;
+        getTextSize(): number;
+        setTextSize(textSize: number): void;
+        private static _measureTextContext;
+        measureText(text: string, index?: number, count?: number): number;
+        getTextWidths(text: string, start: number, end: number, widths: number[]): number;
+        getTextWidths_2(text: string, widths: number[]): number;
         _setToCanvasContent(context: CanvasRenderingContext2D): void;
+    }
+    module Paint {
+        enum Align {
+            LEFT = 0,
+            CENTER = 1,
+            RIGHT = 2,
+        }
+        enum Style {
+            FILL = 0,
+            STROKE = 1,
+            FILL_AND_STROKE = 2,
+        }
+        enum Cap {
+            BUTT = 0,
+            ROUND = 1,
+            SQUARE = 2,
+        }
+        enum Join {
+            MITER = 0,
+            ROUND = 1,
+            BEVEL = 2,
+        }
     }
 }
 declare module android.graphics {
@@ -301,6 +355,7 @@ declare module android.graphics {
         drawCanvas(canvas: Canvas, offsetX: number, offsetY: number, width?: number, height?: number, canvasOffsetX?: number, canvasOffsetY?: number, canvasImageWidth?: number, canvasImageHeight?: number): void;
         drawRect(rect: Rect, paint: Paint): any;
         drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
+        drawText(text: string, x: number, y: number, paint: Paint): void;
     }
 }
 declare module android.graphics.drawable {
@@ -566,10 +621,12 @@ declare module android.util {
 declare module android.content.res {
     import DisplayMetrics = android.util.DisplayMetrics;
     class Resources {
-        private static displayMetrics;
-        private static density;
+        static instance: Resources;
+        static globalDensity: number;
+        private displayMetrics;
+        static from(any: any): Resources;
         static getDisplayMetrics(): DisplayMetrics;
-        static setDensity(density: number): void;
+        getDisplayMetrics(): DisplayMetrics;
     }
 }
 declare module android.view {
@@ -940,7 +997,7 @@ declare module androidui.attr {
         parseBoolean(value: any, defaultValue?: boolean): boolean;
         parseGravity(s: string, defaultValue?: number): number;
         parseDrawable(s: string): Drawable;
-        parseColor(value: string): number;
+        parseColor(value: string, defaultValue?: number): number;
         parseColorList(value: string): ColorStateList;
         parseNumber(value: any, defaultValue?: number, baseValue?: number): number;
     }
@@ -1039,6 +1096,7 @@ declare module android.view {
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import ArrayList = java.util.ArrayList;
+    import Resources = android.content.res.Resources;
     import AttrBinder = androidui.attr.AttrBinder;
     import KeyEvent = android.view.KeyEvent;
     class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback {
@@ -1441,7 +1499,7 @@ declare module android.view {
         getDrawingTime(): number;
         drawFromParent(canvas: Canvas, parent: ViewGroup, drawingTime: number): boolean;
         draw(canvas: Canvas): void;
-        onDraw(canvas: Canvas): void;
+        protected onDraw(canvas: Canvas): void;
         dispatchDraw(canvas: Canvas): void;
         onDrawScrollBars(canvas: Canvas): void;
         isVerticalScrollBarHidden(): boolean;
@@ -1491,6 +1549,8 @@ declare module android.view {
         private initialAwakenScrollBars();
         awakenScrollBars(startDelay?: number, invalidate?: boolean): boolean;
         getVerticalFadingEdgeLength(): number;
+        setVerticalFadingEdgeEnabled(enable: boolean): void;
+        setHorizontalFadingEdgeEnabled(enable: boolean): void;
         setFadingEdgeLength(length: number): void;
         getHorizontalFadingEdgeLength(): number;
         getVerticalScrollbarWidth(): number;
@@ -1506,8 +1566,8 @@ declare module android.view {
         setVerticalScrollbarPosition(position: number): void;
         setHorizontalScrollbarPosition(position: number): void;
         setScrollBarStyle(position: number): void;
-        getTopFadingEdgeStrength(): number;
-        getBottomFadingEdgeStrength(): number;
+        protected getTopFadingEdgeStrength(): number;
+        protected getBottomFadingEdgeStrength(): number;
         protected getLeftFadingEdgeStrength(): number;
         protected getRightFadingEdgeStrength(): number;
         isScrollbarFadingEnabled(): boolean;
@@ -1546,6 +1606,7 @@ declare module android.view {
         getId(): string;
         setIsRootNamespace(isRoot: boolean): void;
         isRootNamespace(): boolean;
+        getResources(): Resources;
         static inflate(eleOrRef: HTMLElement | string, rootElement: HTMLElement, viewParent?: ViewGroup): View;
         static optReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
         static findReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
@@ -1562,14 +1623,14 @@ declare module android.view {
         private _syncBoundToElementLock;
         private syncBoundToElementRun;
         postSyncBoundToElement(): void;
+        postSyncScrollToElement(): void;
         private _lastSyncLeft;
         private _lastSyncTop;
         private _lastSyncWidth;
         private _lastSyncHeight;
-        private _syncBoundToElement();
         private _lastSyncScrollX;
         private _lastSyncScrollY;
-        syncScrollToElement(): void;
+        protected _syncBoundToElement(): boolean;
         syncVisibleToElement(): void;
         private _initAttrObserver();
         private _parseInitedAttribute();
@@ -2460,7 +2521,7 @@ declare module android.widget {
         setDividerPadding(padding: number): void;
         getDividerPadding(): number;
         getDividerWidth(): number;
-        onDraw(canvas: Canvas): void;
+        protected onDraw(canvas: Canvas): void;
         drawDividersVertical(canvas: Canvas): void;
         drawDividersHorizontal(canvas: Canvas): void;
         drawHorizontalDivider(canvas: Canvas, top: number): void;
@@ -2641,9 +2702,12 @@ declare module android.R {
     }
 }
 declare module android.R {
+    import Drawable = android.graphics.drawable.Drawable;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
+    import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class attr {
         static buttonStyle: {
-            background: graphics.drawable.Drawable;
+            background: Drawable;
             focusable: boolean;
             clickable: boolean;
             textSize: string;
@@ -2653,12 +2717,28 @@ declare module android.R {
             textSize: string;
             textColor: content.res.ColorStateList;
         };
+        static imageButtonStyle: {
+            background: Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            gravity: number;
+        };
         static gridViewStyle: {
             numColumns: number;
         };
         static listViewStyle: {
-            divider: graphics.drawable.Drawable;
+            divider: Drawable;
             dividerHeight: number;
+        };
+        static numberPickerStyle: {
+            orientation: string;
+            solidColor: string;
+            selectionDivider: ColorDrawable;
+            selectionDividerHeight: string;
+            selectionDividersDistance: string;
+            internalMinWidth: string;
+            internalMaxHeight: string;
+            virtualButtonPressedDrawable: StateListDrawable;
         };
     }
 }
@@ -2778,6 +2858,11 @@ declare module android.widget {
         }
     }
 }
+declare module android.widget {
+    class ImageButton extends ImageView {
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+    }
+}
 declare module android.util {
     class MathUtils {
         private static DEG_TO_RAD;
@@ -2870,6 +2955,7 @@ declare module java.lang {
     class Integer {
         static MIN_VALUE: number;
         static MAX_VALUE: number;
+        static parseInt(value: string): number;
     }
 }
 declare module android.text {
@@ -3262,8 +3348,8 @@ declare module android.widget {
         protected computeVerticalScrollExtent(): number;
         protected computeVerticalScrollOffset(): number;
         protected computeVerticalScrollRange(): number;
-        getTopFadingEdgeStrength(): number;
-        getBottomFadingEdgeStrength(): number;
+        protected getTopFadingEdgeStrength(): number;
+        protected getBottomFadingEdgeStrength(): number;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         setFrame(left: number, top: number, right: number, bottom: number): boolean;
@@ -3928,6 +4014,210 @@ declare module android.widget {
         private static clamp(n, my, child);
     }
 }
+declare module android.view.animation {
+    class DecelerateInterpolator implements Interpolator {
+        private mFactor;
+        constructor(factor?: number);
+        getInterpolation(input: number): number;
+    }
+}
+declare module java.util {
+    class Collections {
+        private static EMPTY_LIST;
+        static emptyList(): List<any>;
+    }
+}
+declare module android.R {
+    class layout {
+        static number_picker: HTMLElement;
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import Runnable = java.lang.Runnable;
+    import LinearLayout = android.widget.LinearLayout;
+    class NumberPicker extends LinearLayout {
+        private SELECTOR_WHEEL_ITEM_COUNT;
+        private static DEFAULT_LONG_PRESS_UPDATE_INTERVAL;
+        private SELECTOR_MIDDLE_ITEM_INDEX;
+        private static SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT;
+        private static SELECTOR_ADJUSTMENT_DURATION_MILLIS;
+        private static SNAP_SCROLL_DURATION;
+        private static TOP_AND_BOTTOM_FADING_EDGE_STRENGTH;
+        private static UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
+        private static UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
+        private static SIZE_UNSPECIFIED;
+        private static sTwoDigitFormatter;
+        static getTwoDigitFormatter(): NumberPicker.Formatter;
+        private mSelectionDividersDistance;
+        private mMinHeight_;
+        private mMaxHeight;
+        private mMinWidth_;
+        private mMaxWidth;
+        private mComputeMaxWidth;
+        private mTextSize;
+        private mSelectorTextGapHeight;
+        private mDisplayedValues;
+        private mMinValue;
+        private mMaxValue;
+        private mValue;
+        private mOnValueChangeListener;
+        private mOnScrollListener;
+        private mFormatter;
+        private mLongPressUpdateInterval;
+        private mSelectorIndexToStringCache;
+        private mSelectorIndices;
+        private mSelectorWheelPaint;
+        private mVirtualButtonPressedDrawable;
+        private mSelectorElementHeight;
+        private mInitialScrollOffset;
+        private mCurrentScrollOffset;
+        private mFlingScroller;
+        private mAdjustScroller;
+        private mPreviousScrollerY;
+        private mSetSelectionCommand;
+        private mChangeCurrentByOneFromLongPressCommand;
+        private mBeginSoftInputOnLongPressCommand;
+        private mLastDownEventY;
+        private mLastDownEventTime;
+        private mLastDownOrMoveEventY;
+        private mVelocityTracker;
+        private mMinimumFlingVelocity;
+        private mMaximumFlingVelocity;
+        private mWrapSelectorWheel;
+        private mSolidColor;
+        private mHasSelectorWheel;
+        private mSelectionDivider;
+        private mSelectionDividerHeight;
+        private mScrollState;
+        private mIngonreMoveEvents;
+        private mShowSoftInputOnTap;
+        private mTopSelectionDividerTop;
+        private mBottomSelectionDividerBottom;
+        private mLastHoveredChildVirtualViewId;
+        private mIncrementVirtualButtonPressed;
+        private mDecrementVirtualButtonPressed;
+        private mPressedStateHelper;
+        private mLastHandledDownDpadKeyCode;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        private moveToFinalScrollerPosition(scroller);
+        onInterceptTouchEvent(event: MotionEvent): boolean;
+        onTouchEvent(event: MotionEvent): boolean;
+        dispatchTouchEvent(event: MotionEvent): boolean;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        computeScroll(): void;
+        setEnabled(enabled: boolean): void;
+        scrollBy(x: number, y: number): void;
+        protected computeVerticalScrollOffset(): number;
+        protected computeVerticalScrollRange(): number;
+        protected computeVerticalScrollExtent(): number;
+        getSolidColor(): number;
+        setOnValueChangedListener(onValueChangedListener: NumberPicker.OnValueChangeListener): void;
+        setOnScrollListener(onScrollListener: NumberPicker.OnScrollListener): void;
+        setFormatter(formatter: NumberPicker.Formatter): void;
+        setValue(value: number): void;
+        private showSoftInput();
+        private hideSoftInput();
+        private tryComputeMaxWidth();
+        getWrapSelectorWheel(): boolean;
+        setWrapSelectorWheel(wrapSelectorWheel: boolean): void;
+        setOnLongPressUpdateInterval(intervalMillis: number): void;
+        getValue(): number;
+        getMinValue(): number;
+        setMinValue(minValue: number): void;
+        getMaxValue(): number;
+        setMaxValue(maxValue: number): void;
+        getDisplayedValues(): string[];
+        setDisplayedValues(displayedValues: string[]): void;
+        protected getTopFadingEdgeStrength(): number;
+        protected getBottomFadingEdgeStrength(): number;
+        protected onDetachedFromWindow(): void;
+        protected onDraw(canvas: Canvas): void;
+        private makeMeasureSpec(measureSpec, maxSize);
+        private resolveSizeAndStateRespectingMinSize(minSize, measuredSize, measureSpec);
+        private initializeSelectorWheelIndices();
+        private setValueInternal(current, notifyChange);
+        private changeValueByOne(increment);
+        private initializeSelectorWheel();
+        private initializeFadingEdges();
+        private onScrollerFinished(scroller);
+        private onScrollStateChange(scrollState);
+        private fling(velocityY);
+        private getWrappedSelectorIndex(selectorIndex);
+        private incrementSelectorIndices(selectorIndices);
+        private decrementSelectorIndices(selectorIndices);
+        private ensureCachedScrollSelectorValue(selectorIndex);
+        private formatNumber(value);
+        private validateInputTextView(v);
+        private updateInputTextView();
+        private notifyChange(previous, current);
+        private postChangeCurrentByOneFromLongPress(increment, delayMillis);
+        private removeChangeCurrentByOneFromLongPress();
+        private postBeginSoftInputOnLongPressCommand();
+        private removeBeginSoftInputCommand();
+        private removeAllCallbacks();
+        private getSelectedPos(value);
+        private postSetSelectionCommand(selectionStart, selectionEnd);
+        private ensureScrollWheelAdjusted();
+        private static formatNumberWithLocale(value);
+    }
+    module NumberPicker {
+        class TwoDigitFormatter implements NumberPicker.Formatter {
+            format(value: number): string;
+        }
+        interface OnValueChangeListener {
+            onValueChange(picker: NumberPicker, oldVal: number, newVal: number): void;
+        }
+        interface OnScrollListener {
+            onScrollStateChange(view: NumberPicker, scrollState: number): void;
+        }
+        module OnScrollListener {
+            var SCROLL_STATE_IDLE: number;
+            var SCROLL_STATE_TOUCH_SCROLL: number;
+            var SCROLL_STATE_FLING: number;
+        }
+        interface Formatter {
+            format(value: number): string;
+        }
+        class PressedStateHelper implements Runnable {
+            _NumberPicker_this: NumberPicker;
+            constructor(arg: NumberPicker);
+            static BUTTON_INCREMENT: number;
+            static BUTTON_DECREMENT: number;
+            private MODE_PRESS;
+            private MODE_TAPPED;
+            private mManagedButton;
+            private mMode;
+            cancel(): void;
+            buttonPressDelayed(button: number): void;
+            buttonTapped(button: number): void;
+            run(): void;
+        }
+        class SetSelectionCommand implements Runnable {
+            _NumberPicker_this: NumberPicker;
+            constructor(arg: NumberPicker);
+            private mSelectionStart;
+            private mSelectionEnd;
+            run(): void;
+        }
+        class ChangeCurrentByOneFromLongPressCommand implements Runnable {
+            _NumberPicker_this: NumberPicker;
+            constructor(arg: NumberPicker);
+            private mIncrement;
+            private setStep(increment);
+            run(): void;
+        }
+        class BeginSoftInputOnLongPressCommand implements Runnable {
+            _NumberPicker_this: NumberPicker;
+            constructor(arg: NumberPicker);
+            run(): void;
+        }
+    }
+}
 declare module android.support.v4.view {
     import DataSetObserver = android.database.DataSetObserver;
     import ViewGroup = android.view.ViewGroup;
@@ -4095,7 +4385,7 @@ declare module android.support.v4.view {
         private infoForCurrentScrollPosition();
         private determineTargetPage(currentPage, pageOffset, velocity, deltaX);
         draw(canvas: android.graphics.Canvas): void;
-        onDraw(canvas: android.graphics.Canvas): void;
+        protected onDraw(canvas: android.graphics.Canvas): void;
         beginFakeDrag(): boolean;
         endFakeDrag(): void;
         fakeDragBy(xOffset: number): void;
@@ -4369,6 +4659,13 @@ declare module androidui.widget {
         destroyItem(container: android.view.ViewGroup, position: number, object: any): void;
         isViewFromObject(view: android.view.View, object: any): boolean;
         getItemPosition(object: any): number;
+    }
+}
+declare module androidui.widget {
+    class HtmlDataPickerAdapter implements HtmlDataAdapter {
+        bindElementData: HTMLElement;
+        rootElement: HTMLElement;
+        onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
     }
 }
 declare module android.R {

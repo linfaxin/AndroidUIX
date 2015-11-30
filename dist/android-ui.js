@@ -861,7 +861,7 @@ var android;
                 }
                 throw new Error("Unknown color");
             }
-            static toRGBA(color) {
+            static toARGBHex(color) {
                 let r = Color.red(color);
                 let g = Color.green(color);
                 let b = Color.blue(color);
@@ -871,6 +871,13 @@ var android;
                 let hB = b < 16 ? '0' + b.toString(16) : b.toString(16);
                 let hA = a < 16 ? '0' + a.toString(16) : a.toString(16);
                 return "#" + hA + hR + hG + hB;
+            }
+            static toRGBAFunc(color) {
+                let r = Color.red(color);
+                let g = Color.green(color);
+                let b = Color.blue(color);
+                let a = Color.alpha(color);
+                return `rgba(${r},${g},${b},${a / 255})`;
             }
             static getHtmlColor(color) {
                 let i = Color.sColorNameMap.get(color.toLowerCase());
@@ -915,6 +922,7 @@ var android;
         Color.sColorNameMap.set("purple", 0xFF800080);
         Color.sColorNameMap.set("silver", 0xFFC0C0C0);
         Color.sColorNameMap.set("teal", 0xFF008080);
+        Color.sColorNameMap.set("transparent", Color.TRANSPARENT);
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
 /**
@@ -926,11 +934,26 @@ var android;
     var graphics;
     (function (graphics) {
         class Paint {
+            constructor() {
+                this.shadowDx = 0;
+                this.shadowDy = 0;
+                this.shadowRadius = 0;
+                this.shadowColor = 0;
+            }
+            getStyle() {
+                return this.mTextStyle;
+            }
+            setStyle(style) {
+                this.mTextStyle = style;
+            }
             getColor() {
                 return this.mColor;
             }
             setColor(color) {
                 this.mColor = color;
+            }
+            setARGB(a, r, g, b) {
+                this.setColor((a << 24) | (r << 16) | (g << 8) | b);
             }
             getAlpha() {
                 return this.mAlpha;
@@ -938,17 +961,140 @@ var android;
             setAlpha(alpha) {
                 this.mAlpha = alpha;
             }
+            getStrokeWidth() {
+                return this.mStrokeWidth;
+            }
+            setStrokeWidth(width) {
+                this.mStrokeWidth = width;
+            }
+            getStrokeCap() {
+                return this.mStrokeCap;
+            }
+            setStrokeCap(cap) {
+                this.mStrokeCap = cap;
+            }
+            getStrokeJoin() {
+                return this.mStrokeJoin;
+            }
+            setStrokeJoin(join) {
+                this.mStrokeJoin = join;
+            }
+            setAntiAlias(enable) {
+            }
+            setShadowLayer(radius, dx, dy, color) {
+                this.hasShadow = radius > 0.0;
+                this.shadowRadius = radius;
+                this.shadowDx = dx;
+                this.shadowDy = dy;
+                this.shadowColor = color;
+            }
+            clearShadowLayer() {
+                this.hasShadow = false;
+            }
+            getTextAlign() {
+                return this.align;
+            }
+            setTextAlign(align) {
+                this.align = align;
+            }
+            getTextSize() {
+                return this.textSize;
+            }
+            setTextSize(textSize) {
+                this.textSize = textSize;
+            }
+            measureText(text, index = 0, count = text.length) {
+                if (this.textSize != null) {
+                    let fontParts = Paint._measureTextContext.font.split(' ');
+                    Paint._measureTextContext.font = this.textSize + ' ' + fontParts[fontParts.length - 1];
+                }
+                else {
+                    Paint._measureTextContext.font = '';
+                }
+                return Paint._measureTextContext.measureText(text.substr(index, count)).width;
+            }
+            getTextWidths(text, start, end, widths) {
+                if (text == null) {
+                    throw Error(`new IllegalArgumentException("text cannot be null")`);
+                }
+                if ((start | end | (end - start) | (text.length - end)) < 0) {
+                    throw Error(`new IndexOutOfBoundsException()`);
+                }
+                if (end - start > widths.length) {
+                    throw Error(`new ArrayIndexOutOfBoundsException()`);
+                }
+                if (text.length == 0 || start == end) {
+                    return 0;
+                }
+                for (let i = start; i < end; i++) {
+                    widths[i] = this.measureText(text[i]);
+                }
+                return end - start;
+            }
+            getTextWidths_2(text, widths) {
+                return this.getTextWidths(text, 0, text.length, widths);
+            }
             _setToCanvasContent(context) {
                 if (Number.isInteger(this.mColor)) {
-                    let r = graphics.Color.red(this.mColor);
-                    let g = graphics.Color.green(this.mColor);
-                    let b = graphics.Color.blue(this.mColor);
-                    let a = graphics.Color.alpha(this.mColor);
-                    context.fillStyle = `rgba(${r},${g},${b},${a / 255})`;
+                    context.fillStyle = graphics.Color.toRGBAFunc(this.mColor);
+                }
+                if (this.align != null) {
+                    context.textAlign = Paint.Align[this.align].toLowerCase();
+                }
+                if (this.mStrokeWidth != null) {
+                    context.lineWidth = this.mStrokeWidth;
+                }
+                if (this.mStrokeCap != null) {
+                    context.lineCap = Paint.Cap[this.mStrokeCap].toLowerCase();
+                }
+                if (this.mStrokeJoin != null) {
+                    context.lineJoin = Paint.Join[this.mStrokeJoin].toLowerCase();
+                }
+                if (this.hasShadow) {
+                    context.shadowBlur = this.shadowRadius;
+                    context.shadowOffsetX = this.shadowDx;
+                    context.shadowOffsetY = this.shadowDy;
+                    context.shadowColor = graphics.Color.toRGBAFunc(this.shadowColor);
+                }
+                let fontStyles = [];
+                if (this.textSize != null) {
+                    fontStyles.push(this.textSize + 'px');
+                }
+                if (fontStyles.length > 0) {
+                    let fontParts = context.font.split(' ');
+                    fontStyles.push(fontParts[fontParts.length - 1]);
+                    context.font = fontStyles.join(' ');
                 }
             }
         }
+        Paint._measureTextContext = document.createElement('canvas').getContext('2d');
         graphics.Paint = Paint;
+        (function (Paint) {
+            (function (Align) {
+                Align[Align["LEFT"] = 0] = "LEFT";
+                Align[Align["CENTER"] = 1] = "CENTER";
+                Align[Align["RIGHT"] = 2] = "RIGHT";
+            })(Paint.Align || (Paint.Align = {}));
+            var Align = Paint.Align;
+            (function (Style) {
+                Style[Style["FILL"] = 0] = "FILL";
+                Style[Style["STROKE"] = 1] = "STROKE";
+                Style[Style["FILL_AND_STROKE"] = 2] = "FILL_AND_STROKE";
+            })(Paint.Style || (Paint.Style = {}));
+            var Style = Paint.Style;
+            (function (Cap) {
+                Cap[Cap["BUTT"] = 0] = "BUTT";
+                Cap[Cap["ROUND"] = 1] = "ROUND";
+                Cap[Cap["SQUARE"] = 2] = "SQUARE";
+            })(Paint.Cap || (Paint.Cap = {}));
+            var Cap = Paint.Cap;
+            (function (Join) {
+                Join[Join["MITER"] = 0] = "MITER";
+                Join[Join["ROUND"] = 1] = "ROUND";
+                Join[Join["BEVEL"] = 2] = "BEVEL";
+            })(Paint.Join || (Paint.Join = {}));
+            var Join = Paint.Join;
+        })(Paint = graphics.Paint || (graphics.Paint = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
 ///<reference path="../util/Pools.ts"/>
@@ -1145,6 +1291,29 @@ var android;
                     this._mCanvasContent.fillRect(left, top, right - left, bottom - top);
                     this._mCanvasContent.restore();
                 }
+            }
+            drawText(text, x, y, paint) {
+                this._mCanvasContent.save();
+                if (paint) {
+                    paint._setToCanvasContent(this._mCanvasContent);
+                    switch (paint.getStyle()) {
+                        case graphics.Paint.Style.STROKE:
+                            this._mCanvasContent.strokeText(text, x, y);
+                            break;
+                        case graphics.Paint.Style.FILL_AND_STROKE:
+                            this._mCanvasContent.strokeText(text, x, y);
+                            this._mCanvasContent.fillText(text, x, y);
+                            break;
+                        case graphics.Paint.Style.FILL:
+                        default:
+                            this._mCanvasContent.fillText(text, x, y);
+                            break;
+                    }
+                }
+                else {
+                    this._mCanvasContent.fillText(text, x, y);
+                }
+                this._mCanvasContent.restore();
             }
         }
         Canvas.FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
@@ -2123,12 +2292,18 @@ var android;
         (function (res) {
             var DisplayMetrics = android.util.DisplayMetrics;
             class Resources {
+                static from(any) {
+                    return Resources.instance;
+                }
                 static getDisplayMetrics() {
-                    if (Resources.displayMetrics)
-                        return Resources.displayMetrics;
-                    Resources.displayMetrics = new DisplayMetrics();
-                    let displayMetrics = Resources.displayMetrics;
-                    let density = Resources.density;
+                    return Resources.instance.getDisplayMetrics();
+                }
+                getDisplayMetrics() {
+                    if (this.displayMetrics)
+                        return this.displayMetrics;
+                    this.displayMetrics = new DisplayMetrics();
+                    let displayMetrics = this.displayMetrics;
+                    let density = Resources.globalDensity;
                     displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.density = density;
@@ -2138,12 +2313,9 @@ var android;
                     displayMetrics.heightPixels = window.innerHeight * density;
                     return displayMetrics;
                 }
-                static setDensity(density) {
-                    Resources.density = density;
-                    Resources.displayMetrics = null;
-                }
             }
-            Resources.density = 1;
+            Resources.instance = new Resources();
+            Resources.globalDensity = 1;
             res.Resources = Resources;
         })(res = content.res || (content.res = {}));
     })(content = android.content || (android.content = {}));
@@ -3656,29 +3828,32 @@ var androidui;
                     return new ColorDrawable(color);
                 }
             }
-            parseColor(value) {
+            parseColor(value, defaultValue) {
                 let color = Number.parseInt(value);
                 if (Number.isInteger(color))
                     return color;
-                if (value.startsWith('rgb(')) {
-                    value = value.replace('rgb(', '').replace(')', '');
-                    let parts = value.split(',');
-                    return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
-                }
-                else if (value.startsWith('rgba(')) {
-                    value = value.replace('rgba(', '').replace(')', '');
-                    let parts = value.split(',');
-                    return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[2]) * 255);
-                }
-                else {
-                    if (value.startsWith('#') && value.length === 4) {
-                        value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
+                try {
+                    if (value.startsWith('rgb(')) {
+                        value = value.replace('rgb(', '').replace(')', '');
+                        let parts = value.split(',');
+                        return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
                     }
-                    try {
+                    else if (value.startsWith('rgba(')) {
+                        value = value.replace('rgba(', '').replace(')', '');
+                        let parts = value.split(',');
+                        return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[2]) * 255);
+                    }
+                    else {
+                        if (value.startsWith('#') && value.length === 4) {
+                            value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
+                        }
                         return Color.parseColor(value);
                     }
-                    catch (e) {
-                    }
+                }
+                catch (e) {
+                    if (defaultValue == null)
+                        throw e;
+                    return defaultValue;
                 }
             }
             parseColorList(value) {
@@ -4116,7 +4291,7 @@ var android;
                     this.setBackground(this._attrBinder.parseDrawable(value));
                 }, () => {
                     if (this.mBackground instanceof ColorDrawable) {
-                        return Color.toRGBA(this.mBackground.getColor());
+                        return Color.toARGBHex(this.mBackground.getColor());
                     }
                     return this.mBackground;
                 });
@@ -6066,7 +6241,7 @@ var android;
                 this.computeScroll();
                 let sx = this.mScrollX;
                 let sy = this.mScrollY;
-                this.syncScrollToElement();
+                this.postSyncScrollToElement();
                 let hasNoCache = cache == null;
                 let offsetForScroll = cache == null;
                 let restoreTo = canvas.save();
@@ -6603,6 +6778,10 @@ var android;
             getVerticalFadingEdgeLength() {
                 return 0;
             }
+            setVerticalFadingEdgeEnabled(enable) {
+            }
+            setHorizontalFadingEdgeEnabled(enable) {
+            }
             setFadingEdgeLength(length) {
             }
             getHorizontalFadingEdgeLength() {
@@ -6928,6 +7107,9 @@ var android;
             isRootNamespace() {
                 return (this.mPrivateFlags & View.PFLAG_IS_ROOT_NAMESPACE) != 0;
             }
+            getResources() {
+                return Resources.from(this);
+            }
             static inflate(eleOrRef, rootElement, viewParent) {
                 let domtree;
                 if (typeof eleOrRef === "string") {
@@ -6942,14 +7124,39 @@ var android;
                     domtree = eleOrRef;
                 }
                 let className = domtree.tagName;
-                if (className.toLowerCase() === 'android-layout') {
+                if (className.startsWith('ANDROID-')) {
+                    className = className.substring('ANDROID-'.length);
+                }
+                if (className === 'LAYOUT') {
                     let child = domtree.firstElementChild;
                     if (child)
                         return View.inflate(child, rootElement, viewParent);
                     return null;
                 }
-                if (className.startsWith('ANDROID-')) {
-                    className = className.substring('ANDROID-'.length);
+                else if (className === 'INCLUDE') {
+                    let refLayoutId = domtree.getAttribute('layout');
+                    let view = View.inflate(refLayoutId, rootElement, viewParent);
+                    if (view) {
+                        for (let attr of Array.from(domtree.attributes)) {
+                            let name = attr.name;
+                            if (name === 'layout')
+                                continue;
+                            view.bindElement.setAttribute(name, attr.value);
+                        }
+                    }
+                    return view;
+                }
+                else if (className === 'MERGE') {
+                    if (!viewParent)
+                        throw Error('merge tag need ViewParent');
+                    Array.from(domtree.children).forEach((item) => {
+                        if (item instanceof HTMLElement) {
+                            let view = View.inflate(item, rootElement, viewParent);
+                            if (view instanceof View)
+                                viewParent.addView(view);
+                        }
+                    });
+                    return viewParent;
                 }
                 let rootViewClass = ClassFinder.findClass(className, android.view);
                 if (!rootViewClass)
@@ -6984,7 +7191,7 @@ var android;
                     children.forEach((item) => {
                         if (item instanceof HTMLElement) {
                             let view = View.inflate(item, rootElement, parent);
-                            if (view instanceof View)
+                            if (view instanceof View && view !== parent)
                                 parent.addView(view);
                         }
                     });
@@ -7067,41 +7274,46 @@ var android;
                     requestAnimationFrame(this.syncBoundToElementRun);
                 }
             }
+            postSyncScrollToElement() {
+                this.postSyncBoundToElement();
+            }
             _syncBoundToElement() {
                 this._syncBoundToElementLock = false;
+                let change = false;
                 const left = this.mLeft;
                 const top = this.mTop;
                 const width = this.getWidth();
                 const height = this.getHeight();
-                if (left === this._lastSyncLeft && top === this._lastSyncTop
-                    && width === this._lastSyncWidth && height === this._lastSyncHeight)
-                    return;
-                this._lastSyncLeft = left;
-                this._lastSyncTop = top;
-                this._lastSyncWidth = width;
-                this._lastSyncHeight = height;
-                let bind = this.bindElement;
-                bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
+                if (left !== this._lastSyncLeft || top !== this._lastSyncTop
+                    || width !== this._lastSyncWidth || height !== this._lastSyncHeight) {
+                    this._lastSyncLeft = left;
+                    this._lastSyncTop = top;
+                    this._lastSyncWidth = width;
+                    this._lastSyncHeight = height;
+                    let bind = this.bindElement;
+                    bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
             -webkit-transform: translate3d(${left}px, ${top}px, 0px);`;
-                bind.style.width = width + 'px';
-                bind.style.height = height + 'px';
-            }
-            syncScrollToElement() {
+                    bind.style.width = width + 'px';
+                    bind.style.height = height + 'px';
+                    change = true;
+                }
                 let sx = this.mScrollX;
                 let sy = this.mScrollY;
-                if (this._lastSyncScrollX === sx && this._lastSyncScrollY === sy)
-                    return;
-                this._lastSyncScrollX = sx;
-                this._lastSyncScrollY = sy;
-                if (this instanceof view_1.ViewGroup) {
-                    let group = this;
-                    for (let i = 0, count = group.getChildCount(); i < count; i++) {
-                        let child = group.getChildAt(i);
-                        let item = child.bindElement;
-                        item.style.cssText += `transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);
+                if (this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
+                    this._lastSyncScrollX = sx;
+                    this._lastSyncScrollY = sy;
+                    if (this instanceof view_1.ViewGroup) {
+                        let group = this;
+                        for (let i = 0, count = group.getChildCount(); i < count; i++) {
+                            let child = group.getChildAt(i);
+                            let item = child.bindElement;
+                            item.style.cssText += `transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);
                     -webkit-transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);`;
+                        }
                     }
+                    change = true;
                 }
+                return change;
             }
             syncVisibleToElement() {
                 let visibility = this.getVisibility();
@@ -15164,11 +15376,22 @@ var android;
 ///<reference path="drawable.ts"/>
 ///<reference path="color.ts"/>
 ///<reference path="../view/Gravity.ts"/>
+///<reference path="../view/View.ts"/>
+///<reference path="../content/res/Resources.ts"/>
+///<reference path="../graphics/Color.ts"/>
+///<reference path="../graphics/drawable/Drawable.ts"/>
+///<reference path="../graphics/drawable/InsetDrawable.ts"/>
+///<reference path="../graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../graphics/drawable/StateListDrawable.ts"/>
 var android;
 (function (android) {
     var R;
     (function (R) {
         var Gravity = android.view.Gravity;
+        var View = android.view.View;
+        var Color = android.graphics.Color;
+        var ColorDrawable = android.graphics.drawable.ColorDrawable;
+        var StateListDrawable = android.graphics.drawable.StateListDrawable;
         class attr {
             static get buttonStyle() {
                 return {
@@ -15185,6 +15408,14 @@ var android;
                     textColor: R.color.textView_textColor
                 };
             }
+            static get imageButtonStyle() {
+                return {
+                    background: R.drawable.button_background,
+                    focusable: true,
+                    clickable: true,
+                    gravity: Gravity.CENTER
+                };
+            }
             static get gridViewStyle() {
                 return {
                     numColumns: 1
@@ -15194,6 +15425,24 @@ var android;
                 return {
                     divider: android.R.drawable.list_divider,
                     dividerHeight: 1
+                };
+            }
+            static get numberPickerStyle() {
+                return {
+                    orientation: 'vertical',
+                    solidColor: 'transparent',
+                    selectionDivider: new ColorDrawable(0xcc33b5e5),
+                    selectionDividerHeight: '2dp',
+                    selectionDividersDistance: '48dp',
+                    internalMinWidth: '64dp',
+                    internalMaxHeight: '180dp',
+                    virtualButtonPressedDrawable: (() => {
+                        let stateList = new StateListDrawable();
+                        stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
+                        stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
+                        stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
+                        return stateList;
+                    })(),
                 };
             }
         }
@@ -15229,7 +15478,7 @@ var android;
                 this.mTextColor = ColorStateList.valueOf(Color.BLACK);
                 this.mCurTextColor = Color.BLACK;
                 this.mHintColor = Color.LTGRAY;
-                this.mSpacingMult = 1.2;
+                this.mSpacingMult = 1.0;
                 this.mSpacingAdd = 0;
                 this.mMaxWidth = Number.MAX_SAFE_INTEGER;
                 this.mMaxHeight = Number.MAX_SAFE_INTEGER;
@@ -15262,7 +15511,7 @@ var android;
                 this._attrBinder.addAttr('textSize', (value) => {
                     if (value !== undefined && value !== null) {
                         value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
-                        this.setTextSize(value);
+                        this.setTextSizeInPx(value);
                     }
                 }, () => {
                     return this.mTextSize;
@@ -16039,6 +16288,25 @@ var android;
         })(ImageView = widget.ImageView || (widget.ImageView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/28.
+ */
+///<reference path="ImageView.ts"/>
+///<reference path="../view/View.ts"/>
+///<reference path="../R/attr.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        class ImageButton extends widget.ImageView {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.applyDefaultAttributes(android.R.attr.imageButtonStyle);
+            }
+        }
+        widget.ImageButton = ImageButton;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
 /*
  * Copyright (C) 2009 The Android Open Source Project
  *
@@ -16327,6 +16595,9 @@ var java;
     var lang;
     (function (lang) {
         class Integer {
+            static parseInt(value) {
+                return Number.parseInt(value);
+            }
         }
         Integer.MIN_VALUE = Number.MIN_SAFE_INTEGER;
         Integer.MAX_VALUE = Number.MAX_SAFE_INTEGER;
@@ -25446,6 +25717,1166 @@ var android;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class DecelerateInterpolator {
+                constructor(factor = 1) {
+                    this.mFactor = factor;
+                }
+                getInterpolation(input) {
+                    let result;
+                    if (this.mFactor == 1.0) {
+                        result = (1.0 - (1.0 - input) * (1.0 - input));
+                    }
+                    else {
+                        result = (1.0 - Math.pow((1.0 - input), 2 * this.mFactor));
+                    }
+                    return result;
+                }
+            }
+            animation.DecelerateInterpolator = DecelerateInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/28.
+ */
+///<reference path="List.ts"/>
+///<reference path="ArrayList.ts"/>
+var java;
+(function (java) {
+    var util;
+    (function (util) {
+        class Collections {
+            static emptyList() {
+                return Collections.EMPTY_LIST;
+            }
+        }
+        Collections.EMPTY_LIST = new util.ArrayList();
+        util.Collections = Collections;
+    })(util = java.util || (java.util = {}));
+})(java || (java = {}));
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        const div = document.createElement('div');
+        function stringToElement(html) {
+            div.innerHTML = html;
+            return div.firstElementChild;
+        }
+        class layout {
+            static get number_picker() {
+                return stringToElement(`
+                    <merge>
+                        <ImageButton android:id="@+id/increment"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:background="transparent"
+                            android:state_pressed="#ddd"
+                            android:paddingTop="22dip"
+                            android:paddingBottom="22dip"
+                            android:contentDescription="@string/number_picker_increment_button" ></ImageButton>
+
+                        <View
+                            android:id="@+id/numberpicker_input"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"></View>
+
+                        <ImageButton android:id="@+id/decrement"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:background="transparent"
+                            android:state_pressed="#ddd"
+                            android:paddingTop="22dip"
+                            android:paddingBottom="22dip"
+                            android:contentDescription="@string/number_picker_decrement_button" ></ImageButton>
+                    </merge>`)
+                    .cloneNode(true);
+            }
+        }
+        R.layout = layout;
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/res/ColorStateList.ts"/>
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Color.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+///<reference path="../../android/util/SparseArray.ts"/>
+///<reference path="../../android/util/TypedValue.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/VelocityTracker.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../android/view/animation/DecelerateInterpolator.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
+///<reference path="../../java/util/Collections.ts"/>
+///<reference path="../../java/util/List.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/StringBuilder.ts"/>
+///<reference path="../../java/lang/Runnable.ts"/>
+///<reference path="../../android/widget/Button.ts"/>
+///<reference path="../../android/widget/ImageButton.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/OverScroller.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/R/layout.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Color = android.graphics.Color;
+        var Paint = android.graphics.Paint;
+        var Align = android.graphics.Paint.Align;
+        var SparseArray = android.util.SparseArray;
+        var KeyEvent = android.view.KeyEvent;
+        var MotionEvent = android.view.MotionEvent;
+        var VelocityTracker = android.view.VelocityTracker;
+        var ViewConfiguration = android.view.ViewConfiguration;
+        var DecelerateInterpolator = android.view.animation.DecelerateInterpolator;
+        var Integer = java.lang.Integer;
+        var LinearLayout = android.widget.LinearLayout;
+        var OverScroller = android.widget.OverScroller;
+        var R = android.R;
+        class NumberPicker extends LinearLayout {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.SELECTOR_WHEEL_ITEM_COUNT = 3;
+                this.SELECTOR_MIDDLE_ITEM_INDEX = Math.floor(this.SELECTOR_WHEEL_ITEM_COUNT / 2);
+                this.mSelectionDividersDistance = 0;
+                this.mMinHeight_ = NumberPicker.SIZE_UNSPECIFIED;
+                this.mMaxHeight = NumberPicker.SIZE_UNSPECIFIED;
+                this.mMinWidth_ = NumberPicker.SIZE_UNSPECIFIED;
+                this.mMaxWidth = NumberPicker.SIZE_UNSPECIFIED;
+                this.mTextSize = 0;
+                this.mSelectorTextGapHeight = 0;
+                this.mMinValue = 0;
+                this.mMaxValue = 0;
+                this.mValue = 0;
+                this.mLongPressUpdateInterval = NumberPicker.DEFAULT_LONG_PRESS_UPDATE_INTERVAL;
+                this.mSelectorIndexToStringCache = new SparseArray();
+                this.mSelectorElementHeight = 0;
+                this.mInitialScrollOffset = Integer.MIN_VALUE;
+                this.mCurrentScrollOffset = 0;
+                this.mPreviousScrollerY = 0;
+                this.mLastDownEventY = 0;
+                this.mLastDownEventTime = 0;
+                this.mLastDownOrMoveEventY = 0;
+                this.mMinimumFlingVelocity = 0;
+                this.mMaximumFlingVelocity = 0;
+                this.mSolidColor = 0;
+                this.mSelectionDividerHeight = 0;
+                this.mScrollState = NumberPicker.OnScrollListener.SCROLL_STATE_IDLE;
+                this.mTopSelectionDividerTop = 0;
+                this.mBottomSelectionDividerBottom = 0;
+                this.mLastHoveredChildVirtualViewId = 0;
+                this.mLastHandledDownDpadKeyCode = -1;
+                this.mHasSelectorWheel = true;
+                this._attrBinder.addAttr('solidColor', (value) => {
+                    this.mSolidColor = this._attrBinder.parseColor(value) || 0;
+                });
+                this._attrBinder.addAttr('selectionDivider', (value) => {
+                    this.mSelectionDivider = this._attrBinder.parseDrawable(value);
+                });
+                this._attrBinder.addAttr('selectionDividerHeight', (value) => {
+                    const defSelectionDividerHeight = NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT
+                        * this.getResources().getDisplayMetrics().density;
+                    this.mSelectionDividerHeight = this._attrBinder.parseNumber(value, defSelectionDividerHeight);
+                });
+                this._attrBinder.addAttr('selectionDividersDistance', (value) => {
+                    const defSelectionDividerDistance = NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE
+                        * this.getResources().getDisplayMetrics().density;
+                    this.mSelectionDividersDistance = this._attrBinder.parseNumber(value, defSelectionDividerDistance);
+                });
+                this._attrBinder.addAttr('internalMinHeight', (value) => {
+                    this.mMinHeight_ = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                });
+                this._attrBinder.addAttr('internalMaxHeight', (value) => {
+                    this.mMaxHeight = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                });
+                this._attrBinder.addAttr('internalMinWidth', (value) => {
+                    this.mMinWidth_ = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                });
+                this._attrBinder.addAttr('internalMaxWidth', (value) => {
+                    this.mMaxWidth = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                });
+                this._attrBinder.addAttr('internalMaxWidth', (value) => {
+                    this.mMaxWidth = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                });
+                this._attrBinder.addAttr('virtualButtonPressedDrawable', (value) => {
+                    this.mVirtualButtonPressedDrawable = this._attrBinder.parseDrawable(value);
+                });
+                this._attrBinder.addAttr('textSize', (value) => {
+                    this.mTextSize = this._attrBinder.parseNumber(value, this.mTextSize);
+                    this.mSelectorWheelPaint.setTextSize(this.mTextSize);
+                });
+                this._attrBinder.addAttr('textColor', (value) => {
+                    this.mSelectorWheelPaint.setColor(this._attrBinder.parseColor(value, this.mSelectorWheelPaint.getColor()));
+                });
+                this._attrBinder.addAttr('minValue', (value) => {
+                    this.setMinValue(this._attrBinder.parseNumber(value, this.mMinValue));
+                });
+                this._attrBinder.addAttr('maxValue', (value) => {
+                    this.setMaxValue(this._attrBinder.parseNumber(value, this.mMaxValue));
+                });
+                this._attrBinder.addAttr('itemCount', (value) => {
+                    this.SELECTOR_WHEEL_ITEM_COUNT = this._attrBinder.parseNumber(value, this.SELECTOR_WHEEL_ITEM_COUNT);
+                    this.SELECTOR_MIDDLE_ITEM_INDEX = Math.floor(this.SELECTOR_WHEEL_ITEM_COUNT / 2);
+                    this.mSelectorIndices = new Array(this.SELECTOR_WHEEL_ITEM_COUNT);
+                });
+                this.mTextSize = Math.floor(16 * this.getResources().getDisplayMetrics().density);
+                let paint = new Paint();
+                paint.setAntiAlias(true);
+                paint.setTextAlign(Align.CENTER);
+                paint.setTextSize(this.mTextSize);
+                paint.setColor(Color.DKGRAY);
+                this.mSelectorWheelPaint = paint;
+                this.mSelectorIndices = new Array(this.SELECTOR_WHEEL_ITEM_COUNT);
+                this.applyDefaultAttributes(R.attr.numberPickerStyle);
+                if (this.mMinHeight_ != NumberPicker.SIZE_UNSPECIFIED && this.mMaxHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMinHeight_ > this.mMaxHeight) {
+                    throw Error(`new IllegalArgumentException("minHeight > maxHeight")`);
+                }
+                if (this.mMinWidth_ != NumberPicker.SIZE_UNSPECIFIED && this.mMaxWidth != NumberPicker.SIZE_UNSPECIFIED && this.mMinWidth_ > this.mMaxWidth) {
+                    throw Error(`new IllegalArgumentException("minWidth > maxWidth")`);
+                }
+                this.mComputeMaxWidth = (this.mMaxWidth == NumberPicker.SIZE_UNSPECIFIED);
+                this.mPressedStateHelper = new NumberPicker.PressedStateHelper(this);
+                this.setWillNotDraw(!this.mHasSelectorWheel);
+                let configuration = ViewConfiguration.get();
+                this.mMinimumFlingVelocity = configuration.getScaledMinimumFlingVelocity();
+                this.mMaximumFlingVelocity = configuration.getScaledMaximumFlingVelocity() / NumberPicker.SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT;
+                this.mFlingScroller = new OverScroller(null, true);
+                this.mAdjustScroller = new OverScroller(new DecelerateInterpolator(2.5));
+                this.updateInputTextView();
+            }
+            static getTwoDigitFormatter() {
+                if (!NumberPicker.sTwoDigitFormatter) {
+                    NumberPicker.sTwoDigitFormatter = new NumberPicker.TwoDigitFormatter();
+                }
+                return NumberPicker.sTwoDigitFormatter;
+            }
+            onLayout(changed, left, top, right, bottom) {
+                if (!this.mHasSelectorWheel) {
+                    super.onLayout(changed, left, top, right, bottom);
+                    return;
+                }
+                const msrdWdth = this.getMeasuredWidth();
+                const msrdHght = this.getMeasuredHeight();
+                if (changed) {
+                    this.initializeSelectorWheel();
+                    this.initializeFadingEdges();
+                    this.mTopSelectionDividerTop = (this.getHeight() - this.mSelectionDividersDistance) / 2 - this.mSelectionDividerHeight;
+                    this.mBottomSelectionDividerBottom = this.mTopSelectionDividerTop + 2 * this.mSelectionDividerHeight + this.mSelectionDividersDistance;
+                }
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                if (!this.mHasSelectorWheel) {
+                    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                    return;
+                }
+                const newWidthMeasureSpec = this.makeMeasureSpec(widthMeasureSpec, this.mMaxWidth);
+                const newHeightMeasureSpec = this.makeMeasureSpec(heightMeasureSpec, this.mMaxHeight);
+                super.onMeasure(newWidthMeasureSpec, newHeightMeasureSpec);
+                const widthSize = this.resolveSizeAndStateRespectingMinSize(this.mMinWidth_, this.getMeasuredWidth(), widthMeasureSpec);
+                const heightSize = this.resolveSizeAndStateRespectingMinSize(this.mMinHeight_, this.getMeasuredHeight(), heightMeasureSpec);
+                this.setMeasuredDimension(widthSize, heightSize);
+            }
+            moveToFinalScrollerPosition(scroller) {
+                scroller.forceFinished(true);
+                let amountToScroll = scroller.getFinalY() - scroller.getCurrY();
+                let futureScrollOffset = (this.mCurrentScrollOffset + amountToScroll) % this.mSelectorElementHeight;
+                let overshootAdjustment = this.mInitialScrollOffset - futureScrollOffset;
+                if (overshootAdjustment != 0) {
+                    if (Math.abs(overshootAdjustment) > this.mSelectorElementHeight / 2) {
+                        if (overshootAdjustment > 0) {
+                            overshootAdjustment -= this.mSelectorElementHeight;
+                        }
+                        else {
+                            overshootAdjustment += this.mSelectorElementHeight;
+                        }
+                    }
+                    amountToScroll += overshootAdjustment;
+                    this.scrollBy(0, amountToScroll);
+                    return true;
+                }
+                return false;
+            }
+            onInterceptTouchEvent(event) {
+                if (!this.mHasSelectorWheel || !this.isEnabled()) {
+                    return false;
+                }
+                const action = event.getActionMasked();
+                switch (action) {
+                    case MotionEvent.ACTION_DOWN:
+                        {
+                            this.removeAllCallbacks();
+                            this.mLastDownOrMoveEventY = this.mLastDownEventY = event.getY();
+                            this.mLastDownEventTime = event.getEventTime();
+                            this.mIngonreMoveEvents = false;
+                            this.mShowSoftInputOnTap = false;
+                            if (this.mLastDownEventY < this.mTopSelectionDividerTop) {
+                                if (this.mScrollState == NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
+                                    this.mPressedStateHelper.buttonPressDelayed(NumberPicker.PressedStateHelper.BUTTON_DECREMENT);
+                                }
+                            }
+                            else if (this.mLastDownEventY > this.mBottomSelectionDividerBottom) {
+                                if (this.mScrollState == NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
+                                    this.mPressedStateHelper.buttonPressDelayed(NumberPicker.PressedStateHelper.BUTTON_INCREMENT);
+                                }
+                            }
+                            this.getParent().requestDisallowInterceptTouchEvent(true);
+                            if (!this.mFlingScroller.isFinished()) {
+                                this.mFlingScroller.forceFinished(true);
+                                this.mAdjustScroller.forceFinished(true);
+                                this.onScrollStateChange(NumberPicker.OnScrollListener.SCROLL_STATE_IDLE);
+                            }
+                            else if (!this.mAdjustScroller.isFinished()) {
+                                this.mFlingScroller.forceFinished(true);
+                                this.mAdjustScroller.forceFinished(true);
+                            }
+                            else if (this.mLastDownEventY < this.mTopSelectionDividerTop) {
+                                this.hideSoftInput();
+                                this.postChangeCurrentByOneFromLongPress(false, ViewConfiguration.getLongPressTimeout());
+                            }
+                            else if (this.mLastDownEventY > this.mBottomSelectionDividerBottom) {
+                                this.hideSoftInput();
+                                this.postChangeCurrentByOneFromLongPress(true, ViewConfiguration.getLongPressTimeout());
+                            }
+                            else {
+                                this.mShowSoftInputOnTap = true;
+                                this.postBeginSoftInputOnLongPressCommand();
+                            }
+                            return true;
+                        }
+                }
+                return false;
+            }
+            onTouchEvent(event) {
+                if (!this.isEnabled() || !this.mHasSelectorWheel) {
+                    return false;
+                }
+                if (this.mVelocityTracker == null) {
+                    this.mVelocityTracker = VelocityTracker.obtain();
+                }
+                this.mVelocityTracker.addMovement(event);
+                let action = event.getActionMasked();
+                switch (action) {
+                    case MotionEvent.ACTION_MOVE:
+                        {
+                            if (this.mIngonreMoveEvents) {
+                                break;
+                            }
+                            let currentMoveY = event.getY();
+                            if (this.mScrollState != NumberPicker.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
+                                let deltaDownY = Math.floor(Math.abs(currentMoveY - this.mLastDownEventY));
+                                if (deltaDownY > this.mTouchSlop) {
+                                    this.removeAllCallbacks();
+                                    this.onScrollStateChange(NumberPicker.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
+                                }
+                            }
+                            else {
+                                let deltaMoveY = Math.floor(((currentMoveY - this.mLastDownOrMoveEventY)));
+                                this.scrollBy(0, deltaMoveY);
+                                this.invalidate();
+                            }
+                            this.mLastDownOrMoveEventY = currentMoveY;
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        {
+                            this.removeBeginSoftInputCommand();
+                            this.removeChangeCurrentByOneFromLongPress();
+                            this.mPressedStateHelper.cancel();
+                            let velocityTracker = this.mVelocityTracker;
+                            velocityTracker.computeCurrentVelocity(1000, this.mMaximumFlingVelocity);
+                            let initialVelocity = Math.floor(velocityTracker.getYVelocity());
+                            if (Math.abs(initialVelocity) > this.mMinimumFlingVelocity) {
+                                this.fling(initialVelocity);
+                                this.onScrollStateChange(NumberPicker.OnScrollListener.SCROLL_STATE_FLING);
+                            }
+                            else {
+                                let eventY = Math.floor(event.getY());
+                                let deltaMoveY = Math.floor(Math.abs(eventY - this.mLastDownEventY));
+                                let deltaTime = event.getEventTime() - this.mLastDownEventTime;
+                                if (deltaMoveY <= this.mTouchSlop && deltaTime < ViewConfiguration.getTapTimeout()) {
+                                    if (this.mShowSoftInputOnTap) {
+                                        this.mShowSoftInputOnTap = false;
+                                        this.showSoftInput();
+                                    }
+                                    else {
+                                        let selectorIndexOffset = (eventY / this.mSelectorElementHeight) - this.SELECTOR_MIDDLE_ITEM_INDEX;
+                                        if (selectorIndexOffset > 0) {
+                                            this.changeValueByOne(true);
+                                            this.mPressedStateHelper.buttonTapped(NumberPicker.PressedStateHelper.BUTTON_INCREMENT);
+                                        }
+                                        else if (selectorIndexOffset < 0) {
+                                            this.changeValueByOne(false);
+                                            this.mPressedStateHelper.buttonTapped(NumberPicker.PressedStateHelper.BUTTON_DECREMENT);
+                                        }
+                                    }
+                                }
+                                else {
+                                    this.ensureScrollWheelAdjusted();
+                                }
+                                this.onScrollStateChange(NumberPicker.OnScrollListener.SCROLL_STATE_IDLE);
+                            }
+                            this.mVelocityTracker.recycle();
+                            this.mVelocityTracker = null;
+                        }
+                        break;
+                }
+                return true;
+            }
+            dispatchTouchEvent(event) {
+                const action = event.getActionMasked();
+                switch (action) {
+                    case MotionEvent.ACTION_CANCEL:
+                    case MotionEvent.ACTION_UP:
+                        this.removeAllCallbacks();
+                        break;
+                }
+                return super.dispatchTouchEvent(event);
+            }
+            dispatchKeyEvent(event) {
+                const keyCode = event.getKeyCode();
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_CENTER:
+                    case KeyEvent.KEYCODE_ENTER:
+                        this.removeAllCallbacks();
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        if (!this.mHasSelectorWheel) {
+                            break;
+                        }
+                        switch (event.getAction()) {
+                            case KeyEvent.ACTION_DOWN:
+                                if (this.mWrapSelectorWheel || (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) ? this.getValue() < this.getMaxValue() : this.getValue() > this.getMinValue()) {
+                                    this.requestFocus();
+                                    this.mLastHandledDownDpadKeyCode = keyCode;
+                                    this.removeAllCallbacks();
+                                    if (this.mFlingScroller.isFinished()) {
+                                        this.changeValueByOne(keyCode == KeyEvent.KEYCODE_DPAD_DOWN);
+                                    }
+                                    return true;
+                                }
+                                break;
+                            case KeyEvent.ACTION_UP:
+                                if (this.mLastHandledDownDpadKeyCode == keyCode) {
+                                    this.mLastHandledDownDpadKeyCode = -1;
+                                    return true;
+                                }
+                                break;
+                        }
+                }
+                return super.dispatchKeyEvent(event);
+            }
+            computeScroll() {
+                let scroller = this.mFlingScroller;
+                if (scroller.isFinished()) {
+                    scroller = this.mAdjustScroller;
+                    if (scroller.isFinished()) {
+                        return;
+                    }
+                }
+                scroller.computeScrollOffset();
+                let currentScrollerY = scroller.getCurrY();
+                if (this.mPreviousScrollerY == 0) {
+                    this.mPreviousScrollerY = scroller.getStartY();
+                }
+                this.scrollBy(0, currentScrollerY - this.mPreviousScrollerY);
+                this.mPreviousScrollerY = currentScrollerY;
+                if (scroller.isFinished()) {
+                    this.onScrollerFinished(scroller);
+                }
+                else {
+                    this.invalidate();
+                }
+            }
+            setEnabled(enabled) {
+                super.setEnabled(enabled);
+                if (!this.mHasSelectorWheel) {
+                }
+                if (!this.mHasSelectorWheel) {
+                }
+            }
+            scrollBy(x, y) {
+                let selectorIndices = this.mSelectorIndices;
+                if (!this.mWrapSelectorWheel && y > 0 && selectorIndices[this.SELECTOR_MIDDLE_ITEM_INDEX] <= this.mMinValue) {
+                    this.mCurrentScrollOffset = this.mInitialScrollOffset;
+                    return;
+                }
+                if (!this.mWrapSelectorWheel && y < 0 && selectorIndices[this.SELECTOR_MIDDLE_ITEM_INDEX] >= this.mMaxValue) {
+                    this.mCurrentScrollOffset = this.mInitialScrollOffset;
+                    return;
+                }
+                this.mCurrentScrollOffset += y;
+                while (this.mCurrentScrollOffset - this.mInitialScrollOffset > this.mSelectorTextGapHeight) {
+                    this.mCurrentScrollOffset -= this.mSelectorElementHeight;
+                    this.decrementSelectorIndices(selectorIndices);
+                    this.setValueInternal(selectorIndices[this.SELECTOR_MIDDLE_ITEM_INDEX], true);
+                    if (!this.mWrapSelectorWheel && selectorIndices[this.SELECTOR_MIDDLE_ITEM_INDEX] <= this.mMinValue) {
+                        this.mCurrentScrollOffset = this.mInitialScrollOffset;
+                    }
+                }
+                while (this.mCurrentScrollOffset - this.mInitialScrollOffset < -this.mSelectorTextGapHeight) {
+                    this.mCurrentScrollOffset += this.mSelectorElementHeight;
+                    this.incrementSelectorIndices(selectorIndices);
+                    this.setValueInternal(selectorIndices[this.SELECTOR_MIDDLE_ITEM_INDEX], true);
+                    if (!this.mWrapSelectorWheel && selectorIndices[this.SELECTOR_MIDDLE_ITEM_INDEX] >= this.mMaxValue) {
+                        this.mCurrentScrollOffset = this.mInitialScrollOffset;
+                    }
+                }
+            }
+            computeVerticalScrollOffset() {
+                return this.mCurrentScrollOffset;
+            }
+            computeVerticalScrollRange() {
+                return (this.mMaxValue - this.mMinValue + 1) * this.mSelectorElementHeight;
+            }
+            computeVerticalScrollExtent() {
+                return this.getHeight();
+            }
+            getSolidColor() {
+                return this.mSolidColor;
+            }
+            setOnValueChangedListener(onValueChangedListener) {
+                this.mOnValueChangeListener = onValueChangedListener;
+            }
+            setOnScrollListener(onScrollListener) {
+                this.mOnScrollListener = onScrollListener;
+            }
+            setFormatter(formatter) {
+                if (formatter == this.mFormatter) {
+                    return;
+                }
+                this.mFormatter = formatter;
+                this.initializeSelectorWheelIndices();
+                this.updateInputTextView();
+            }
+            setValue(value) {
+                this.setValueInternal(value, false);
+            }
+            showSoftInput() {
+            }
+            hideSoftInput() {
+            }
+            tryComputeMaxWidth() {
+                if (!this.mComputeMaxWidth) {
+                    return;
+                }
+                let maxTextWidth = 0;
+                if (this.mDisplayedValues == null) {
+                    let maxDigitWidth = 0;
+                    for (let i = 0; i <= 9; i++) {
+                        const digitWidth = this.mSelectorWheelPaint.measureText(NumberPicker.formatNumberWithLocale(i));
+                        if (digitWidth > maxDigitWidth) {
+                            maxDigitWidth = digitWidth;
+                        }
+                    }
+                    let numberOfDigits = 0;
+                    let current = this.mMaxValue;
+                    while (current > 0) {
+                        numberOfDigits++;
+                        current = current / 10;
+                    }
+                    maxTextWidth = Math.floor((numberOfDigits * maxDigitWidth));
+                }
+                else {
+                    const valueCount = this.mDisplayedValues.length;
+                    for (let i = 0; i < valueCount; i++) {
+                        const textWidth = this.mSelectorWheelPaint.measureText(this.mDisplayedValues[i]);
+                        if (textWidth > maxTextWidth) {
+                            maxTextWidth = Math.floor(textWidth);
+                        }
+                    }
+                }
+                if (this.mMaxWidth != maxTextWidth) {
+                    if (maxTextWidth > this.mMinWidth_) {
+                        this.mMaxWidth = maxTextWidth;
+                    }
+                    else {
+                        this.mMaxWidth = this.mMinWidth_;
+                    }
+                    this.invalidate();
+                }
+            }
+            getWrapSelectorWheel() {
+                return this.mWrapSelectorWheel;
+            }
+            setWrapSelectorWheel(wrapSelectorWheel) {
+                const wrappingAllowed = (this.mMaxValue - this.mMinValue) >= this.mSelectorIndices.length;
+                if ((!wrapSelectorWheel || wrappingAllowed) && wrapSelectorWheel != this.mWrapSelectorWheel) {
+                    this.mWrapSelectorWheel = wrapSelectorWheel;
+                }
+            }
+            setOnLongPressUpdateInterval(intervalMillis) {
+                this.mLongPressUpdateInterval = intervalMillis;
+            }
+            getValue() {
+                return this.mValue;
+            }
+            getMinValue() {
+                return this.mMinValue;
+            }
+            setMinValue(minValue) {
+                if (this.mMinValue == minValue) {
+                    return;
+                }
+                if (minValue < 0) {
+                    throw Error(`new IllegalArgumentException("minValue must be >= 0")`);
+                }
+                this.mMinValue = minValue;
+                if (this.mMinValue > this.mValue) {
+                    this.mValue = this.mMinValue;
+                }
+                let wrapSelectorWheel = this.mMaxValue - this.mMinValue > this.mSelectorIndices.length;
+                this.setWrapSelectorWheel(wrapSelectorWheel);
+                this.initializeSelectorWheelIndices();
+                this.updateInputTextView();
+                this.tryComputeMaxWidth();
+                this.invalidate();
+            }
+            getMaxValue() {
+                return this.mMaxValue;
+            }
+            setMaxValue(maxValue) {
+                if (this.mMaxValue == maxValue) {
+                    return;
+                }
+                if (maxValue < 0) {
+                    throw Error(`new IllegalArgumentException("maxValue must be >= 0")`);
+                }
+                this.mMaxValue = maxValue;
+                if (this.mMaxValue < this.mValue) {
+                    this.mValue = this.mMaxValue;
+                }
+                let wrapSelectorWheel = this.mMaxValue - this.mMinValue > this.mSelectorIndices.length;
+                this.setWrapSelectorWheel(wrapSelectorWheel);
+                this.initializeSelectorWheelIndices();
+                this.updateInputTextView();
+                this.tryComputeMaxWidth();
+                this.invalidate();
+            }
+            getDisplayedValues() {
+                return this.mDisplayedValues;
+            }
+            setDisplayedValues(displayedValues) {
+                if (this.mDisplayedValues == displayedValues) {
+                    return;
+                }
+                this.mDisplayedValues = displayedValues;
+                if (this.mDisplayedValues != null) {
+                }
+                else {
+                }
+                this.updateInputTextView();
+                this.initializeSelectorWheelIndices();
+                this.tryComputeMaxWidth();
+            }
+            getTopFadingEdgeStrength() {
+                return NumberPicker.TOP_AND_BOTTOM_FADING_EDGE_STRENGTH;
+            }
+            getBottomFadingEdgeStrength() {
+                return NumberPicker.TOP_AND_BOTTOM_FADING_EDGE_STRENGTH;
+            }
+            onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                this.removeAllCallbacks();
+            }
+            onDraw(canvas) {
+                if (!this.mHasSelectorWheel) {
+                    super.onDraw(canvas);
+                    return;
+                }
+                let x = (this.mRight - this.mLeft) / 2;
+                let y = this.mCurrentScrollOffset;
+                if (this.mVirtualButtonPressedDrawable != null && this.mScrollState == NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
+                    if (this.mDecrementVirtualButtonPressed) {
+                        this.mVirtualButtonPressedDrawable.setState(NumberPicker.PRESSED_STATE_SET);
+                        this.mVirtualButtonPressedDrawable.setBounds(0, 0, this.mRight, this.mTopSelectionDividerTop);
+                        this.mVirtualButtonPressedDrawable.draw(canvas);
+                    }
+                    if (this.mIncrementVirtualButtonPressed) {
+                        this.mVirtualButtonPressedDrawable.setState(NumberPicker.PRESSED_STATE_SET);
+                        this.mVirtualButtonPressedDrawable.setBounds(0, this.mBottomSelectionDividerBottom, this.mRight, this.mBottom);
+                        this.mVirtualButtonPressedDrawable.draw(canvas);
+                    }
+                }
+                let selectorIndices = this.mSelectorIndices;
+                for (let i = 0; i < selectorIndices.length; i++) {
+                    let selectorIndex = selectorIndices[i];
+                    let scrollSelectorValue = this.mSelectorIndexToStringCache.get(selectorIndex);
+                    canvas.drawText(scrollSelectorValue, x, y, this.mSelectorWheelPaint);
+                    y += this.mSelectorElementHeight;
+                }
+                if (this.mSelectionDivider != null) {
+                    let topOfTopDivider = this.mTopSelectionDividerTop;
+                    let bottomOfTopDivider = topOfTopDivider + this.mSelectionDividerHeight;
+                    this.mSelectionDivider.setBounds(0, topOfTopDivider, this.mRight, bottomOfTopDivider);
+                    this.mSelectionDivider.draw(canvas);
+                    let bottomOfBottomDivider = this.mBottomSelectionDividerBottom;
+                    let topOfBottomDivider = bottomOfBottomDivider - this.mSelectionDividerHeight;
+                    this.mSelectionDivider.setBounds(0, topOfBottomDivider, this.mRight, bottomOfBottomDivider);
+                    this.mSelectionDivider.draw(canvas);
+                }
+            }
+            makeMeasureSpec(measureSpec, maxSize) {
+                if (maxSize == NumberPicker.SIZE_UNSPECIFIED) {
+                    return measureSpec;
+                }
+                const size = NumberPicker.MeasureSpec.getSize(measureSpec);
+                const mode = NumberPicker.MeasureSpec.getMode(measureSpec);
+                switch (mode) {
+                    case NumberPicker.MeasureSpec.EXACTLY:
+                        return measureSpec;
+                    case NumberPicker.MeasureSpec.AT_MOST:
+                        return NumberPicker.MeasureSpec.makeMeasureSpec(Math.min(size, maxSize), NumberPicker.MeasureSpec.EXACTLY);
+                    case NumberPicker.MeasureSpec.UNSPECIFIED:
+                        return NumberPicker.MeasureSpec.makeMeasureSpec(maxSize, NumberPicker.MeasureSpec.EXACTLY);
+                    default:
+                        throw Error(`new IllegalArgumentException("Unknown measure mode: " + mode)`);
+                }
+            }
+            resolveSizeAndStateRespectingMinSize(minSize, measuredSize, measureSpec) {
+                if (minSize != NumberPicker.SIZE_UNSPECIFIED) {
+                    const desiredWidth = Math.max(minSize, measuredSize);
+                    return NumberPicker.resolveSizeAndState(desiredWidth, measureSpec, 0);
+                }
+                else {
+                    return measuredSize;
+                }
+            }
+            initializeSelectorWheelIndices() {
+                this.mSelectorIndexToStringCache.clear();
+                let selectorIndices = this.mSelectorIndices;
+                let current = this.getValue();
+                for (let i = 0; i < this.mSelectorIndices.length; i++) {
+                    let selectorIndex = Math.floor(current + (i - this.SELECTOR_MIDDLE_ITEM_INDEX));
+                    if (this.mWrapSelectorWheel) {
+                        selectorIndex = this.getWrappedSelectorIndex(selectorIndex);
+                    }
+                    selectorIndices[i] = selectorIndex;
+                    this.ensureCachedScrollSelectorValue(selectorIndices[i]);
+                }
+            }
+            setValueInternal(current, notifyChange) {
+                if (this.mValue == current) {
+                    return;
+                }
+                if (this.mWrapSelectorWheel) {
+                    current = this.getWrappedSelectorIndex(current);
+                }
+                else {
+                    current = Math.max(current, this.mMinValue);
+                    current = Math.min(current, this.mMaxValue);
+                }
+                let previous = this.mValue;
+                this.mValue = current;
+                this.updateInputTextView();
+                if (notifyChange) {
+                    this.notifyChange(previous, current);
+                }
+                this.initializeSelectorWheelIndices();
+                this.invalidate();
+            }
+            changeValueByOne(increment) {
+                if (this.mHasSelectorWheel) {
+                    if (!this.moveToFinalScrollerPosition(this.mFlingScroller)) {
+                        this.moveToFinalScrollerPosition(this.mAdjustScroller);
+                    }
+                    this.mPreviousScrollerY = 0;
+                    if (increment) {
+                        this.mFlingScroller.startScroll(0, 0, 0, -this.mSelectorElementHeight, NumberPicker.SNAP_SCROLL_DURATION);
+                    }
+                    else {
+                        this.mFlingScroller.startScroll(0, 0, 0, this.mSelectorElementHeight, NumberPicker.SNAP_SCROLL_DURATION);
+                    }
+                    this.invalidate();
+                }
+                else {
+                    if (increment) {
+                        this.setValueInternal(this.mValue + 1, true);
+                    }
+                    else {
+                        this.setValueInternal(this.mValue - 1, true);
+                    }
+                }
+            }
+            initializeSelectorWheel() {
+                this.initializeSelectorWheelIndices();
+                let selectorIndices = this.mSelectorIndices;
+                let totalTextHeight = selectorIndices.length * this.mTextSize;
+                let totalTextGapHeight = (this.mBottom - this.mTop) - totalTextHeight;
+                let textGapCount = selectorIndices.length;
+                this.mSelectorTextGapHeight = Math.floor((totalTextGapHeight / textGapCount + 0.5));
+                this.mSelectorElementHeight = this.mTextSize + this.mSelectorTextGapHeight;
+                let editTextTextPosition = this.getHeight() / 2 + this.mTextSize / 2;
+                this.mInitialScrollOffset = editTextTextPosition - (this.mSelectorElementHeight * this.SELECTOR_MIDDLE_ITEM_INDEX);
+                this.mCurrentScrollOffset = this.mInitialScrollOffset;
+                this.updateInputTextView();
+            }
+            initializeFadingEdges() {
+                this.setVerticalFadingEdgeEnabled(true);
+                this.setFadingEdgeLength((this.mBottom - this.mTop - this.mTextSize) / 2);
+            }
+            onScrollerFinished(scroller) {
+                if (scroller == this.mFlingScroller) {
+                    if (!this.ensureScrollWheelAdjusted()) {
+                        this.updateInputTextView();
+                    }
+                    this.onScrollStateChange(NumberPicker.OnScrollListener.SCROLL_STATE_IDLE);
+                }
+                else {
+                    if (this.mScrollState != NumberPicker.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
+                        this.updateInputTextView();
+                    }
+                }
+            }
+            onScrollStateChange(scrollState) {
+                if (this.mScrollState == scrollState) {
+                    return;
+                }
+                this.mScrollState = scrollState;
+                if (this.mOnScrollListener != null) {
+                    this.mOnScrollListener.onScrollStateChange(this, scrollState);
+                }
+            }
+            fling(velocityY) {
+                this.mPreviousScrollerY = 0;
+                if (velocityY > 0) {
+                    this.mFlingScroller.fling(0, 0, 0, velocityY, 0, 0, 0, Integer.MAX_VALUE);
+                }
+                else {
+                    this.mFlingScroller.fling(0, Integer.MAX_VALUE, 0, velocityY, 0, 0, 0, Integer.MAX_VALUE);
+                }
+                this.invalidate();
+            }
+            getWrappedSelectorIndex(selectorIndex) {
+                if (selectorIndex > this.mMaxValue) {
+                    return this.mMinValue + (selectorIndex - this.mMaxValue) % (this.mMaxValue - this.mMinValue) - 1;
+                }
+                else if (selectorIndex < this.mMinValue) {
+                    return this.mMaxValue - (this.mMinValue - selectorIndex) % (this.mMaxValue - this.mMinValue) + 1;
+                }
+                return selectorIndex;
+            }
+            incrementSelectorIndices(selectorIndices) {
+                for (let i = 0; i < selectorIndices.length - 1; i++) {
+                    selectorIndices[i] = selectorIndices[i + 1];
+                }
+                let nextScrollSelectorIndex = selectorIndices[selectorIndices.length - 2] + 1;
+                if (this.mWrapSelectorWheel && nextScrollSelectorIndex > this.mMaxValue) {
+                    nextScrollSelectorIndex = this.mMinValue;
+                }
+                selectorIndices[selectorIndices.length - 1] = nextScrollSelectorIndex;
+                this.ensureCachedScrollSelectorValue(nextScrollSelectorIndex);
+            }
+            decrementSelectorIndices(selectorIndices) {
+                for (let i = selectorIndices.length - 1; i > 0; i--) {
+                    selectorIndices[i] = selectorIndices[i - 1];
+                }
+                let nextScrollSelectorIndex = selectorIndices[1] - 1;
+                if (this.mWrapSelectorWheel && nextScrollSelectorIndex < this.mMinValue) {
+                    nextScrollSelectorIndex = this.mMaxValue;
+                }
+                selectorIndices[0] = nextScrollSelectorIndex;
+                this.ensureCachedScrollSelectorValue(nextScrollSelectorIndex);
+            }
+            ensureCachedScrollSelectorValue(selectorIndex) {
+                let cache = this.mSelectorIndexToStringCache;
+                let scrollSelectorValue = cache.get(selectorIndex);
+                if (scrollSelectorValue != null) {
+                    return;
+                }
+                if (selectorIndex < this.mMinValue || selectorIndex > this.mMaxValue) {
+                    scrollSelectorValue = "";
+                }
+                else {
+                    if (this.mDisplayedValues != null) {
+                        let displayedValueIndex = selectorIndex - this.mMinValue;
+                        scrollSelectorValue = this.mDisplayedValues[displayedValueIndex];
+                    }
+                    else {
+                        scrollSelectorValue = this.formatNumber(selectorIndex);
+                    }
+                }
+                cache.put(selectorIndex, scrollSelectorValue);
+            }
+            formatNumber(value) {
+                return (this.mFormatter != null) ? this.mFormatter.format(value) : NumberPicker.formatNumberWithLocale(value);
+            }
+            validateInputTextView(v) {
+            }
+            updateInputTextView() {
+                return false;
+            }
+            notifyChange(previous, current) {
+                if (this.mOnValueChangeListener != null) {
+                    this.mOnValueChangeListener.onValueChange(this, previous, this.mValue);
+                }
+            }
+            postChangeCurrentByOneFromLongPress(increment, delayMillis) {
+                if (this.mChangeCurrentByOneFromLongPressCommand == null) {
+                    this.mChangeCurrentByOneFromLongPressCommand = new NumberPicker.ChangeCurrentByOneFromLongPressCommand(this);
+                }
+                else {
+                    this.removeCallbacks(this.mChangeCurrentByOneFromLongPressCommand);
+                }
+                this.mChangeCurrentByOneFromLongPressCommand.setStep(increment);
+                this.postDelayed(this.mChangeCurrentByOneFromLongPressCommand, delayMillis);
+            }
+            removeChangeCurrentByOneFromLongPress() {
+                if (this.mChangeCurrentByOneFromLongPressCommand != null) {
+                    this.removeCallbacks(this.mChangeCurrentByOneFromLongPressCommand);
+                }
+            }
+            postBeginSoftInputOnLongPressCommand() {
+                if (this.mBeginSoftInputOnLongPressCommand == null) {
+                    this.mBeginSoftInputOnLongPressCommand = new NumberPicker.BeginSoftInputOnLongPressCommand(this);
+                }
+                else {
+                    this.removeCallbacks(this.mBeginSoftInputOnLongPressCommand);
+                }
+                this.postDelayed(this.mBeginSoftInputOnLongPressCommand, ViewConfiguration.getLongPressTimeout());
+            }
+            removeBeginSoftInputCommand() {
+                if (this.mBeginSoftInputOnLongPressCommand != null) {
+                    this.removeCallbacks(this.mBeginSoftInputOnLongPressCommand);
+                }
+            }
+            removeAllCallbacks() {
+                if (this.mChangeCurrentByOneFromLongPressCommand != null) {
+                    this.removeCallbacks(this.mChangeCurrentByOneFromLongPressCommand);
+                }
+                if (this.mSetSelectionCommand != null) {
+                    this.removeCallbacks(this.mSetSelectionCommand);
+                }
+                if (this.mBeginSoftInputOnLongPressCommand != null) {
+                    this.removeCallbacks(this.mBeginSoftInputOnLongPressCommand);
+                }
+                this.mPressedStateHelper.cancel();
+            }
+            getSelectedPos(value) {
+                if (this.mDisplayedValues == null) {
+                    try {
+                        return Integer.parseInt(value);
+                    }
+                    catch (e) {
+                    }
+                }
+                else {
+                    for (let i = 0; i < this.mDisplayedValues.length; i++) {
+                        value = value.toLowerCase();
+                        if (this.mDisplayedValues[i].toLowerCase().startsWith(value)) {
+                            return this.mMinValue + i;
+                        }
+                    }
+                    try {
+                        return Integer.parseInt(value);
+                    }
+                    catch (e) {
+                    }
+                }
+                return this.mMinValue;
+            }
+            postSetSelectionCommand(selectionStart, selectionEnd) {
+                if (this.mSetSelectionCommand == null) {
+                    this.mSetSelectionCommand = new NumberPicker.SetSelectionCommand(this);
+                }
+                else {
+                    this.removeCallbacks(this.mSetSelectionCommand);
+                }
+                this.mSetSelectionCommand.mSelectionStart = selectionStart;
+                this.mSetSelectionCommand.mSelectionEnd = selectionEnd;
+                this.post(this.mSetSelectionCommand);
+            }
+            ensureScrollWheelAdjusted() {
+                let deltaY = this.mInitialScrollOffset - this.mCurrentScrollOffset;
+                if (deltaY != 0) {
+                    this.mPreviousScrollerY = 0;
+                    if (Math.abs(deltaY) > this.mSelectorElementHeight / 2) {
+                        deltaY += (deltaY > 0) ? -this.mSelectorElementHeight : this.mSelectorElementHeight;
+                    }
+                    this.mAdjustScroller.startScroll(0, 0, 0, deltaY, NumberPicker.SELECTOR_ADJUSTMENT_DURATION_MILLIS);
+                    this.invalidate();
+                    return true;
+                }
+                return false;
+            }
+            static formatNumberWithLocale(value) {
+                return value + '';
+            }
+        }
+        NumberPicker.DEFAULT_LONG_PRESS_UPDATE_INTERVAL = 300;
+        NumberPicker.SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT = 8;
+        NumberPicker.SELECTOR_ADJUSTMENT_DURATION_MILLIS = 800;
+        NumberPicker.SNAP_SCROLL_DURATION = 300;
+        NumberPicker.TOP_AND_BOTTOM_FADING_EDGE_STRENGTH = 0.9;
+        NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT = 2;
+        NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE = 48;
+        NumberPicker.SIZE_UNSPECIFIED = -1;
+        widget.NumberPicker = NumberPicker;
+        (function (NumberPicker) {
+            class TwoDigitFormatter {
+                format(value) {
+                    let s = value + '';
+                    if (s.length === 1)
+                        s = '0' + s;
+                    return s;
+                }
+            }
+            NumberPicker.TwoDigitFormatter = TwoDigitFormatter;
+            var OnScrollListener;
+            (function (OnScrollListener) {
+                OnScrollListener.SCROLL_STATE_IDLE = 0;
+                OnScrollListener.SCROLL_STATE_TOUCH_SCROLL = 1;
+                OnScrollListener.SCROLL_STATE_FLING = 2;
+            })(OnScrollListener = NumberPicker.OnScrollListener || (NumberPicker.OnScrollListener = {}));
+            class PressedStateHelper {
+                constructor(arg) {
+                    this.MODE_PRESS = 1;
+                    this.MODE_TAPPED = 2;
+                    this.mManagedButton = 0;
+                    this.mMode = 0;
+                    this._NumberPicker_this = arg;
+                }
+                cancel() {
+                    this.mMode = 0;
+                    this.mManagedButton = 0;
+                    this._NumberPicker_this.removeCallbacks(this);
+                    if (this._NumberPicker_this.mIncrementVirtualButtonPressed) {
+                        this._NumberPicker_this.mIncrementVirtualButtonPressed = false;
+                        this._NumberPicker_this.invalidate(0, this._NumberPicker_this.mBottomSelectionDividerBottom, this._NumberPicker_this.mRight, this._NumberPicker_this.mBottom);
+                    }
+                    if (this._NumberPicker_this.mDecrementVirtualButtonPressed) {
+                        this._NumberPicker_this.mDecrementVirtualButtonPressed = false;
+                        this._NumberPicker_this.invalidate(0, 0, this._NumberPicker_this.mRight, this._NumberPicker_this.mTopSelectionDividerTop);
+                    }
+                }
+                buttonPressDelayed(button) {
+                    this.cancel();
+                    this.mMode = this.MODE_PRESS;
+                    this.mManagedButton = button;
+                    this._NumberPicker_this.postDelayed(this, ViewConfiguration.getTapTimeout());
+                }
+                buttonTapped(button) {
+                    this.cancel();
+                    this.mMode = this.MODE_TAPPED;
+                    this.mManagedButton = button;
+                    this._NumberPicker_this.post(this);
+                }
+                run() {
+                    switch (this.mMode) {
+                        case this.MODE_PRESS:
+                            {
+                                switch (this.mManagedButton) {
+                                    case PressedStateHelper.BUTTON_INCREMENT:
+                                        {
+                                            this._NumberPicker_this.mIncrementVirtualButtonPressed = true;
+                                            this._NumberPicker_this.invalidate(0, this._NumberPicker_this.mBottomSelectionDividerBottom, this._NumberPicker_this.mRight, this._NumberPicker_this.mBottom);
+                                        }
+                                        break;
+                                    case PressedStateHelper.BUTTON_DECREMENT:
+                                        {
+                                            this._NumberPicker_this.mDecrementVirtualButtonPressed = true;
+                                            this._NumberPicker_this.invalidate(0, 0, this._NumberPicker_this.mRight, this._NumberPicker_this.mTopSelectionDividerTop);
+                                        }
+                                }
+                            }
+                            break;
+                        case this.MODE_TAPPED:
+                            {
+                                switch (this.mManagedButton) {
+                                    case PressedStateHelper.BUTTON_INCREMENT:
+                                        {
+                                            if (!this._NumberPicker_this.mIncrementVirtualButtonPressed) {
+                                                this._NumberPicker_this.postDelayed(this, ViewConfiguration.getPressedStateDuration());
+                                            }
+                                            this._NumberPicker_this.mIncrementVirtualButtonPressed = !this._NumberPicker_this.mIncrementVirtualButtonPressed;
+                                            this._NumberPicker_this.invalidate(0, this._NumberPicker_this.mBottomSelectionDividerBottom, this._NumberPicker_this.mRight, this._NumberPicker_this.mBottom);
+                                        }
+                                        break;
+                                    case PressedStateHelper.BUTTON_DECREMENT:
+                                        {
+                                            if (!this._NumberPicker_this.mDecrementVirtualButtonPressed) {
+                                                this._NumberPicker_this.postDelayed(this, ViewConfiguration.getPressedStateDuration());
+                                            }
+                                            this._NumberPicker_this.mDecrementVirtualButtonPressed = !this._NumberPicker_this.mDecrementVirtualButtonPressed;
+                                            this._NumberPicker_this.invalidate(0, 0, this._NumberPicker_this.mRight, this._NumberPicker_this.mTopSelectionDividerTop);
+                                        }
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+            PressedStateHelper.BUTTON_INCREMENT = 1;
+            PressedStateHelper.BUTTON_DECREMENT = 2;
+            NumberPicker.PressedStateHelper = PressedStateHelper;
+            class SetSelectionCommand {
+                constructor(arg) {
+                    this.mSelectionStart = 0;
+                    this.mSelectionEnd = 0;
+                    this._NumberPicker_this = arg;
+                }
+                run() {
+                }
+            }
+            NumberPicker.SetSelectionCommand = SetSelectionCommand;
+            class ChangeCurrentByOneFromLongPressCommand {
+                constructor(arg) {
+                    this._NumberPicker_this = arg;
+                }
+                setStep(increment) {
+                    this.mIncrement = increment;
+                }
+                run() {
+                    this._NumberPicker_this.changeValueByOne(this.mIncrement);
+                    this._NumberPicker_this.postDelayed(this, this._NumberPicker_this.mLongPressUpdateInterval);
+                }
+            }
+            NumberPicker.ChangeCurrentByOneFromLongPressCommand = ChangeCurrentByOneFromLongPressCommand;
+            class BeginSoftInputOnLongPressCommand {
+                constructor(arg) {
+                    this._NumberPicker_this = arg;
+                }
+                run() {
+                    this._NumberPicker_this.showSoftInput();
+                    this._NumberPicker_this.mIngonreMoveEvents = true;
+                }
+            }
+            NumberPicker.BeginSoftInputOnLongPressCommand = BeginSoftInputOnLongPressCommand;
+        })(NumberPicker = widget.NumberPicker || (widget.NumberPicker = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/**
  * Created by linfaxin on 15/11/5.
  */
 ///<reference path="../../../database/DataSetObservable.ts"/>
@@ -28428,17 +29859,6 @@ var androidui;
                 this.rootStyleElement = document.createElement("style");
             }
             this.rootStyleElement.setAttribute('scoped', '');
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            if (density != 1) {
-                this.rootStyleElement.innerHTML += `
-                .${AndroidUI.DomClassName}.id-${this.AndroidID} RootLayout {
-                    transform:scale(${1 / density},${1 / density});
-                    -webkit-transform:scale(${1 / density},${1 / density});
-                    transform-origin:0 0;
-                    -webkit-transform-origin:0 0;
-                }
-                `;
-            }
             if (this.element.style.display === 'none') {
                 this.element.style.display = '';
             }
@@ -28640,6 +30060,17 @@ var androidui;
         `;
     document.head.appendChild(styleElement);
     class RootLayout extends FrameLayout {
+        _syncBoundToElement() {
+            let change = super._syncBoundToElement();
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            if (change && density !== 1) {
+                this.bindElement.style.cssText += `transform:scale(${1 / density},${1 / density});
+                    -webkit-transform:scale(${1 / density},${1 / density});
+                    transform-origin:0 0;
+                    -webkit-transform-origin:0 0;`;
+            }
+            return change;
+        }
     }
 })(androidui || (androidui = {}));
 /**
@@ -28908,6 +30339,37 @@ var androidui;
         HtmlDataPagerAdapter.RefElementProperty = "RefElement";
         HtmlDataPagerAdapter.BindAdapterProperty = "BindAdapter";
         widget.HtmlDataPagerAdapter = HtmlDataPagerAdapter;
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/11/16.
+ */
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/widget/NumberPicker.ts"/>
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var NumberPicker = android.widget.NumberPicker;
+        class HtmlDataPickerAdapter {
+            onInflateAdapter(bindElement, rootElement, parent) {
+                this.bindElementData = bindElement;
+                this.rootElement = rootElement;
+                if (parent instanceof NumberPicker) {
+                    const callBack = (arr, observer) => {
+                        const values = [];
+                        for (let child of Array.from(this.bindElementData.children)) {
+                            values.push(child.innerText);
+                        }
+                        parent.setDisplayedValues(values);
+                    };
+                    callBack.call(this);
+                    let observer = new MutationObserver(callBack);
+                    observer.observe(this.bindElementData, { childList: true });
+                }
+            }
+        }
+        widget.HtmlDataPickerAdapter = HtmlDataPickerAdapter;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
 var android;
@@ -29623,9 +31085,11 @@ var androidui;
 ///<reference path="android/widget/TextView.ts"/>
 ///<reference path="android/widget/Button.ts"/>
 ///<reference path="android/widget/ImageView.ts"/>
+///<reference path="android/widget/ImageButton.ts"/>
 ///<reference path="android/widget/ListView.ts"/>
 ///<reference path="android/widget/GridView.ts"/>
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
+///<reference path="android/widget/NumberPicker.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
@@ -29634,6 +31098,7 @@ var androidui;
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
+///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
 window[`android`] = android;
 window[`java`] = java;

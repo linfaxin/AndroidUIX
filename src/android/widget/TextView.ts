@@ -29,7 +29,7 @@ module android.widget{
         private mTextColor = ColorStateList.valueOf(Color.BLACK);
         private mCurTextColor = Color.BLACK;
         private mHintColor = Color.LTGRAY;
-        private mSpacingMult = 1.2;
+        private mSpacingMult = 1.0;
         private mSpacingAdd = 0;
 
         private mMaxWidth = Number.MAX_SAFE_INTEGER;
@@ -67,7 +67,7 @@ module android.widget{
             this._attrBinder.addAttr('textSize', (value)=>{
                 if(value !== undefined && value !== null){
                     value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
-                    this.setTextSize(value);
+                    this.setTextSizeInPx(value);
                 }
             }, ()=>{
                 return this.mTextSize;

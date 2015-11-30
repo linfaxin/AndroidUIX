@@ -101,18 +101,6 @@ module androidui {
             }
             this.rootStyleElement.setAttribute('scoped', '');//don't set scoped, or safari will lose the style
 
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            if(density!=1){
-                this.rootStyleElement.innerHTML += `
-                .${AndroidUI.DomClassName}.id-${this.AndroidID} RootLayout {
-                    transform:scale(${1/density},${1/density});
-                    -webkit-transform:scale(${1/density},${1/density});
-                    transform-origin:0 0;
-                    -webkit-transform-origin:0 0;
-                }
-                `;
-            }
-
             if (this.element.style.display==='none') {
                 this.element.style.display = '';
             }
@@ -338,5 +326,17 @@ module androidui {
     document.head.appendChild(styleElement);
 
     class RootLayout extends FrameLayout{
+
+        protected _syncBoundToElement():boolean {
+            let change = super._syncBoundToElement();
+            let density = android.content.res.Resources.getDisplayMetrics().density;
+            if(change && density!==1){
+                this.bindElement.style.cssText += `transform:scale(${1/density},${1/density});
+                    -webkit-transform:scale(${1/density},${1/density});
+                    transform-origin:0 0;
+                    -webkit-transform-origin:0 0;`;
+            }
+            return change;
+        }
     }
 }
