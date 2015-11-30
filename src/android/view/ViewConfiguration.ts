@@ -8,10 +8,6 @@ module android.view{
     import SparseArray = android.util.SparseArray;
     import Resources = android.content.res.Resources;
 
-    const metrics = Resources.getDisplayMetrics();
-    const density = metrics.density;
-    const sizeAndDensity = density;
-
     export class ViewConfiguration{
         private static SCROLL_BAR_SIZE = 8;
         private static SCROLL_BAR_FADE_DURATION = 250;
@@ -36,6 +32,12 @@ module android.view{
         private static WINDOW_TOUCH_SLOP = 16;
         private static MINIMUM_FLING_VELOCITY = 50;
         private static MAXIMUM_FLING_VELOCITY = 8000;
+
+        /**
+         * The maximum size of View's drawing cache, expressed in bytes. This size
+         * should be at least equal to the size of the screen in ARGB888 format.
+         */
+        private static MAXIMUM_DRAWING_CACHE_SIZE:number = 480 * 800 * 4;
         private static SCROLL_FRICTION = 0.015;
         private static OVERSCROLL_DISTANCE = 800;//defaul 0
         private static OVERFLING_DISTANCE = 100;//default 6
@@ -48,18 +50,21 @@ module android.view{
             return ViewConfiguration.instance;
         }
 
-        mEdgeSlop:number = sizeAndDensity * ViewConfiguration.EDGE_SLOP;
-        mFadingEdgeLength:number = sizeAndDensity * ViewConfiguration.FADING_EDGE_LENGTH;
-        mMinimumFlingVelocity:number = density * ViewConfiguration.MINIMUM_FLING_VELOCITY;
-        mMaximumFlingVelocity:number = density * ViewConfiguration.MAXIMUM_FLING_VELOCITY;
-        mScrollbarSize:number = density * ViewConfiguration.SCROLL_BAR_SIZE;
-        mTouchSlop:number = density * ViewConfiguration.TOUCH_SLOP;
-        mDoubleTapTouchSlop:number = sizeAndDensity * ViewConfiguration.DOUBLE_TAP_TOUCH_SLOP;
-        mPagingTouchSlop:number = density * ViewConfiguration.PAGING_TOUCH_SLOP;
-        mDoubleTapSlop:number = density * ViewConfiguration.DOUBLE_TAP_SLOP;
-        mWindowTouchSlop:number = sizeAndDensity * ViewConfiguration.WINDOW_TOUCH_SLOP;
-        mOverscrollDistance:number = sizeAndDensity * ViewConfiguration.OVERSCROLL_DISTANCE;
-        mOverflingDistance:number = sizeAndDensity * ViewConfiguration.OVERFLING_DISTANCE;
+        private density = Resources.getDisplayMetrics().density;
+        private sizeAndDensity = this.density;
+        mEdgeSlop:number = this.sizeAndDensity * ViewConfiguration.EDGE_SLOP;
+        mFadingEdgeLength:number = this.sizeAndDensity * ViewConfiguration.FADING_EDGE_LENGTH;
+        mMinimumFlingVelocity:number = this.density * ViewConfiguration.MINIMUM_FLING_VELOCITY;
+        mMaximumFlingVelocity:number = this.density * ViewConfiguration.MAXIMUM_FLING_VELOCITY;
+        mScrollbarSize:number = this.density * ViewConfiguration.SCROLL_BAR_SIZE;
+        mTouchSlop:number = this.density * ViewConfiguration.TOUCH_SLOP;
+        mDoubleTapTouchSlop:number = this.sizeAndDensity * ViewConfiguration.DOUBLE_TAP_TOUCH_SLOP;
+        mPagingTouchSlop:number = this.density * ViewConfiguration.PAGING_TOUCH_SLOP;
+        mDoubleTapSlop:number = this.density * ViewConfiguration.DOUBLE_TAP_SLOP;
+        mWindowTouchSlop:number = this.sizeAndDensity * ViewConfiguration.WINDOW_TOUCH_SLOP;
+        mOverscrollDistance:number = this.sizeAndDensity * ViewConfiguration.OVERSCROLL_DISTANCE;
+        mOverflingDistance:number = this.sizeAndDensity * ViewConfiguration.OVERFLING_DISTANCE;
+        mMaximumDrawingCacheSize:number = ViewConfiguration.MAXIMUM_DRAWING_CACHE_SIZE;
 
         getScaledScrollBarSize():number {
             return this.mScrollbarSize;
@@ -122,6 +127,15 @@ module android.view{
         }
         getScaledMaximumFlingVelocity() {
             return this.mMaximumFlingVelocity;
+        }
+
+        /**
+         * The maximum drawing cache size expressed in bytes.
+         *
+         * @return the maximum size of View's drawing cache expressed in bytes
+         */
+        getScaledMaximumDrawingCacheSize():number  {
+            return this.mMaximumDrawingCacheSize;
         }
         getScaledOverscrollDistance() {
             return this.mOverscrollDistance;

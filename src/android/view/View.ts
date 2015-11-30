@@ -605,6 +605,7 @@ module android.view {
          * the cache to use 16 bit bitmaps instead of 32 bit.
          */
         private mDrawingCacheBackgroundColor = 0;
+        private mUnscaledDrawingCache:Canvas;
         mTouchSlop = 0;
         private mVerticalScrollFactor = 0;
         private mOverScrollMode = 0;
@@ -3102,9 +3103,9 @@ module android.view {
             if (caching) {
                 if (layerType != View.LAYER_TYPE_NONE) {
                     layerType = View.LAYER_TYPE_SOFTWARE;
-                    //this.buildDrawingCache(true);//TODO when cache impl
+                    this.buildDrawingCache(true);
                 }
-                //cache = this.getDrawingCache(true);//TODO when cache impl
+                cache = this.getDrawingCache(true);
             }
 
             this.computeScroll();
@@ -3362,6 +3363,43 @@ module android.view {
         }
 
         /**
+         * <p>Returns the bitmap in which this view drawing is cached. The returned bitmap
+         * is null when caching is disabled. If caching is enabled and the cache is not ready,
+         * this method will create it. Calling {@link #draw(android.graphics.Canvas)} will not
+         * draw from the cache when the cache is enabled. To benefit from the cache, you must
+         * request the drawing cache by calling this method and draw it on screen if the
+         * returned bitmap is not null.</p>
+         *
+         * <p>Note about auto scaling in compatibility mode: When auto scaling is not enabled,
+         * this method will create a bitmap of the same size as this view. Because this bitmap
+         * will be drawn scaled by the parent ViewGroup, the result on screen might show
+         * scaling artifacts. To avoid such artifacts, you should call this method by setting
+         * the auto scaling to true. Doing so, however, will generate a bitmap of a different
+         * size than the view. This implies that your application must be able to handle this
+         * size.</p>
+         *
+         * @param autoScale Indicates whether the generated bitmap should be scaled based on
+         *        the current density of the screen when the application is in compatibility
+         *        mode.
+         *
+         * @return A bitmap representing this view or null if cache is disabled.
+         *
+         * @see #setDrawingCacheEnabled(boolean)
+         * @see #isDrawingCacheEnabled()
+         * @see #buildDrawingCache(boolean)
+         * @see #destroyDrawingCache()
+         */
+        getDrawingCache(autoScale=false):Canvas  {
+            if ((this.mViewFlags & View.WILL_NOT_CACHE_DRAWING) == View.WILL_NOT_CACHE_DRAWING) {
+                return null;
+            }
+            if ((this.mViewFlags & View.DRAWING_CACHE_ENABLED) == View.DRAWING_CACHE_ENABLED) {
+                this.buildDrawingCache(autoScale);
+            }
+            return this.mUnscaledDrawingCache;
+        }
+
+        /**
          * Setting a solid background color for the drawing cache's bitmaps will improve
          * performance and memory usage. Note, though that this should only be used if this
          * view will always be drawn on top of a solid color.
@@ -3388,7 +3426,87 @@ module android.view {
             return this.mDrawingCacheBackgroundColor;
         }
         destroyDrawingCache() {
-            //TODO impl draw cache
+            if (this.mUnscaledDrawingCache != null) {
+                this.mUnscaledDrawingCache.recycle();
+                this.mUnscaledDrawingCache = null;
+            }
+        }
+
+        /**
+         * <p>Forces the drawing cache to be built if the drawing cache is invalid.</p>
+         *
+         * <p>If you call {@link #buildDrawingCache()} manually without calling
+         * {@link #setDrawingCacheEnabled(boolean) setDrawingCacheEnabled(true)}, you
+         * should cleanup the cache by calling {@link #destroyDrawingCache()} afterwards.</p>
+         *
+         * <p>Note about auto scaling in compatibility mode: When auto scaling is not enabled,
+         * this method will create a bitmap of the same size as this view. Because this bitmap
+         * will be drawn scaled by the parent ViewGroup, the result on screen might show
+         * scaling artifacts. To avoid such artifacts, you should call this method by setting
+         * the auto scaling to true. Doing so, however, will generate a bitmap of a different
+         * size than the view. This implies that your application must be able to handle this
+         * size.</p>
+         *
+         * <p>You should avoid calling this method when hardware acceleration is enabled. If
+         * you do not need the drawing cache bitmap, calling this method will increase memory
+         * usage and cause the view to be rendered in software once, thus negatively impacting
+         * performance.</p>
+         *
+         * @see #getDrawingCache()
+         * @see #destroyDrawingCache()
+         */
+        buildDrawingCache(autoScale=false):void  {
+            if ((this.mPrivateFlags & View.PFLAG_DRAWING_CACHE_VALID) == 0 || this.mUnscaledDrawingCache == null){
+                this.mCachingFailed = false;
+                let width:number = this.mRight - this.mLeft;
+                let height:number = this.mBottom - this.mTop;
+                const attachInfo:View.AttachInfo = this.mAttachInfo;
+                const drawingCacheBackgroundColor:number = this.mDrawingCacheBackgroundColor;
+                const opaque:boolean = drawingCacheBackgroundColor != 0 || this.isOpaque();
+                const use32BitCache:boolean = true;
+                const projectedBitmapSize:number = width * height * (opaque && !use32BitCache ? 2 : 4);
+                const drawingCacheSize:number = ViewConfiguration.get().getScaledMaximumDrawingCacheSize();
+                if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
+                    if (width > 0 && height > 0) {
+                        Log.w(View.VIEW_LOG_TAG, "View too large to fit into drawing cache, needs " + projectedBitmapSize + " bytes, only " + drawingCacheSize + " available");
+                    }
+                    this.destroyDrawingCache();
+                    this.mCachingFailed = true;
+                    return;
+                }
+
+                if(this.mUnscaledDrawingCache &&
+                    (this.mUnscaledDrawingCache.getWidth()!==width || this.mUnscaledDrawingCache.getHeight()!==height)){
+                    this.mUnscaledDrawingCache.recycle();
+                    this.mUnscaledDrawingCache = null;
+                }
+                if(this.mUnscaledDrawingCache){
+                    this.mUnscaledDrawingCache.clearColor();
+                } else{
+                    this.mUnscaledDrawingCache = new Canvas(width, height);
+                }
+
+                const canvas = this.mUnscaledDrawingCache;
+                this.computeScroll();
+                const restoreCount:number = canvas.save();
+                canvas.translate(-this.mScrollX, -this.mScrollY);
+                this.mPrivateFlags |= View.PFLAG_DRAWN;
+                //if (this.mAttachInfo == null || !this.mAttachInfo.mHardwareAccelerated || this.mLayerType != View.LAYER_TYPE_NONE) {
+                    this.mPrivateFlags |= View.PFLAG_DRAWING_CACHE_VALID;
+                //}
+
+                // Fast path for layouts with no backgrounds
+                if ((this.mPrivateFlags & View.PFLAG_SKIP_DRAW) == View.PFLAG_SKIP_DRAW) {
+                    this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
+                    this.dispatchDraw(canvas);
+                    if (this.mOverlay != null && !this.mOverlay.isEmpty()) {
+                        this.mOverlay.getOverlayView().draw(canvas);
+                    }
+                } else {
+                    this.draw(canvas);
+                }
+                canvas.restoreToCount(restoreCount);
+            }
         }
         setWillNotDraw(willNotDraw:boolean) {
             this.setFlags(willNotDraw ? View.WILL_NOT_DRAW : 0, View.DRAW_MASK);

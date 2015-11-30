@@ -229,10 +229,8 @@ module android.graphics {
             }
         }
 
-        drawCanvas(canvas:Canvas, offsetX:number, offsetY:number, width?:number, height?:number, canvasOffsetX?:number,
-                   canvasOffsetY?:number, canvasImageWidth?:number, canvasImageHeight?:number):void {
-            this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY, width, height,
-                canvasOffsetX, canvasOffsetY, canvasImageWidth, canvasImageHeight);
+        drawCanvas(canvas:Canvas, offsetX:number, offsetY:number):void {
+            this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY);
         }
 
         drawRect(rect:Rect, paint:Paint);

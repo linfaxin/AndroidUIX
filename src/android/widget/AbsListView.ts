@@ -734,6 +734,7 @@ module android.widget {
             this._attrBinder.addAttr('choiceMode', (value)=>{
                 this.setChoiceMode(this._attrBinder.parseNumber(value, AbsListView.CHOICE_MODE_NONE))
             });
+
         }
 
         //constructor(context:Context, attrs:AttributeSet, defStyle:number) {

@@ -352,7 +352,7 @@ declare module android.graphics {
         getClipBounds(bounds?: Rect): Rect;
         quickReject(rect: Rect): boolean;
         quickReject(left: number, top: number, right: number, bottom: number): boolean;
-        drawCanvas(canvas: Canvas, offsetX: number, offsetY: number, width?: number, height?: number, canvasOffsetX?: number, canvasOffsetY?: number, canvasImageWidth?: number, canvasImageHeight?: number): void;
+        drawCanvas(canvas: Canvas, offsetX: number, offsetY: number): void;
         drawRect(rect: Rect, paint: Paint): any;
         drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
         drawText(text: string, x: number, y: number, paint: Paint): void;
@@ -654,11 +654,14 @@ declare module android.view {
         private static WINDOW_TOUCH_SLOP;
         private static MINIMUM_FLING_VELOCITY;
         private static MAXIMUM_FLING_VELOCITY;
+        private static MAXIMUM_DRAWING_CACHE_SIZE;
         private static SCROLL_FRICTION;
         private static OVERSCROLL_DISTANCE;
         private static OVERFLING_DISTANCE;
         static instance: ViewConfiguration;
         static get(arg?: any): ViewConfiguration;
+        private density;
+        private sizeAndDensity;
         mEdgeSlop: number;
         mFadingEdgeLength: number;
         mMinimumFlingVelocity: number;
@@ -671,6 +674,7 @@ declare module android.view {
         mWindowTouchSlop: number;
         mOverscrollDistance: number;
         mOverflingDistance: number;
+        mMaximumDrawingCacheSize: number;
         getScaledScrollBarSize(): number;
         static getScrollBarFadeDuration(): number;
         static getScrollDefaultDelay(): number;
@@ -690,6 +694,7 @@ declare module android.view {
         getScaledWindowTouchSlop(): number;
         getScaledMinimumFlingVelocity(): number;
         getScaledMaximumFlingVelocity(): number;
+        getScaledMaximumDrawingCacheSize(): number;
         getScaledOverscrollDistance(): number;
         getScaledOverflingDistance(): number;
         static getScrollFriction(): number;
@@ -1252,6 +1257,7 @@ declare module android.view {
         private mTouchDelegate;
         private mFloatingTreeObserver;
         private mDrawingCacheBackgroundColor;
+        private mUnscaledDrawingCache;
         mTouchSlop: number;
         private mVerticalScrollFactor;
         private mOverScrollMode;
@@ -1508,9 +1514,11 @@ declare module android.view {
         isHardwareAccelerated(): boolean;
         setDrawingCacheEnabled(enabled: boolean): void;
         isDrawingCacheEnabled(): boolean;
+        getDrawingCache(autoScale?: boolean): Canvas;
         setDrawingCacheBackgroundColor(color: number): void;
         getDrawingCacheBackgroundColor(): number;
         destroyDrawingCache(): void;
+        buildDrawingCache(autoScale?: boolean): void;
         setWillNotDraw(willNotDraw: boolean): void;
         willNotDraw(): boolean;
         setWillNotCacheDrawing(willNotCacheDrawing: boolean): void;

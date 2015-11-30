@@ -1276,8 +1276,8 @@ var android;
                     return !this.mCurrentClip.intersects(left, t, right, bottom);
                 }
             }
-            drawCanvas(canvas, offsetX, offsetY, width, height, canvasOffsetX, canvasOffsetY, canvasImageWidth, canvasImageHeight) {
-                this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY, width, height, canvasOffsetX, canvasOffsetY, canvasImageWidth, canvasImageHeight);
+            drawCanvas(canvas, offsetX, offsetY) {
+                this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY);
             }
             drawRect(...args) {
                 if (args.length == 2) {
@@ -2330,23 +2330,23 @@ var android;
     var view;
     (function (view) {
         var Resources = android.content.res.Resources;
-        const metrics = Resources.getDisplayMetrics();
-        const density = metrics.density;
-        const sizeAndDensity = density;
         class ViewConfiguration {
             constructor() {
-                this.mEdgeSlop = sizeAndDensity * ViewConfiguration.EDGE_SLOP;
-                this.mFadingEdgeLength = sizeAndDensity * ViewConfiguration.FADING_EDGE_LENGTH;
-                this.mMinimumFlingVelocity = density * ViewConfiguration.MINIMUM_FLING_VELOCITY;
-                this.mMaximumFlingVelocity = density * ViewConfiguration.MAXIMUM_FLING_VELOCITY;
-                this.mScrollbarSize = density * ViewConfiguration.SCROLL_BAR_SIZE;
-                this.mTouchSlop = density * ViewConfiguration.TOUCH_SLOP;
-                this.mDoubleTapTouchSlop = sizeAndDensity * ViewConfiguration.DOUBLE_TAP_TOUCH_SLOP;
-                this.mPagingTouchSlop = density * ViewConfiguration.PAGING_TOUCH_SLOP;
-                this.mDoubleTapSlop = density * ViewConfiguration.DOUBLE_TAP_SLOP;
-                this.mWindowTouchSlop = sizeAndDensity * ViewConfiguration.WINDOW_TOUCH_SLOP;
-                this.mOverscrollDistance = sizeAndDensity * ViewConfiguration.OVERSCROLL_DISTANCE;
-                this.mOverflingDistance = sizeAndDensity * ViewConfiguration.OVERFLING_DISTANCE;
+                this.density = Resources.getDisplayMetrics().density;
+                this.sizeAndDensity = this.density;
+                this.mEdgeSlop = this.sizeAndDensity * ViewConfiguration.EDGE_SLOP;
+                this.mFadingEdgeLength = this.sizeAndDensity * ViewConfiguration.FADING_EDGE_LENGTH;
+                this.mMinimumFlingVelocity = this.density * ViewConfiguration.MINIMUM_FLING_VELOCITY;
+                this.mMaximumFlingVelocity = this.density * ViewConfiguration.MAXIMUM_FLING_VELOCITY;
+                this.mScrollbarSize = this.density * ViewConfiguration.SCROLL_BAR_SIZE;
+                this.mTouchSlop = this.density * ViewConfiguration.TOUCH_SLOP;
+                this.mDoubleTapTouchSlop = this.sizeAndDensity * ViewConfiguration.DOUBLE_TAP_TOUCH_SLOP;
+                this.mPagingTouchSlop = this.density * ViewConfiguration.PAGING_TOUCH_SLOP;
+                this.mDoubleTapSlop = this.density * ViewConfiguration.DOUBLE_TAP_SLOP;
+                this.mWindowTouchSlop = this.sizeAndDensity * ViewConfiguration.WINDOW_TOUCH_SLOP;
+                this.mOverscrollDistance = this.sizeAndDensity * ViewConfiguration.OVERSCROLL_DISTANCE;
+                this.mOverflingDistance = this.sizeAndDensity * ViewConfiguration.OVERFLING_DISTANCE;
+                this.mMaximumDrawingCacheSize = ViewConfiguration.MAXIMUM_DRAWING_CACHE_SIZE;
             }
             static get(arg) {
                 if (!ViewConfiguration.instance) {
@@ -2411,6 +2411,9 @@ var android;
             getScaledMaximumFlingVelocity() {
                 return this.mMaximumFlingVelocity;
             }
+            getScaledMaximumDrawingCacheSize() {
+                return this.mMaximumDrawingCacheSize;
+            }
             getScaledOverscrollDistance() {
                 return this.mOverscrollDistance;
             }
@@ -2444,6 +2447,7 @@ var android;
         ViewConfiguration.WINDOW_TOUCH_SLOP = 16;
         ViewConfiguration.MINIMUM_FLING_VELOCITY = 50;
         ViewConfiguration.MAXIMUM_FLING_VELOCITY = 8000;
+        ViewConfiguration.MAXIMUM_DRAWING_CACHE_SIZE = 480 * 800 * 4;
         ViewConfiguration.SCROLL_FRICTION = 0.015;
         ViewConfiguration.OVERSCROLL_DISTANCE = 800;
         ViewConfiguration.OVERFLING_DISTANCE = 100;
@@ -4233,6 +4237,7 @@ var android;
         var SystemClock = android.os.SystemClock;
         var Log = android.util.Log;
         var Rect = android.graphics.Rect;
+        var Canvas = android.graphics.Canvas;
         var CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
         var ArrayList = java.util.ArrayList;
         var Resources = android.content.res.Resources;
@@ -6236,7 +6241,9 @@ var android;
                 if (caching) {
                     if (layerType != View.LAYER_TYPE_NONE) {
                         layerType = View.LAYER_TYPE_SOFTWARE;
+                        this.buildDrawingCache(true);
                     }
+                    cache = this.getDrawingCache(true);
                 }
                 this.computeScroll();
                 let sx = this.mScrollX;
@@ -6415,6 +6422,15 @@ var android;
             isDrawingCacheEnabled() {
                 return (this.mViewFlags & View.DRAWING_CACHE_ENABLED) == View.DRAWING_CACHE_ENABLED;
             }
+            getDrawingCache(autoScale = false) {
+                if ((this.mViewFlags & View.WILL_NOT_CACHE_DRAWING) == View.WILL_NOT_CACHE_DRAWING) {
+                    return null;
+                }
+                if ((this.mViewFlags & View.DRAWING_CACHE_ENABLED) == View.DRAWING_CACHE_ENABLED) {
+                    this.buildDrawingCache(autoScale);
+                }
+                return this.mUnscaledDrawingCache;
+            }
             setDrawingCacheBackgroundColor(color) {
                 if (color != this.mDrawingCacheBackgroundColor) {
                     this.mDrawingCacheBackgroundColor = color;
@@ -6425,6 +6441,57 @@ var android;
                 return this.mDrawingCacheBackgroundColor;
             }
             destroyDrawingCache() {
+                if (this.mUnscaledDrawingCache != null) {
+                    this.mUnscaledDrawingCache.recycle();
+                    this.mUnscaledDrawingCache = null;
+                }
+            }
+            buildDrawingCache(autoScale = false) {
+                if ((this.mPrivateFlags & View.PFLAG_DRAWING_CACHE_VALID) == 0 || this.mUnscaledDrawingCache == null) {
+                    this.mCachingFailed = false;
+                    let width = this.mRight - this.mLeft;
+                    let height = this.mBottom - this.mTop;
+                    const attachInfo = this.mAttachInfo;
+                    const drawingCacheBackgroundColor = this.mDrawingCacheBackgroundColor;
+                    const opaque = drawingCacheBackgroundColor != 0 || this.isOpaque();
+                    const use32BitCache = true;
+                    const projectedBitmapSize = width * height * (opaque && !use32BitCache ? 2 : 4);
+                    const drawingCacheSize = view_1.ViewConfiguration.get().getScaledMaximumDrawingCacheSize();
+                    if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
+                        if (width > 0 && height > 0) {
+                            Log.w(View.VIEW_LOG_TAG, "View too large to fit into drawing cache, needs " + projectedBitmapSize + " bytes, only " + drawingCacheSize + " available");
+                        }
+                        this.destroyDrawingCache();
+                        this.mCachingFailed = true;
+                        return;
+                    }
+                    if (this.mUnscaledDrawingCache &&
+                        (this.mUnscaledDrawingCache.getWidth() !== width || this.mUnscaledDrawingCache.getHeight() !== height)) {
+                        this.mUnscaledDrawingCache.recycle();
+                        this.mUnscaledDrawingCache = null;
+                    }
+                    if (this.mUnscaledDrawingCache)
+                        this.mUnscaledDrawingCache.drawColor(drawingCacheBackgroundColor);
+                    else
+                        this.mUnscaledDrawingCache = new Canvas(width, height);
+                    const canvas = this.mUnscaledDrawingCache;
+                    this.computeScroll();
+                    const restoreCount = canvas.save();
+                    canvas.translate(-this.mScrollX, -this.mScrollY);
+                    this.mPrivateFlags |= View.PFLAG_DRAWN;
+                    this.mPrivateFlags |= View.PFLAG_DRAWING_CACHE_VALID;
+                    if ((this.mPrivateFlags & View.PFLAG_SKIP_DRAW) == View.PFLAG_SKIP_DRAW) {
+                        this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
+                        this.dispatchDraw(canvas);
+                        if (this.mOverlay != null && !this.mOverlay.isEmpty()) {
+                            this.mOverlay.getOverlayView().draw(canvas);
+                        }
+                    }
+                    else {
+                        this.draw(canvas);
+                    }
+                    canvas.restoreToCount(restoreCount);
+                }
             }
             setWillNotDraw(willNotDraw) {
                 this.setFlags(willNotDraw ? View.WILL_NOT_DRAW : 0, View.DRAW_MASK);
