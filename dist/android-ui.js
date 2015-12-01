@@ -15789,21 +15789,23 @@ var android;
                     }
                 }
                 let contextHeight = height - padTop - padBottom;
-                let textHeight = this.mTextElement.offsetHeight;
+                const verticalGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
                 let finalTop = padTop;
-                if (textHeight < contextHeight) {
-                    const verticalGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
-                    switch (verticalGravity) {
-                        case Gravity.CENTER_VERTICAL:
-                            finalTop += (contextHeight - textHeight) / 2;
-                            break;
-                        case Gravity.BOTTOM:
-                            finalTop += (contextHeight - textHeight);
-                            break;
-                        case Gravity.TOP:
-                            break;
+                if (verticalGravity !== Gravity.TOP) {
+                    let textHeight = this.mTextElement.offsetHeight;
+                    if (textHeight < contextHeight) {
+                        switch (verticalGravity) {
+                            case Gravity.CENTER_VERTICAL:
+                                finalTop += (contextHeight - textHeight) / 2;
+                                break;
+                            case Gravity.BOTTOM:
+                                finalTop += (contextHeight - textHeight);
+                                break;
+                            case Gravity.TOP:
+                                break;
+                        }
+                        contextHeight = textHeight;
                     }
-                    contextHeight = textHeight;
                 }
                 this.mTextElement.style.height = contextHeight + "px";
                 this.mTextElement.style.top = finalTop + "px";

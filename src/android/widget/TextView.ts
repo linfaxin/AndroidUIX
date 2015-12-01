@@ -215,7 +215,7 @@ module android.widget{
 
             this.mTextElement.style.height = "";
             this.mTextElement.style.width = "";
-            this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels + 'px';//measure width no limit
+            this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels*Resources.getDisplayMetrics().density + 'px';//measure width no limit
             this.mTextElement.style.top = "";
 
             if (widthMode == MeasureSpec.EXACTLY) {
@@ -267,21 +267,23 @@ module android.widget{
             }
 
             let contextHeight = height - padTop - padBottom;
-            let textHeight = this.mTextElement.offsetHeight;
+            const verticalGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
             let finalTop = padTop;
-            if(textHeight<contextHeight){
-                const verticalGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
-                switch (verticalGravity) {
-                    case Gravity.CENTER_VERTICAL:
-                        finalTop += (contextHeight - textHeight) / 2;
-                        break;
-                    case Gravity.BOTTOM:
-                        finalTop += (contextHeight - textHeight);
-                        break;
-                    case Gravity.TOP:
-                        break;
+            if(verticalGravity!==Gravity.TOP) {
+                let textHeight = this.mTextElement.offsetHeight;
+                if (textHeight < contextHeight) {
+                    switch (verticalGravity) {
+                        case Gravity.CENTER_VERTICAL:
+                            finalTop += (contextHeight - textHeight) / 2;
+                            break;
+                        case Gravity.BOTTOM:
+                            finalTop += (contextHeight - textHeight);
+                            break;
+                        case Gravity.TOP:
+                            break;
+                    }
+                    contextHeight = textHeight;
                 }
-                contextHeight = textHeight;
             }
 
             this.mTextElement.style.height = contextHeight + "px";
