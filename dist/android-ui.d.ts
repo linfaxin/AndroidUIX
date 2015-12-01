@@ -4783,3 +4783,8 @@ declare module androidui.widget {
         }
     }
 }
+declare module androidui.util {
+    class PerformanceAdjuster {
+        static noCanvasMode(): void;
+    }
+}

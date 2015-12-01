@@ -30091,22 +30091,23 @@ var androidui;
         initGenericEvent() {
         }
         initListenSizeChange() {
+            const _this = this;
             window.addEventListener('resize', () => {
-                this.notifySizeChange();
+                _this.notifySizeChange();
             });
             let lastWidth = this.element.offsetWidth;
             let lastHeight = this.element.offsetHeight;
             if (lastWidth > 0 && lastHeight > 0)
                 this.notifySizeChange();
             setInterval(() => {
-                let width = this.element.offsetWidth;
-                let height = this.element.offsetHeight;
+                let width = _this.element.offsetWidth;
+                let height = _this.element.offsetHeight;
                 if (lastHeight !== height || lastWidth !== width) {
                     lastWidth = width;
                     lastHeight = height;
-                    this.notifySizeChange();
+                    _this.notifySizeChange();
                 }
-            }, 300);
+            }, 500);
         }
         notifySizeChange() {
             this.refreshWindowBound();
@@ -31179,6 +31180,67 @@ var androidui;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
 /**
+ * Created by linfaxin on 15/12/1.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+var androidui;
+(function (androidui) {
+    var util;
+    (function (util) {
+        class PerformanceAdjuster {
+            static noCanvasMode() {
+                android.graphics.Canvas.prototype = HackCanvas.prototype;
+            }
+        }
+        util.PerformanceAdjuster = PerformanceAdjuster;
+        class HackCanvas extends android.graphics.Canvas {
+            init() {
+            }
+            recycle() {
+            }
+            translate(dx, dy) {
+            }
+            scale(sx, sy, px, py) {
+            }
+            rotate(degrees, px, py) {
+            }
+            drawRGB(r, g, b) {
+            }
+            drawARGB(a, r, g, b) {
+            }
+            drawColor(color) {
+            }
+            clearColor() {
+            }
+            save() {
+                return 1;
+            }
+            restore() {
+            }
+            restoreToCount(saveCount) {
+            }
+            getSaveCount() {
+                return 1;
+            }
+            clipRect(...args) {
+                return false;
+            }
+            getClipBounds(bounds) {
+                return null;
+            }
+            quickReject(...args) {
+                return false;
+            }
+            drawCanvas(canvas, offsetX, offsetY) {
+            }
+            drawRect(...args) {
+            }
+            drawText(text, x, y, paint) {
+            }
+        }
+    })(util = androidui.util || (androidui.util = {}));
+})(androidui || (androidui = {}));
+/**
  * Created by linfaxin on 15/10/6.
  */
 //use the deepest sub class as enter
@@ -31205,6 +31267,7 @@ var androidui;
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
+///<reference path="androidui/util/PerformanceAdjuster.ts"/>
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;

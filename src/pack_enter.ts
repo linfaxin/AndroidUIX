@@ -34,6 +34,8 @@
 ///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
 
+///<reference path="androidui/util/PerformanceAdjuster.ts"/>
+
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;
