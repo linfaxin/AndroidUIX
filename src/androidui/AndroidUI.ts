@@ -252,22 +252,24 @@ module androidui {
         }
 
         private initListenSizeChange(){
+            const _this = this;
             window.addEventListener('resize', ()=>{
-                this.notifySizeChange();
+                _this.notifySizeChange();
             });
 
             let lastWidth = this.element.offsetWidth;
             let lastHeight = this.element.offsetHeight;
             if(lastWidth>0 && lastHeight>0) this.notifySizeChange();
+
             setInterval(()=>{
-                let width = this.element.offsetWidth;
-                let height = this.element.offsetHeight;
+                let width = _this.element.offsetWidth;
+                let height = _this.element.offsetHeight;
                 if(lastHeight !== height || lastWidth !== width){
                     lastWidth = width;
                     lastHeight = height;
-                    this.notifySizeChange();
+                    _this.notifySizeChange();
                 }
-            }, 300);
+            }, 500);
         }
 
         notifySizeChange(){
