@@ -574,6 +574,7 @@ module android.view {
             }
         }
 
+        private _showFPSNode:HTMLElement;
         trackFPS() {
             // Tracks frames per second drawn. First value in a series of draws may be bogus
             // because it down not account for the intervening idle time
@@ -586,11 +587,22 @@ module android.view {
                 //let thisHash = Integer.toHexString(System.identityHashCode(this));
                 let frameTime = nowTime - this.mFpsPrevTime;
                 let totalTime = nowTime - this.mFpsStartTime;
-                Log.v(ViewRootImpl.TAG, "Frame time:\t" + frameTime);
+                //Log.v(ViewRootImpl.TAG, "Frame time:\t" + frameTime);
                 this.mFpsPrevTime = nowTime;
                 if (totalTime > 1000) {
                     let fps = this.mFpsNumFrames * 1000 / totalTime;
                     Log.v(ViewRootImpl.TAG, "FPS:\t" + fps);
+                    if(!this._showFPSNode){
+                        this._showFPSNode = document.createElement('p');
+                        this._showFPSNode.style.position = 'absolute';
+                        this._showFPSNode.style.left = '0';
+                        this._showFPSNode.style.bottom = '0';
+                        this._showFPSNode.style.background = 'black';
+                        this._showFPSNode.style.color = 'white';
+                        this.rootElement.appendChild(this._showFPSNode);
+                    }
+                    this._showFPSNode.innerText = 'FPS:'+fps.toFixed(1);
+
                     this.mFpsStartTime = nowTime;
                     this.mFpsNumFrames = 0;
                 }

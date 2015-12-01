@@ -38,15 +38,15 @@ module android.graphics {
         }
 
         constructor(width:number, height:number) {
-            this.mCanvasElement = document.createElement("canvas");
-            this.mCanvasElement.width = width;
-            this.mCanvasElement.height = height;
             this.mWidth = width;
             this.mHeight = height;
             this.init();
         }
 
-        private init() {
+        protected init() {
+            this.mCanvasElement = document.createElement("canvas");
+            this.mCanvasElement.width = this.mWidth;
+            this.mCanvasElement.height = this.mHeight;
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
             this.mCurrentClip = Canvas.obtainRect();
             this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
@@ -78,6 +78,7 @@ module android.graphics {
             for(let rects of this.shouldDoRectBeforeRestoreMap.values()){
                 Canvas.recycleRect(...rects);
             }
+            this.mCanvasElement.width = this.mCanvasElement.height = 0;
         }
 
         public get canvasElement():HTMLCanvasElement {

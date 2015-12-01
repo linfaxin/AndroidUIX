@@ -1116,9 +1116,6 @@ var android;
                 this._saveCount = 0;
                 this.shouldDoRectBeforeRestoreMap = new Map();
                 this.mClipStateMap = new Map();
-                this.mCanvasElement = document.createElement("canvas");
-                this.mCanvasElement.width = width;
-                this.mCanvasElement.height = height;
                 this.mWidth = width;
                 this.mHeight = height;
                 this.init();
@@ -1138,6 +1135,9 @@ var android;
                 }
             }
             init() {
+                this.mCanvasElement = document.createElement("canvas");
+                this.mCanvasElement.width = this.mWidth;
+                this.mCanvasElement.height = this.mHeight;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
                 this.mCurrentClip = Canvas.obtainRect();
                 this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
@@ -1152,6 +1152,7 @@ var android;
                 for (let rects of this.shouldDoRectBeforeRestoreMap.values()) {
                     Canvas.recycleRect(...rects);
                 }
+                this.mCanvasElement.width = this.mCanvasElement.height = 0;
             }
             get canvasElement() {
                 return this.mCanvasElement;
@@ -6470,10 +6471,12 @@ var android;
                         this.mUnscaledDrawingCache.recycle();
                         this.mUnscaledDrawingCache = null;
                     }
-                    if (this.mUnscaledDrawingCache)
-                        this.mUnscaledDrawingCache.drawColor(drawingCacheBackgroundColor);
-                    else
+                    if (this.mUnscaledDrawingCache) {
+                        this.mUnscaledDrawingCache.clearColor();
+                    }
+                    else {
                         this.mUnscaledDrawingCache = new Canvas(width, height);
+                    }
                     const canvas = this.mUnscaledDrawingCache;
                     this.computeScroll();
                     const restoreCount = canvas.save();
@@ -7937,7 +7940,8 @@ var android;
             }
             unlockCanvasAndPost(canvas) {
                 let mCanvasContent = this.mCanvasElement.getContext('2d');
-                mCanvasContent.drawImage(canvas.canvasElement, this.mLockedRect.left, this.mLockedRect.top);
+                if (canvas.canvasElement)
+                    mCanvasContent.drawImage(canvas.canvasElement, this.mLockedRect.left, this.mLockedRect.top);
                 canvas.recycle();
             }
         }
@@ -8356,11 +8360,20 @@ var android;
                     this.mFpsNumFrames++;
                     let frameTime = nowTime - this.mFpsPrevTime;
                     let totalTime = nowTime - this.mFpsStartTime;
-                    Log.v(ViewRootImpl.TAG, "Frame time:\t" + frameTime);
                     this.mFpsPrevTime = nowTime;
                     if (totalTime > 1000) {
                         let fps = this.mFpsNumFrames * 1000 / totalTime;
                         Log.v(ViewRootImpl.TAG, "FPS:\t" + fps);
+                        if (!this._showFPSNode) {
+                            this._showFPSNode = document.createElement('p');
+                            this._showFPSNode.style.position = 'absolute';
+                            this._showFPSNode.style.left = '0';
+                            this._showFPSNode.style.bottom = '0';
+                            this._showFPSNode.style.background = 'black';
+                            this._showFPSNode.style.color = 'white';
+                            this.rootElement.appendChild(this._showFPSNode);
+                        }
+                        this._showFPSNode.innerText = 'FPS:' + fps.toFixed(1);
                         this.mFpsStartTime = nowTime;
                         this.mFpsNumFrames = 0;
                     }
@@ -30205,6 +30218,83 @@ var android;
         Activity.registerCustomElement();
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
+///<reference path="../util/Pools.ts"/>
+///<reference path="../util/Log.ts"/>
+///<reference path="Rect.ts"/>
+///<reference path="Color.ts"/>
+///<reference path="Paint.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        class CanvasFake extends graphics.Canvas {
+            constructor(width, height) {
+                super(width, height);
+            }
+            init() {
+            }
+            recycle() {
+            }
+            translate(dx, dy) {
+            }
+            scale(sx, sy, px, py) {
+            }
+            rotate(degrees, px, py) {
+            }
+            drawRGB(r, g, b) {
+            }
+            drawARGB(a, r, g, b) {
+            }
+            drawColor(color) {
+            }
+            clearColor() {
+            }
+            save() {
+                return 1;
+            }
+            restore() {
+            }
+            restoreToCount(saveCount) {
+            }
+            getSaveCount() {
+                return 1;
+            }
+            clipRect(...args) {
+                return false;
+            }
+            getClipBounds(bounds) {
+                return null;
+            }
+            quickReject(...args) {
+                return false;
+            }
+            drawCanvas(canvas, offsetX, offsetY) {
+            }
+            drawRect(...args) {
+            }
+            drawText(text, x, y, paint) {
+            }
+        }
+        graphics.CanvasFake = CanvasFake;
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/12/1.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/CanvasFake.ts"/>
+var androidui;
+(function (androidui) {
+    var util;
+    (function (util) {
+        class PerformanceHelper {
+            static noCanvasMode() {
+                android.graphics.Canvas.prototype = android.graphics.CanvasFake.prototype;
+            }
+        }
+        util.PerformanceHelper = PerformanceHelper;
+    })(util = androidui.util || (androidui.util = {}));
+})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/11/16.
  */
@@ -31168,6 +31258,7 @@ var androidui;
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
+///<reference path="androidui/util/PerformanceHelper.ts"/>
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>

@@ -49,7 +49,7 @@ module android.view{
          */
         unlockCanvasAndPost(canvas:Canvas):void {
             let mCanvasContent:CanvasRenderingContext2D = this.mCanvasElement.getContext('2d');
-            mCanvasContent.drawImage(canvas.canvasElement, this.mLockedRect.left, this.mLockedRect.top);
+            if(canvas.canvasElement) mCanvasContent.drawImage(canvas.canvasElement, this.mLockedRect.left, this.mLockedRect.top);
             //mCanvasContent.putImageData(canvas.canvasElement.getContext('2d').getImageData(rect.left, rect.top, rect.width(), rect.height()), rect.left, rect.top);
             canvas.recycle();
         }

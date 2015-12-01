@@ -330,7 +330,7 @@ declare module android.graphics {
         private static obtainRect(copy?);
         private static recycleRect(...rects);
         constructor(width: number, height: number);
-        private init();
+        protected init(): void;
         recycle(): void;
         canvasElement: HTMLCanvasElement;
         getHeight(): number;
@@ -1850,6 +1850,7 @@ declare module android.view {
         private performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
         isInLayout(): boolean;
         requestLayoutDuringLayout(view: View): boolean;
+        private _showFPSNode;
         trackFPS(): void;
         private performDraw();
         private draw(fullRedrawNeeded);
@@ -4625,6 +4626,39 @@ declare module android.app {
         addContentView(view: View): void;
         findViewById(id: string): View;
         static registerCustomElement(): void;
+    }
+}
+declare module android.graphics {
+    import Rect = android.graphics.Rect;
+    class CanvasFake extends Canvas {
+        constructor(width: number, height: number);
+        protected init(): void;
+        recycle(): void;
+        translate(dx: number, dy: number): void;
+        scale(sx: number, sy: number, px?: number, py?: number): void;
+        rotate(degrees: number, px?: number, py?: number): void;
+        drawRGB(r: number, g: number, b: number): void;
+        drawARGB(a: number, r: number, g: number, b: number): void;
+        drawColor(color: number): void;
+        clearColor(): void;
+        save(): number;
+        restore(): void;
+        restoreToCount(saveCount: number): void;
+        getSaveCount(): number;
+        clipRect(rect: Rect): boolean;
+        clipRect(left: number, top: number, right: number, bottom: number): boolean;
+        getClipBounds(bounds?: Rect): Rect;
+        quickReject(rect: Rect): boolean;
+        quickReject(left: number, top: number, right: number, bottom: number): boolean;
+        drawCanvas(canvas: Canvas, offsetX: number, offsetY: number): void;
+        drawRect(rect: Rect, paint: Paint): any;
+        drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
+        drawText(text: string, x: number, y: number, paint: Paint): void;
+    }
+}
+declare module androidui.util {
+    class PerformanceHelper {
+        static noCanvasMode(): void;
     }
 }
 declare module androidui.widget {
