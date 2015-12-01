@@ -2975,18 +2975,25 @@ var android;
 (function (android) {
     var os;
     (function (os) {
+        var requestAnimationFrame = window["requestAnimationFrame"] ||
+            window["webkitRequestAnimationFrame"] ||
+            window["mozRequestAnimationFrame"] ||
+            window["oRequestAnimationFrame"] ||
+            window["msRequestAnimationFrame"];
+        if (!requestAnimationFrame) {
+            requestAnimationFrame = function (callback) {
+                return window.setTimeout(callback, 1000 / 60);
+            };
+        }
         class MessageQueue {
-            constructor() {
-                this.messages = new Map();
-            }
-            getMessages(h, args, object) {
+            static getMessages(h, args, object) {
                 let msgs = [];
                 if (h == null) {
                     return msgs;
                 }
                 if (typeof args === "number") {
                     let what = args;
-                    for (let p of this.messages.keys()) {
+                    for (let p of MessageQueue.messages) {
                         if (p.target == h && p.what == what && (object == null || p.obj == object)) {
                             msgs.push(p);
                         }
@@ -2994,7 +3001,7 @@ var android;
                 }
                 else {
                     let r = args;
-                    for (let p of this.messages.keys()) {
+                    for (let p of MessageQueue.messages) {
                         if (p.target == h && p.callback == r && (object == null || p.obj == object)) {
                             msgs.push(p);
                         }
@@ -3002,44 +3009,66 @@ var android;
                 }
                 return msgs;
             }
-            hasMessages(h, args, object) {
-                return this.getMessages(h, args, object).length > 0;
+            static hasMessages(h, args, object) {
+                return MessageQueue.getMessages(h, args, object).length > 0;
             }
-            addMessage(handler, msg, delayHandleID) {
-                this.messages.set(msg, delayHandleID);
+            static enqueueMessage(msg, when) {
+                if (msg.target == null) {
+                    throw new Error("Message must have a target.");
+                }
+                msg.when = when;
+                MessageQueue.messages.add(msg);
+                MessageQueue.checkLoop();
+                return true;
             }
-            recycleMessage(handler, message, clearTimeoutId = true) {
-                try {
-                    message.recycle();
-                }
-                catch (e) {
-                }
-                let oldId = this.messages.get(message);
-                if (clearTimeoutId && oldId !== undefined) {
-                    if (oldId > 0)
-                        clearTimeout(oldId);
-                    else if (oldId < 0)
-                        cancelAnimationFrame(-oldId);
-                }
-                this.messages.delete(message);
+            static recycleMessage(handler, message) {
+                message.recycle();
+                MessageQueue.messages.delete(message);
             }
-            removeMessages(h, args, object) {
-                let p = this.getMessages(h, args, object);
+            static removeMessages(h, args, object) {
+                let p = MessageQueue.getMessages(h, args, object);
                 if (p && p.length > 0) {
-                    p.forEach((item) => this.recycleMessage(h, item));
+                    p.forEach((item) => MessageQueue.recycleMessage(h, item));
                 }
             }
-            removeCallbacksAndMessages(h, object) {
+            static removeCallbacksAndMessages(h, object) {
                 if (h == null) {
                     return;
                 }
-                for (let p of this.messages.keys()) {
+                for (let p of MessageQueue.messages) {
                     if (p != null && p.target == h && (object == null || p.obj == object)) {
-                        this.recycleMessage(h, p);
+                        MessageQueue.recycleMessage(h, p);
                     }
                 }
             }
+            static checkLoop() {
+                if (!MessageQueue._loopActive) {
+                    MessageQueue._loopActive = true;
+                    requestAnimationFrame(MessageQueue.loop);
+                }
+            }
+            static loop() {
+                let dispatchMessages = [];
+                const now = os.SystemClock.uptimeMillis();
+                for (let msg of MessageQueue.messages) {
+                    if (msg.when <= now)
+                        dispatchMessages.push(msg);
+                }
+                for (let msg of dispatchMessages) {
+                    if (MessageQueue.messages.has(msg)) {
+                        MessageQueue.messages.delete(msg);
+                        msg.target.dispatchMessage(msg);
+                        MessageQueue.recycleMessage(msg.target, msg);
+                    }
+                }
+                if (MessageQueue.messages.size > 0)
+                    requestAnimationFrame(MessageQueue.loop);
+                else
+                    MessageQueue._loopActive = false;
+            }
         }
+        MessageQueue.messages = new Set();
+        MessageQueue._loopActive = false;
         os.MessageQueue = MessageQueue;
     })(os = android.os || (android.os = {}));
 })(android || (android = {}));
@@ -3056,7 +3085,6 @@ var android;
     (function (os) {
         class Handler {
             constructor(mCallback) {
-                this.mQueue = new os.MessageQueue();
                 this.mCallback = mCallback;
             }
             handleMessage(msg) {
@@ -3104,7 +3132,7 @@ var android;
                 return this.post(r);
             }
             removeCallbacks(r, token) {
-                this.mQueue.removeMessages(this, r, token);
+                os.MessageQueue.removeMessages(this, r, token);
             }
             sendMessage(msg) {
                 return this.sendMessageDelayed(msg, 0);
@@ -3126,34 +3154,23 @@ var android;
                 if (delayMillis < 0) {
                     delayMillis = 0;
                 }
-                msg.target = this;
-                let func = () => {
-                    this.dispatchMessage(msg);
-                    this.mQueue.recycleMessage(this, msg, false);
-                };
-                if (delayMillis <= 17) {
-                    var id = -requestAnimationFrame(func);
-                }
-                else {
-                    var id = setTimeout(func, delayMillis);
-                }
-                this.mQueue.addMessage(this, msg, id);
-                return true;
+                return this.sendMessageAtTime(msg, os.SystemClock.uptimeMillis() + delayMillis);
             }
             sendMessageAtTime(msg, uptimeMillis) {
-                return this.sendMessageDelayed(msg, uptimeMillis - os.SystemClock.uptimeMillis());
+                msg.target = this;
+                return os.MessageQueue.enqueueMessage(msg, uptimeMillis);
             }
             sendMessageAtFrontOfQueue(msg) {
                 return this.sendMessage(msg);
             }
             removeMessages(what, object) {
-                this.mQueue.removeMessages(this, what, object);
+                os.MessageQueue.removeMessages(this, what, object);
             }
             removeCallbacksAndMessages(token) {
-                this.mQueue.removeCallbacksAndMessages(this, token);
+                os.MessageQueue.removeCallbacksAndMessages(this, token);
             }
             hasMessages(what, object) {
-                return this.mQueue.hasMessages(this, what, object);
+                return os.MessageQueue.hasMessages(this, what, object);
             }
             static getPostMessage(r, token) {
                 let m = os.Message.obtain();
@@ -30218,83 +30235,6 @@ var android;
         Activity.registerCustomElement();
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-///<reference path="../util/Pools.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="Rect.ts"/>
-///<reference path="Color.ts"/>
-///<reference path="Paint.ts"/>
-var android;
-(function (android) {
-    var graphics;
-    (function (graphics) {
-        class CanvasFake extends graphics.Canvas {
-            constructor(width, height) {
-                super(width, height);
-            }
-            init() {
-            }
-            recycle() {
-            }
-            translate(dx, dy) {
-            }
-            scale(sx, sy, px, py) {
-            }
-            rotate(degrees, px, py) {
-            }
-            drawRGB(r, g, b) {
-            }
-            drawARGB(a, r, g, b) {
-            }
-            drawColor(color) {
-            }
-            clearColor() {
-            }
-            save() {
-                return 1;
-            }
-            restore() {
-            }
-            restoreToCount(saveCount) {
-            }
-            getSaveCount() {
-                return 1;
-            }
-            clipRect(...args) {
-                return false;
-            }
-            getClipBounds(bounds) {
-                return null;
-            }
-            quickReject(...args) {
-                return false;
-            }
-            drawCanvas(canvas, offsetX, offsetY) {
-            }
-            drawRect(...args) {
-            }
-            drawText(text, x, y, paint) {
-            }
-        }
-        graphics.CanvasFake = CanvasFake;
-    })(graphics = android.graphics || (android.graphics = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/1.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/CanvasFake.ts"/>
-var androidui;
-(function (androidui) {
-    var util;
-    (function (util) {
-        class PerformanceHelper {
-            static noCanvasMode() {
-                android.graphics.Canvas.prototype = android.graphics.CanvasFake.prototype;
-            }
-        }
-        util.PerformanceHelper = PerformanceHelper;
-    })(util = androidui.util || (androidui.util = {}));
-})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/11/16.
  */
@@ -31258,7 +31198,6 @@ var androidui;
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
-///<reference path="androidui/util/PerformanceHelper.ts"/>
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>

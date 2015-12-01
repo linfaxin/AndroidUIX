@@ -818,23 +818,25 @@ declare module android.os {
 declare module android.os {
     import Runnable = java.lang.Runnable;
     class MessageQueue {
-        messages: Map<Message, number>;
-        getMessages(h: Handler, r: Runnable, object: any): Array<Message>;
-        getMessages(h: Handler, what: number, object: any): Array<Message>;
-        hasMessages(h: Handler, r: Runnable, object: any): boolean;
-        hasMessages(h: Handler, what: number, object: any): boolean;
-        addMessage(handler: Handler, msg: Message, delayHandleID: number): void;
-        recycleMessage(handler: Handler, message: Message, clearTimeoutId?: boolean): void;
-        removeMessages(h: Handler, what: number, object: any): any;
-        removeMessages(h: Handler, r: Runnable, object: any): any;
-        removeCallbacksAndMessages(h: Handler, object: any): void;
+        static messages: Set<Message>;
+        static getMessages(h: Handler, r: Runnable, object: any): Array<Message>;
+        static getMessages(h: Handler, what: number, object: any): Array<Message>;
+        static hasMessages(h: Handler, r: Runnable, object: any): boolean;
+        static hasMessages(h: Handler, what: number, object: any): boolean;
+        static enqueueMessage(msg: Message, when: number): boolean;
+        static recycleMessage(handler: Handler, message: Message): void;
+        static removeMessages(h: Handler, what: number, object: any): any;
+        static removeMessages(h: Handler, r: Runnable, object: any): any;
+        static removeCallbacksAndMessages(h: Handler, object: any): void;
+        private static _loopActive;
+        private static checkLoop();
+        private static loop();
     }
 }
 declare module android.os {
     import Runnable = java.lang.Runnable;
     class Handler {
         mCallback: Handler.Callback;
-        mQueue: MessageQueue;
         constructor(mCallback?: Handler.Callback);
         handleMessage(msg: Message): void;
         dispatchMessage(msg: Message): void;
@@ -4626,39 +4628,6 @@ declare module android.app {
         addContentView(view: View): void;
         findViewById(id: string): View;
         static registerCustomElement(): void;
-    }
-}
-declare module android.graphics {
-    import Rect = android.graphics.Rect;
-    class CanvasFake extends Canvas {
-        constructor(width: number, height: number);
-        protected init(): void;
-        recycle(): void;
-        translate(dx: number, dy: number): void;
-        scale(sx: number, sy: number, px?: number, py?: number): void;
-        rotate(degrees: number, px?: number, py?: number): void;
-        drawRGB(r: number, g: number, b: number): void;
-        drawARGB(a: number, r: number, g: number, b: number): void;
-        drawColor(color: number): void;
-        clearColor(): void;
-        save(): number;
-        restore(): void;
-        restoreToCount(saveCount: number): void;
-        getSaveCount(): number;
-        clipRect(rect: Rect): boolean;
-        clipRect(left: number, top: number, right: number, bottom: number): boolean;
-        getClipBounds(bounds?: Rect): Rect;
-        quickReject(rect: Rect): boolean;
-        quickReject(left: number, top: number, right: number, bottom: number): boolean;
-        drawCanvas(canvas: Canvas, offsetX: number, offsetY: number): void;
-        drawRect(rect: Rect, paint: Paint): any;
-        drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
-        drawText(text: string, x: number, y: number, paint: Paint): void;
-    }
-}
-declare module androidui.util {
-    class PerformanceHelper {
-        static noCanvasMode(): void;
     }
 }
 declare module androidui.widget {

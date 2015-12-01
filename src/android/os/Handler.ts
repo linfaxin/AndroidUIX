@@ -11,7 +11,6 @@ module android.os {
 
     export class Handler {
         mCallback:Handler.Callback;
-        mQueue:MessageQueue = new MessageQueue();
 
         constructor(mCallback?:Handler.Callback) {
             this.mCallback = mCallback;
@@ -73,7 +72,7 @@ module android.os {
         }
 
         removeCallbacks(r:Runnable, token?:any) {
-            this.mQueue.removeMessages(this, r, token);
+            MessageQueue.removeMessages(this, r, token);
         }
 
         sendMessage(msg:Message):boolean {
@@ -100,25 +99,12 @@ module android.os {
             if (delayMillis < 0) {
                 delayMillis = 0;
             }
-            msg.target = this;
-
-            //send delay
-            let func = ()=> {
-                this.dispatchMessage(msg);
-                this.mQueue.recycleMessage(this, msg, false);
-
-            };
-            if(delayMillis<=17){
-                var id = -requestAnimationFrame(func);
-            }else{
-                var id = setTimeout(func, delayMillis);
-            }
-            this.mQueue.addMessage(this, msg, id);
-            return true;
+            return this.sendMessageAtTime(msg, SystemClock.uptimeMillis() + delayMillis);
         }
 
         sendMessageAtTime(msg:Message, uptimeMillis:number) {
-            return this.sendMessageDelayed(msg, uptimeMillis - SystemClock.uptimeMillis());
+            msg.target = this;
+            return MessageQueue.enqueueMessage(msg, uptimeMillis);
         }
 
         sendMessageAtFrontOfQueue(msg:Message) {
@@ -126,15 +112,15 @@ module android.os {
         }
 
         removeMessages(what:number, object?:any) {
-            this.mQueue.removeMessages(this, what, object);
+            MessageQueue.removeMessages(this, what, object);
         }
 
         removeCallbacksAndMessages(token?:any) {
-            this.mQueue.removeCallbacksAndMessages(this, token);
+            MessageQueue.removeCallbacksAndMessages(this, token);
         }
 
         hasMessages(what:number, object?:any):boolean {
-            return this.mQueue.hasMessages(this, what, object);
+            return MessageQueue.hasMessages(this, what, object);
         }
 
         private static getPostMessage(r:Runnable, token?:any):Message {
