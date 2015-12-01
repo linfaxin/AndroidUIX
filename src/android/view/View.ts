@@ -3585,6 +3585,7 @@ module android.view {
                 this.mDrawableState = this.onCreateDrawableState(0);
                 this.mPrivateFlags &= ~View.PFLAG_DRAWABLE_STATE_DIRTY;
                 this._fireStateChangeToAttribute(oldDrawableState, this.mDrawableState);
+                this.syncDrawStateToElement();
                 return this.mDrawableState;
             }
         }
@@ -4665,6 +4666,25 @@ module android.view {
                 this.bindElement.style.display = 'none';
                 this.bindElement.style.visibility = '';
             }
+        }
+        syncDrawStateToElement(){
+            const bind = this.bindElement;
+
+            if(this.isPressed()) bind.classList.add('_pressed');
+            else bind.classList.remove('_pressed');
+
+            if(this.isEnabled()) bind.classList.remove('_disabled');
+            else bind.classList.add('_disabled');
+
+            if(this.isFocused()) bind.classList.add('_focused');
+            else bind.classList.remove('_focused');
+
+            if(this.isSelected()) bind.classList.add('_selected');
+            else bind.classList.remove('_selected');
+
+            if(this.isActivated()) bind.classList.add('_activated');
+            else bind.classList.remove('_activated');
+
         }
 
         private _initAttrObserver(){
