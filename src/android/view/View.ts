@@ -41,6 +41,7 @@
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
 ///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
 ///<reference path="KeyEvent.ts"/>
+///<reference path="../R/attr.ts"/>
 
 
 module android.view {
@@ -853,6 +854,7 @@ module android.view {
             });
 
             this.initBindElement(bindElement, rootElement);
+            this.applyDefaultAttributes(android.R.attr.viewStyle);
         }
 
         getWidth():number {

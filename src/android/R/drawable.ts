@@ -10,7 +10,6 @@
 ///<reference path="../graphics/drawable/StateListDrawable.ts"/>
 
 module android.R{
-    import View = android.view.View;
     import Resources = android.content.res.Resources;
     import Color = android.graphics.Color;
     import Drawable = android.graphics.drawable.Drawable;
@@ -30,10 +29,10 @@ module android.R{
 
                 private static createStateList():Drawable {
                     let stateList = new StateListDrawable();
-                    stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
-                    stateList.addState([View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
-                    stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
-                    stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
+                    stateList.addState([android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
+                    stateList.addState([android.view.View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
+                    stateList.addState([android.view.View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+                    stateList.addState([-android.view.View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
                     stateList.addState([], new ColorDrawable(Color.LTGRAY));
                     return stateList;
                 }
@@ -61,10 +60,10 @@ module android.R{
 
         static get list_selector_background():Drawable {
             let stateList = new StateListDrawable();
-            stateList.addState([View.VIEW_STATE_FOCUSED, -View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
-            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
-            stateList.addState([-View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
-            stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED, -android.view.View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
+            stateList.addState([-android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
             stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
             return stateList;
         }

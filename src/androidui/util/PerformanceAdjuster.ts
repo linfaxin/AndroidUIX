@@ -3,6 +3,7 @@
  */
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/R/attr.ts"/>
 
 module androidui.util{
     import Canvas = android.graphics.Canvas;
@@ -41,6 +42,8 @@ module androidui.util{
                     scrollBarEl.style.height = length + 'px';
                     scrollBarEl.style.opacity = this.mScrollCache.scrollBar.mVerticalThumb.getAlpha() / 255 + '';
             };
+
+            android.R.attr._viewStyle.syncAttr = "background";
         }
 
     }

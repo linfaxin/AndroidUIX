@@ -10,7 +10,6 @@
 ///<reference path="../graphics/drawable/ColorDrawable.ts"/>
 ///<reference path="../graphics/drawable/StateListDrawable.ts"/>
 module android.R{
-    import View = android.view.View;
     import Resources = android.content.res.Resources;
     import ColorStateList = android.content.res.ColorStateList;
     import Color = android.graphics.Color;
@@ -22,7 +21,7 @@ module android.R{
 
     export class color{
         static get textView_textColor():ColorStateList {
-            let _defaultStates = [[-View.VIEW_STATE_ENABLED], []];
+            let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
             let _defaultColors = [0xffc0c0c0, 0xff333333];
             class DefaultStyleTextColor extends ColorStateList{
                 constructor() {

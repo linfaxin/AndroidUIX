@@ -1091,6 +1091,179 @@ declare module android.view {
         }
     }
 }
+declare module android.graphics.drawable {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    class DrawableContainer extends Drawable implements Drawable.Callback {
+        private static DEBUG;
+        private static TAG;
+        static DEFAULT_DITHER: boolean;
+        private mDrawableContainerState;
+        private mCurrDrawable;
+        private mAlpha;
+        private mCurIndex;
+        mMutated: boolean;
+        private mAnimationRunnable;
+        private mEnterAnimationEnd;
+        private mExitAnimationEnd;
+        private mLastDrawable;
+        draw(canvas: Canvas): void;
+        private needsMirroring();
+        getPadding(padding: android.graphics.Rect): boolean;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        setDither(dither: boolean): void;
+        setEnterFadeDuration(ms: number): void;
+        setExitFadeDuration(ms: number): void;
+        onBoundsChange(bounds: android.graphics.Rect): void;
+        isStateful(): boolean;
+        setAutoMirrored(mirrored: boolean): void;
+        isAutoMirrored(): boolean;
+        jumpToCurrentState(): void;
+        onStateChange(state: Array<number>): boolean;
+        onLevelChange(level: number): boolean;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getMinimumWidth(): number;
+        getMinimumHeight(): number;
+        invalidateDrawable(who: android.graphics.drawable.Drawable): void;
+        scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
+        unscheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable): void;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        getOpacity(): number;
+        selectDrawable(idx: number): boolean;
+        animate(schedule: boolean): void;
+        getCurrent(): Drawable;
+        getConstantState(): Drawable.ConstantState;
+        mutate(): Drawable;
+        setConstantState(state: DrawableContainer.DrawableContainerState): void;
+    }
+    module DrawableContainer {
+        class DrawableContainerState implements Drawable.ConstantState {
+            mOwner: DrawableContainer;
+            private mDrawableFutures;
+            mDrawables: Array<Drawable>;
+            mNumChildren: number;
+            mVariablePadding: boolean;
+            mPaddingChecked: boolean;
+            mConstantPadding: Rect;
+            mConstantSize: boolean;
+            mComputedConstantSize: boolean;
+            mConstantWidth: number;
+            mConstantHeight: number;
+            mConstantMinimumWidth: number;
+            mConstantMinimumHeight: number;
+            mCheckedOpacity: boolean;
+            mOpacity: number;
+            mCheckedStateful: boolean;
+            mStateful: boolean;
+            mCheckedConstantState: boolean;
+            mCanConstantState: boolean;
+            mDither: boolean;
+            mMutated: boolean;
+            mEnterFadeDuration: number;
+            mExitFadeDuration: number;
+            mAutoMirrored: boolean;
+            constructor(orig: DrawableContainerState, owner: DrawableContainer);
+            addChild(dr: Drawable): number;
+            getCapacity(): number;
+            private createAllFutures();
+            getChildCount(): number;
+            getChildren(): Array<Drawable>;
+            getChild(index: number): Drawable;
+            mutate(): void;
+            setVariablePadding(variable: boolean): void;
+            getConstantPadding(): Rect;
+            setConstantSize(constant: boolean): void;
+            isConstantSize(): boolean;
+            getConstantWidth(): number;
+            getConstantHeight(): number;
+            getConstantMinimumWidth(): number;
+            getConstantMinimumHeight(): number;
+            computeConstantSize(): void;
+            setEnterFadeDuration(duration: number): void;
+            getEnterFadeDuration(): number;
+            setExitFadeDuration(duration: number): void;
+            getExitFadeDuration(): number;
+            getOpacity(): number;
+            isStateful(): boolean;
+            canConstantState(): boolean;
+            newDrawable(): android.graphics.drawable.Drawable;
+        }
+    }
+}
+declare module android.graphics.drawable {
+    class StateListDrawable extends DrawableContainer {
+        private mStateListState;
+        constructor();
+        private initWithState(state);
+        addState(stateSet: Array<number>, drawable: Drawable): void;
+        isStateful(): boolean;
+        onStateChange(stateSet: Array<number>): boolean;
+        getStateCount(): number;
+        getStateSet(index: number): Array<number>;
+        getStateDrawable(index: number): Drawable;
+        getStateDrawableIndex(stateSet: Array<number>): number;
+        mutate(): Drawable;
+    }
+}
+declare module android.R {
+    import Drawable = android.graphics.drawable.Drawable;
+    class drawable {
+        static button_background: Drawable;
+        static list_selector_background: Drawable;
+        static list_divider: Drawable;
+    }
+}
+declare module android.R {
+    import ColorStateList = android.content.res.ColorStateList;
+    class color {
+        static textView_textColor: ColorStateList;
+    }
+}
+declare module android.R {
+    import Drawable = android.graphics.drawable.Drawable;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
+    import StateListDrawable = android.graphics.drawable.StateListDrawable;
+    class attr {
+        static _viewStyle: any;
+        static viewStyle: any;
+        static buttonStyle: {
+            background: Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            textSize: string;
+            gravity: number;
+        };
+        static textViewStyle: {
+            textSize: string;
+            textColor: content.res.ColorStateList;
+        };
+        static imageButtonStyle: {
+            background: Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            gravity: number;
+        };
+        static gridViewStyle: {
+            numColumns: number;
+        };
+        static listViewStyle: {
+            divider: Drawable;
+            dividerHeight: number;
+        };
+        static numberPickerStyle: {
+            orientation: string;
+            solidColor: string;
+            selectionDivider: ColorDrawable;
+            selectionDividerHeight: string;
+            selectionDividersDistance: string;
+            internalMinWidth: string;
+            internalMaxHeight: string;
+            virtualButtonPressedDrawable: StateListDrawable;
+        };
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
@@ -2583,177 +2756,6 @@ declare module android.widget {
             constructor(source: ViewGroup.LayoutParams);
             constructor(width: number, height: number, weight?: number);
         }
-    }
-}
-declare module android.graphics.drawable {
-    import Canvas = android.graphics.Canvas;
-    import Rect = android.graphics.Rect;
-    class DrawableContainer extends Drawable implements Drawable.Callback {
-        private static DEBUG;
-        private static TAG;
-        static DEFAULT_DITHER: boolean;
-        private mDrawableContainerState;
-        private mCurrDrawable;
-        private mAlpha;
-        private mCurIndex;
-        mMutated: boolean;
-        private mAnimationRunnable;
-        private mEnterAnimationEnd;
-        private mExitAnimationEnd;
-        private mLastDrawable;
-        draw(canvas: Canvas): void;
-        private needsMirroring();
-        getPadding(padding: android.graphics.Rect): boolean;
-        setAlpha(alpha: number): void;
-        getAlpha(): number;
-        setDither(dither: boolean): void;
-        setEnterFadeDuration(ms: number): void;
-        setExitFadeDuration(ms: number): void;
-        onBoundsChange(bounds: android.graphics.Rect): void;
-        isStateful(): boolean;
-        setAutoMirrored(mirrored: boolean): void;
-        isAutoMirrored(): boolean;
-        jumpToCurrentState(): void;
-        onStateChange(state: Array<number>): boolean;
-        onLevelChange(level: number): boolean;
-        getIntrinsicWidth(): number;
-        getIntrinsicHeight(): number;
-        getMinimumWidth(): number;
-        getMinimumHeight(): number;
-        invalidateDrawable(who: android.graphics.drawable.Drawable): void;
-        scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
-        unscheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable): void;
-        setVisible(visible: boolean, restart: boolean): boolean;
-        getOpacity(): number;
-        selectDrawable(idx: number): boolean;
-        animate(schedule: boolean): void;
-        getCurrent(): Drawable;
-        getConstantState(): Drawable.ConstantState;
-        mutate(): Drawable;
-        setConstantState(state: DrawableContainer.DrawableContainerState): void;
-    }
-    module DrawableContainer {
-        class DrawableContainerState implements Drawable.ConstantState {
-            mOwner: DrawableContainer;
-            private mDrawableFutures;
-            mDrawables: Array<Drawable>;
-            mNumChildren: number;
-            mVariablePadding: boolean;
-            mPaddingChecked: boolean;
-            mConstantPadding: Rect;
-            mConstantSize: boolean;
-            mComputedConstantSize: boolean;
-            mConstantWidth: number;
-            mConstantHeight: number;
-            mConstantMinimumWidth: number;
-            mConstantMinimumHeight: number;
-            mCheckedOpacity: boolean;
-            mOpacity: number;
-            mCheckedStateful: boolean;
-            mStateful: boolean;
-            mCheckedConstantState: boolean;
-            mCanConstantState: boolean;
-            mDither: boolean;
-            mMutated: boolean;
-            mEnterFadeDuration: number;
-            mExitFadeDuration: number;
-            mAutoMirrored: boolean;
-            constructor(orig: DrawableContainerState, owner: DrawableContainer);
-            addChild(dr: Drawable): number;
-            getCapacity(): number;
-            private createAllFutures();
-            getChildCount(): number;
-            getChildren(): Array<Drawable>;
-            getChild(index: number): Drawable;
-            mutate(): void;
-            setVariablePadding(variable: boolean): void;
-            getConstantPadding(): Rect;
-            setConstantSize(constant: boolean): void;
-            isConstantSize(): boolean;
-            getConstantWidth(): number;
-            getConstantHeight(): number;
-            getConstantMinimumWidth(): number;
-            getConstantMinimumHeight(): number;
-            computeConstantSize(): void;
-            setEnterFadeDuration(duration: number): void;
-            getEnterFadeDuration(): number;
-            setExitFadeDuration(duration: number): void;
-            getExitFadeDuration(): number;
-            getOpacity(): number;
-            isStateful(): boolean;
-            canConstantState(): boolean;
-            newDrawable(): android.graphics.drawable.Drawable;
-        }
-    }
-}
-declare module android.graphics.drawable {
-    class StateListDrawable extends DrawableContainer {
-        private mStateListState;
-        constructor();
-        private initWithState(state);
-        addState(stateSet: Array<number>, drawable: Drawable): void;
-        isStateful(): boolean;
-        onStateChange(stateSet: Array<number>): boolean;
-        getStateCount(): number;
-        getStateSet(index: number): Array<number>;
-        getStateDrawable(index: number): Drawable;
-        getStateDrawableIndex(stateSet: Array<number>): number;
-        mutate(): Drawable;
-    }
-}
-declare module android.R {
-    import Drawable = android.graphics.drawable.Drawable;
-    class drawable {
-        static button_background: Drawable;
-        static list_selector_background: Drawable;
-        static list_divider: Drawable;
-    }
-}
-declare module android.R {
-    import ColorStateList = android.content.res.ColorStateList;
-    class color {
-        static textView_textColor: ColorStateList;
-    }
-}
-declare module android.R {
-    import Drawable = android.graphics.drawable.Drawable;
-    import ColorDrawable = android.graphics.drawable.ColorDrawable;
-    import StateListDrawable = android.graphics.drawable.StateListDrawable;
-    class attr {
-        static buttonStyle: {
-            background: Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            textSize: string;
-            gravity: number;
-        };
-        static textViewStyle: {
-            textSize: string;
-            textColor: content.res.ColorStateList;
-        };
-        static imageButtonStyle: {
-            background: Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            gravity: number;
-        };
-        static gridViewStyle: {
-            numColumns: number;
-        };
-        static listViewStyle: {
-            divider: Drawable;
-            dividerHeight: number;
-        };
-        static numberPickerStyle: {
-            orientation: string;
-            solidColor: string;
-            selectionDivider: ColorDrawable;
-            selectionDividerHeight: string;
-            selectionDividersDistance: string;
-            internalMinWidth: string;
-            internalMaxHeight: string;
-            virtualButtonPressedDrawable: StateListDrawable;
-        };
     }
 }
 declare module android.widget {

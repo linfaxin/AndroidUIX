@@ -14,7 +14,6 @@
 
 module android.R {
     import Gravity = android.view.Gravity;
-    import View = android.view.View;
     import Resources = android.content.res.Resources;
     import Color = android.graphics.Color;
     import Drawable = android.graphics.drawable.Drawable;
@@ -24,6 +23,10 @@ module android.R {
 
 
     export class attr {
+        static _viewStyle:any = {};
+        static get viewStyle(){
+            return attr._viewStyle;
+        }
 
         static get buttonStyle() {
             return {
@@ -75,8 +78,8 @@ module android.R {
                 internalMaxHeight : '180dp',
                 virtualButtonPressedDrawable : (()=>{
                     let stateList = new StateListDrawable();
-                    stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
-                    stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
+                    stateList.addState([android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
+                    stateList.addState([android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
                     stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
                     return stateList;
                 })(),
