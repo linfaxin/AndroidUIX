@@ -15575,7 +15575,7 @@ var android;
                 this.mTextColor = ColorStateList.valueOf(Color.BLACK);
                 this.mCurTextColor = Color.BLACK;
                 this.mHintColor = Color.LTGRAY;
-                this.mSpacingMult = 1.0;
+                this.mSpacingMult = 1.2;
                 this.mSpacingAdd = 0;
                 this.mMaxWidth = Number.MAX_SAFE_INTEGER;
                 this.mMaxHeight = Number.MAX_SAFE_INTEGER;
@@ -15756,7 +15756,7 @@ var android;
                 let padBottom = this.getCompoundPaddingBottom();
                 this.mTextElement.style.height = "";
                 this.mTextElement.style.width = "";
-                this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels + 'px';
+                this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels * Resources.getDisplayMetrics().density + 'px';
                 this.mTextElement.style.top = "";
                 if (widthMode == MeasureSpec.EXACTLY) {
                     width = widthSize;

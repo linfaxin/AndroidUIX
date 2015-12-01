@@ -29,7 +29,7 @@ module android.widget{
         private mTextColor = ColorStateList.valueOf(Color.BLACK);
         private mCurTextColor = Color.BLACK;
         private mHintColor = Color.LTGRAY;
-        private mSpacingMult = 1.0;
+        private mSpacingMult = 1.2;
         private mSpacingAdd = 0;
 
         private mMaxWidth = Number.MAX_SAFE_INTEGER;
