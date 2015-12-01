@@ -1626,6 +1626,7 @@ declare module android.view {
         private _AttrObserver;
         private _stateAttrList;
         protected _attrBinder: AttrBinder;
+        private mSyncAttrToStyle;
         static AndroidViewProperty: string;
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
@@ -1642,12 +1643,14 @@ declare module android.view {
         private _lastSyncScrollY;
         protected _syncBoundToElement(): boolean;
         syncVisibleToElement(): void;
+        syncDrawStateToElement(): void;
         private _initAttrObserver();
         private _parseInitedAttribute();
         private _fireInitedAttributeChange();
         private _fireStateChangeToAttribute(oldState, newState);
         private onBindElementAttributeChanged(attributeName, oldVal, newVal);
         hasAttributeIgnoreCase(name: string): boolean;
+        getAttributeIgnoreCase(name: string): string;
         applyDefaultAttributes(attrs: any): void;
         tagName(): string;
     }

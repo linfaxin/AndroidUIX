@@ -3863,7 +3863,7 @@ var androidui;
                     else if (value.startsWith('rgba(')) {
                         value = value.replace('rgba(', '').replace(')', '');
                         let parts = value.split(',');
-                        return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[2]) * 255);
+                        return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[3]) * 255);
                     }
                     else {
                         if (value.startsWith('#') && value.length === 4) {
@@ -4302,6 +4302,7 @@ var android;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
                 this._attrBinder = new AttrBinder(this);
+                this.mSyncAttrToStyle = [];
                 this._syncBoundToElementLock = false;
                 this.syncBoundToElementRun = () => {
                     this._syncBoundToElement();
@@ -4314,7 +4315,7 @@ var android;
                     this.setBackground(this._attrBinder.parseDrawable(value));
                 }, () => {
                     if (this.mBackground instanceof ColorDrawable) {
-                        return Color.toARGBHex(this.mBackground.getColor());
+                        return Color.toRGBAFunc(this.mBackground.getColor());
                     }
                     return this.mBackground;
                 });
@@ -4489,6 +4490,12 @@ var android;
                     }),
                     this._attrBinder.addAttr('layerType', (value) => {
                     });
+                this._attrBinder.addAttr('syncAttr', (value) => {
+                    this.mSyncAttrToStyle = value ? value.toLowerCase().split(';') : [];
+                    for (let attrName of this.mSyncAttrToStyle) {
+                        this.bindElement.style[attrName] = this.getAttributeIgnoreCase(attrName);
+                    }
+                });
                 this.initBindElement(bindElement, rootElement);
             }
             get mID() {
@@ -6586,6 +6593,7 @@ var android;
                     this.mDrawableState = this.onCreateDrawableState(0);
                     this.mPrivateFlags &= ~View.PFLAG_DRAWABLE_STATE_DIRTY;
                     this._fireStateChangeToAttribute(oldDrawableState, this.mDrawableState);
+                    this.syncDrawStateToElement();
                     return this.mDrawableState;
                 }
             }
@@ -7415,6 +7423,29 @@ var android;
                     this.bindElement.style.visibility = '';
                 }
             }
+            syncDrawStateToElement() {
+                const bind = this.bindElement;
+                if (this.isPressed())
+                    bind.classList.add('_pressed');
+                else
+                    bind.classList.remove('_pressed');
+                if (this.isEnabled())
+                    bind.classList.remove('_disabled');
+                else
+                    bind.classList.add('_disabled');
+                if (this.isFocused())
+                    bind.classList.add('_focused');
+                else
+                    bind.classList.remove('_focused');
+                if (this.isSelected())
+                    bind.classList.add('_selected');
+                else
+                    bind.classList.remove('_selected');
+                if (this.isActivated())
+                    bind.classList.add('_activated');
+                else
+                    bind.classList.remove('_activated');
+            }
             _initAttrObserver() {
                 if (!this._AttrObserver)
                     this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
@@ -7497,10 +7528,16 @@ var android;
                     return;
                 }
                 this._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
+                if (this.mSyncAttrToStyle.indexOf(attrName) !== -1) {
+                    this.bindElement.style[attrName] = this.getAttributeIgnoreCase(attrName);
+                }
             }
             hasAttributeIgnoreCase(name) {
+                return this.getAttributeIgnoreCase(name) != null;
+            }
+            getAttributeIgnoreCase(name) {
                 if (!(typeof name === 'string'))
-                    return false;
+                    return null;
                 name = name.toLowerCase();
                 if (name.startsWith('android:'))
                     name = name.substring('android:'.length);
@@ -7509,9 +7546,9 @@ var android;
                     if (attrName.startsWith('android:'))
                         attrName = attrName.substring('android:'.length);
                     if (attrName == name)
-                        return true;
+                        return attr.value;
                 }
-                return false;
+                return null;
             }
             applyDefaultAttributes(attrs) {
                 for (let key in attrs) {

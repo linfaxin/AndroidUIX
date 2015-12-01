@@ -154,7 +154,7 @@ module androidui.attr {
                     value = value.replace('rgba(', '').replace(')', '');
                     let parts = value.split(',');
                     return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
-                        Number.parseInt(parts[2]), Number.parseInt(parts[2]) * 255);
+                        Number.parseInt(parts[2]), Number.parseInt(parts[3]) * 255);
 
                 } else {
                     if (value.startsWith('#') && value.length === 4) {//support parse #333
