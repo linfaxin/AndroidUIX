@@ -4586,7 +4586,8 @@ module android.view {
         postSyncBoundToElement(){
             if(!this._syncBoundToElementLock){
                 this._syncBoundToElementLock = true;
-                requestAnimationFrame(this.syncBoundToElementRun);
+                this._syncBoundToElement();
+                //requestAnimationFrame(this.syncBoundToElementRun);
             }
         }
 
@@ -4620,8 +4621,9 @@ module android.view {
 
                 let bind = this.bindElement;
 
-                bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
-            -webkit-transform: translate3d(${left}px, ${top}px, 0px);`;
+                bind.style.transform = `translate3d(${left}px, ${top}px, 0px);`;
+            //    bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
+            //-webkit-transform: translate3d(${left}px, ${top}px, 0px);`;
 
                 bind.style.width = width + 'px';
                 bind.style.height = height + 'px';
@@ -4640,8 +4642,9 @@ module android.view {
                         let child = group.getChildAt(i);
                         let item = child.bindElement;
 
-                        item.style.cssText += `transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);
-                    -webkit-transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);`;
+                        item.style.transform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);`;
+                    //    item.style.cssText += `transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);
+                    //-webkit-transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);`;
                     }
                 }
                 change = true;
