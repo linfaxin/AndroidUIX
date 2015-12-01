@@ -7358,7 +7358,7 @@ var android;
             postSyncBoundToElement() {
                 if (!this._syncBoundToElementLock) {
                     this._syncBoundToElementLock = true;
-                    requestAnimationFrame(this.syncBoundToElementRun);
+                    this._syncBoundToElement();
                 }
             }
             postSyncScrollToElement() {
@@ -7378,8 +7378,7 @@ var android;
                     this._lastSyncWidth = width;
                     this._lastSyncHeight = height;
                     let bind = this.bindElement;
-                    bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
-            -webkit-transform: translate3d(${left}px, ${top}px, 0px);`;
+                    bind.style.transform = bind.style.webkitTransform = `translate3d(${left}px, ${top}px, 0px)`;
                     bind.style.width = width + 'px';
                     bind.style.height = height + 'px';
                     change = true;
@@ -7394,8 +7393,7 @@ var android;
                         for (let i = 0, count = group.getChildCount(); i < count; i++) {
                             let child = group.getChildAt(i);
                             let item = child.bindElement;
-                            item.style.cssText += `transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);
-                    -webkit-transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);`;
+                            item.style.transform = item.style.webkitTransform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px)`;
                         }
                     }
                     change = true;
