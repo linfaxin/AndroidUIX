@@ -77,6 +77,7 @@ module android.view {
         mYOffset = 0;
 
         _activeTouch:any;
+        _event:any;
         private _axisValues = new Map<number, number>();
 
         static obtainWithTouchEvent(e, action:number):MotionEvent {
@@ -112,6 +113,7 @@ module android.view {
         private static IdIndexCache = new Map<number, number>();
 
         initWithTouch(event, baseAction:number, windowBound = new Rect() ) {
+            this._event = event;
             let e = <TouchEvent>event;
             //get actionIndex
             let action = baseAction;

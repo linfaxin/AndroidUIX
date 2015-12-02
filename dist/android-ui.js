@@ -2508,6 +2508,7 @@ var android;
                 return newEv;
             }
             initWithTouch(event, baseAction, windowBound = new Rect()) {
+                this._event = event;
                 let e = event;
                 let action = baseAction;
                 let actionIndex = -1;
@@ -5234,10 +5235,6 @@ var android;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
                 this._attrBinder = new AttrBinder(this);
-                this._syncBoundToElementLock = false;
-                this.syncBoundToElementRun = () => {
-                    this._syncBoundToElement();
-                };
                 this._lastSyncScrollX = 0;
                 this._lastSyncScrollY = 0;
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
@@ -5434,22 +5431,22 @@ var android;
             get mLeft() { return this._mLeft; }
             set mLeft(value) {
                 this._mLeft = Math.floor(value);
-                this.postSyncBoundToElement();
+                this.syncBoundToElement();
             }
             get mRight() { return this._mRight; }
             set mRight(value) {
                 this._mRight = Math.floor(value);
-                this.postSyncBoundToElement();
+                this.syncBoundToElement();
             }
             get mTop() { return this._mTop; }
             set mTop(value) {
                 this._mTop = Math.floor(value);
-                this.postSyncBoundToElement();
+                this.syncBoundToElement();
             }
             get mBottom() { return this._mBottom; }
             set mBottom(value) {
                 this._mBottom = Math.floor(value);
-                this.postSyncBoundToElement();
+                this.syncBoundToElement();
             }
             get mScrollX() { return this._mScrollX; }
             set mScrollX(value) { this._mScrollX = Math.floor(value); }
@@ -7199,7 +7196,7 @@ var android;
                 this.computeScroll();
                 let sx = this.mScrollX;
                 let sy = this.mScrollY;
-                this.postSyncScrollToElement();
+                this.syncScrollToElement();
                 let hasNoCache = cache == null;
                 let offsetForScroll = cache == null;
                 let restoreTo = canvas.save();
@@ -8289,17 +8286,13 @@ var android;
                 this._parseInitedAttribute();
                 this._initAttrObserver();
             }
-            postSyncBoundToElement() {
-                if (!this._syncBoundToElementLock) {
-                    this._syncBoundToElementLock = true;
-                    this._syncBoundToElement();
-                }
+            syncBoundToElement() {
+                this._syncBoundToElement();
             }
-            postSyncScrollToElement() {
-                this.postSyncBoundToElement();
+            syncScrollToElement() {
+                this._syncScrollToElement();
             }
             _syncBoundToElement() {
-                this._syncBoundToElementLock = false;
                 let change = false;
                 const left = this.mLeft;
                 const top = this.mTop;
@@ -8317,6 +8310,10 @@ var android;
                     bind.style.height = height + 'px';
                     change = true;
                 }
+                return change;
+            }
+            _syncScrollToElement() {
+                let change = false;
                 let sx = this.mScrollX;
                 let sy = this.mScrollY;
                 if (this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
@@ -9540,7 +9537,10 @@ var android;
                 let result = event[InputStage.FLAG_FINISHED_HANDLED];
                 event[InputStage.FLAG_FINISHED] = false;
                 event[InputStage.FLAG_FINISHED_HANDLED] = false;
-                return result;
+                let view = this.mView;
+                let isTouchEvent = event instanceof view_2.MotionEvent && event.isTouchEvent();
+                let disallowIntercept = view instanceof view_2.ViewGroup ? (view.mGroupFlags & view_2.ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0 : false;
+                return result && (!isTouchEvent || disallowIntercept);
             }
             deliverInputEvent(event) {
                 this.mFirstInputStage.deliver(event);
@@ -12093,8 +12093,8 @@ var android;
                     this._bottomMarginOrig = 0;
                     if (args.length === 1) {
                         let src = args[0];
+                        super(src);
                         if (src instanceof MarginLayoutParams) {
-                            super(src);
                             this.leftMargin = src._leftMargin;
                             this.topMargin = src._topMargin;
                             this.rightMargin = src._rightMargin;
@@ -15548,8 +15548,11 @@ var android;
                     super();
                     this.weight = 0;
                     this.gravity = -1;
-                    if (args.length === 1 && args[0] instanceof LayoutParams) {
-                        this.gravity = args[0].gravity;
+                    if (args.length === 1) {
+                        if (args[0] instanceof LayoutParams) {
+                            this.gravity = args[0].gravity;
+                        }
+                        super(args[0]);
                     }
                     else {
                         let [width, height, weight = 0] = args;
@@ -30013,29 +30016,33 @@ var androidui;
         initTouchEvent() {
             this.element.addEventListener('touchstart', (e) => {
                 this.refreshWindowBound();
-                e.preventDefault();
-                e.stopPropagation();
                 this.element.focus();
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
             this.element.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_MOVE, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
             this.element.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_UP, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
             this.element.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_CANCEL, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
         }
         initMouseEvent() {
@@ -30061,34 +30068,38 @@ var androidui;
             this.element.addEventListener('mousedown', (e) => {
                 isMouseDown = true;
                 this.refreshWindowBound();
-                e.preventDefault();
-                e.stopPropagation();
                 this.element.focus();
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
             this.element.addEventListener('mousemove', (e) => {
                 if (!isMouseDown)
                     return;
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
             this.element.addEventListener('mouseup', (e) => {
                 isMouseDown = false;
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
             this.element.addEventListener('mouseleave', (e) => {
                 if (e.fromElement === this.element) {
                     isMouseDown = false;
-                    e.preventDefault();
-                    e.stopPropagation();
                     this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
-                    this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                    if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
                 }
             }, true);
             let scrollEvent = new MotionEvent();
@@ -30187,6 +30198,12 @@ var androidui;
             position: absolute;
             left: 0;
             top: 0;
+        }
+        androidui-nativescrollview::-webkit-scrollbar {
+            display: none;
+        }
+        androidui.widget.nativescrollview::-webkit-scrollbar {
+            display: none;
         }
         `;
     document.head.appendChild(styleElement);
@@ -30536,6 +30553,80 @@ var android;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 ///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/widget/ScrollView.ts"/>
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var ScrollView = android.widget.ScrollView;
+        class NativeScrollView extends ScrollView {
+            constructor(...args) {
+                super(...args);
+                this.isTouching = false;
+            }
+            initBindElement(bindElement, rootElement) {
+                super.initBindElement(bindElement, rootElement);
+                this.bindElement.style.cssText += ";overflow-y:auto;-webkit-overflow-scrolling:touch;";
+                const density = this.getResources().getDisplayMetrics().density;
+                this.bindElement.addEventListener('scroll', (e) => {
+                    let oldX = this.mScrollX;
+                    let oldY = this.mScrollY;
+                    let x = this.bindElement.scrollLeft * density;
+                    let y = this.bindElement.scrollTop * density;
+                    if (oldX != x || oldY != y) {
+                        const range = this.getScrollRange();
+                        this.overScrollBy(x - oldX, y - oldY, oldX, oldY, 0, range, 0, this.mOverflingDistance, this.isTouching);
+                        this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
+                    }
+                    this.awakenScrollBars();
+                });
+                this.bindElement.addEventListener("touchstart", () => {
+                    var maxScroll = this.bindElement.scrollHeight - this.bindElement.offsetHeight;
+                    if (this.bindElement.scrollTop === 0)
+                        this.bindElement.scrollTop = 1;
+                    else if (this.bindElement.scrollTop === maxScroll)
+                        this.bindElement.scrollTop = maxScroll - 1;
+                });
+            }
+            onInterceptTouchEvent(ev) {
+                const parent = this.getParent();
+                var func;
+                if (parent != null) {
+                    func = parent.requestDisallowInterceptTouchEvent;
+                    parent.requestDisallowInterceptTouchEvent = () => { };
+                }
+                try {
+                    return super.onInterceptTouchEvent(ev);
+                }
+                finally {
+                    if (parent != null && func) {
+                        parent.requestDisallowInterceptTouchEvent = func;
+                    }
+                }
+            }
+            onTouchEvent(ev) {
+                switch (ev.getAction()) {
+                    case android.view.MotionEvent.ACTION_CANCEL:
+                    case android.view.MotionEvent.ACTION_UP:
+                        this.isTouching = false;
+                        break;
+                    case android.view.MotionEvent.ACTION_DOWN:
+                    case android.view.MotionEvent.ACTION_MOVE:
+                        this.isTouching = true;
+                        break;
+                }
+                return true;
+            }
+            _syncScrollToElement() {
+                return false;
+            }
+            onDrawVerticalScrollBar(canvas, scrollBar, l, t, r, b) {
+            }
+        }
+        widget.NativeScrollView = NativeScrollView;
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
+///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/view/Gravity.ts"/>
 ///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../../android/view/MotionEvent.ts"/>
@@ -30543,6 +30634,7 @@ var android;
 ///<reference path="../../android/widget/AbsListView.ts"/>
 ///<reference path="../../android/widget/ScrollView.ts"/>
 ///<reference path="../../android/widget/OverScroller.ts"/>
+///<reference path="../../androidui/widget/NativeScrollView.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
 var androidui;
 (function (androidui) {
@@ -31246,7 +31338,7 @@ var androidui;
                             t = 0;
                         if (offset < 0)
                             offset = 0;
-                        scrollBarEl.style.transform = scrollBarEl.style.webkitTransform = `translate(${l}px, ${t + offset}px`;
+                        scrollBarEl.style.transform = scrollBarEl.style.webkitTransform = `translate(${l}px, ${t + offset}px)`;
                         scrollBarEl.style.width = (r - l) / 2 + 'px';
                         scrollBarEl.style.height = length + 'px';
                         scrollBarEl.style.opacity = this.mScrollCache.scrollBar.mVerticalThumb.getAlpha() / 255 + '';
@@ -31335,6 +31427,7 @@ var androidui;
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
+///<reference path="androidui/widget/NativeScrollView.ts"/>
 ///<reference path="androidui/util/PerformanceAdjuster.ts"/>
 window[`android`] = android;
 window[`java`] = java;

@@ -9,6 +9,7 @@
 ///<reference path="../../android/widget/AbsListView.ts"/>
 ///<reference path="../../android/widget/ScrollView.ts"/>
 ///<reference path="../../android/widget/OverScroller.ts"/>
+///<reference path="../../androidui/widget/NativeScrollView.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
 module androidui.widget {
     import View = android.view.View;
@@ -19,6 +20,7 @@ module androidui.widget {
     import AbsListView = android.widget.AbsListView;
     import ScrollView = android.widget.ScrollView;
     import OverScroller = android.widget.OverScroller;
+    import NativeScrollView = androidui.widget.NativeScrollView;
     import Integer = java.lang.Integer;
     export interface OverScrollLocker {
         lockOverScrollTop(lockTop:number):void;

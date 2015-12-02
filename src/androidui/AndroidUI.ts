@@ -132,30 +132,35 @@ module androidui {
             this.element.addEventListener('touchstart', (e)=> {
                 this.refreshWindowBound();
 
-                e.preventDefault();
-                e.stopPropagation();
                 this.element.focus();
 
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
             }, true);
             this.element.addEventListener('touchmove', (e)=> {
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_MOVE, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
             this.element.addEventListener('touchend', (e)=> {
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_UP, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
             this.element.addEventListener('touchcancel', (e)=> {
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_CANCEL, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
         }
 
@@ -184,37 +189,41 @@ module androidui {
                 isMouseDown = true;
                 this.refreshWindowBound();
 
-                e.preventDefault();
-                e.stopPropagation();
                 this.element.focus();
 
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
 
             this.element.addEventListener('mousemove', (e)=> {
                 if(!isMouseDown) return;
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
 
             this.element.addEventListener('mouseup', (e)=> {
                 isMouseDown = false;
-                e.preventDefault();
-                e.stopPropagation();
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
-                this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }, true);
 
             this.element.addEventListener('mouseleave', (e)=> {
                 if(e.fromElement === this.element){
                     isMouseDown = false;
-                    e.preventDefault();
-                    e.stopPropagation();
                     this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
-                    this._viewRootImpl.dispatchInputEvent(this.touchEvent);
+                    if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
                 }
             }, true);
 
@@ -323,6 +332,12 @@ module androidui {
             position: absolute;
             left: 0;
             top: 0;
+        }
+        androidui-nativescrollview::-webkit-scrollbar {
+            display: none;
+        }
+        androidui.widget.nativescrollview::-webkit-scrollbar {
+            display: none;
         }
         `;
     document.head.appendChild(styleElement);

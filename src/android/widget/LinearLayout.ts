@@ -1436,8 +1436,11 @@ module android.widget{
             constructor(width:number, height:number, weight?:number);
             constructor(...args) {
                 super();
-                if (args.length === 1 && args[0] instanceof LayoutParams) {
-                    this.gravity = args[0].gravity;
+                if (args.length === 1) {
+                    if(args[0] instanceof LayoutParams){
+                        this.gravity = args[0].gravity;
+                    }
+                    super(args[0]);
                 } else {
                     let [width, height, weight=0] = args;
                     super(width, height);

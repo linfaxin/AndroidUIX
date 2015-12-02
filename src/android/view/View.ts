@@ -637,22 +637,22 @@ module android.view {
         get mLeft():number{return this._mLeft;}
         set mLeft(value:number){
             this._mLeft = Math.floor(value);
-            this.postSyncBoundToElement();
+            this.syncBoundToElement();
         }
         get mRight():number{return this._mRight;}
         set mRight(value:number){
             this._mRight = Math.floor(value);
-            this.postSyncBoundToElement();
+            this.syncBoundToElement();
         }
         get mTop():number{return this._mTop;}
         set mTop(value:number){
             this._mTop = Math.floor(value);
-            this.postSyncBoundToElement();
+            this.syncBoundToElement();
         }
         get mBottom():number{return this._mBottom;}
         set mBottom(value:number){
             this._mBottom = Math.floor(value);
-            this.postSyncBoundToElement();
+            this.syncBoundToElement();
         }
 
         private _mScrollX = 0;
@@ -3114,7 +3114,7 @@ module android.view {
             let sx = this.mScrollX;
             let sy = this.mScrollY;
 
-            this.postSyncScrollToElement();
+            this.syncScrollToElement();
 
             let hasNoCache = cache == null;
             let offsetForScroll = cache == null;
@@ -4582,31 +4582,18 @@ module android.view {
         }
 
 
-        private _syncBoundToElementLock = false;
-        private syncBoundToElementRun = ()=>{
+        syncBoundToElement(){
             this._syncBoundToElement();
-        };
-        postSyncBoundToElement(){
-            if(!this._syncBoundToElementLock){
-                this._syncBoundToElementLock = true;
-                this._syncBoundToElement();
-                //requestAnimationFrame(this.syncBoundToElementRun);
-            }
         }
-
-        postSyncScrollToElement(){
-            this.postSyncBoundToElement();
+        syncScrollToElement(){
+            this._syncScrollToElement();
         }
 
         private _lastSyncLeft:number;
         private _lastSyncTop:number;
         private _lastSyncWidth:number;
         private _lastSyncHeight:number;
-        private _lastSyncScrollX=0;
-        private _lastSyncScrollY=0;
         protected _syncBoundToElement():boolean {
-            this._syncBoundToElementLock = false;
-
             let change = false;
 
             //bound
@@ -4632,7 +4619,13 @@ module android.view {
                 bind.style.height = height + 'px';
                 change = true;
             }
+            return change;
+        }
 
+        private _lastSyncScrollX=0;
+        private _lastSyncScrollY=0;
+        protected _syncScrollToElement():boolean {
+            let change = false;
             //scroll
             let sx = this.mScrollX;
             let sy = this.mScrollY;

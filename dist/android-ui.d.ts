@@ -734,6 +734,7 @@ declare module android.view {
         mXOffset: number;
         mYOffset: number;
         _activeTouch: any;
+        _event: any;
         private _axisValues;
         static obtainWithTouchEvent(e: any, action: number): MotionEvent;
         static obtain(event: MotionEvent): MotionEvent;
@@ -1803,17 +1804,16 @@ declare module android.view {
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
         protected initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
-        private _syncBoundToElementLock;
-        private syncBoundToElementRun;
-        postSyncBoundToElement(): void;
-        postSyncScrollToElement(): void;
+        syncBoundToElement(): void;
+        syncScrollToElement(): void;
         private _lastSyncLeft;
         private _lastSyncTop;
         private _lastSyncWidth;
         private _lastSyncHeight;
+        protected _syncBoundToElement(): boolean;
         private _lastSyncScrollX;
         private _lastSyncScrollY;
-        protected _syncBoundToElement(): boolean;
+        protected _syncScrollToElement(): boolean;
         syncVisibleToElement(): void;
         syncDrawStateToElement(): void;
         private _initAttrObserver();
@@ -4696,6 +4696,17 @@ declare module android.R {
         static prll_footer_state_fail: string;
         static prll_footer_state_no_more: string;
         static zh(): void;
+    }
+}
+declare module androidui.widget {
+    import ScrollView = android.widget.ScrollView;
+    class NativeScrollView extends ScrollView {
+        isTouching: boolean;
+        protected initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
+        onInterceptTouchEvent(ev: android.view.MotionEvent): boolean;
+        onTouchEvent(ev: android.view.MotionEvent): boolean;
+        protected _syncScrollToElement(): boolean;
+        onDrawVerticalScrollBar(canvas: android.graphics.Canvas, scrollBar: android.graphics.drawable.Drawable, l: number, t: number, r: number, b: number): void;
     }
 }
 declare module androidui.widget {

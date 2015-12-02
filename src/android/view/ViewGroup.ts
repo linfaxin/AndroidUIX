@@ -2441,13 +2441,14 @@ module android.view {
 
                 if (args.length === 1) {
                     let src = args[0];
+                    super(src);
                     if (src instanceof MarginLayoutParams) {
-                        super(src);
                         this.leftMargin = src._leftMargin;
                         this.topMargin = src._topMargin;
                         this.rightMargin = src._rightMargin;
                         this.bottomMargin = src._bottomMargin;
                     }
+
                 }else if(args.length==2){
                     super(args[0], args[1]);
                 }
