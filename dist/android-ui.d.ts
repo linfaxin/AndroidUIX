@@ -1799,7 +1799,6 @@ declare module android.view {
         private _AttrObserver;
         private _stateAttrList;
         protected _attrBinder: AttrBinder;
-        private mSyncAttrToStyle;
         static AndroidViewProperty: string;
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);

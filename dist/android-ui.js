@@ -5234,7 +5234,6 @@ var android;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
                 this._attrBinder = new AttrBinder(this);
-                this.mSyncAttrToStyle = [];
                 this._syncBoundToElementLock = false;
                 this.syncBoundToElementRun = () => {
                     this._syncBoundToElement();
@@ -5422,12 +5421,6 @@ var android;
                     }),
                     this._attrBinder.addAttr('layerType', (value) => {
                     });
-                this._attrBinder.addAttr('syncAttr', (value) => {
-                    this.mSyncAttrToStyle = value ? value.toLowerCase().split(';') : [];
-                    for (let attrName of this.mSyncAttrToStyle) {
-                        this.bindElement.style[attrName] = this.getAttributeIgnoreCase(attrName);
-                    }
-                });
                 this.initBindElement(bindElement, rootElement);
                 this.applyDefaultAttributes(android.R.attr.viewStyle);
             }
@@ -8461,9 +8454,6 @@ var android;
                     return;
                 }
                 this._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
-                if (this.mSyncAttrToStyle.indexOf(attrName) !== -1) {
-                    this.bindElement.style[attrName] = this.getAttributeIgnoreCase(attrName);
-                }
             }
             hasAttributeIgnoreCase(name) {
                 return this.getAttributeIgnoreCase(name) != null;
@@ -31222,11 +31212,12 @@ var androidui;
  */
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/R/attr.ts"/>
 var androidui;
 (function (androidui) {
     var util;
     (function (util) {
+        var ColorDrawable = android.graphics.drawable.ColorDrawable;
+        var Color = android.graphics.Color;
         class PerformanceAdjuster {
             static noCanvasMode() {
                 android.graphics.Canvas.prototype = HackCanvas.prototype;
@@ -31239,6 +31230,8 @@ var androidui;
                             scrollBarEl.style.zIndex = '9';
                             scrollBarEl.style.position = 'absolute';
                             scrollBarEl.style.background = 'black';
+                            scrollBarEl.style.left = '0px';
+                            scrollBarEl.style.top = '0px';
                             this.bindElement.appendChild(scrollBarEl);
                         }
                         let height = b - t;
@@ -31258,7 +31251,13 @@ var androidui;
                         scrollBarEl.style.height = length + 'px';
                         scrollBarEl.style.opacity = this.mScrollCache.scrollBar.mVerticalThumb.getAlpha() / 255 + '';
                     };
-                android.R.attr._viewStyle.syncAttr = "background";
+                const oldSetBackground = android.view.View.prototype.setBackground;
+                android.view.View.prototype.setBackground = function (drawable) {
+                    oldSetBackground.call(this, drawable);
+                    if (drawable instanceof ColorDrawable) {
+                        this.bindElement.style.background = Color.toRGBAFunc(this.mBackground.getColor());
+                    }
+                };
             }
         }
         util.PerformanceAdjuster = PerformanceAdjuster;

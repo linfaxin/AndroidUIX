@@ -40,7 +40,7 @@ module androidui.util{
                     if(t<0) t = 0;
                     if(offset<0) offset = 0;
 
-                    scrollBarEl.style.transform = scrollBarEl.style.webkitTransform = `translate(${l}px, ${t + offset}px`;
+                    scrollBarEl.style.transform = scrollBarEl.style.webkitTransform = `translate(${l}px, ${t + offset}px)`;
                     scrollBarEl.style.width = (r-l)/2 + 'px';//half style
                     scrollBarEl.style.height = length + 'px';
                     scrollBarEl.style.opacity = this.mScrollCache.scrollBar.mVerticalThumb.getAlpha() / 255 + '';
