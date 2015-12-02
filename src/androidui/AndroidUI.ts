@@ -333,12 +333,6 @@ module androidui {
             left: 0;
             top: 0;
         }
-        androidui-nativescrollview::-webkit-scrollbar {
-            display: none;
-        }
-        androidui.widget.nativescrollview::-webkit-scrollbar {
-            display: none;
-        }
         `;
     document.head.appendChild(styleElement);
 

@@ -41,6 +41,29 @@ module androidui.widget{
             });
         }
 
+
+        protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+            if (this.getChildCount() > 0) {
+                const child = this.getChildAt(0);
+                let height = this.getMeasuredHeight();
+                if (child.getMeasuredHeight() < height) {
+                    const lp = child.getLayoutParams();
+
+                    let childWidthMeasureSpec = android.widget.FrameLayout.getChildMeasureSpec(widthMeasureSpec,
+                        this.mPaddingLeft + this.mPaddingRight, lp.width);
+                    height -= this.mPaddingTop;
+                    height -= this.mPaddingBottom;
+                    height += 3;//3px more, fix ios native scroll
+                    let childHeightMeasureSpec =
+                        View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY);
+
+                    child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+                }
+            }
+        }
+
         onInterceptTouchEvent(ev:android.view.MotionEvent):boolean {
 
             const parent = this.getParent();
@@ -71,6 +94,16 @@ module androidui.widget{
                     break;
             }
             return true;
+        }
+
+
+        dispatchTouchEvent(ev:android.view.MotionEvent):boolean {
+            let result = super.dispatchTouchEvent(ev);
+            if(ev.getAction()===android.view.MotionEvent.ACTION_UP && result && this.getParent()){
+                //if child handle touch force Intercept touch, make sure browser not handle the touch
+                this.getParent().requestDisallowInterceptTouchEvent(true);
+            }
+            return result;
         }
 
         protected _syncScrollToElement():boolean {

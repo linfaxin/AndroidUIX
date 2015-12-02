@@ -30199,12 +30199,6 @@ var androidui;
             left: 0;
             top: 0;
         }
-        androidui-nativescrollview::-webkit-scrollbar {
-            display: none;
-        }
-        androidui.widget.nativescrollview::-webkit-scrollbar {
-            display: none;
-        }
         `;
     document.head.appendChild(styleElement);
     class RootLayout extends FrameLayout {
@@ -30558,6 +30552,7 @@ var androidui;
 (function (androidui) {
     var widget;
     (function (widget) {
+        var View = android.view.View;
         var ScrollView = android.widget.ScrollView;
         class NativeScrollView extends ScrollView {
             constructor(...args) {
@@ -30588,6 +30583,22 @@ var androidui;
                         this.bindElement.scrollTop = maxScroll - 1;
                 });
             }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                if (this.getChildCount() > 0) {
+                    const child = this.getChildAt(0);
+                    let height = this.getMeasuredHeight();
+                    if (child.getMeasuredHeight() < height) {
+                        const lp = child.getLayoutParams();
+                        let childWidthMeasureSpec = android.widget.FrameLayout.getChildMeasureSpec(widthMeasureSpec, this.mPaddingLeft + this.mPaddingRight, lp.width);
+                        height -= this.mPaddingTop;
+                        height -= this.mPaddingBottom;
+                        height += 3;
+                        let childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY);
+                        child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+                    }
+                }
+            }
             onInterceptTouchEvent(ev) {
                 const parent = this.getParent();
                 var func;
@@ -30616,6 +30627,13 @@ var androidui;
                         break;
                 }
                 return true;
+            }
+            dispatchTouchEvent(ev) {
+                let result = super.dispatchTouchEvent(ev);
+                if (ev.getAction() === android.view.MotionEvent.ACTION_UP && result && this.getParent()) {
+                    this.getParent().requestDisallowInterceptTouchEvent(true);
+                }
+                return result;
             }
             _syncScrollToElement() {
                 return false;

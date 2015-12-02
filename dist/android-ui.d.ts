@@ -4703,8 +4703,10 @@ declare module androidui.widget {
     class NativeScrollView extends ScrollView {
         isTouching: boolean;
         protected initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         onInterceptTouchEvent(ev: android.view.MotionEvent): boolean;
         onTouchEvent(ev: android.view.MotionEvent): boolean;
+        dispatchTouchEvent(ev: android.view.MotionEvent): boolean;
         protected _syncScrollToElement(): boolean;
         onDrawVerticalScrollBar(canvas: android.graphics.Canvas, scrollBar: android.graphics.drawable.Drawable, l: number, t: number, r: number, b: number): void;
     }
