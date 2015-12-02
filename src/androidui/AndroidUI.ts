@@ -39,7 +39,9 @@ module androidui {
             return this._windowBound;
         }
         private touchEvent = new MotionEvent();
+        private touchAvailable = false;
         private ketEvent = new KeyEvent();
+
         private AndroidID:number;
 
         constructor(element:HTMLElement) {
@@ -130,6 +132,7 @@ module androidui {
 
         private initTouchEvent() {
             this.element.addEventListener('touchstart', (e)=> {
+                this.touchAvailable = true;
                 this.refreshWindowBound();
 
                 this.element.focus();
@@ -186,6 +189,7 @@ module androidui {
             let isMouseDown = false;
 
             this.element.addEventListener('mousedown', (e:MouseEvent)=> {
+                if(this.touchAvailable) return;
                 isMouseDown = true;
                 this.refreshWindowBound();
 
@@ -199,6 +203,7 @@ module androidui {
             }, true);
 
             this.element.addEventListener('mousemove', (e)=> {
+                if(this.touchAvailable) return;
                 if(!isMouseDown) return;
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
@@ -208,6 +213,7 @@ module androidui {
             }, true);
 
             this.element.addEventListener('mouseup', (e)=> {
+                if(this.touchAvailable) return;
                 isMouseDown = false;
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
@@ -217,6 +223,7 @@ module androidui {
             }, true);
 
             this.element.addEventListener('mouseleave', (e)=> {
+                if(this.touchAvailable) return;
                 if(e.fromElement === this.element){
                     isMouseDown = false;
                     this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);

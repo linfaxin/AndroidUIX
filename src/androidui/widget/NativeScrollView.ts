@@ -96,16 +96,6 @@ module androidui.widget{
             return true;
         }
 
-
-        dispatchTouchEvent(ev:android.view.MotionEvent):boolean {
-            let result = super.dispatchTouchEvent(ev);
-            if(ev.getAction()===android.view.MotionEvent.ACTION_UP && result && this.getParent()){
-                //if child handle touch force Intercept touch, make sure browser not handle the touch
-                this.getParent().requestDisallowInterceptTouchEvent(true);
-            }
-            return result;
-        }
-
         protected _syncScrollToElement():boolean {
             return false;
         }

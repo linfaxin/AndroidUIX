@@ -4599,6 +4599,7 @@ declare module androidui {
         private tempRect;
         windowBound: android.graphics.Rect;
         private touchEvent;
+        private touchAvailable;
         private ketEvent;
         private AndroidID;
         constructor(element: HTMLElement);
@@ -4706,7 +4707,6 @@ declare module androidui.widget {
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         onInterceptTouchEvent(ev: android.view.MotionEvent): boolean;
         onTouchEvent(ev: android.view.MotionEvent): boolean;
-        dispatchTouchEvent(ev: android.view.MotionEvent): boolean;
         protected _syncScrollToElement(): boolean;
         onDrawVerticalScrollBar(canvas: android.graphics.Canvas, scrollBar: android.graphics.drawable.Drawable, l: number, t: number, r: number, b: number): void;
     }

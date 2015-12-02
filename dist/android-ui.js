@@ -29938,6 +29938,7 @@ var androidui;
             this._windowBound = new android.graphics.Rect();
             this.tempRect = new android.graphics.Rect();
             this.touchEvent = new MotionEvent();
+            this.touchAvailable = false;
             this.ketEvent = new KeyEvent();
             this.element = element;
             if (element[AndroidUI.BindTOElementName]) {
@@ -30015,6 +30016,7 @@ var androidui;
         }
         initTouchEvent() {
             this.element.addEventListener('touchstart', (e) => {
+                this.touchAvailable = true;
                 this.refreshWindowBound();
                 this.element.focus();
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
@@ -30066,6 +30068,8 @@ var androidui;
             }
             let isMouseDown = false;
             this.element.addEventListener('mousedown', (e) => {
+                if (this.touchAvailable)
+                    return;
                 isMouseDown = true;
                 this.refreshWindowBound();
                 this.element.focus();
@@ -30076,6 +30080,8 @@ var androidui;
                 }
             }, true);
             this.element.addEventListener('mousemove', (e) => {
+                if (this.touchAvailable)
+                    return;
                 if (!isMouseDown)
                     return;
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
@@ -30085,6 +30091,8 @@ var androidui;
                 }
             }, true);
             this.element.addEventListener('mouseup', (e) => {
+                if (this.touchAvailable)
+                    return;
                 isMouseDown = false;
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
@@ -30093,6 +30101,8 @@ var androidui;
                 }
             }, true);
             this.element.addEventListener('mouseleave', (e) => {
+                if (this.touchAvailable)
+                    return;
                 if (e.fromElement === this.element) {
                     isMouseDown = false;
                     this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
@@ -30627,13 +30637,6 @@ var androidui;
                         break;
                 }
                 return true;
-            }
-            dispatchTouchEvent(ev) {
-                let result = super.dispatchTouchEvent(ev);
-                if (ev.getAction() === android.view.MotionEvent.ACTION_UP && result && this.getParent()) {
-                    this.getParent().requestDisallowInterceptTouchEvent(true);
-                }
-                return result;
             }
             _syncScrollToElement() {
                 return false;
