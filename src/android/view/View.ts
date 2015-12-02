@@ -846,12 +846,6 @@ module android.view {
             }),
             this._attrBinder.addAttr('layerType', (value)=>{
             });
-            this._attrBinder.addAttr('syncAttr', (value)=>{
-                this.mSyncAttrToStyle = value ? value.toLowerCase().split(';') : [];
-                for(let attrName of this.mSyncAttrToStyle){
-                    this.bindElement.style[attrName] = this.getAttributeIgnoreCase(attrName);
-                }
-            });
 
             this.initBindElement(bindElement, rootElement);
             this.applyDefaultAttributes(android.R.attr.viewStyle);
@@ -4549,7 +4543,6 @@ module android.view {
         private _AttrObserver:MutationObserver;
         private _stateAttrList:StateAttrList;
         protected _attrBinder = new AttrBinder(this);
-        private mSyncAttrToStyle:string[] = [];
         static AndroidViewProperty = 'AndroidView';
         get rootElement():HTMLElement{
             if(this._rootElement) return this._rootElement;
@@ -4778,11 +4771,7 @@ module android.view {
             }
 
             this._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
-
-
-            if(this.mSyncAttrToStyle.indexOf(attrName)!==-1){
-                this.bindElement.style[attrName] = this.getAttributeIgnoreCase(attrName);
-            }
+            
         }
 
         hasAttributeIgnoreCase(name:string):boolean {

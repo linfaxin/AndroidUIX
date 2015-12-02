@@ -3,11 +3,12 @@
  */
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/R/attr.ts"/>
 
 module androidui.util{
     import Canvas = android.graphics.Canvas;
     import Drawable = android.graphics.drawable.Drawable;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
+    import Color = android.graphics.Color;
     export class PerformanceAdjuster {
 
         static noCanvasMode(){
@@ -22,6 +23,8 @@ module androidui.util{
                         scrollBarEl.style.zIndex = '9';
                         scrollBarEl.style.position = 'absolute';
                         scrollBarEl.style.background = 'black';
+                        scrollBarEl.style.left = '0px';
+                        scrollBarEl.style.top = '0px';
                         this.bindElement.appendChild(scrollBarEl);
                     }
 
@@ -43,7 +46,13 @@ module androidui.util{
                     scrollBarEl.style.opacity = this.mScrollCache.scrollBar.mVerticalThumb.getAlpha() / 255 + '';
             };
 
-            android.R.attr._viewStyle.syncAttr = "background";
+            const oldSetBackground = android.view.View.prototype.setBackground;
+            android.view.View.prototype.setBackground = function(drawable:Drawable){
+                oldSetBackground.call(this, drawable);
+                if(drawable instanceof ColorDrawable){
+                    this.bindElement.style.background = Color.toRGBAFunc((<ColorDrawable>this.mBackground).getColor());
+                }
+            };
         }
 
     }
