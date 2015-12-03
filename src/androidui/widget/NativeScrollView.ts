@@ -39,6 +39,13 @@ module androidui.widget{
                 if (this.bindElement.scrollTop === 0) this.bindElement.scrollTop = 1;
                 else if (this.bindElement.scrollTop === maxScroll) this.bindElement.scrollTop = maxScroll - 1;
             });
+
+            this.bindElement.addEventListener('click', (e)=>{
+                if(e[View.AndroidViewProperty]) return;
+                //ignore browser's case click
+                e.preventDefault();
+                e.stopPropagation();
+            }, true);
         }
 
 

@@ -2339,6 +2339,7 @@ module android.view {
             let clickEvent = document.createEvent('MouseEvents');
             clickEvent.initMouseEvent('click', false, true, window, 1, screenX, screenY, clientX, clientY, false, false, false, false, 0, null);
             (<any>clickEvent).forwardedTouchEvent = true;
+            clickEvent[View.AndroidViewProperty] = this;
             this.bindElement.dispatchEvent(clickEvent);
         }
 

@@ -6614,6 +6614,7 @@ var android;
                 let clickEvent = document.createEvent('MouseEvents');
                 clickEvent.initMouseEvent('click', false, true, window, 1, screenX, screenY, clientX, clientY, false, false, false, false, 0, null);
                 clickEvent.forwardedTouchEvent = true;
+                clickEvent[View.AndroidViewProperty] = this;
                 this.bindElement.dispatchEvent(clickEvent);
             }
             callOnClick() {
@@ -30592,6 +30593,12 @@ var androidui;
                     else if (this.bindElement.scrollTop === maxScroll)
                         this.bindElement.scrollTop = maxScroll - 1;
                 });
+                this.bindElement.addEventListener('click', (e) => {
+                    if (e[View.AndroidViewProperty])
+                        return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, true);
             }
             onMeasure(widthMeasureSpec, heightMeasureSpec) {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
