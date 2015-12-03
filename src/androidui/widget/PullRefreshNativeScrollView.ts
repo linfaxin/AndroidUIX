@@ -13,7 +13,7 @@
 ///<reference path="../../android/R/string.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
 ///<reference path="../../androidui/widget/NativeScrollView.ts"/>
-module com.linfaxin{
+module androidui.widget{
     import NativeScrollView = androidui.widget.NativeScrollView;
     import LinearLayout = android.widget.LinearLayout;
     import FrameLayout = android.widget.FrameLayout;
@@ -53,9 +53,9 @@ module com.linfaxin{
             [PullRefreshNativeScrollView.State_Footer_NoMoreToLoad] : [PullRefreshNativeScrollView.State_Footer_ReadyToLoad]
         };
 
-        scrollContentWrap:ScrollContentWrap;
-        headerView:Header;
-        footerView:Footer;
+        private scrollContentWrap:ScrollContentWrap;
+        private headerView:Header;
+        private footerView:Footer;
         contentOverY = 0;
 
         private autoLoadScrollAtBottom = true;

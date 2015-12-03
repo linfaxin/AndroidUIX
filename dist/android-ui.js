@@ -31327,6 +31327,292 @@ var androidui;
         })(PullRefreshLoadLayout = widget.PullRefreshLoadLayout || (widget.PullRefreshLoadLayout = {}));
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/FrameLayout.ts"/>
+///<reference path="../../android/widget/AbsListView.ts"/>
+///<reference path="../../android/widget/ScrollView.ts"/>
+///<reference path="../../android/widget/OverScroller.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/R/string.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../androidui/widget/NativeScrollView.ts"/>
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var NativeScrollView = androidui.widget.NativeScrollView;
+        var LinearLayout = android.widget.LinearLayout;
+        var FrameLayout = android.widget.FrameLayout;
+        var TextView = android.widget.TextView;
+        var Gravity = android.view.Gravity;
+        var R = android.R;
+        class PullRefreshNativeScrollView extends NativeScrollView {
+            constructor(...args) {
+                super(...args);
+                this.contentOverY = 0;
+                this.autoLoadScrollAtBottom = true;
+                this.footerViewReadyDistance = 36 * android.content.res.Resources.getDisplayMetrics().density;
+            }
+            addView(...args) {
+                args[0] = this.scrollContentWrap = new ScrollContentWrap(args[0]);
+                this.headerView = this.scrollContentWrap.header;
+                this.footerView = this.scrollContentWrap.footer;
+                return super.addView(...args);
+            }
+            overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent) {
+                let newScrollY = deltaY + scrollY;
+                const top = 0;
+                scrollRangeY += this.scrollContentWrap.getLayoutParams().topMargin;
+                const bottom = scrollRangeY - this.footerView.getHeight();
+                if (newScrollY > bottom) {
+                    this.contentOverY = newScrollY - bottom;
+                }
+                else if (newScrollY < top) {
+                    this.contentOverY = newScrollY - top;
+                }
+                else {
+                    this.contentOverY = 0;
+                }
+                if (this.headerView) {
+                    if (this.contentOverY < -this.headerView.getHeight()) {
+                        if (isTouchEvent) {
+                            this.setHeaderState(PullRefreshNativeScrollView.State_Header_ReadyToRefresh);
+                        }
+                        else if (this.headerView.state === PullRefreshNativeScrollView.State_Header_ReadyToRefresh) {
+                            this.setHeaderState(PullRefreshNativeScrollView.State_Header_Refreshing);
+                        }
+                    }
+                    else if (this.headerView.state === PullRefreshNativeScrollView.State_Header_ReadyToRefresh) {
+                        this.setHeaderState(this.headerView.stateBeforeReady);
+                    }
+                }
+                if (this.footerView) {
+                    const footerState = this.footerView.state;
+                    if (this.contentOverY > this.footerView.getHeight() + this.footerViewReadyDistance) {
+                        if (isTouchEvent) {
+                            this.setFooterState(PullRefreshNativeScrollView.State_Footer_ReadyToLoad);
+                        }
+                        else if (footerState === PullRefreshNativeScrollView.State_Footer_ReadyToLoad) {
+                            this.setFooterState(PullRefreshNativeScrollView.State_Footer_Loading);
+                        }
+                    }
+                    else if (footerState === PullRefreshNativeScrollView.State_Footer_ReadyToLoad) {
+                        this.setFooterState(this.footerView.stateBeforeReady);
+                    }
+                    if (this.contentOverY > 0 && this.autoLoadScrollAtBottom
+                        && footerState === PullRefreshNativeScrollView.State_Footer_Normal) {
+                        this.setFooterState(PullRefreshNativeScrollView.State_Footer_Loading);
+                    }
+                }
+                return super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+            }
+            onTouchEvent(ev) {
+                if (ev.getAction() === android.view.MotionEvent.ACTION_UP
+                    && this.headerView.state === PullRefreshNativeScrollView.State_Header_ReadyToRefresh) {
+                    this.setHeaderState(PullRefreshNativeScrollView.State_Header_Refreshing);
+                }
+                return super.onTouchEvent(ev);
+            }
+            setHeaderState(newState) {
+                if (!this.headerView)
+                    return;
+                if (this.headerView.state === newState)
+                    return;
+                const changeLimit = PullRefreshNativeScrollView.StateChangeLimit[this.headerView.state];
+                if (changeLimit && changeLimit.indexOf(newState) !== -1)
+                    return;
+                this.headerView.setStateInner(this, newState);
+                if (newState === PullRefreshNativeScrollView.State_Header_Refreshing
+                    || newState === PullRefreshNativeScrollView.State_Header_Refreshing) {
+                    this.scrollContentWrap.setShowHeader(true);
+                }
+                else {
+                    this.scrollContentWrap.setShowHeader(false);
+                }
+                if (newState === PullRefreshNativeScrollView.State_Header_Refreshing && this.refreshLoadListener) {
+                    this.refreshLoadListener.onRefresh(this);
+                }
+            }
+            getHeaderState() {
+                if (!this.headerView)
+                    return PullRefreshNativeScrollView.State_Disable;
+                return this.headerView.state;
+            }
+            setFooterState(newState) {
+                if (!this.footerView)
+                    return;
+                if (this.footerView.state === newState)
+                    return;
+                const changeLimit = PullRefreshNativeScrollView.StateChangeLimit[this.footerView.state];
+                if (changeLimit && changeLimit.indexOf(newState) !== -1)
+                    return;
+                this.footerView.setStateInner(this, newState);
+                if (newState === PullRefreshNativeScrollView.State_Footer_Loading && this.refreshLoadListener) {
+                    this.refreshLoadListener.onLoadMore(this);
+                }
+            }
+            getFooterState() {
+                if (!this.footerView)
+                    return PullRefreshNativeScrollView.State_Disable;
+                return this.footerView.state;
+            }
+            setAutoLoadMoreWhenScrollBottom(autoLoad) {
+                this.autoLoadScrollAtBottom = autoLoad;
+            }
+            setRefreshLoadListener(refreshLoadListener) {
+                this.refreshLoadListener = refreshLoadListener;
+            }
+            startRefresh() {
+                this.setHeaderState(PullRefreshNativeScrollView.State_Header_Refreshing);
+            }
+            startLoadMore() {
+                this.setFooterState(PullRefreshNativeScrollView.State_Footer_Loading);
+            }
+        }
+        PullRefreshNativeScrollView.State_Disable = -1;
+        PullRefreshNativeScrollView.State_Header_Normal = 0;
+        PullRefreshNativeScrollView.State_Header_Refreshing = 1;
+        PullRefreshNativeScrollView.State_Header_ReadyToRefresh = 2;
+        PullRefreshNativeScrollView.State_Header_RefreshFail = 3;
+        PullRefreshNativeScrollView.State_Footer_Normal = 4;
+        PullRefreshNativeScrollView.State_Footer_Loading = 5;
+        PullRefreshNativeScrollView.State_Footer_ReadyToLoad = 6;
+        PullRefreshNativeScrollView.State_Footer_LoadFail = 7;
+        PullRefreshNativeScrollView.State_Footer_NoMoreToLoad = 8;
+        PullRefreshNativeScrollView.StateChangeLimit = {
+            [PullRefreshNativeScrollView.State_Header_Refreshing]: [PullRefreshNativeScrollView.State_Header_ReadyToRefresh, PullRefreshNativeScrollView.State_Footer_Loading,
+                PullRefreshNativeScrollView.State_Footer_ReadyToLoad, PullRefreshNativeScrollView.State_Footer_LoadFail,
+                PullRefreshNativeScrollView.State_Footer_NoMoreToLoad,],
+            [PullRefreshNativeScrollView.State_Header_RefreshFail]: [PullRefreshNativeScrollView.State_Header_ReadyToRefresh, PullRefreshNativeScrollView.State_Footer_Loading,
+                PullRefreshNativeScrollView.State_Footer_ReadyToLoad, PullRefreshNativeScrollView.State_Footer_LoadFail,
+                PullRefreshNativeScrollView.State_Footer_NoMoreToLoad,],
+            [PullRefreshNativeScrollView.State_Footer_Loading]: [PullRefreshNativeScrollView.State_Header_ReadyToRefresh, PullRefreshNativeScrollView.State_Header_Refreshing,
+                PullRefreshNativeScrollView.State_Footer_ReadyToLoad, PullRefreshNativeScrollView.State_Header_RefreshFail],
+            [PullRefreshNativeScrollView.State_Footer_NoMoreToLoad]: [PullRefreshNativeScrollView.State_Footer_ReadyToLoad]
+        };
+        widget.PullRefreshNativeScrollView = PullRefreshNativeScrollView;
+        class ScrollContentWrap extends LinearLayout {
+            constructor(content, bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.isShowHeader = false;
+                this.setOrientation(LinearLayout.VERTICAL);
+                this.addView(this.header = new Header());
+                this.addView(content);
+                this.addView(this.footer = new Footer());
+            }
+            measure(widthMeasureSpec, heightMeasureSpec) {
+                super.measure(widthMeasureSpec, heightMeasureSpec);
+                if (this.isShowHeader) {
+                    this.getLayoutParams().topMargin = 0;
+                }
+                else {
+                    this.getLayoutParams().topMargin = -this.header.getMeasuredHeight();
+                }
+            }
+            setShowHeader(enable) {
+                if (this.isShowHeader === enable)
+                    return;
+                this.isShowHeader = enable;
+                this.requestLayout();
+                this.bindElement.style.transition = 'transform 0.2s ease-out';
+                this.bindElement.style.webkitTransition = '-webkit-transform 0.2s ease-out';
+            }
+        }
+        class Header extends FrameLayout {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.state = PullRefreshNativeScrollView.State_Header_Normal;
+                this.stateBeforeReady = PullRefreshNativeScrollView.State_Header_Normal;
+                this.textView = new TextView();
+                const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
+                this.textView.setPadding(pad, pad, pad, pad);
+                this.textView.setGravity(Gravity.CENTER);
+                this.addView(this.textView, -1, -2);
+                this.onStateChange(PullRefreshNativeScrollView.State_Header_Normal);
+            }
+            setStateInner(prScroll, state) {
+                const oldState = this.state;
+                this.state = state;
+                this.onStateChange(state, oldState);
+                const _this = this;
+                switch (state) {
+                    case PullRefreshNativeScrollView.State_Header_RefreshFail:
+                        this.postDelayed({
+                            run() {
+                                if (state === _this.state) {
+                                    prScroll.setHeaderState(PullRefreshNativeScrollView.State_Header_Normal);
+                                }
+                            }
+                        }, 1000);
+                        break;
+                    case PullRefreshNativeScrollView.State_Header_ReadyToRefresh:
+                        this.stateBeforeReady = oldState;
+                        break;
+                }
+            }
+            onStateChange(newState, oldState = PullRefreshNativeScrollView.State_Disable) {
+                switch (newState) {
+                    case PullRefreshNativeScrollView.State_Header_Refreshing:
+                        this.textView.setText(R.string_.prll_header_state_loading);
+                        break;
+                    case PullRefreshNativeScrollView.State_Header_ReadyToRefresh:
+                        this.textView.setText(R.string_.prll_header_state_ready);
+                        break;
+                    case PullRefreshNativeScrollView.State_Header_RefreshFail:
+                        this.textView.setText(R.string_.prll_header_state_fail);
+                        break;
+                    default:
+                        this.textView.setText(R.string_.prll_header_state_normal);
+                }
+            }
+        }
+        class Footer extends FrameLayout {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.state = PullRefreshNativeScrollView.State_Footer_Normal;
+                this.stateBeforeReady = PullRefreshNativeScrollView.State_Footer_Normal;
+                this.textView = new TextView();
+                const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
+                this.textView.setPadding(pad, pad, pad, pad);
+                this.textView.setGravity(Gravity.CENTER);
+                this.addView(this.textView, -1, -2);
+                this.onStateChange(PullRefreshNativeScrollView.State_Footer_Normal);
+            }
+            setStateInner(prScroll, state) {
+                const oldState = this.state;
+                this.state = state;
+                this.onStateChange(state, oldState);
+                const _this = this;
+                switch (state) {
+                    case PullRefreshNativeScrollView.State_Footer_ReadyToLoad:
+                        this.stateBeforeReady = oldState;
+                        break;
+                }
+            }
+            onStateChange(newState, oldState = PullRefreshNativeScrollView.State_Disable) {
+                switch (newState) {
+                    case PullRefreshNativeScrollView.State_Footer_Loading:
+                        this.textView.setText(R.string_.prll_footer_state_loading);
+                        break;
+                    case PullRefreshNativeScrollView.State_Footer_ReadyToLoad:
+                        this.textView.setText(R.string_.prll_footer_state_ready);
+                        break;
+                    case PullRefreshNativeScrollView.State_Footer_LoadFail:
+                        this.textView.setText(R.string_.prll_footer_state_fail);
+                        break;
+                    case PullRefreshNativeScrollView.State_Footer_NoMoreToLoad:
+                        this.textView.setText(R.string_.prll_footer_state_no_more);
+                        break;
+                    default:
+                        this.textView.setText(R.string_.prll_footer_state_normal);
+                }
+            }
+        }
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/12/1.
  */
@@ -31456,6 +31742,7 @@ var androidui;
 ///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
 ///<reference path="androidui/widget/NativeScrollView.ts"/>
+///<reference path="androidui/widget/PullRefreshNativeScrollView.ts"/>
 ///<reference path="androidui/util/PerformanceAdjuster.ts"/>
 window[`android`] = android;
 window[`java`] = java;
