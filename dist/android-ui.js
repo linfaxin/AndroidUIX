@@ -9538,10 +9538,7 @@ var android;
                 let result = event[InputStage.FLAG_FINISHED_HANDLED];
                 event[InputStage.FLAG_FINISHED] = false;
                 event[InputStage.FLAG_FINISHED_HANDLED] = false;
-                let view = this.mView;
-                let isTouchEvent = event instanceof view_2.MotionEvent && event.isTouchEvent();
-                let disallowIntercept = view instanceof view_2.ViewGroup ? (view.mGroupFlags & view_2.ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0 : false;
-                return result && (!isTouchEvent || disallowIntercept);
+                return result;
             }
             deliverInputEvent(event) {
                 this.mFirstInputStage.deliver(event);
