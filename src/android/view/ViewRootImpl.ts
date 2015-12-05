@@ -869,10 +869,11 @@ module android.view {
             event[InputStage.FLAG_FINISHED] = false;
             event[InputStage.FLAG_FINISHED_HANDLED] = false;
 
-            let view = this.mView;
-            let isTouchEvent = event instanceof MotionEvent && event.isTouchEvent();
-            let disallowIntercept = view instanceof ViewGroup ? (view.mGroupFlags & ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0 : false;
-            return result && (!isTouchEvent || disallowIntercept);
+            return result;
+            //let view = this.mView;
+            //let isTouchEvent = event instanceof MotionEvent && event.isTouchEvent();
+            //let disallowIntercept = view instanceof ViewGroup ? (view.mGroupFlags & ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0 : false;
+            //return result && (!isTouchEvent || disallowIntercept);
         }
         private deliverInputEvent(event) {
             this.mFirstInputStage.deliver(event);
