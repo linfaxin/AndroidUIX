@@ -4800,6 +4800,46 @@ declare module androidui.widget {
         }
     }
 }
+declare module androidui.widget {
+    import NativeScrollView = androidui.widget.NativeScrollView;
+    class PullRefreshNativeScrollView extends NativeScrollView {
+        static State_Disable: number;
+        static State_Header_Normal: number;
+        static State_Header_Refreshing: number;
+        static State_Header_ReadyToRefresh: number;
+        static State_Header_RefreshFail: number;
+        static State_Footer_Normal: number;
+        static State_Footer_Loading: number;
+        static State_Footer_ReadyToLoad: number;
+        static State_Footer_LoadFail: number;
+        static State_Footer_NoMoreToLoad: number;
+        static StateChangeLimit: {};
+        private scrollContentWrap;
+        private headerView;
+        private footerView;
+        contentOverY: number;
+        private autoLoadScrollAtBottom;
+        private footerViewReadyDistance;
+        private refreshLoadListener;
+        addView(...args: any[]): any;
+        protected overScrollBy(deltaX: number, deltaY: number, scrollX: number, scrollY: number, scrollRangeX: number, scrollRangeY: number, maxOverScrollX: number, maxOverScrollY: number, isTouchEvent: boolean): boolean;
+        onTouchEvent(ev: android.view.MotionEvent): boolean;
+        setHeaderState(newState: number): void;
+        getHeaderState(): number;
+        setFooterState(newState: number): void;
+        getFooterState(): number;
+        setAutoLoadMoreWhenScrollBottom(autoLoad: boolean): void;
+        setRefreshLoadListener(refreshLoadListener: PullRefreshNativeScrollView.RefreshLoadListener): void;
+        startRefresh(): void;
+        startLoadMore(): void;
+    }
+    module PullRefreshNativeScrollView {
+        interface RefreshLoadListener {
+            onRefresh(prScroll: PullRefreshNativeScrollView): void;
+            onLoadMore(prScroll: PullRefreshNativeScrollView): void;
+        }
+    }
+}
 declare module androidui.util {
     class PerformanceAdjuster {
         static noCanvasMode(): void;
