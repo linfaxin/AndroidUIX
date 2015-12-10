@@ -8,8 +8,9 @@ module androidui.widget{
     import View = android.view.View;
     import MeasureSpec = View.MeasureSpec;
     import ImageView = android.widget.ImageView;//current undefined
-    requestAnimationFrame(()=>{
-        //there are cross import, should delay import
+
+    window.addEventListener('AndroidUILoadFinish', ()=>{
+        //there are cross import, should import after lib load finish
         eval('ImageView = android.widget.ImageView;');//real import now
     });
 
@@ -273,7 +274,7 @@ module androidui.widget{
             return result;
         }
 
-        setFrame(left:number, top:number, right:number, bottom:number):boolean {
+        protected setFrame(left:number, top:number, right:number, bottom:number):boolean {
             let changed = super.setFrame(left, top, right, bottom);
             this.mHaveFrame = true;
             this.configureBounds();

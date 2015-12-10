@@ -40,6 +40,7 @@
 ///<reference path="../../androidui/attr/AttrBinder.ts"/>
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
 ///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
+///<reference path="../../androidui/util/PerformanceAdjuster.ts"/>
 ///<reference path="KeyEvent.ts"/>
 ///<reference path="../R/attr.ts"/>
 
@@ -80,6 +81,7 @@ module android.view {
     import AttrBinder = androidui.attr.AttrBinder;
     import ClassFinder = androidui.util.ClassFinder;
     import HtmlDataAdapter = androidui.widget.HtmlDataAdapter;
+    import PerformanceAdjuster = androidui.util.PerformanceAdjuster;
     import KeyEvent = android.view.KeyEvent;
 
 
@@ -1828,7 +1830,7 @@ module android.view {
         dispatchVisibilityChanged(changedView:View, visibility:number) {
             this.onVisibilityChanged(changedView, visibility);
         }
-        onVisibilityChanged(changedView:View, visibility:number) {
+        protected onVisibilityChanged(changedView:View, visibility:number) {
             if (visibility == View.VISIBLE) {
                 if (this.mAttachInfo != null) {
                     this.initialAwakenScrollBars();
@@ -2554,7 +2556,7 @@ module android.view {
         protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void {
         }
 
-        setFrame(left:number, top:number, right:number, bottom:number) {
+        protected setFrame(left:number, top:number, right:number, bottom:number) {
             let changed = false;
 
             if (View.DBG) {
@@ -3560,16 +3562,19 @@ module android.view {
             }
         }
 
-        verifyDrawable(who:Drawable):boolean {
+        protected verifyDrawable(who:Drawable):boolean {
             return who == this.mBackground;
         }
-        drawableStateChanged() {
+        protected drawableStateChanged() {
             this.getDrawableState();//fire may state change to stateAttrList
 
             let d = this.mBackground;
             if (d != null && d.isStateful()) {
                 d.setState(this.getDrawableState());
             }
+        }
+        resolveDrawables(){
+            //do nothing
         }
         refreshDrawableState() {
             this.mPrivateFlags |= View.PFLAG_DRAWABLE_STATE_DIRTY;
@@ -3592,7 +3597,7 @@ module android.view {
                 return this.mDrawableState;
             }
         }
-        onCreateDrawableState(extraSpace:number):Array<number> {
+        protected onCreateDrawableState(extraSpace:number):Array<number> {
             if ((this.mViewFlags & View.DUPLICATE_PARENT_STATE) == View.DUPLICATE_PARENT_STATE &&
                 this.mParent instanceof View) {
                 return (<View><any>this.mParent).onCreateDrawableState(extraSpace);
@@ -4583,11 +4588,25 @@ module android.view {
         }
 
 
-        syncBoundToElement(){
+        private _syncToElementLock = false;
+        private syncToElementFunc = ()=>{
+            this._syncToElementLock = false;
             this._syncBoundToElement();
+            this._syncScrollToElement();
+        };
+
+        syncBoundToElement(){
+            //TODO sync from view root.
+            if(!this._syncToElementLock){
+                this._syncToElementLock = true;
+                setTimeout(this.syncToElementFunc, 300);
+            }
         }
         syncScrollToElement(){
-            this._syncScrollToElement();
+            if(!this._syncToElementLock){
+                this._syncToElementLock = true;
+                setTimeout(this.syncToElementFunc, 300);
+            }
         }
 
         private _lastSyncLeft:number;
@@ -4612,9 +4631,8 @@ module android.view {
 
                 let bind = this.bindElement;
 
-                bind.style.transform = bind.style.webkitTransform = `translate3d(${left}px, ${top}px, 0px)`;
-            //    bind.style.cssText += `transform: translate3d(${left}px, ${top}px, 0px);
-            //-webkit-transform: translate3d(${left}px, ${top}px, 0px);`;
+                //bind.style.transform = bind.style.webkitTransform = `translate3d(${left}px, ${top}px, 0px)`;
+                bind.style.transform = bind.style.webkitTransform = `translate(${left}px, ${top}px)`;
 
                 bind.style.width = width + 'px';
                 bind.style.height = height + 'px';
@@ -4639,9 +4657,8 @@ module android.view {
                         let child = group.getChildAt(i);
                         let item = child.bindElement;
 
-                        item.style.transform = item.style.webkitTransform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px)`;
-                    //    item.style.cssText += `transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);
-                    //-webkit-transform: translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px);`;
+                        //item.style.transform = item.style.webkitTransform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px)`;
+                        item.style.transform = item.style.webkitTransform = `translate(${child.mLeft - sx}px, ${child.mTop - sy}px)`;
                     }
                 }
                 change = true;

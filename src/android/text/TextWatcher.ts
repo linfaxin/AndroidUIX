@@ -29,7 +29,7 @@ export interface TextWatcher {
      * It is an error to attempt to make changes to <code>s</code> from
      * this callback.
      */
-    beforeTextChanged(s:string, start:number, count:number, after:number):void ;
+    beforeTextChanged(s:String, start:number, count:number, after:number):void ;
 
     /**
      * This method is called to notify you that, within <code>s</code>,
@@ -38,7 +38,7 @@ export interface TextWatcher {
      * It is an error to attempt to make changes to <code>s</code> from
      * this callback.
      */
-    onTextChanged(s:string, start:number, before:number, count:number):void ;
+    onTextChanged(s:String, start:number, before:number, count:number):void ;
 
     /**
      * This method is called to notify you that, somewhere within
@@ -54,6 +54,6 @@ export interface TextWatcher {
      * to mark your place and then look up from here where the span
      * ended up.
      */
-    afterTextChanged(s:string):void ;//Editable
+    afterTextChanged(s:String):void ;//Editable
 }
 }

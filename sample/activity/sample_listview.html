@@ -49,7 +49,7 @@
             android:layout_gravity="bottom"
             android:layout_height="wrap_content"
             android:textColor="white"
-            style="background-color:rgba(0, 0, 0, 0.7);"
+            android:background="rgba(0, 0, 0, 0.7)"
             >
         ListView使用Adapter机制,移出屏幕的条目可以被回收再用,因此不用担心条目太多的内存问题
     </TextView>
@@ -59,6 +59,7 @@
 <script src="../lib/CustomElements.min.js"></script>
 <script src="../../dist/android-ui.es5.js"></script>
 <script src="../build/main.es5.js"></script>
+<script>android.view.ViewRootImpl.DEBUG_FPS = true;</script>
 
 </body>
 </html>

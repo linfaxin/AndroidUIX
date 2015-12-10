@@ -132,9 +132,17 @@ var java;
             length() {
                 return this.array.length;
             }
-            append(str) {
-                str = str + "";
+            append(a) {
+                let str = a + '';
                 this.array.push(...str.split(''));
+                return this;
+            }
+            deleteCharAt(index) {
+                this.array.splice(index, 1);
+                return this;
+            }
+            replace(start, end, str) {
+                this.array.splice(start, end - start, ...str.split(''));
                 return this;
             }
             setLength(length) {
@@ -146,12 +154,12 @@ var java;
                 }
                 else {
                     for (let i = 0; i < arrayLength - length; i++) {
-                        this.array.push(' ');
+                        this.array.push('\0');
                     }
                 }
             }
             toString() {
-                return this.array.join("");
+                return this.array.join('');
             }
         }
         lang.StringBuilder = StringBuilder;
@@ -934,17 +942,38 @@ var android;
     var graphics;
     (function (graphics) {
         class Paint {
-            constructor() {
+            constructor(flag = 0) {
+                this.mFlag = 0;
                 this.shadowDx = 0;
                 this.shadowDy = 0;
                 this.shadowRadius = 0;
                 this.shadowColor = 0;
+                this.mFlag = flag;
+            }
+            set(src) {
+                if (this != src) {
+                    this.setClassVariablesFrom(src);
+                }
+            }
+            setClassVariablesFrom(paint) {
+                Object.assign(this, paint);
             }
             getStyle() {
                 return this.mTextStyle;
             }
             setStyle(style) {
                 this.mTextStyle = style;
+            }
+            getFlags() {
+                return this.mFlag;
+            }
+            setFlags(flags) {
+                this.mFlag = flags;
+            }
+            getTextScaleX() {
+                return 1;
+            }
+            setTextScaleX(scaleX) {
             }
             getColor() {
                 return this.mColor;
@@ -981,6 +1010,9 @@ var android;
             }
             setAntiAlias(enable) {
             }
+            isAntiAlias() {
+                return true;
+            }
             setShadowLayer(radius, dx, dy, color) {
                 this.hasShadow = radius > 0.0;
                 this.shadowRadius = radius;
@@ -1003,17 +1035,51 @@ var android;
             setTextSize(textSize) {
                 this.textSize = textSize;
             }
-            measureText(text, index = 0, count = text.length) {
-                if (this.textSize != null) {
-                    let fontParts = Paint._measureTextContext.font.split(' ');
-                    Paint._measureTextContext.font = this.textSize + ' ' + fontParts[fontParts.length - 1];
+            ascent() {
+                return this.textSize * Paint.FontMetrics_Size_Ascent;
+            }
+            descent() {
+                return this.textSize * Paint.FontMetrics_Size_Descent;
+            }
+            getFontMetricsInt(fmi) {
+                if (fmi == null) {
+                    return Math.floor((Paint.FontMetrics_Size_Descent - Paint.FontMetrics_Size_Ascent) * this.textSize);
                 }
-                else {
-                    Paint._measureTextContext.font = '';
+                fmi.ascent = Math.floor(Paint.FontMetrics_Size_Ascent * this.textSize);
+                fmi.bottom = Math.floor(Paint.FontMetrics_Size_Bottom * this.textSize);
+                fmi.descent = Math.floor(Paint.FontMetrics_Size_Descent * this.textSize);
+                fmi.leading = Math.floor(Paint.FontMetrics_Size_Leading * this.textSize);
+                fmi.top = Math.floor(Paint.FontMetrics_Size_Top * this.textSize);
+                return fmi.descent - fmi.ascent;
+            }
+            getFontMetrics(metrics) {
+                if (metrics == null) {
+                    return (Paint.FontMetrics_Size_Descent - Paint.FontMetrics_Size_Ascent) * this.textSize;
+                }
+                metrics.ascent = Paint.FontMetrics_Size_Ascent * this.textSize;
+                metrics.bottom = Paint.FontMetrics_Size_Bottom * this.textSize;
+                metrics.descent = Paint.FontMetrics_Size_Descent * this.textSize;
+                metrics.leading = Paint.FontMetrics_Size_Leading * this.textSize;
+                metrics.top = Paint.FontMetrics_Size_Top * this.textSize;
+                return metrics.descent - metrics.ascent;
+            }
+            measureText(text, index = 0, count = text.length) {
+                if (this.textSize != Paint._measureTextSize) {
+                    Paint._measureTextSize = this.textSize;
+                    if (this.textSize != null) {
+                        let fontParts = Paint._measureTextContext.font.split(' ');
+                        Paint._measureTextContext.font = this.textSize + 'px ' + fontParts[fontParts.length - 1];
+                    }
+                    else {
+                        Paint._measureTextContext.font = '';
+                    }
                 }
                 return Paint._measureTextContext.measureText(text.substr(index, count)).width;
             }
-            getTextWidths(text, start, end, widths) {
+            getTextWidths_count(text, index, count, widths) {
+                return this.getTextWidths_end(text, index, index + count, widths);
+            }
+            getTextWidths_end(text, start, end, widths) {
                 if (text == null) {
                     throw Error(`new IllegalArgumentException("text cannot be null")`);
                 }
@@ -1027,12 +1093,87 @@ var android;
                     return 0;
                 }
                 for (let i = start; i < end; i++) {
-                    widths[i] = this.measureText(text[i]);
+                    widths[i - start] = this.measureText(text[i]);
                 }
                 return end - start;
             }
             getTextWidths_2(text, widths) {
-                return this.getTextWidths(text, 0, text.length, widths);
+                return this.getTextWidths_end(text, 0, text.length, widths);
+            }
+            getTextRunAdvances_count(chars, index, count, contextIndex, contextCount, flags, advances, advancesIndex) {
+                return this.getTextRunAdvances_end(chars, index, index + count, contextIndex, contextCount, flags, advances, advancesIndex);
+            }
+            getTextRunAdvances_end(text, start, end, contextStart, contextEnd, flags, advances, advancesIndex) {
+                if (text == null) {
+                    throw Error(`new IllegalArgumentException("text cannot be null")`);
+                }
+                if (flags != Paint.DIRECTION_LTR && flags != Paint.DIRECTION_RTL) {
+                    throw Error(`new IllegalArgumentException("unknown flags value: " + flags)`);
+                }
+                if ((start | end | contextStart | contextEnd | advancesIndex | (end - start)
+                    | (start - contextStart) | (contextEnd - end) | (text.length - contextEnd)
+                    | (advances == null ? 0 : (advances.length - advancesIndex - (end - start)))) < 0) {
+                    throw Error(`new IndexOutOfBoundsException()`);
+                }
+                if (text.length == 0 || start == end) {
+                    return 0;
+                }
+                let totalAdvance = 0;
+                for (let i = start; i < end; i++) {
+                    let width = this.measureText(text[i]);
+                    if (advances)
+                        advances[i - start + advancesIndex] = width;
+                    totalAdvance += width;
+                }
+                return totalAdvance;
+            }
+            getTextRunCursor_len(text, contextStart, contextLength, flags, offset, cursorOpt) {
+                let contextEnd = contextStart + contextLength;
+                if (((contextStart | contextEnd | offset | (contextEnd - contextStart) | (offset - contextStart) | (contextEnd - offset)
+                    | (text.length - contextEnd) | cursorOpt) < 0) || cursorOpt > Paint.CURSOR_OPT_MAX_VALUE) {
+                    throw Error(`new IndexOutOfBoundsException()`);
+                }
+                const scalarArray = new Array(contextLength);
+                this.getTextRunAdvances_count(text, contextStart, contextLength, contextStart, contextLength, flags, scalarArray, 0);
+                let pos = offset - contextStart;
+                switch (cursorOpt) {
+                    case Paint.CURSOR_AFTER:
+                        if (pos < contextLength) {
+                            pos += 1;
+                        }
+                    case Paint.CURSOR_AT_OR_AFTER:
+                        while (pos < contextLength && scalarArray[pos] == 0) {
+                            ++pos;
+                        }
+                        break;
+                    case Paint.CURSOR_BEFORE:
+                        if (pos > 0) {
+                            --pos;
+                        }
+                    case Paint.CURSOR_AT_OR_BEFORE:
+                        while (pos > 0 && scalarArray[pos] == 0) {
+                            --pos;
+                        }
+                        break;
+                    case Paint.CURSOR_AT:
+                    default:
+                        if (scalarArray[pos] == 0) {
+                            pos = -1;
+                        }
+                        break;
+                }
+                if (pos != -1) {
+                    pos += contextStart;
+                }
+                return pos;
+            }
+            getTextRunCursor_end(text, contextStart, contextEnd, flags, offset, cursorOpt) {
+                if (((contextStart | contextEnd | offset | (contextEnd - contextStart) | (offset - contextStart) | (contextEnd - offset)
+                    | (text.length - contextEnd) | cursorOpt) < 0) || cursorOpt > Paint.CURSOR_OPT_MAX_VALUE) {
+                    throw Error(`new IndexOutOfBoundsException()`);
+                }
+                let contextLen = contextEnd - contextStart;
+                return this.getTextRunCursor_len(text, 0, contextLen, flags, offset - contextStart, cursorOpt);
             }
             _setToCanvasContent(context) {
                 if (Number.isInteger(this.mColor)) {
@@ -1056,18 +1197,49 @@ var android;
                     context.shadowOffsetY = this.shadowDy;
                     context.shadowColor = graphics.Color.toRGBAFunc(this.shadowColor);
                 }
-                let fontStyles = [];
+                const fontStyles = [];
                 if (this.textSize != null) {
                     fontStyles.push(this.textSize + 'px');
                 }
                 if (fontStyles.length > 0) {
-                    let fontParts = context.font.split(' ');
+                    let cFont = context.font;
+                    let fontParts = cFont.split(' ');
                     fontStyles.push(fontParts[fontParts.length - 1]);
-                    context.font = fontStyles.join(' ');
+                    let font = fontStyles.join(' ');
+                    if (font != cFont)
+                        context.font = font;
                 }
             }
         }
+        Paint.FontMetrics_Size_Ascent = -0.9277344;
+        Paint.FontMetrics_Size_Bottom = 0.2709961;
+        Paint.FontMetrics_Size_Descent = 0.24414062;
+        Paint.FontMetrics_Size_Leading = 0;
+        Paint.FontMetrics_Size_Top = -1.05615234;
+        Paint.DIRECTION_LTR = 0;
+        Paint.DIRECTION_RTL = 1;
+        Paint.CURSOR_AFTER = 0;
+        Paint.CURSOR_AT_OR_AFTER = 1;
+        Paint.CURSOR_BEFORE = 2;
+        Paint.CURSOR_AT_OR_BEFORE = 3;
+        Paint.CURSOR_AT = 4;
+        Paint.CURSOR_OPT_MAX_VALUE = Paint.CURSOR_AT;
+        Paint.ANTI_ALIAS_FLAG = 0x01;
+        Paint.FILTER_BITMAP_FLAG = 0x02;
+        Paint.DITHER_FLAG = 0x04;
+        Paint.UNDERLINE_TEXT_FLAG = 0x08;
+        Paint.STRIKE_THRU_TEXT_FLAG = 0x10;
+        Paint.FAKE_BOLD_TEXT_FLAG = 0x20;
+        Paint.LINEAR_TEXT_FLAG = 0x40;
+        Paint.SUBPIXEL_TEXT_FLAG = 0x80;
+        Paint.DEV_KERN_TEXT_FLAG = 0x100;
+        Paint.LCD_RENDER_TEXT_FLAG = 0x200;
+        Paint.EMBEDDED_BITMAP_TEXT_FLAG = 0x400;
+        Paint.AUTO_HINTING_TEXT_FLAG = 0x800;
+        Paint.VERTICAL_TEXT_FLAG = 0x1000;
+        Paint.DEFAULT_PAINT_FLAGS = Paint.DEV_KERN_TEXT_FLAG | Paint.EMBEDDED_BITMAP_TEXT_FLAG;
         Paint._measureTextContext = document.createElement('canvas').getContext('2d');
+        Paint._measureTextSize = -1;
         graphics.Paint = Paint;
         (function (Paint) {
             (function (Align) {
@@ -1076,6 +1248,29 @@ var android;
                 Align[Align["RIGHT"] = 2] = "RIGHT";
             })(Paint.Align || (Paint.Align = {}));
             var Align = Paint.Align;
+            class FontMetrics {
+                constructor() {
+                    this.top = 0;
+                    this.ascent = 0;
+                    this.descent = 0;
+                    this.bottom = 0;
+                    this.leading = 0;
+                }
+            }
+            Paint.FontMetrics = FontMetrics;
+            class FontMetricsInt {
+                constructor() {
+                    this.top = 0;
+                    this.ascent = 0;
+                    this.descent = 0;
+                    this.bottom = 0;
+                    this.leading = 0;
+                }
+                toString() {
+                    return "FontMetricsInt: top=" + this.top + " ascent=" + this.ascent + " descent=" + this.descent + " bottom=" + this.bottom + " leading=" + this.leading;
+                }
+            }
+            Paint.FontMetricsInt = FontMetricsInt;
             (function (Style) {
                 Style[Style["FILL"] = 0] = "FILL";
                 Style[Style["STROKE"] = 1] = "STROKE";
@@ -1097,11 +1292,23 @@ var android;
         })(Paint = graphics.Paint || (graphics.Paint = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        class Path {
+            reset() {
+            }
+        }
+        graphics.Path = Path;
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="../util/Log.ts"/>
 ///<reference path="Rect.ts"/>
 ///<reference path="Color.ts"/>
 ///<reference path="Paint.ts"/>
+///<reference path="Path.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -1143,7 +1350,6 @@ var android;
                 this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
                 this._saveCount = 0;
                 this.fullRectForClip();
-                this._mCanvasContent.clip();
                 this.save();
             }
             recycle() {
@@ -1204,18 +1410,18 @@ var android;
                 return this._saveCount;
             }
             restore() {
-                let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-                if (doRects && doRects.length > 0) {
-                    doRects.forEach((rect) => {
-                        this._mCanvasContent.rect(rect.left, rect.top, rect.width(), rect.height());
-                    });
-                    if (doRects.length % 2 == 1) {
-                        this.fullRectForClip();
-                    }
-                    while (doRects.length > 0) {
-                        Canvas.recycleRect(doRects.pop());
-                    }
-                }
+                //let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
+                //if(doRects && doRects.length>0){
+                //    doRects.forEach((rect:Rect)=>{
+                //        this._mCanvasContent.rect(rect.left, rect.top, rect.width(), rect.height());
+                //    });
+                //    if(doRects.length%2 == 1){
+                //        this.fullRectForClip();
+                //    }
+                //    while(doRects.length>0){
+                //        Canvas.recycleRect(doRects.pop());
+                //    }
+                //}
                 this._saveCount--;
                 this._mCanvasContent.restore();
                 let savedClip = this.mClipStateMap.get(this._saveCount);
@@ -1236,7 +1442,6 @@ var android;
                 return this._saveCount;
             }
             fullRectForClip() {
-                this._mCanvasContent.rect(Canvas.FullRect.left, Canvas.FullRect.top, Canvas.FullRect.width(), Canvas.FullRect.height());
             }
             clipRect(...args) {
                 let rect = Canvas.obtainRect();
@@ -1247,15 +1452,6 @@ var android;
                     let [left = 0, top = 0, right = 0, bottom = 0] = args;
                     rect.set(left, top, right, bottom);
                 }
-                this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
-                this.fullRectForClip();
-                this._mCanvasContent.clip('evenodd');
-                let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-                if (!doRects) {
-                    doRects = [];
-                    this.shouldDoRectBeforeRestoreMap.set(this._saveCount, doRects);
-                }
-                doRects.push(rect);
                 this.mCurrentClip.intersect(rect);
                 return rect.isEmpty();
             }
@@ -1293,6 +1489,20 @@ var android;
                     this._mCanvasContent.restore();
                 }
             }
+            drawPath(path, paint) {
+            }
+            drawText_count(text, index, count, x, y, paint) {
+                if ((index | count | (index + count) | (text.length - index - count)) < 0) {
+                    throw Error(`new IndexOutOfBoundsException()`);
+                }
+                this.drawText(text.substr(index, count), x, y, paint);
+            }
+            drawText_end(text, start, end, x, y, paint) {
+                if ((start | end | (end - start) | (text.length - end)) < 0) {
+                    throw Error(`new IndexOutOfBoundsException()`);
+                }
+                this.drawText(text.substring(start, end), x, y, paint);
+            }
             drawText(text, x, y, paint) {
                 this._mCanvasContent.save();
                 if (paint) {
@@ -1316,8 +1526,16 @@ var android;
                 }
                 this._mCanvasContent.restore();
             }
+            drawTextRun_count(text, index, count, contextIndex, contextCount, x, y, dir, paint) {
+                this.drawText_count(text, index, count, x, y, paint);
+            }
+            drawTextRun_end(text, start, end, contextStart, contextEnd, x, y, dir, paint) {
+                this.drawText_end(text, start, end, x, y, paint);
+            }
         }
         Canvas.FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
+        Canvas.DIRECTION_LTR = 0;
+        Canvas.DIRECTION_RTL = 1;
         Canvas.sRectPool = new Pools.SynchronizedPool(100);
         graphics.Canvas = Canvas;
     })(graphics = android.graphics || (android.graphics = {}));
@@ -2307,7 +2525,7 @@ var android;
                     let density = Resources.globalDensity;
                     displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
-                    displayMetrics.density = density;
+                    displayMetrics.density = window.devicePixelRatio;
                     displayMetrics.densityDpi = density * DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.scaledDensity = density;
                     displayMetrics.widthPixels = window.innerWidth * density;
@@ -3275,16 +3493,26 @@ var android;
                 let temp = document.createElement('div');
                 document.body.appendChild(temp);
                 temp.style.height = 100 + TypedValue.COMPLEX_UNIT_PT;
-                TypedValue.UNIT_SCALE_PT = temp.offsetHeight / 100;
+                TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_PT, temp.offsetHeight / 100);
                 temp.style.height = 1 + TypedValue.COMPLEX_UNIT_IN;
-                TypedValue.UNIT_SCALE_IN = temp.offsetHeight;
+                TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_IN, temp.offsetHeight);
                 temp.style.height = 100 + TypedValue.COMPLEX_UNIT_MM;
-                TypedValue.UNIT_SCALE_MM = temp.offsetHeight / 100;
+                TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_MM, temp.offsetHeight / 100);
                 temp.style.height = 10 + TypedValue.COMPLEX_UNIT_EM;
-                TypedValue.UNIT_SCALE_EM = temp.offsetHeight / 10;
+                TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_EM, temp.offsetHeight / 10);
                 temp.style.height = 10 + TypedValue.COMPLEX_UNIT_REM;
-                TypedValue.UNIT_SCALE_REM = temp.offsetHeight / 10;
+                TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_REM, temp.offsetHeight / 10);
                 document.body.removeChild(temp);
+            }
+            static applyDimension(unit, size, dm) {
+                let scale = 1;
+                if (unit === TypedValue.COMPLEX_UNIT_DP || unit === TypedValue.COMPLEX_UNIT_DIP || unit === TypedValue.COMPLEX_UNIT_SP) {
+                    scale = dm.density;
+                }
+                else {
+                    scale = TypedValue.UNIT_SCALE_MAP.get(unit) || 1;
+                }
+                return size * scale;
             }
             static complexToDimensionPixelSize(valueWithUnit, baseValue = 0, metrics = Resources.getDisplayMetrics()) {
                 if (this.initUnit)
@@ -3310,27 +3538,27 @@ var android;
                 }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_SP)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_SP, "");
-                    scale = metrics.density * TypedValue.UNIT_SCALE_SP;
+                    scale = metrics.density * (TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_SP) || 1);
                 }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_PT)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_PT, "");
-                    scale = TypedValue.UNIT_SCALE_PT;
+                    scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_PT) || 1;
                 }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_IN)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_IN, "");
-                    scale = TypedValue.UNIT_SCALE_IN;
+                    scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_IN) || 1;
                 }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_MM)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_MM, "");
-                    scale = TypedValue.UNIT_SCALE_MM;
+                    scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_MM) || 1;
                 }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_EM)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_EM, "");
-                    scale = TypedValue.UNIT_SCALE_EM;
+                    scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_EM) || 1;
                 }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_REM)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_REM, "");
-                    scale = TypedValue.UNIT_SCALE_REM;
+                    scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_REM) || 1;
                 }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_VH)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_VH, "");
@@ -3365,7 +3593,7 @@ var android;
         TypedValue.COMPLEX_UNIT_VH = 'vh';
         TypedValue.COMPLEX_UNIT_VW = 'vw';
         TypedValue.COMPLEX_UNIT_FRACTION = '%';
-        TypedValue.UNIT_SCALE_SP = 1;
+        TypedValue.UNIT_SCALE_MAP = new Map();
         util.TypedValue = TypedValue;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
@@ -3857,14 +4085,14 @@ var androidui;
                     return color;
                 try {
                     if (value.startsWith('rgb(')) {
-                        value = value.replace('rgb(', '').replace(')', '');
+                        value = value.substring(value.indexOf('(') + 1, value.lastIndexOf(')'));
                         let parts = value.split(',');
                         return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
                     }
                     else if (value.startsWith('rgba(')) {
-                        value = value.replace('rgba(', '').replace(')', '');
+                        value = value.substring(value.indexOf('(') + 1, value.lastIndexOf(')'));
                         let parts = value.split(',');
-                        return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseInt(parts[3]) * 255);
+                        return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseFloat(parts[3]) * 255);
                     }
                     else {
                         if (value.startsWith('#') && value.length === 4) {
@@ -3946,6 +4174,107 @@ var androidui;
  */
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/view/ViewGroup.ts"/>
+/**
+ * Created by linfaxin on 15/12/1.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/graphics/Canvas.ts"/>
+var androidui;
+(function (androidui) {
+    var util;
+    (function (util) {
+        var ColorDrawable = android.graphics.drawable.ColorDrawable;
+        var Color = android.graphics.Color;
+        class PerformanceAdjuster {
+            static noCanvasMode() {
+                android.graphics.Canvas.prototype = HackCanvas.prototype;
+                android.view.View.prototype.onDrawVerticalScrollBar =
+                    function (canvas, scrollBar, l, t, r, b) {
+                        let scrollBarEl = this.bindElement['VerticalScrollBar'];
+                        if (!scrollBarEl) {
+                            scrollBarEl = document.createElement('div');
+                            this.bindElement['VerticalScrollBar'] = scrollBarEl;
+                            scrollBarEl.style.zIndex = '9';
+                            scrollBarEl.style.position = 'absolute';
+                            scrollBarEl.style.background = 'black';
+                            scrollBarEl.style.left = '0px';
+                            scrollBarEl.style.top = '0px';
+                            this.bindElement.appendChild(scrollBarEl);
+                        }
+                        let height = b - t;
+                        let width = r - l;
+                        let size = height;
+                        let thickness = width;
+                        let extent = this.mScrollCache.scrollBar.mExtent;
+                        let range = this.mScrollCache.scrollBar.mRange;
+                        let length = Math.round(size * extent / range);
+                        let offset = Math.round((size - length) * this.mScrollCache.scrollBar.mOffset / (range - extent));
+                        if (t < 0)
+                            t = 0;
+                        if (offset < 0)
+                            offset = 0;
+                        scrollBarEl.style.transform = scrollBarEl.style.webkitTransform = `translate(${l}px, ${t + offset}px)`;
+                        scrollBarEl.style.width = (r - l) / 2 + 'px';
+                        scrollBarEl.style.height = length + 'px';
+                        scrollBarEl.style.opacity = this.mScrollCache.scrollBar.mVerticalThumb.getAlpha() / 255 + '';
+                    };
+                const oldSetBackground = android.view.View.prototype.setBackground;
+                android.view.View.prototype.setBackground = function (drawable) {
+                    oldSetBackground.call(this, drawable);
+                    if (drawable instanceof ColorDrawable) {
+                        this.bindElement.style.background = Color.toRGBAFunc(this.mBackground.getColor());
+                    }
+                };
+            }
+        }
+        util.PerformanceAdjuster = PerformanceAdjuster;
+        class HackCanvas extends android.graphics.Canvas {
+            init() {
+            }
+            recycle() {
+            }
+            translate(dx, dy) {
+            }
+            scale(sx, sy, px, py) {
+            }
+            rotate(degrees, px, py) {
+            }
+            drawRGB(r, g, b) {
+            }
+            drawARGB(a, r, g, b) {
+            }
+            drawColor(color) {
+            }
+            clearColor() {
+            }
+            save() {
+                return 1;
+            }
+            restore() {
+            }
+            restoreToCount(saveCount) {
+            }
+            getSaveCount() {
+                return 1;
+            }
+            clipRect(...args) {
+                return false;
+            }
+            getClipBounds(bounds) {
+                return null;
+            }
+            quickReject(...args) {
+                return false;
+            }
+            drawCanvas(canvas, offsetX, offsetY) {
+            }
+            drawRect(...args) {
+            }
+            drawText(text, x, y, paint) {
+            }
+        }
+    })(util = androidui.util || (androidui.util = {}));
+})(androidui || (androidui = {}));
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../view/ViewConfiguration.ts"/>
@@ -5170,6 +5499,7 @@ var android;
 ///<reference path="../../androidui/attr/AttrBinder.ts"/>
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
 ///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
+///<reference path="../../androidui/util/PerformanceAdjuster.ts"/>
 ///<reference path="KeyEvent.ts"/>
 ///<reference path="../R/attr.ts"/>
 var android;
@@ -5235,6 +5565,12 @@ var android;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
                 this._attrBinder = new AttrBinder(this);
+                this._syncToElementLock = false;
+                this.syncToElementFunc = () => {
+                    this._syncToElementLock = false;
+                    this._syncBoundToElement();
+                    this._syncScrollToElement();
+                };
                 this._lastSyncScrollX = 0;
                 this._lastSyncScrollY = 0;
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
@@ -7500,6 +7836,8 @@ var android;
                     d.setState(this.getDrawableState());
                 }
             }
+            resolveDrawables() {
+            }
             refreshDrawableState() {
                 this.mPrivateFlags |= View.PFLAG_DRAWABLE_STATE_DIRTY;
                 this.drawableStateChanged();
@@ -8288,10 +8626,16 @@ var android;
                 this._initAttrObserver();
             }
             syncBoundToElement() {
-                this._syncBoundToElement();
+                if (!this._syncToElementLock) {
+                    this._syncToElementLock = true;
+                    setTimeout(this.syncToElementFunc, 300);
+                }
             }
             syncScrollToElement() {
-                this._syncScrollToElement();
+                if (!this._syncToElementLock) {
+                    this._syncToElementLock = true;
+                    setTimeout(this.syncToElementFunc, 300);
+                }
             }
             _syncBoundToElement() {
                 let change = false;
@@ -8306,7 +8650,7 @@ var android;
                     this._lastSyncWidth = width;
                     this._lastSyncHeight = height;
                     let bind = this.bindElement;
-                    bind.style.transform = bind.style.webkitTransform = `translate3d(${left}px, ${top}px, 0px)`;
+                    bind.style.transform = bind.style.webkitTransform = `translate(${left}px, ${top}px)`;
                     bind.style.width = width + 'px';
                     bind.style.height = height + 'px';
                     change = true;
@@ -8325,7 +8669,7 @@ var android;
                         for (let i = 0, count = group.getChildCount(); i < count; i++) {
                             let child = group.getChildAt(i);
                             let item = child.bindElement;
-                            item.style.transform = item.style.webkitTransform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px)`;
+                            item.style.transform = item.style.webkitTransform = `translate(${child.mLeft - sx}px, ${child.mTop - sy}px)`;
                         }
                     }
                     change = true;
@@ -9338,7 +9682,7 @@ var android;
                         let fps = this.mFpsNumFrames * 1000 / totalTime;
                         Log.v(ViewRootImpl.TAG, "FPS:\t" + fps);
                         if (!this._showFPSNode) {
-                            this._showFPSNode = document.createElement('p');
+                            this._showFPSNode = document.createElement('div');
                             this._showFPSNode.style.position = 'absolute';
                             this._showFPSNode.style.left = '0';
                             this._showFPSNode.style.bottom = '0';
@@ -15575,297 +15919,5919 @@ var android;
         })(LinearLayout = widget.LinearLayout || (widget.LinearLayout = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        class string_ {
+            static zh() {
+                this.prll_header_state_normal = '下拉以刷新';
+                this.prll_header_state_ready = '松开马上刷新';
+                this.prll_header_state_loading = '正在刷新...';
+                this.prll_header_state_fail = '刷新失败';
+                this.prll_footer_state_normal = '点击加载更多';
+                this.prll_footer_state_loading = '正在加载...';
+                this.prll_footer_state_ready = '松开加载更多';
+                this.prll_footer_state_no_more = '加载完毕';
+                this.prll_footer_state_fail = '加载失败,点击重试';
+            }
+        }
+        string_.prll_header_state_normal = 'Pull to refresh';
+        string_.prll_header_state_ready = 'Release to refresh';
+        string_.prll_header_state_loading = 'Loading';
+        string_.prll_header_state_fail = 'Refresh fail';
+        string_.prll_footer_state_normal = 'Load more';
+        string_.prll_footer_state_loading = 'Loading';
+        string_.prll_footer_state_ready = 'Pull to load more';
+        string_.prll_footer_state_fail = 'Click to reload';
+        string_.prll_footer_state_no_more = 'Load Finish';
+        R.string_ = string_;
+        const lang = navigator.language.split('-')[0].toLowerCase();
+        if (typeof string_[lang] === 'function')
+            string_[lang].call(string_);
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
 /**
- * Created by linfaxin on 15/10/26.
+ * Created by linfaxin on 15/12/6.
  */
-///<reference path="../view/View.ts"/>
-///<reference path="../view/Gravity.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Color.ts"/>
-///<reference path="../content/res/ColorStateList.ts"/>
-///<reference path="../util/TypedValue.ts"/>
-///<reference path="../R/attr.ts"/>
+///<reference path="Rect.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        class RectF extends graphics.Rect {
+        }
+        graphics.RectF = RectF;
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var style;
+        (function (style) {
+            var ParagraphStyle;
+            (function (ParagraphStyle) {
+                ParagraphStyle.type = Symbol();
+            })(ParagraphStyle = style.ParagraphStyle || (style.ParagraphStyle = {}));
+        })(style = text.style || (text.style = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var Spanned;
+        (function (Spanned) {
+            function isImplements(obj) {
+                return obj && obj['getSpans'] && obj['getSpanStart'] && obj['getSpanEnd']
+                    && obj['getSpanFlags'] && obj['nextSpanTransition'];
+            }
+            Spanned.isImplements = isImplements;
+            Spanned.SPAN_POINT_MARK_MASK = 0x33;
+            Spanned.SPAN_MARK_MARK = 0x11;
+            Spanned.SPAN_MARK_POINT = 0x12;
+            Spanned.SPAN_POINT_MARK = 0x21;
+            Spanned.SPAN_POINT_POINT = 0x22;
+            Spanned.SPAN_PARAGRAPH = 0x33;
+            Spanned.SPAN_INCLUSIVE_EXCLUSIVE = Spanned.SPAN_MARK_MARK;
+            Spanned.SPAN_INCLUSIVE_INCLUSIVE = Spanned.SPAN_MARK_POINT;
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE = Spanned.SPAN_POINT_MARK;
+            Spanned.SPAN_EXCLUSIVE_INCLUSIVE = Spanned.SPAN_POINT_POINT;
+            Spanned.SPAN_COMPOSING = 0x100;
+            Spanned.SPAN_INTERMEDIATE = 0x200;
+            Spanned.SPAN_USER_SHIFT = 24;
+            Spanned.SPAN_USER = 0xFFFFFFFF << Spanned.SPAN_USER_SHIFT;
+            Spanned.SPAN_PRIORITY_SHIFT = 16;
+            Spanned.SPAN_PRIORITY = 0xFF << Spanned.SPAN_PRIORITY_SHIFT;
+        })(Spanned = text.Spanned || (text.Spanned = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/12/5.
+ */
+///<reference path="../graphics/Paint.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        class TextPaint extends android.graphics.Paint {
+            constructor(...args) {
+                super(...args);
+                this.baselineShift = 0;
+                this.bgColor = 0;
+                this.linkColor = 0;
+                this.underlineColor = 0;
+                this.underlineThickness = 0;
+            }
+            set(tp) {
+                super.set(tp);
+                this.bgColor = tp.bgColor;
+                this.baselineShift = tp.baselineShift;
+                this.linkColor = tp.linkColor;
+                this.underlineColor = tp.underlineColor;
+                this.underlineThickness = tp.underlineThickness;
+            }
+            setUnderlineText(color, thickness) {
+                this.underlineColor = color;
+                this.underlineThickness = thickness;
+            }
+        }
+        text.TextPaint = TextPaint;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/text/style/UpdateAppearance.ts"/>
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/text/style/UpdateLayout.ts"/>
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/text/TextPaint.ts"/>
+///<reference path="../../../android/text/style/MetricAffectingSpan.ts"/>
+///<reference path="../../../android/text/style/UpdateAppearance.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var style;
+        (function (style) {
+            var MetricAffectingSpan = android.text.style.MetricAffectingSpan;
+            class CharacterStyle {
+                constructor() {
+                    this.mType = CharacterStyle.type;
+                }
+                static wrap(cs) {
+                    if (cs instanceof MetricAffectingSpan) {
+                        return new MetricAffectingSpan.Passthrough_MetricAffectingSpan(cs);
+                    }
+                    else {
+                        return new CharacterStyle.Passthrough_CharacterStyle(cs);
+                    }
+                }
+                getUnderlying() {
+                    return this;
+                }
+            }
+            CharacterStyle.type = Symbol();
+            style.CharacterStyle = CharacterStyle;
+            (function (CharacterStyle) {
+                class Passthrough_CharacterStyle extends CharacterStyle {
+                    constructor(cs) {
+                        super();
+                        this.mStyle = cs;
+                    }
+                    updateDrawState(tp) {
+                        this.mStyle.updateDrawState(tp);
+                    }
+                    getUnderlying() {
+                        return this.mStyle.getUnderlying();
+                    }
+                }
+                CharacterStyle.Passthrough_CharacterStyle = Passthrough_CharacterStyle;
+            })(CharacterStyle = style.CharacterStyle || (style.CharacterStyle = {}));
+        })(style = text.style || (text.style = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Paint.ts"/>
+///<reference path="../../../android/text/TextPaint.ts"/>
+///<reference path="../../../android/text/style/CharacterStyle.ts"/>
+///<reference path="../../../android/text/style/UpdateLayout.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var style;
+        (function (style) {
+            var CharacterStyle = android.text.style.CharacterStyle;
+            class MetricAffectingSpan extends CharacterStyle {
+                constructor(...args) {
+                    super(...args);
+                    this.mType = MetricAffectingSpan.type;
+                }
+                getUnderlying() {
+                    return this;
+                }
+            }
+            MetricAffectingSpan.type = Symbol();
+            style.MetricAffectingSpan = MetricAffectingSpan;
+            (function (MetricAffectingSpan) {
+                class Passthrough_MetricAffectingSpan extends MetricAffectingSpan {
+                    constructor(cs) {
+                        super();
+                        this.mStyle = cs;
+                    }
+                    updateDrawState(tp) {
+                        this.mStyle.updateDrawState(tp);
+                    }
+                    updateMeasureState(tp) {
+                        this.mStyle.updateMeasureState(tp);
+                    }
+                    getUnderlying() {
+                        return this.mStyle.getUnderlying();
+                    }
+                }
+                MetricAffectingSpan.Passthrough_MetricAffectingSpan = Passthrough_MetricAffectingSpan;
+            })(MetricAffectingSpan = style.MetricAffectingSpan || (style.MetricAffectingSpan = {}));
+        })(style = text.style || (text.style = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Paint.ts"/>
+///<reference path="../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../android/text/TextPaint.ts"/>
+///<reference path="../../../android/text/style/MetricAffectingSpan.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_1) {
+        var style;
+        (function (style) {
+            var MetricAffectingSpan = android.text.style.MetricAffectingSpan;
+            class ReplacementSpan extends MetricAffectingSpan {
+                constructor(...args) {
+                    super(...args);
+                    this.mType = ReplacementSpan.type;
+                }
+                updateMeasureState(p) {
+                }
+                updateDrawState(ds) {
+                }
+            }
+            ReplacementSpan.type = Symbol();
+            style.ReplacementSpan = ReplacementSpan;
+        })(style = text_1.style || (text_1.style = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
+///<reference path="../../android/text/style/ReplacementSpan.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_2) {
+        var Canvas = android.graphics.Canvas;
+        var ReplacementSpan = android.text.style.ReplacementSpan;
+        var Log = android.util.Log;
+        var Spanned = android.text.Spanned;
+        var TextPaint = android.text.TextPaint;
+        class MeasuredText {
+            constructor() {
+                this.mTextStart = 0;
+                this.mDir = 0;
+                this.mLen = 0;
+                this.mPos = 0;
+                this.mWorkPaint = new TextPaint();
+            }
+            static obtain() {
+                let mt;
+                {
+                    for (let i = MeasuredText.sCached.length; --i >= 0;) {
+                        if (MeasuredText.sCached[i] != null) {
+                            mt = MeasuredText.sCached[i];
+                            MeasuredText.sCached[i] = null;
+                            return mt;
+                        }
+                    }
+                }
+                mt = new MeasuredText();
+                if (MeasuredText.localLOGV) {
+                    Log.v("MEAS", "new: " + mt);
+                }
+                return mt;
+            }
+            static recycle(mt) {
+                mt.mText = null;
+                if (mt.mLen < 1000) {
+                    {
+                        for (let i = 0; i < MeasuredText.sCached.length; ++i) {
+                            if (MeasuredText.sCached[i] == null) {
+                                MeasuredText.sCached[i] = mt;
+                                mt.mText = null;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            setPos(pos) {
+                this.mPos = pos - this.mTextStart;
+            }
+            setPara(text, start, end, textDir) {
+                this.mText = text;
+                this.mTextStart = start;
+                let len = end - start;
+                this.mLen = len;
+                this.mPos = 0;
+                if (this.mWidths == null || this.mWidths.length < len) {
+                    this.mWidths = new Array(len);
+                }
+                this.mChars = text.toString().substring(start, end);
+                if (Spanned.isImplements(text)) {
+                    let spanned = text;
+                    let spans = spanned.getSpans(start, end, ReplacementSpan.type);
+                    for (let i = 0; i < spans.length; i++) {
+                        let startInPara = spanned.getSpanStart(spans[i]) - start;
+                        let endInPara = spanned.getSpanEnd(spans[i]) - start;
+                        if (startInPara < 0)
+                            startInPara = 0;
+                        if (endInPara > len)
+                            endInPara = len;
+                        for (let j = startInPara; j < endInPara; j++) {
+                            this.mChars[j] = '￼';
+                        }
+                    }
+                }
+                this.mDir = android.text.Layout.DIR_LEFT_TO_RIGHT;
+                this.mEasy = true;
+            }
+            addStyleRun(...args) {
+                if (args.length === 3)
+                    return this.addStyleRun_3(...args);
+                if (args.length === 4)
+                    return this.addStyleRun_4(...args);
+            }
+            addStyleRun_3(paint, len, fm) {
+                if (fm != null) {
+                    paint.getFontMetricsInt(fm);
+                }
+                let p = this.mPos;
+                this.mPos = p + len;
+                if (this.mEasy) {
+                    let flags = this.mDir == android.text.Layout.DIR_LEFT_TO_RIGHT ? Canvas.DIRECTION_LTR : Canvas.DIRECTION_RTL;
+                    return paint.getTextRunAdvances_count(this.mChars, p, len, p, len, flags, this.mWidths, p);
+                }
+                let totalAdvance = 0;
+                let level = this.mLevels[p];
+                for (let q = p, i = p + 1, e = p + len;; ++i) {
+                    if (i == e || this.mLevels[i] != level) {
+                        let flags = (level & 0x1) == 0 ? Canvas.DIRECTION_LTR : Canvas.DIRECTION_RTL;
+                        totalAdvance += paint.getTextRunAdvances_count(this.mChars, q, i - q, q, i - q, flags, this.mWidths, q);
+                        if (i == e) {
+                            break;
+                        }
+                        q = i;
+                        level = this.mLevels[i];
+                    }
+                }
+                return totalAdvance;
+            }
+            addStyleRun_4(paint, spans, len, fm) {
+                let workPaint = this.mWorkPaint;
+                workPaint.set(paint);
+                workPaint.baselineShift = 0;
+                let replacement = null;
+                for (let i = 0; i < spans.length; i++) {
+                    let span = spans[i];
+                    if (span instanceof ReplacementSpan) {
+                        replacement = span;
+                    }
+                    else {
+                        span.updateMeasureState(workPaint);
+                    }
+                }
+                let wid;
+                if (replacement == null) {
+                    wid = this.addStyleRun(workPaint, len, fm);
+                }
+                else {
+                    wid = replacement.getSize(workPaint, this.mText, this.mTextStart + this.mPos, this.mTextStart + this.mPos + len, fm);
+                    let w = this.mWidths;
+                    w[this.mPos] = wid;
+                    for (let i = this.mPos + 1, e = this.mPos + len; i < e; i++)
+                        w[i] = 0;
+                    this.mPos += len;
+                }
+                if (fm != null) {
+                    if (workPaint.baselineShift < 0) {
+                        fm.ascent += workPaint.baselineShift;
+                        fm.top += workPaint.baselineShift;
+                    }
+                    else {
+                        fm.descent += workPaint.baselineShift;
+                        fm.bottom += workPaint.baselineShift;
+                    }
+                }
+                return wid;
+            }
+            breakText(limit, forwards, width) {
+                let w = this.mWidths;
+                if (forwards) {
+                    let i = 0;
+                    while (i < limit) {
+                        width -= w[i];
+                        if (width < 0.0)
+                            break;
+                        i++;
+                    }
+                    while (i > 0 && this.mChars[i - 1] == ' ')
+                        i--;
+                    return i;
+                }
+                else {
+                    let i = limit - 1;
+                    while (i >= 0) {
+                        width -= w[i];
+                        if (width < 0.0)
+                            break;
+                        i--;
+                    }
+                    while (i < limit - 1 && this.mChars[i + 1] == ' ')
+                        i++;
+                    return limit - i - 1;
+                }
+            }
+            measure(start, limit) {
+                let width = 0;
+                let w = this.mWidths;
+                for (let i = start; i < limit; ++i) {
+                    width += w[i];
+                }
+                return width;
+            }
+        }
+        MeasuredText.localLOGV = false;
+        MeasuredText.sLock = new Array(0);
+        MeasuredText.sCached = new Array(3);
+        text_2.MeasuredText = MeasuredText;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        class TextDirectionHeuristics {
+            static isRtlText(directionality) {
+                return TextDirectionHeuristics.STATE_FALSE;
+            }
+            static isRtlTextOrFormat(directionality) {
+                return TextDirectionHeuristics.STATE_FALSE;
+            }
+        }
+        TextDirectionHeuristics.STATE_TRUE = 0;
+        TextDirectionHeuristics.STATE_FALSE = 1;
+        TextDirectionHeuristics.STATE_UNKNOWN = 2;
+        text.TextDirectionHeuristics = TextDirectionHeuristics;
+        (function (TextDirectionHeuristics) {
+            class TextDirectionHeuristicImpl {
+                constructor(algorithm) {
+                    this.mAlgorithm = algorithm;
+                }
+                isRtl(cs, start, count) {
+                    if (cs == null || start < 0 || count < 0 || cs.length - count < start) {
+                        throw Error(`new IllegalArgumentException()`);
+                    }
+                    if (this.mAlgorithm == null) {
+                        return this.defaultIsRtl();
+                    }
+                    return this.doCheck(cs, start, count);
+                }
+                doCheck(cs, start, count) {
+                    switch (this.mAlgorithm.checkRtl(cs, start, count)) {
+                        case TextDirectionHeuristics.STATE_TRUE:
+                            return true;
+                        case TextDirectionHeuristics.STATE_FALSE:
+                            return false;
+                        default:
+                            return this.defaultIsRtl();
+                    }
+                }
+            }
+            TextDirectionHeuristics.TextDirectionHeuristicImpl = TextDirectionHeuristicImpl;
+            class TextDirectionHeuristicInternal extends TextDirectionHeuristics.TextDirectionHeuristicImpl {
+                constructor(algorithm, defaultIsRtl) {
+                    super(algorithm);
+                    this.mDefaultIsRtl = defaultIsRtl;
+                }
+                defaultIsRtl() {
+                    return this.mDefaultIsRtl;
+                }
+            }
+            TextDirectionHeuristics.TextDirectionHeuristicInternal = TextDirectionHeuristicInternal;
+            class FirstStrong {
+                constructor() {
+                }
+                checkRtl(cs, start, count) {
+                    let result = TextDirectionHeuristics.STATE_UNKNOWN;
+                    for (let i = start, e = start + count; i < e && result == TextDirectionHeuristics.STATE_UNKNOWN; ++i) {
+                        result = TextDirectionHeuristics.STATE_FALSE;
+                    }
+                    return result;
+                }
+            }
+            FirstStrong.INSTANCE = new FirstStrong();
+            TextDirectionHeuristics.FirstStrong = FirstStrong;
+            class AnyStrong {
+                constructor(lookForRtl) {
+                    this.mLookForRtl = lookForRtl;
+                }
+                checkRtl(cs, start, count) {
+                    let haveUnlookedFor = false;
+                    for (let i = start, e = start + count; i < e; ++i) {
+                        switch (TextDirectionHeuristics.isRtlText(0)) {
+                            case TextDirectionHeuristics.STATE_TRUE:
+                                if (this.mLookForRtl) {
+                                    return TextDirectionHeuristics.STATE_TRUE;
+                                }
+                                haveUnlookedFor = true;
+                                break;
+                            case TextDirectionHeuristics.STATE_FALSE:
+                                if (!this.mLookForRtl) {
+                                    return TextDirectionHeuristics.STATE_FALSE;
+                                }
+                                haveUnlookedFor = true;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    if (haveUnlookedFor) {
+                        return this.mLookForRtl ? TextDirectionHeuristics.STATE_FALSE : TextDirectionHeuristics.STATE_TRUE;
+                    }
+                    return TextDirectionHeuristics.STATE_UNKNOWN;
+                }
+            }
+            AnyStrong.INSTANCE_RTL = new AnyStrong(true);
+            AnyStrong.INSTANCE_LTR = new AnyStrong(false);
+            TextDirectionHeuristics.AnyStrong = AnyStrong;
+            class TextDirectionHeuristicLocale extends TextDirectionHeuristics.TextDirectionHeuristicImpl {
+                constructor() {
+                    super(null);
+                }
+                defaultIsRtl() {
+                    return false;
+                }
+            }
+            TextDirectionHeuristicLocale.INSTANCE = new TextDirectionHeuristicLocale();
+            TextDirectionHeuristics.TextDirectionHeuristicLocale = TextDirectionHeuristicLocale;
+        })(TextDirectionHeuristics = text.TextDirectionHeuristics || (text.TextDirectionHeuristics = {}));
+        TextDirectionHeuristics.LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(null, false);
+        TextDirectionHeuristics.RTL = new TextDirectionHeuristics.TextDirectionHeuristicInternal(null, true);
+        TextDirectionHeuristics.FIRSTSTRONG_LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.FirstStrong.INSTANCE, false);
+        TextDirectionHeuristics.FIRSTSTRONG_RTL = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.FirstStrong.INSTANCE, true);
+        TextDirectionHeuristics.ANYRTL_LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.AnyStrong.INSTANCE_RTL, false);
+        TextDirectionHeuristics.LOCALE = TextDirectionHeuristics.TextDirectionHeuristicLocale.INSTANCE;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/14.
+ */
+///<reference path="Spanned.ts"/>
+///<reference path="style/ReplacementSpan.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../java/lang/StringBuilder.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/MeasuredText.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_3) {
+        var System = java.lang.System;
+        var StringBuilder = java.lang.StringBuilder;
+        var MeasuredText = android.text.MeasuredText;
+        var Spanned = android.text.Spanned;
+        var TextDirectionHeuristics = android.text.TextDirectionHeuristics;
+        class TextUtils {
+            static isEmpty(str) {
+                if (str == null || str.length == 0)
+                    return true;
+                else
+                    return false;
+            }
+            static getOffsetBefore(text, offset) {
+                if (offset == 0)
+                    return 0;
+                if (offset == 1)
+                    return 0;
+                let c = text.codePointAt(offset - 1);
+                if (c >= '?'.codePointAt(0) && c <= '?'.codePointAt(0)) {
+                    let c1 = text.codePointAt(offset - 2);
+                    if (c1 >= '?'.codePointAt(0) && c1 <= '?'.codePointAt(0))
+                        offset -= 2;
+                    else
+                        offset -= 1;
+                }
+                else {
+                    offset -= 1;
+                }
+                if (Spanned.isImplements(text)) {
+                    let spans = text.getSpans(offset, offset, android.text.style.ReplacementSpan.type);
+                    for (let i = 0; i < spans.length; i++) {
+                        let start = text.getSpanStart(spans[i]);
+                        let end = text.getSpanEnd(spans[i]);
+                        if (start < offset && end > offset)
+                            offset = start;
+                    }
+                }
+                return offset;
+            }
+            static getOffsetAfter(text, offset) {
+                let len = text.length;
+                if (offset == len)
+                    return len;
+                if (offset == len - 1)
+                    return len;
+                let c = text.codePointAt(offset);
+                if (c >= '?'.codePointAt(0) && c <= '?'.codePointAt(0)) {
+                    let c1 = text.codePointAt(offset + 1);
+                    if (c1 >= '?'.codePointAt(0) && c1 <= '?'.codePointAt(0))
+                        offset += 2;
+                    else
+                        offset += 1;
+                }
+                else {
+                    offset += 1;
+                }
+                if (Spanned.isImplements(text)) {
+                    let spans = text.getSpans(offset, offset, android.text.style.ReplacementSpan.type);
+                    for (let i = 0; i < spans.length; i++) {
+                        let start = text.getSpanStart(spans[i]);
+                        let end = text.getSpanEnd(spans[i]);
+                        if (start < offset && end > offset)
+                            offset = end;
+                    }
+                }
+                return offset;
+            }
+            static ellipsize(text, paint, avail, where, preserveLength = false, callback = null, textDir = TextDirectionHeuristics.FIRSTSTRONG_LTR, ellipsis = undefined) {
+                ellipsis = ellipsis || (where == TextUtils.TruncateAt.END_SMALL ? android.text.Layout.ELLIPSIS_TWO_DOTS[0] : android.text.Layout.ELLIPSIS_NORMAL[0]);
+                let len = text.length;
+                let mt = MeasuredText.obtain();
+                try {
+                    let width = TextUtils.setPara(mt, paint, text, 0, text.length, textDir);
+                    if (width <= avail) {
+                        if (callback != null) {
+                            callback.ellipsized(0, 0);
+                        }
+                        return text;
+                    }
+                    let ellipsiswid = paint.measureText(ellipsis);
+                    avail -= ellipsiswid;
+                    let left = 0;
+                    let right = len;
+                    if (avail < 0) {
+                    }
+                    else if (where == TextUtils.TruncateAt.START) {
+                        right = len - mt.breakText(len, false, avail);
+                    }
+                    else if (where == TextUtils.TruncateAt.END || where == TextUtils.TruncateAt.END_SMALL) {
+                        left = mt.breakText(len, true, avail);
+                    }
+                    else {
+                        right = len - mt.breakText(len, false, avail / 2);
+                        avail -= mt.measure(right, len);
+                        left = mt.breakText(right, true, avail);
+                    }
+                    if (callback != null) {
+                        callback.ellipsized(left, right);
+                    }
+                    let buf = mt.mChars.split('');
+                    let sp = Spanned.isImplements(text) ? text : null;
+                    let remaining = len - (right - left);
+                    if (preserveLength) {
+                        if (remaining > 0) {
+                            buf[left++] = ellipsis.charAt(0);
+                        }
+                        for (let i = left; i < right; i++) {
+                            buf[i] = TextUtils.ZWNBS_CHAR;
+                        }
+                        let s = buf.join('');
+                        return s;
+                    }
+                    if (remaining == 0) {
+                        return "";
+                    }
+                    let sb = new StringBuilder(remaining + ellipsis.length());
+                    sb.append(buf.join('').substr(0, left));
+                    sb.append(ellipsis);
+                    sb.append(buf.join('').substr(right, len - right));
+                    return sb.toString();
+                }
+                finally {
+                    MeasuredText.recycle(mt);
+                }
+            }
+            static setPara(mt, paint, text, start, end, textDir) {
+                mt.setPara(text, start, end, textDir);
+                let width;
+                let sp = Spanned.isImplements(text) ? text : null;
+                let len = end - start;
+                if (sp == null) {
+                    width = mt.addStyleRun(paint, len, null);
+                }
+                else {
+                    width = 0;
+                    let spanEnd;
+                    for (let spanStart = 0; spanStart < len; spanStart = spanEnd) {
+                        spanEnd = sp.nextSpanTransition(spanStart, len, android.text.style.MetricAffectingSpan.type);
+                        let spans = sp.getSpans(spanStart, spanEnd, android.text.style.MetricAffectingSpan.type);
+                        spans = TextUtils.removeEmptySpans(spans, sp, android.text.style.MetricAffectingSpan.type);
+                        width += mt.addStyleRun(paint, spans, spanEnd - spanStart, null);
+                    }
+                }
+                return width;
+            }
+            static removeEmptySpans(spans, spanned, klass) {
+                let copy = null;
+                let count = 0;
+                for (let i = 0; i < spans.length; i++) {
+                    const span = spans[i];
+                    const start = spanned.getSpanStart(span);
+                    const end = spanned.getSpanEnd(span);
+                    if (start == end) {
+                        if (copy == null) {
+                            copy = new Array(spans.length - 1);
+                            System.arraycopy(spans, 0, copy, 0, i);
+                            count = i;
+                        }
+                    }
+                    else {
+                        if (copy != null) {
+                            copy[count] = span;
+                            count++;
+                        }
+                    }
+                }
+                if (copy != null) {
+                    let result = new Array(count);
+                    System.arraycopy(copy, 0, result, 0, count);
+                    return result;
+                }
+                else {
+                    return spans;
+                }
+            }
+            static packRangeInLong(start, end) {
+                return [start, end];
+            }
+            static unpackRangeStartFromLong(range) {
+                return range[0] || 0;
+            }
+            static unpackRangeEndFromLong(range) {
+                return range[1] || 0;
+            }
+        }
+        TextUtils.ALIGNMENT_SPAN = 1;
+        TextUtils.FIRST_SPAN = TextUtils.ALIGNMENT_SPAN;
+        TextUtils.FOREGROUND_COLOR_SPAN = 2;
+        TextUtils.RELATIVE_SIZE_SPAN = 3;
+        TextUtils.SCALE_X_SPAN = 4;
+        TextUtils.STRIKETHROUGH_SPAN = 5;
+        TextUtils.UNDERLINE_SPAN = 6;
+        TextUtils.STYLE_SPAN = 7;
+        TextUtils.BULLET_SPAN = 8;
+        TextUtils.QUOTE_SPAN = 9;
+        TextUtils.LEADING_MARGIN_SPAN = 10;
+        TextUtils.URL_SPAN = 11;
+        TextUtils.BACKGROUND_COLOR_SPAN = 12;
+        TextUtils.TYPEFACE_SPAN = 13;
+        TextUtils.SUPERSCRIPT_SPAN = 14;
+        TextUtils.SUBSCRIPT_SPAN = 15;
+        TextUtils.ABSOLUTE_SIZE_SPAN = 16;
+        TextUtils.TEXT_APPEARANCE_SPAN = 17;
+        TextUtils.ANNOTATION = 18;
+        TextUtils.SUGGESTION_SPAN = 19;
+        TextUtils.SPELL_CHECK_SPAN = 20;
+        TextUtils.SUGGESTION_RANGE_SPAN = 21;
+        TextUtils.EASY_EDIT_SPAN = 22;
+        TextUtils.LOCALE_SPAN = 23;
+        TextUtils.LAST_SPAN = TextUtils.LOCALE_SPAN;
+        TextUtils.EMPTY_STRING_ARRAY = [];
+        TextUtils.ZWNBS_CHAR = String.fromCodePoint(20);
+        TextUtils.ARAB_SCRIPT_SUBTAG = "Arab";
+        TextUtils.HEBR_SCRIPT_SUBTAG = "Hebr";
+        text_3.TextUtils = TextUtils;
+        (function (TextUtils) {
+            (function (TruncateAt) {
+                TruncateAt[TruncateAt["START"] = 0] = "START";
+                TruncateAt[TruncateAt["MIDDLE"] = 1] = "MIDDLE";
+                TruncateAt[TruncateAt["END"] = 2] = "END";
+                TruncateAt[TruncateAt["MARQUEE"] = 3] = "MARQUEE";
+                TruncateAt[TruncateAt["END_SMALL"] = 4] = "END_SMALL";
+            })(TextUtils.TruncateAt || (TextUtils.TruncateAt = {}));
+            var TruncateAt = TextUtils.TruncateAt;
+        })(TextUtils = text_3.TextUtils || (text_3.TextUtils = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Paint.ts"/>
+///<reference path="../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../android/text/Layout.ts"/>
+///<reference path="../../../android/text/TextUtils.ts"/>
+///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
+///<reference path="../../../android/text/style/WrapTogetherSpan.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_4) {
+        var style;
+        (function (style) {
+            var TextUtils = android.text.TextUtils;
+            var LeadingMarginSpan;
+            (function (LeadingMarginSpan) {
+                function isImpl(obj) {
+                    return obj && obj['getLeadingMargin'] && obj['drawLeadingMargin'];
+                }
+                LeadingMarginSpan.isImpl = isImpl;
+                LeadingMarginSpan.type = Symbol();
+                var LeadingMarginSpan2;
+                (function (LeadingMarginSpan2) {
+                    function isImpl(obj) {
+                        return obj['getLeadingMarginLineCount'];
+                    }
+                    LeadingMarginSpan2.isImpl = isImpl;
+                })(LeadingMarginSpan2 = LeadingMarginSpan.LeadingMarginSpan2 || (LeadingMarginSpan.LeadingMarginSpan2 = {}));
+                class Standard {
+                    constructor(first, rest = first) {
+                        this.mFirst = 0;
+                        this.mRest = 0;
+                        this.mFirst = first;
+                        this.mRest = rest;
+                    }
+                    getSpanTypeId() {
+                        return TextUtils.LEADING_MARGIN_SPAN;
+                    }
+                    describeContents() {
+                        return 0;
+                    }
+                    getLeadingMargin(first) {
+                        return first ? this.mFirst : this.mRest;
+                    }
+                    drawLeadingMargin(c, p, x, dir, top, baseline, bottom, text, start, end, first, layout) {
+                        ;
+                    }
+                }
+                LeadingMarginSpan.Standard = Standard;
+            })(LeadingMarginSpan = style.LeadingMarginSpan || (style.LeadingMarginSpan = {}));
+        })(style = text_4.style || (text_4.style = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Paint.ts"/>
+///<reference path="../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_5) {
+        var style;
+        (function (style) {
+            var LineBackgroundSpan;
+            (function (LineBackgroundSpan) {
+                LineBackgroundSpan.type = Symbol();
+            })(LineBackgroundSpan = style.LineBackgroundSpan || (style.LineBackgroundSpan = {}));
+        })(style = text_5.style || (text_5.style = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var style;
+        (function (style) {
+            var TabStopSpan;
+            (function (TabStopSpan) {
+                TabStopSpan.type = Symbol();
+                function isImpl(obj) {
+                    return obj && obj['getTabStop'];
+                }
+                TabStopSpan.isImpl = isImpl;
+                class Standard {
+                    constructor(where) {
+                        this.mTab = 0;
+                        this.mTab = where;
+                    }
+                    getTabStop() {
+                        return this.mTab;
+                    }
+                }
+                TabStopSpan.Standard = Standard;
+            })(TabStopSpan = style.TabStopSpan || (style.TabStopSpan = {}));
+        })(style = text.style || (text.style = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+var java;
+(function (java) {
+    var util;
+    (function (util) {
+        class Arrays {
+            static sort(a, fromIndex, toIndex) {
+                Arrays.rangeCheck(a.length, fromIndex, toIndex);
+                var sort = new Array(toIndex - fromIndex);
+                for (let i = fromIndex; i < toIndex; i++) {
+                    sort[i - fromIndex] = a[i];
+                }
+                sort.sort((a, b) => {
+                    return a > b ? 1 : -1;
+                });
+                for (let i = fromIndex; i < toIndex; i++) {
+                    a[i] = sort[i - fromIndex];
+                }
+            }
+            static rangeCheck(arrayLength, fromIndex, toIndex) {
+                if (fromIndex > toIndex) {
+                    throw new Error("ArrayIndexOutOfBoundsException:fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+                }
+                if (fromIndex < 0) {
+                    throw new Error('ArrayIndexOutOfBoundsException:' + fromIndex);
+                }
+                if (toIndex > arrayLength) {
+                    throw new Error('ArrayIndexOutOfBoundsException:' + toIndex);
+                }
+            }
+        }
+        util.Arrays = Arrays;
+    })(util = java.util || (java.util = {}));
+})(java || (java = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        class Float {
+            static parseFloat(value) {
+                return Number.parseFloat(value);
+            }
+        }
+        Float.MIN_VALUE = Number.MIN_VALUE;
+        Float.MAX_VALUE = Number.MAX_VALUE;
+        lang.Float = Float;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/text/Spanned.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        class SpanSet {
+            constructor(type) {
+                this.numberOfSpans = 0;
+                this.classType = type;
+                this.numberOfSpans = 0;
+            }
+            init(spanned, start, limit) {
+                const allSpans = spanned.getSpans(start, limit, this.classType);
+                const length = allSpans.length;
+                if (length > 0 && (this.spans == null || this.spans.length < length)) {
+                    this.spans = new Array(length);
+                    this.spanStarts = new Array(length);
+                    this.spanEnds = new Array(length);
+                    this.spanFlags = new Array(length);
+                }
+                this.numberOfSpans = 0;
+                for (let i = 0; i < length; i++) {
+                    const span = allSpans[i];
+                    const spanStart = spanned.getSpanStart(span);
+                    const spanEnd = spanned.getSpanEnd(span);
+                    if (spanStart == spanEnd)
+                        continue;
+                    const spanFlag = spanned.getSpanFlags(span);
+                    this.spans[this.numberOfSpans] = span;
+                    this.spanStarts[this.numberOfSpans] = spanStart;
+                    this.spanEnds[this.numberOfSpans] = spanEnd;
+                    this.spanFlags[this.numberOfSpans] = spanFlag;
+                    this.numberOfSpans++;
+                }
+            }
+            hasSpansIntersecting(start, end) {
+                for (let i = 0; i < this.numberOfSpans; i++) {
+                    if (this.spanStarts[i] >= end || this.spanEnds[i] <= start)
+                        continue;
+                    return true;
+                }
+                return false;
+            }
+            getNextTransition(start, limit) {
+                for (let i = 0; i < this.numberOfSpans; i++) {
+                    const spanStart = this.spanStarts[i];
+                    const spanEnd = this.spanEnds[i];
+                    if (spanStart > start && spanStart < limit)
+                        limit = spanStart;
+                    if (spanEnd > start && spanEnd < limit)
+                        limit = spanEnd;
+                }
+                return limit;
+            }
+            recycle() {
+                for (let i = 0; i < this.numberOfSpans; i++) {
+                    this.spans[i] = null;
+                }
+            }
+        }
+        text.SpanSet = SpanSet;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/RectF.ts"/>
+///<reference path="../../android/text/style/CharacterStyle.ts"/>
+///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
+///<reference path="../../android/text/style/ReplacementSpan.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/SpanSet.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_6) {
+        var Canvas = android.graphics.Canvas;
+        var Paint = android.graphics.Paint;
+        var CharacterStyle = android.text.style.CharacterStyle;
+        var MetricAffectingSpan = android.text.style.MetricAffectingSpan;
+        var ReplacementSpan = android.text.style.ReplacementSpan;
+        var Log = android.util.Log;
+        var Spanned = android.text.Spanned;
+        var SpanSet = android.text.SpanSet;
+        var TextPaint = android.text.TextPaint;
+        var TextUtils = android.text.TextUtils;
+        var Layout = android.text.Layout;
+        window.addEventListener('AndroidUILoadFinish', () => {
+            eval('Layout = android.text.Layout;');
+        });
+        class TextLine {
+            constructor() {
+                this.mStart = 0;
+                this.mLen = 0;
+                this.mDir = 0;
+                this.mWorkPaint = new TextPaint();
+                this.mMetricAffectingSpanSpanSet = new SpanSet(MetricAffectingSpan.type);
+                this.mCharacterStyleSpanSet = new SpanSet(CharacterStyle.type);
+                this.mReplacementSpanSpanSet = new SpanSet(ReplacementSpan.type);
+            }
+            static obtain() {
+                let tl;
+                {
+                    for (let i = TextLine.sCached.length; --i >= 0;) {
+                        if (TextLine.sCached[i] != null) {
+                            tl = TextLine.sCached[i];
+                            TextLine.sCached[i] = null;
+                            return tl;
+                        }
+                    }
+                }
+                tl = new TextLine();
+                if (TextLine.DEBUG) {
+                    Log.v("TLINE", "new: " + tl);
+                }
+                return tl;
+            }
+            static recycle(tl) {
+                tl.mText = null;
+                tl.mPaint = null;
+                tl.mDirections = null;
+                tl.mMetricAffectingSpanSpanSet.recycle();
+                tl.mCharacterStyleSpanSet.recycle();
+                tl.mReplacementSpanSpanSet.recycle();
+                {
+                    for (let i = 0; i < TextLine.sCached.length; ++i) {
+                        if (TextLine.sCached[i] == null) {
+                            TextLine.sCached[i] = tl;
+                            break;
+                        }
+                    }
+                }
+                return null;
+            }
+            set(paint, text, start, limit, dir, directions, hasTabs, tabStops) {
+                this.mPaint = paint;
+                this.mText = text;
+                this.mStart = start;
+                this.mLen = limit - start;
+                this.mDir = dir;
+                this.mDirections = directions;
+                if (this.mDirections == null) {
+                    throw Error(`new IllegalArgumentException("Directions cannot be null")`);
+                }
+                this.mHasTabs = hasTabs;
+                this.mSpanned = null;
+                let hasReplacement = false;
+                if (Spanned.isImplements(text)) {
+                    this.mSpanned = text;
+                    this.mReplacementSpanSpanSet.init(this.mSpanned, start, limit);
+                    hasReplacement = this.mReplacementSpanSpanSet.numberOfSpans > 0;
+                }
+                this.mCharsValid = hasReplacement || hasTabs || directions != Layout.DIRS_ALL_LEFT_TO_RIGHT;
+                if (this.mCharsValid) {
+                    this.mChars = text;
+                    if (hasReplacement) {
+                        let chars = this.mChars;
+                        for (let i = start, inext; i < limit; i = inext) {
+                            inext = this.mReplacementSpanSpanSet.getNextTransition(i, limit);
+                            if (this.mReplacementSpanSpanSet.hasSpansIntersecting(i, inext)) {
+                                chars[i - start] = '￼';
+                                for (let j = i - start + 1, e = inext - start; j < e; ++j) {
+                                    chars[j] = '﻿';
+                                }
+                            }
+                        }
+                    }
+                }
+                this.mTabs = tabStops;
+            }
+            draw(c, x, top, y, bottom) {
+                if (!this.mHasTabs) {
+                    if (this.mDirections == Layout.DIRS_ALL_LEFT_TO_RIGHT) {
+                        this.drawRun(c, 0, this.mLen, false, x, top, y, bottom, false);
+                        return;
+                    }
+                    if (this.mDirections == Layout.DIRS_ALL_RIGHT_TO_LEFT) {
+                        this.drawRun(c, 0, this.mLen, true, x, top, y, bottom, false);
+                        return;
+                    }
+                }
+                let h = 0;
+                let runs = this.mDirections.mDirections;
+                let emojiRect = null;
+                let lastRunIndex = runs.length - 2;
+                for (let i = 0; i < runs.length; i += 2) {
+                    let runStart = runs[i];
+                    let runLimit = runStart + (runs[i + 1] & Layout.RUN_LENGTH_MASK);
+                    if (runLimit > this.mLen) {
+                        runLimit = this.mLen;
+                    }
+                    let runIsRtl = (runs[i + 1] & Layout.RUN_RTL_FLAG) != 0;
+                    let segstart = runStart;
+                    for (let j = this.mHasTabs ? runStart : runLimit; j <= runLimit; j++) {
+                        let codept = 0;
+                        if (this.mHasTabs && j < runLimit) {
+                            codept = this.mChars.codePointAt(j);
+                            if (codept >= 0xd800 && codept < 0xdc00 && j + 1 < runLimit) {
+                                codept = this.mChars.codePointAt(j);
+                                if (codept > 0xffff) {
+                                    ++j;
+                                    continue;
+                                }
+                            }
+                        }
+                        if (j == runLimit || codept == '\t'.codePointAt(0)) {
+                            h += this.drawRun(c, segstart, j, runIsRtl, x + h, top, y, bottom, i != lastRunIndex || j != this.mLen);
+                            if (codept == '\t'.codePointAt(0)) {
+                                h = this.mDir * this.nextTab(h * this.mDir);
+                            }
+                            segstart = j + 1;
+                        }
+                    }
+                }
+            }
+            metrics(fmi) {
+                return this.measure(this.mLen, false, fmi);
+            }
+            measure(offset, trailing, fmi) {
+                let target = trailing ? offset - 1 : offset;
+                if (target < 0) {
+                    return 0;
+                }
+                let h = 0;
+                if (!this.mHasTabs) {
+                    if (this.mDirections == Layout.DIRS_ALL_LEFT_TO_RIGHT) {
+                        return this.measureRun(0, offset, this.mLen, false, fmi);
+                    }
+                    if (this.mDirections == Layout.DIRS_ALL_RIGHT_TO_LEFT) {
+                        return this.measureRun(0, offset, this.mLen, true, fmi);
+                    }
+                }
+                let chars = this.mChars;
+                let runs = this.mDirections.mDirections;
+                for (let i = 0; i < runs.length; i += 2) {
+                    let runStart = runs[i];
+                    let runLimit = runStart + (runs[i + 1] & Layout.RUN_LENGTH_MASK);
+                    if (runLimit > this.mLen) {
+                        runLimit = this.mLen;
+                    }
+                    let runIsRtl = (runs[i + 1] & Layout.RUN_RTL_FLAG) != 0;
+                    let segstart = runStart;
+                    for (let j = this.mHasTabs ? runStart : runLimit; j <= runLimit; j++) {
+                        let codept = 0;
+                        if (this.mHasTabs && j < runLimit) {
+                            codept = chars.codePointAt(j);
+                            if (codept >= 0xd800 && codept < 0xdc00 && j + 1 < runLimit) {
+                                codept = chars.codePointAt(j);
+                                if (codept > 0xffff) {
+                                    ++j;
+                                    continue;
+                                }
+                            }
+                        }
+                        if (j == runLimit || codept == '\t'.codePointAt(0)) {
+                            let inSegment = target >= segstart && target < j;
+                            let advance = (this.mDir == Layout.DIR_RIGHT_TO_LEFT) == runIsRtl;
+                            if (inSegment && advance) {
+                                return h += this.measureRun(segstart, offset, j, runIsRtl, fmi);
+                            }
+                            let w = this.measureRun(segstart, j, j, runIsRtl, fmi);
+                            h += advance ? w : -w;
+                            if (inSegment) {
+                                return h += this.measureRun(segstart, offset, j, runIsRtl, null);
+                            }
+                            if (codept == '\t'.codePointAt(0)) {
+                                if (offset == j) {
+                                    return h;
+                                }
+                                h = this.mDir * this.nextTab(h * this.mDir);
+                                if (target == j) {
+                                    return h;
+                                }
+                            }
+                            segstart = j + 1;
+                        }
+                    }
+                }
+                return h;
+            }
+            drawRun(c, start, limit, runIsRtl, x, top, y, bottom, needWidth) {
+                if ((this.mDir == Layout.DIR_LEFT_TO_RIGHT) == runIsRtl) {
+                    let w = -this.measureRun(start, limit, limit, runIsRtl, null);
+                    this.handleRun(start, limit, limit, runIsRtl, c, x + w, top, y, bottom, null, false);
+                    return w;
+                }
+                return this.handleRun(start, limit, limit, runIsRtl, c, x, top, y, bottom, null, needWidth);
+            }
+            measureRun(start, offset, limit, runIsRtl, fmi) {
+                return this.handleRun(start, offset, limit, runIsRtl, null, 0, 0, 0, 0, fmi, true);
+            }
+            getOffsetToLeftRightOf(cursor, toLeft) {
+                let lineStart = 0;
+                let lineEnd = this.mLen;
+                let paraIsRtl = this.mDir == -1;
+                let runs = this.mDirections.mDirections;
+                let runIndex, runLevel = 0, runStart = lineStart, runLimit = lineEnd, newCaret = -1;
+                let trailing = false;
+                if (cursor == lineStart) {
+                    runIndex = -2;
+                }
+                else if (cursor == lineEnd) {
+                    runIndex = runs.length;
+                }
+                else {
+                    for (runIndex = 0; runIndex < runs.length; runIndex += 2) {
+                        runStart = lineStart + runs[runIndex];
+                        if (cursor >= runStart) {
+                            runLimit = runStart + (runs[runIndex + 1] & Layout.RUN_LENGTH_MASK);
+                            if (runLimit > lineEnd) {
+                                runLimit = lineEnd;
+                            }
+                            if (cursor < runLimit) {
+                                runLevel = (runs[runIndex + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                                if (cursor == runStart) {
+                                    let prevRunIndex, prevRunLevel, prevRunStart, prevRunLimit;
+                                    let pos = cursor - 1;
+                                    for (prevRunIndex = 0; prevRunIndex < runs.length; prevRunIndex += 2) {
+                                        prevRunStart = lineStart + runs[prevRunIndex];
+                                        if (pos >= prevRunStart) {
+                                            prevRunLimit = prevRunStart + (runs[prevRunIndex + 1] & Layout.RUN_LENGTH_MASK);
+                                            if (prevRunLimit > lineEnd) {
+                                                prevRunLimit = lineEnd;
+                                            }
+                                            if (pos < prevRunLimit) {
+                                                prevRunLevel = (runs[prevRunIndex + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                                                if (prevRunLevel < runLevel) {
+                                                    runIndex = prevRunIndex;
+                                                    runLevel = prevRunLevel;
+                                                    runStart = prevRunStart;
+                                                    runLimit = prevRunLimit;
+                                                    trailing = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (runIndex != runs.length) {
+                        let runIsRtl = (runLevel & 0x1) != 0;
+                        let advance = toLeft == runIsRtl;
+                        if (cursor != (advance ? runLimit : runStart) || advance != trailing) {
+                            newCaret = this.getOffsetBeforeAfter(runIndex, runStart, runLimit, runIsRtl, cursor, advance);
+                            if (newCaret != (advance ? runLimit : runStart)) {
+                                return newCaret;
+                            }
+                        }
+                    }
+                }
+                while (true) {
+                    let advance = toLeft == paraIsRtl;
+                    let otherRunIndex = runIndex + (advance ? 2 : -2);
+                    if (otherRunIndex >= 0 && otherRunIndex < runs.length) {
+                        let otherRunStart = lineStart + runs[otherRunIndex];
+                        let otherRunLimit = otherRunStart + (runs[otherRunIndex + 1] & Layout.RUN_LENGTH_MASK);
+                        if (otherRunLimit > lineEnd) {
+                            otherRunLimit = lineEnd;
+                        }
+                        let otherRunLevel = (runs[otherRunIndex + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                        let otherRunIsRtl = (otherRunLevel & 1) != 0;
+                        advance = toLeft == otherRunIsRtl;
+                        if (newCaret == -1) {
+                            newCaret = this.getOffsetBeforeAfter(otherRunIndex, otherRunStart, otherRunLimit, otherRunIsRtl, advance ? otherRunStart : otherRunLimit, advance);
+                            if (newCaret == (advance ? otherRunLimit : otherRunStart)) {
+                                runIndex = otherRunIndex;
+                                runLevel = otherRunLevel;
+                                continue;
+                            }
+                            break;
+                        }
+                        if (otherRunLevel < runLevel) {
+                            newCaret = advance ? otherRunStart : otherRunLimit;
+                        }
+                        break;
+                    }
+                    if (newCaret == -1) {
+                        newCaret = advance ? this.mLen + 1 : -1;
+                        break;
+                    }
+                    if (newCaret <= lineEnd) {
+                        newCaret = advance ? lineEnd : lineStart;
+                    }
+                    break;
+                }
+                return newCaret;
+            }
+            getOffsetBeforeAfter(runIndex, runStart, runLimit, runIsRtl, offset, after) {
+                if (runIndex < 0 || offset == (after ? this.mLen : 0)) {
+                    if (after) {
+                        return TextUtils.getOffsetAfter(this.mText, offset + this.mStart) - this.mStart;
+                    }
+                    return TextUtils.getOffsetBefore(this.mText, offset + this.mStart) - this.mStart;
+                }
+                let wp = this.mWorkPaint;
+                wp.set(this.mPaint);
+                let spanStart = runStart;
+                let spanLimit;
+                if (this.mSpanned == null) {
+                    spanLimit = runLimit;
+                }
+                else {
+                    let target = after ? offset + 1 : offset;
+                    let limit = this.mStart + runLimit;
+                    while (true) {
+                        spanLimit = this.mSpanned.nextSpanTransition(this.mStart + spanStart, limit, MetricAffectingSpan.type) - this.mStart;
+                        if (spanLimit >= target) {
+                            break;
+                        }
+                        spanStart = spanLimit;
+                    }
+                    let spans = this.mSpanned.getSpans(this.mStart + spanStart, this.mStart + spanLimit, MetricAffectingSpan.type);
+                    spans = TextUtils.removeEmptySpans(spans, this.mSpanned, MetricAffectingSpan.type);
+                    if (spans.length > 0) {
+                        let replacement = null;
+                        for (let j = 0; j < spans.length; j++) {
+                            let span = spans[j];
+                            if (span instanceof ReplacementSpan) {
+                                replacement = span;
+                            }
+                            else {
+                                span.updateMeasureState(wp);
+                            }
+                        }
+                        if (replacement != null) {
+                            return after ? spanLimit : spanStart;
+                        }
+                    }
+                }
+                let flags = runIsRtl ? Paint.DIRECTION_RTL : Paint.DIRECTION_LTR;
+                let cursorOpt = after ? Paint.CURSOR_AFTER : Paint.CURSOR_BEFORE;
+                if (this.mCharsValid) {
+                    return wp.getTextRunCursor_len(this.mChars.toString(), spanStart, spanLimit - spanStart, flags, offset, cursorOpt);
+                }
+                else {
+                    return wp.getTextRunCursor_end(this.mText.toString(), this.mStart + spanStart, this.mStart + spanLimit, flags, this.mStart + offset, cursorOpt) - this.mStart;
+                }
+            }
+            static expandMetricsFromPaint(fmi, wp) {
+                const previousTop = fmi.top;
+                const previousAscent = fmi.ascent;
+                const previousDescent = fmi.descent;
+                const previousBottom = fmi.bottom;
+                const previousLeading = fmi.leading;
+                wp.getFontMetricsInt(fmi);
+                TextLine.updateMetrics(fmi, previousTop, previousAscent, previousDescent, previousBottom, previousLeading);
+            }
+            static updateMetrics(fmi, previousTop, previousAscent, previousDescent, previousBottom, previousLeading) {
+                fmi.top = Math.min(fmi.top, previousTop);
+                fmi.ascent = Math.min(fmi.ascent, previousAscent);
+                fmi.descent = Math.max(fmi.descent, previousDescent);
+                fmi.bottom = Math.max(fmi.bottom, previousBottom);
+                fmi.leading = Math.max(fmi.leading, previousLeading);
+            }
+            handleText(wp, start, end, contextStart, contextEnd, runIsRtl, c, x, top, y, bottom, fmi, needWidth) {
+                if (fmi != null) {
+                    TextLine.expandMetricsFromPaint(fmi, wp);
+                }
+                let runLen = end - start;
+                if (runLen == 0) {
+                    return 0;
+                }
+                let ret = 0;
+                let contextLen = contextEnd - contextStart;
+                if (needWidth || (c != null && (wp.bgColor != 0 || wp.underlineColor != 0 || runIsRtl))) {
+                    let flags = runIsRtl ? Paint.DIRECTION_RTL : Paint.DIRECTION_LTR;
+                    if (this.mCharsValid) {
+                        ret = wp.getTextRunAdvances_count(this.mChars.toString(), start, runLen, contextStart, contextLen, flags, null, 0);
+                    }
+                    else {
+                        let delta = this.mStart;
+                        ret = wp.getTextRunAdvances_end(this.mText.toString(), delta + start, delta + end, delta + contextStart, delta + contextEnd, flags, null, 0);
+                    }
+                }
+                if (c != null) {
+                    if (runIsRtl) {
+                        x -= ret;
+                    }
+                    if (wp.bgColor != 0) {
+                        let previousColor = wp.getColor();
+                        let previousStyle = wp.getStyle();
+                        wp.setColor(wp.bgColor);
+                        wp.setStyle(Paint.Style.FILL);
+                        c.drawRect(x, top, x + ret, bottom, wp);
+                        wp.setStyle(previousStyle);
+                        wp.setColor(previousColor);
+                    }
+                    if (wp.underlineColor != 0) {
+                        let underlineTop = y + wp.baselineShift + (1.0 / 9.0) * wp.getTextSize();
+                        let previousColor = wp.getColor();
+                        let previousStyle = wp.getStyle();
+                        let previousAntiAlias = wp.isAntiAlias();
+                        wp.setStyle(Paint.Style.FILL);
+                        wp.setAntiAlias(true);
+                        wp.setColor(wp.underlineColor);
+                        c.drawRect(x, underlineTop, x + ret, underlineTop + wp.underlineThickness, wp);
+                        wp.setStyle(previousStyle);
+                        wp.setColor(previousColor);
+                        wp.setAntiAlias(previousAntiAlias);
+                    }
+                    this.drawTextRun(c, wp, start, end, contextStart, contextEnd, runIsRtl, x, y + wp.baselineShift);
+                }
+                return runIsRtl ? -ret : ret;
+            }
+            handleReplacement(replacement, wp, start, limit, runIsRtl, c, x, top, y, bottom, fmi, needWidth) {
+                let ret = 0;
+                let textStart = this.mStart + start;
+                let textLimit = this.mStart + limit;
+                if (needWidth || (c != null && runIsRtl)) {
+                    let previousTop = 0;
+                    let previousAscent = 0;
+                    let previousDescent = 0;
+                    let previousBottom = 0;
+                    let previousLeading = 0;
+                    let needUpdateMetrics = (fmi != null);
+                    if (needUpdateMetrics) {
+                        previousTop = fmi.top;
+                        previousAscent = fmi.ascent;
+                        previousDescent = fmi.descent;
+                        previousBottom = fmi.bottom;
+                        previousLeading = fmi.leading;
+                    }
+                    ret = replacement.getSize(wp, this.mText, textStart, textLimit, fmi);
+                    if (needUpdateMetrics) {
+                        TextLine.updateMetrics(fmi, previousTop, previousAscent, previousDescent, previousBottom, previousLeading);
+                    }
+                }
+                if (c != null) {
+                    if (runIsRtl) {
+                        x -= ret;
+                    }
+                    replacement.draw(c, this.mText, textStart, textLimit, x, top, y, bottom, wp);
+                }
+                return runIsRtl ? -ret : ret;
+            }
+            handleRun(start, measureLimit, limit, runIsRtl, c, x, top, y, bottom, fmi, needWidth) {
+                if (start == measureLimit) {
+                    let wp = this.mWorkPaint;
+                    wp.set(this.mPaint);
+                    if (fmi != null) {
+                        TextLine.expandMetricsFromPaint(fmi, wp);
+                    }
+                    return 0;
+                }
+                if (this.mSpanned == null) {
+                    let wp = this.mWorkPaint;
+                    wp.set(this.mPaint);
+                    const mlimit = measureLimit;
+                    return this.handleText(wp, start, mlimit, start, limit, runIsRtl, c, x, top, y, bottom, fmi, needWidth || mlimit < measureLimit);
+                }
+                this.mMetricAffectingSpanSpanSet.init(this.mSpanned, this.mStart + start, this.mStart + limit);
+                this.mCharacterStyleSpanSet.init(this.mSpanned, this.mStart + start, this.mStart + limit);
+                const originalX = x;
+                for (let i = start, inext; i < measureLimit; i = inext) {
+                    let wp = this.mWorkPaint;
+                    wp.set(this.mPaint);
+                    inext = this.mMetricAffectingSpanSpanSet.getNextTransition(this.mStart + i, this.mStart + limit) - this.mStart;
+                    let mlimit = Math.min(inext, measureLimit);
+                    let replacement = null;
+                    for (let j = 0; j < this.mMetricAffectingSpanSpanSet.numberOfSpans; j++) {
+                        if ((this.mMetricAffectingSpanSpanSet.spanStarts[j] >= this.mStart + mlimit) || (this.mMetricAffectingSpanSpanSet.spanEnds[j] <= this.mStart + i))
+                            continue;
+                        let span = this.mMetricAffectingSpanSpanSet.spans[j];
+                        if (span instanceof ReplacementSpan) {
+                            replacement = span;
+                        }
+                        else {
+                            span.updateDrawState(wp);
+                        }
+                    }
+                    if (replacement != null) {
+                        x += this.handleReplacement(replacement, wp, i, mlimit, runIsRtl, c, x, top, y, bottom, fmi, needWidth || mlimit < measureLimit);
+                        continue;
+                    }
+                    for (let j = i, jnext; j < mlimit; j = jnext) {
+                        jnext = this.mCharacterStyleSpanSet.getNextTransition(this.mStart + j, this.mStart + mlimit) - this.mStart;
+                        wp.set(this.mPaint);
+                        for (let k = 0; k < this.mCharacterStyleSpanSet.numberOfSpans; k++) {
+                            if ((this.mCharacterStyleSpanSet.spanStarts[k] >= this.mStart + jnext) || (this.mCharacterStyleSpanSet.spanEnds[k] <= this.mStart + j))
+                                continue;
+                            let span = this.mCharacterStyleSpanSet.spans[k];
+                            span.updateDrawState(wp);
+                        }
+                        x += this.handleText(wp, j, jnext, i, inext, runIsRtl, c, x, top, y, bottom, fmi, needWidth || jnext < measureLimit);
+                    }
+                }
+                return x - originalX;
+            }
+            drawTextRun(c, wp, start, end, contextStart, contextEnd, runIsRtl, x, y) {
+                let flags = runIsRtl ? Canvas.DIRECTION_RTL : Canvas.DIRECTION_LTR;
+                if (this.mCharsValid) {
+                    let count = end - start;
+                    let contextCount = contextEnd - contextStart;
+                    c.drawTextRun_count(this.mChars.toString(), start, count, contextStart, contextCount, x, y, flags, wp);
+                }
+                else {
+                    let delta = this.mStart;
+                    c.drawTextRun_end(this.mText.toString(), delta + start, delta + end, delta + contextStart, delta + contextEnd, x, y, flags, wp);
+                }
+            }
+            ascent(pos) {
+                if (this.mSpanned == null) {
+                    return this.mPaint.ascent();
+                }
+                pos += this.mStart;
+                let spans = this.mSpanned.getSpans(pos, pos + 1, MetricAffectingSpan.type);
+                if (spans.length == 0) {
+                    return this.mPaint.ascent();
+                }
+                let wp = this.mWorkPaint;
+                wp.set(this.mPaint);
+                for (let span of spans) {
+                    span.updateMeasureState(wp);
+                }
+                return wp.ascent();
+            }
+            nextTab(h) {
+                if (this.mTabs != null) {
+                    return this.mTabs.nextTab(h);
+                }
+                return Layout.TabStops.nextDefaultStop(h, TextLine.TAB_INCREMENT);
+            }
+        }
+        TextLine.DEBUG = false;
+        TextLine.sCached = new Array(3);
+        TextLine.TAB_INCREMENT = 20;
+        text_6.TextLine = TextLine;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/Path.ts"/>
+///<reference path="../../android/text/style/LeadingMarginSpan.ts"/>
+///<reference path="../../android/text/style/LineBackgroundSpan.ts"/>
+///<reference path="../../android/text/style/ParagraphStyle.ts"/>
+///<reference path="../../android/text/style/ReplacementSpan.ts"/>
+///<reference path="../../android/text/style/TabStopSpan.ts"/>
+///<reference path="../../java/util/Arrays.ts"/>
+///<reference path="../../java/lang/Float.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../java/lang/StringBuilder.ts"/>
+///<reference path="../../android/text/MeasuredText.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/SpanSet.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
+///<reference path="../../android/text/TextLine.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+///<reference path="../../android/text/TextWatcher.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_7) {
+        var Rect = android.graphics.Rect;
+        var LeadingMarginSpan = android.text.style.LeadingMarginSpan;
+        var LeadingMarginSpan2 = android.text.style.LeadingMarginSpan.LeadingMarginSpan2;
+        var LineBackgroundSpan = android.text.style.LineBackgroundSpan;
+        var ParagraphStyle = android.text.style.ParagraphStyle;
+        var ReplacementSpan = android.text.style.ReplacementSpan;
+        var TabStopSpan = android.text.style.TabStopSpan;
+        var Arrays = java.util.Arrays;
+        var Float = java.lang.Float;
+        var System = java.lang.System;
+        var MeasuredText = android.text.MeasuredText;
+        var Spanned = android.text.Spanned;
+        var SpanSet = android.text.SpanSet;
+        var TextDirectionHeuristics = android.text.TextDirectionHeuristics;
+        var TextLine = android.text.TextLine;
+        var TextPaint = android.text.TextPaint;
+        var TextUtils = android.text.TextUtils;
+        class Layout {
+            constructor(text, paint, width, align, textDir = TextDirectionHeuristics.FIRSTSTRONG_LTR, spacingMult = 1, spacingAdd = 0) {
+                this.mWidth = 0;
+                this.mAlignment = Layout.Alignment.ALIGN_NORMAL;
+                this.mSpacingMult = 0;
+                this.mSpacingAdd = 0;
+                if (width < 0)
+                    throw Error(`new IllegalArgumentException("Layout: " + width + " < 0")`);
+                if (paint != null) {
+                    paint.bgColor = 0;
+                    paint.baselineShift = 0;
+                }
+                this.mText = text;
+                this.mPaint = paint;
+                this.mWorkPaint = new TextPaint();
+                this.mWidth = width;
+                this.mAlignment = align;
+                this.mSpacingMult = spacingMult;
+                this.mSpacingAdd = spacingAdd;
+                this.mSpannedText = Spanned.isImplements(text);
+                this.mTextDir = textDir;
+            }
+            static getDesiredWidth(...args) {
+                if (args.length == 2)
+                    return Layout.getDesiredWidth_2(...args);
+                if (args.length == 4)
+                    return Layout.getDesiredWidth_4(...args);
+            }
+            static getDesiredWidth_2(source, paint) {
+                return Layout.getDesiredWidth(source, 0, source.length, paint);
+            }
+            static getDesiredWidth_4(source, start, end, paint) {
+                let need = 0;
+                let next;
+                for (let i = start; i <= end; i = next) {
+                    next = source.substring(0, end).indexOf('\n', i);
+                    if (next < 0)
+                        next = end;
+                    let w = Layout.measurePara(paint, source, i, next);
+                    if (w > need)
+                        need = w;
+                    next++;
+                }
+                return need;
+            }
+            replaceWith(text, paint, width, align, spacingmult, spacingadd) {
+                if (width < 0) {
+                    throw Error(`new IllegalArgumentException("Layout: " + width + " < 0")`);
+                }
+                this.mText = text;
+                this.mPaint = paint;
+                this.mWidth = width;
+                this.mAlignment = align;
+                this.mSpacingMult = spacingmult;
+                this.mSpacingAdd = spacingadd;
+                this.mSpannedText = Spanned.isImplements(text);
+            }
+            draw(canvas, highlight = null, highlightPaint = null, cursorOffsetVertical = 0) {
+                const lineRange = this.getLineRangeForDraw(canvas);
+                let firstLine = TextUtils.unpackRangeStartFromLong(lineRange);
+                let lastLine = TextUtils.unpackRangeEndFromLong(lineRange);
+                if (lastLine < 0)
+                    return;
+                this.drawBackground(canvas, highlight, highlightPaint, cursorOffsetVertical, firstLine, lastLine);
+                this.drawText(canvas, firstLine, lastLine);
+            }
+            drawText(canvas, firstLine, lastLine) {
+                let previousLineBottom = this.getLineTop(firstLine);
+                let previousLineEnd = this.getLineStart(firstLine);
+                let spans = Layout.NO_PARA_SPANS;
+                let spanEnd = 0;
+                let paint = this.mPaint;
+                let buf = this.mText;
+                let paraAlign = this.mAlignment;
+                let tabStops = null;
+                let tabStopsIsInitialized = false;
+                let tl = TextLine.obtain();
+                for (let i = firstLine; i <= lastLine; i++) {
+                    let start = previousLineEnd;
+                    previousLineEnd = this.getLineStart(i + 1);
+                    let end = this.getLineVisibleEnd(i, start, previousLineEnd);
+                    let ltop = previousLineBottom;
+                    let lbottom = this.getLineTop(i + 1);
+                    previousLineBottom = lbottom;
+                    let lbaseline = lbottom - this.getLineDescent(i);
+                    let dir = this.getParagraphDirection(i);
+                    let left = 0;
+                    let right = this.mWidth;
+                    if (this.mSpannedText) {
+                        let sp = buf;
+                        let textLength = buf.length;
+                        let isFirstParaLine = (start == 0 || buf.charAt(start - 1) == '\n');
+                        if (start >= spanEnd && (i == firstLine || isFirstParaLine)) {
+                            spanEnd = sp.nextSpanTransition(start, textLength, ParagraphStyle.type);
+                            spans = Layout.getParagraphSpans(sp, start, spanEnd, ParagraphStyle.type);
+                            paraAlign = this.mAlignment;
+                            tabStopsIsInitialized = false;
+                        }
+                        const length = spans.length;
+                        for (let n = 0; n < length; n++) {
+                            if (LeadingMarginSpan.isImpl(spans[n])) {
+                                let margin = spans[n];
+                                let useFirstLineMargin = isFirstParaLine;
+                                if (LeadingMarginSpan2.isImpl(margin)) {
+                                    let count = margin.getLeadingMarginLineCount();
+                                    let startLine = this.getLineForOffset(sp.getSpanStart(margin));
+                                    useFirstLineMargin = i < startLine + count;
+                                }
+                                if (dir == Layout.DIR_RIGHT_TO_LEFT) {
+                                    margin.drawLeadingMargin(canvas, paint, right, dir, ltop, lbaseline, lbottom, buf, start, end, isFirstParaLine, this);
+                                    right -= margin.getLeadingMargin(useFirstLineMargin);
+                                }
+                                else {
+                                    margin.drawLeadingMargin(canvas, paint, left, dir, ltop, lbaseline, lbottom, buf, start, end, isFirstParaLine, this);
+                                    left += margin.getLeadingMargin(useFirstLineMargin);
+                                }
+                            }
+                        }
+                    }
+                    let hasTabOrEmoji = this.getLineContainsTab(i);
+                    if (hasTabOrEmoji && !tabStopsIsInitialized) {
+                        if (tabStops == null) {
+                            tabStops = new Layout.TabStops(Layout.TAB_INCREMENT, spans);
+                        }
+                        else {
+                            tabStops.reset(Layout.TAB_INCREMENT, spans);
+                        }
+                        tabStopsIsInitialized = true;
+                    }
+                    let align = paraAlign;
+                    if (align == Layout.Alignment.ALIGN_LEFT) {
+                        align = (dir == Layout.DIR_LEFT_TO_RIGHT) ? Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE;
+                    }
+                    else if (align == Layout.Alignment.ALIGN_RIGHT) {
+                        align = (dir == Layout.DIR_LEFT_TO_RIGHT) ? Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL;
+                    }
+                    let x;
+                    if (align == Layout.Alignment.ALIGN_NORMAL) {
+                        if (dir == Layout.DIR_LEFT_TO_RIGHT) {
+                            x = left;
+                        }
+                        else {
+                            x = right;
+                        }
+                    }
+                    else {
+                        let max = Math.floor(this.getLineExtent(i, tabStops, false));
+                        if (align == Layout.Alignment.ALIGN_OPPOSITE) {
+                            if (dir == Layout.DIR_LEFT_TO_RIGHT) {
+                                x = right - max;
+                            }
+                            else {
+                                x = left - max;
+                            }
+                        }
+                        else {
+                            max = max & ~1;
+                            x = (right + left - max) >> 1;
+                        }
+                    }
+                    let directions = this.getLineDirections(i);
+                    if (directions == Layout.DIRS_ALL_LEFT_TO_RIGHT && !this.mSpannedText && !hasTabOrEmoji) {
+                        canvas.drawText_end(buf.toString(), start, end, x, lbaseline, paint);
+                    }
+                    else {
+                        tl.set(paint, buf, start, end, dir, directions, hasTabOrEmoji, tabStops);
+                        tl.draw(canvas, x, ltop, lbaseline, lbottom);
+                    }
+                }
+                TextLine.recycle(tl);
+            }
+            drawBackground(canvas, highlight, highlightPaint, cursorOffsetVertical, firstLine, lastLine) {
+                if (this.mSpannedText) {
+                    if (this.mLineBackgroundSpans == null) {
+                        this.mLineBackgroundSpans = new SpanSet(LineBackgroundSpan.type);
+                    }
+                    let buffer = this.mText;
+                    let textLength = buffer.length;
+                    this.mLineBackgroundSpans.init(buffer, 0, textLength);
+                    if (this.mLineBackgroundSpans.numberOfSpans > 0) {
+                        let previousLineBottom = this.getLineTop(firstLine);
+                        let previousLineEnd = this.getLineStart(firstLine);
+                        let spans = Layout.NO_PARA_SPANS;
+                        let spansLength = 0;
+                        let paint = this.mPaint;
+                        let spanEnd = 0;
+                        const width = this.mWidth;
+                        for (let i = firstLine; i <= lastLine; i++) {
+                            let start = previousLineEnd;
+                            let end = this.getLineStart(i + 1);
+                            previousLineEnd = end;
+                            let ltop = previousLineBottom;
+                            let lbottom = this.getLineTop(i + 1);
+                            previousLineBottom = lbottom;
+                            let lbaseline = lbottom - this.getLineDescent(i);
+                            if (start >= spanEnd) {
+                                spanEnd = this.mLineBackgroundSpans.getNextTransition(start, textLength);
+                                spansLength = 0;
+                                if (start != end || start == 0) {
+                                    for (let j = 0; j < this.mLineBackgroundSpans.numberOfSpans; j++) {
+                                        if (this.mLineBackgroundSpans.spanStarts[j] >= end || this.mLineBackgroundSpans.spanEnds[j] <= start)
+                                            continue;
+                                        if (spansLength == spans.length) {
+                                            let newSize = (2 * spansLength);
+                                            let newSpans = new Array(newSize);
+                                            System.arraycopy(spans, 0, newSpans, 0, spansLength);
+                                            spans = newSpans;
+                                        }
+                                        spans[spansLength++] = this.mLineBackgroundSpans.spans[j];
+                                    }
+                                }
+                            }
+                            for (let n = 0; n < spansLength; n++) {
+                                let lineBackgroundSpan = spans[n];
+                                lineBackgroundSpan.drawBackground(canvas, paint, 0, width, ltop, lbaseline, lbottom, buffer, start, end, i);
+                            }
+                        }
+                    }
+                    this.mLineBackgroundSpans.recycle();
+                }
+                if (highlight != null) {
+                    if (cursorOffsetVertical != 0)
+                        canvas.translate(0, cursorOffsetVertical);
+                    canvas.drawPath(highlight, highlightPaint);
+                    if (cursorOffsetVertical != 0)
+                        canvas.translate(0, -cursorOffsetVertical);
+                }
+            }
+            getLineRangeForDraw(canvas) {
+                let dtop, dbottom;
+                {
+                    if (!canvas.getClipBounds(Layout.sTempRect)) {
+                        return TextUtils.packRangeInLong(0, -1);
+                    }
+                    dtop = Layout.sTempRect.top;
+                    dbottom = Layout.sTempRect.bottom;
+                }
+                const top = Math.max(dtop, 0);
+                const bottom = Math.min(this.getLineTop(this.getLineCount()), dbottom);
+                if (top >= bottom)
+                    return TextUtils.packRangeInLong(0, -1);
+                return TextUtils.packRangeInLong(this.getLineForVertical(top), this.getLineForVertical(bottom));
+            }
+            getLineStartPos(line, left, right) {
+                let align = this.getParagraphAlignment(line);
+                let dir = this.getParagraphDirection(line);
+                if (align == Layout.Alignment.ALIGN_LEFT) {
+                    align = (dir == Layout.DIR_LEFT_TO_RIGHT) ? Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE;
+                }
+                else if (align == Layout.Alignment.ALIGN_RIGHT) {
+                    align = (dir == Layout.DIR_LEFT_TO_RIGHT) ? Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL;
+                }
+                let x;
+                if (align == Layout.Alignment.ALIGN_NORMAL) {
+                    if (dir == Layout.DIR_LEFT_TO_RIGHT) {
+                        x = left;
+                    }
+                    else {
+                        x = right;
+                    }
+                }
+                else {
+                    let tabStops = null;
+                    if (this.mSpannedText && this.getLineContainsTab(line)) {
+                        let spanned = this.mText;
+                        let start = this.getLineStart(line);
+                        let spanEnd = spanned.nextSpanTransition(start, spanned.length, TabStopSpan.type);
+                        let tabSpans = Layout.getParagraphSpans(spanned, start, spanEnd, TabStopSpan.type);
+                        if (tabSpans.length > 0) {
+                            tabStops = new Layout.TabStops(Layout.TAB_INCREMENT, tabSpans);
+                        }
+                    }
+                    let max = Math.floor(this.getLineExtent(line, tabStops, false));
+                    if (align == Layout.Alignment.ALIGN_OPPOSITE) {
+                        if (dir == Layout.DIR_LEFT_TO_RIGHT) {
+                            x = right - max;
+                        }
+                        else {
+                            x = left - max;
+                        }
+                    }
+                    else {
+                        max = max & ~1;
+                        x = (left + right - max) >> 1;
+                    }
+                }
+                return x;
+            }
+            getText() {
+                return this.mText;
+            }
+            getPaint() {
+                return this.mPaint;
+            }
+            getWidth() {
+                return this.mWidth;
+            }
+            getEllipsizedWidth() {
+                return this.mWidth;
+            }
+            increaseWidthTo(wid) {
+                if (wid < this.mWidth) {
+                    throw Error(`new RuntimeException("attempted to reduce Layout width")`);
+                }
+                this.mWidth = wid;
+            }
+            getHeight() {
+                return this.getLineTop(this.getLineCount());
+            }
+            getAlignment() {
+                return this.mAlignment;
+            }
+            getSpacingMultiplier() {
+                return this.mSpacingMult;
+            }
+            getSpacingAdd() {
+                return this.mSpacingAdd;
+            }
+            getTextDirectionHeuristic() {
+                return this.mTextDir;
+            }
+            getLineBounds(line, bounds) {
+                if (bounds != null) {
+                    bounds.left = 0;
+                    bounds.top = this.getLineTop(line);
+                    bounds.right = this.mWidth;
+                    bounds.bottom = this.getLineTop(line + 1);
+                }
+                return this.getLineBaseline(line);
+            }
+            isLevelBoundary(offset) {
+                let line = this.getLineForOffset(offset);
+                let dirs = this.getLineDirections(line);
+                if (dirs == Layout.DIRS_ALL_LEFT_TO_RIGHT || dirs == Layout.DIRS_ALL_RIGHT_TO_LEFT) {
+                    return false;
+                }
+                let runs = dirs.mDirections;
+                let lineStart = this.getLineStart(line);
+                let lineEnd = this.getLineEnd(line);
+                if (offset == lineStart || offset == lineEnd) {
+                    let paraLevel = this.getParagraphDirection(line) == 1 ? 0 : 1;
+                    let runIndex = offset == lineStart ? 0 : runs.length - 2;
+                    return ((runs[runIndex + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK) != paraLevel;
+                }
+                offset -= lineStart;
+                for (let i = 0; i < runs.length; i += 2) {
+                    if (offset == runs[i]) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            isRtlCharAt(offset) {
+                let line = this.getLineForOffset(offset);
+                let dirs = this.getLineDirections(line);
+                if (dirs == Layout.DIRS_ALL_LEFT_TO_RIGHT) {
+                    return false;
+                }
+                if (dirs == Layout.DIRS_ALL_RIGHT_TO_LEFT) {
+                    return true;
+                }
+                let runs = dirs.mDirections;
+                let lineStart = this.getLineStart(line);
+                for (let i = 0; i < runs.length; i += 2) {
+                    let start = lineStart + (runs[i] & Layout.RUN_LENGTH_MASK);
+                    if (offset >= start) {
+                        let level = (runs[i + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                        return ((level & 1) != 0);
+                    }
+                }
+                return false;
+            }
+            primaryIsTrailingPrevious(offset) {
+                let line = this.getLineForOffset(offset);
+                let lineStart = this.getLineStart(line);
+                let lineEnd = this.getLineEnd(line);
+                let runs = this.getLineDirections(line).mDirections;
+                let levelAt = -1;
+                for (let i = 0; i < runs.length; i += 2) {
+                    let start = lineStart + runs[i];
+                    let limit = start + (runs[i + 1] & Layout.RUN_LENGTH_MASK);
+                    if (limit > lineEnd) {
+                        limit = lineEnd;
+                    }
+                    if (offset >= start && offset < limit) {
+                        if (offset > start) {
+                            return false;
+                        }
+                        levelAt = (runs[i + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                        break;
+                    }
+                }
+                if (levelAt == -1) {
+                    levelAt = this.getParagraphDirection(line) == 1 ? 0 : 1;
+                }
+                let levelBefore = -1;
+                if (offset == lineStart) {
+                    levelBefore = this.getParagraphDirection(line) == 1 ? 0 : 1;
+                }
+                else {
+                    offset -= 1;
+                    for (let i = 0; i < runs.length; i += 2) {
+                        let start = lineStart + runs[i];
+                        let limit = start + (runs[i + 1] & Layout.RUN_LENGTH_MASK);
+                        if (limit > lineEnd) {
+                            limit = lineEnd;
+                        }
+                        if (offset >= start && offset < limit) {
+                            levelBefore = (runs[i + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                            break;
+                        }
+                    }
+                }
+                return levelBefore < levelAt;
+            }
+            getPrimaryHorizontal(offset, clamped = false) {
+                let trailing = this.primaryIsTrailingPrevious(offset);
+                return this.getHorizontal(offset, trailing, clamped);
+            }
+            getSecondaryHorizontal(offset, clamped = false) {
+                let trailing = this.primaryIsTrailingPrevious(offset);
+                return this.getHorizontal(offset, !trailing, clamped);
+            }
+            getHorizontal(offset, trailing, clamped) {
+                let line = this.getLineForOffset(offset);
+                return this.getHorizontal_4(offset, trailing, line, clamped);
+            }
+            getHorizontal_4(offset, trailing, line, clamped) {
+                let start = this.getLineStart(line);
+                let end = this.getLineEnd(line);
+                let dir = this.getParagraphDirection(line);
+                let hasTabOrEmoji = this.getLineContainsTab(line);
+                let directions = this.getLineDirections(line);
+                let tabStops = null;
+                if (hasTabOrEmoji && Spanned.isImplements(this.mText)) {
+                    let tabs = Layout.getParagraphSpans(this.mText, start, end, TabStopSpan.type);
+                    if (tabs.length > 0) {
+                        tabStops = new Layout.TabStops(Layout.TAB_INCREMENT, tabs);
+                    }
+                }
+                let tl = TextLine.obtain();
+                tl.set(this.mPaint, this.mText, start, end, dir, directions, hasTabOrEmoji, tabStops);
+                let wid = tl.measure(offset - start, trailing, null);
+                TextLine.recycle(tl);
+                if (clamped && wid > this.mWidth) {
+                    wid = this.mWidth;
+                }
+                let left = this.getParagraphLeft(line);
+                let right = this.getParagraphRight(line);
+                return this.getLineStartPos(line, left, right) + wid;
+            }
+            getLineLeft(line) {
+                let dir = this.getParagraphDirection(line);
+                let align = this.getParagraphAlignment(line);
+                if (align == Layout.Alignment.ALIGN_LEFT) {
+                    return 0;
+                }
+                else if (align == Layout.Alignment.ALIGN_NORMAL) {
+                    if (dir == Layout.DIR_RIGHT_TO_LEFT)
+                        return this.getParagraphRight(line) - this.getLineMax(line);
+                    else
+                        return 0;
+                }
+                else if (align == Layout.Alignment.ALIGN_RIGHT) {
+                    return this.mWidth - this.getLineMax(line);
+                }
+                else if (align == Layout.Alignment.ALIGN_OPPOSITE) {
+                    if (dir == Layout.DIR_RIGHT_TO_LEFT)
+                        return 0;
+                    else
+                        return this.mWidth - this.getLineMax(line);
+                }
+                else {
+                    let left = this.getParagraphLeft(line);
+                    let right = this.getParagraphRight(line);
+                    let max = (Math.floor(this.getLineMax(line))) & ~1;
+                    return left + ((right - left) - max) / 2;
+                }
+            }
+            getLineRight(line) {
+                let dir = this.getParagraphDirection(line);
+                let align = this.getParagraphAlignment(line);
+                if (align == Layout.Alignment.ALIGN_LEFT) {
+                    return this.getParagraphLeft(line) + this.getLineMax(line);
+                }
+                else if (align == Layout.Alignment.ALIGN_NORMAL) {
+                    if (dir == Layout.DIR_RIGHT_TO_LEFT)
+                        return this.mWidth;
+                    else
+                        return this.getParagraphLeft(line) + this.getLineMax(line);
+                }
+                else if (align == Layout.Alignment.ALIGN_RIGHT) {
+                    return this.mWidth;
+                }
+                else if (align == Layout.Alignment.ALIGN_OPPOSITE) {
+                    if (dir == Layout.DIR_RIGHT_TO_LEFT)
+                        return this.getLineMax(line);
+                    else
+                        return this.mWidth;
+                }
+                else {
+                    let left = this.getParagraphLeft(line);
+                    let right = this.getParagraphRight(line);
+                    let max = (Math.floor(this.getLineMax(line))) & ~1;
+                    return right - ((right - left) - max) / 2;
+                }
+            }
+            getLineMax(line) {
+                let margin = this.getParagraphLeadingMargin(line);
+                let signedExtent = this.getLineExtent(line, false);
+                return margin + signedExtent >= 0 ? signedExtent : -signedExtent;
+            }
+            getLineWidth(line) {
+                let margin = this.getParagraphLeadingMargin(line);
+                let signedExtent = this.getLineExtent(line, true);
+                return margin + signedExtent >= 0 ? signedExtent : -signedExtent;
+            }
+            getLineExtent(...args) {
+                if (args.length === 2)
+                    return this.getLineExtent_2(...args);
+                if (args.length === 3)
+                    return this.getLineExtent_3(...args);
+            }
+            getLineExtent_2(line, full) {
+                let start = this.getLineStart(line);
+                let end = full ? this.getLineEnd(line) : this.getLineVisibleEnd(line);
+                let hasTabsOrEmoji = this.getLineContainsTab(line);
+                let tabStops = null;
+                if (hasTabsOrEmoji && Spanned.isImplements(this.mText)) {
+                    let tabs = Layout.getParagraphSpans(this.mText, start, end, TabStopSpan.type);
+                    if (tabs.length > 0) {
+                        tabStops = new Layout.TabStops(Layout.TAB_INCREMENT, tabs);
+                    }
+                }
+                let directions = this.getLineDirections(line);
+                if (directions == null) {
+                    return 0;
+                }
+                let dir = this.getParagraphDirection(line);
+                let tl = TextLine.obtain();
+                tl.set(this.mPaint, this.mText, start, end, dir, directions, hasTabsOrEmoji, tabStops);
+                let width = tl.metrics(null);
+                TextLine.recycle(tl);
+                return width;
+            }
+            getLineExtent_3(line, tabStops, full) {
+                let start = this.getLineStart(line);
+                let end = full ? this.getLineEnd(line) : this.getLineVisibleEnd(line);
+                let hasTabsOrEmoji = this.getLineContainsTab(line);
+                let directions = this.getLineDirections(line);
+                let dir = this.getParagraphDirection(line);
+                let tl = TextLine.obtain();
+                tl.set(this.mPaint, this.mText, start, end, dir, directions, hasTabsOrEmoji, tabStops);
+                let width = tl.metrics(null);
+                TextLine.recycle(tl);
+                return width;
+            }
+            getLineForVertical(vertical) {
+                let high = this.getLineCount(), low = -1, guess;
+                while (high - low > 1) {
+                    guess = Math.floor((high + low) / 2);
+                    if (this.getLineTop(guess) > vertical)
+                        high = guess;
+                    else
+                        low = guess;
+                }
+                if (low < 0)
+                    return 0;
+                else
+                    return low;
+            }
+            getLineForOffset(offset) {
+                let high = this.getLineCount(), low = -1, guess;
+                while (high - low > 1) {
+                    guess = Math.floor((high + low) / 2);
+                    if (this.getLineStart(guess) > offset)
+                        high = guess;
+                    else
+                        low = guess;
+                }
+                if (low < 0)
+                    return 0;
+                else
+                    return low;
+            }
+            getOffsetForHorizontal(line, horiz) {
+                let max = this.getLineEnd(line) - 1;
+                let min = this.getLineStart(line);
+                let dirs = this.getLineDirections(line);
+                if (line == this.getLineCount() - 1)
+                    max++;
+                let best = min;
+                let bestdist = Math.abs(this.getPrimaryHorizontal(best) - horiz);
+                for (let i = 0; i < dirs.mDirections.length; i += 2) {
+                    let here = min + dirs.mDirections[i];
+                    let there = here + (dirs.mDirections[i + 1] & Layout.RUN_LENGTH_MASK);
+                    let swap = (dirs.mDirections[i + 1] & Layout.RUN_RTL_FLAG) != 0 ? -1 : 1;
+                    if (there > max)
+                        there = max;
+                    let high = there - 1 + 1, low = here + 1 - 1, guess;
+                    while (high - low > 1) {
+                        guess = Math.floor((high + low) / 2);
+                        let adguess = this.getOffsetAtStartOf(guess);
+                        if (this.getPrimaryHorizontal(adguess) * swap >= horiz * swap)
+                            high = guess;
+                        else
+                            low = guess;
+                    }
+                    if (low < here + 1)
+                        low = here + 1;
+                    if (low < there) {
+                        low = this.getOffsetAtStartOf(low);
+                        let dist = Math.abs(this.getPrimaryHorizontal(low) - horiz);
+                        let aft = TextUtils.getOffsetAfter(this.mText, low);
+                        if (aft < there) {
+                            let other = Math.abs(this.getPrimaryHorizontal(aft) - horiz);
+                            if (other < dist) {
+                                dist = other;
+                                low = aft;
+                            }
+                        }
+                        if (dist < bestdist) {
+                            bestdist = dist;
+                            best = low;
+                        }
+                    }
+                    let dist = Math.abs(this.getPrimaryHorizontal(here) - horiz);
+                    if (dist < bestdist) {
+                        bestdist = dist;
+                        best = here;
+                    }
+                }
+                let dist = Math.abs(this.getPrimaryHorizontal(max) - horiz);
+                if (dist <= bestdist) {
+                    bestdist = dist;
+                    best = max;
+                }
+                return best;
+            }
+            getLineEnd(line) {
+                return this.getLineStart(line + 1);
+            }
+            getLineVisibleEnd(line, start = this.getLineStart(line), end = this.getLineStart(line + 1)) {
+                let text = this.mText;
+                let ch;
+                if (line == this.getLineCount() - 1) {
+                    return end;
+                }
+                for (; end > start; end--) {
+                    ch = text.charAt(end - 1);
+                    if (ch == '\n') {
+                        return end - 1;
+                    }
+                    if (ch != ' ' && ch != '\t') {
+                        break;
+                    }
+                }
+                return end;
+            }
+            getLineBottom(line) {
+                return this.getLineTop(line + 1);
+            }
+            getLineBaseline(line) {
+                return this.getLineTop(line + 1) - this.getLineDescent(line);
+            }
+            getLineAscent(line) {
+                return this.getLineTop(line) - (this.getLineTop(line + 1) - this.getLineDescent(line));
+            }
+            getOffsetToLeftOf(offset) {
+                return this.getOffsetToLeftRightOf(offset, true);
+            }
+            getOffsetToRightOf(offset) {
+                return this.getOffsetToLeftRightOf(offset, false);
+            }
+            getOffsetToLeftRightOf(caret, toLeft) {
+                let line = this.getLineForOffset(caret);
+                let lineStart = this.getLineStart(line);
+                let lineEnd = this.getLineEnd(line);
+                let lineDir = this.getParagraphDirection(line);
+                let lineChanged = false;
+                let advance = toLeft == (lineDir == Layout.DIR_RIGHT_TO_LEFT);
+                if (advance) {
+                    if (caret == lineEnd) {
+                        if (line < this.getLineCount() - 1) {
+                            lineChanged = true;
+                            ++line;
+                        }
+                        else {
+                            return caret;
+                        }
+                    }
+                }
+                else {
+                    if (caret == lineStart) {
+                        if (line > 0) {
+                            lineChanged = true;
+                            --line;
+                        }
+                        else {
+                            return caret;
+                        }
+                    }
+                }
+                if (lineChanged) {
+                    lineStart = this.getLineStart(line);
+                    lineEnd = this.getLineEnd(line);
+                    let newDir = this.getParagraphDirection(line);
+                    if (newDir != lineDir) {
+                        toLeft = !toLeft;
+                        lineDir = newDir;
+                    }
+                }
+                let directions = this.getLineDirections(line);
+                let tl = TextLine.obtain();
+                tl.set(this.mPaint, this.mText, lineStart, lineEnd, lineDir, directions, false, null);
+                caret = lineStart + tl.getOffsetToLeftRightOf(caret - lineStart, toLeft);
+                tl = TextLine.recycle(tl);
+                return caret;
+            }
+            getOffsetAtStartOf(offset) {
+                if (offset == 0)
+                    return 0;
+                let text = this.mText;
+                let c = text.codePointAt(offset);
+                let questionMark = '?'.codePointAt(0);
+                if (c >= questionMark && c <= questionMark) {
+                    let c1 = text.codePointAt(offset - 1);
+                    if (c1 >= questionMark && c1 <= questionMark)
+                        offset -= 1;
+                }
+                if (this.mSpannedText) {
+                    let spans = text.getSpans(offset, offset, ReplacementSpan.type);
+                    for (let i = 0; i < spans.length; i++) {
+                        let start = text.getSpanStart(spans[i]);
+                        let end = text.getSpanEnd(spans[i]);
+                        if (start < offset && end > offset)
+                            offset = start;
+                    }
+                }
+                return offset;
+            }
+            shouldClampCursor(line) {
+                switch (this.getParagraphAlignment(line)) {
+                    case Layout.Alignment.ALIGN_LEFT:
+                        return true;
+                    case Layout.Alignment.ALIGN_NORMAL:
+                        return this.getParagraphDirection(line) > 0;
+                    default:
+                        return false;
+                }
+            }
+            getCursorPath(point, dest, editingBuffer) {
+                dest.reset();
+            }
+            addSelection(line, start, end, top, bottom, dest) {
+            }
+            getSelectionPath(start, end, dest) {
+                dest.reset();
+            }
+            getParagraphAlignment(line) {
+                let align = this.mAlignment;
+                return align;
+            }
+            getParagraphLeft(line) {
+                let left = 0;
+                let dir = this.getParagraphDirection(line);
+                if (dir == Layout.DIR_RIGHT_TO_LEFT || !this.mSpannedText) {
+                    return left;
+                }
+                return this.getParagraphLeadingMargin(line);
+            }
+            getParagraphRight(line) {
+                let right = this.mWidth;
+                let dir = this.getParagraphDirection(line);
+                if (dir == Layout.DIR_LEFT_TO_RIGHT || !this.mSpannedText) {
+                    return right;
+                }
+                return right - this.getParagraphLeadingMargin(line);
+            }
+            getParagraphLeadingMargin(line) {
+                if (!this.mSpannedText) {
+                    return 0;
+                }
+                let spanned = this.mText;
+                let lineStart = this.getLineStart(line);
+                let lineEnd = this.getLineEnd(line);
+                let spanEnd = spanned.nextSpanTransition(lineStart, lineEnd, LeadingMarginSpan.type);
+                let spans = Layout.getParagraphSpans(spanned, lineStart, spanEnd, LeadingMarginSpan.type);
+                if (spans.length == 0) {
+                    return 0;
+                }
+                let margin = 0;
+                let isFirstParaLine = lineStart == 0 || spanned.charAt(lineStart - 1) == '\n';
+                for (let i = 0; i < spans.length; i++) {
+                    let span = spans[i];
+                    let useFirstLineMargin = isFirstParaLine;
+                    if (LeadingMarginSpan2.isImpl(span)) {
+                        let spStart = spanned.getSpanStart(span);
+                        let spanLine = this.getLineForOffset(spStart);
+                        let count = span.getLeadingMarginLineCount();
+                        useFirstLineMargin = line < spanLine + count;
+                    }
+                    margin += span.getLeadingMargin(useFirstLineMargin);
+                }
+                return margin;
+            }
+            static measurePara(paint, text, start, end) {
+                let mt = MeasuredText.obtain();
+                let tl = TextLine.obtain();
+                try {
+                    mt.setPara(text, start, end, TextDirectionHeuristics.LTR);
+                    let directions;
+                    let dir;
+                    directions = Layout.DIRS_ALL_LEFT_TO_RIGHT;
+                    dir = Layout.DIR_LEFT_TO_RIGHT;
+                    let chars = mt.mChars;
+                    let len = mt.mLen;
+                    let hasTabs = false;
+                    let tabStops = null;
+                    for (let i = 0; i < len; ++i) {
+                        if (chars[i] == '\t') {
+                            hasTabs = true;
+                            if (Spanned.isImplements(text)) {
+                                let spanned = text;
+                                let spanEnd = spanned.nextSpanTransition(start, end, TabStopSpan.type);
+                                let spans = Layout.getParagraphSpans(spanned, start, spanEnd, TabStopSpan.type);
+                                if (spans.length > 0) {
+                                    tabStops = new Layout.TabStops(Layout.TAB_INCREMENT, spans);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    tl.set(paint, text, start, end, dir, directions, hasTabs, tabStops);
+                    return tl.metrics(null);
+                }
+                finally {
+                    TextLine.recycle(tl);
+                    MeasuredText.recycle(mt);
+                }
+            }
+            static nextTab(text, start, end, h, tabs) {
+                let nh = Float.MAX_VALUE;
+                let alltabs = false;
+                if (Spanned.isImplements(text)) {
+                    if (tabs == null) {
+                        tabs = Layout.getParagraphSpans(text, start, end, TabStopSpan.type);
+                        alltabs = true;
+                    }
+                    for (let i = 0; i < tabs.length; i++) {
+                        if (!alltabs) {
+                            if (!(TabStopSpan.isImpl(tabs[i])))
+                                continue;
+                        }
+                        let where = tabs[i].getTabStop();
+                        if (where < nh && where > h)
+                            nh = where;
+                    }
+                    if (nh != Float.MAX_VALUE)
+                        return nh;
+                }
+                return (Math.floor(((h + Layout.TAB_INCREMENT) / Layout.TAB_INCREMENT))) * Layout.TAB_INCREMENT;
+            }
+            isSpanned() {
+                return this.mSpannedText;
+            }
+            static getParagraphSpans(text, start, end, type) {
+                if (start == end && start > 0) {
+                    return [];
+                }
+                return text.getSpans(start, end, type);
+            }
+            getEllipsisChar(method) {
+                return (method == TextUtils.TruncateAt.END_SMALL) ? Layout.ELLIPSIS_TWO_DOTS[0] : Layout.ELLIPSIS_NORMAL[0];
+            }
+            ellipsize(start, end, line, dest, destoff, method) {
+                let ellipsisCount = this.getEllipsisCount(line);
+                if (ellipsisCount == 0) {
+                    return;
+                }
+                let ellipsisStart = this.getEllipsisStart(line);
+                let linestart = this.getLineStart(line);
+                for (let i = ellipsisStart; i < ellipsisStart + ellipsisCount; i++) {
+                    let c;
+                    if (i == ellipsisStart) {
+                        c = this.getEllipsisChar(method);
+                    }
+                    else {
+                        c = String.fromCharCode(20);
+                    }
+                    let a = i + linestart;
+                    if (a >= start && a < end) {
+                        dest[destoff + a - start] = c;
+                    }
+                }
+            }
+        }
+        Layout.NO_PARA_SPANS = [];
+        Layout.sTempRect = new Rect();
+        Layout.DIR_LEFT_TO_RIGHT = 1;
+        Layout.DIR_RIGHT_TO_LEFT = -1;
+        Layout.DIR_REQUEST_LTR = 1;
+        Layout.DIR_REQUEST_RTL = -1;
+        Layout.DIR_REQUEST_DEFAULT_LTR = 2;
+        Layout.DIR_REQUEST_DEFAULT_RTL = -2;
+        Layout.RUN_LENGTH_MASK = 0x03ffffff;
+        Layout.RUN_LEVEL_SHIFT = 26;
+        Layout.RUN_LEVEL_MASK = 0x3f;
+        Layout.RUN_RTL_FLAG = 1 << Layout.RUN_LEVEL_SHIFT;
+        Layout.TAB_INCREMENT = 20;
+        Layout.ELLIPSIS_NORMAL = ['…'];
+        Layout.ELLIPSIS_TWO_DOTS = ['‥'];
+        text_7.Layout = Layout;
+        (function (Layout) {
+            class TabStops {
+                constructor(increment, spans) {
+                    this.mNumStops = 0;
+                    this.mIncrement = 0;
+                    this.reset(increment, spans);
+                }
+                reset(increment, spans) {
+                    this.mIncrement = increment;
+                    let ns = 0;
+                    if (spans != null) {
+                        let stops = this.mStops;
+                        for (let o of spans) {
+                            if (TabStopSpan.isImpl(o)) {
+                                if (stops == null) {
+                                    stops = new Array(10);
+                                }
+                                else if (ns == stops.length) {
+                                    let nstops = new Array(ns * 2);
+                                    for (let i = 0; i < ns; ++i) {
+                                        nstops[i] = stops[i];
+                                    }
+                                    stops = nstops;
+                                }
+                                stops[ns++] = o.getTabStop();
+                            }
+                        }
+                        if (ns > 1) {
+                            Arrays.sort(stops, 0, ns);
+                        }
+                        if (stops != this.mStops) {
+                            this.mStops = stops;
+                        }
+                    }
+                    this.mNumStops = ns;
+                }
+                nextTab(h) {
+                    let ns = this.mNumStops;
+                    if (ns > 0) {
+                        let stops = this.mStops;
+                        for (let i = 0; i < ns; ++i) {
+                            let stop = stops[i];
+                            if (stop > h) {
+                                return stop;
+                            }
+                        }
+                    }
+                    return TabStops.nextDefaultStop(h, this.mIncrement);
+                }
+                static nextDefaultStop(h, inc) {
+                    return (Math.floor(((h + inc) / inc))) * inc;
+                }
+            }
+            Layout.TabStops = TabStops;
+            class Directions {
+                constructor(dirs) {
+                    this.mDirections = dirs;
+                }
+            }
+            Layout.Directions = Directions;
+            class Ellipsizer extends String {
+                constructor(s) {
+                    super(s);
+                    this.mWidth = 0;
+                    this.mText = s;
+                }
+                toString() {
+                    let line1 = this.mLayout.getLineForOffset(0);
+                    let line2 = this.mLayout.getLineForOffset(this.mText.length);
+                    let dest = this.mText.split('');
+                    for (let i = line1; i <= line2; i++) {
+                        this.mLayout.ellipsize(0, this.mText.length, i, dest, 0, this.mMethod);
+                    }
+                    return dest.join('');
+                }
+            }
+            Layout.Ellipsizer = Ellipsizer;
+            class SpannedEllipsizer extends Layout.Ellipsizer {
+                constructor(display) {
+                    super(display);
+                    this.mSpanned = display;
+                }
+                getSpans(start, end, type) {
+                    return this.mSpanned.getSpans(start, end, type);
+                }
+                getSpanStart(tag) {
+                    return this.mSpanned.getSpanStart(tag);
+                }
+                getSpanEnd(tag) {
+                    return this.mSpanned.getSpanEnd(tag);
+                }
+                getSpanFlags(tag) {
+                    return this.mSpanned.getSpanFlags(tag);
+                }
+                nextSpanTransition(start, limit, type) {
+                    return this.mSpanned.nextSpanTransition(start, limit, type);
+                }
+            }
+            Layout.SpannedEllipsizer = SpannedEllipsizer;
+            (function (Alignment) {
+                Alignment[Alignment["ALIGN_NORMAL"] = 0] = "ALIGN_NORMAL";
+                Alignment[Alignment["ALIGN_OPPOSITE"] = 1] = "ALIGN_OPPOSITE";
+                Alignment[Alignment["ALIGN_CENTER"] = 2] = "ALIGN_CENTER";
+                Alignment[Alignment["ALIGN_LEFT"] = 3] = "ALIGN_LEFT";
+                Alignment[Alignment["ALIGN_RIGHT"] = 4] = "ALIGN_RIGHT";
+            })(Layout.Alignment || (Layout.Alignment = {}));
+            var Alignment = Layout.Alignment;
+        })(Layout = text_7.Layout || (text_7.Layout = {}));
+        Layout.DIRS_ALL_LEFT_TO_RIGHT = new Layout.Directions([0, Layout.RUN_LENGTH_MASK]);
+        Layout.DIRS_ALL_RIGHT_TO_LEFT = new Layout.Directions([0, Layout.RUN_LENGTH_MASK | Layout.RUN_RTL_FLAG]);
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Path.ts"/>
+///<reference path="../../android/text/style/ParagraphStyle.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
+///<reference path="../../android/text/TextLine.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_8) {
+        var Paint = android.graphics.Paint;
+        var ParagraphStyle = android.text.style.ParagraphStyle;
+        var Layout = android.text.Layout;
+        var Spanned = android.text.Spanned;
+        var TextDirectionHeuristics = android.text.TextDirectionHeuristics;
+        var TextLine = android.text.TextLine;
+        var TextPaint = android.text.TextPaint;
+        var TextUtils = android.text.TextUtils;
+        class BoringLayout extends Layout {
+            constructor(source, paint, outerwidth, align, spacingmult, spacingadd, metrics, includepad, ellipsize = null, ellipsizedWidth = outerwidth) {
+                super(source, paint, outerwidth, align, TextDirectionHeuristics.FIRSTSTRONG_LTR, spacingmult, spacingadd);
+                this.mBottom = 0;
+                this.mDesc = 0;
+                this.mTopPadding = 0;
+                this.mBottomPadding = 0;
+                this.mMax = 0;
+                this.mEllipsizedWidth = 0;
+                this.mEllipsizedStart = 0;
+                this.mEllipsizedCount = 0;
+                let trust;
+                if (ellipsize == null || ellipsize == TextUtils.TruncateAt.MARQUEE) {
+                    this.mEllipsizedWidth = outerwidth;
+                    this.mEllipsizedStart = 0;
+                    this.mEllipsizedCount = 0;
+                    trust = true;
+                }
+                else {
+                    this.replaceWith(TextUtils.ellipsize(source, paint, ellipsizedWidth, ellipsize, true, this), paint, outerwidth, align, spacingmult, spacingadd);
+                    this.mEllipsizedWidth = ellipsizedWidth;
+                    trust = false;
+                }
+                this.init(this.getText(), paint, outerwidth, align, spacingmult, spacingadd, metrics, includepad, trust);
+            }
+            static make(source, paint, outerwidth, align, spacingmult, spacingadd, metrics, includepad, ellipsize = null, ellipsizedWidth = outerwidth) {
+                return new BoringLayout(source, paint, outerwidth, align, spacingmult, spacingadd, metrics, includepad, ellipsize, ellipsizedWidth);
+            }
+            replaceOrMake(source, paint, outerwidth, align, spacingmult, spacingadd, metrics, includepad, ellipsize = null, ellipsizedWidth = outerwidth) {
+                let trust;
+                if (ellipsize == null || ellipsize == TextUtils.TruncateAt.MARQUEE) {
+                    this.replaceWith(source, paint, outerwidth, align, spacingmult, spacingadd);
+                    this.mEllipsizedWidth = outerwidth;
+                    this.mEllipsizedStart = 0;
+                    this.mEllipsizedCount = 0;
+                    trust = true;
+                }
+                else {
+                    this.replaceWith(TextUtils.ellipsize(source, paint, ellipsizedWidth, ellipsize, true, this), paint, outerwidth, align, spacingmult, spacingadd);
+                    this.mEllipsizedWidth = ellipsizedWidth;
+                    trust = false;
+                }
+                this.init(this.getText(), paint, outerwidth, align, spacingmult, spacingadd, metrics, includepad, trust);
+                return this;
+            }
+            init(source, paint, outerwidth, align, spacingmult, spacingadd, metrics, includepad, trustWidth) {
+                let spacing;
+                if (Object.getPrototypeOf(source) === String.prototype && align == Layout.Alignment.ALIGN_NORMAL) {
+                    this.mDirect = source.toString();
+                }
+                else {
+                    this.mDirect = null;
+                }
+                this.mPaint = paint;
+                if (includepad) {
+                    spacing = metrics.bottom - metrics.top;
+                }
+                else {
+                    spacing = metrics.descent - metrics.ascent;
+                }
+                if (spacingmult != 1 || spacingadd != 0) {
+                    spacing = Math.floor((spacing * spacingmult + spacingadd + 0.5));
+                }
+                this.mBottom = spacing;
+                if (includepad) {
+                    this.mDesc = spacing + metrics.top;
+                }
+                else {
+                    this.mDesc = spacing + metrics.ascent;
+                }
+                if (trustWidth) {
+                    this.mMax = metrics.width;
+                }
+                else {
+                    let line = TextLine.obtain();
+                    line.set(paint, source, 0, source.length, Layout.DIR_LEFT_TO_RIGHT, Layout.DIRS_ALL_LEFT_TO_RIGHT, false, null);
+                    this.mMax = Math.floor(Math.ceil(line.metrics(null)));
+                    TextLine.recycle(line);
+                }
+                if (includepad) {
+                    this.mTopPadding = metrics.top - metrics.ascent;
+                    this.mBottomPadding = metrics.bottom - metrics.descent;
+                }
+            }
+            static isBoring(text, paint, textDir = TextDirectionHeuristics.FIRSTSTRONG_LTR, metrics = null) {
+                let temp;
+                let length = text.length;
+                let boring = true;
+                outer: for (let i = 0; i < length; i += 500) {
+                    let j = i + 500;
+                    if (j > length)
+                        j = length;
+                    temp = text.substring(i, j);
+                    let n = j - i;
+                    for (let a = 0; a < n; a++) {
+                        let c = temp[a];
+                        if (c == '\n' || c == '\t') {
+                            boring = false;
+                            break outer;
+                        }
+                    }
+                    if (textDir != null && textDir.isRtl(temp, 0, n)) {
+                        boring = false;
+                        break outer;
+                    }
+                }
+                if (boring && Spanned.isImplements(text)) {
+                    let sp = text;
+                    let styles = sp.getSpans(0, length, ParagraphStyle.type);
+                    if (styles.length > 0) {
+                        boring = false;
+                    }
+                }
+                if (boring) {
+                    let fm = metrics;
+                    if (fm == null) {
+                        fm = new BoringLayout.Metrics();
+                    }
+                    let line = TextLine.obtain();
+                    line.set(paint, text, 0, length, Layout.DIR_LEFT_TO_RIGHT, Layout.DIRS_ALL_LEFT_TO_RIGHT, false, null);
+                    fm.width = Math.floor(Math.ceil(line.metrics(fm)));
+                    TextLine.recycle(line);
+                    return fm;
+                }
+                else {
+                    return null;
+                }
+            }
+            getHeight() {
+                return this.mBottom;
+            }
+            getLineCount() {
+                return 1;
+            }
+            getLineTop(line) {
+                if (line == 0)
+                    return 0;
+                else
+                    return this.mBottom;
+            }
+            getLineDescent(line) {
+                return this.mDesc;
+            }
+            getLineStart(line) {
+                if (line == 0)
+                    return 0;
+                else
+                    return this.getText().length;
+            }
+            getParagraphDirection(line) {
+                return BoringLayout.DIR_LEFT_TO_RIGHT;
+            }
+            getLineContainsTab(line) {
+                return false;
+            }
+            getLineMax(line) {
+                return this.mMax;
+            }
+            getLineDirections(line) {
+                return Layout.DIRS_ALL_LEFT_TO_RIGHT;
+            }
+            getTopPadding() {
+                return this.mTopPadding;
+            }
+            getBottomPadding() {
+                return this.mBottomPadding;
+            }
+            getEllipsisCount(line) {
+                return this.mEllipsizedCount;
+            }
+            getEllipsisStart(line) {
+                return this.mEllipsizedStart;
+            }
+            getEllipsizedWidth() {
+                return this.mEllipsizedWidth;
+            }
+            draw(c, highlight, highlightpaint, cursorOffset) {
+                if (this.mDirect != null && highlight == null) {
+                    c.drawText(this.mDirect, 0, this.mBottom - this.mDesc, this.mPaint);
+                }
+                else {
+                    super.draw(c, highlight, highlightpaint, cursorOffset);
+                }
+            }
+            ellipsized(start, end) {
+                this.mEllipsizedStart = start;
+                this.mEllipsizedCount = end - start;
+            }
+        }
+        BoringLayout.FIRST_RIGHT_TO_LEFT = '֐'.codePointAt(0);
+        BoringLayout.sTemp = new TextPaint();
+        text_8.BoringLayout = BoringLayout;
+        (function (BoringLayout) {
+            class Metrics extends Paint.FontMetricsInt {
+                constructor(...args) {
+                    super(...args);
+                    this.width = 0;
+                }
+                toString() {
+                    return super.toString() + " width=" + this.width;
+                }
+            }
+            BoringLayout.Metrics = Metrics;
+        })(BoringLayout = text_8.BoringLayout || (text_8.BoringLayout = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../java/lang/System.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var System = java.lang.System;
+        class PackedIntVector {
+            constructor(columns) {
+                this.mColumns = 0;
+                this.mRows = 0;
+                this.mRowGapStart = 0;
+                this.mRowGapLength = 0;
+                this.mColumns = columns;
+                this.mRows = 0;
+                this.mRowGapStart = 0;
+                this.mRowGapLength = this.mRows;
+                this.mValues = null;
+                this.mValueGap = new Array(2 * columns);
+            }
+            getValue(row, column) {
+                const columns = this.mColumns;
+                if (((row | column) < 0) || (row >= this.size()) || (column >= columns)) {
+                    throw Error(`new IndexOutOfBoundsException(row + ", " + column)`);
+                }
+                if (row >= this.mRowGapStart) {
+                    row += this.mRowGapLength;
+                }
+                let value = this.mValues[row * columns + column];
+                let valuegap = this.mValueGap;
+                if (row >= valuegap[column]) {
+                    value += valuegap[column + columns];
+                }
+                return value;
+            }
+            setValue(row, column, value) {
+                if (((row | column) < 0) || (row >= this.size()) || (column >= this.mColumns)) {
+                    throw Error(`new IndexOutOfBoundsException(row + ", " + column)`);
+                }
+                if (row >= this.mRowGapStart) {
+                    row += this.mRowGapLength;
+                }
+                let valuegap = this.mValueGap;
+                if (row >= valuegap[column]) {
+                    value -= valuegap[column + this.mColumns];
+                }
+                this.mValues[row * this.mColumns + column] = value;
+            }
+            setValueInternal(row, column, value) {
+                if (row >= this.mRowGapStart) {
+                    row += this.mRowGapLength;
+                }
+                let valuegap = this.mValueGap;
+                if (row >= valuegap[column]) {
+                    value -= valuegap[column + this.mColumns];
+                }
+                this.mValues[row * this.mColumns + column] = value;
+            }
+            adjustValuesBelow(startRow, column, delta) {
+                if (((startRow | column) < 0) || (startRow > this.size()) || (column >= this.width())) {
+                    throw Error(`new IndexOutOfBoundsException(startRow + ", " + column)`);
+                }
+                if (startRow >= this.mRowGapStart) {
+                    startRow += this.mRowGapLength;
+                }
+                this.moveValueGapTo(column, startRow);
+                this.mValueGap[column + this.mColumns] += delta;
+            }
+            insertAt(row, values) {
+                if ((row < 0) || (row > this.size())) {
+                    throw Error(`new IndexOutOfBoundsException("row " + row)`);
+                }
+                if ((values != null) && (values.length < this.width())) {
+                    throw Error(`new IndexOutOfBoundsException("value count " + values.length)`);
+                }
+                this.moveRowGapTo(row);
+                if (this.mRowGapLength == 0) {
+                    this.growBuffer();
+                }
+                this.mRowGapStart++;
+                this.mRowGapLength--;
+                if (values == null) {
+                    for (let i = this.mColumns - 1; i >= 0; i--) {
+                        this.setValueInternal(row, i, 0);
+                    }
+                }
+                else {
+                    for (let i = this.mColumns - 1; i >= 0; i--) {
+                        this.setValueInternal(row, i, values[i]);
+                    }
+                }
+            }
+            deleteAt(row, count) {
+                if (((row | count) < 0) || (row + count > this.size())) {
+                    throw Error(`new IndexOutOfBoundsException(row + ", " + count)`);
+                }
+                this.moveRowGapTo(row + count);
+                this.mRowGapStart -= count;
+                this.mRowGapLength += count;
+            }
+            size() {
+                return this.mRows - this.mRowGapLength;
+            }
+            width() {
+                return this.mColumns;
+            }
+            growBuffer() {
+                const columns = this.mColumns;
+                let newsize = this.size() + 1;
+                newsize = (newsize * columns) / columns;
+                let newvalues = new Array(newsize * columns);
+                const valuegap = this.mValueGap;
+                const rowgapstart = this.mRowGapStart;
+                let after = this.mRows - (rowgapstart + this.mRowGapLength);
+                if (this.mValues != null) {
+                    System.arraycopy(this.mValues, 0, newvalues, 0, columns * rowgapstart);
+                    System.arraycopy(this.mValues, (this.mRows - after) * columns, newvalues, (newsize - after) * columns, after * columns);
+                }
+                for (let i = 0; i < columns; i++) {
+                    if (valuegap[i] >= rowgapstart) {
+                        valuegap[i] += newsize - this.mRows;
+                        if (valuegap[i] < rowgapstart) {
+                            valuegap[i] = rowgapstart;
+                        }
+                    }
+                }
+                this.mRowGapLength += newsize - this.mRows;
+                this.mRows = newsize;
+                this.mValues = newvalues;
+            }
+            moveValueGapTo(column, where) {
+                const valuegap = this.mValueGap;
+                const values = this.mValues;
+                const columns = this.mColumns;
+                if (where == valuegap[column]) {
+                    return;
+                }
+                else if (where > valuegap[column]) {
+                    for (let i = valuegap[column]; i < where; i++) {
+                        values[i * columns + column] += valuegap[column + columns];
+                    }
+                }
+                else {
+                    for (let i = where; i < valuegap[column]; i++) {
+                        values[i * columns + column] -= valuegap[column + columns];
+                    }
+                }
+                valuegap[column] = where;
+            }
+            moveRowGapTo(where) {
+                if (where == this.mRowGapStart) {
+                    return;
+                }
+                else if (where > this.mRowGapStart) {
+                    let moving = where + this.mRowGapLength - (this.mRowGapStart + this.mRowGapLength);
+                    const columns = this.mColumns;
+                    const valuegap = this.mValueGap;
+                    const values = this.mValues;
+                    const gapend = this.mRowGapStart + this.mRowGapLength;
+                    for (let i = gapend; i < gapend + moving; i++) {
+                        let destrow = i - gapend + this.mRowGapStart;
+                        for (let j = 0; j < columns; j++) {
+                            let val = values[i * columns + j];
+                            if (i >= valuegap[j]) {
+                                val += valuegap[j + columns];
+                            }
+                            if (destrow >= valuegap[j]) {
+                                val -= valuegap[j + columns];
+                            }
+                            values[destrow * columns + j] = val;
+                        }
+                    }
+                }
+                else {
+                    let moving = this.mRowGapStart - where;
+                    const columns = this.mColumns;
+                    const valuegap = this.mValueGap;
+                    const values = this.mValues;
+                    const gapend = this.mRowGapStart + this.mRowGapLength;
+                    for (let i = where + moving - 1; i >= where; i--) {
+                        let destrow = i - where + gapend - moving;
+                        for (let j = 0; j < columns; j++) {
+                            let val = values[i * columns + j];
+                            if (i >= valuegap[j]) {
+                                val += valuegap[j + columns];
+                            }
+                            if (destrow >= valuegap[j]) {
+                                val -= valuegap[j + columns];
+                            }
+                            values[destrow * columns + j] = val;
+                        }
+                    }
+                }
+                this.mRowGapStart = where;
+            }
+        }
+        text.PackedIntVector = PackedIntVector;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../java/lang/System.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var System = java.lang.System;
+        class PackedObjectVector {
+            constructor(columns) {
+                this.mColumns = 0;
+                this.mRows = 0;
+                this.mRowGapStart = 0;
+                this.mRowGapLength = 0;
+                this.mColumns = columns;
+                this.mRows = 1;
+                this.mRowGapStart = 0;
+                this.mRowGapLength = this.mRows;
+                this.mValues = new Array(this.mRows * this.mColumns);
+            }
+            getValue(row, column) {
+                if (row >= this.mRowGapStart)
+                    row += this.mRowGapLength;
+                let value = this.mValues[row * this.mColumns + column];
+                return value;
+            }
+            setValue(row, column, value) {
+                if (row >= this.mRowGapStart)
+                    row += this.mRowGapLength;
+                this.mValues[row * this.mColumns + column] = value;
+            }
+            insertAt(row, values) {
+                this.moveRowGapTo(row);
+                if (this.mRowGapLength == 0)
+                    this.growBuffer();
+                this.mRowGapStart++;
+                this.mRowGapLength--;
+                if (values == null)
+                    for (let i = 0; i < this.mColumns; i++)
+                        this.setValue(row, i, null);
+                else
+                    for (let i = 0; i < this.mColumns; i++)
+                        this.setValue(row, i, values[i]);
+            }
+            deleteAt(row, count) {
+                this.moveRowGapTo(row + count);
+                this.mRowGapStart -= count;
+                this.mRowGapLength += count;
+                if (this.mRowGapLength > this.size() * 2) {
+                }
+            }
+            size() {
+                return this.mRows - this.mRowGapLength;
+            }
+            width() {
+                return this.mColumns;
+            }
+            growBuffer() {
+                let newsize = this.size() + 1;
+                newsize = (newsize * this.mColumns) / this.mColumns;
+                let newvalues = new Array(newsize * this.mColumns);
+                let after = this.mRows - (this.mRowGapStart + this.mRowGapLength);
+                System.arraycopy(this.mValues, 0, newvalues, 0, this.mColumns * this.mRowGapStart);
+                System.arraycopy(this.mValues, (this.mRows - after) * this.mColumns, newvalues, (newsize - after) * this.mColumns, after * this.mColumns);
+                this.mRowGapLength += newsize - this.mRows;
+                this.mRows = newsize;
+                this.mValues = newvalues;
+            }
+            moveRowGapTo(where) {
+                if (where == this.mRowGapStart)
+                    return;
+                if (where > this.mRowGapStart) {
+                    let moving = where + this.mRowGapLength - (this.mRowGapStart + this.mRowGapLength);
+                    for (let i = this.mRowGapStart + this.mRowGapLength; i < this.mRowGapStart + this.mRowGapLength + moving; i++) {
+                        let destrow = i - (this.mRowGapStart + this.mRowGapLength) + this.mRowGapStart;
+                        for (let j = 0; j < this.mColumns; j++) {
+                            let val = this.mValues[i * this.mColumns + j];
+                            this.mValues[destrow * this.mColumns + j] = val;
+                        }
+                    }
+                }
+                else {
+                    let moving = this.mRowGapStart - where;
+                    for (let i = where + moving - 1; i >= where; i--) {
+                        let destrow = i - where + this.mRowGapStart + this.mRowGapLength - moving;
+                        for (let j = 0; j < this.mColumns; j++) {
+                            let val = this.mValues[i * this.mColumns + j];
+                            this.mValues[destrow * this.mColumns + j] = val;
+                        }
+                    }
+                }
+                this.mRowGapStart = where;
+            }
+            dump() {
+                for (let i = 0; i < this.mRows; i++) {
+                    for (let j = 0; j < this.mColumns; j++) {
+                        let val = this.mValues[i * this.mColumns + j];
+                        if (i < this.mRowGapStart || i >= this.mRowGapStart + this.mRowGapLength)
+                            System.out.print(val + " ");
+                        else
+                            System.out.print("(" + val + ") ");
+                    }
+                    System.out.print(" << \n");
+                }
+                System.out.print("-----\n\n");
+            }
+        }
+        text.PackedObjectVector = PackedObjectVector;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/TextWatcher.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var Spannable;
+        (function (Spannable) {
+            function isImpl(obj) {
+                return obj && obj['setSpan'] && obj['removeSpan'];
+            }
+            Spannable.isImpl = isImpl;
+            class Factory {
+                static getInstance() {
+                    return Factory.sInstance;
+                }
+                newSpannable(source) {
+                    return source;
+                }
+            }
+            Factory.sInstance = new Factory();
+            Spannable.Factory = Factory;
+        })(Spannable = text.Spannable || (text.Spannable = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Paint.ts"/>
+///<reference path="../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../android/text/Layout.ts"/>
+///<reference path="../../../android/text/TextPaint.ts"/>
+///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
+///<reference path="../../../android/text/style/WrapTogetherSpan.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_9) {
+        var style;
+        (function (style) {
+            var LineHeightSpan;
+            (function (LineHeightSpan) {
+                LineHeightSpan.type = Symbol();
+            })(LineHeightSpan = style.LineHeightSpan || (style.LineHeightSpan = {}));
+        })(style = text_9.style || (text_9.style = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        class Integer {
+            static parseInt(value) {
+                return Number.parseInt(value);
+            }
+        }
+        Integer.MIN_VALUE = Number.MIN_SAFE_INTEGER;
+        Integer.MAX_VALUE = Number.MAX_SAFE_INTEGER;
+        lang.Integer = Integer;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/text/style/LeadingMarginSpan.ts"/>
+///<reference path="../../android/text/style/LineHeightSpan.ts"/>
+///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
+///<reference path="../../android/text/style/TabStopSpan.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/MeasuredText.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_10) {
+        var Paint = android.graphics.Paint;
+        var LeadingMarginSpan = android.text.style.LeadingMarginSpan;
+        var LeadingMarginSpan2 = android.text.style.LeadingMarginSpan.LeadingMarginSpan2;
+        var LineHeightSpan = android.text.style.LineHeightSpan;
+        var MetricAffectingSpan = android.text.style.MetricAffectingSpan;
+        var TabStopSpan = android.text.style.TabStopSpan;
+        var Integer = java.lang.Integer;
+        var System = java.lang.System;
+        var Layout = android.text.Layout;
+        var MeasuredText = android.text.MeasuredText;
+        var Spanned = android.text.Spanned;
+        var TextUtils = android.text.TextUtils;
+        class StaticLayout extends Layout {
+            constructor(source, bufstart, bufend, paint, outerwidth, align, textDir, spacingmult, spacingadd, includepad, ellipsize = null, ellipsizedWidth = 0, maxLines = Integer.MAX_VALUE) {
+                super((ellipsize == null) ? source : (Spanned.isImplements(source)) ? new Layout.SpannedEllipsizer(source) : new Layout.Ellipsizer(source), paint, outerwidth, align, textDir, spacingmult, spacingadd);
+                this.mLineCount = 0;
+                this.mTopPadding = 0;
+                this.mBottomPadding = 0;
+                this.mColumns = 0;
+                this.mEllipsizedWidth = 0;
+                this.mMaximumVisibleLineCount = Integer.MAX_VALUE;
+                this.mFontMetricsInt = new Paint.FontMetricsInt();
+                if (source == null) {
+                    this.mColumns = StaticLayout.COLUMNS_ELLIPSIZE;
+                    this.mLines = new Array((2 * this.mColumns));
+                    this.mLineDirections = new Array((2 * this.mColumns));
+                    this.mMeasured = MeasuredText.obtain();
+                    return;
+                }
+                if (ellipsize != null) {
+                    let e = this.getText();
+                    e.mLayout = this;
+                    e.mWidth = ellipsizedWidth;
+                    e.mMethod = ellipsize;
+                    this.mEllipsizedWidth = ellipsizedWidth;
+                    this.mColumns = StaticLayout.COLUMNS_ELLIPSIZE;
+                }
+                else {
+                    this.mColumns = StaticLayout.COLUMNS_NORMAL;
+                    this.mEllipsizedWidth = outerwidth;
+                }
+                this.mLines = new Array(2 * this.mColumns);
+                this.mLineDirections = new Array(2 * this.mColumns);
+                this.mMaximumVisibleLineCount = maxLines;
+                this.mMeasured = MeasuredText.obtain();
+                this.generate(source, bufstart, bufend, paint, outerwidth, textDir, spacingmult, spacingadd, includepad, includepad, ellipsizedWidth, ellipsize);
+                this.mMeasured = MeasuredText.recycle(this.mMeasured);
+                this.mFontMetricsInt = null;
+            }
+            generate(source, bufStart, bufEnd, paint, outerWidth, textDir, spacingmult, spacingadd, includepad, trackpad, ellipsizedWidth, ellipsize) {
+                this.mLineCount = 0;
+                let v = 0;
+                let needMultiply = (spacingmult != 1 || spacingadd != 0);
+                let fm = this.mFontMetricsInt;
+                let chooseHtv = null;
+                let measured = this.mMeasured;
+                let spanned = null;
+                if (Spanned.isImplements(source))
+                    spanned = source;
+                let DEFAULT_DIR = StaticLayout.DIR_LEFT_TO_RIGHT;
+                let paraEnd;
+                for (let paraStart = bufStart; paraStart <= bufEnd; paraStart = paraEnd) {
+                    paraEnd = source.substring(0, bufEnd).indexOf(StaticLayout.CHAR_NEW_LINE, paraStart);
+                    if (paraEnd < 0)
+                        paraEnd = bufEnd;
+                    else
+                        paraEnd++;
+                    let firstWidthLineLimit = this.mLineCount + 1;
+                    let firstWidth = outerWidth;
+                    let restWidth = outerWidth;
+                    let chooseHt = null;
+                    if (spanned != null) {
+                        let sp = StaticLayout.getParagraphSpans(spanned, paraStart, paraEnd, LeadingMarginSpan.type);
+                        for (let i = 0; i < sp.length; i++) {
+                            let lms = sp[i];
+                            firstWidth -= sp[i].getLeadingMargin(true);
+                            restWidth -= sp[i].getLeadingMargin(false);
+                            if (LeadingMarginSpan2.isImpl(lms)) {
+                                let lms2 = lms;
+                                let lmsFirstLine = this.getLineForOffset(spanned.getSpanStart(lms2));
+                                firstWidthLineLimit = lmsFirstLine + lms2.getLeadingMarginLineCount();
+                            }
+                        }
+                        chooseHt = StaticLayout.getParagraphSpans(spanned, paraStart, paraEnd, LineHeightSpan.type);
+                        if (chooseHt.length != 0) {
+                            if (chooseHtv == null || chooseHtv.length < chooseHt.length) {
+                                chooseHtv = new Array(chooseHt.length);
+                            }
+                            for (let i = 0; i < chooseHt.length; i++) {
+                                let o = spanned.getSpanStart(chooseHt[i]);
+                                if (o < paraStart) {
+                                    chooseHtv[i] = this.getLineTop(this.getLineForOffset(o));
+                                }
+                                else {
+                                    chooseHtv[i] = v;
+                                }
+                            }
+                        }
+                    }
+                    measured.setPara(source, paraStart, paraEnd, textDir);
+                    let chs = measured.mChars;
+                    let widths = measured.mWidths;
+                    let chdirs = measured.mLevels;
+                    let dir = measured.mDir;
+                    let easy = measured.mEasy;
+                    let width = firstWidth;
+                    let w = 0;
+                    let here = paraStart;
+                    let ok = paraStart;
+                    let okWidth = w;
+                    let okAscent = 0, okDescent = 0, okTop = 0, okBottom = 0;
+                    let fit = paraStart;
+                    let fitWidth = w;
+                    let fitAscent = 0, fitDescent = 0, fitTop = 0, fitBottom = 0;
+                    let hasTabOrEmoji = false;
+                    let hasTab = false;
+                    let tabStops = null;
+                    for (let spanStart = paraStart, spanEnd; spanStart < paraEnd; spanStart = spanEnd) {
+                        if (spanned == null) {
+                            spanEnd = paraEnd;
+                            let spanLen = spanEnd - spanStart;
+                            measured.addStyleRun(paint, spanLen, fm);
+                        }
+                        else {
+                            spanEnd = spanned.nextSpanTransition(spanStart, paraEnd, MetricAffectingSpan.type);
+                            let spanLen = spanEnd - spanStart;
+                            let spans = spanned.getSpans(spanStart, spanEnd, MetricAffectingSpan.type);
+                            spans = TextUtils.removeEmptySpans(spans, spanned, MetricAffectingSpan.type);
+                            measured.addStyleRun(paint, spans, spanLen, fm);
+                        }
+                        let fmTop = fm.top;
+                        let fmBottom = fm.bottom;
+                        let fmAscent = fm.ascent;
+                        let fmDescent = fm.descent;
+                        for (let j = spanStart; j < spanEnd; j++) {
+                            let c = chs[j - paraStart];
+                            if (c == StaticLayout.CHAR_NEW_LINE) {
+                            }
+                            else if (c == StaticLayout.CHAR_TAB) {
+                                if (hasTab == false) {
+                                    hasTab = true;
+                                    hasTabOrEmoji = true;
+                                    if (spanned != null) {
+                                        let spans = StaticLayout.getParagraphSpans(spanned, paraStart, paraEnd, TabStopSpan.type);
+                                        if (spans.length > 0) {
+                                            tabStops = new Layout.TabStops(StaticLayout.TAB_INCREMENT, spans);
+                                        }
+                                    }
+                                }
+                                if (tabStops != null) {
+                                    w = tabStops.nextTab(w);
+                                }
+                                else {
+                                    w = StaticLayout.TabStops.nextDefaultStop(w, StaticLayout.TAB_INCREMENT);
+                                }
+                            }
+                            else if (c.codePointAt(0) >= StaticLayout.CHAR_FIRST_HIGH_SURROGATE
+                                && c.codePointAt(0) <= StaticLayout.CHAR_LAST_LOW_SURROGATE && j + 1 < spanEnd) {
+                                let emoji = chs.codePointAt(j - paraStart);
+                                w += widths[j - paraStart];
+                            }
+                            else {
+                                w += widths[j - paraStart];
+                            }
+                            let isSpaceOrTab = c == StaticLayout.CHAR_SPACE || c == StaticLayout.CHAR_TAB || c == StaticLayout.CHAR_ZWSP;
+                            if (w <= width || isSpaceOrTab) {
+                                fitWidth = w;
+                                fit = j + 1;
+                                if (fmTop < fitTop)
+                                    fitTop = fmTop;
+                                if (fmAscent < fitAscent)
+                                    fitAscent = fmAscent;
+                                if (fmDescent > fitDescent)
+                                    fitDescent = fmDescent;
+                                if (fmBottom > fitBottom)
+                                    fitBottom = fmBottom;
+                                let isLineBreak = isSpaceOrTab ||
+                                    ((c == StaticLayout.CHAR_SLASH || c == StaticLayout.CHAR_HYPHEN) && (j + 1 >= spanEnd ||
+                                        !Number.isInteger(Number.parseInt(chs[j + 1 - paraStart])))) ||
+                                    (c.codePointAt(0) >= StaticLayout.CHAR_FIRST_CJK.codePointAt(0) && StaticLayout.isIdeographic(c, true) && j + 1 < spanEnd && StaticLayout.isIdeographic(chs[j + 1 - paraStart], false));
+                                if (isLineBreak) {
+                                    okWidth = w;
+                                    ok = j + 1;
+                                    if (fitTop < okTop)
+                                        okTop = fitTop;
+                                    if (fitAscent < okAscent)
+                                        okAscent = fitAscent;
+                                    if (fitDescent > okDescent)
+                                        okDescent = fitDescent;
+                                    if (fitBottom > okBottom)
+                                        okBottom = fitBottom;
+                                }
+                            }
+                            else {
+                                const moreChars = (j + 1 < spanEnd);
+                                let endPos;
+                                let above, below, top, bottom;
+                                let currentTextWidth;
+                                if (ok != here) {
+                                    endPos = ok;
+                                    above = okAscent;
+                                    below = okDescent;
+                                    top = okTop;
+                                    bottom = okBottom;
+                                    currentTextWidth = okWidth;
+                                }
+                                else if (fit != here) {
+                                    endPos = fit;
+                                    above = fitAscent;
+                                    below = fitDescent;
+                                    top = fitTop;
+                                    bottom = fitBottom;
+                                    currentTextWidth = fitWidth;
+                                }
+                                else {
+                                    endPos = here + 1;
+                                    above = fm.ascent;
+                                    below = fm.descent;
+                                    top = fm.top;
+                                    bottom = fm.bottom;
+                                    currentTextWidth = widths[here - paraStart];
+                                }
+                                v = this.out(source, here, endPos, above, below, top, bottom, v, spacingmult, spacingadd, chooseHt, chooseHtv, fm, hasTabOrEmoji, needMultiply, chdirs, dir, easy, bufEnd, includepad, trackpad, chs, widths, paraStart, ellipsize, ellipsizedWidth, currentTextWidth, paint, moreChars);
+                                here = endPos;
+                                j = here - 1;
+                                ok = fit = here;
+                                w = 0;
+                                fitAscent = fitDescent = fitTop = fitBottom = 0;
+                                okAscent = okDescent = okTop = okBottom = 0;
+                                if (--firstWidthLineLimit <= 0) {
+                                    width = restWidth;
+                                }
+                                if (here < spanStart) {
+                                    measured.setPos(here);
+                                    spanEnd = here;
+                                    break;
+                                }
+                                if (this.mLineCount >= this.mMaximumVisibleLineCount) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (paraEnd != here && this.mLineCount < this.mMaximumVisibleLineCount) {
+                        if ((fitTop | fitBottom | fitDescent | fitAscent) == 0) {
+                            paint.getFontMetricsInt(fm);
+                            fitTop = fm.top;
+                            fitBottom = fm.bottom;
+                            fitAscent = fm.ascent;
+                            fitDescent = fm.descent;
+                        }
+                        v = this.out(source, here, paraEnd, fitAscent, fitDescent, fitTop, fitBottom, v, spacingmult, spacingadd, chooseHt, chooseHtv, fm, hasTabOrEmoji, needMultiply, chdirs, dir, easy, bufEnd, includepad, trackpad, chs, widths, paraStart, ellipsize, ellipsizedWidth, w, paint, paraEnd != bufEnd);
+                    }
+                    paraStart = paraEnd;
+                    if (paraEnd == bufEnd)
+                        break;
+                }
+                if ((bufEnd == bufStart || source.charAt(bufEnd - 1) == StaticLayout.CHAR_NEW_LINE) && this.mLineCount < this.mMaximumVisibleLineCount) {
+                    measured.setPara(source, bufStart, bufEnd, textDir);
+                    paint.getFontMetricsInt(fm);
+                    v = this.out(source, bufEnd, bufEnd, fm.ascent, fm.descent, fm.top, fm.bottom, v, spacingmult, spacingadd, null, null, fm, false, needMultiply, measured.mLevels, measured.mDir, measured.mEasy, bufEnd, includepad, trackpad, null, null, bufStart, ellipsize, ellipsizedWidth, 0, paint, false);
+                }
+            }
+            static isIdeographic(c, includeNonStarters) {
+                let code = c.codePointAt(0);
+                if (code >= '⺀'.codePointAt(0) && code <= '⿿'.codePointAt(0)) {
+                    return true;
+                }
+                if (c == '　') {
+                    return true;
+                }
+                if (code >= '぀'.codePointAt(0) && code <= 'ゟ'.codePointAt(0)) {
+                    if (!includeNonStarters) {
+                        switch (c) {
+                            case 'ぁ':
+                            case 'ぃ':
+                            case 'ぅ':
+                            case 'ぇ':
+                            case 'ぉ':
+                            case 'っ':
+                            case 'ゃ':
+                            case 'ゅ':
+                            case 'ょ':
+                            case 'ゎ':
+                            case 'ゕ':
+                            case 'ゖ':
+                            case '゛':
+                            case '゜':
+                            case 'ゝ':
+                            case 'ゞ':
+                                return false;
+                        }
+                    }
+                    return true;
+                }
+                if (code >= '゠'.codePointAt(0) && code <= 'ヿ'.codePointAt(0)) {
+                    if (!includeNonStarters) {
+                        switch (c) {
+                            case '゠':
+                            case 'ァ':
+                            case 'ィ':
+                            case 'ゥ':
+                            case 'ェ':
+                            case 'ォ':
+                            case 'ッ':
+                            case 'ャ':
+                            case 'ュ':
+                            case 'ョ':
+                            case 'ヮ':
+                            case 'ヵ':
+                            case 'ヶ':
+                            case '・':
+                            case 'ー':
+                            case 'ヽ':
+                            case 'ヾ':
+                                return false;
+                        }
+                    }
+                    return true;
+                }
+                if (code >= '㐀'.codePointAt(0) && code <= '䶵'.codePointAt(0)) {
+                    return true;
+                }
+                if (code >= '一'.codePointAt(0) && code <= '龻'.codePointAt(0)) {
+                    return true;
+                }
+                if (code >= '豈'.codePointAt(0) && code <= '龎'.codePointAt(0)) {
+                    return true;
+                }
+                if (code >= 'ꀀ'.codePointAt(0) && code <= '꒏'.codePointAt(0)) {
+                    return true;
+                }
+                if (code >= '꒐'.codePointAt(0) && code <= '꓏'.codePointAt(0)) {
+                    return true;
+                }
+                if (code >= '﹢'.codePointAt(0) && code <= '﹦'.codePointAt(0)) {
+                    return true;
+                }
+                if (code >= '０'.codePointAt(0) && code <= '９'.codePointAt(0)) {
+                    return true;
+                }
+                return false;
+            }
+            out(text, start, end, above, below, top, bottom, v, spacingmult, spacingadd, chooseHt, chooseHtv, fm, hasTabOrEmoji, needMultiply, chdirs, dir, easy, bufEnd, includePad, trackPad, chs, widths, widthStart, ellipsize, ellipsisWidth, textWidth, paint, moreChars) {
+                let j = this.mLineCount;
+                let off = j * this.mColumns;
+                let want = off + this.mColumns + StaticLayout.TOP;
+                let lines = this.mLines;
+                if (want >= lines.length) {
+                    let nlen = (want + 1);
+                    let grow = new Array(nlen);
+                    System.arraycopy(lines, 0, grow, 0, lines.length);
+                    this.mLines = grow;
+                    lines = grow;
+                    let grow2 = new Array(nlen);
+                    System.arraycopy(this.mLineDirections, 0, grow2, 0, this.mLineDirections.length);
+                    this.mLineDirections = grow2;
+                }
+                if (chooseHt != null) {
+                    fm.ascent = above;
+                    fm.descent = below;
+                    fm.top = top;
+                    fm.bottom = bottom;
+                    for (let i = 0; i < chooseHt.length; i++) {
+                        chooseHt[i].chooseHeight(text, start, end, chooseHtv[i], v, fm, paint);
+                    }
+                    above = fm.ascent;
+                    below = fm.descent;
+                    top = fm.top;
+                    bottom = fm.bottom;
+                }
+                if (j == 0) {
+                    if (trackPad) {
+                        this.mTopPadding = top - above;
+                    }
+                    if (includePad) {
+                        above = top;
+                    }
+                }
+                if (end == bufEnd) {
+                    if (trackPad) {
+                        this.mBottomPadding = bottom - below;
+                    }
+                    if (includePad) {
+                        below = bottom;
+                    }
+                }
+                let extra;
+                if (needMultiply) {
+                    let ex = (below - above) * (spacingmult - 1) + spacingadd;
+                    if (ex >= 0) {
+                        extra = Math.floor((ex + StaticLayout.EXTRA_ROUNDING));
+                    }
+                    else {
+                        extra = -Math.floor((-ex + StaticLayout.EXTRA_ROUNDING));
+                    }
+                }
+                else {
+                    extra = 0;
+                }
+                lines[off + StaticLayout.START] = start;
+                lines[off + StaticLayout.TOP] = v;
+                lines[off + StaticLayout.DESCENT] = below + extra;
+                v += (below - above) + extra;
+                lines[off + this.mColumns + StaticLayout.START] = end;
+                lines[off + this.mColumns + StaticLayout.TOP] = v;
+                if (hasTabOrEmoji)
+                    lines[off + StaticLayout.TAB] |= StaticLayout.TAB_MASK;
+                lines[off + StaticLayout.DIR] |= dir << StaticLayout.DIR_SHIFT;
+                let linedirs = StaticLayout.DIRS_ALL_LEFT_TO_RIGHT;
+                this.mLineDirections[j] = linedirs;
+                if (ellipsize != null) {
+                    let firstLine = (j == 0);
+                    let currentLineIsTheLastVisibleOne = (j + 1 == this.mMaximumVisibleLineCount);
+                    let forceEllipsis = moreChars && (this.mLineCount + 1 == this.mMaximumVisibleLineCount);
+                    let doEllipsis = (((this.mMaximumVisibleLineCount == 1 && moreChars) || (firstLine && !moreChars)) && ellipsize != TextUtils.TruncateAt.MARQUEE) || (!firstLine && (currentLineIsTheLastVisibleOne || !moreChars) && ellipsize == TextUtils.TruncateAt.END);
+                    if (doEllipsis) {
+                        this.calculateEllipsis(start, end, widths, widthStart, ellipsisWidth, ellipsize, j, textWidth, paint, forceEllipsis);
+                    }
+                }
+                this.mLineCount++;
+                return v;
+            }
+            calculateEllipsis(lineStart, lineEnd, widths, widthStart, avail, where, line, textWidth, paint, forceEllipsis) {
+                if (textWidth <= avail && !forceEllipsis) {
+                    this.mLines[this.mColumns * line + StaticLayout.ELLIPSIS_START] = 0;
+                    this.mLines[this.mColumns * line + StaticLayout.ELLIPSIS_COUNT] = 0;
+                    return;
+                }
+                let ellipsisWidth = paint.measureText((where == TextUtils.TruncateAt.END_SMALL) ? StaticLayout.ELLIPSIS_TWO_DOTS[0] : StaticLayout.ELLIPSIS_NORMAL[0], 0, 1);
+                let ellipsisStart = 0;
+                let ellipsisCount = 0;
+                let len = lineEnd - lineStart;
+                if (where == TextUtils.TruncateAt.START) {
+                    if (this.mMaximumVisibleLineCount == 1) {
+                        let sum = 0;
+                        let i;
+                        for (i = len; i >= 0; i--) {
+                            let w = widths[i - 1 + lineStart - widthStart];
+                            if (w + sum + ellipsisWidth > avail) {
+                                break;
+                            }
+                            sum += w;
+                        }
+                        ellipsisStart = 0;
+                        ellipsisCount = i;
+                    }
+                    else {
+                    }
+                }
+                else if (where == TextUtils.TruncateAt.END || where == TextUtils.TruncateAt.MARQUEE || where == TextUtils.TruncateAt.END_SMALL) {
+                    let sum = 0;
+                    let i;
+                    for (i = 0; i < len; i++) {
+                        let w = widths[i + lineStart - widthStart];
+                        if (w + sum + ellipsisWidth > avail) {
+                            break;
+                        }
+                        sum += w;
+                    }
+                    ellipsisStart = i;
+                    ellipsisCount = len - i;
+                    if (forceEllipsis && ellipsisCount == 0 && len > 0) {
+                        ellipsisStart = len - 1;
+                        ellipsisCount = 1;
+                    }
+                }
+                else {
+                    if (this.mMaximumVisibleLineCount == 1) {
+                        let lsum = 0, rsum = 0;
+                        let left = 0, right = len;
+                        let ravail = (avail - ellipsisWidth) / 2;
+                        for (right = len; right >= 0; right--) {
+                            let w = widths[right - 1 + lineStart - widthStart];
+                            if (w + rsum > ravail) {
+                                break;
+                            }
+                            rsum += w;
+                        }
+                        let lavail = avail - ellipsisWidth - rsum;
+                        for (left = 0; left < right; left++) {
+                            let w = widths[left + lineStart - widthStart];
+                            if (w + lsum > lavail) {
+                                break;
+                            }
+                            lsum += w;
+                        }
+                        ellipsisStart = left;
+                        ellipsisCount = right - left;
+                    }
+                    else {
+                    }
+                }
+                this.mLines[this.mColumns * line + StaticLayout.ELLIPSIS_START] = ellipsisStart;
+                this.mLines[this.mColumns * line + StaticLayout.ELLIPSIS_COUNT] = ellipsisCount;
+            }
+            getLineForVertical(vertical) {
+                let high = this.mLineCount;
+                let low = -1;
+                let guess;
+                let lines = this.mLines;
+                while (high - low > 1) {
+                    guess = (high + low) >> 1;
+                    if (lines[this.mColumns * guess + StaticLayout.TOP] > vertical) {
+                        high = guess;
+                    }
+                    else {
+                        low = guess;
+                    }
+                }
+                if (low < 0) {
+                    return 0;
+                }
+                else {
+                    return low;
+                }
+            }
+            getLineCount() {
+                return this.mLineCount;
+            }
+            getLineTop(line) {
+                let top = this.mLines[this.mColumns * line + StaticLayout.TOP];
+                if (this.mMaximumVisibleLineCount > 0 && line >= this.mMaximumVisibleLineCount && line != this.mLineCount) {
+                    top += this.getBottomPadding();
+                }
+                return top;
+            }
+            getLineDescent(line) {
+                let descent = this.mLines[this.mColumns * line + StaticLayout.DESCENT];
+                if (this.mMaximumVisibleLineCount > 0 && line >= this.mMaximumVisibleLineCount - 1 && line != this.mLineCount) {
+                    descent += this.getBottomPadding();
+                }
+                return descent;
+            }
+            getLineStart(line) {
+                return this.mLines[this.mColumns * line + StaticLayout.START] & StaticLayout.START_MASK;
+            }
+            getParagraphDirection(line) {
+                return this.mLines[this.mColumns * line + StaticLayout.DIR] >> StaticLayout.DIR_SHIFT;
+            }
+            getLineContainsTab(line) {
+                return (this.mLines[this.mColumns * line + StaticLayout.TAB] & StaticLayout.TAB_MASK) != 0;
+            }
+            getLineDirections(line) {
+                return this.mLineDirections[line];
+            }
+            getTopPadding() {
+                return this.mTopPadding;
+            }
+            getBottomPadding() {
+                return this.mBottomPadding;
+            }
+            getEllipsisCount(line) {
+                if (this.mColumns < StaticLayout.COLUMNS_ELLIPSIZE) {
+                    return 0;
+                }
+                return this.mLines[this.mColumns * line + StaticLayout.ELLIPSIS_COUNT];
+            }
+            getEllipsisStart(line) {
+                if (this.mColumns < StaticLayout.COLUMNS_ELLIPSIZE) {
+                    return 0;
+                }
+                return this.mLines[this.mColumns * line + StaticLayout.ELLIPSIS_START];
+            }
+            getEllipsizedWidth() {
+                return this.mEllipsizedWidth;
+            }
+            prepare() {
+                this.mMeasured = MeasuredText.obtain();
+            }
+            finish() {
+                this.mMeasured = MeasuredText.recycle(this.mMeasured);
+            }
+        }
+        StaticLayout.TAG = "StaticLayout";
+        StaticLayout.COLUMNS_NORMAL = 3;
+        StaticLayout.COLUMNS_ELLIPSIZE = 5;
+        StaticLayout.START = 0;
+        StaticLayout.DIR = StaticLayout.START;
+        StaticLayout.TAB = StaticLayout.START;
+        StaticLayout.TOP = 1;
+        StaticLayout.DESCENT = 2;
+        StaticLayout.ELLIPSIS_START = 3;
+        StaticLayout.ELLIPSIS_COUNT = 4;
+        StaticLayout.START_MASK = 0x1FFFFFFF;
+        StaticLayout.DIR_SHIFT = 30;
+        StaticLayout.TAB_MASK = 0x20000000;
+        StaticLayout.CHAR_FIRST_CJK = '⺀';
+        StaticLayout.CHAR_NEW_LINE = '\n';
+        StaticLayout.CHAR_TAB = '\t';
+        StaticLayout.CHAR_SPACE = ' ';
+        StaticLayout.CHAR_SLASH = '/';
+        StaticLayout.CHAR_HYPHEN = '-';
+        StaticLayout.CHAR_ZWSP = '​';
+        StaticLayout.EXTRA_ROUNDING = 0.5;
+        StaticLayout.CHAR_FIRST_HIGH_SURROGATE = 0xD800;
+        StaticLayout.CHAR_LAST_LOW_SURROGATE = 0xDFFF;
+        text_10.StaticLayout = StaticLayout;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/text/style/UpdateLayout.ts"/>
+///<reference path="../../android/text/style/WrapTogetherSpan.ts"/>
+///<reference path="../../java/lang/ref/WeakReference.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/PackedIntVector.ts"/>
+///<reference path="../../android/text/PackedObjectVector.ts"/>
+///<reference path="../../android/text/Spannable.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/StaticLayout.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+///<reference path="../../android/text/TextWatcher.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_11) {
+        var Paint = android.graphics.Paint;
+        var System = java.lang.System;
+        var Layout = android.text.Layout;
+        var PackedIntVector = android.text.PackedIntVector;
+        var PackedObjectVector = android.text.PackedObjectVector;
+        var Spanned = android.text.Spanned;
+        var StaticLayout = android.text.StaticLayout;
+        class DynamicLayout extends Layout {
+            constructor(base, display, paint, width, align, textDir, spacingmult, spacingadd, includepad, ellipsize = null, ellipsizedWidth = 0) {
+                super((ellipsize == null) ? display : (Spanned.isImplements(display)) ? new Layout.SpannedEllipsizer(display) : new Layout.Ellipsizer(display), paint, width, align, textDir, spacingmult, spacingadd);
+                this.mEllipsizedWidth = 0;
+                this.mNumberOfBlocks = 0;
+                this.mIndexFirstChangedBlock = 0;
+                this.mTopPadding = 0;
+                this.mBottomPadding = 0;
+                this.mBase = base;
+                this.mDisplay = display;
+                if (ellipsize != null) {
+                    this.mInts = new PackedIntVector(DynamicLayout.COLUMNS_ELLIPSIZE);
+                    this.mEllipsizedWidth = ellipsizedWidth;
+                    this.mEllipsizeAt = ellipsize;
+                }
+                else {
+                    this.mInts = new PackedIntVector(DynamicLayout.COLUMNS_NORMAL);
+                    this.mEllipsizedWidth = width;
+                    this.mEllipsizeAt = null;
+                }
+                this.mObjects = new PackedObjectVector(1);
+                this.mIncludePad = includepad;
+                if (ellipsize != null) {
+                    let e = this.getText();
+                    e.mLayout = this;
+                    e.mWidth = ellipsizedWidth;
+                    e.mMethod = ellipsize;
+                    this.mEllipsize = true;
+                }
+                let start;
+                if (ellipsize != null) {
+                    start = new Array(DynamicLayout.COLUMNS_ELLIPSIZE);
+                    start[DynamicLayout.ELLIPSIS_START] = DynamicLayout.ELLIPSIS_UNDEFINED;
+                }
+                else {
+                    start = new Array(DynamicLayout.COLUMNS_NORMAL);
+                }
+                let dirs = [DynamicLayout.DIRS_ALL_LEFT_TO_RIGHT];
+                let fm = new Paint.FontMetricsInt();
+                paint.getFontMetricsInt(fm);
+                let asc = fm.ascent;
+                let desc = fm.descent;
+                start[DynamicLayout.DIR] = DynamicLayout.DIR_LEFT_TO_RIGHT << DynamicLayout.DIR_SHIFT;
+                start[DynamicLayout.TOP] = 0;
+                start[DynamicLayout.DESCENT] = desc;
+                this.mInts.insertAt(0, start);
+                start[DynamicLayout.TOP] = desc - asc;
+                this.mInts.insertAt(1, start);
+                this.mObjects.insertAt(0, dirs);
+                this.reflow(base, 0, 0, base.length);
+            }
+            reflow(s, where, before, after) {
+                if (s != this.mBase)
+                    return;
+                let text = this.mDisplay;
+                let len = text.length;
+                let find = text.lastIndexOf('\n', where - 1);
+                if (find < 0)
+                    find = 0;
+                else
+                    find = find + 1;
+                {
+                    let diff = where - find;
+                    before += diff;
+                    after += diff;
+                    where -= diff;
+                }
+                let look = text.indexOf('\n', where + after);
+                if (look < 0)
+                    look = len;
+                else
+                    look++;
+                let change = look - (where + after);
+                before += change;
+                after += change;
+                let startline = this.getLineForOffset(where);
+                let startv = this.getLineTop(startline);
+                let endline = this.getLineForOffset(where + before);
+                if (where + after == len)
+                    endline = this.getLineCount();
+                let endv = this.getLineTop(endline);
+                let islast = (endline == this.getLineCount());
+                let reflowed;
+                {
+                    reflowed = DynamicLayout.sStaticLayout;
+                    DynamicLayout.sStaticLayout = null;
+                }
+                if (reflowed == null) {
+                    reflowed = new StaticLayout(null, 0, 0, null, 0, null, null, 0, 1, true);
+                }
+                else {
+                    reflowed.prepare();
+                }
+                reflowed.generate(text, where, where + after, this.getPaint(), this.getWidth(), this.getTextDirectionHeuristic(), this.getSpacingMultiplier(), this.getSpacingAdd(), false, true, this.mEllipsizedWidth, this.mEllipsizeAt);
+                let n = reflowed.getLineCount();
+                if (where + after != len && reflowed.getLineStart(n - 1) == where + after)
+                    n--;
+                this.mInts.deleteAt(startline, endline - startline);
+                this.mObjects.deleteAt(startline, endline - startline);
+                let ht = reflowed.getLineTop(n);
+                let toppad = 0, botpad = 0;
+                if (this.mIncludePad && startline == 0) {
+                    toppad = reflowed.getTopPadding();
+                    this.mTopPadding = toppad;
+                    ht -= toppad;
+                }
+                if (this.mIncludePad && islast) {
+                    botpad = reflowed.getBottomPadding();
+                    this.mBottomPadding = botpad;
+                    ht += botpad;
+                }
+                this.mInts.adjustValuesBelow(startline, DynamicLayout.START, after - before);
+                this.mInts.adjustValuesBelow(startline, DynamicLayout.TOP, startv - endv + ht);
+                let ints;
+                if (this.mEllipsize) {
+                    ints = new Array(DynamicLayout.COLUMNS_ELLIPSIZE);
+                    ints[DynamicLayout.ELLIPSIS_START] = DynamicLayout.ELLIPSIS_UNDEFINED;
+                }
+                else {
+                    ints = new Array(DynamicLayout.COLUMNS_NORMAL);
+                }
+                let objects = new Array(1);
+                for (let i = 0; i < n; i++) {
+                    ints[DynamicLayout.START] = reflowed.getLineStart(i) | (reflowed.getParagraphDirection(i) << DynamicLayout.DIR_SHIFT) | (reflowed.getLineContainsTab(i) ? DynamicLayout.TAB_MASK : 0);
+                    let top = reflowed.getLineTop(i) + startv;
+                    if (i > 0)
+                        top -= toppad;
+                    ints[DynamicLayout.TOP] = top;
+                    let desc = reflowed.getLineDescent(i);
+                    if (i == n - 1)
+                        desc += botpad;
+                    ints[DynamicLayout.DESCENT] = desc;
+                    objects[0] = reflowed.getLineDirections(i);
+                    if (this.mEllipsize) {
+                        ints[DynamicLayout.ELLIPSIS_START] = reflowed.getEllipsisStart(i);
+                        ints[DynamicLayout.ELLIPSIS_COUNT] = reflowed.getEllipsisCount(i);
+                    }
+                    this.mInts.insertAt(startline + i, ints);
+                    this.mObjects.insertAt(startline + i, objects);
+                }
+                this.updateBlocks(startline, endline - 1, n);
+                {
+                    DynamicLayout.sStaticLayout = reflowed;
+                    reflowed.finish();
+                }
+            }
+            createBlocks() {
+                let offset = DynamicLayout.BLOCK_MINIMUM_CHARACTER_LENGTH;
+                this.mNumberOfBlocks = 0;
+                const text = this.mDisplay;
+                while (true) {
+                    offset = text.indexOf('\n', offset);
+                    if (offset < 0) {
+                        this.addBlockAtOffset(text.length);
+                        break;
+                    }
+                    else {
+                        this.addBlockAtOffset(offset);
+                        offset += DynamicLayout.BLOCK_MINIMUM_CHARACTER_LENGTH;
+                    }
+                }
+                this.mBlockIndices = new Array(this.mBlockEndLines.length);
+                for (let i = 0; i < this.mBlockEndLines.length; i++) {
+                    this.mBlockIndices[i] = DynamicLayout.INVALID_BLOCK_INDEX;
+                }
+            }
+            addBlockAtOffset(offset) {
+                const line = this.getLineForOffset(offset);
+                if (this.mBlockEndLines == null) {
+                    this.mBlockEndLines = new Array((1));
+                    this.mBlockEndLines[this.mNumberOfBlocks] = line;
+                    this.mNumberOfBlocks++;
+                    return;
+                }
+                const previousBlockEndLine = this.mBlockEndLines[this.mNumberOfBlocks - 1];
+                if (line > previousBlockEndLine) {
+                    if (this.mNumberOfBlocks == this.mBlockEndLines.length) {
+                        let blockEndLines = new Array((this.mNumberOfBlocks + 1));
+                        System.arraycopy(this.mBlockEndLines, 0, blockEndLines, 0, this.mNumberOfBlocks);
+                        this.mBlockEndLines = blockEndLines;
+                    }
+                    this.mBlockEndLines[this.mNumberOfBlocks] = line;
+                    this.mNumberOfBlocks++;
+                }
+            }
+            updateBlocks(startLine, endLine, newLineCount) {
+                if (this.mBlockEndLines == null) {
+                    this.createBlocks();
+                    return;
+                }
+                let firstBlock = -1;
+                let lastBlock = -1;
+                for (let i = 0; i < this.mNumberOfBlocks; i++) {
+                    if (this.mBlockEndLines[i] >= startLine) {
+                        firstBlock = i;
+                        break;
+                    }
+                }
+                for (let i = firstBlock; i < this.mNumberOfBlocks; i++) {
+                    if (this.mBlockEndLines[i] >= endLine) {
+                        lastBlock = i;
+                        break;
+                    }
+                }
+                const lastBlockEndLine = this.mBlockEndLines[lastBlock];
+                let createBlockBefore = startLine > (firstBlock == 0 ? 0 : this.mBlockEndLines[firstBlock - 1] + 1);
+                let createBlock = newLineCount > 0;
+                let createBlockAfter = endLine < this.mBlockEndLines[lastBlock];
+                let numAddedBlocks = 0;
+                if (createBlockBefore)
+                    numAddedBlocks++;
+                if (createBlock)
+                    numAddedBlocks++;
+                if (createBlockAfter)
+                    numAddedBlocks++;
+                const numRemovedBlocks = lastBlock - firstBlock + 1;
+                const newNumberOfBlocks = this.mNumberOfBlocks + numAddedBlocks - numRemovedBlocks;
+                if (newNumberOfBlocks == 0) {
+                    this.mBlockEndLines[0] = 0;
+                    this.mBlockIndices[0] = DynamicLayout.INVALID_BLOCK_INDEX;
+                    this.mNumberOfBlocks = 1;
+                    return;
+                }
+                if (newNumberOfBlocks > this.mBlockEndLines.length) {
+                    const newSize = (newNumberOfBlocks);
+                    let blockEndLines = new Array(newSize);
+                    let blockIndices = new Array(newSize);
+                    System.arraycopy(this.mBlockEndLines, 0, blockEndLines, 0, firstBlock);
+                    System.arraycopy(this.mBlockIndices, 0, blockIndices, 0, firstBlock);
+                    System.arraycopy(this.mBlockEndLines, lastBlock + 1, blockEndLines, firstBlock + numAddedBlocks, this.mNumberOfBlocks - lastBlock - 1);
+                    System.arraycopy(this.mBlockIndices, lastBlock + 1, blockIndices, firstBlock + numAddedBlocks, this.mNumberOfBlocks - lastBlock - 1);
+                    this.mBlockEndLines = blockEndLines;
+                    this.mBlockIndices = blockIndices;
+                }
+                else {
+                    System.arraycopy(this.mBlockEndLines, lastBlock + 1, this.mBlockEndLines, firstBlock + numAddedBlocks, this.mNumberOfBlocks - lastBlock - 1);
+                    System.arraycopy(this.mBlockIndices, lastBlock + 1, this.mBlockIndices, firstBlock + numAddedBlocks, this.mNumberOfBlocks - lastBlock - 1);
+                }
+                this.mNumberOfBlocks = newNumberOfBlocks;
+                let newFirstChangedBlock;
+                const deltaLines = newLineCount - (endLine - startLine + 1);
+                if (deltaLines != 0) {
+                    newFirstChangedBlock = firstBlock + numAddedBlocks;
+                    for (let i = newFirstChangedBlock; i < this.mNumberOfBlocks; i++) {
+                        this.mBlockEndLines[i] += deltaLines;
+                    }
+                }
+                else {
+                    newFirstChangedBlock = this.mNumberOfBlocks;
+                }
+                this.mIndexFirstChangedBlock = Math.min(this.mIndexFirstChangedBlock, newFirstChangedBlock);
+                let blockIndex = firstBlock;
+                if (createBlockBefore) {
+                    this.mBlockEndLines[blockIndex] = startLine - 1;
+                    this.mBlockIndices[blockIndex] = DynamicLayout.INVALID_BLOCK_INDEX;
+                    blockIndex++;
+                }
+                if (createBlock) {
+                    this.mBlockEndLines[blockIndex] = startLine + newLineCount - 1;
+                    this.mBlockIndices[blockIndex] = DynamicLayout.INVALID_BLOCK_INDEX;
+                    blockIndex++;
+                }
+                if (createBlockAfter) {
+                    this.mBlockEndLines[blockIndex] = lastBlockEndLine + deltaLines;
+                    this.mBlockIndices[blockIndex] = DynamicLayout.INVALID_BLOCK_INDEX;
+                }
+            }
+            setBlocksDataForTest(blockEndLines, blockIndices, numberOfBlocks) {
+                this.mBlockEndLines = new Array(blockEndLines.length);
+                this.mBlockIndices = new Array(blockIndices.length);
+                System.arraycopy(blockEndLines, 0, this.mBlockEndLines, 0, blockEndLines.length);
+                System.arraycopy(blockIndices, 0, this.mBlockIndices, 0, blockIndices.length);
+                this.mNumberOfBlocks = numberOfBlocks;
+            }
+            getBlockEndLines() {
+                return this.mBlockEndLines;
+            }
+            getBlockIndices() {
+                return this.mBlockIndices;
+            }
+            getNumberOfBlocks() {
+                return this.mNumberOfBlocks;
+            }
+            getIndexFirstChangedBlock() {
+                return this.mIndexFirstChangedBlock;
+            }
+            setIndexFirstChangedBlock(i) {
+                this.mIndexFirstChangedBlock = i;
+            }
+            getLineCount() {
+                return this.mInts.size() - 1;
+            }
+            getLineTop(line) {
+                return this.mInts.getValue(line, DynamicLayout.TOP);
+            }
+            getLineDescent(line) {
+                return this.mInts.getValue(line, DynamicLayout.DESCENT);
+            }
+            getLineStart(line) {
+                return this.mInts.getValue(line, DynamicLayout.START) & DynamicLayout.START_MASK;
+            }
+            getLineContainsTab(line) {
+                return (this.mInts.getValue(line, DynamicLayout.TAB) & DynamicLayout.TAB_MASK) != 0;
+            }
+            getParagraphDirection(line) {
+                return this.mInts.getValue(line, DynamicLayout.DIR) >> DynamicLayout.DIR_SHIFT;
+            }
+            getLineDirections(line) {
+                return this.mObjects.getValue(line, 0);
+            }
+            getTopPadding() {
+                return this.mTopPadding;
+            }
+            getBottomPadding() {
+                return this.mBottomPadding;
+            }
+            getEllipsizedWidth() {
+                return this.mEllipsizedWidth;
+            }
+            getEllipsisStart(line) {
+                if (this.mEllipsizeAt == null) {
+                    return 0;
+                }
+                return this.mInts.getValue(line, DynamicLayout.ELLIPSIS_START);
+            }
+            getEllipsisCount(line) {
+                if (this.mEllipsizeAt == null) {
+                    return 0;
+                }
+                return this.mInts.getValue(line, DynamicLayout.ELLIPSIS_COUNT);
+            }
+        }
+        DynamicLayout.PRIORITY = 128;
+        DynamicLayout.BLOCK_MINIMUM_CHARACTER_LENGTH = 400;
+        DynamicLayout.INVALID_BLOCK_INDEX = -1;
+        DynamicLayout.sStaticLayout = new StaticLayout(null, 0, 0, null, 0, null, null, 1, 0, true);
+        DynamicLayout.sLock = new Array(0);
+        DynamicLayout.START = 0;
+        DynamicLayout.DIR = DynamicLayout.START;
+        DynamicLayout.TAB = DynamicLayout.START;
+        DynamicLayout.TOP = 1;
+        DynamicLayout.DESCENT = 2;
+        DynamicLayout.COLUMNS_NORMAL = 3;
+        DynamicLayout.ELLIPSIS_START = 3;
+        DynamicLayout.ELLIPSIS_COUNT = 4;
+        DynamicLayout.COLUMNS_ELLIPSIZE = 5;
+        DynamicLayout.START_MASK = 0x1FFFFFFF;
+        DynamicLayout.DIR_SHIFT = 30;
+        DynamicLayout.TAB_MASK = 0x20000000;
+        DynamicLayout.ELLIPSIS_UNDEFINED = 0x80000000;
+        text_11.DynamicLayout = DynamicLayout;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        class InputType {
+        }
+        InputType.TYPE_MASK_CLASS = 0x0000000f;
+        InputType.TYPE_MASK_VARIATION = 0x00000ff0;
+        InputType.TYPE_MASK_FLAGS = 0x00fff000;
+        InputType.TYPE_NULL = 0x00000000;
+        InputType.TYPE_CLASS_TEXT = 0x00000001;
+        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS = 0x00001000;
+        InputType.TYPE_TEXT_FLAG_CAP_WORDS = 0x00002000;
+        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES = 0x00004000;
+        InputType.TYPE_TEXT_FLAG_AUTO_CORRECT = 0x00008000;
+        InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE = 0x00010000;
+        InputType.TYPE_TEXT_FLAG_MULTI_LINE = 0x00020000;
+        InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE = 0x00040000;
+        InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS = 0x00080000;
+        InputType.TYPE_TEXT_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_TEXT_VARIATION_URI = 0x00000010;
+        InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
+        InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT = 0x00000030;
+        InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE = 0x00000040;
+        InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE = 0x00000050;
+        InputType.TYPE_TEXT_VARIATION_PERSON_NAME = 0x00000060;
+        InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS = 0x00000070;
+        InputType.TYPE_TEXT_VARIATION_PASSWORD = 0x00000080;
+        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD = 0x00000090;
+        InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT = 0x000000a0;
+        InputType.TYPE_TEXT_VARIATION_FILTER = 0x000000b0;
+        InputType.TYPE_TEXT_VARIATION_PHONETIC = 0x000000c0;
+        InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS = 0x000000d0;
+        InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD = 0x000000e0;
+        InputType.TYPE_CLASS_NUMBER = 0x00000002;
+        InputType.TYPE_NUMBER_FLAG_SIGNED = 0x00001000;
+        InputType.TYPE_NUMBER_FLAG_DECIMAL = 0x00002000;
+        InputType.TYPE_NUMBER_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_NUMBER_VARIATION_PASSWORD = 0x00000010;
+        InputType.TYPE_CLASS_PHONE = 0x00000003;
+        InputType.TYPE_CLASS_DATETIME = 0x00000004;
+        InputType.TYPE_DATETIME_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_DATETIME_VARIATION_DATE = 0x00000010;
+        InputType.TYPE_DATETIME_VARIATION_TIME = 0x00000020;
+        text.InputType = InputType;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/text/Spannable.ts"/>
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Rect.ts"/>
+///<reference path="../../../android/view/View.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var method;
+        (function (method) {
+            var TransformationMethod;
+            (function (TransformationMethod) {
+                function isImpl(obj) {
+                    return obj['getTransformation'] && obj['onFocusChanged'];
+                }
+                TransformationMethod.isImpl = isImpl;
+            })(TransformationMethod = method.TransformationMethod || (method.TransformationMethod = {}));
+        })(method = text.method || (text.method = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/text/method/TransformationMethod.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var method;
+        (function (method) {
+            var TransformationMethod = android.text.method.TransformationMethod;
+            var TransformationMethod2;
+            (function (TransformationMethod2) {
+                function isImpl(obj) {
+                    return TransformationMethod.isImpl(obj) && obj['setLengthChangesAllowed'];
+                }
+                TransformationMethod2.isImpl = isImpl;
+            })(TransformationMethod2 = method.TransformationMethod2 || (method.TransformationMethod2 = {}));
+        })(method = text.method || (text.method = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Rect.ts"/>
+///<reference path="../../../android/util/Log.ts"/>
+///<reference path="../../../android/view/View.ts"/>
+///<reference path="../../../android/text/method/TransformationMethod.ts"/>
+///<reference path="../../../android/text/method/TransformationMethod2.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var method;
+        (function (method) {
+            var Log = android.util.Log;
+            class AllCapsTransformationMethod {
+                constructor(context) {
+                }
+                getTransformation(source, view) {
+                    if (this.mEnabled) {
+                        return source != null ? source.toLocaleUpperCase() : null;
+                    }
+                    Log.w(AllCapsTransformationMethod.TAG, "Caller did not enable length changes; not transforming text");
+                    return source;
+                }
+                onFocusChanged(view, sourceText, focused, direction, previouslyFocusedRect) {
+                }
+                setLengthChangesAllowed(allowLengthChanges) {
+                    this.mEnabled = allowLengthChanges;
+                }
+            }
+            AllCapsTransformationMethod.TAG = "AllCapsTransformationMethod";
+            method.AllCapsTransformationMethod = AllCapsTransformationMethod;
+        })(method = text.method || (text.method = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/widget/TextView.ts"/>
+///<reference path="../../../android/view/KeyEvent.ts"/>
+///<reference path="../../../android/view/MotionEvent.ts"/>
+///<reference path="../../../android/text/Spannable.ts"/>
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Rect.ts"/>
+///<reference path="../../../android/text/Spannable.ts"/>
+///<reference path="../../../android/text/Spanned.ts"/>
+///<reference path="../../../android/text/TextUtils.ts"/>
+///<reference path="../../../android/view/View.ts"/>
+///<reference path="../../../android/text/method/TransformationMethod.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var method;
+        (function (method) {
+            class ReplacementTransformationMethod {
+                getTransformation(source, v) {
+                    let original = this.getOriginal();
+                    let replacement = this.getReplacement();
+                    let doNothing = true;
+                    let n = original.length;
+                    for (let i = 0; i < n; i++) {
+                        if (source.indexOf(original[i]) >= 0) {
+                            doNothing = false;
+                            break;
+                        }
+                    }
+                    if (doNothing) {
+                        return source;
+                    }
+                    return new ReplacementTransformationMethod.ReplacementCharSequence(source, original, replacement).toString();
+                    return new ReplacementTransformationMethod.ReplacementCharSequence(source, original, replacement);
+                }
+                onFocusChanged(view, sourceText, focused, direction, previouslyFocusedRect) {
+                }
+            }
+            method.ReplacementTransformationMethod = ReplacementTransformationMethod;
+            (function (ReplacementTransformationMethod) {
+                class ReplacementCharSequence extends String {
+                    constructor(source, original, replacement) {
+                        super(source);
+                        this.mSource = source;
+                        this.mOriginal = original;
+                        this.mReplacement = replacement;
+                    }
+                    charAt(i) {
+                        let c = this.mSource.charAt(i);
+                        let n = this.mOriginal.length;
+                        for (let j = 0; j < n; j++) {
+                            if (c == this.mOriginal[j]) {
+                                c = this.mReplacement[j];
+                            }
+                        }
+                        return c;
+                    }
+                    toString() {
+                        return this.startReplace(0, this.length);
+                    }
+                    substr(from, length) {
+                        return this.startReplace(from, from + length);
+                    }
+                    substring(start, end) {
+                        return this.startReplace(start, end);
+                    }
+                    startReplace(start, end) {
+                        let dest = this.mSource.substring(start, end).split('');
+                        let offend = end - start;
+                        let n = this.mOriginal.length;
+                        for (let i = 0; i < offend; i++) {
+                            let c = dest[i];
+                            for (let j = 0; j < n; j++) {
+                                if (c == this.mOriginal[j]) {
+                                    dest[i] = this.mReplacement[j];
+                                }
+                            }
+                        }
+                        return dest.join('');
+                    }
+                }
+                ReplacementTransformationMethod.ReplacementCharSequence = ReplacementCharSequence;
+            })(ReplacementTransformationMethod = method.ReplacementTransformationMethod || (method.ReplacementTransformationMethod = {}));
+        })(method = text.method || (text.method = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Rect.ts"/>
+///<reference path="../../../android/text/Spannable.ts"/>
+///<reference path="../../../android/text/Spanned.ts"/>
+///<reference path="../../../android/text/TextUtils.ts"/>
+///<reference path="../../../android/view/View.ts"/>
+///<reference path="../../../android/text/method/ReplacementTransformationMethod.ts"/>
+///<reference path="../../../android/text/method/TransformationMethod.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var method;
+        (function (method) {
+            var ReplacementTransformationMethod = android.text.method.ReplacementTransformationMethod;
+            class SingleLineTransformationMethod extends ReplacementTransformationMethod {
+                getOriginal() {
+                    return SingleLineTransformationMethod.ORIGINAL;
+                }
+                getReplacement() {
+                    return SingleLineTransformationMethod.REPLACEMENT;
+                }
+                static getInstance() {
+                    if (SingleLineTransformationMethod.sInstance != null)
+                        return SingleLineTransformationMethod.sInstance;
+                    SingleLineTransformationMethod.sInstance = new SingleLineTransformationMethod();
+                    return SingleLineTransformationMethod.sInstance;
+                }
+            }
+            SingleLineTransformationMethod.ORIGINAL = ['\n', '\r'];
+            SingleLineTransformationMethod.REPLACEMENT = [' ', '﻿'];
+            method.SingleLineTransformationMethod = SingleLineTransformationMethod;
+        })(method = text.method || (text.method = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/view/View.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        class HapticFeedbackConstants {
+        }
+        HapticFeedbackConstants.LONG_PRESS = 0;
+        HapticFeedbackConstants.VIRTUAL_KEY = 1;
+        HapticFeedbackConstants.KEYBOARD_TAP = 3;
+        HapticFeedbackConstants.SAFE_MODE_DISABLED = 10000;
+        HapticFeedbackConstants.SAFE_MODE_ENABLED = 10001;
+        HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING = 0x0001;
+        HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING = 0x0002;
+        view.HapticFeedbackConstants = HapticFeedbackConstants;
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/R/attr.ts"/>
+///<reference path="../../android/R/color.ts"/>
+///<reference path="../../android/R/drawable.ts"/>
+///<reference path="../../android/R/string.ts"/>
+///<reference path="../../android/content/res/ColorStateList.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Path.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/RectF.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/os/Handler.ts"/>
+///<reference path="../../android/os/Message.ts"/>
+///<reference path="../../android/os/SystemClock.ts"/>
+///<reference path="../../android/text/BoringLayout.ts"/>
+///<reference path="../../android/text/DynamicLayout.ts"/>
+///<reference path="../../android/text/InputType.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/SpanWatcher.ts"/>
+///<reference path="../../android/text/Spannable.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/StaticLayout.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+///<reference path="../../android/text/TextWatcher.ts"/>
+///<reference path="../../android/text/method/AllCapsTransformationMethod.ts"/>
+///<reference path="../../android/text/method/MovementMethod.ts"/>
+///<reference path="../../android/text/method/SingleLineTransformationMethod.ts"/>
+///<reference path="../../android/text/method/TransformationMethod.ts"/>
+///<reference path="../../android/text/method/TransformationMethod2.ts"/>
+///<reference path="../../android/text/style/CharacterStyle.ts"/>
+///<reference path="../../android/text/style/ParagraphStyle.ts"/>
+///<reference path="../../android/text/style/UpdateAppearance.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/util/TypedValue.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/HapticFeedbackConstants.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../android/view/ViewRootImpl.ts"/>
+///<reference path="../../android/view/ViewTreeObserver.ts"/>
+///<reference path="../../android/view/animation/AnimationUtils.ts"/>
+///<reference path="../../java/lang/ref/WeakReference.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../java/lang/Runnable.ts"/>
+///<reference path="../../android/widget/OverScroller.ts"/>
 var android;
 (function (android) {
     var widget;
     (function (widget) {
-        var View = android.view.View;
-        var Gravity = android.view.Gravity;
-        var Resources = android.content.res.Resources;
-        var Color = android.graphics.Color;
         var ColorStateList = android.content.res.ColorStateList;
-        var MeasureSpec = View.MeasureSpec;
+        var Paint = android.graphics.Paint;
+        var Path = android.graphics.Path;
+        var Rect = android.graphics.Rect;
+        var RectF = android.graphics.RectF;
+        var Handler = android.os.Handler;
+        var BoringLayout = android.text.BoringLayout;
+        var DynamicLayout = android.text.DynamicLayout;
+        var Layout = android.text.Layout;
+        var Spannable = android.text.Spannable;
+        var Spanned = android.text.Spanned;
+        var StaticLayout = android.text.StaticLayout;
+        var TextDirectionHeuristics = android.text.TextDirectionHeuristics;
+        var TextPaint = android.text.TextPaint;
+        var TextUtils = android.text.TextUtils;
+        var TruncateAt = android.text.TextUtils.TruncateAt;
+        var AllCapsTransformationMethod = android.text.method.AllCapsTransformationMethod;
+        var SingleLineTransformationMethod = android.text.method.SingleLineTransformationMethod;
+        var TransformationMethod2 = android.text.method.TransformationMethod2;
+        var Log = android.util.Log;
         var TypedValue = android.util.TypedValue;
+        var Gravity = android.view.Gravity;
+        var HapticFeedbackConstants = android.view.HapticFeedbackConstants;
+        var MotionEvent = android.view.MotionEvent;
+        var View = android.view.View;
+        var LayoutParams = android.view.ViewGroup.LayoutParams;
+        var AnimationUtils = android.view.animation.AnimationUtils;
+        var WeakReference = java.lang.ref.WeakReference;
+        var ArrayList = java.util.ArrayList;
+        var Integer = java.lang.Integer;
+        var System = java.lang.System;
         class TextView extends View {
             constructor(bindElement, rootElement) {
                 super(bindElement, rootElement);
+                this.mCurTextColor = 0;
+                this.mCurHintTextColor = 0;
+                this.mSpannableFactory = Spannable.Factory.getInstance();
+                this.mShadowRadius = 0;
+                this.mShadowDx = 0;
+                this.mShadowDy = 0;
+                this.mMarqueeRepeatLimit = 3;
+                this.mLastLayoutDirection = -1;
+                this.mMarqueeFadeMode = TextView.MARQUEE_FADE_NORMAL;
+                this.mBufferType = TextView.BufferType.NORMAL;
                 this.mGravity = Gravity.TOP | Gravity.LEFT;
-                this.mSingleLine = false;
-                this.mTextColor = ColorStateList.valueOf(Color.BLACK);
-                this.mCurTextColor = Color.BLACK;
-                this.mHintColor = Color.LTGRAY;
-                this.mSpacingMult = 1.2;
-                this.mSpacingAdd = 0;
-                this.mMaxWidth = Number.MAX_SAFE_INTEGER;
-                this.mMaxHeight = Number.MAX_SAFE_INTEGER;
-                this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
-                this.mMinLineCount = 0;
-                this.initTextElement();
-                this._attrBinder.addAttr('enabled', (value) => {
-                    this.setEnabled(this._attrBinder.parseBoolean(value, true));
-                }, () => {
-                    return this.isEnabled();
-                });
+                this.mAutoLinkMask = 0;
+                this.mLinksClickable = true;
+                this.mSpacingMult = 1.0;
+                this.mSpacingAdd = 0.0;
+                this.mMaximum = Integer.MAX_VALUE;
+                this.mMaxMode = TextView.LINES;
+                this.mMinimum = 0;
+                this.mMinMode = TextView.LINES;
+                this.mOldMaximum = this.mMaximum;
+                this.mOldMaxMode = this.mMaxMode;
+                this.mMaxWidthValue = Integer.MAX_VALUE;
+                this.mMaxWidthMode = TextView.PIXELS;
+                this.mMinWidthValue = 0;
+                this.mMinWidthMode = TextView.PIXELS;
+                this.mDesiredHeightAtMeasure = -1;
+                this.mIncludePad = true;
+                this.mDeferScroll = -1;
+                this.mLastScroll = 0;
+                this.mFilters = TextView.NO_FILTERS;
+                this.mHighlightColor = 0x6633B5E5;
+                this.mHighlightPathBogus = true;
+                this.mCursorDrawableRes = 0;
+                this.mTextSelectHandleLeftRes = 0;
+                this.mTextSelectHandleRightRes = 0;
+                this.mTextSelectHandleRes = 0;
+                this.mTextEditSuggestionItemLayout = 0;
+                this.mText = "";
+                const res = this.getResources();
+                this.mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+                this.mHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                this.mMovement = this.getDefaultMovementMethod();
+                this.mTransformation = null;
                 this._attrBinder.addAttr('textColorHighlight', (value) => {
+                    this.setHighlightColor(this._attrBinder.parseColor(value, this.mHighlightColor));
                 });
                 this._attrBinder.addAttr('textColor', (value) => {
-                    let colorList = this._attrBinder.parseColorList(value);
-                    if (colorList instanceof ColorStateList) {
-                        this.setTextColor(colorList);
-                        return;
-                    }
-                    let color = this._attrBinder.parseColor(value);
-                    if (Number.isInteger(color))
+                    let color = this._attrBinder.parseColorList(value);
+                    if (color)
                         this.setTextColor(color);
                 }, () => {
-                    if (this.mTextColor.isStateful())
-                        return this.mTextColor;
-                    return this.mTextColor.getDefaultColor();
+                    return this.mTextColor;
                 });
                 this._attrBinder.addAttr('textColorHint', (value) => {
+                    let color = this._attrBinder.parseColorList(value);
+                    if (color)
+                        this.setHintTextColor(color);
+                }, () => {
+                    return this.mHintTextColor;
                 });
                 this._attrBinder.addAttr('textSize', (value) => {
-                    if (value !== undefined && value !== null) {
-                        value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
-                        this.setTextSizeInPx(value);
-                    }
+                    let size = this._attrBinder.parseNumber(value, this.mTextPaint.getTextSize());
+                    this.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
                 }, () => {
-                    return this.mTextSize;
-                });
-                this._attrBinder.addAttr('textStyle', (value) => {
+                    return this.mTextPaint.getTextSize();
                 });
                 this._attrBinder.addAttr('textAllCaps', (value) => {
+                    this.setAllCaps(this._attrBinder.parseBoolean(value, true));
+                });
+                this._attrBinder.addAttr('shadowColor', (value) => {
+                    this.setShadowLayer(this.mShadowRadius, this.mShadowDx, this.mShadowDy, this._attrBinder.parseColor(value, this.mTextPaint.shadowColor));
+                });
+                this._attrBinder.addAttr('shadowDx', (value) => {
+                    let dx = this._attrBinder.parseNumber(value, this.mShadowDx);
+                    this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
+                });
+                this._attrBinder.addAttr('shadowDy', (value) => {
+                    let dy = this._attrBinder.parseNumber(value, this.mShadowDy);
+                    this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
+                });
+                this._attrBinder.addAttr('shadowRadius', (value) => {
+                    let radius = this._attrBinder.parseNumber(value, this.mShadowRadius);
+                    this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
                 });
                 this._attrBinder.addAttr('drawableLeft', (value) => {
+                    let drawable = this._attrBinder.parseDrawable(value);
+                    this.setCompoundDrawablesWithIntrinsicBounds(drawable, this.mDrawables.mDrawableTop, this.mDrawables.mDrawableRight, this.mDrawables.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableTop', (value) => {
+                    let drawable = this._attrBinder.parseDrawable(value);
+                    this.setCompoundDrawablesWithIntrinsicBounds(this.mDrawables.mDrawableLeft, drawable, this.mDrawables.mDrawableRight, this.mDrawables.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableRight', (value) => {
+                    let drawable = this._attrBinder.parseDrawable(value);
+                    this.setCompoundDrawablesWithIntrinsicBounds(this.mDrawables.mDrawableLeft, this.mDrawables.mDrawableTop, drawable, this.mDrawables.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableBottom', (value) => {
+                    let drawable = this._attrBinder.parseDrawable(value);
+                    this.setCompoundDrawablesWithIntrinsicBounds(this.mDrawables.mDrawableLeft, this.mDrawables.mDrawableTop, this.mDrawables.mDrawableRight, drawable);
                 });
                 this._attrBinder.addAttr('drawablePadding', (value) => {
+                    let drawablePadding = this._attrBinder.parseNumber(value, this.mDrawables.mDrawablePadding);
+                    if (drawablePadding !== this.mDrawables.mDrawablePadding) {
+                        this.setCompoundDrawablePadding(drawablePadding);
+                    }
                 });
                 this._attrBinder.addAttr('maxLines', (value) => {
                     value = Number.parseInt(value);
                     if (Number.isInteger(value))
                         this.setMaxLines(value);
                 }, () => {
-                    return this.mMaxLineCount;
+                    return this.getMaxLines();
                 });
                 this._attrBinder.addAttr('maxHeight', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMaxHeight(value);
+                    this.setMaxHeight(this._attrBinder.parseNumber(value, this.getMaxHeight()));
                 }, () => {
-                    return this.mMaxHeight;
+                    return this.getMaxHeight();
                 });
                 this._attrBinder.addAttr('lines', (value) => {
                     value = Number.parseInt(value);
                     if (Number.isInteger(value))
                         this.setLines(value);
                 }, () => {
-                    if (this.mMaxLineCount === this.mMinLineCount)
-                        return this.mMaxLineCount;
+                    if (this.getMaxLines() === this.getMinLines())
+                        return this.getMaxLines();
                     return null;
                 });
                 this._attrBinder.addAttr('height', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
+                    value = this._attrBinder.parseNumber(value, -1);
+                    if (value >= 0)
                         this.setHeight(value);
                 }, () => {
-                    if (this.mMaxHeight === this.getMinimumHeight())
-                        return this.mMaxHeight;
+                    if (this.getMaxHeight() === this.getMinimumHeight())
+                        return this.getMaxHeight();
                     return null;
                 });
                 this._attrBinder.addAttr('minLines', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMinLines(value);
+                    this.setMinLines(this._attrBinder.parseNumber(value, this.getMinLines()));
                 }, () => {
-                    return this.mMinLineCount;
+                    return this.getMinLines();
                 });
                 this._attrBinder.addAttr('minHeight', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMinimumHeight(value);
+                    this.setMinHeight(this._attrBinder.parseNumber(value, this.getMinHeight()));
+                }, () => {
+                    return this.getMinHeight();
+                });
+                this._attrBinder.addAttr('maxEms', (value) => {
+                    this.setMaxEms(this._attrBinder.parseNumber(value, this.getMaxEms()));
+                }, () => {
+                    return this.getMaxEms();
                 });
                 this._attrBinder.addAttr('maxWidth', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMaxWidth(value);
+                    this.setMaxWidth(this._attrBinder.parseNumber(value, this.getMaxWidth()));
                 }, () => {
-                    return this.mMaxWidth;
+                    return this.getMaxWidth();
+                });
+                this._attrBinder.addAttr('ems', (value) => {
+                    let ems = this._attrBinder.parseNumber(value, null);
+                    if (ems != null)
+                        this.setEms(ems);
+                }, () => {
+                    if (this.getMinEms() === this.getMaxEms())
+                        return this.getMaxEms();
+                    return null;
                 });
                 this._attrBinder.addAttr('width', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
+                    value = this._attrBinder.parseNumber(value, -1);
+                    if (value >= 0)
                         this.setWidth(value);
                 }, () => {
-                    if (this.mMinWidth === this.mMaxWidth)
-                        return this.mMinWidth;
+                    if (this.getMinWidth() === this.getMaxWidth())
+                        return this.getMinWidth();
                     return null;
+                });
+                this._attrBinder.addAttr('minEms', (value) => {
+                    this.setMinEms(this._attrBinder.parseNumber(value, this.getMinEms()));
+                }, () => {
+                    return this.getMinEms();
+                });
+                this._attrBinder.addAttr('minWidth', (value) => {
+                    this.setMinWidth(this._attrBinder.parseNumber(value, this.getMinWidth()));
+                }, () => {
+                    return this.getMinWidth();
                 });
                 this._attrBinder.addAttr('gravity', (value) => {
                     this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
                 }, () => {
                     return this.mGravity;
                 });
+                this._attrBinder.addAttr('hint', (value) => {
+                    this.setHint(value);
+                }, () => {
+                    return this.getHint();
+                });
                 this._attrBinder.addAttr('text', (value) => {
                     this.setText(value);
                 }, () => {
                     return this.getText();
                 });
-                this._attrBinder.addAttr('singleLine', (value) => {
-                    if (this._attrBinder.parseBoolean(value, false))
-                        this.setSingleLine();
-                }, () => {
-                    if (this.mMinLineCount === 1 && this.mMaxLineCount === 1)
-                        return true;
-                    return false;
+                this._attrBinder.addAttr('scrollHorizontally', (value) => {
+                    this.setHorizontallyScrolling(this._attrBinder.parseBoolean(value, false));
                 });
-                this._attrBinder.addAttr('textScaleX', (value) => {
+                this._attrBinder.addAttr('singleLine', (value) => {
+                    this.setSingleLine(this._attrBinder.parseBoolean(value, false));
+                });
+                this._attrBinder.addAttr('ellipsize', (value) => {
+                    let ellipsize = TextUtils.TruncateAt[(value + '').toUpperCase()];
+                    if (ellipsize)
+                        this.setEllipsize(ellipsize);
+                });
+                this._attrBinder.addAttr('marqueeRepeatLimit', (value) => {
+                    let marqueeRepeatLimit = this._attrBinder.parseNumber(value, -1);
+                    if (marqueeRepeatLimit >= 0)
+                        this.setMarqueeRepeatLimit(marqueeRepeatLimit);
+                });
+                this._attrBinder.addAttr('includeFontPadding', (value) => {
+                    this.setIncludeFontPadding(this._attrBinder.parseBoolean(value, false));
+                });
+                this._attrBinder.addAttr('enabled', (value) => {
+                    this.setEnabled(this._attrBinder.parseBoolean(value, this.isEnabled()));
                 });
                 this._attrBinder.addAttr('lineSpacingExtra', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setLineSpacing(value, this.mSpacingMult);
+                    this.setLineSpacing(this._attrBinder.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);
                 }, () => {
                     return this.mSpacingAdd;
                 });
                 this._attrBinder.addAttr('lineSpacingMultiplier', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setLineSpacing(this.mSpacingAdd, value);
+                    this.setLineSpacing(this.mSpacingAdd, this._attrBinder.parseNumber(value, this.mSpacingMult));
                 }, () => {
                     return this.mSpacingMult;
                 });
                 this.applyDefaultAttributes(android.R.attr.textViewStyle);
+                this.bindElement.innerHTML = this.bindElement.innerHTML.trim();
+                let text = this.mText || this.bindElement.innerText;
+                this.bindElement.innerHTML = '';
+                this.setText(text, this.mBufferType);
             }
-            initTextElement() {
-                this.mTextElement = document.createElement('div');
-                this.mTextElement.style.position = "absolute";
-                this.mTextElement.style.boxSizing = "border-box";
-                this.mTextElement.style.overflow = "hidden";
-                this.mTextElement.style.opacity = "0";
-                this.bindElement.appendChild(this.mTextElement);
+            setTypefaceFromAttrs(familyName, typefaceIndex, styleIndex) {
             }
-            onLayout(changed, left, top, right, bottom) {
-                super.onLayout(changed, left, top, right, bottom);
-                this.mTextElement.style.opacity = "";
+            setRelativeDrawablesIfNeeded(start, end) {
+                let hasRelativeDrawables = (start != null) || (end != null);
+                if (hasRelativeDrawables) {
+                    let dr = this.mDrawables;
+                    if (dr == null) {
+                        this.mDrawables = dr = new TextView.Drawables();
+                    }
+                    this.mDrawables.mOverride = true;
+                    const compoundRect = dr.mCompoundRect;
+                    let state = this.getDrawableState();
+                    if (start != null) {
+                        start.setBounds(0, 0, start.getIntrinsicWidth(), start.getIntrinsicHeight());
+                        start.setState(state);
+                        start.copyBounds(compoundRect);
+                        start.setCallback(this);
+                        dr.mDrawableStart = start;
+                        dr.mDrawableSizeStart = compoundRect.width();
+                        dr.mDrawableHeightStart = compoundRect.height();
+                    }
+                    else {
+                        dr.mDrawableSizeStart = dr.mDrawableHeightStart = 0;
+                    }
+                    if (end != null) {
+                        end.setBounds(0, 0, end.getIntrinsicWidth(), end.getIntrinsicHeight());
+                        end.setState(state);
+                        end.copyBounds(compoundRect);
+                        end.setCallback(this);
+                        dr.mDrawableEnd = end;
+                        dr.mDrawableSizeEnd = compoundRect.width();
+                        dr.mDrawableHeightEnd = compoundRect.height();
+                    }
+                    else {
+                        dr.mDrawableSizeEnd = dr.mDrawableHeightEnd = 0;
+                    }
+                    this.resetResolvedDrawables();
+                    this.resolveDrawables();
+                }
             }
-            onFinishInflate() {
-                super.onFinishInflate();
-                Array.from(this.bindElement.childNodes).forEach((item) => {
-                    if (item === this.mTextElement)
-                        return;
-                    this.bindElement.removeChild(item);
-                    this.mTextElement.appendChild(item);
-                });
+            setEnabled(enabled) {
+                if (enabled == this.isEnabled()) {
+                    return;
+                }
+                super.setEnabled(enabled);
             }
-            onMeasure(widthMeasureSpec, heightMeasureSpec) {
-                let widthMode = MeasureSpec.getMode(widthMeasureSpec);
-                let heightMode = MeasureSpec.getMode(heightMeasureSpec);
-                let widthSize = MeasureSpec.getSize(widthMeasureSpec);
-                let heightSize = MeasureSpec.getSize(heightMeasureSpec);
-                let width, height;
-                let padLeft = this.getCompoundPaddingLeft();
-                let padTop = this.getCompoundPaddingTop();
-                let padRight = this.getCompoundPaddingRight();
-                let padBottom = this.getCompoundPaddingBottom();
-                this.mTextElement.style.height = "";
-                this.mTextElement.style.width = "";
-                this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels * Resources.getDisplayMetrics().density + 'px';
-                this.mTextElement.style.top = "";
-                if (widthMode == MeasureSpec.EXACTLY) {
-                    width = widthSize;
+            setTypeface(tf, style) {
+            }
+            getDefaultEditable() {
+                return false;
+            }
+            getDefaultMovementMethod() {
+                return null;
+            }
+            getText() {
+                return this.mText;
+            }
+            length() {
+                return this.mText.length;
+            }
+            getEditableText() {
+                return null;
+            }
+            getLineHeight() {
+                return Math.round(this.mTextPaint.getFontMetricsInt(null) * this.mSpacingMult + this.mSpacingAdd);
+            }
+            getLayout() {
+                return this.mLayout;
+            }
+            getHintLayout() {
+                return this.mHintLayout;
+            }
+            getUndoManager() {
+                return null;
+            }
+            setUndoManager(undoManager, tag) {
+            }
+            getKeyListener() {
+                return null;
+            }
+            setKeyListener(input) {
+            }
+            setKeyListenerOnly(input) {
+            }
+            getMovementMethod() {
+                return this.mMovement;
+            }
+            setMovementMethod(movement) {
+                if (this.mMovement != movement) {
+                    this.mMovement = movement;
+                    if (movement != null && !Spannable.isImpl(this.mText)) {
+                        this.setText(this.mText);
+                    }
+                    this.fixFocusableAndClickableSettings();
+                }
+            }
+            fixFocusableAndClickableSettings() {
+                if (this.mMovement != null) {
+                    this.setFocusable(true);
+                    this.setClickable(true);
+                    this.setLongClickable(true);
                 }
                 else {
-                    width = this.mTextElement.offsetWidth + 2;
-                    width += padLeft + padRight;
-                    width = Math.min(width, this.mMaxWidth);
-                    width = Math.max(width, this.getSuggestedMinimumWidth());
-                    if (widthMode == MeasureSpec.AT_MOST) {
-                        width = Math.min(widthSize, width);
+                    this.setFocusable(false);
+                    this.setClickable(false);
+                    this.setLongClickable(false);
+                }
+            }
+            getTransformationMethod() {
+                return this.mTransformation;
+            }
+            setTransformationMethod(method) {
+                if (method == this.mTransformation) {
+                    return;
+                }
+                if (this.mTransformation != null) {
+                    if (Spannable.isImpl(this.mText)) {
+                        this.mText.removeSpan(this.mTransformation);
                     }
                 }
-                let unpaddedWidth = width - padLeft - padRight;
-                this.mTextElement.style.width = unpaddedWidth + "px";
-                this.mTextElement.style.left = padLeft + "px";
-                if (heightMode == MeasureSpec.EXACTLY) {
-                    height = heightSize;
-                    let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
-                    if (this.mMaxLineCount < Number.MAX_SAFE_INTEGER) {
-                        let maxHeightWithLineCount = pad + this.mMaxLineCount * this.getLineHeight();
-                        height = Math.min(maxHeightWithLineCount, height);
-                    }
+                this.mTransformation = method;
+                if (TransformationMethod2.isImpl(method)) {
+                    let method2 = method;
+                    this.mAllowTransformationLengthChange = !this.isTextSelectable();
+                    method2.setLengthChangesAllowed(this.mAllowTransformationLengthChange);
                 }
                 else {
-                    let desired = this.getDesiredHeight();
-                    height = desired;
-                    if (heightMode == MeasureSpec.AT_MOST) {
-                        height = Math.min(desired, heightSize);
-                    }
+                    this.mAllowTransformationLengthChange = false;
                 }
-                let contextHeight = height - padTop - padBottom;
-                const verticalGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
-                let finalTop = padTop;
-                if (verticalGravity !== Gravity.TOP) {
-                    let textHeight = this.mTextElement.offsetHeight;
-                    if (textHeight < contextHeight) {
-                        switch (verticalGravity) {
-                            case Gravity.CENTER_VERTICAL:
-                                finalTop += (contextHeight - textHeight) / 2;
-                                break;
-                            case Gravity.BOTTOM:
-                                finalTop += (contextHeight - textHeight);
-                                break;
-                            case Gravity.TOP:
-                                break;
+                this.setText(this.mText);
+            }
+            getCompoundPaddingTop() {
+                const dr = this.mDrawables;
+                if (dr == null || dr.mDrawableTop == null) {
+                    return this.mPaddingTop;
+                }
+                else {
+                    return this.mPaddingTop + dr.mDrawablePadding + dr.mDrawableSizeTop;
+                }
+            }
+            getCompoundPaddingBottom() {
+                const dr = this.mDrawables;
+                if (dr == null || dr.mDrawableBottom == null) {
+                    return this.mPaddingBottom;
+                }
+                else {
+                    return this.mPaddingBottom + dr.mDrawablePadding + dr.mDrawableSizeBottom;
+                }
+            }
+            getCompoundPaddingLeft() {
+                const dr = this.mDrawables;
+                if (dr == null || dr.mDrawableLeft == null) {
+                    return this.mPaddingLeft;
+                }
+                else {
+                    return this.mPaddingLeft + dr.mDrawablePadding + dr.mDrawableSizeLeft;
+                }
+            }
+            getCompoundPaddingRight() {
+                const dr = this.mDrawables;
+                if (dr == null || dr.mDrawableRight == null) {
+                    return this.mPaddingRight;
+                }
+                else {
+                    return this.mPaddingRight + dr.mDrawablePadding + dr.mDrawableSizeRight;
+                }
+            }
+            getCompoundPaddingStart() {
+                this.resolveDrawables();
+                return this.getCompoundPaddingLeft();
+            }
+            getCompoundPaddingEnd() {
+                this.resolveDrawables();
+                return this.getCompoundPaddingRight();
+            }
+            getExtendedPaddingTop() {
+                if (this.mMaxMode != TextView.LINES) {
+                    return this.getCompoundPaddingTop();
+                }
+                if (this.mLayout.getLineCount() <= this.mMaximum) {
+                    return this.getCompoundPaddingTop();
+                }
+                let top = this.getCompoundPaddingTop();
+                let bottom = this.getCompoundPaddingBottom();
+                let viewht = this.getHeight() - top - bottom;
+                let layoutht = this.mLayout.getLineTop(this.mMaximum);
+                if (layoutht >= viewht) {
+                    return top;
+                }
+                const gravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                if (gravity == Gravity.TOP) {
+                    return top;
+                }
+                else if (gravity == Gravity.BOTTOM) {
+                    return top + viewht - layoutht;
+                }
+                else {
+                    return top + (viewht - layoutht) / 2;
+                }
+            }
+            getExtendedPaddingBottom() {
+                if (this.mMaxMode != TextView.LINES) {
+                    return this.getCompoundPaddingBottom();
+                }
+                if (this.mLayout.getLineCount() <= this.mMaximum) {
+                    return this.getCompoundPaddingBottom();
+                }
+                let top = this.getCompoundPaddingTop();
+                let bottom = this.getCompoundPaddingBottom();
+                let viewht = this.getHeight() - top - bottom;
+                let layoutht = this.mLayout.getLineTop(this.mMaximum);
+                if (layoutht >= viewht) {
+                    return bottom;
+                }
+                const gravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                if (gravity == Gravity.TOP) {
+                    return bottom + viewht - layoutht;
+                }
+                else if (gravity == Gravity.BOTTOM) {
+                    return bottom;
+                }
+                else {
+                    return bottom + (viewht - layoutht) / 2;
+                }
+            }
+            getTotalPaddingLeft() {
+                return this.getCompoundPaddingLeft();
+            }
+            getTotalPaddingRight() {
+                return this.getCompoundPaddingRight();
+            }
+            getTotalPaddingStart() {
+                return this.getCompoundPaddingStart();
+            }
+            getTotalPaddingEnd() {
+                return this.getCompoundPaddingEnd();
+            }
+            getTotalPaddingTop() {
+                return this.getExtendedPaddingTop() + this.getVerticalOffset(true);
+            }
+            getTotalPaddingBottom() {
+                return this.getExtendedPaddingBottom() + this.getBottomVerticalOffset(true);
+            }
+            setCompoundDrawables(left, top, right, bottom) {
+                let dr = this.mDrawables;
+                const drawables = left != null || top != null || right != null || bottom != null;
+                if (!drawables) {
+                    if (dr != null) {
+                        if (dr.mDrawablePadding == 0) {
+                            this.mDrawables = null;
                         }
-                        contextHeight = textHeight;
+                        else {
+                            if (dr.mDrawableLeft != null)
+                                dr.mDrawableLeft.setCallback(null);
+                            dr.mDrawableLeft = null;
+                            if (dr.mDrawableTop != null)
+                                dr.mDrawableTop.setCallback(null);
+                            dr.mDrawableTop = null;
+                            if (dr.mDrawableRight != null)
+                                dr.mDrawableRight.setCallback(null);
+                            dr.mDrawableRight = null;
+                            if (dr.mDrawableBottom != null)
+                                dr.mDrawableBottom.setCallback(null);
+                            dr.mDrawableBottom = null;
+                            dr.mDrawableSizeLeft = dr.mDrawableHeightLeft = 0;
+                            dr.mDrawableSizeRight = dr.mDrawableHeightRight = 0;
+                            dr.mDrawableSizeTop = dr.mDrawableWidthTop = 0;
+                            dr.mDrawableSizeBottom = dr.mDrawableWidthBottom = 0;
+                        }
                     }
-                }
-                this.mTextElement.style.height = contextHeight + "px";
-                this.mTextElement.style.top = finalTop + "px";
-                this.setMeasuredDimension(width, height);
-            }
-            getDesiredHeight() {
-                let desired = this.mTextElement.offsetHeight;
-                let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
-                desired += pad;
-                desired = Math.min(this.mMaxHeight, desired);
-                if (this.mMaxLineCount < Number.MAX_SAFE_INTEGER) {
-                    let maxHeightWithLineCount = pad + this.mMaxLineCount * this.getLineHeight();
-                    desired = Math.min(maxHeightWithLineCount, desired);
-                }
-                if (this.mMinLineCount > 0) {
-                    let minHeightWithLineCount = pad + this.mMinLineCount * this.getLineHeight();
-                    desired = Math.max(minHeightWithLineCount, desired);
-                }
-                desired = Math.max(desired, this.getSuggestedMinimumHeight());
-                return desired;
-            }
-            setTextColor(color) {
-                if (Number.isInteger(color)) {
-                    this.mTextColor = ColorStateList.valueOf(color);
                 }
                 else {
-                    if (color === null || color === undefined) {
-                        throw new Error('colors is null');
+                    if (dr == null) {
+                        this.mDrawables = dr = new TextView.Drawables();
                     }
-                    this.mTextColor = color;
+                    this.mDrawables.mOverride = false;
+                    if (dr.mDrawableLeft != left && dr.mDrawableLeft != null) {
+                        dr.mDrawableLeft.setCallback(null);
+                    }
+                    dr.mDrawableLeft = left;
+                    if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
+                        dr.mDrawableTop.setCallback(null);
+                    }
+                    dr.mDrawableTop = top;
+                    if (dr.mDrawableRight != right && dr.mDrawableRight != null) {
+                        dr.mDrawableRight.setCallback(null);
+                    }
+                    dr.mDrawableRight = right;
+                    if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
+                        dr.mDrawableBottom.setCallback(null);
+                    }
+                    dr.mDrawableBottom = bottom;
+                    const compoundRect = dr.mCompoundRect;
+                    let state;
+                    state = this.getDrawableState();
+                    if (left != null) {
+                        left.setState(state);
+                        left.copyBounds(compoundRect);
+                        left.setCallback(this);
+                        dr.mDrawableSizeLeft = compoundRect.width();
+                        dr.mDrawableHeightLeft = compoundRect.height();
+                    }
+                    else {
+                        dr.mDrawableSizeLeft = dr.mDrawableHeightLeft = 0;
+                    }
+                    if (right != null) {
+                        right.setState(state);
+                        right.copyBounds(compoundRect);
+                        right.setCallback(this);
+                        dr.mDrawableSizeRight = compoundRect.width();
+                        dr.mDrawableHeightRight = compoundRect.height();
+                    }
+                    else {
+                        dr.mDrawableSizeRight = dr.mDrawableHeightRight = 0;
+                    }
+                    if (top != null) {
+                        top.setState(state);
+                        top.copyBounds(compoundRect);
+                        top.setCallback(this);
+                        dr.mDrawableSizeTop = compoundRect.height();
+                        dr.mDrawableWidthTop = compoundRect.width();
+                    }
+                    else {
+                        dr.mDrawableSizeTop = dr.mDrawableWidthTop = 0;
+                    }
+                    if (bottom != null) {
+                        bottom.setState(state);
+                        bottom.copyBounds(compoundRect);
+                        bottom.setCallback(this);
+                        dr.mDrawableSizeBottom = compoundRect.height();
+                        dr.mDrawableWidthBottom = compoundRect.width();
+                    }
+                    else {
+                        dr.mDrawableSizeBottom = dr.mDrawableWidthBottom = 0;
+                    }
                 }
+                if (dr != null) {
+                    dr.mDrawableLeftInitial = left;
+                    dr.mDrawableRightInitial = right;
+                }
+                this.resetResolvedDrawables();
+                this.resolveDrawables();
+                this.invalidate();
+                this.requestLayout();
+            }
+            setCompoundDrawablesWithIntrinsicBounds(left, top, right, bottom) {
+                if (left != null) {
+                    left.setBounds(0, 0, left.getIntrinsicWidth(), left.getIntrinsicHeight());
+                }
+                if (right != null) {
+                    right.setBounds(0, 0, right.getIntrinsicWidth(), right.getIntrinsicHeight());
+                }
+                if (top != null) {
+                    top.setBounds(0, 0, top.getIntrinsicWidth(), top.getIntrinsicHeight());
+                }
+                if (bottom != null) {
+                    bottom.setBounds(0, 0, bottom.getIntrinsicWidth(), bottom.getIntrinsicHeight());
+                }
+                this.setCompoundDrawables(left, top, right, bottom);
+            }
+            setCompoundDrawablesRelative(start, top, end, bottom) {
+                let dr = this.mDrawables;
+                const drawables = start != null || top != null || end != null || bottom != null;
+                if (!drawables) {
+                    if (dr != null) {
+                        if (dr.mDrawablePadding == 0) {
+                            this.mDrawables = null;
+                        }
+                        else {
+                            if (dr.mDrawableStart != null)
+                                dr.mDrawableStart.setCallback(null);
+                            dr.mDrawableStart = null;
+                            if (dr.mDrawableTop != null)
+                                dr.mDrawableTop.setCallback(null);
+                            dr.mDrawableTop = null;
+                            if (dr.mDrawableEnd != null)
+                                dr.mDrawableEnd.setCallback(null);
+                            dr.mDrawableEnd = null;
+                            if (dr.mDrawableBottom != null)
+                                dr.mDrawableBottom.setCallback(null);
+                            dr.mDrawableBottom = null;
+                            dr.mDrawableSizeStart = dr.mDrawableHeightStart = 0;
+                            dr.mDrawableSizeEnd = dr.mDrawableHeightEnd = 0;
+                            dr.mDrawableSizeTop = dr.mDrawableWidthTop = 0;
+                            dr.mDrawableSizeBottom = dr.mDrawableWidthBottom = 0;
+                        }
+                    }
+                }
+                else {
+                    if (dr == null) {
+                        this.mDrawables = dr = new TextView.Drawables();
+                    }
+                    this.mDrawables.mOverride = true;
+                    if (dr.mDrawableStart != start && dr.mDrawableStart != null) {
+                        dr.mDrawableStart.setCallback(null);
+                    }
+                    dr.mDrawableStart = start;
+                    if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
+                        dr.mDrawableTop.setCallback(null);
+                    }
+                    dr.mDrawableTop = top;
+                    if (dr.mDrawableEnd != end && dr.mDrawableEnd != null) {
+                        dr.mDrawableEnd.setCallback(null);
+                    }
+                    dr.mDrawableEnd = end;
+                    if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
+                        dr.mDrawableBottom.setCallback(null);
+                    }
+                    dr.mDrawableBottom = bottom;
+                    const compoundRect = dr.mCompoundRect;
+                    let state;
+                    state = this.getDrawableState();
+                    if (start != null) {
+                        start.setState(state);
+                        start.copyBounds(compoundRect);
+                        start.setCallback(this);
+                        dr.mDrawableSizeStart = compoundRect.width();
+                        dr.mDrawableHeightStart = compoundRect.height();
+                    }
+                    else {
+                        dr.mDrawableSizeStart = dr.mDrawableHeightStart = 0;
+                    }
+                    if (end != null) {
+                        end.setState(state);
+                        end.copyBounds(compoundRect);
+                        end.setCallback(this);
+                        dr.mDrawableSizeEnd = compoundRect.width();
+                        dr.mDrawableHeightEnd = compoundRect.height();
+                    }
+                    else {
+                        dr.mDrawableSizeEnd = dr.mDrawableHeightEnd = 0;
+                    }
+                    if (top != null) {
+                        top.setState(state);
+                        top.copyBounds(compoundRect);
+                        top.setCallback(this);
+                        dr.mDrawableSizeTop = compoundRect.height();
+                        dr.mDrawableWidthTop = compoundRect.width();
+                    }
+                    else {
+                        dr.mDrawableSizeTop = dr.mDrawableWidthTop = 0;
+                    }
+                    if (bottom != null) {
+                        bottom.setState(state);
+                        bottom.copyBounds(compoundRect);
+                        bottom.setCallback(this);
+                        dr.mDrawableSizeBottom = compoundRect.height();
+                        dr.mDrawableWidthBottom = compoundRect.width();
+                    }
+                    else {
+                        dr.mDrawableSizeBottom = dr.mDrawableWidthBottom = 0;
+                    }
+                }
+                this.resetResolvedDrawables();
+                this.resolveDrawables();
+                this.invalidate();
+                this.requestLayout();
+            }
+            setCompoundDrawablesRelativeWithIntrinsicBounds(start, top, end, bottom) {
+                if (start != null) {
+                    start.setBounds(0, 0, start.getIntrinsicWidth(), start.getIntrinsicHeight());
+                }
+                if (end != null) {
+                    end.setBounds(0, 0, end.getIntrinsicWidth(), end.getIntrinsicHeight());
+                }
+                if (top != null) {
+                    top.setBounds(0, 0, top.getIntrinsicWidth(), top.getIntrinsicHeight());
+                }
+                if (bottom != null) {
+                    bottom.setBounds(0, 0, bottom.getIntrinsicWidth(), bottom.getIntrinsicHeight());
+                }
+                this.setCompoundDrawablesRelative(start, top, end, bottom);
+            }
+            getCompoundDrawables() {
+                const dr = this.mDrawables;
+                if (dr != null) {
+                    return [dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom];
+                }
+                else {
+                    return [null, null, null, null];
+                }
+            }
+            getCompoundDrawablesRelative() {
+                const dr = this.mDrawables;
+                if (dr != null) {
+                    return [dr.mDrawableStart, dr.mDrawableTop, dr.mDrawableEnd, dr.mDrawableBottom];
+                }
+                else {
+                    return [null, null, null, null];
+                }
+            }
+            setCompoundDrawablePadding(pad) {
+                let dr = this.mDrawables;
+                if (pad == 0) {
+                    if (dr != null) {
+                        dr.mDrawablePadding = pad;
+                    }
+                }
+                else {
+                    if (dr == null) {
+                        this.mDrawables = dr = new TextView.Drawables();
+                    }
+                    dr.mDrawablePadding = pad;
+                }
+                this.invalidate();
+                this.requestLayout();
+            }
+            getCompoundDrawablePadding() {
+                const dr = this.mDrawables;
+                return dr != null ? dr.mDrawablePadding : 0;
+            }
+            setPadding(left, top, right, bottom) {
+                if (left != this.mPaddingLeft || right != this.mPaddingRight || top != this.mPaddingTop || bottom != this.mPaddingBottom) {
+                    this.nullLayouts();
+                }
+                super.setPadding(left, top, right, bottom);
+                this.invalidate();
+            }
+            getAutoLinkMask() {
+                return this.mAutoLinkMask;
+            }
+            getTextLocale() {
+                return null;
+            }
+            setTextLocale(locale) {
+            }
+            getTextSize() {
+                return this.mTextPaint.getTextSize();
+            }
+            setTextSize(...args) {
+                if (args.length == 1) {
+                    this.setTextSize(TypedValue.COMPLEX_UNIT_SP, args[0]);
+                    return;
+                }
+                let [unit, size] = args;
+                this.setRawTextSize(TypedValue.applyDimension(unit, size, this.getResources().getDisplayMetrics()));
+            }
+            setRawTextSize(size) {
+                if (size != this.mTextPaint.getTextSize()) {
+                    this.mTextPaint.setTextSize(size);
+                    if (this.mLayout != null) {
+                        this.nullLayouts();
+                        this.requestLayout();
+                        this.invalidate();
+                    }
+                }
+            }
+            getTextScaleX() {
+                return 1;
+            }
+            setTextScaleX(size) {
+            }
+            getTypeface() {
+                return null;
+            }
+            setTextColor(colors) {
+                if (typeof colors === 'number') {
+                    colors = ColorStateList.valueOf(colors);
+                }
+                if (colors == null) {
+                    throw Error(`new NullPointerException()`);
+                }
+                this.mTextColor = colors;
                 this.updateTextColors();
             }
             getTextColors() {
@@ -15874,17 +21840,251 @@ var android;
             getCurrentTextColor() {
                 return this.mCurTextColor;
             }
+            setHighlightColor(color) {
+                if (this.mHighlightColor != color) {
+                    this.mHighlightColor = color;
+                    this.invalidate();
+                }
+            }
+            getHighlightColor() {
+                return this.mHighlightColor;
+            }
+            setShowSoftInputOnFocus(show) {
+                this.createEditorIfNeeded();
+            }
+            getShowSoftInputOnFocus() {
+                return false;
+            }
+            setShadowLayer(radius, dx, dy, color) {
+                this.mTextPaint.setShadowLayer(radius, dx, dy, color);
+                this.mShadowRadius = radius;
+                this.mShadowDx = dx;
+                this.mShadowDy = dy;
+                this.invalidate();
+            }
+            getShadowRadius() {
+                return this.mShadowRadius;
+            }
+            getShadowDx() {
+                return this.mShadowDx;
+            }
+            getShadowDy() {
+                return this.mShadowDy;
+            }
+            getShadowColor() {
+                return this.mTextPaint.shadowColor;
+            }
+            getPaint() {
+                return this.mTextPaint;
+            }
+            setAutoLinkMask(mask) {
+                this.mAutoLinkMask = mask;
+            }
+            setLinksClickable(whether) {
+                this.mLinksClickable = whether;
+            }
+            getLinksClickable() {
+                return this.mLinksClickable;
+            }
+            getUrls() {
+                return new Array(0);
+            }
+            setHintTextColor(colors) {
+                if (typeof colors === 'number') {
+                    colors = ColorStateList.valueOf(colors);
+                }
+                this.mHintTextColor = colors;
+                this.updateTextColors();
+            }
+            getHintTextColors() {
+                return this.mHintTextColor;
+            }
+            getCurrentHintTextColor() {
+                return this.mHintTextColor != null ? this.mCurHintTextColor : this.mCurTextColor;
+            }
+            setGravity(gravity) {
+                if ((gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == 0) {
+                    gravity |= Gravity.LEFT;
+                }
+                if ((gravity & Gravity.VERTICAL_GRAVITY_MASK) == 0) {
+                    gravity |= Gravity.TOP;
+                }
+                let newLayout = false;
+                if ((gravity & Gravity.HORIZONTAL_GRAVITY_MASK) != (this.mGravity & Gravity.HORIZONTAL_GRAVITY_MASK)) {
+                    newLayout = true;
+                }
+                if (gravity != this.mGravity) {
+                    this.invalidate();
+                }
+                this.mGravity = gravity;
+                if (this.mLayout != null && newLayout) {
+                    let want = this.mLayout.getWidth();
+                    let hintWant = this.mHintLayout == null ? 0 : this.mHintLayout.getWidth();
+                    this.makeNewLayout(want, hintWant, TextView.UNKNOWN_BORING, TextView.UNKNOWN_BORING, this.mRight - this.mLeft - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight(), true);
+                }
+            }
+            getGravity() {
+                return this.mGravity;
+            }
+            getPaintFlags() {
+                return this.mTextPaint.getFlags();
+            }
+            setPaintFlags(flags) {
+                if (this.mTextPaint.getFlags() != flags) {
+                    this.mTextPaint.setFlags(flags);
+                    if (this.mLayout != null) {
+                        this.nullLayouts();
+                        this.requestLayout();
+                        this.invalidate();
+                    }
+                }
+            }
+            setHorizontallyScrolling(whether) {
+                if (this.mHorizontallyScrolling != whether) {
+                    this.mHorizontallyScrolling = whether;
+                    if (this.mLayout != null) {
+                        this.nullLayouts();
+                        this.requestLayout();
+                        this.invalidate();
+                    }
+                }
+            }
+            getHorizontallyScrolling() {
+                return this.mHorizontallyScrolling;
+            }
+            setMinLines(minlines) {
+                this.mMinimum = minlines;
+                this.mMinMode = TextView.LINES;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMinLines() {
+                return this.mMinMode == TextView.LINES ? this.mMinimum : -1;
+            }
+            setMinHeight(minHeight) {
+                this.mMinimum = minHeight;
+                this.mMinMode = TextView.PIXELS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMinHeight() {
+                return this.mMinMode == TextView.PIXELS ? this.mMinimum : -1;
+            }
+            setMaxLines(maxlines) {
+                this.mMaximum = maxlines;
+                this.mMaxMode = TextView.LINES;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxLines() {
+                return this.mMaxMode == TextView.LINES ? this.mMaximum : -1;
+            }
+            setMaxHeight(maxHeight) {
+                this.mMaximum = maxHeight;
+                this.mMaxMode = TextView.PIXELS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxHeight() {
+                return this.mMaxMode == TextView.PIXELS ? this.mMaximum : -1;
+            }
+            setLines(lines) {
+                this.mMaximum = this.mMinimum = lines;
+                this.mMaxMode = this.mMinMode = TextView.LINES;
+                this.requestLayout();
+                this.invalidate();
+            }
+            setHeight(pixels) {
+                this.mMaximum = this.mMinimum = pixels;
+                this.mMaxMode = this.mMinMode = TextView.PIXELS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            setMinEms(minems) {
+                this.mMinWidthValue = minems;
+                this.mMinWidthMode = TextView.EMS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMinEms() {
+                return this.mMinWidthMode == TextView.EMS ? this.mMinWidthValue : -1;
+            }
+            setMinWidth(minpixels) {
+                this.mMinWidthValue = minpixels;
+                this.mMinWidthMode = TextView.PIXELS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMinWidth() {
+                return this.mMinWidthMode == TextView.PIXELS ? this.mMinWidthValue : -1;
+            }
+            setMaxEms(maxems) {
+                this.mMaxWidthValue = maxems;
+                this.mMaxWidthMode = TextView.EMS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxEms() {
+                return this.mMaxWidthMode == TextView.EMS ? this.mMaxWidthValue : -1;
+            }
+            setMaxWidth(maxpixels) {
+                this.mMaxWidthValue = maxpixels;
+                this.mMaxWidthMode = TextView.PIXELS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxWidth() {
+                return this.mMaxWidthMode == TextView.PIXELS ? this.mMaxWidthValue : -1;
+            }
+            setEms(ems) {
+                this.mMaxWidthValue = this.mMinWidthValue = ems;
+                this.mMaxWidthMode = this.mMinWidthMode = TextView.EMS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            setWidth(pixels) {
+                this.mMaxWidthValue = this.mMinWidthValue = pixels;
+                this.mMaxWidthMode = this.mMinWidthMode = TextView.PIXELS;
+                this.requestLayout();
+                this.invalidate();
+            }
+            setLineSpacing(add, mult) {
+                if (this.mSpacingAdd != add || this.mSpacingMult != mult) {
+                    this.mSpacingAdd = add;
+                    this.mSpacingMult = mult;
+                    if (this.mLayout != null) {
+                        this.nullLayouts();
+                        this.requestLayout();
+                        this.invalidate();
+                    }
+                }
+            }
+            getLineSpacingMultiplier() {
+                return this.mSpacingMult;
+            }
+            getLineSpacingExtra() {
+                return this.mSpacingAdd;
+            }
             updateTextColors() {
                 let inval = false;
                 let color = this.mTextColor.getColorForState(this.getDrawableState(), 0);
                 if (color != this.mCurTextColor) {
                     this.mCurTextColor = color;
-                    let r = Color.red(this.mCurTextColor);
-                    let g = Color.green(this.mCurTextColor);
-                    let b = Color.blue(this.mCurTextColor);
-                    let a = Color.alpha(this.mCurTextColor);
-                    this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-                    inval = false;
+                    inval = true;
+                }
+                if (this.mLinkTextColor != null) {
+                    color = this.mLinkTextColor.getColorForState(this.getDrawableState(), 0);
+                    if (color != this.mTextPaint.linkColor) {
+                        this.mTextPaint.linkColor = color;
+                        inval = true;
+                    }
+                }
+                if (this.mHintTextColor != null) {
+                    color = this.mHintTextColor.getColorForState(this.getDrawableState(), 0);
+                    if (color != this.mCurHintTextColor && this.mText.length == 0) {
+                        this.mCurHintTextColor = color;
+                        inval = true;
+                    }
                 }
                 if (inval) {
                     this.invalidate();
@@ -15892,140 +22092,2036 @@ var android;
             }
             drawableStateChanged() {
                 super.drawableStateChanged();
-                if (this.mTextColor != null && this.mTextColor.isStateful()) {
+                if (this.mTextColor != null && this.mTextColor.isStateful() || (this.mHintTextColor != null && this.mHintTextColor.isStateful()) || (this.mLinkTextColor != null && this.mLinkTextColor.isStateful())) {
                     this.updateTextColors();
                 }
+                const dr = this.mDrawables;
+                if (dr != null) {
+                    let state = this.getDrawableState();
+                    if (dr.mDrawableTop != null && dr.mDrawableTop.isStateful()) {
+                        dr.mDrawableTop.setState(state);
+                    }
+                    if (dr.mDrawableBottom != null && dr.mDrawableBottom.isStateful()) {
+                        dr.mDrawableBottom.setState(state);
+                    }
+                    if (dr.mDrawableLeft != null && dr.mDrawableLeft.isStateful()) {
+                        dr.mDrawableLeft.setState(state);
+                    }
+                    if (dr.mDrawableRight != null && dr.mDrawableRight.isStateful()) {
+                        dr.mDrawableRight.setState(state);
+                    }
+                    if (dr.mDrawableStart != null && dr.mDrawableStart.isStateful()) {
+                        dr.mDrawableStart.setState(state);
+                    }
+                    if (dr.mDrawableEnd != null && dr.mDrawableEnd.isStateful()) {
+                        dr.mDrawableEnd.setState(state);
+                    }
+                }
             }
-            getCompoundPaddingTop() {
-                return this.mPaddingTop;
+            removeMisspelledSpans(spannable) {
             }
-            getCompoundPaddingBottom() {
-                return this.mPaddingBottom;
+            setFreezesText(freezesText) {
+                this.mFreezesText = freezesText;
             }
-            getCompoundPaddingLeft() {
-                return this.mPaddingLeft;
+            getFreezesText() {
+                return this.mFreezesText;
             }
-            getCompoundPaddingRight() {
-                return this.mPaddingRight;
+            setSpannableFactory(factory) {
+                this.mSpannableFactory = factory;
+                this.setText(this.mText);
             }
-            setGravity(gravity) {
-                switch (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
-                    case Gravity.CENTER_HORIZONTAL:
-                        this.mTextElement.style.textAlign = "center";
+            setText(text, type = this.mBufferType, notifyBefore = true, oldlen = 0) {
+                if (text == null) {
+                    text = "";
+                }
+                if (!this.isSuggestionsEnabled()) {
+                    text = this.removeSuggestionSpans(text);
+                }
+                if (Spanned.isImplements(text) && text.getSpanStart(TextUtils.TruncateAt.MARQUEE) >= 0) {
+                    this.setHorizontalFadingEdgeEnabled(true);
+                    this.mMarqueeFadeMode = TextView.MARQUEE_FADE_NORMAL;
+                    this.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+                }
+                if (notifyBefore) {
+                    if (this.mText != null) {
+                        oldlen = this.mText.length;
+                        this.sendBeforeTextChanged(this.mText, 0, oldlen, text.length);
+                    }
+                    else {
+                        this.sendBeforeTextChanged("", 0, 0, text.length);
+                    }
+                }
+                let needEditableForNotification = false;
+                if (this.mListeners != null && this.mListeners.size() != 0) {
+                    needEditableForNotification = true;
+                }
+                if (type == TextView.BufferType.SPANNABLE || this.mMovement != null) {
+                    text = this.mSpannableFactory.newSpannable(text);
+                }
+                this.mBufferType = type;
+                this.mText = text;
+                if (this.mTransformation == null) {
+                    this.mTransformed = text;
+                }
+                else {
+                    this.mTransformed = this.mTransformation.getTransformation(text, this);
+                }
+                const textLength = text.length;
+                if (this.mLayout != null) {
+                    this.checkForRelayout();
+                }
+                this.sendOnTextChanged(text, 0, oldlen, textLength);
+                this.onTextChanged(text, 0, oldlen, textLength);
+            }
+            setHint(hint) {
+                this.mHint = hint;
+                if (this.mLayout != null) {
+                    this.checkForRelayout();
+                }
+                if (this.mText.length == 0) {
+                    this.invalidate();
+                }
+            }
+            getHint() {
+                return this.mHint;
+            }
+            isSingleLine() {
+                return this.mSingleLine;
+            }
+            static isMultilineInputType(type) {
+                return true;
+            }
+            removeSuggestionSpans(text) {
+                return text;
+            }
+            hasPasswordTransformationMethod() {
+                return false;
+            }
+            static isPasswordInputType(inputType) {
+                return false;
+            }
+            static isVisiblePasswordInputType(inputType) {
+                return true;
+            }
+            setRawInputType(type) {
+            }
+            setInputType(type, direct = false) {
+            }
+            getInputType() {
+                return 0;
+            }
+            setImeOptions(imeOptions) {
+            }
+            getImeOptions() {
+                return -1;
+            }
+            setImeActionLabel(label, actionId) {
+                this.createEditorIfNeeded();
+            }
+            getImeActionLabel() {
+                return '';
+            }
+            getImeActionId() {
+                return 0;
+            }
+            setOnEditorActionListener(l) {
+                this.createEditorIfNeeded();
+            }
+            setFrame(l, t, r, b) {
+                let result = super.setFrame(l, t, r, b);
+                this.restartMarqueeIfNeeded();
+                return result;
+            }
+            restartMarqueeIfNeeded() {
+                if (this.mRestartMarquee && this.mEllipsize == TextUtils.TruncateAt.MARQUEE) {
+                    this.mRestartMarquee = false;
+                    this.startMarquee();
+                }
+            }
+            setFilters(...args) {
+            }
+            getFilters() {
+                return this.mFilters;
+            }
+            getBoxHeight(l) {
+                let padding = (l == this.mHintLayout) ? this.getCompoundPaddingTop() + this.getCompoundPaddingBottom() : this.getExtendedPaddingTop() + this.getExtendedPaddingBottom();
+                return this.getMeasuredHeight() - padding;
+            }
+            getVerticalOffset(forceNormal) {
+                let voffset = 0;
+                const gravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                let l = this.mLayout;
+                if (!forceNormal && this.mText.length == 0 && this.mHintLayout != null) {
+                    l = this.mHintLayout;
+                }
+                if (gravity != Gravity.TOP) {
+                    let boxht = this.getBoxHeight(l);
+                    let textht = l.getHeight();
+                    if (textht < boxht) {
+                        if (gravity == Gravity.BOTTOM)
+                            voffset = boxht - textht;
+                        else
+                            voffset = (boxht - textht) >> 1;
+                    }
+                }
+                return voffset;
+            }
+            getBottomVerticalOffset(forceNormal) {
+                let voffset = 0;
+                const gravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                let l = this.mLayout;
+                if (!forceNormal && this.mText.length == 0 && this.mHintLayout != null) {
+                    l = this.mHintLayout;
+                }
+                if (gravity != Gravity.BOTTOM) {
+                    let boxht = this.getBoxHeight(l);
+                    let textht = l.getHeight();
+                    if (textht < boxht) {
+                        if (gravity == Gravity.TOP)
+                            voffset = boxht - textht;
+                        else
+                            voffset = (boxht - textht) >> 1;
+                    }
+                }
+                return voffset;
+            }
+            invalidateRegion(start, end, invalidateCursor) {
+                if (this.mLayout == null) {
+                    this.invalidate();
+                }
+                else {
+                    let lineStart = this.mLayout.getLineForOffset(start);
+                    let top = this.mLayout.getLineTop(lineStart);
+                    if (lineStart > 0) {
+                        top -= this.mLayout.getLineDescent(lineStart - 1);
+                    }
+                    let lineEnd;
+                    if (start == end)
+                        lineEnd = lineStart;
+                    else
+                        lineEnd = this.mLayout.getLineForOffset(end);
+                    let bottom = this.mLayout.getLineBottom(lineEnd);
+                    const compoundPaddingLeft = this.getCompoundPaddingLeft();
+                    const verticalPadding = this.getExtendedPaddingTop() + this.getVerticalOffset(true);
+                    let left, right;
+                    if (lineStart == lineEnd && !invalidateCursor) {
+                        left = Math.floor(this.mLayout.getPrimaryHorizontal(start));
+                        right = Math.floor((this.mLayout.getPrimaryHorizontal(end) + 1.0));
+                        left += compoundPaddingLeft;
+                        right += compoundPaddingLeft;
+                    }
+                    else {
+                        left = compoundPaddingLeft;
+                        right = this.getWidth() - this.getCompoundPaddingRight();
+                    }
+                    this.invalidate(this.mScrollX + left, verticalPadding + top, this.mScrollX + right, verticalPadding + bottom);
+                }
+            }
+            registerForPreDraw() {
+                if (!this.mPreDrawRegistered) {
+                    this.getViewTreeObserver().addOnPreDrawListener(this);
+                    this.mPreDrawRegistered = true;
+                }
+            }
+            onPreDraw() {
+                if (this.mLayout == null) {
+                    this.assumeLayout();
+                }
+                if (this.mMovement != null) {
+                    let curs = this.getSelectionEnd();
+                    if (curs < 0 && (this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM) {
+                        curs = this.mText.length;
+                    }
+                    if (curs >= 0) {
+                        this.bringPointIntoView(curs);
+                    }
+                }
+                else {
+                    this.bringTextIntoView();
+                }
+                this.getViewTreeObserver().removeOnPreDrawListener(this);
+                this.mPreDrawRegistered = false;
+                return true;
+            }
+            onAttachedToWindow() {
+                super.onAttachedToWindow();
+                this.mTemporaryDetach = false;
+            }
+            onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                if (this.mPreDrawRegistered) {
+                    this.getViewTreeObserver().removeOnPreDrawListener(this);
+                    this.mPreDrawRegistered = false;
+                }
+                this.resetResolvedDrawables();
+            }
+            isPaddingOffsetRequired() {
+                return this.mShadowRadius != 0 || this.mDrawables != null;
+            }
+            getLeftPaddingOffset() {
+                return this.getCompoundPaddingLeft() - this.mPaddingLeft + Math.floor(Math.min(0, this.mShadowDx - this.mShadowRadius));
+            }
+            getTopPaddingOffset() {
+                return Math.floor(Math.min(0, this.mShadowDy - this.mShadowRadius));
+            }
+            getBottomPaddingOffset() {
+                return Math.floor(Math.max(0, this.mShadowDy + this.mShadowRadius));
+            }
+            getRightPaddingOffset() {
+                return -(this.getCompoundPaddingRight() - this.mPaddingRight) + Math.floor(Math.max(0, this.mShadowDx + this.mShadowRadius));
+            }
+            verifyDrawable(who) {
+                const verified = super.verifyDrawable(who);
+                if (!verified && this.mDrawables != null) {
+                    return who == this.mDrawables.mDrawableLeft || who == this.mDrawables.mDrawableTop || who == this.mDrawables.mDrawableRight || who == this.mDrawables.mDrawableBottom || who == this.mDrawables.mDrawableStart || who == this.mDrawables.mDrawableEnd;
+                }
+                return verified;
+            }
+            jumpDrawablesToCurrentState() {
+                super.jumpDrawablesToCurrentState();
+                if (this.mDrawables != null) {
+                    if (this.mDrawables.mDrawableLeft != null) {
+                        this.mDrawables.mDrawableLeft.jumpToCurrentState();
+                    }
+                    if (this.mDrawables.mDrawableTop != null) {
+                        this.mDrawables.mDrawableTop.jumpToCurrentState();
+                    }
+                    if (this.mDrawables.mDrawableRight != null) {
+                        this.mDrawables.mDrawableRight.jumpToCurrentState();
+                    }
+                    if (this.mDrawables.mDrawableBottom != null) {
+                        this.mDrawables.mDrawableBottom.jumpToCurrentState();
+                    }
+                    if (this.mDrawables.mDrawableStart != null) {
+                        this.mDrawables.mDrawableStart.jumpToCurrentState();
+                    }
+                    if (this.mDrawables.mDrawableEnd != null) {
+                        this.mDrawables.mDrawableEnd.jumpToCurrentState();
+                    }
+                }
+            }
+            invalidateDrawable(drawable) {
+                if (this.verifyDrawable(drawable)) {
+                    const dirty = drawable.getBounds();
+                    let scrollX = this.mScrollX;
+                    let scrollY = this.mScrollY;
+                    const drawables = this.mDrawables;
+                    if (drawables != null) {
+                        if (drawable == drawables.mDrawableLeft) {
+                            const compoundPaddingTop = this.getCompoundPaddingTop();
+                            const compoundPaddingBottom = this.getCompoundPaddingBottom();
+                            const vspace = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
+                            scrollX += this.mPaddingLeft;
+                            scrollY += compoundPaddingTop + (vspace - drawables.mDrawableHeightLeft) / 2;
+                        }
+                        else if (drawable == drawables.mDrawableRight) {
+                            const compoundPaddingTop = this.getCompoundPaddingTop();
+                            const compoundPaddingBottom = this.getCompoundPaddingBottom();
+                            const vspace = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
+                            scrollX += (this.mRight - this.mLeft - this.mPaddingRight - drawables.mDrawableSizeRight);
+                            scrollY += compoundPaddingTop + (vspace - drawables.mDrawableHeightRight) / 2;
+                        }
+                        else if (drawable == drawables.mDrawableTop) {
+                            const compoundPaddingLeft = this.getCompoundPaddingLeft();
+                            const compoundPaddingRight = this.getCompoundPaddingRight();
+                            const hspace = this.mRight - this.mLeft - compoundPaddingRight - compoundPaddingLeft;
+                            scrollX += compoundPaddingLeft + (hspace - drawables.mDrawableWidthTop) / 2;
+                            scrollY += this.mPaddingTop;
+                        }
+                        else if (drawable == drawables.mDrawableBottom) {
+                            const compoundPaddingLeft = this.getCompoundPaddingLeft();
+                            const compoundPaddingRight = this.getCompoundPaddingRight();
+                            const hspace = this.mRight - this.mLeft - compoundPaddingRight - compoundPaddingLeft;
+                            scrollX += compoundPaddingLeft + (hspace - drawables.mDrawableWidthBottom) / 2;
+                            scrollY += (this.mBottom - this.mTop - this.mPaddingBottom - drawables.mDrawableSizeBottom);
+                        }
+                    }
+                    this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
+                }
+            }
+            isTextSelectable() {
+                return false;
+            }
+            setTextIsSelectable(selectable) {
+            }
+            onCreateDrawableState(extraSpace) {
+                let drawableState;
+                if (this.mSingleLine) {
+                    drawableState = super.onCreateDrawableState(extraSpace);
+                }
+                else {
+                    drawableState = super.onCreateDrawableState(extraSpace + 1);
+                    TextView.mergeDrawableStates(drawableState, TextView.MULTILINE_STATE_SET);
+                }
+                if (this.isTextSelectable()) {
+                    const length = drawableState.length;
+                    for (let i = 0; i < length; i++) {
+                        if (drawableState[i] == View.VIEW_STATE_PRESSED) {
+                            const nonPressedState = new Array(length - 1);
+                            System.arraycopy(drawableState, 0, nonPressedState, 0, i);
+                            System.arraycopy(drawableState, i + 1, nonPressedState, i, length - i - 1);
+                            return nonPressedState;
+                        }
+                    }
+                }
+                return drawableState;
+            }
+            getUpdatedHighlightPath() {
+                let highlight = null;
+                let highlightPaint = this.mHighlightPaint;
+                const selStart = this.getSelectionStart();
+                const selEnd = this.getSelectionEnd();
+                if (this.mMovement != null && (this.isFocused() || this.isPressed()) && selStart >= 0) {
+                    if (selStart == selEnd) {
+                    }
+                    else {
+                        if (this.mHighlightPathBogus) {
+                            if (this.mHighlightPath == null)
+                                this.mHighlightPath = new Path();
+                            this.mHighlightPath.reset();
+                            this.mLayout.getSelectionPath(selStart, selEnd, this.mHighlightPath);
+                            this.mHighlightPathBogus = false;
+                        }
+                        highlightPaint.setColor(this.mHighlightColor);
+                        highlightPaint.setStyle(Paint.Style.FILL);
+                        highlight = this.mHighlightPath;
+                    }
+                }
+                return highlight;
+            }
+            getHorizontalOffsetForDrawables() {
+                return 0;
+            }
+            onDraw(canvas) {
+                this.restartMarqueeIfNeeded();
+                super.onDraw(canvas);
+                const compoundPaddingLeft = this.getCompoundPaddingLeft();
+                const compoundPaddingTop = this.getCompoundPaddingTop();
+                const compoundPaddingRight = this.getCompoundPaddingRight();
+                const compoundPaddingBottom = this.getCompoundPaddingBottom();
+                const scrollX = this.mScrollX;
+                const scrollY = this.mScrollY;
+                const right = this.mRight;
+                const left = this.mLeft;
+                const bottom = this.mBottom;
+                const top = this.mTop;
+                const isLayoutRtl = this.isLayoutRtl();
+                const offset = this.getHorizontalOffsetForDrawables();
+                const leftOffset = isLayoutRtl ? 0 : offset;
+                const rightOffset = isLayoutRtl ? offset : 0;
+                const dr = this.mDrawables;
+                if (dr != null) {
+                    let vspace = bottom - top - compoundPaddingBottom - compoundPaddingTop;
+                    let hspace = right - left - compoundPaddingRight - compoundPaddingLeft;
+                    if (dr.mDrawableLeft != null) {
+                        canvas.save();
+                        canvas.translate(scrollX + this.mPaddingLeft + leftOffset, scrollY + compoundPaddingTop + (vspace - dr.mDrawableHeightLeft) / 2);
+                        dr.mDrawableLeft.draw(canvas);
+                        canvas.restore();
+                    }
+                    if (dr.mDrawableRight != null) {
+                        canvas.save();
+                        canvas.translate(scrollX + right - left - this.mPaddingRight - dr.mDrawableSizeRight - rightOffset, scrollY + compoundPaddingTop + (vspace - dr.mDrawableHeightRight) / 2);
+                        dr.mDrawableRight.draw(canvas);
+                        canvas.restore();
+                    }
+                    if (dr.mDrawableTop != null) {
+                        canvas.save();
+                        canvas.translate(scrollX + compoundPaddingLeft + (hspace - dr.mDrawableWidthTop) / 2, scrollY + this.mPaddingTop);
+                        dr.mDrawableTop.draw(canvas);
+                        canvas.restore();
+                    }
+                    if (dr.mDrawableBottom != null) {
+                        canvas.save();
+                        canvas.translate(scrollX + compoundPaddingLeft + (hspace - dr.mDrawableWidthBottom) / 2, scrollY + bottom - top - this.mPaddingBottom - dr.mDrawableSizeBottom);
+                        dr.mDrawableBottom.draw(canvas);
+                        canvas.restore();
+                    }
+                }
+                let color = this.mCurTextColor;
+                if (this.mLayout == null) {
+                    this.assumeLayout();
+                }
+                let layout = this.mLayout;
+                if (this.mHint != null && this.mText.length == 0) {
+                    if (this.mHintTextColor != null) {
+                        color = this.mCurHintTextColor;
+                    }
+                    layout = this.mHintLayout;
+                }
+                this.mTextPaint.setColor(color);
+                this.mTextPaint.drawableState = this.getDrawableState();
+                canvas.save();
+                let extendedPaddingTop = this.getExtendedPaddingTop();
+                let extendedPaddingBottom = this.getExtendedPaddingBottom();
+                const vspace = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
+                const maxScrollY = this.mLayout.getHeight() - vspace;
+                let clipLeft = compoundPaddingLeft + scrollX;
+                let clipTop = (scrollY == 0) ? 0 : extendedPaddingTop + scrollY;
+                let clipRight = right - left - compoundPaddingRight + scrollX;
+                let clipBottom = bottom - top + scrollY - ((scrollY == maxScrollY) ? 0 : extendedPaddingBottom);
+                if (this.mShadowRadius != 0) {
+                    clipLeft += Math.min(0, this.mShadowDx - this.mShadowRadius);
+                    clipRight += Math.max(0, this.mShadowDx + this.mShadowRadius);
+                    clipTop += Math.min(0, this.mShadowDy - this.mShadowRadius);
+                    clipBottom += Math.max(0, this.mShadowDy + this.mShadowRadius);
+                }
+                canvas.clipRect(clipLeft, clipTop, clipRight, clipBottom);
+                let voffsetText = 0;
+                let voffsetCursor = 0;
+                if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) != Gravity.TOP) {
+                    voffsetText = this.getVerticalOffset(false);
+                    voffsetCursor = this.getVerticalOffset(true);
+                }
+                canvas.translate(compoundPaddingLeft, extendedPaddingTop + voffsetText);
+                const absoluteGravity = this.mGravity;
+                if (this.mEllipsize == TextUtils.TruncateAt.MARQUEE && this.mMarqueeFadeMode != TextView.MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
+                    if (!this.mSingleLine && this.getLineCount() == 1 && this.canMarquee() && (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) != Gravity.LEFT) {
+                        const width = this.mRight - this.mLeft;
+                        const padding = this.getCompoundPaddingLeft() + this.getCompoundPaddingRight();
+                        const dx = this.mLayout.getLineRight(0) - (width - padding);
+                        canvas.translate(isLayoutRtl ? -dx : +dx, 0.0);
+                    }
+                    if (this.mMarquee != null && this.mMarquee.isRunning()) {
+                        const dx = -this.mMarquee.getScroll();
+                        canvas.translate(isLayoutRtl ? -dx : +dx, 0.0);
+                    }
+                }
+                const cursorOffsetVertical = voffsetCursor - voffsetText;
+                let highlight = this.getUpdatedHighlightPath();
+                layout.draw(canvas, highlight, this.mHighlightPaint, cursorOffsetVertical);
+                if (this.mMarquee != null && this.mMarquee.shouldDrawGhost()) {
+                    const dx = Math.floor(this.mMarquee.getGhostOffset());
+                    canvas.translate(isLayoutRtl ? -dx : dx, 0.0);
+                    layout.draw(canvas, highlight, this.mHighlightPaint, cursorOffsetVertical);
+                }
+                canvas.restore();
+            }
+            getFocusedRect(r) {
+                if (this.mLayout == null) {
+                    super.getFocusedRect(r);
+                    return;
+                }
+                let selEnd = this.getSelectionEnd();
+                if (selEnd < 0) {
+                    super.getFocusedRect(r);
+                    return;
+                }
+            }
+            getLineCount() {
+                return this.mLayout != null ? this.mLayout.getLineCount() : 0;
+            }
+            getLineBounds(line, bounds) {
+                if (this.mLayout == null) {
+                    if (bounds != null) {
+                        bounds.set(0, 0, 0, 0);
+                    }
+                    return 0;
+                }
+                else {
+                    let baseline = this.mLayout.getLineBounds(line, bounds);
+                    let voffset = this.getExtendedPaddingTop();
+                    if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) != Gravity.TOP) {
+                        voffset += this.getVerticalOffset(true);
+                    }
+                    if (bounds != null) {
+                        bounds.offset(this.getCompoundPaddingLeft(), voffset);
+                    }
+                    return baseline + voffset;
+                }
+            }
+            getBaseline() {
+                if (this.mLayout == null) {
+                    return super.getBaseline();
+                }
+                let voffset = 0;
+                if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) != Gravity.TOP) {
+                    voffset = this.getVerticalOffset(true);
+                }
+                return this.getExtendedPaddingTop() + voffset + this.mLayout.getLineBaseline(0);
+            }
+            getFadeTop(offsetRequired) {
+                if (this.mLayout == null)
+                    return 0;
+                let voffset = 0;
+                if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) != Gravity.TOP) {
+                    voffset = this.getVerticalOffset(true);
+                }
+                if (offsetRequired)
+                    voffset += this.getTopPaddingOffset();
+                return this.getExtendedPaddingTop() + voffset;
+            }
+            getFadeHeight(offsetRequired) {
+                return this.mLayout != null ? this.mLayout.getHeight() : 0;
+            }
+            onKeyDown(keyCode, event) {
+                let which = this.doKeyDown(keyCode, event, null);
+                if (which == 0) {
+                    return super.onKeyDown(keyCode, event);
+                }
+                return true;
+            }
+            shouldAdvanceFocusOnEnter() {
+                if (this.getKeyListener() == null) {
+                    return false;
+                }
+                if (this.mSingleLine) {
+                    return true;
+                }
+                return false;
+            }
+            shouldAdvanceFocusOnTab() {
+                return true;
+            }
+            doKeyDown(keyCode, event, otherEvent) {
+                return 0;
+            }
+            resetErrorChangedFlag() {
+            }
+            hideErrorIfUnchanged() {
+            }
+            onKeyUp(keyCode, event) {
+                return super.onKeyUp(keyCode, event);
+            }
+            onCheckIsTextEditor() {
+                return false;
+            }
+            nullLayouts() {
+                if (this.mLayout instanceof BoringLayout && this.mSavedLayout == null) {
+                    this.mSavedLayout = this.mLayout;
+                }
+                if (this.mHintLayout instanceof BoringLayout && this.mSavedHintLayout == null) {
+                    this.mSavedHintLayout = this.mHintLayout;
+                }
+                this.mSavedMarqueeModeLayout = this.mLayout = this.mHintLayout = null;
+                this.mBoring = this.mHintBoring = null;
+            }
+            assumeLayout() {
+                let width = this.mRight - this.mLeft - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight();
+                if (width < 1) {
+                    width = 0;
+                }
+                let physicalWidth = width;
+                if (this.mHorizontallyScrolling) {
+                    width = TextView.VERY_WIDE;
+                }
+                this.makeNewLayout(width, physicalWidth, TextView.UNKNOWN_BORING, TextView.UNKNOWN_BORING, physicalWidth, false);
+            }
+            getLayoutAlignment() {
+                let alignment;
+                switch (this.mGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                    case Gravity.LEFT:
+                        alignment = Layout.Alignment.ALIGN_LEFT;
                         break;
                     case Gravity.RIGHT:
-                        this.mTextElement.style.textAlign = "right";
+                        alignment = Layout.Alignment.ALIGN_RIGHT;
                         break;
-                    case Gravity.LEFT:
-                        this.mTextElement.style.textAlign = "left";
+                    case Gravity.CENTER_HORIZONTAL:
+                        alignment = Layout.Alignment.ALIGN_CENTER;
+                        break;
+                    default:
+                        alignment = Layout.Alignment.ALIGN_NORMAL;
                         break;
                 }
-                if ((gravity & Gravity.VERTICAL_GRAVITY_MASK) !=
-                    (this.mGravity & Gravity.VERTICAL_GRAVITY_MASK)) {
-                    this.requestLayout();
+                return alignment;
+            }
+            makeNewLayout(wantWidth, hintWidth, boring, hintBoring, ellipsisWidth, bringIntoView) {
+                this.stopMarquee();
+                this.mOldMaximum = this.mMaximum;
+                this.mOldMaxMode = this.mMaxMode;
+                this.mHighlightPathBogus = true;
+                if (wantWidth < 0) {
+                    wantWidth = 0;
                 }
-                this.mGravity = gravity;
-            }
-            setLineSpacing(add, mult) {
-                if (this.mSpacingAdd != add || this.mSpacingMult != mult) {
-                    this.mSpacingAdd = add;
-                    this.mSpacingMult = mult;
-                    this.setTextSize(this.mTextSize);
+                if (hintWidth < 0) {
+                    hintWidth = 0;
+                }
+                let alignment = this.getLayoutAlignment();
+                const testDirChange = this.mSingleLine && this.mLayout != null && (alignment == Layout.Alignment.ALIGN_NORMAL || alignment == Layout.Alignment.ALIGN_OPPOSITE);
+                let oldDir = 0;
+                if (testDirChange)
+                    oldDir = this.mLayout.getParagraphDirection(0);
+                let shouldEllipsize = this.mEllipsize != null && this.getKeyListener() == null;
+                const switchEllipsize = this.mEllipsize == TruncateAt.MARQUEE && this.mMarqueeFadeMode != TextView.MARQUEE_FADE_NORMAL;
+                let effectiveEllipsize = this.mEllipsize;
+                if (this.mEllipsize == TruncateAt.MARQUEE && this.mMarqueeFadeMode == TextView.MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
+                    effectiveEllipsize = TruncateAt.END_SMALL;
+                }
+                if (this.mTextDir == null) {
+                    this.mTextDir = this.getTextDirectionHeuristic();
+                }
+                this.mLayout = this.makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment, shouldEllipsize, effectiveEllipsize, effectiveEllipsize == this.mEllipsize);
+                if (switchEllipsize) {
+                    let oppositeEllipsize = effectiveEllipsize == TruncateAt.MARQUEE ? TruncateAt.END : TruncateAt.MARQUEE;
+                    this.mSavedMarqueeModeLayout = this.makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment, shouldEllipsize, oppositeEllipsize, effectiveEllipsize != this.mEllipsize);
+                }
+                shouldEllipsize = this.mEllipsize != null;
+                this.mHintLayout = null;
+                if (this.mHint != null) {
+                    if (shouldEllipsize)
+                        hintWidth = wantWidth;
+                    if (hintBoring == TextView.UNKNOWN_BORING) {
+                        hintBoring = BoringLayout.isBoring(this.mHint, this.mTextPaint, this.mTextDir, this.mHintBoring);
+                        if (hintBoring != null) {
+                            this.mHintBoring = hintBoring;
+                        }
+                    }
+                    if (hintBoring != null) {
+                        if (hintBoring.width <= hintWidth && (!shouldEllipsize || hintBoring.width <= ellipsisWidth)) {
+                            if (this.mSavedHintLayout != null) {
+                                this.mHintLayout = this.mSavedHintLayout.replaceOrMake(this.mHint, this.mTextPaint, hintWidth, alignment, this.mSpacingMult, this.mSpacingAdd, hintBoring, this.mIncludePad);
+                            }
+                            else {
+                                this.mHintLayout = BoringLayout.make(this.mHint, this.mTextPaint, hintWidth, alignment, this.mSpacingMult, this.mSpacingAdd, hintBoring, this.mIncludePad);
+                            }
+                            this.mSavedHintLayout = this.mHintLayout;
+                        }
+                        else if (shouldEllipsize && hintBoring.width <= hintWidth) {
+                            if (this.mSavedHintLayout != null) {
+                                this.mHintLayout = this.mSavedHintLayout.replaceOrMake(this.mHint, this.mTextPaint, hintWidth, alignment, this.mSpacingMult, this.mSpacingAdd, hintBoring, this.mIncludePad, this.mEllipsize, ellipsisWidth);
+                            }
+                            else {
+                                this.mHintLayout = BoringLayout.make(this.mHint, this.mTextPaint, hintWidth, alignment, this.mSpacingMult, this.mSpacingAdd, hintBoring, this.mIncludePad, this.mEllipsize, ellipsisWidth);
+                            }
+                        }
+                        else if (shouldEllipsize) {
+                            this.mHintLayout = new StaticLayout(this.mHint, 0, this.mHint.length, this.mTextPaint, hintWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad, this.mEllipsize, ellipsisWidth, this.mMaxMode == TextView.LINES ? this.mMaximum : Integer.MAX_VALUE);
+                        }
+                        else {
+                            this.mHintLayout = new StaticLayout(this.mHint, 0, this.mHint.length, this.mTextPaint, hintWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad);
+                        }
+                    }
+                    else if (shouldEllipsize) {
+                        this.mHintLayout = new StaticLayout(this.mHint, 0, this.mHint.length, this.mTextPaint, hintWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad, this.mEllipsize, ellipsisWidth, this.mMaxMode == TextView.LINES ? this.mMaximum : Integer.MAX_VALUE);
+                    }
+                    else {
+                        this.mHintLayout = new StaticLayout(this.mHint, 0, this.mHint.length, this.mTextPaint, hintWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad);
+                    }
+                }
+                if (bringIntoView || (testDirChange && oldDir != this.mLayout.getParagraphDirection(0))) {
+                    this.registerForPreDraw();
+                }
+                if (this.mEllipsize == TextUtils.TruncateAt.MARQUEE) {
+                    if (!this.compressText(ellipsisWidth)) {
+                        const height = this.mLayoutParams.height;
+                        if (height != LayoutParams.WRAP_CONTENT && height != LayoutParams.MATCH_PARENT) {
+                            this.startMarquee();
+                        }
+                        else {
+                            this.mRestartMarquee = true;
+                        }
+                    }
                 }
             }
-            setTextSizeInPx(sizeInPx) {
-                if (this.mTextSize !== sizeInPx) {
-                    this.mTextSize = sizeInPx;
-                    this.mTextElement.style.fontSize = sizeInPx + "px";
-                    this.mTextElement.style.lineHeight = this.getLineHeight() + "px";
-                    this.requestLayout();
+            makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment, shouldEllipsize, effectiveEllipsize, useSaved) {
+                let result = null;
+                if (Spannable.isImpl(this.mText)) {
+                    result = new DynamicLayout(this.mText, this.mTransformed, this.mTextPaint, wantWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad, this.getKeyListener() == null ? effectiveEllipsize : null, ellipsisWidth);
                 }
-            }
-            setTextSize(size) {
-                let sizeInPx = size * Resources.getDisplayMetrics().density;
-                this.setTextSizeInPx(sizeInPx);
-            }
-            getLineHeight() {
-                return Math.ceil(this.mTextSize * this.mSpacingMult + this.mSpacingAdd);
-            }
-            setHeight(pixels) {
-                this.mMaxHeight = pixels;
-                this.setMinimumHeight(pixels);
-                this.requestLayout();
-                this.invalidate();
-            }
-            setMaxLines(max) {
-                this.mMaxLineCount = max;
-                this.requestLayout();
-                this.invalidate();
-            }
-            getMaxLines() {
-                return this.mMaxLineCount;
-            }
-            setMaxHeight(maxHeight) {
-                this.mMaxHeight = maxHeight;
-                this.requestLayout();
-                this.invalidate();
-            }
-            getMaxHeight() {
-                return this.mMaxHeight;
-            }
-            setMaxWidth(maxpixels) {
-                this.mMaxWidth = maxpixels;
-                this.requestLayout();
-                this.invalidate();
-            }
-            getMaxWidth() {
-                return this.mMaxWidth;
-            }
-            setWidth(pixels) {
-                this.mMaxWidth = pixels;
-                this.setMinimumWidth(pixels);
-                this.requestLayout();
-                this.invalidate();
-            }
-            setMinLines(min) {
-                this.mMinLineCount = min;
-                this.requestLayout();
-                this.invalidate();
-            }
-            getMinLines() {
-                return this.mMinLineCount;
-            }
-            setSingleLine(singleLine = true) {
-                if (singleLine)
-                    this.setLines(1);
                 else {
-                    this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
-                    this.mMinLineCount = 0;
+                    if (boring == TextView.UNKNOWN_BORING) {
+                        boring = BoringLayout.isBoring(this.mTransformed, this.mTextPaint, this.mTextDir, this.mBoring);
+                        if (boring != null) {
+                            this.mBoring = boring;
+                        }
+                    }
+                    if (boring != null) {
+                        if (boring.width <= wantWidth && (effectiveEllipsize == null || boring.width <= ellipsisWidth)) {
+                            if (useSaved && this.mSavedLayout != null) {
+                                result = this.mSavedLayout.replaceOrMake(this.mTransformed, this.mTextPaint, wantWidth, alignment, this.mSpacingMult, this.mSpacingAdd, boring, this.mIncludePad);
+                            }
+                            else {
+                                result = BoringLayout.make(this.mTransformed, this.mTextPaint, wantWidth, alignment, this.mSpacingMult, this.mSpacingAdd, boring, this.mIncludePad);
+                            }
+                            if (useSaved) {
+                                this.mSavedLayout = result;
+                            }
+                        }
+                        else if (shouldEllipsize && boring.width <= wantWidth) {
+                            if (useSaved && this.mSavedLayout != null) {
+                                result = this.mSavedLayout.replaceOrMake(this.mTransformed, this.mTextPaint, wantWidth, alignment, this.mSpacingMult, this.mSpacingAdd, boring, this.mIncludePad, effectiveEllipsize, ellipsisWidth);
+                            }
+                            else {
+                                result = BoringLayout.make(this.mTransformed, this.mTextPaint, wantWidth, alignment, this.mSpacingMult, this.mSpacingAdd, boring, this.mIncludePad, effectiveEllipsize, ellipsisWidth);
+                            }
+                        }
+                        else if (shouldEllipsize) {
+                            result = new StaticLayout(this.mTransformed, 0, this.mTransformed.length, this.mTextPaint, wantWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad, effectiveEllipsize, ellipsisWidth, this.mMaxMode == TextView.LINES ? this.mMaximum : Integer.MAX_VALUE);
+                        }
+                        else {
+                            result = new StaticLayout(this.mTransformed, 0, this.mTransformed.length, this.mTextPaint, wantWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad);
+                        }
+                    }
+                    else if (shouldEllipsize) {
+                        result = new StaticLayout(this.mTransformed, 0, this.mTransformed.length, this.mTextPaint, wantWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad, effectiveEllipsize, ellipsisWidth, this.mMaxMode == TextView.LINES ? this.mMaximum : Integer.MAX_VALUE);
+                    }
+                    else {
+                        result = new StaticLayout(this.mTransformed, 0, this.mTransformed.length, this.mTextPaint, wantWidth, alignment, this.mTextDir, this.mSpacingMult, this.mSpacingAdd, this.mIncludePad);
+                    }
+                }
+                return result;
+            }
+            compressText(width) {
+                if (this.isHardwareAccelerated())
+                    return false;
+                if (width > 0.0 && this.mLayout != null && this.getLineCount() == 1 && !this.mUserSetTextScaleX && this.mTextPaint.getTextScaleX() == 1.0) {
+                    const textWidth = this.mLayout.getLineWidth(0);
+                    const overflow = (textWidth + 1.0 - width) / width;
+                    if (overflow > 0.0 && overflow <= TextView.Marquee.MARQUEE_DELTA_MAX) {
+                        this.mTextPaint.setTextScaleX(1.0 - overflow - 0.005);
+                        this.post((() => {
+                            const _this = this;
+                            class _Inner {
+                                run() {
+                                    _this.requestLayout();
+                                }
+                            }
+                            return new _Inner();
+                        })());
+                        return true;
+                    }
+                }
+                return false;
+            }
+            static desired(layout) {
+                let n = layout.getLineCount();
+                let text = layout.getText();
+                let max = 0;
+                for (let i = 0; i < n - 1; i++) {
+                    if (text.charAt(layout.getLineEnd(i) - 1) != '\n')
+                        return -1;
+                }
+                for (let i = 0; i < n; i++) {
+                    max = Math.max(max, layout.getLineWidth(i));
+                }
+                return Math.floor(Math.ceil(max));
+            }
+            setIncludeFontPadding(includepad) {
+                if (this.mIncludePad != includepad) {
+                    this.mIncludePad = includepad;
+                    if (this.mLayout != null) {
+                        this.nullLayouts();
+                        this.requestLayout();
+                        this.invalidate();
+                    }
+                }
+            }
+            getIncludeFontPadding() {
+                return this.mIncludePad;
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                let widthMode = TextView.MeasureSpec.getMode(widthMeasureSpec);
+                let heightMode = TextView.MeasureSpec.getMode(heightMeasureSpec);
+                let widthSize = TextView.MeasureSpec.getSize(widthMeasureSpec);
+                let heightSize = TextView.MeasureSpec.getSize(heightMeasureSpec);
+                let width;
+                let height;
+                let boring = TextView.UNKNOWN_BORING;
+                let hintBoring = TextView.UNKNOWN_BORING;
+                if (this.mTextDir == null) {
+                    this.mTextDir = this.getTextDirectionHeuristic();
+                }
+                let des = -1;
+                let fromexisting = false;
+                if (widthMode == TextView.MeasureSpec.EXACTLY) {
+                    width = widthSize;
+                }
+                else {
+                    if (this.mLayout != null && this.mEllipsize == null) {
+                        des = TextView.desired(this.mLayout);
+                    }
+                    if (des < 0) {
+                        boring = BoringLayout.isBoring(this.mTransformed, this.mTextPaint, this.mTextDir, this.mBoring);
+                        if (boring != null) {
+                            this.mBoring = boring;
+                        }
+                    }
+                    else {
+                        fromexisting = true;
+                    }
+                    if (boring == null || boring == TextView.UNKNOWN_BORING) {
+                        if (des < 0) {
+                            des = Math.floor(Math.ceil(Layout.getDesiredWidth(this.mTransformed, this.mTextPaint)));
+                        }
+                        width = des;
+                    }
+                    else {
+                        width = boring.width;
+                    }
+                    const dr = this.mDrawables;
+                    if (dr != null) {
+                        width = Math.max(width, dr.mDrawableWidthTop);
+                        width = Math.max(width, dr.mDrawableWidthBottom);
+                    }
+                    if (this.mHint != null) {
+                        let hintDes = -1;
+                        let hintWidth;
+                        if (this.mHintLayout != null && this.mEllipsize == null) {
+                            hintDes = TextView.desired(this.mHintLayout);
+                        }
+                        if (hintDes < 0) {
+                            hintBoring = BoringLayout.isBoring(this.mHint, this.mTextPaint, this.mTextDir, this.mHintBoring);
+                            if (hintBoring != null) {
+                                this.mHintBoring = hintBoring;
+                            }
+                        }
+                        if (hintBoring == null || hintBoring == TextView.UNKNOWN_BORING) {
+                            if (hintDes < 0) {
+                                hintDes = Math.floor(Math.ceil(Layout.getDesiredWidth(this.mHint, this.mTextPaint)));
+                            }
+                            hintWidth = hintDes;
+                        }
+                        else {
+                            hintWidth = hintBoring.width;
+                        }
+                        if (hintWidth > width) {
+                            width = hintWidth;
+                        }
+                    }
+                    width += this.getCompoundPaddingLeft() + this.getCompoundPaddingRight();
+                    if (this.mMaxWidthMode == TextView.EMS) {
+                        width = Math.min(width, this.mMaxWidthValue * this.getLineHeight());
+                    }
+                    else {
+                        width = Math.min(width, this.mMaxWidthValue);
+                    }
+                    if (this.mMinWidthMode == TextView.EMS) {
+                        width = Math.max(width, this.mMinWidthValue * this.getLineHeight());
+                    }
+                    else {
+                        width = Math.max(width, this.mMinWidthValue);
+                    }
+                    width = Math.max(width, this.getSuggestedMinimumWidth());
+                    if (widthMode == TextView.MeasureSpec.AT_MOST) {
+                        width = Math.min(widthSize, width);
+                    }
+                }
+                let want = width - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight();
+                let unpaddedWidth = want;
+                if (this.mHorizontallyScrolling)
+                    want = TextView.VERY_WIDE;
+                let hintWant = want;
+                let hintWidth = (this.mHintLayout == null) ? hintWant : this.mHintLayout.getWidth();
+                if (this.mLayout == null) {
+                    this.makeNewLayout(want, hintWant, boring, hintBoring, width - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight(), false);
+                }
+                else {
+                    const layoutChanged = (this.mLayout.getWidth() != want) || (hintWidth != hintWant) || (this.mLayout.getEllipsizedWidth() != width - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight());
+                    const widthChanged = (this.mHint == null) && (this.mEllipsize == null) && (want > this.mLayout.getWidth()) && (this.mLayout instanceof BoringLayout || (fromexisting && des >= 0 && des <= want));
+                    const maximumChanged = (this.mMaxMode != this.mOldMaxMode) || (this.mMaximum != this.mOldMaximum);
+                    if (layoutChanged || maximumChanged) {
+                        if (!maximumChanged && widthChanged) {
+                            this.mLayout.increaseWidthTo(want);
+                        }
+                        else {
+                            this.makeNewLayout(want, hintWant, boring, hintBoring, width - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight(), false);
+                        }
+                    }
+                    else {
+                    }
+                }
+                if (heightMode == TextView.MeasureSpec.EXACTLY) {
+                    height = heightSize;
+                    this.mDesiredHeightAtMeasure = -1;
+                }
+                else {
+                    let desired = this.getDesiredHeight();
+                    height = desired;
+                    this.mDesiredHeightAtMeasure = desired;
+                    if (heightMode == TextView.MeasureSpec.AT_MOST) {
+                        height = Math.min(desired, heightSize);
+                    }
+                }
+                let unpaddedHeight = height - this.getCompoundPaddingTop() - this.getCompoundPaddingBottom();
+                if (this.mMaxMode == TextView.LINES && this.mLayout.getLineCount() > this.mMaximum) {
+                    unpaddedHeight = Math.min(unpaddedHeight, this.mLayout.getLineTop(this.mMaximum));
+                }
+                if (this.mMovement != null || this.mLayout.getWidth() > unpaddedWidth || this.mLayout.getHeight() > unpaddedHeight) {
+                    this.registerForPreDraw();
+                }
+                else {
+                    this.scrollTo(0, 0);
+                }
+                this.setMeasuredDimension(width, height);
+            }
+            getDesiredHeight(layout, cap = true) {
+                if (arguments.length === 0) {
+                    return Math.max(this.getDesiredHeight(this.mLayout, true), this.getDesiredHeight(this.mHintLayout, this.mEllipsize != null));
+                }
+                if (layout == null) {
+                    return 0;
+                }
+                let linecount = layout.getLineCount();
+                let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
+                let desired = layout.getLineTop(linecount);
+                const dr = this.mDrawables;
+                if (dr != null) {
+                    desired = Math.max(desired, dr.mDrawableHeightLeft);
+                    desired = Math.max(desired, dr.mDrawableHeightRight);
+                }
+                desired += pad;
+                if (this.mMaxMode == TextView.LINES) {
+                    if (cap) {
+                        if (linecount > this.mMaximum) {
+                            desired = layout.getLineTop(this.mMaximum);
+                            if (dr != null) {
+                                desired = Math.max(desired, dr.mDrawableHeightLeft);
+                                desired = Math.max(desired, dr.mDrawableHeightRight);
+                            }
+                            desired += pad;
+                            linecount = this.mMaximum;
+                        }
+                    }
+                }
+                else {
+                    desired = Math.min(desired, this.mMaximum);
+                }
+                if (this.mMinMode == TextView.LINES) {
+                    if (linecount < this.mMinimum) {
+                        desired += this.getLineHeight() * (this.mMinimum - linecount);
+                    }
+                }
+                else {
+                    desired = Math.max(desired, this.mMinimum);
+                }
+                desired = Math.max(desired, this.getSuggestedMinimumHeight());
+                return desired;
+            }
+            checkForResize() {
+                let sizeChanged = false;
+                if (this.mLayout != null) {
+                    if (this.mLayoutParams.width == LayoutParams.WRAP_CONTENT) {
+                        sizeChanged = true;
+                        this.invalidate();
+                    }
+                    if (this.mLayoutParams.height == LayoutParams.WRAP_CONTENT) {
+                        let desiredHeight = this.getDesiredHeight();
+                        if (desiredHeight != this.getHeight()) {
+                            sizeChanged = true;
+                        }
+                    }
+                    else if (this.mLayoutParams.height == LayoutParams.MATCH_PARENT) {
+                        if (this.mDesiredHeightAtMeasure >= 0) {
+                            let desiredHeight = this.getDesiredHeight();
+                            if (desiredHeight != this.mDesiredHeightAtMeasure) {
+                                sizeChanged = true;
+                            }
+                        }
+                    }
+                }
+                if (sizeChanged) {
+                    this.requestLayout();
+                }
+            }
+            checkForRelayout() {
+                if ((this.mLayoutParams.width != LayoutParams.WRAP_CONTENT || (this.mMaxWidthMode == this.mMinWidthMode && this.mMaxWidthValue == this.mMinWidthValue)) && (this.mHint == null || this.mHintLayout != null) && (this.mRight - this.mLeft - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight() > 0)) {
+                    let oldht = this.mLayout.getHeight();
+                    let want = this.mLayout.getWidth();
+                    let hintWant = this.mHintLayout == null ? 0 : this.mHintLayout.getWidth();
+                    this.makeNewLayout(want, hintWant, TextView.UNKNOWN_BORING, TextView.UNKNOWN_BORING, this.mRight - this.mLeft - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight(), false);
+                    if (this.mEllipsize != TextUtils.TruncateAt.MARQUEE) {
+                        if (this.mLayoutParams.height != LayoutParams.WRAP_CONTENT && this.mLayoutParams.height != LayoutParams.MATCH_PARENT) {
+                            this.invalidate();
+                            return;
+                        }
+                        if (this.mLayout.getHeight() == oldht && (this.mHintLayout == null || this.mHintLayout.getHeight() == oldht)) {
+                            this.invalidate();
+                            return;
+                        }
+                    }
+                    this.requestLayout();
+                    this.invalidate();
+                }
+                else {
+                    this.nullLayouts();
                     this.requestLayout();
                     this.invalidate();
                 }
             }
-            setLines(lines) {
-                this.mMaxLineCount = this.mMinLineCount = lines;
-                this.requestLayout();
+            onLayout(changed, left, top, right, bottom) {
+                super.onLayout(changed, left, top, right, bottom);
+                if (this.mDeferScroll >= 0) {
+                    let curs = this.mDeferScroll;
+                    this.mDeferScroll = -1;
+                    this.bringPointIntoView(Math.min(curs, this.mText.length));
+                }
+            }
+            isShowingHint() {
+                return TextUtils.isEmpty(this.mText) && !TextUtils.isEmpty(this.mHint);
+            }
+            bringTextIntoView() {
+                let layout = this.isShowingHint() ? this.mHintLayout : this.mLayout;
+                let line = 0;
+                if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM) {
+                    line = layout.getLineCount() - 1;
+                }
+                let a = layout.getParagraphAlignment(line);
+                let dir = layout.getParagraphDirection(line);
+                let hspace = this.mRight - this.mLeft - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight();
+                let vspace = this.mBottom - this.mTop - this.getExtendedPaddingTop() - this.getExtendedPaddingBottom();
+                let ht = layout.getHeight();
+                let scrollx, scrolly;
+                if (a == Layout.Alignment.ALIGN_NORMAL) {
+                    a = dir == Layout.DIR_LEFT_TO_RIGHT ? Layout.Alignment.ALIGN_LEFT : Layout.Alignment.ALIGN_RIGHT;
+                }
+                else if (a == Layout.Alignment.ALIGN_OPPOSITE) {
+                    a = dir == Layout.DIR_LEFT_TO_RIGHT ? Layout.Alignment.ALIGN_RIGHT : Layout.Alignment.ALIGN_LEFT;
+                }
+                if (a == Layout.Alignment.ALIGN_CENTER) {
+                    let left = Math.floor(Math.floor(layout.getLineLeft(line)));
+                    let right = Math.floor(Math.ceil(layout.getLineRight(line)));
+                    if (right - left < hspace) {
+                        scrollx = (right + left) / 2 - hspace / 2;
+                    }
+                    else {
+                        if (dir < 0) {
+                            scrollx = right - hspace;
+                        }
+                        else {
+                            scrollx = left;
+                        }
+                    }
+                }
+                else if (a == Layout.Alignment.ALIGN_RIGHT) {
+                    let right = Math.floor(Math.ceil(layout.getLineRight(line)));
+                    scrollx = right - hspace;
+                }
+                else {
+                    scrollx = Math.floor(Math.floor(layout.getLineLeft(line)));
+                }
+                if (ht < vspace) {
+                    scrolly = 0;
+                }
+                else {
+                    if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM) {
+                        scrolly = ht - vspace;
+                    }
+                    else {
+                        scrolly = 0;
+                    }
+                }
+                if (scrollx != this.mScrollX || scrolly != this.mScrollY) {
+                    this.scrollTo(scrollx, scrolly);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            bringPointIntoView(offset) {
+                if (this.isLayoutRequested()) {
+                    this.mDeferScroll = offset;
+                    return false;
+                }
+                let changed = false;
+                let layout = this.isShowingHint() ? this.mHintLayout : this.mLayout;
+                if (layout == null)
+                    return changed;
+                let line = layout.getLineForOffset(offset);
+                let grav;
+                switch (layout.getParagraphAlignment(line)) {
+                    case Layout.Alignment.ALIGN_LEFT:
+                        grav = 1;
+                        break;
+                    case Layout.Alignment.ALIGN_RIGHT:
+                        grav = -1;
+                        break;
+                    case Layout.Alignment.ALIGN_NORMAL:
+                        grav = layout.getParagraphDirection(line);
+                        break;
+                    case Layout.Alignment.ALIGN_OPPOSITE:
+                        grav = -layout.getParagraphDirection(line);
+                        break;
+                    case Layout.Alignment.ALIGN_CENTER:
+                    default:
+                        grav = 0;
+                        break;
+                }
+                const clamped = grav > 0;
+                const x = Math.floor(layout.getPrimaryHorizontal(offset, clamped));
+                const top = layout.getLineTop(line);
+                const bottom = layout.getLineTop(line + 1);
+                let left = Math.floor(Math.floor(layout.getLineLeft(line)));
+                let right = Math.floor(Math.ceil(layout.getLineRight(line)));
+                let ht = layout.getHeight();
+                let hspace = this.mRight - this.mLeft - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight();
+                let vspace = this.mBottom - this.mTop - this.getExtendedPaddingTop() - this.getExtendedPaddingBottom();
+                if (!this.mHorizontallyScrolling && right - left > hspace && right > x) {
+                    right = Math.max(x, left + hspace);
+                }
+                let hslack = (bottom - top) / 2;
+                let vslack = hslack;
+                if (vslack > vspace / 4)
+                    vslack = vspace / 4;
+                if (hslack > hspace / 4)
+                    hslack = hspace / 4;
+                let hs = this.mScrollX;
+                let vs = this.mScrollY;
+                if (top - vs < vslack)
+                    vs = top - vslack;
+                if (bottom - vs > vspace - vslack)
+                    vs = bottom - (vspace - vslack);
+                if (ht - vs < vspace)
+                    vs = ht - vspace;
+                if (0 - vs > 0)
+                    vs = 0;
+                if (grav != 0) {
+                    if (x - hs < hslack) {
+                        hs = x - hslack;
+                    }
+                    if (x - hs > hspace - hslack) {
+                        hs = x - (hspace - hslack);
+                    }
+                }
+                if (grav < 0) {
+                    if (left - hs > 0)
+                        hs = left;
+                    if (right - hs < hspace)
+                        hs = right - hspace;
+                }
+                else if (grav > 0) {
+                    if (right - hs < hspace)
+                        hs = right - hspace;
+                    if (left - hs > 0)
+                        hs = left;
+                }
+                else {
+                    if (right - left <= hspace) {
+                        hs = left - (hspace - (right - left)) / 2;
+                    }
+                    else if (x > right - hslack) {
+                        hs = right - hspace;
+                    }
+                    else if (x < left + hslack) {
+                        hs = left;
+                    }
+                    else if (left > hs) {
+                        hs = left;
+                    }
+                    else if (right < hs + hspace) {
+                        hs = right - hspace;
+                    }
+                    else {
+                        if (x - hs < hslack) {
+                            hs = x - hslack;
+                        }
+                        if (x - hs > hspace - hslack) {
+                            hs = x - (hspace - hslack);
+                        }
+                    }
+                }
+                if (hs != this.mScrollX || vs != this.mScrollY) {
+                    if (this.mScroller == null) {
+                        this.scrollTo(hs, vs);
+                    }
+                    else {
+                        let duration = AnimationUtils.currentAnimationTimeMillis() - this.mLastScroll;
+                        let dx = hs - this.mScrollX;
+                        let dy = vs - this.mScrollY;
+                        if (duration > TextView.ANIMATED_SCROLL_GAP) {
+                            this.mScroller.startScroll(this.mScrollX, this.mScrollY, dx, dy);
+                            this.awakenScrollBars(this.mScroller.getDuration());
+                            this.invalidate();
+                        }
+                        else {
+                            if (!this.mScroller.isFinished()) {
+                                this.mScroller.abortAnimation();
+                            }
+                            this.scrollBy(dx, dy);
+                        }
+                        this.mLastScroll = AnimationUtils.currentAnimationTimeMillis();
+                    }
+                    changed = true;
+                }
+                if (this.isFocused()) {
+                    if (this.mTempRect == null)
+                        this.mTempRect = new Rect();
+                    this.mTempRect.set(x - 2, top, x + 2, bottom);
+                    this.getInterestingRect(this.mTempRect, line);
+                    this.mTempRect.offset(this.mScrollX, this.mScrollY);
+                }
+                return changed;
+            }
+            moveCursorToVisibleOffset() {
+                return false;
+            }
+            computeScroll() {
+                if (this.mScroller != null) {
+                    if (this.mScroller.computeScrollOffset()) {
+                        this.mScrollX = this.mScroller.getCurrX();
+                        this.mScrollY = this.mScroller.getCurrY();
+                        this.invalidateParentCaches();
+                        this.postInvalidate();
+                    }
+                }
+            }
+            getInterestingRect(r, line) {
+                this.convertFromViewportToContentCoordinates(r);
+                if (line == 0)
+                    r.top -= this.getExtendedPaddingTop();
+                if (line == this.mLayout.getLineCount() - 1)
+                    r.bottom += this.getExtendedPaddingBottom();
+            }
+            convertFromViewportToContentCoordinates(r) {
+                const horizontalOffset = this.viewportToContentHorizontalOffset();
+                r.left += horizontalOffset;
+                r.right += horizontalOffset;
+                const verticalOffset = this.viewportToContentVerticalOffset();
+                r.top += verticalOffset;
+                r.bottom += verticalOffset;
+            }
+            viewportToContentHorizontalOffset() {
+                return this.getCompoundPaddingLeft() - this.mScrollX;
+            }
+            viewportToContentVerticalOffset() {
+                let offset = this.getExtendedPaddingTop() - this.mScrollY;
+                if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) != Gravity.TOP) {
+                    offset += this.getVerticalOffset(false);
+                }
+                return offset;
+            }
+            getSelectionStart() {
+                return -1;
+            }
+            getSelectionEnd() {
+                return -1;
+            }
+            hasSelection() {
+                const selectionStart = this.getSelectionStart();
+                const selectionEnd = this.getSelectionEnd();
+                return selectionStart >= 0 && selectionStart != selectionEnd;
+            }
+            setAllCaps(allCaps) {
+                if (allCaps) {
+                    this.setTransformationMethod(new AllCapsTransformationMethod());
+                }
+                else {
+                    this.setTransformationMethod(null);
+                }
+            }
+            setSingleLine(singleLine = true) {
+                this.setInputTypeSingleLine(singleLine);
+                this.applySingleLine(singleLine, true, true);
+            }
+            setInputTypeSingleLine(singleLine) {
+            }
+            applySingleLine(singleLine, applyTransformation, changeMaxLines) {
+                this.mSingleLine = singleLine;
+                if (singleLine) {
+                    this.setLines(1);
+                    this.setHorizontallyScrolling(true);
+                    if (applyTransformation) {
+                        this.setTransformationMethod(SingleLineTransformationMethod.getInstance());
+                    }
+                }
+                else {
+                    if (changeMaxLines) {
+                        this.setMaxLines(Integer.MAX_VALUE);
+                    }
+                    this.setHorizontallyScrolling(false);
+                    if (applyTransformation) {
+                        this.setTransformationMethod(null);
+                    }
+                }
+            }
+            setEllipsize(where) {
+                if (this.mEllipsize != where) {
+                    this.mEllipsize = where;
+                    if (this.mLayout != null) {
+                        this.nullLayouts();
+                        this.requestLayout();
+                        this.invalidate();
+                    }
+                }
+            }
+            setMarqueeRepeatLimit(marqueeLimit) {
+                this.mMarqueeRepeatLimit = marqueeLimit;
+            }
+            getMarqueeRepeatLimit() {
+                return this.mMarqueeRepeatLimit;
+            }
+            getEllipsize() {
+                return this.mEllipsize;
+            }
+            setSelectAllOnFocus(selectAllOnFocus) {
+                this.createEditorIfNeeded();
+                this.mEditor.mSelectAllOnFocus = selectAllOnFocus;
+                if (selectAllOnFocus && !Spannable.isImpl(this.mText)) {
+                    this.setText(this.mText, TextView.BufferType.SPANNABLE);
+                }
+            }
+            setCursorVisible(visible) {
+            }
+            isCursorVisible() {
+                return null;
+            }
+            canMarquee() {
+                let width = (this.mRight - this.mLeft - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight());
+                return width > 0 && (this.mLayout.getLineWidth(0) > width || (this.mMarqueeFadeMode != TextView.MARQUEE_FADE_NORMAL && this.mSavedMarqueeModeLayout != null && this.mSavedMarqueeModeLayout.getLineWidth(0) > width));
+            }
+            startMarquee() {
+                if (this.getKeyListener() != null)
+                    return;
+                if (this.compressText(this.getWidth() - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight())) {
+                    return;
+                }
+                if ((this.mMarquee == null || this.mMarquee.isStopped()) && (this.isFocused() || this.isSelected()) && this.getLineCount() == 1 && this.canMarquee()) {
+                    if (this.mMarqueeFadeMode == TextView.MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
+                        this.mMarqueeFadeMode = TextView.MARQUEE_FADE_SWITCH_SHOW_FADE;
+                        const tmp = this.mLayout;
+                        this.mLayout = this.mSavedMarqueeModeLayout;
+                        this.mSavedMarqueeModeLayout = tmp;
+                        this.setHorizontalFadingEdgeEnabled(true);
+                        this.requestLayout();
+                        this.invalidate();
+                    }
+                    if (this.mMarquee == null)
+                        this.mMarquee = new TextView.Marquee(this);
+                    this.mMarquee.start(this.mMarqueeRepeatLimit);
+                }
+            }
+            stopMarquee() {
+                if (this.mMarquee != null && !this.mMarquee.isStopped()) {
+                    this.mMarquee.stop();
+                }
+                if (this.mMarqueeFadeMode == TextView.MARQUEE_FADE_SWITCH_SHOW_FADE) {
+                    this.mMarqueeFadeMode = TextView.MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
+                    const tmp = this.mSavedMarqueeModeLayout;
+                    this.mSavedMarqueeModeLayout = this.mLayout;
+                    this.mLayout = tmp;
+                    this.setHorizontalFadingEdgeEnabled(false);
+                    this.requestLayout();
+                    this.invalidate();
+                }
+            }
+            startStopMarquee(start) {
+                if (this.mEllipsize == TextUtils.TruncateAt.MARQUEE) {
+                    if (start) {
+                        this.startMarquee();
+                    }
+                    else {
+                        this.stopMarquee();
+                    }
+                }
+            }
+            onTextChanged(text, start, lengthBefore, lengthAfter) {
+            }
+            onSelectionChanged(selStart, selEnd) {
+            }
+            addTextChangedListener(watcher) {
+                if (this.mListeners == null) {
+                    this.mListeners = new ArrayList();
+                }
+                this.mListeners.add(watcher);
+            }
+            removeTextChangedListener(watcher) {
+                if (this.mListeners != null) {
+                    let i = this.mListeners.indexOf(watcher);
+                    if (i >= 0) {
+                        this.mListeners.remove(i);
+                    }
+                }
+            }
+            sendBeforeTextChanged(text, start, before, after) {
+                if (this.mListeners != null) {
+                    const list = this.mListeners;
+                    const count = list.size();
+                    for (let i = 0; i < count; i++) {
+                        list.get(i).beforeTextChanged(text, start, before, after);
+                    }
+                }
+            }
+            removeAdjacentSuggestionSpans(pos) {
+            }
+            sendOnTextChanged(text, start, before, after) {
+                if (this.mListeners != null) {
+                    const list = this.mListeners;
+                    const count = list.size();
+                    for (let i = 0; i < count; i++) {
+                        list.get(i).onTextChanged(text, start, before, after);
+                    }
+                }
+            }
+            sendAfterTextChanged(text) {
+                if (this.mListeners != null) {
+                    const list = this.mListeners;
+                    const count = list.size();
+                    for (let i = 0; i < count; i++) {
+                        list.get(i).afterTextChanged(text + '');
+                    }
+                }
+            }
+            updateAfterEdit() {
                 this.invalidate();
+                let curs = this.getSelectionStart();
+                if (curs >= 0 || (this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM) {
+                    this.registerForPreDraw();
+                }
+                this.checkForResize();
+                if (curs >= 0) {
+                    this.mHighlightPathBogus = true;
+                    this.bringPointIntoView(curs);
+                }
             }
-            setText(text = '') {
-                this.mTextElement.innerText = text;
-                this.requestLayout();
+            handleTextChanged(buffer, start, before, after) {
+                this.updateAfterEdit();
+                this.sendOnTextChanged(buffer, start, before, after);
+                this.onTextChanged(buffer, start, before, after);
             }
-            getText() {
-                return this.mTextElement.innerText;
+            spanChange(buf, what, oldStart, newStart, oldEnd, newEnd) {
+                let selChanged = false;
+                let newSelStart = -1, newSelEnd = -1;
+                this.invalidate();
+                this.mHighlightPathBogus = true;
+                this.checkForResize();
             }
-            setHtml(html) {
-                this.mTextElement.innerHTML = html;
-                this.requestLayout();
+            dispatchFinishTemporaryDetach() {
+                this.mDispatchTemporaryDetach = true;
+                super.dispatchFinishTemporaryDetach();
+                this.mDispatchTemporaryDetach = false;
             }
-            getHtml() {
-                return this.mTextElement.innerHTML;
+            onStartTemporaryDetach() {
+                super.onStartTemporaryDetach();
+                if (!this.mDispatchTemporaryDetach)
+                    this.mTemporaryDetach = true;
             }
-            getTextElement() {
-                return this.mTextElement;
+            onFinishTemporaryDetach() {
+                super.onFinishTemporaryDetach();
+                if (!this.mDispatchTemporaryDetach)
+                    this.mTemporaryDetach = false;
+            }
+            onFocusChanged(focused, direction, previouslyFocusedRect) {
+                if (this.mTemporaryDetach) {
+                    super.onFocusChanged(focused, direction, previouslyFocusedRect);
+                    return;
+                }
+                this.startStopMarquee(focused);
+                if (this.mTransformation != null) {
+                    this.mTransformation.onFocusChanged(this, this.mText, focused, direction, previouslyFocusedRect);
+                }
+                super.onFocusChanged(focused, direction, previouslyFocusedRect);
+            }
+            onWindowFocusChanged(hasWindowFocus) {
+                super.onWindowFocusChanged(hasWindowFocus);
+                this.startStopMarquee(hasWindowFocus);
+            }
+            onVisibilityChanged(changedView, visibility) {
+                super.onVisibilityChanged(changedView, visibility);
+            }
+            clearComposingText() {
+            }
+            setSelected(selected) {
+                let wasSelected = this.isSelected();
+                super.setSelected(selected);
+                if (selected != wasSelected && this.mEllipsize == TextUtils.TruncateAt.MARQUEE) {
+                    if (selected) {
+                        this.startMarquee();
+                    }
+                    else {
+                        this.stopMarquee();
+                    }
+                }
+            }
+            onTouchEvent(event) {
+                const action = event.getActionMasked();
+                const superResult = super.onTouchEvent(event);
+                const touchIsFinished = (action == MotionEvent.ACTION_UP)
+                    && this.isFocused();
+                if ((this.mMovement != null || this.onCheckIsTextEditor()) && this.isEnabled() && Spannable.isImpl(this.mText) && this.mLayout != null) {
+                    let handled = false;
+                    if (this.mMovement != null) {
+                        handled = this.mMovement.onTouchEvent(this, this.mText, event) || handled;
+                    }
+                    if (handled) {
+                        return true;
+                    }
+                }
+                return superResult;
+            }
+            onGenericMotionEvent(event) {
+                if (this.mMovement != null && Spannable.isImpl(this.mText) && this.mLayout != null) {
+                    try {
+                        if (this.mMovement.onGenericMotionEvent(this, this.mText, event)) {
+                            return true;
+                        }
+                    }
+                    catch (e) {
+                    }
+                }
+                return super.onGenericMotionEvent(event);
+            }
+            isTextEditable() {
+                return false;
+            }
+            didTouchFocusSelect() {
+                return false;
+            }
+            cancelLongPress() {
+                super.cancelLongPress();
+            }
+            setScroller(s) {
+                this.mScroller = s;
+            }
+            getLeftFadingEdgeStrength() {
+                if (this.mEllipsize == TextUtils.TruncateAt.MARQUEE && this.mMarqueeFadeMode != TextView.MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
+                    if (this.mMarquee != null && !this.mMarquee.isStopped()) {
+                        const marquee = this.mMarquee;
+                        if (marquee.shouldDrawLeftFade()) {
+                            const scroll = marquee.getScroll();
+                            return scroll / this.getHorizontalFadingEdgeLength();
+                        }
+                        else {
+                            return 0.0;
+                        }
+                    }
+                    else if (this.getLineCount() == 1) {
+                        const absoluteGravity = this.mGravity;
+                        switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                            case Gravity.LEFT:
+                                return 0.0;
+                            case Gravity.RIGHT:
+                                return (this.mLayout.getLineRight(0) - (this.mRight - this.mLeft) - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight() - this.mLayout.getLineLeft(0)) / this.getHorizontalFadingEdgeLength();
+                            case Gravity.CENTER_HORIZONTAL:
+                            case Gravity.FILL_HORIZONTAL:
+                                const textDirection = this.mLayout.getParagraphDirection(0);
+                                if (textDirection == Layout.DIR_LEFT_TO_RIGHT) {
+                                    return 0.0;
+                                }
+                                else {
+                                    return (this.mLayout.getLineRight(0) - (this.mRight - this.mLeft) - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight() - this.mLayout.getLineLeft(0)) / this.getHorizontalFadingEdgeLength();
+                                }
+                        }
+                    }
+                }
+                return super.getLeftFadingEdgeStrength();
+            }
+            getRightFadingEdgeStrength() {
+                if (this.mEllipsize == TextUtils.TruncateAt.MARQUEE && this.mMarqueeFadeMode != TextView.MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
+                    if (this.mMarquee != null && !this.mMarquee.isStopped()) {
+                        const marquee = this.mMarquee;
+                        const maxFadeScroll = marquee.getMaxFadeScroll();
+                        const scroll = marquee.getScroll();
+                        return (maxFadeScroll - scroll) / this.getHorizontalFadingEdgeLength();
+                    }
+                    else if (this.getLineCount() == 1) {
+                        const absoluteGravity = this.mGravity;
+                        switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                            case Gravity.LEFT:
+                                const textWidth = (this.mRight - this.mLeft) - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight();
+                                const lineWidth = this.mLayout.getLineWidth(0);
+                                return (lineWidth - textWidth) / this.getHorizontalFadingEdgeLength();
+                            case Gravity.RIGHT:
+                                return 0.0;
+                            case Gravity.CENTER_HORIZONTAL:
+                            case Gravity.FILL_HORIZONTAL:
+                                const textDirection = this.mLayout.getParagraphDirection(0);
+                                if (textDirection == Layout.DIR_RIGHT_TO_LEFT) {
+                                    return 0.0;
+                                }
+                                else {
+                                    return (this.mLayout.getLineWidth(0) - ((this.mRight - this.mLeft) - this.getCompoundPaddingLeft() - this.getCompoundPaddingRight())) / this.getHorizontalFadingEdgeLength();
+                                }
+                        }
+                    }
+                }
+                return super.getRightFadingEdgeStrength();
+            }
+            computeHorizontalScrollRange() {
+                if (this.mLayout != null) {
+                    return this.mSingleLine && (this.mGravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.LEFT ? Math.floor(this.mLayout.getLineWidth(0)) : this.mLayout.getWidth();
+                }
+                return super.computeHorizontalScrollRange();
+            }
+            computeVerticalScrollRange() {
+                if (this.mLayout != null)
+                    return this.mLayout.getHeight();
+                return super.computeVerticalScrollRange();
+            }
+            computeVerticalScrollExtent() {
+                return this.getHeight() - this.getCompoundPaddingTop() - this.getCompoundPaddingBottom();
+            }
+            static getTextColors() {
+                return android.R.attr.textViewStyle.textColor;
+            }
+            static getTextColor(def) {
+                let colors = this.getTextColors();
+                if (colors == null) {
+                    return def;
+                }
+                else {
+                    return colors.getDefaultColor();
+                }
+            }
+            canSelectText() {
+                return false;
+            }
+            textCanBeSelected() {
+                return false;
+            }
+            getTransformedText(start, end) {
+                return this.removeSuggestionSpans(this.mTransformed.substring(start, end));
+            }
+            performLongClick() {
+                let handled = false;
+                if (super.performLongClick()) {
+                    handled = true;
+                }
+                if (handled) {
+                    this.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                }
+                return handled;
+            }
+            isSuggestionsEnabled() {
+                return false;
+            }
+            setCustomSelectionActionModeCallback(actionModeCallback) {
+                this.createEditorIfNeeded();
+            }
+            getCustomSelectionActionModeCallback() {
+                return null;
+            }
+            stopSelectionActionMode() {
+            }
+            canCut() {
+                return false;
+            }
+            canCopy() {
+                return true;
+            }
+            canPaste() {
+                return false;
+            }
+            selectAllText() {
+                return false;
+            }
+            getOffsetForPosition(x, y) {
+                if (this.getLayout() == null)
+                    return -1;
+                const line = this.getLineAtCoordinate(y);
+                const offset = this.getOffsetAtCoordinate(line, x);
+                return offset;
+            }
+            convertToLocalHorizontalCoordinate(x) {
+                x -= this.getTotalPaddingLeft();
+                x = Math.max(0.0, x);
+                x = Math.min(this.getWidth() - this.getTotalPaddingRight() - 1, x);
+                x += this.getScrollX();
+                return x;
+            }
+            getLineAtCoordinate(y) {
+                y -= this.getTotalPaddingTop();
+                y = Math.max(0.0, y);
+                y = Math.min(this.getHeight() - this.getTotalPaddingBottom() - 1, y);
+                y += this.getScrollY();
+                return this.getLayout().getLineForVertical(Math.floor(y));
+            }
+            getOffsetAtCoordinate(line, x) {
+                x = this.convertToLocalHorizontalCoordinate(x);
+                return this.getLayout().getOffsetForHorizontal(line, x);
+            }
+            isInBatchEditMode() {
+                return false;
+            }
+            getTextDirectionHeuristic() {
+                return TextDirectionHeuristics.LTR;
+            }
+            onResolveDrawables(layoutDirection) {
+                if (this.mLastLayoutDirection == layoutDirection) {
+                    return;
+                }
+                this.mLastLayoutDirection = layoutDirection;
+                if (this.mDrawables != null) {
+                    this.mDrawables.resolveWithLayoutDirection(layoutDirection);
+                }
+            }
+            resetResolvedDrawables() {
+                this.mLastLayoutDirection = -1;
+            }
+            deleteText_internal(start, end) {
+            }
+            replaceText_internal(start, end, text) {
+            }
+            setSpan_internal(span, start, end, flags) {
+            }
+            setCursorPosition_internal(start, end) {
+            }
+            createEditorIfNeeded() {
             }
         }
+        TextView.LOG_TAG = "TextView";
+        TextView.DEBUG_EXTRACT = false;
+        TextView.SANS = 1;
+        TextView.SERIF = 2;
+        TextView.MONOSPACE = 3;
+        TextView.SIGNED = 2;
+        TextView.DECIMAL = 4;
+        TextView.MARQUEE_FADE_NORMAL = 0;
+        TextView.MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS = 1;
+        TextView.MARQUEE_FADE_SWITCH_SHOW_FADE = 2;
+        TextView.LINES = 1;
+        TextView.EMS = TextView.LINES;
+        TextView.PIXELS = 2;
+        TextView.TEMP_RECTF = new RectF();
+        TextView.VERY_WIDE = 1024 * 1024;
+        TextView.ANIMATED_SCROLL_GAP = 250;
+        TextView.NO_FILTERS = new Array(0);
+        TextView.CHANGE_WATCHER_PRIORITY = 100;
+        TextView.MULTILINE_STATE_SET = [1 << 10];
+        TextView.LAST_CUT_OR_COPY_TIME = 0;
+        TextView.UNKNOWN_BORING = new BoringLayout.Metrics();
         widget.TextView = TextView;
+        (function (TextView) {
+            class Drawables {
+                constructor(context) {
+                    this.mCompoundRect = new Rect();
+                    this.mDrawableSizeTop = 0;
+                    this.mDrawableSizeBottom = 0;
+                    this.mDrawableSizeLeft = 0;
+                    this.mDrawableSizeRight = 0;
+                    this.mDrawableSizeStart = 0;
+                    this.mDrawableSizeEnd = 0;
+                    this.mDrawableSizeError = 0;
+                    this.mDrawableSizeTemp = 0;
+                    this.mDrawableWidthTop = 0;
+                    this.mDrawableWidthBottom = 0;
+                    this.mDrawableHeightLeft = 0;
+                    this.mDrawableHeightRight = 0;
+                    this.mDrawableHeightStart = 0;
+                    this.mDrawableHeightEnd = 0;
+                    this.mDrawableHeightError = 0;
+                    this.mDrawableHeightTemp = 0;
+                    this.mDrawablePadding = 0;
+                    this.mDrawableSaved = Drawables.DRAWABLE_NONE;
+                    this.mIsRtlCompatibilityMode = false;
+                    this.mOverride = false;
+                }
+                resolveWithLayoutDirection(layoutDirection) {
+                    this.mDrawableLeft = this.mDrawableLeftInitial;
+                    this.mDrawableRight = this.mDrawableRightInitial;
+                    if (this.mOverride) {
+                        this.mDrawableLeft = this.mDrawableStart;
+                        this.mDrawableSizeLeft = this.mDrawableSizeStart;
+                        this.mDrawableHeightLeft = this.mDrawableHeightStart;
+                        this.mDrawableRight = this.mDrawableEnd;
+                        this.mDrawableSizeRight = this.mDrawableSizeEnd;
+                        this.mDrawableHeightRight = this.mDrawableHeightEnd;
+                    }
+                    this.applyErrorDrawableIfNeeded(layoutDirection);
+                    this.updateDrawablesLayoutDirection(layoutDirection);
+                }
+                updateDrawablesLayoutDirection(layoutDirection) {
+                }
+                setErrorDrawable(dr, tv) {
+                    if (this.mDrawableError != dr && this.mDrawableError != null) {
+                        this.mDrawableError.setCallback(null);
+                    }
+                    this.mDrawableError = dr;
+                    const compoundRect = this.mCompoundRect;
+                    let state = tv.getDrawableState();
+                    if (this.mDrawableError != null) {
+                        this.mDrawableError.setState(state);
+                        this.mDrawableError.copyBounds(compoundRect);
+                        this.mDrawableError.setCallback(tv);
+                        this.mDrawableSizeError = compoundRect.width();
+                        this.mDrawableHeightError = compoundRect.height();
+                    }
+                    else {
+                        this.mDrawableSizeError = this.mDrawableHeightError = 0;
+                    }
+                }
+                applyErrorDrawableIfNeeded(layoutDirection) {
+                    switch (this.mDrawableSaved) {
+                        case Drawables.DRAWABLE_LEFT:
+                            this.mDrawableLeft = this.mDrawableTemp;
+                            this.mDrawableSizeLeft = this.mDrawableSizeTemp;
+                            this.mDrawableHeightLeft = this.mDrawableHeightTemp;
+                            break;
+                        case Drawables.DRAWABLE_RIGHT:
+                            this.mDrawableRight = this.mDrawableTemp;
+                            this.mDrawableSizeRight = this.mDrawableSizeTemp;
+                            this.mDrawableHeightRight = this.mDrawableHeightTemp;
+                            break;
+                        case Drawables.DRAWABLE_NONE:
+                        default:
+                    }
+                    this.mDrawableSaved = Drawables.DRAWABLE_RIGHT;
+                    this.mDrawableTemp = this.mDrawableRight;
+                    this.mDrawableSizeTemp = this.mDrawableSizeRight;
+                    this.mDrawableHeightTemp = this.mDrawableHeightRight;
+                    this.mDrawableRight = this.mDrawableError;
+                    this.mDrawableSizeRight = this.mDrawableSizeError;
+                    this.mDrawableHeightRight = this.mDrawableHeightError;
+                }
+            }
+            Drawables.DRAWABLE_NONE = -1;
+            Drawables.DRAWABLE_RIGHT = 0;
+            Drawables.DRAWABLE_LEFT = 1;
+            TextView.Drawables = Drawables;
+            class Marquee extends Handler {
+                constructor(v) {
+                    super();
+                    this.mStatus = Marquee.MARQUEE_STOPPED;
+                    this.mScrollUnit = 0;
+                    this.mMaxScroll = 0;
+                    this.mMaxFadeScroll = 0;
+                    this.mGhostStart = 0;
+                    this.mGhostOffset = 0;
+                    this.mFadeStop = 0;
+                    this.mRepeatLimit = 0;
+                    this.mScroll = 0;
+                    const density = v.getResources().getDisplayMetrics().density;
+                    this.mScrollUnit = (Marquee.MARQUEE_PIXELS_PER_SECOND * density) / Marquee.MARQUEE_RESOLUTION;
+                    this.mView = new WeakReference(v);
+                }
+                handleMessage(msg) {
+                    switch (msg.what) {
+                        case Marquee.MESSAGE_START:
+                            this.mStatus = Marquee.MARQUEE_RUNNING;
+                            this.tick();
+                            break;
+                        case Marquee.MESSAGE_TICK:
+                            this.tick();
+                            break;
+                        case Marquee.MESSAGE_RESTART:
+                            if (this.mStatus == Marquee.MARQUEE_RUNNING) {
+                                if (this.mRepeatLimit >= 0) {
+                                    this.mRepeatLimit--;
+                                }
+                                this.start(this.mRepeatLimit);
+                            }
+                            break;
+                    }
+                }
+                tick() {
+                    if (this.mStatus != Marquee.MARQUEE_RUNNING) {
+                        return;
+                    }
+                    this.removeMessages(Marquee.MESSAGE_TICK);
+                    const textView = this.mView.get();
+                    if (textView != null && (textView.isFocused() || textView.isSelected())) {
+                        this.mScroll += this.mScrollUnit;
+                        if (this.mScroll > this.mMaxScroll) {
+                            this.mScroll = this.mMaxScroll;
+                            this.sendEmptyMessageDelayed(Marquee.MESSAGE_RESTART, Marquee.MARQUEE_RESTART_DELAY);
+                        }
+                        else {
+                            this.sendEmptyMessageDelayed(Marquee.MESSAGE_TICK, Marquee.MARQUEE_RESOLUTION);
+                        }
+                        textView.invalidate();
+                    }
+                }
+                stop() {
+                    this.mStatus = Marquee.MARQUEE_STOPPED;
+                    this.removeMessages(Marquee.MESSAGE_START);
+                    this.removeMessages(Marquee.MESSAGE_RESTART);
+                    this.removeMessages(Marquee.MESSAGE_TICK);
+                    this.resetScroll();
+                }
+                resetScroll() {
+                    this.mScroll = 0.0;
+                    const textView = this.mView.get();
+                    if (textView != null)
+                        textView.invalidate();
+                }
+                start(repeatLimit) {
+                    if (repeatLimit == 0) {
+                        this.stop();
+                        return;
+                    }
+                    this.mRepeatLimit = repeatLimit;
+                    const textView = this.mView.get();
+                    if (textView != null && textView.mLayout != null) {
+                        this.mStatus = Marquee.MARQUEE_STARTING;
+                        this.mScroll = 0.0;
+                        const textWidth = textView.getWidth() - textView.getCompoundPaddingLeft() - textView.getCompoundPaddingRight();
+                        const lineWidth = textView.mLayout.getLineWidth(0);
+                        const gap = textWidth / 3.0;
+                        this.mGhostStart = lineWidth - textWidth + gap;
+                        this.mMaxScroll = this.mGhostStart + textWidth;
+                        this.mGhostOffset = lineWidth + gap;
+                        this.mFadeStop = lineWidth + textWidth / 6.0;
+                        this.mMaxFadeScroll = this.mGhostStart + lineWidth + lineWidth;
+                        textView.invalidate();
+                        this.sendEmptyMessageDelayed(Marquee.MESSAGE_START, Marquee.MARQUEE_DELAY);
+                    }
+                }
+                getGhostOffset() {
+                    return this.mGhostOffset;
+                }
+                getScroll() {
+                    return this.mScroll;
+                }
+                getMaxFadeScroll() {
+                    return this.mMaxFadeScroll;
+                }
+                shouldDrawLeftFade() {
+                    return this.mScroll <= this.mFadeStop;
+                }
+                shouldDrawGhost() {
+                    return this.mStatus == Marquee.MARQUEE_RUNNING && this.mScroll > this.mGhostStart;
+                }
+                isRunning() {
+                    return this.mStatus == Marquee.MARQUEE_RUNNING;
+                }
+                isStopped() {
+                    return this.mStatus == Marquee.MARQUEE_STOPPED;
+                }
+            }
+            Marquee.MARQUEE_DELTA_MAX = 0.07;
+            Marquee.MARQUEE_DELAY = 1200;
+            Marquee.MARQUEE_RESTART_DELAY = 1200;
+            Marquee.MARQUEE_RESOLUTION = 1000 / 30;
+            Marquee.MARQUEE_PIXELS_PER_SECOND = 30;
+            Marquee.MARQUEE_STOPPED = 0x0;
+            Marquee.MARQUEE_STARTING = 0x1;
+            Marquee.MARQUEE_RUNNING = 0x2;
+            Marquee.MESSAGE_START = 0x1;
+            Marquee.MESSAGE_TICK = 0x2;
+            Marquee.MESSAGE_RESTART = 0x3;
+            TextView.Marquee = Marquee;
+            class ChangeWatcher {
+                constructor(arg) {
+                    this._TextView_this = arg;
+                }
+                beforeTextChanged(buffer, start, before, after) {
+                    if (TextView.DEBUG_EXTRACT)
+                        Log.v(TextView.LOG_TAG, "beforeTextChanged start=" + start + " before=" + before + " after=" + after + ": " + buffer);
+                    this._TextView_this.sendBeforeTextChanged(buffer, start, before, after);
+                }
+                onTextChanged(buffer, start, before, after) {
+                    if (TextView.DEBUG_EXTRACT)
+                        Log.v(TextView.LOG_TAG, "onTextChanged start=" + start + " before=" + before + " after=" + after + ": " + buffer);
+                    this._TextView_this.handleTextChanged(buffer, start, before, after);
+                }
+                afterTextChanged(buffer) {
+                    if (TextView.DEBUG_EXTRACT)
+                        Log.v(TextView.LOG_TAG, "afterTextChanged: " + buffer);
+                    this._TextView_this.sendAfterTextChanged(buffer);
+                }
+                onSpanChanged(buf, what, s, e, st, en) {
+                    if (TextView.DEBUG_EXTRACT)
+                        Log.v(TextView.LOG_TAG, "onSpanChanged s=" + s + " e=" + e + " st=" + st + " en=" + en + " what=" + what + ": " + buf);
+                    this._TextView_this.spanChange(buf, what, s, st, e, en);
+                }
+                onSpanAdded(buf, what, s, e) {
+                    if (TextView.DEBUG_EXTRACT)
+                        Log.v(TextView.LOG_TAG, "onSpanAdded s=" + s + " e=" + e + " what=" + what + ": " + buf);
+                    this._TextView_this.spanChange(buf, what, -1, s, -1, e);
+                }
+                onSpanRemoved(buf, what, s, e) {
+                    if (TextView.DEBUG_EXTRACT)
+                        Log.v(TextView.LOG_TAG, "onSpanRemoved s=" + s + " e=" + e + " what=" + what + ": " + buf);
+                    this._TextView_this.spanChange(buf, what, s, -1, e, -1);
+                }
+            }
+            TextView.ChangeWatcher = ChangeWatcher;
+            (function (BufferType) {
+                BufferType[BufferType["NORMAL"] = 0] = "NORMAL";
+                BufferType[BufferType["SPANNABLE"] = 1] = "SPANNABLE";
+                BufferType[BufferType["EDITABLE"] = 2] = "EDITABLE";
+            })(TextView.BufferType || (TextView.BufferType = {}));
+            var BufferType = TextView.BufferType;
+        })(TextView = widget.TextView || (widget.TextView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
@@ -16059,7 +24155,7 @@ var androidui;
         var View = android.view.View;
         var MeasureSpec = View.MeasureSpec;
         var ImageView = android.widget.ImageView;
-        requestAnimationFrame(() => {
+        window.addEventListener('AndroidUILoadFinish', () => {
             eval('ImageView = android.widget.ImageView;');
         });
         class HtmlImageView extends View {
@@ -16718,97 +24814,6 @@ var android;
         os.Trace = Trace;
     })(os = android.os || (android.os = {}));
 })(android || (android = {}));
-var java;
-(function (java) {
-    var lang;
-    (function (lang) {
-        class Integer {
-            static parseInt(value) {
-                return Number.parseInt(value);
-            }
-        }
-        Integer.MIN_VALUE = Number.MIN_SAFE_INTEGER;
-        Integer.MAX_VALUE = Number.MAX_SAFE_INTEGER;
-        lang.Integer = Integer;
-    })(lang = java.lang || (java.lang = {}));
-})(java || (java = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-var android;
-(function (android) {
-    var text;
-    (function (text) {
-        class InputType {
-        }
-        InputType.TYPE_MASK_CLASS = 0x0000000f;
-        InputType.TYPE_MASK_VARIATION = 0x00000ff0;
-        InputType.TYPE_MASK_FLAGS = 0x00fff000;
-        InputType.TYPE_NULL = 0x00000000;
-        InputType.TYPE_CLASS_TEXT = 0x00000001;
-        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS = 0x00001000;
-        InputType.TYPE_TEXT_FLAG_CAP_WORDS = 0x00002000;
-        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES = 0x00004000;
-        InputType.TYPE_TEXT_FLAG_AUTO_CORRECT = 0x00008000;
-        InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE = 0x00010000;
-        InputType.TYPE_TEXT_FLAG_MULTI_LINE = 0x00020000;
-        InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE = 0x00040000;
-        InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS = 0x00080000;
-        InputType.TYPE_TEXT_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_TEXT_VARIATION_URI = 0x00000010;
-        InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
-        InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT = 0x00000030;
-        InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE = 0x00000040;
-        InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE = 0x00000050;
-        InputType.TYPE_TEXT_VARIATION_PERSON_NAME = 0x00000060;
-        InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS = 0x00000070;
-        InputType.TYPE_TEXT_VARIATION_PASSWORD = 0x00000080;
-        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD = 0x00000090;
-        InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT = 0x000000a0;
-        InputType.TYPE_TEXT_VARIATION_FILTER = 0x000000b0;
-        InputType.TYPE_TEXT_VARIATION_PHONETIC = 0x000000c0;
-        InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS = 0x000000d0;
-        InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD = 0x000000e0;
-        InputType.TYPE_CLASS_NUMBER = 0x00000002;
-        InputType.TYPE_NUMBER_FLAG_SIGNED = 0x00001000;
-        InputType.TYPE_NUMBER_FLAG_DECIMAL = 0x00002000;
-        InputType.TYPE_NUMBER_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_NUMBER_VARIATION_PASSWORD = 0x00000010;
-        InputType.TYPE_CLASS_PHONE = 0x00000003;
-        InputType.TYPE_CLASS_DATETIME = 0x00000004;
-        InputType.TYPE_DATETIME_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_DATETIME_VARIATION_DATE = 0x00000010;
-        InputType.TYPE_DATETIME_VARIATION_TIME = 0x00000020;
-        text.InputType = InputType;
-    })(text = android.text || (android.text = {}));
-})(android || (android = {}));
-var android;
-(function (android) {
-    var text;
-    (function (text) {
-        class TextUtils {
-            static isEmpty(str) {
-                if (str == null || str.length == 0)
-                    return true;
-                else
-                    return false;
-            }
-        }
-        text.TextUtils = TextUtils;
-    })(text = android.text || (android.text = {}));
-})(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/3.
  */
@@ -16821,38 +24826,6 @@ var android;
         }
         util.LongSparseArray = LongSparseArray;
     })(util = android.util || (android.util = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/View.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        class HapticFeedbackConstants {
-        }
-        HapticFeedbackConstants.LONG_PRESS = 0;
-        HapticFeedbackConstants.VIRTUAL_KEY = 1;
-        HapticFeedbackConstants.KEYBOARD_TAP = 3;
-        HapticFeedbackConstants.SAFE_MODE_DISABLED = 10000;
-        HapticFeedbackConstants.SAFE_MODE_ENABLED = 10001;
-        HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING = 0x0001;
-        HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING = 0x0002;
-        view.HapticFeedbackConstants = HapticFeedbackConstants;
-    })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/5.
@@ -30286,6 +38259,459 @@ var android;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/10/26.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="../../android/graphics/Color.ts"/>
+///<reference path="../../android/content/res/ColorStateList.ts"/>
+///<reference path="../../android/util/TypedValue.ts"/>
+///<reference path="../../android/R/attr.ts"/>
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var View = android.view.View;
+        var Gravity = android.view.Gravity;
+        var Resources = android.content.res.Resources;
+        var Color = android.graphics.Color;
+        var ColorStateList = android.content.res.ColorStateList;
+        var MeasureSpec = View.MeasureSpec;
+        var TypedValue = android.util.TypedValue;
+        class HtmlView extends View {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.mGravity = Gravity.TOP | Gravity.LEFT;
+                this.mSingleLine = false;
+                this.mTextColor = ColorStateList.valueOf(Color.BLACK);
+                this.mCurTextColor = Color.BLACK;
+                this.mHintColor = Color.LTGRAY;
+                this.mSpacingMult = 1.2;
+                this.mSpacingAdd = 0;
+                this.mMaxWidth = Number.MAX_SAFE_INTEGER;
+                this.mMaxHeight = Number.MAX_SAFE_INTEGER;
+                this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
+                this.mMinLineCount = 0;
+                this.initTextElement();
+                this._attrBinder.addAttr('enabled', (value) => {
+                    this.setEnabled(this._attrBinder.parseBoolean(value, true));
+                }, () => {
+                    return this.isEnabled();
+                });
+                this._attrBinder.addAttr('textColorHighlight', (value) => {
+                });
+                this._attrBinder.addAttr('textColor', (value) => {
+                    let colorList = this._attrBinder.parseColorList(value);
+                    if (colorList instanceof ColorStateList) {
+                        this.setTextColor(colorList);
+                        return;
+                    }
+                    let color = this._attrBinder.parseColor(value);
+                    if (Number.isInteger(color))
+                        this.setTextColor(color);
+                }, () => {
+                    if (this.mTextColor.isStateful())
+                        return this.mTextColor;
+                    return this.mTextColor.getDefaultColor();
+                });
+                this._attrBinder.addAttr('textColorHint', (value) => {
+                });
+                this._attrBinder.addAttr('textSize', (value) => {
+                    if (value !== undefined && value !== null) {
+                        value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
+                        this.setTextSizeInPx(value);
+                    }
+                }, () => {
+                    return this.mTextSize;
+                });
+                this._attrBinder.addAttr('textStyle', (value) => {
+                });
+                this._attrBinder.addAttr('textAllCaps', (value) => {
+                });
+                this._attrBinder.addAttr('drawableLeft', (value) => {
+                });
+                this._attrBinder.addAttr('drawableTop', (value) => {
+                });
+                this._attrBinder.addAttr('drawableRight', (value) => {
+                });
+                this._attrBinder.addAttr('drawableBottom', (value) => {
+                });
+                this._attrBinder.addAttr('drawablePadding', (value) => {
+                });
+                this._attrBinder.addAttr('maxLines', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setMaxLines(value);
+                }, () => {
+                    return this.mMaxLineCount;
+                });
+                this._attrBinder.addAttr('maxHeight', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setMaxHeight(value);
+                }, () => {
+                    return this.mMaxHeight;
+                });
+                this._attrBinder.addAttr('lines', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setLines(value);
+                }, () => {
+                    if (this.mMaxLineCount === this.mMinLineCount)
+                        return this.mMaxLineCount;
+                    return null;
+                });
+                this._attrBinder.addAttr('height', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setHeight(value);
+                }, () => {
+                    if (this.mMaxHeight === this.getMinimumHeight())
+                        return this.mMaxHeight;
+                    return null;
+                });
+                this._attrBinder.addAttr('minLines', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setMinLines(value);
+                }, () => {
+                    return this.mMinLineCount;
+                });
+                this._attrBinder.addAttr('minHeight', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setMinimumHeight(value);
+                });
+                this._attrBinder.addAttr('maxWidth', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setMaxWidth(value);
+                }, () => {
+                    return this.mMaxWidth;
+                });
+                this._attrBinder.addAttr('width', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setWidth(value);
+                }, () => {
+                    if (this.mMinWidth === this.mMaxWidth)
+                        return this.mMinWidth;
+                    return null;
+                });
+                this._attrBinder.addAttr('gravity', (value) => {
+                    this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
+                }, () => {
+                    return this.mGravity;
+                });
+                this._attrBinder.addAttr('text', (value) => {
+                    this.setText(value);
+                }, () => {
+                    return this.getText();
+                });
+                this._attrBinder.addAttr('singleLine', (value) => {
+                    if (this._attrBinder.parseBoolean(value, false))
+                        this.setSingleLine();
+                }, () => {
+                    if (this.mMinLineCount === 1 && this.mMaxLineCount === 1)
+                        return true;
+                    return false;
+                });
+                this._attrBinder.addAttr('textScaleX', (value) => {
+                });
+                this._attrBinder.addAttr('lineSpacingExtra', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setLineSpacing(value, this.mSpacingMult);
+                }, () => {
+                    return this.mSpacingAdd;
+                });
+                this._attrBinder.addAttr('lineSpacingMultiplier', (value) => {
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value))
+                        this.setLineSpacing(this.mSpacingAdd, value);
+                }, () => {
+                    return this.mSpacingMult;
+                });
+                this.applyDefaultAttributes(android.R.attr.textViewStyle);
+            }
+            initTextElement() {
+                this.mTextElement = document.createElement('div');
+                this.mTextElement.style.position = "absolute";
+                this.mTextElement.style.boxSizing = "border-box";
+                this.mTextElement.style.overflow = "hidden";
+                this.mTextElement.style.opacity = "0";
+                this.bindElement.appendChild(this.mTextElement);
+            }
+            onLayout(changed, left, top, right, bottom) {
+                super.onLayout(changed, left, top, right, bottom);
+                this.mTextElement.style.opacity = "";
+            }
+            onFinishInflate() {
+                super.onFinishInflate();
+                Array.from(this.bindElement.childNodes).forEach((item) => {
+                    if (item === this.mTextElement)
+                        return;
+                    this.bindElement.removeChild(item);
+                    this.mTextElement.appendChild(item);
+                });
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                let widthMode = MeasureSpec.getMode(widthMeasureSpec);
+                let heightMode = MeasureSpec.getMode(heightMeasureSpec);
+                let widthSize = MeasureSpec.getSize(widthMeasureSpec);
+                let heightSize = MeasureSpec.getSize(heightMeasureSpec);
+                let width, height;
+                let padLeft = this.getCompoundPaddingLeft();
+                let padTop = this.getCompoundPaddingTop();
+                let padRight = this.getCompoundPaddingRight();
+                let padBottom = this.getCompoundPaddingBottom();
+                this.mTextElement.style.height = "";
+                this.mTextElement.style.width = "";
+                this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels * Resources.getDisplayMetrics().density + 'px';
+                this.mTextElement.style.top = "";
+                if (widthMode == MeasureSpec.EXACTLY) {
+                    width = widthSize;
+                }
+                else {
+                    width = this.mTextElement.offsetWidth + 2;
+                    width += padLeft + padRight;
+                    width = Math.min(width, this.mMaxWidth);
+                    width = Math.max(width, this.getSuggestedMinimumWidth());
+                    if (widthMode == MeasureSpec.AT_MOST) {
+                        width = Math.min(widthSize, width);
+                    }
+                }
+                let unpaddedWidth = width - padLeft - padRight;
+                this.mTextElement.style.width = unpaddedWidth + "px";
+                this.mTextElement.style.left = padLeft + "px";
+                if (heightMode == MeasureSpec.EXACTLY) {
+                    height = heightSize;
+                    let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
+                    if (this.mMaxLineCount < Number.MAX_SAFE_INTEGER) {
+                        let maxHeightWithLineCount = pad + this.mMaxLineCount * this.getLineHeight();
+                        height = Math.min(maxHeightWithLineCount, height);
+                    }
+                }
+                else {
+                    let desired = this.getDesiredHeight();
+                    height = desired;
+                    if (heightMode == MeasureSpec.AT_MOST) {
+                        height = Math.min(desired, heightSize);
+                    }
+                }
+                let contextHeight = height - padTop - padBottom;
+                const verticalGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                let finalTop = padTop;
+                if (verticalGravity !== Gravity.TOP) {
+                    let textHeight = this.mTextElement.offsetHeight;
+                    if (textHeight < contextHeight) {
+                        switch (verticalGravity) {
+                            case Gravity.CENTER_VERTICAL:
+                                finalTop += (contextHeight - textHeight) / 2;
+                                break;
+                            case Gravity.BOTTOM:
+                                finalTop += (contextHeight - textHeight);
+                                break;
+                            case Gravity.TOP:
+                                break;
+                        }
+                        contextHeight = textHeight;
+                    }
+                }
+                this.mTextElement.style.height = contextHeight + "px";
+                this.mTextElement.style.top = finalTop + "px";
+                this.setMeasuredDimension(width, height);
+            }
+            getDesiredHeight() {
+                let desired = this.mTextElement.offsetHeight;
+                let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
+                desired += pad;
+                desired = Math.min(this.mMaxHeight, desired);
+                if (this.mMaxLineCount < Number.MAX_SAFE_INTEGER) {
+                    let maxHeightWithLineCount = pad + this.mMaxLineCount * this.getLineHeight();
+                    desired = Math.min(maxHeightWithLineCount, desired);
+                }
+                if (this.mMinLineCount > 0) {
+                    let minHeightWithLineCount = pad + this.mMinLineCount * this.getLineHeight();
+                    desired = Math.max(minHeightWithLineCount, desired);
+                }
+                desired = Math.max(desired, this.getSuggestedMinimumHeight());
+                return desired;
+            }
+            setTextColor(color) {
+                if (Number.isInteger(color)) {
+                    this.mTextColor = ColorStateList.valueOf(color);
+                }
+                else {
+                    if (color === null || color === undefined) {
+                        throw new Error('colors is null');
+                    }
+                    this.mTextColor = color;
+                }
+                this.updateTextColors();
+            }
+            getTextColors() {
+                return this.mTextColor;
+            }
+            getCurrentTextColor() {
+                return this.mCurTextColor;
+            }
+            updateTextColors() {
+                let inval = false;
+                let color = this.mTextColor.getColorForState(this.getDrawableState(), 0);
+                if (color != this.mCurTextColor) {
+                    this.mCurTextColor = color;
+                    let r = Color.red(this.mCurTextColor);
+                    let g = Color.green(this.mCurTextColor);
+                    let b = Color.blue(this.mCurTextColor);
+                    let a = Color.alpha(this.mCurTextColor);
+                    this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                    inval = false;
+                }
+                if (inval) {
+                    this.invalidate();
+                }
+            }
+            drawableStateChanged() {
+                super.drawableStateChanged();
+                if (this.mTextColor != null && this.mTextColor.isStateful()) {
+                    this.updateTextColors();
+                }
+            }
+            getCompoundPaddingTop() {
+                return this.mPaddingTop;
+            }
+            getCompoundPaddingBottom() {
+                return this.mPaddingBottom;
+            }
+            getCompoundPaddingLeft() {
+                return this.mPaddingLeft;
+            }
+            getCompoundPaddingRight() {
+                return this.mPaddingRight;
+            }
+            setGravity(gravity) {
+                switch (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                    case Gravity.CENTER_HORIZONTAL:
+                        this.mTextElement.style.textAlign = "center";
+                        break;
+                    case Gravity.RIGHT:
+                        this.mTextElement.style.textAlign = "right";
+                        break;
+                    case Gravity.LEFT:
+                        this.mTextElement.style.textAlign = "left";
+                        break;
+                }
+                if ((gravity & Gravity.VERTICAL_GRAVITY_MASK) !=
+                    (this.mGravity & Gravity.VERTICAL_GRAVITY_MASK)) {
+                    this.requestLayout();
+                }
+                this.mGravity = gravity;
+            }
+            setLineSpacing(add, mult) {
+                if (this.mSpacingAdd != add || this.mSpacingMult != mult) {
+                    this.mSpacingAdd = add;
+                    this.mSpacingMult = mult;
+                    this.setTextSize(this.mTextSize);
+                }
+            }
+            setTextSizeInPx(sizeInPx) {
+                if (this.mTextSize !== sizeInPx) {
+                    this.mTextSize = sizeInPx;
+                    this.mTextElement.style.fontSize = sizeInPx + "px";
+                    this.mTextElement.style.lineHeight = this.getLineHeight() + "px";
+                    this.requestLayout();
+                }
+            }
+            setTextSize(size) {
+                let sizeInPx = size * Resources.getDisplayMetrics().density;
+                this.setTextSizeInPx(sizeInPx);
+            }
+            getLineHeight() {
+                return Math.ceil(this.mTextSize * this.mSpacingMult + this.mSpacingAdd);
+            }
+            setHeight(pixels) {
+                this.mMaxHeight = pixels;
+                this.setMinimumHeight(pixels);
+                this.requestLayout();
+                this.invalidate();
+            }
+            setMaxLines(max) {
+                this.mMaxLineCount = max;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxLines() {
+                return this.mMaxLineCount;
+            }
+            setMaxHeight(maxHeight) {
+                this.mMaxHeight = maxHeight;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxHeight() {
+                return this.mMaxHeight;
+            }
+            setMaxWidth(maxpixels) {
+                this.mMaxWidth = maxpixels;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMaxWidth() {
+                return this.mMaxWidth;
+            }
+            setWidth(pixels) {
+                this.mMaxWidth = pixels;
+                this.setMinimumWidth(pixels);
+                this.requestLayout();
+                this.invalidate();
+            }
+            setMinLines(min) {
+                this.mMinLineCount = min;
+                this.requestLayout();
+                this.invalidate();
+            }
+            getMinLines() {
+                return this.mMinLineCount;
+            }
+            setSingleLine(singleLine = true) {
+                if (singleLine)
+                    this.setLines(1);
+                else {
+                    this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
+                    this.mMinLineCount = 0;
+                    this.requestLayout();
+                    this.invalidate();
+                }
+            }
+            setLines(lines) {
+                this.mMaxLineCount = this.mMinLineCount = lines;
+                this.requestLayout();
+                this.invalidate();
+            }
+            setText(text = '') {
+                this.mTextElement.innerText = text;
+                this.requestLayout();
+            }
+            getText() {
+                return this.mTextElement.innerText;
+            }
+            setHtml(html) {
+                this.mTextElement.innerHTML = html;
+                this.requestLayout();
+            }
+            getHtml() {
+                return this.mTextElement.innerHTML;
+            }
+            getTextElement() {
+                return this.mTextElement;
+            }
+        }
+        widget.HtmlView = HtmlView;
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
+/**
  * Created by linfaxin on 15/11/16.
  */
 ///<reference path="../../android/view/View.ts"/>
@@ -30522,38 +38948,6 @@ var androidui;
         widget.HtmlDataPickerAdapter = HtmlDataPickerAdapter;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-var android;
-(function (android) {
-    var R;
-    (function (R) {
-        class string_ {
-            static zh() {
-                this.prll_header_state_normal = '下拉以刷新';
-                this.prll_header_state_ready = '松开马上刷新';
-                this.prll_header_state_loading = '正在刷新...';
-                this.prll_header_state_fail = '刷新失败';
-                this.prll_footer_state_normal = '点击加载更多';
-                this.prll_footer_state_loading = '正在加载...';
-                this.prll_footer_state_ready = '松开加载更多';
-                this.prll_footer_state_no_more = '加载完毕';
-                this.prll_footer_state_fail = '加载失败,点击重试';
-            }
-        }
-        string_.prll_header_state_normal = 'Pull to refresh';
-        string_.prll_header_state_ready = 'Release to refresh';
-        string_.prll_header_state_loading = 'Loading';
-        string_.prll_header_state_fail = 'Refresh fail';
-        string_.prll_footer_state_normal = 'Load more';
-        string_.prll_footer_state_loading = 'Loading';
-        string_.prll_footer_state_ready = 'Pull to load more';
-        string_.prll_footer_state_fail = 'Click to reload';
-        string_.prll_footer_state_no_more = 'Load Finish';
-        R.string_ = string_;
-        const lang = navigator.language.split('-')[0].toLowerCase();
-        if (typeof string_[lang] === 'function')
-            string_[lang].call(string_);
-    })(R = android.R || (android.R = {}));
-})(android || (android = {}));
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/widget/ScrollView.ts"/>
 var androidui;
@@ -31611,107 +40005,6 @@ var androidui;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
 /**
- * Created by linfaxin on 15/12/1.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/graphics/Canvas.ts"/>
-var androidui;
-(function (androidui) {
-    var util;
-    (function (util) {
-        var ColorDrawable = android.graphics.drawable.ColorDrawable;
-        var Color = android.graphics.Color;
-        class PerformanceAdjuster {
-            static noCanvasMode() {
-                android.graphics.Canvas.prototype = HackCanvas.prototype;
-                android.view.View.prototype.onDrawVerticalScrollBar =
-                    function (canvas, scrollBar, l, t, r, b) {
-                        let scrollBarEl = this.bindElement['VerticalScrollBar'];
-                        if (!scrollBarEl) {
-                            scrollBarEl = document.createElement('div');
-                            this.bindElement['VerticalScrollBar'] = scrollBarEl;
-                            scrollBarEl.style.zIndex = '9';
-                            scrollBarEl.style.position = 'absolute';
-                            scrollBarEl.style.background = 'black';
-                            scrollBarEl.style.left = '0px';
-                            scrollBarEl.style.top = '0px';
-                            this.bindElement.appendChild(scrollBarEl);
-                        }
-                        let height = b - t;
-                        let width = r - l;
-                        let size = height;
-                        let thickness = width;
-                        let extent = this.mScrollCache.scrollBar.mExtent;
-                        let range = this.mScrollCache.scrollBar.mRange;
-                        let length = Math.round(size * extent / range);
-                        let offset = Math.round((size - length) * this.mScrollCache.scrollBar.mOffset / (range - extent));
-                        if (t < 0)
-                            t = 0;
-                        if (offset < 0)
-                            offset = 0;
-                        scrollBarEl.style.transform = scrollBarEl.style.webkitTransform = `translate(${l}px, ${t + offset}px)`;
-                        scrollBarEl.style.width = (r - l) / 2 + 'px';
-                        scrollBarEl.style.height = length + 'px';
-                        scrollBarEl.style.opacity = this.mScrollCache.scrollBar.mVerticalThumb.getAlpha() / 255 + '';
-                    };
-                const oldSetBackground = android.view.View.prototype.setBackground;
-                android.view.View.prototype.setBackground = function (drawable) {
-                    oldSetBackground.call(this, drawable);
-                    if (drawable instanceof ColorDrawable) {
-                        this.bindElement.style.background = Color.toRGBAFunc(this.mBackground.getColor());
-                    }
-                };
-            }
-        }
-        util.PerformanceAdjuster = PerformanceAdjuster;
-        class HackCanvas extends android.graphics.Canvas {
-            init() {
-            }
-            recycle() {
-            }
-            translate(dx, dy) {
-            }
-            scale(sx, sy, px, py) {
-            }
-            rotate(degrees, px, py) {
-            }
-            drawRGB(r, g, b) {
-            }
-            drawARGB(a, r, g, b) {
-            }
-            drawColor(color) {
-            }
-            clearColor() {
-            }
-            save() {
-                return 1;
-            }
-            restore() {
-            }
-            restoreToCount(saveCount) {
-            }
-            getSaveCount() {
-                return 1;
-            }
-            clipRect(...args) {
-                return false;
-            }
-            getClipBounds(bounds) {
-                return null;
-            }
-            quickReject(...args) {
-                return false;
-            }
-            drawCanvas(canvas, offsetX, offsetY) {
-            }
-            drawRect(...args) {
-            }
-            drawText(text, x, y, paint) {
-            }
-        }
-    })(util = androidui.util || (androidui.util = {}));
-})(androidui || (androidui = {}));
-/**
  * Created by linfaxin on 15/10/6.
  */
 //use the deepest sub class as enter
@@ -31728,11 +40021,16 @@ var androidui;
 ///<reference path="android/widget/GridView.ts"/>
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/widget/NumberPicker.ts"/>
+///<reference path="android/text/Layout.ts"/>
+///<reference path="android/text/BoringLayout.ts"/>
+///<reference path="android/text/StaticLayout.ts"/>
+///<reference path="android/text/style/MetricAffectingSpan.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
+///<reference path="androidui/widget/HtmlView.ts"/>
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
@@ -31744,3 +40042,4 @@ var androidui;
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;
+window.dispatchEvent(new CustomEvent("AndroidUILoadFinish"));

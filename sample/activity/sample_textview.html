@@ -6,8 +6,6 @@
     <meta name="format-detection" content="telephone=no">
     <meta charset="UTF-8">
     <title>android-components-sample</title>
-    <script>
-    </script>
     <style>
         html {
             height: 100%;
@@ -54,19 +52,20 @@
                 <TextView
                         android:padding="10dp"
                         android:text="Line1
-                        Line2
-                        Line3
-                        Line4"
+Line2
+Line3
+Line4"
                         android:style="@style/textStyle"
                         ></TextView>
                 <View android:style="@style/line_spit"></View>
                 <TextView
                         android:maxLines="2"
+                        android:ellipsize="END"
                         android:padding="10dp"
                         android:text="maxLines=2
-                        maxLines=2
-                        maxLines=2
-                        maxLines=2"
+maxLines=2
+maxLines=2
+maxLines=2"
                         android:style="@style/textStyle"
                         ></TextView>
                 <View android:style="@style/line_spit"></View>
@@ -139,17 +138,6 @@
                         android:text="文本居右居下"
                         android:style="@style/textStyle"
                         ></TextView>
-                <View android:style="@style/line_spit"></View>
-                <TextView
-                        android:layout_height="100dp"
-                        android:layout_width="match_parent"
-                        android:padding="10dp"
-                        android:gravity="center"
-                        android:style="@style/textStyle"
-                        >
-                    Html富文本也可以直接定义在此处.<a href="#">链接</a><br>
-                    <p android:style="color: red;font-size: 20px;font-style: italic;font-weight: 900">css样式</p>
-                </TextView>
                 <View android:style="@style/line_spit"></View>
             </LinearLayout>
         </ScrollView>

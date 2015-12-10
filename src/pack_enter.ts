@@ -18,6 +18,11 @@
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/widget/NumberPicker.ts"/>
 
+///<reference path="android/text/Layout.ts"/>
+///<reference path="android/text/BoringLayout.ts"/>
+///<reference path="android/text/StaticLayout.ts"/>
+///<reference path="android/text/style/MetricAffectingSpan.ts"/>
+
 
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
@@ -28,6 +33,7 @@
 
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
+///<reference path="androidui/widget/HtmlView.ts"/>
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
@@ -41,3 +47,4 @@
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;
+window.dispatchEvent(new CustomEvent("AndroidUILoadFinish"));

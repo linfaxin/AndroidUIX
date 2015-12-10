@@ -593,7 +593,7 @@ module android.view {
                     let fps = this.mFpsNumFrames * 1000 / totalTime;
                     Log.v(ViewRootImpl.TAG, "FPS:\t" + fps);
                     if(!this._showFPSNode){
-                        this._showFPSNode = document.createElement('p');
+                        this._showFPSNode = document.createElement('div');
                         this._showFPSNode.style.position = 'absolute';
                         this._showFPSNode.style.left = '0';
                         this._showFPSNode.style.bottom = '0';

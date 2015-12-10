@@ -1912,7 +1912,7 @@ module android.view {
         drawChild(canvas:Canvas, child:View , drawingTime:number):boolean {
             return child.drawFromParent(canvas, this, drawingTime);
         }
-        drawableStateChanged() {
+        protected drawableStateChanged() {
             super.drawableStateChanged();
 
             if ((this.mGroupFlags & ViewGroup.FLAG_NOTIFY_CHILDREN_ON_DRAWABLE_STATE_CHANGE) != 0) {
@@ -1940,7 +1940,7 @@ module android.view {
                 children[i].jumpDrawablesToCurrentState();
             }
         }
-        onCreateDrawableState(extraSpace:number):Array<number> {
+        protected onCreateDrawableState(extraSpace:number):Array<number> {
             if ((this.mGroupFlags & ViewGroup.FLAG_ADD_STATES_FROM_CHILDREN) == 0) {
                 return super.onCreateDrawableState(extraSpace);
             }

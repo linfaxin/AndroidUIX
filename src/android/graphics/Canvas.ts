@@ -6,6 +6,7 @@
 ///<reference path="Rect.ts"/>
 ///<reference path="Color.ts"/>
 ///<reference path="Paint.ts"/>
+///<reference path="Path.ts"/>
 module android.graphics {
     import Pools = android.util.Pools;
     import Log = android.util.Log;
@@ -22,6 +23,20 @@ module android.graphics {
         mCurrentClip:Rect;
         private shouldDoRectBeforeRestoreMap = new Map<number, Array<Rect>>();
         private mClipStateMap = new Map<number, Rect>();
+
+
+        /**
+         * Flag for drawTextRun indicating left-to-right run direction.
+         * @hide
+         */
+        static DIRECTION_LTR = 0;
+
+        /**
+         * Flag for drawTextRun indicating right-to-left run direction.
+         * @hide
+         */
+        static DIRECTION_RTL = 1;
+
 
         private static sRectPool = new Pools.SynchronizedPool<Rect>(100);
         private static obtainRect(copy?:Rect):Rect {
@@ -68,7 +83,7 @@ module android.graphics {
             //content.fillRect = logMethod(content.fillRect);
 
             this.fullRectForClip();//ready for clip bound
-            this._mCanvasContent.clip();
+            //this._mCanvasContent.clip();
             this.save();
         }
 
@@ -142,18 +157,18 @@ module android.graphics {
         }
 
         restore() {
-            let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-            if(doRects && doRects.length>0){
-                doRects.forEach((rect:Rect)=>{
-                    this._mCanvasContent.rect(rect.left, rect.top, rect.width(), rect.height());
-                });
-                if(doRects.length%2 == 1){
-                    this.fullRectForClip();
-                }
-                while(doRects.length>0){
-                    Canvas.recycleRect(doRects.pop());
-                }
-            }
+            //let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
+            //if(doRects && doRects.length>0){
+            //    doRects.forEach((rect:Rect)=>{
+            //        this._mCanvasContent.rect(rect.left, rect.top, rect.width(), rect.height());
+            //    });
+            //    if(doRects.length%2 == 1){
+            //        this.fullRectForClip();
+            //    }
+            //    while(doRects.length>0){
+            //        Canvas.recycleRect(doRects.pop());
+            //    }
+            //}
 
 
             this._saveCount--;
@@ -178,7 +193,7 @@ module android.graphics {
         }
 
         private fullRectForClip(){
-            this._mCanvasContent.rect(Canvas.FullRect.left, Canvas.FullRect.top, Canvas.FullRect.width(), Canvas.FullRect.height());
+            //this._mCanvasContent.rect(Canvas.FullRect.left, Canvas.FullRect.top, Canvas.FullRect.width(), Canvas.FullRect.height());
         }
 
         clipRect(rect:Rect):boolean;
@@ -194,18 +209,18 @@ module android.graphics {
                 rect.set(left, top, right, bottom);
             }
 
-            this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top),
-                Math.ceil(rect.width()), Math.ceil(rect.height()));
-            this.fullRectForClip();
-            this._mCanvasContent.clip('evenodd');
-
-            let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-            if(!doRects){
-                doRects = [];
-                this.shouldDoRectBeforeRestoreMap.set(this._saveCount, doRects);
-            }
-            doRects.push(rect);
-
+            //this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top),
+            //    Math.ceil(rect.width()), Math.ceil(rect.height()));
+            //this.fullRectForClip();
+            //this._mCanvasContent.clip('evenodd');
+            //
+            //let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
+            //if(!doRects){
+            //    doRects = [];
+            //    this.shouldDoRectBeforeRestoreMap.set(this._saveCount, doRects);
+            //}
+            //doRects.push(rect);
+            //
             this.mCurrentClip.intersect(rect);
 
             return rect.isEmpty();
@@ -249,6 +264,54 @@ module android.graphics {
             }
         }
 
+
+
+        /**
+         * Draw the specified path using the specified paint. The path will be
+         * filled or framed based on the Style in the paint.
+         *
+         * @param path  The path to be drawn
+         * @param paint The paint used to draw the path
+         */
+        drawPath(path:Path, paint:Paint):void  {
+            //TODO set path
+        }
+
+
+        /**
+         * Draw the text, with origin at (x,y), using the specified paint. The
+         * origin is interpreted based on the Align setting in the paint.
+         *
+         * @param text  The text to be drawn
+         * @param x     The x-coordinate of the origin of the text being drawn
+         * @param y     The y-coordinate of the origin of the text being drawn
+         * @param paint The paint used for the text (e.g. color, size, style)
+         */
+        drawText_count(text:string, index:number, count:number, x:number, y:number, paint:Paint):void  {
+            if ((index | count | (index + count) | (text.length - index - count)) < 0) {
+                throw Error(`new IndexOutOfBoundsException()`);
+            }
+            this.drawText(text.substr(index, count), x, y, paint);
+        }
+
+        /**
+         * Draw the text, with origin at (x,y), using the specified paint.
+         * The origin is interpreted based on the Align setting in the paint.
+         *
+         * @param text  The text to be drawn
+         * @param start The index of the first character in text to draw
+         * @param end   (end - 1) is the index of the last character in text to draw
+         * @param x     The x-coordinate of the origin of the text being drawn
+         * @param y     The y-coordinate of the origin of the text being drawn
+         * @param paint The paint used for the text (e.g. color, size, style)
+         */
+        drawText_end(text:string, start:number, end:number, x:number, y:number, paint:Paint):void  {
+            if ((start | end | (end - start) | (text.length - end)) < 0) {
+                throw Error(`new IndexOutOfBoundsException()`);
+            }
+            this.drawText(text.substring(start, end), x, y, paint);
+        }
+
         /**
          * Draw the text, with origin at (x,y), using the specified paint. The
          * origin is interpreted based on the Align setting in the paint.
@@ -279,6 +342,87 @@ module android.graphics {
                 this._mCanvasContent.fillText(text, x, y);
             }
             this._mCanvasContent.restore();
+        }
+
+
+        /**
+         * Render a run of all LTR or all RTL text, with shaping. This does not run
+         * bidi on the provided text, but renders it as a uniform right-to-left or
+         * left-to-right run, as indicated by dir. Alignment of the text is as
+         * determined by the Paint's TextAlign value.
+         *
+         * @param text the text to render
+         * @param index the start of the text to render
+         * @param count the count of chars to render
+         * @param contextIndex the start of the context for shaping.  Must be
+         *         no greater than index.
+         * @param contextCount the number of characters in the context for shaping.
+         *         ContexIndex + contextCount must be no less than index
+         *         + count.
+         * @param x the x position at which to draw the text
+         * @param y the y position at which to draw the text
+         * @param dir the run direction, either {@link #DIRECTION_LTR} or
+         *         {@link #DIRECTION_RTL}.
+         * @param paint the paint
+         * @hide
+         */
+        drawTextRun_count(text:string, index:number, count:number, contextIndex:number, contextCount:number, x:number, y:number, dir:number, paint:Paint):void  {
+            //if (text == null) {
+            //    throw Error(`new NullPointerException("text is null")`);
+            //}
+            //if (paint == null) {
+            //    throw Error(`new NullPointerException("paint is null")`);
+            //}
+            //if ((index | count | text.length - index - count) < 0) {
+            //    throw Error(`new IndexOutOfBoundsException()`);
+            //}
+            //if (dir != Canvas.DIRECTION_LTR && dir != Canvas.DIRECTION_RTL) {
+            //    throw Error(`new IllegalArgumentException("unknown dir: " + dir)`);
+            //}
+            this.drawText_count(text, index, count, x, y, paint);
+        }
+
+        /**
+         * Render a run of all LTR or all RTL text, with shaping. This does not run
+         * bidi on the provided text, but renders it as a uniform right-to-left or
+         * left-to-right run, as indicated by dir. Alignment of the text is as
+         * determined by the Paint's TextAlign value.
+         *
+         * @param text the text to render
+         * @param start the start of the text to render. Data before this position
+         *            can be used for shaping context.
+         * @param end the end of the text to render. Data at or after this
+         *            position can be used for shaping context.
+         * @param x the x position at which to draw the text
+         * @param y the y position at which to draw the text
+         * @param dir the run direction, either 0 for LTR or 1 for RTL.
+         * @param paint the paint
+         * @hide
+         */
+        drawTextRun_end(text:string, start:number, end:number, contextStart:number, contextEnd:number, x:number, y:number, dir:number, paint:Paint):void  {
+            //if (text == null) {
+            //    throw Error(`new NullPointerException("text is null")`);
+            //}
+            //if (paint == null) {
+            //    throw Error(`new NullPointerException("paint is null")`);
+            //}
+            //if ((start | end | end - start | text.length() - end) < 0) {
+            //    throw Error(`new IndexOutOfBoundsException()`);
+            //}
+            //let flags:number = dir == 0 ? 0 : 1;
+            //if (text instanceof string || text instanceof SpannedString || text instanceof SpannableString) {
+            //    Canvas.native_drawTextRun(this.mNativeCanvas, text.toString(), start, end, contextStart, contextEnd, x, y, flags, paint.mNativePaint);
+            //} else if (text instanceof GraphicsOperations) {
+            //    (<GraphicsOperations> text).drawTextRun(this, start, end, contextStart, contextEnd, x, y, flags, paint);
+            //} else {
+            //    let contextLen:number = contextEnd - contextStart;
+            //    let len:number = end - start;
+            //    let buf:char[] = TemporaryBuffer.obtain(contextLen);
+            //    TextUtils.getChars(text, contextStart, contextEnd, buf, 0);
+            //    Canvas.native_drawTextRun(this.mNativeCanvas, buf, start - contextStart, len, 0, contextLen, x, y, flags, paint.mNativePaint);
+            //    TemporaryBuffer.recycle(buf);
+            //}
+            this.drawText_end(text, start, end, x, y, paint);
         }
     }
 }

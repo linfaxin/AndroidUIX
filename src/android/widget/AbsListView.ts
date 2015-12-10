@@ -1728,7 +1728,7 @@ module android.widget {
         /**
          * @hide
          */
-        setFrame(left:number, top:number, right:number, bottom:number):boolean {
+        protected setFrame(left:number, top:number, right:number, bottom:number):boolean {
             const changed:boolean = super.setFrame(left, top, right, bottom);
             if (changed) {
                 // Reposition the popup when the frame has changed. This includes
@@ -2162,12 +2162,12 @@ module android.widget {
             }
         }
 
-        drawableStateChanged():void {
+        protected drawableStateChanged():void {
             super.drawableStateChanged();
             this.updateSelectorState();
         }
 
-        onCreateDrawableState(extraSpace:number):number[] {
+        protected onCreateDrawableState(extraSpace:number):number[] {
             // If the child view is enabled then do the default behavior.
             if (this.mIsChildViewEnabled) {
                 // Common case
@@ -2195,7 +2195,7 @@ module android.widget {
             return state;
         }
 
-        verifyDrawable(dr:Drawable):boolean {
+        protected verifyDrawable(dr:Drawable):boolean {
             return this.mSelector == dr || super.verifyDrawable(dr);
         }
 

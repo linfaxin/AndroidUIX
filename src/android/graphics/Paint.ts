@@ -4,7 +4,189 @@
 ///<reference path="Canvas.ts"/>
 
 module android.graphics{
+
     export class Paint{
+
+        private static FontMetrics_Size_Ascent = -0.9277344;
+        private static FontMetrics_Size_Bottom = 0.2709961;
+        private static FontMetrics_Size_Descent = 0.24414062;
+        private static FontMetrics_Size_Leading = 0;
+        private static FontMetrics_Size_Top = -1.05615234;
+
+        static DIRECTION_LTR:number = 0;
+        static DIRECTION_RTL:number = 1;
+
+        /**
+         * Option for getTextRunCursor to compute the valid cursor after
+         * offset or the limit of the context, whichever is less.
+         * @hide
+         */
+        static CURSOR_AFTER:number = 0;
+
+        /**
+         * Option for getTextRunCursor to compute the valid cursor at or after
+         * the offset or the limit of the context, whichever is less.
+         * @hide
+         */
+        static CURSOR_AT_OR_AFTER:number = 1;
+
+        /**
+         * Option for getTextRunCursor to compute the valid cursor before
+         * offset or the start of the context, whichever is greater.
+         * @hide
+         */
+        static CURSOR_BEFORE:number = 2;
+
+        /**
+         * Option for getTextRunCursor to compute the valid cursor at or before
+         * offset or the start of the context, whichever is greater.
+         * @hide
+         */
+        static CURSOR_AT_OR_BEFORE:number = 3;
+
+        /**
+         * Option for getTextRunCursor to return offset if the cursor at offset
+         * is valid, or -1 if it isn't.
+         * @hide
+         */
+        static CURSOR_AT:number = 4;
+
+        /**
+         * Maximum cursor option value.
+         */
+        private static CURSOR_OPT_MAX_VALUE:number = Paint.CURSOR_AT;
+
+
+        /**
+         * Paint flag that enables antialiasing when drawing.
+         *
+         * <p>Enabling this flag will cause all draw operations that support
+         * antialiasing to use it.</p>
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static ANTI_ALIAS_FLAG:number = 0x01;
+
+        /**
+         * Paint flag that enables bilinear sampling on scaled bitmaps.
+         *
+         * <p>If cleared, scaled bitmaps will be drawn with nearest neighbor
+         * sampling, likely resulting in artifacts. This should generally be on
+         * when drawing bitmaps, unless performance-bound (rendering to software
+         * canvas) or preferring pixelation artifacts to blurriness when scaling
+         * significantly.</p>
+         *
+         * <p>If bitmaps are scaled for device density at creation time (as
+         * resource bitmaps often are) the filtering will already have been
+         * done.</p>
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static FILTER_BITMAP_FLAG:number = 0x02;
+
+        /**
+         * Paint flag that enables dithering when blitting.
+         *
+         * <p>Enabling this flag applies a dither to any blit operation where the
+         * target's colour space is more constrained than the source.
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static DITHER_FLAG:number = 0x04;
+
+        /**
+         * Paint flag that applies an underline decoration to drawn text.
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static UNDERLINE_TEXT_FLAG:number = 0x08;
+
+        /**
+         * Paint flag that applies a strike-through decoration to drawn text.
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static STRIKE_THRU_TEXT_FLAG:number = 0x10;
+
+        /**
+         * Paint flag that applies a synthetic bolding effect to drawn text.
+         *
+         * <p>Enabling this flag will cause text draw operations to apply a
+         * simulated bold effect when drawing a {@link Typeface} that is not
+         * already bold.</p>
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static FAKE_BOLD_TEXT_FLAG:number = 0x20;
+
+        /**
+         * Paint flag that enables smooth linear scaling of text.
+         *
+         * <p>Enabling this flag does not actually scale text, but rather adjusts
+         * text draw operations to deal gracefully with smooth adjustment of scale.
+         * When this flag is enabled, font hinting is disabled to prevent shape
+         * deformation between scale factors, and glyph caching is disabled due to
+         * the large number of glyph images that will be generated.</p>
+         *
+         * <p>{@link #SUBPIXEL_TEXT_FLAG} should be used in conjunction with this
+         * flag to prevent glyph positions from snapping to whole pixel values as
+         * scale factor is adjusted.</p>
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static LINEAR_TEXT_FLAG:number = 0x40;
+
+        /**
+         * Paint flag that enables subpixel positioning of text.
+         *
+         * <p>Enabling this flag causes glyph advances to be computed with subpixel
+         * accuracy.</p>
+         *
+         * <p>This can be used with {@link #LINEAR_TEXT_FLAG} to prevent text from
+         * jittering during smooth scale transitions.</p>
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static SUBPIXEL_TEXT_FLAG:number = 0x80;
+
+        /** Legacy Paint flag, no longer used. */
+        static DEV_KERN_TEXT_FLAG:number = 0x100;
+
+        /** @hide bit mask for the flag enabling subpixel glyph rendering for text */
+        static LCD_RENDER_TEXT_FLAG:number = 0x200;
+
+        /**
+         * Paint flag that enables the use of bitmap fonts when drawing text.
+         *
+         * <p>Disabling this flag will prevent text draw operations from using
+         * embedded bitmap strikes in fonts, causing fonts with both scalable
+         * outlines and bitmap strikes to draw only the scalable outlines, and
+         * fonts with only bitmap strikes to not draw at all.</p>
+         *
+         * @see #Paint(int)
+         * @see #setFlags(int)
+         */
+        static EMBEDDED_BITMAP_TEXT_FLAG:number = 0x400;
+
+        /** @hide bit mask for the flag forcing freetype's autohinter on for text */
+        static AUTO_HINTING_TEXT_FLAG:number = 0x800;
+
+        /** @hide bit mask for the flag enabling vertical rendering for text */
+        static VERTICAL_TEXT_FLAG:number = 0x1000;
+
+        // we use this when we first create a paint
+        static DEFAULT_PAINT_FLAGS:number = Paint.DEV_KERN_TEXT_FLAG | Paint.EMBEDDED_BITMAP_TEXT_FLAG;
+
+
+
         private mTextStyle:Paint.Style;
         private mColor:number;
         private mAlpha:number;
@@ -13,6 +195,8 @@ module android.graphics{
         private mStrokeCap:Paint.Cap;
         private mStrokeJoin:Paint.Join;
         private textSize:number;
+
+        private mFlag = 0;
 
         /**
          * @hide
@@ -39,7 +223,52 @@ module android.graphics{
          */
         shadowColor:number = 0;
 
+        drawableState:number[];
 
+
+        constructor(flag=0){
+            this.mFlag = flag;
+        }
+
+        /**
+         * Copy the fields from src into this paint. This is equivalent to calling
+         * get() on all of the src fields, and calling the corresponding set()
+         * methods on this.
+         */
+        set(src:Paint):void  {
+            if (this != src) {
+                // copy over the native settings
+                this.setClassVariablesFrom(src);
+            }
+        }
+        /**
+         * Set all class variables using current values from the given
+         * {@link Paint}.
+         */
+        private setClassVariablesFrom(paint:Paint):void  {
+            //this.mColorFilter = paint.mColorFilter;
+            //this.mMaskFilter = paint.mMaskFilter;
+            //this.mPathEffect = paint.mPathEffect;
+            //this.mRasterizer = paint.mRasterizer;
+            //if (paint.mShader != null) {
+            //    this.mShader = paint.mShader.copy();
+            //} else {
+            //    this.mShader = null;
+            //}
+            //this.mTypeface = paint.mTypeface;
+            //this.mXfermode = paint.mXfermode;
+            //this.mHasCompatScaling = paint.mHasCompatScaling;
+            //this.mCompatScaling = paint.mCompatScaling;
+            //this.mInvCompatScaling = paint.mInvCompatScaling;
+            //this.hasShadow = paint.hasShadow;
+            //this.shadowDx = paint.shadowDx;
+            //this.shadowDy = paint.shadowDy;
+            //this.shadowRadius = paint.shadowRadius;
+            //this.shadowColor = paint.shadowColor;
+            //this.mBidiFlags = paint.mBidiFlags;
+            //this.mLocale = paint.mLocale;
+            Object.assign(this, paint);
+        }
 
         /**
          * Return the paint's style, used for controlling how primitives'
@@ -61,6 +290,30 @@ module android.graphics{
          */
         setStyle(style:Paint.Style):void  {
             this.mTextStyle = style;
+        }
+
+        /**
+         * Return the paint's flags. Use the Flag enum to test flag values.
+         *
+         * @return the paint's flags (see enums ending in _Flag for bit masks)
+         */
+        getFlags():number{
+            return this.mFlag;
+        }
+
+        /**
+         * Set the paint's flags. Use the Flag enum to specific flag values.
+         *
+         * @param flags The new flag bits for the paint
+         */
+        setFlags(flags:number):void{
+            this.mFlag = flags;
+        }
+
+        getTextScaleX():number {
+            return 1;
+        }
+        setTextScaleX(scaleX:number):void {
         }
 
         getColor():number{
@@ -158,6 +411,10 @@ module android.graphics{
             //no effect on web canvas
             //http://stackoverflow.com/questions/4261090/html5-canvas-and-anti-aliasing
         }
+        isAntiAlias():boolean {
+            //default true on web canvas
+            return true;
+        }
 
         /**
          * This draws a shadow layer below the main layer, with the specified
@@ -222,7 +479,73 @@ module android.graphics{
         }
 
 
+        /**
+         * Return the distance above (negative) the baseline (ascent) based on the
+         * current typeface and text size.
+         *
+         * @return the distance above (negative) the baseline (ascent) based on the
+         *         current typeface and text size.
+         */
+        ascent():number {
+            return this.textSize * Paint.FontMetrics_Size_Ascent;
+        }
+
+        /**
+         * Return the distance below (positive) the baseline (descent) based on the
+         * current typeface and text size.
+         *
+         * @return the distance below (positive) the baseline (descent) based on
+         *         the current typeface and text size.
+         */
+        descent():number {
+            return this.textSize * Paint.FontMetrics_Size_Descent;
+        }
+
+        /**
+         * Return the font's interline spacing, given the Paint's settings for
+         * typeface, textSize, etc. If metrics is not null, return the fontmetric
+         * values in it. Note: all values have been converted to integers from
+         * floats, in such a way has to make the answers useful for both spacing
+         * and clipping. If you want more control over the rounding, call
+         * getFontMetrics().
+         *
+         * @return the font's interline spacing.
+         */
+        getFontMetricsInt(fmi:Paint.FontMetricsInt):number {
+            if(fmi==null){
+                return Math.floor((Paint.FontMetrics_Size_Descent - Paint.FontMetrics_Size_Ascent) * this.textSize);
+            }
+            fmi.ascent = Math.floor(Paint.FontMetrics_Size_Ascent * this.textSize);
+            fmi.bottom = Math.floor(Paint.FontMetrics_Size_Bottom * this.textSize);
+            fmi.descent = Math.floor(Paint.FontMetrics_Size_Descent * this.textSize);
+            fmi.leading = Math.floor(Paint.FontMetrics_Size_Leading * this.textSize);
+            fmi.top = Math.floor(Paint.FontMetrics_Size_Top * this.textSize);
+            return fmi.descent - fmi.ascent;
+        }
+
+        /**
+         * Return the font's recommended interline spacing, given the Paint's
+         * settings for typeface, textSize, etc. If metrics is not null, return the
+         * fontmetric values in it.
+         *
+         * @param metrics If this object is not null, its fields are filled with
+         *                the appropriate values given the paint's text attributes.
+         * @return the font's recommended interline spacing.
+         */
+        getFontMetrics(metrics:Paint.FontMetrics):number {
+            if(metrics==null){
+                return (Paint.FontMetrics_Size_Descent - Paint.FontMetrics_Size_Ascent) * this.textSize;
+            }
+            metrics.ascent = Paint.FontMetrics_Size_Ascent * this.textSize;
+            metrics.bottom = Paint.FontMetrics_Size_Bottom * this.textSize;
+            metrics.descent = Paint.FontMetrics_Size_Descent * this.textSize;
+            metrics.leading = Paint.FontMetrics_Size_Leading * this.textSize;
+            metrics.top = Paint.FontMetrics_Size_Top * this.textSize;
+            return metrics.descent - metrics.ascent;
+        }
+
         private static _measureTextContext = document.createElement('canvas').getContext('2d');
+        private static _measureTextSize = -1;
         /**
          * Return the width of the text.
          *
@@ -232,15 +555,31 @@ module android.graphics{
          * @return      The width of the text
          */
         measureText(text:string, index=0, count=text.length):number  {
-            if(this.textSize!=null){
-                let fontParts = Paint._measureTextContext.font.split(' ');
-                Paint._measureTextContext.font = this.textSize + ' ' + fontParts[fontParts.length-1];
-            }else{
-                Paint._measureTextContext.font = '';
+            if(this.textSize!=Paint._measureTextSize) {
+                Paint._measureTextSize = this.textSize;
+                if (this.textSize != null) {
+                    let fontParts = Paint._measureTextContext.font.split(' ');
+                    Paint._measureTextContext.font = this.textSize + 'px ' + fontParts[fontParts.length - 1];
+                } else {
+                    Paint._measureTextContext.font = '';
+                }
             }
             return Paint._measureTextContext.measureText(text.substr(index, count)).width;
         }
 
+        /**
+         * Return the advance widths for the characters in the string.
+         *
+         * @param text     The text to measure. Cannot be null.
+         * @param index    The index of the first char to to measure
+         * @param count    The number of chars starting with index to measure
+         * @param widths   array to receive the advance widths of the characters.
+         *                 Must be at least a large as count.
+         * @return         the actual number of widths returned.
+         */
+        getTextWidths_count(text:string, index:number, count:number, widths:number[]):number  {
+            return this.getTextWidths_end(text, index, index+count, widths);
+        }
         /**
          * Return the advance widths for the characters in the string.
          *
@@ -251,7 +590,7 @@ module android.graphics{
          *               Must be at least a large as the text.
          * @return       the number of unichars in the specified text.
          */
-        getTextWidths(text:string, start:number, end:number, widths:number[]):number  {
+        getTextWidths_end(text:string, start:number, end:number, widths:number[]):number  {
             if (text == null) {
                 throw Error(`new IllegalArgumentException("text cannot be null")`);
             }
@@ -266,7 +605,7 @@ module android.graphics{
             }
 
             for (let i = start; i < end; i++) {
-                widths[i] = this.measureText(text[i]);
+                widths[i-start] = this.measureText(text[i]);
             }
             return end - start;
         }
@@ -280,7 +619,151 @@ module android.graphics{
          * @return       the number of unichars in the specified text.
          */
         getTextWidths_2(text:string, widths:number[]):number  {
-            return this.getTextWidths(text, 0, text.length, widths);
+            return this.getTextWidths_end(text, 0, text.length, widths);
+        }
+
+        /**
+         * @hide
+         */
+        getTextRunAdvances_count(chars:string, index:number, count:number, contextIndex:number, contextCount:number,
+                           flags:number, advances:number[], advancesIndex:number):number  {
+            return this.getTextRunAdvances_end(chars, index, index+count, contextIndex, contextCount, flags, advances, advancesIndex);
+        }
+
+        /**
+         * @hide
+         */
+        getTextRunAdvances_end(text:string, start:number, end:number, contextStart:number, contextEnd:number,
+                               flags:number, advances:number[], advancesIndex:number):number  {
+            if (text == null) {
+                throw Error(`new IllegalArgumentException("text cannot be null")`);
+            }
+            if (flags != Paint.DIRECTION_LTR && flags != Paint.DIRECTION_RTL) {
+                throw Error(`new IllegalArgumentException("unknown flags value: " + flags)`);
+            }
+            if ((start | end | contextStart | contextEnd | advancesIndex | (end - start)
+                | (start - contextStart) | (contextEnd - end) | (text.length - contextEnd)
+                | (advances == null ? 0 : (advances.length - advancesIndex - (end - start)))) < 0) {
+                throw Error(`new IndexOutOfBoundsException()`);
+            }
+            if (text.length == 0 || start == end) {
+                return 0;
+            }
+
+            let totalAdvance = 0;
+            for (let i = start; i < end; i++) {
+                let width = this.measureText(text[i]);
+                if(advances) advances[i-start+advancesIndex] = width;
+                totalAdvance += width;
+            }
+            return totalAdvance;
+        }
+
+
+        /**
+         * Returns the next cursor position in the run.  This avoids placing the
+         * cursor between surrogates, between characters that form conjuncts,
+         * between base characters and combining marks, or within a reordering
+         * cluster.
+         *
+         * <p>ContextStart and offset are relative to the start of text.
+         * The context is the shaping context for cursor movement, generally
+         * the bounds of the metric span enclosing the cursor in the direction of
+         * movement.
+         *
+         * <p>If cursorOpt is {@link #CURSOR_AT} and the offset is not a valid
+         * cursor position, this returns -1.  Otherwise this will never return a
+         * value before contextStart or after contextStart + contextLength.
+         *
+         * @param text the text
+         * @param contextStart the start of the context
+         * @param contextLength the length of the context
+         * @param flags either {@link #DIRECTION_RTL} or {@link #DIRECTION_LTR}
+         * @param offset the cursor position to move from
+         * @param cursorOpt how to move the cursor, one of {@link #CURSOR_AFTER},
+         * {@link #CURSOR_AT_OR_AFTER}, {@link #CURSOR_BEFORE},
+         * {@link #CURSOR_AT_OR_BEFORE}, or {@link #CURSOR_AT}
+         * @return the offset of the next position, or -1
+         * @hide
+         */
+        getTextRunCursor_len(text:string, contextStart:number, contextLength:number, flags:number, offset:number, cursorOpt:number):number {
+            let contextEnd:number = contextStart + contextLength;
+            if (((contextStart | contextEnd | offset | (contextEnd - contextStart) | (offset - contextStart) | (contextEnd - offset)
+                | (text.length - contextEnd) | cursorOpt) < 0) || cursorOpt > Paint.CURSOR_OPT_MAX_VALUE) {
+                throw Error(`new IndexOutOfBoundsException()`);
+            }
+            const scalarArray = new Array<number>(contextLength);
+            this.getTextRunAdvances_count(text, contextStart, contextLength, contextStart, contextLength, flags, scalarArray, 0);
+            let pos = offset - contextStart;
+            switch (cursorOpt) {
+                case Paint.CURSOR_AFTER:
+                    if (pos < contextLength) {
+                        pos += 1;
+                    }
+                // fall through
+                case Paint.CURSOR_AT_OR_AFTER:
+                    while (pos < contextLength && scalarArray[pos] == 0) {
+                        ++pos;
+                    }
+                    break;
+                case Paint.CURSOR_BEFORE:
+                    if (pos > 0) {
+                        --pos;
+                    }
+                // fall through
+                case Paint.CURSOR_AT_OR_BEFORE:
+                    while (pos > 0 && scalarArray[pos] == 0) {
+                        --pos;
+                    }
+                    break;
+                case Paint.CURSOR_AT:
+                default:
+                    if (scalarArray[pos] == 0) {
+                        pos = -1;
+                    }
+                    break;
+            }
+
+            if (pos != -1) {
+                pos += contextStart;
+            }
+
+            return pos;
+        }
+
+        /**
+         * Returns the next cursor position in the run.  This avoids placing the
+         * cursor between surrogates, between characters that form conjuncts,
+         * between base characters and combining marks, or within a reordering
+         * cluster.
+         *
+         * <p>ContextStart, contextEnd, and offset are relative to the start of
+         * text.  The context is the shaping context for cursor movement, generally
+         * the bounds of the metric span enclosing the cursor in the direction of
+         * movement.
+         *
+         * <p>If cursorOpt is {@link #CURSOR_AT} and the offset is not a valid
+         * cursor position, this returns -1.  Otherwise this will never return a
+         * value before contextStart or after contextEnd.
+         *
+         * @param text the text
+         * @param contextStart the start of the context
+         * @param contextEnd the end of the context
+         * @param flags either {@link #DIRECTION_RTL} or {@link #DIRECTION_LTR}
+         * @param offset the cursor position to move from
+         * @param cursorOpt how to move the cursor, one of {@link #CURSOR_AFTER},
+         * {@link #CURSOR_AT_OR_AFTER}, {@link #CURSOR_BEFORE},
+         * {@link #CURSOR_AT_OR_BEFORE}, or {@link #CURSOR_AT}
+         * @return the offset of the next position, or -1
+         * @hide
+         */
+        getTextRunCursor_end(text:string, contextStart:number, contextEnd:number, flags:number, offset:number, cursorOpt:number):number  {
+            if (((contextStart | contextEnd | offset | (contextEnd - contextStart) | (offset - contextStart) | (contextEnd - offset)
+                | (text.length - contextEnd) | cursorOpt) < 0) || cursorOpt > Paint.CURSOR_OPT_MAX_VALUE) {
+                throw Error(`new IndexOutOfBoundsException()`);
+            }
+            let contextLen:number = contextEnd - contextStart;
+            return this.getTextRunCursor_len(text, 0, contextLen, flags, offset - contextStart, cursorOpt);
         }
 
         _setToCanvasContent(context:CanvasRenderingContext2D){
@@ -310,14 +793,16 @@ module android.graphics{
             }
 
             //font
-            let fontStyles = [];
-            if(this.textSize!=null){
-                fontStyles.push(this.textSize+'px');
+            const fontStyles = [];
+            if (this.textSize != null) {
+                fontStyles.push(this.textSize + 'px');
             }
-            if(fontStyles.length>0){
-                let fontParts = context.font.split(' ');
-                fontStyles.push(fontParts[fontParts.length-1]);
-                context.font = fontStyles.join(' ');
+            if (fontStyles.length > 0) {
+                let cFont = context.font;
+                let fontParts = cFont.split(' ');
+                fontStyles.push(fontParts[fontParts.length - 1]);//font family
+                let font = fontStyles.join(' ');
+                if(font!=cFont) context.font = font;
             }
         }
     }
@@ -329,6 +814,64 @@ module android.graphics{
             CENTER,
             RIGHT,
         }
+
+        /**
+         * Class that describes the various metrics for a font at a given text size.
+         * Remember, Y values increase going down, so those values will be positive,
+         * and values that measure distances going up will be negative. This class
+         * is returned by getFontMetrics().
+         */
+        export class FontMetrics {
+
+            /**
+             * The maximum distance above the baseline for the tallest glyph in
+             * the font at a given text size.
+             */
+            top:number = 0;
+
+            /**
+             * The recommended distance above the baseline for singled spaced text.
+             */
+            ascent:number = 0;
+
+            /**
+             * The recommended distance below the baseline for singled spaced text.
+             */
+            descent:number = 0;
+
+            /**
+             * The maximum distance below the baseline for the lowest glyph in
+             * the font at a given text size.
+             */
+            bottom:number = 0;
+
+            /**
+             * The recommended additional space to add between lines of text.
+             */
+            leading:number = 0;
+        }
+
+        /**
+         * Convenience method for callers that want to have FontMetrics values as
+         * integers.
+         */
+        export class FontMetricsInt {
+
+            top:number = 0;
+
+            ascent:number = 0;
+
+            descent:number = 0;
+
+            bottom:number = 0;
+
+            leading:number = 0;
+
+            toString():string  {
+                return "FontMetricsInt: top=" + this.top + " ascent=" + this.ascent + " descent=" + this.descent + " bottom=" + this.bottom + " leading=" + this.leading;
+            }
+        }
+
         /**
          * The Style specifies if the primitive being drawn is filled, stroked, or
          * both (in the same color). The default is FILL.

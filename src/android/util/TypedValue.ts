@@ -21,12 +21,7 @@ module android.util{
         static COMPLEX_UNIT_VW = 'vw';
         static COMPLEX_UNIT_FRACTION = '%';
 
-        static UNIT_SCALE_PT;
-        static UNIT_SCALE_IN;
-        static UNIT_SCALE_MM;
-        static UNIT_SCALE_EM;
-        static UNIT_SCALE_REM;
-        static UNIT_SCALE_SP = 1;
+        private static UNIT_SCALE_MAP = new Map<string, number>();
 
         private static initUnit(){
             this.initUnit = null;
@@ -34,19 +29,28 @@ module android.util{
             document.body.appendChild(temp);
 
             temp.style.height = 100 + TypedValue.COMPLEX_UNIT_PT;
-            TypedValue.UNIT_SCALE_PT = temp.offsetHeight / 100;
+            TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_PT, temp.offsetHeight / 100);
             temp.style.height = 1 + TypedValue.COMPLEX_UNIT_IN;
-            TypedValue.UNIT_SCALE_IN = temp.offsetHeight;
+            TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_IN, temp.offsetHeight);
             temp.style.height = 100 + TypedValue.COMPLEX_UNIT_MM;
-            TypedValue.UNIT_SCALE_MM = temp.offsetHeight / 100;
+            TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_MM, temp.offsetHeight / 100);
             temp.style.height = 10 + TypedValue.COMPLEX_UNIT_EM;
-            TypedValue.UNIT_SCALE_EM = temp.offsetHeight / 10;
+            TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_EM, temp.offsetHeight / 10);
             temp.style.height = 10 + TypedValue.COMPLEX_UNIT_REM;
-            TypedValue.UNIT_SCALE_REM = temp.offsetHeight / 10;
+            TypedValue.UNIT_SCALE_MAP.set(TypedValue.COMPLEX_UNIT_REM, temp.offsetHeight / 10);
 
             document.body.removeChild(temp);
         }
 
+        static applyDimension(unit:string, size:number, dm:DisplayMetrics):number {
+            let scale = 1;
+            if(unit===TypedValue.COMPLEX_UNIT_DP || unit===TypedValue.COMPLEX_UNIT_DIP || unit===TypedValue.COMPLEX_UNIT_SP){
+                scale = dm.density;
+            }else{
+                scale = TypedValue.UNIT_SCALE_MAP.get(unit) || 1;
+            }
+            return size * scale;
+        }
 
         static complexToDimensionPixelSize(valueWithUnit:string, baseValue = 0, metrics = Resources.getDisplayMetrics()):number {
             if(this.initUnit) this.initUnit();
@@ -70,27 +74,27 @@ module android.util{
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_SP)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_SP, "");
-                scale = metrics.density * TypedValue.UNIT_SCALE_SP;
+                scale = metrics.density * (TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_SP) || 1);
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_PT)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_PT, "");
-                scale = TypedValue.UNIT_SCALE_PT;
+                scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_PT) || 1;
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_IN)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_IN, "");
-                scale = TypedValue.UNIT_SCALE_IN;
+                scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_IN) || 1;
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_MM)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_MM, "");
-                scale = TypedValue.UNIT_SCALE_MM;
+                scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_MM) || 1;
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_EM)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_EM, "");
-                scale = TypedValue.UNIT_SCALE_EM;
+                scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_EM) || 1;
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_REM)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_REM, "");
-                scale = TypedValue.UNIT_SCALE_REM;
+                scale = TypedValue.UNIT_SCALE_MAP.get(TypedValue.COMPLEX_UNIT_REM) || 1;
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_VH)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_VH, "");

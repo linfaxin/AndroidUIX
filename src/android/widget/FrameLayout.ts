@@ -77,7 +77,7 @@ module android.widget {
             }
         }
 
-        verifyDrawable(who:Drawable):boolean {
+        protected verifyDrawable(who:Drawable):boolean {
             return super.verifyDrawable(who) || (who == this.mForeground);
         }
 
@@ -86,7 +86,7 @@ module android.widget {
             if (this.mForeground != null) this.mForeground.jumpToCurrentState();
         }
 
-        drawableStateChanged() {
+        protected drawableStateChanged() {
             super.drawableStateChanged();
             if (this.mForeground != null && this.mForeground.isStateful()) {
                 this.mForeground.setState(this.getDrawableState());

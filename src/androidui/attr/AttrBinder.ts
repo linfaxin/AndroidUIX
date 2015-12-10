@@ -146,15 +146,15 @@ module androidui.attr {
 
             try {
                 if (value.startsWith('rgb(')) {
-                    value = value.replace('rgb(', '').replace(')', '');
+                    value = value.substring(value.indexOf('(')+1, value.lastIndexOf(')'));
                     let parts = value.split(',');
                     return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
 
                 } else if (value.startsWith('rgba(')) {
-                    value = value.replace('rgba(', '').replace(')', '');
+                    value = value.substring(value.indexOf('(')+1, value.lastIndexOf(')'));
                     let parts = value.split(',');
                     return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
-                        Number.parseInt(parts[2]), Number.parseInt(parts[3]) * 255);
+                        Number.parseInt(parts[2]), Number.parseFloat(parts[3]) * 255);
 
                 } else {
                     if (value.startsWith('#') && value.length === 4) {//support parse #333

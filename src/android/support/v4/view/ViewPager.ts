@@ -583,11 +583,11 @@ module android.support.v4.view {
         }
 
 
-        verifyDrawable(who:Drawable):boolean{
+        protected verifyDrawable(who:Drawable):boolean{
             return super.verifyDrawable(who) || who == this.mMarginDrawable;
         }
 
-        drawableStateChanged():void {
+        protected drawableStateChanged():void {
             super.drawableStateChanged();
             const d = this.mMarginDrawable;
             if (d != null && d.isStateful()) {

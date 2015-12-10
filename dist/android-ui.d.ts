@@ -48,7 +48,9 @@ declare module java.lang {
         constructor(capacity: number);
         constructor(str: string);
         length(): number;
-        append(str: any): StringBuilder;
+        append(a: any): StringBuilder;
+        deleteCharAt(index: number): StringBuilder;
+        replace(start: number, end: number, str: string): StringBuilder;
         setLength(length: number): void;
         toString(): string;
     }
@@ -252,6 +254,33 @@ declare module android.graphics {
 }
 declare module android.graphics {
     class Paint {
+        private static FontMetrics_Size_Ascent;
+        private static FontMetrics_Size_Bottom;
+        private static FontMetrics_Size_Descent;
+        private static FontMetrics_Size_Leading;
+        private static FontMetrics_Size_Top;
+        static DIRECTION_LTR: number;
+        static DIRECTION_RTL: number;
+        static CURSOR_AFTER: number;
+        static CURSOR_AT_OR_AFTER: number;
+        static CURSOR_BEFORE: number;
+        static CURSOR_AT_OR_BEFORE: number;
+        static CURSOR_AT: number;
+        private static CURSOR_OPT_MAX_VALUE;
+        static ANTI_ALIAS_FLAG: number;
+        static FILTER_BITMAP_FLAG: number;
+        static DITHER_FLAG: number;
+        static UNDERLINE_TEXT_FLAG: number;
+        static STRIKE_THRU_TEXT_FLAG: number;
+        static FAKE_BOLD_TEXT_FLAG: number;
+        static LINEAR_TEXT_FLAG: number;
+        static SUBPIXEL_TEXT_FLAG: number;
+        static DEV_KERN_TEXT_FLAG: number;
+        static LCD_RENDER_TEXT_FLAG: number;
+        static EMBEDDED_BITMAP_TEXT_FLAG: number;
+        static AUTO_HINTING_TEXT_FLAG: number;
+        static VERTICAL_TEXT_FLAG: number;
+        static DEFAULT_PAINT_FLAGS: number;
         private mTextStyle;
         private mColor;
         private mAlpha;
@@ -260,13 +289,22 @@ declare module android.graphics {
         private mStrokeCap;
         private mStrokeJoin;
         private textSize;
+        private mFlag;
         hasShadow: boolean;
         shadowDx: number;
         shadowDy: number;
         shadowRadius: number;
         shadowColor: number;
+        drawableState: number[];
+        constructor(flag?: number);
+        set(src: Paint): void;
+        private setClassVariablesFrom(paint);
         getStyle(): Paint.Style;
         setStyle(style: Paint.Style): void;
+        getFlags(): number;
+        setFlags(flags: number): void;
+        getTextScaleX(): number;
+        setTextScaleX(scaleX: number): void;
         getColor(): number;
         setColor(color: number): void;
         setARGB(a: number, r: number, g: number, b: number): void;
@@ -279,16 +317,27 @@ declare module android.graphics {
         getStrokeJoin(): Paint.Join;
         setStrokeJoin(join: Paint.Join): void;
         setAntiAlias(enable: boolean): void;
+        isAntiAlias(): boolean;
         setShadowLayer(radius: number, dx: number, dy: number, color: number): void;
         clearShadowLayer(): void;
         getTextAlign(): Paint.Align;
         setTextAlign(align: Paint.Align): void;
         getTextSize(): number;
         setTextSize(textSize: number): void;
+        ascent(): number;
+        descent(): number;
+        getFontMetricsInt(fmi: Paint.FontMetricsInt): number;
+        getFontMetrics(metrics: Paint.FontMetrics): number;
         private static _measureTextContext;
+        private static _measureTextSize;
         measureText(text: string, index?: number, count?: number): number;
-        getTextWidths(text: string, start: number, end: number, widths: number[]): number;
+        getTextWidths_count(text: string, index: number, count: number, widths: number[]): number;
+        getTextWidths_end(text: string, start: number, end: number, widths: number[]): number;
         getTextWidths_2(text: string, widths: number[]): number;
+        getTextRunAdvances_count(chars: string, index: number, count: number, contextIndex: number, contextCount: number, flags: number, advances: number[], advancesIndex: number): number;
+        getTextRunAdvances_end(text: string, start: number, end: number, contextStart: number, contextEnd: number, flags: number, advances: number[], advancesIndex: number): number;
+        getTextRunCursor_len(text: string, contextStart: number, contextLength: number, flags: number, offset: number, cursorOpt: number): number;
+        getTextRunCursor_end(text: string, contextStart: number, contextEnd: number, flags: number, offset: number, cursorOpt: number): number;
         _setToCanvasContent(context: CanvasRenderingContext2D): void;
     }
     module Paint {
@@ -296,6 +345,21 @@ declare module android.graphics {
             LEFT = 0,
             CENTER = 1,
             RIGHT = 2,
+        }
+        class FontMetrics {
+            top: number;
+            ascent: number;
+            descent: number;
+            bottom: number;
+            leading: number;
+        }
+        class FontMetricsInt {
+            top: number;
+            ascent: number;
+            descent: number;
+            bottom: number;
+            leading: number;
+            toString(): string;
         }
         enum Style {
             FILL = 0,
@@ -315,6 +379,11 @@ declare module android.graphics {
     }
 }
 declare module android.graphics {
+    class Path {
+        reset(): void;
+    }
+}
+declare module android.graphics {
     import Rect = android.graphics.Rect;
     class Canvas {
         private static FullRect;
@@ -326,6 +395,8 @@ declare module android.graphics {
         mCurrentClip: Rect;
         private shouldDoRectBeforeRestoreMap;
         private mClipStateMap;
+        static DIRECTION_LTR: number;
+        static DIRECTION_RTL: number;
         private static sRectPool;
         private static obtainRect(copy?);
         private static recycleRect(...rects);
@@ -355,7 +426,12 @@ declare module android.graphics {
         drawCanvas(canvas: Canvas, offsetX: number, offsetY: number): void;
         drawRect(rect: Rect, paint: Paint): any;
         drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
+        drawPath(path: Path, paint: Paint): void;
+        drawText_count(text: string, index: number, count: number, x: number, y: number, paint: Paint): void;
+        drawText_end(text: string, start: number, end: number, x: number, y: number, paint: Paint): void;
         drawText(text: string, x: number, y: number, paint: Paint): void;
+        drawTextRun_count(text: string, index: number, count: number, contextIndex: number, contextCount: number, x: number, y: number, dir: number, paint: Paint): void;
+        drawTextRun_end(text: string, start: number, end: number, contextStart: number, contextEnd: number, x: number, y: number, dir: number, paint: Paint): void;
     }
 }
 declare module android.graphics.drawable {
@@ -900,13 +976,9 @@ declare module android.util {
         static COMPLEX_UNIT_VH: string;
         static COMPLEX_UNIT_VW: string;
         static COMPLEX_UNIT_FRACTION: string;
-        static UNIT_SCALE_PT: any;
-        static UNIT_SCALE_IN: any;
-        static UNIT_SCALE_MM: any;
-        static UNIT_SCALE_EM: any;
-        static UNIT_SCALE_REM: any;
-        static UNIT_SCALE_SP: number;
+        private static UNIT_SCALE_MAP;
         private static initUnit();
+        static applyDimension(unit: string, size: number, dm: DisplayMetrics): number;
         static complexToDimensionPixelSize(valueWithUnit: string, baseValue?: number, metrics?: DisplayMetrics): number;
     }
 }
@@ -1019,6 +1091,11 @@ declare module androidui.widget {
     import ViewGroup = android.view.ViewGroup;
     interface HtmlDataAdapter {
         onInflateAdapter(bindElement: HTMLElement, rootElement?: HTMLElement, parent?: ViewGroup): void;
+    }
+}
+declare module androidui.util {
+    class PerformanceAdjuster {
+        static noCanvasMode(): void;
     }
 }
 declare module android.view {
@@ -1563,7 +1640,7 @@ declare module android.view {
         getVisibility(): number;
         setVisibility(visibility: number): void;
         dispatchVisibilityChanged(changedView: View, visibility: number): void;
-        onVisibilityChanged(changedView: View, visibility: number): void;
+        protected onVisibilityChanged(changedView: View, visibility: number): void;
         dispatchDisplayHint(hint: number): void;
         onDisplayHint(hint: number): void;
         dispatchWindowVisibilityChanged(visibility: number): void;
@@ -1636,7 +1713,7 @@ declare module android.view {
         isLaidOut(): boolean;
         layout(l: number, t: number, r: number, b: number): void;
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
-        setFrame(left: number, top: number, right: number, bottom: number): boolean;
+        protected setFrame(left: number, top: number, right: number, bottom: number): boolean;
         private sizeChange(newWidth, newHeight, oldWidth, oldHeight);
         getHitRect(outRect: Rect): void;
         getFocusedRect(r: Rect): void;
@@ -1702,11 +1779,12 @@ declare module android.view {
         invalidateDrawable(drawable: Drawable): void;
         scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
         unscheduleDrawable(who: Drawable, what?: Runnable): void;
-        verifyDrawable(who: Drawable): boolean;
-        drawableStateChanged(): void;
+        protected verifyDrawable(who: Drawable): boolean;
+        protected drawableStateChanged(): void;
+        resolveDrawables(): void;
         refreshDrawableState(): void;
         getDrawableState(): Array<number>;
-        onCreateDrawableState(extraSpace: number): Array<number>;
+        protected onCreateDrawableState(extraSpace: number): Array<number>;
         static mergeDrawableStates(baseState: Array<number>, additionalState: Array<number>): number[];
         jumpDrawablesToCurrentState(): void;
         setBackgroundColor(color: number): void;
@@ -1804,6 +1882,8 @@ declare module android.view {
         rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
         protected initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
+        private _syncToElementLock;
+        private syncToElementFunc;
         syncBoundToElement(): void;
         syncScrollToElement(): void;
         private _lastSyncLeft;
@@ -2292,9 +2372,9 @@ declare module android.view {
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
         dispatchDraw(canvas: Canvas): void;
         drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
-        drawableStateChanged(): void;
+        protected drawableStateChanged(): void;
         jumpDrawablesToCurrentState(): void;
-        onCreateDrawableState(extraSpace: number): Array<number>;
+        protected onCreateDrawableState(extraSpace: number): Array<number>;
         setAddStatesFromChildren(addsStates: boolean): void;
         addStatesFromChildren(): boolean;
         childDrawableStateChanged(child: android.view.View): void;
@@ -2511,9 +2591,9 @@ declare module android.widget {
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         getForegroundGravity(): number;
         setForegroundGravity(foregroundGravity: number): void;
-        verifyDrawable(who: Drawable): boolean;
+        protected verifyDrawable(who: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
-        drawableStateChanged(): void;
+        protected drawableStateChanged(): void;
         generateDefaultLayoutParams(): FrameLayout.LayoutParams;
         setForeground(drawable: Drawable): void;
         getForeground(): Drawable;
@@ -2757,62 +2837,1453 @@ declare module android.widget {
         }
     }
 }
-declare module android.widget {
-    import View = android.view.View;
-    import ColorStateList = android.content.res.ColorStateList;
-    class TextView extends View {
+declare module android.R {
+    class string_ {
+        static prll_header_state_normal: string;
+        static prll_header_state_ready: string;
+        static prll_header_state_loading: string;
+        static prll_header_state_fail: string;
+        static prll_footer_state_normal: string;
+        static prll_footer_state_loading: string;
+        static prll_footer_state_ready: string;
+        static prll_footer_state_fail: string;
+        static prll_footer_state_no_more: string;
+        static zh(): void;
+    }
+}
+declare module android.graphics {
+    class RectF extends Rect {
+    }
+}
+declare module android.text.style {
+    interface ParagraphStyle {
+    }
+    module ParagraphStyle {
+        var type: symbol;
+    }
+}
+declare module android.text {
+    interface Spanned extends String {
+        getSpans<T>(start: number, end: number, type: any): T[];
+        getSpanStart(tag: any): number;
+        getSpanEnd(tag: any): number;
+        getSpanFlags(tag: any): number;
+        nextSpanTransition(start: number, limit: number, type: any): number;
+    }
+    module Spanned {
+        function isImplements(obj: any): any;
+        var SPAN_POINT_MARK_MASK: number;
+        var SPAN_MARK_MARK: number;
+        var SPAN_MARK_POINT: number;
+        var SPAN_POINT_MARK: number;
+        var SPAN_POINT_POINT: number;
+        var SPAN_PARAGRAPH: number;
+        var SPAN_INCLUSIVE_EXCLUSIVE: number;
+        var SPAN_INCLUSIVE_INCLUSIVE: number;
+        var SPAN_EXCLUSIVE_EXCLUSIVE: number;
+        var SPAN_EXCLUSIVE_INCLUSIVE: number;
+        var SPAN_COMPOSING: number;
+        var SPAN_INTERMEDIATE: number;
+        var SPAN_USER_SHIFT: number;
+        var SPAN_USER: number;
+        var SPAN_PRIORITY_SHIFT: number;
+        var SPAN_PRIORITY: number;
+    }
+}
+declare module android.text {
+    class TextPaint extends android.graphics.Paint {
+        baselineShift: number;
+        bgColor: number;
+        linkColor: number;
+        underlineColor: number;
+        underlineThickness: number;
+        set(tp: TextPaint): void;
+        setUnderlineText(color: number, thickness: number): void;
+    }
+}
+declare module android.text.style {
+    import UpdateAppearance = android.text.style.UpdateAppearance;
+    interface UpdateLayout extends UpdateAppearance {
+    }
+}
+declare module android.text.style {
+    interface UpdateAppearance {
+    }
+}
+declare module android.text.style {
+    import TextPaint = android.text.TextPaint;
+    abstract class CharacterStyle {
+        static type: symbol;
+        mType: symbol;
+        abstract updateDrawState(tp: TextPaint): void;
+        static wrap(cs: CharacterStyle): CharacterStyle;
+        getUnderlying(): CharacterStyle;
+    }
+    module CharacterStyle {
+        class Passthrough_CharacterStyle extends CharacterStyle {
+            private mStyle;
+            constructor(cs: CharacterStyle);
+            updateDrawState(tp: TextPaint): void;
+            getUnderlying(): CharacterStyle;
+        }
+    }
+}
+declare module android.text.style {
+    import TextPaint = android.text.TextPaint;
+    import CharacterStyle = android.text.style.CharacterStyle;
+    import UpdateLayout = android.text.style.UpdateLayout;
+    abstract class MetricAffectingSpan extends CharacterStyle implements UpdateLayout {
+        static type: symbol;
+        mType: symbol;
+        abstract updateMeasureState(p: TextPaint): void;
+        getUnderlying(): MetricAffectingSpan;
+    }
+    module MetricAffectingSpan {
+        class Passthrough_MetricAffectingSpan extends MetricAffectingSpan {
+            private mStyle;
+            constructor(cs: MetricAffectingSpan);
+            updateDrawState(tp: TextPaint): void;
+            updateMeasureState(tp: TextPaint): void;
+            getUnderlying(): MetricAffectingSpan;
+        }
+    }
+}
+declare module android.text.style {
+    import Paint = android.graphics.Paint;
+    import Canvas = android.graphics.Canvas;
+    import TextPaint = android.text.TextPaint;
+    import MetricAffectingSpan = android.text.style.MetricAffectingSpan;
+    abstract class ReplacementSpan extends MetricAffectingSpan {
+        static type: symbol;
+        mType: symbol;
+        abstract getSize(paint: Paint, text: String, start: number, end: number, fm: Paint.FontMetricsInt): number;
+        abstract draw(canvas: Canvas, text: String, start: number, end: number, x: number, top: number, y: number, bottom: number, paint: Paint): void;
+        updateMeasureState(p: TextPaint): void;
+        updateDrawState(ds: TextPaint): void;
+    }
+}
+declare module android.text {
+    interface TextDirectionHeuristic {
+        isRtl(cs: string, start: number, count: number): boolean;
+    }
+}
+declare module android.text {
+    import Paint = android.graphics.Paint;
+    import MetricAffectingSpan = android.text.style.MetricAffectingSpan;
+    import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
+    import TextPaint = android.text.TextPaint;
+    class MeasuredText {
+        private static localLOGV;
+        mText: String;
+        mTextStart: number;
+        mWidths: number[];
+        mChars: string;
+        mLevels: number[];
+        mDir: number;
+        mEasy: boolean;
+        mLen: number;
+        private mPos;
+        private mWorkPaint;
+        constructor();
+        private static sLock;
+        private static sCached;
+        static obtain(): MeasuredText;
+        static recycle(mt: MeasuredText): MeasuredText;
+        setPos(pos: number): void;
+        setPara(text: String, start: number, end: number, textDir: TextDirectionHeuristic): void;
+        addStyleRun(paint: TextPaint, len: number, fm: Paint.FontMetricsInt): number;
+        addStyleRun(paint: TextPaint, spans: MetricAffectingSpan[], len: number, fm: Paint.FontMetricsInt): number;
+        private addStyleRun_3(paint, len, fm);
+        private addStyleRun_4(paint, spans, len, fm);
+        breakText(limit: number, forwards: boolean, width: number): number;
+        measure(start: number, limit: number): number;
+    }
+}
+declare module android.text {
+    import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
+    class TextDirectionHeuristics {
+        static LTR: TextDirectionHeuristic;
+        static RTL: TextDirectionHeuristic;
+        static FIRSTSTRONG_LTR: TextDirectionHeuristic;
+        static FIRSTSTRONG_RTL: TextDirectionHeuristic;
+        static ANYRTL_LTR: TextDirectionHeuristic;
+        static LOCALE: TextDirectionHeuristic;
+        private static STATE_TRUE;
+        private static STATE_FALSE;
+        private static STATE_UNKNOWN;
+        private static isRtlText(directionality);
+        private static isRtlTextOrFormat(directionality);
+    }
+    module TextDirectionHeuristics {
+        abstract class TextDirectionHeuristicImpl implements TextDirectionHeuristic {
+            private mAlgorithm;
+            constructor(algorithm: TextDirectionHeuristics.TextDirectionAlgorithm);
+            protected abstract defaultIsRtl(): boolean;
+            isRtl(cs: string, start: number, count: number): boolean;
+            private doCheck(cs, start, count);
+        }
+        class TextDirectionHeuristicInternal extends TextDirectionHeuristics.TextDirectionHeuristicImpl {
+            private mDefaultIsRtl;
+            constructor(algorithm: TextDirectionHeuristics.TextDirectionAlgorithm, defaultIsRtl: boolean);
+            protected defaultIsRtl(): boolean;
+        }
+        interface TextDirectionAlgorithm {
+            checkRtl(cs: string, start: number, count: number): number;
+        }
+        class FirstStrong implements TextDirectionHeuristics.TextDirectionAlgorithm {
+            checkRtl(cs: string, start: number, count: number): number;
+            constructor();
+            static INSTANCE: FirstStrong;
+        }
+        class AnyStrong implements TextDirectionHeuristics.TextDirectionAlgorithm {
+            private mLookForRtl;
+            checkRtl(cs: string, start: number, count: number): number;
+            constructor(lookForRtl: boolean);
+            static INSTANCE_RTL: AnyStrong;
+            static INSTANCE_LTR: AnyStrong;
+        }
+        class TextDirectionHeuristicLocale extends TextDirectionHeuristics.TextDirectionHeuristicImpl {
+            constructor();
+            protected defaultIsRtl(): boolean;
+            static INSTANCE: TextDirectionHeuristicLocale;
+        }
+    }
+}
+declare module android.text {
+    import Spanned = android.text.Spanned;
+    import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
+    import TextPaint = android.text.TextPaint;
+    class TextUtils {
+        static isEmpty(str: string | String): boolean;
+        static ALIGNMENT_SPAN: number;
+        static FIRST_SPAN: number;
+        static FOREGROUND_COLOR_SPAN: number;
+        static RELATIVE_SIZE_SPAN: number;
+        static SCALE_X_SPAN: number;
+        static STRIKETHROUGH_SPAN: number;
+        static UNDERLINE_SPAN: number;
+        static STYLE_SPAN: number;
+        static BULLET_SPAN: number;
+        static QUOTE_SPAN: number;
+        static LEADING_MARGIN_SPAN: number;
+        static URL_SPAN: number;
+        static BACKGROUND_COLOR_SPAN: number;
+        static TYPEFACE_SPAN: number;
+        static SUPERSCRIPT_SPAN: number;
+        static SUBSCRIPT_SPAN: number;
+        static ABSOLUTE_SIZE_SPAN: number;
+        static TEXT_APPEARANCE_SPAN: number;
+        static ANNOTATION: number;
+        static SUGGESTION_SPAN: number;
+        static SPELL_CHECK_SPAN: number;
+        static SUGGESTION_RANGE_SPAN: number;
+        static EASY_EDIT_SPAN: number;
+        static LOCALE_SPAN: number;
+        static LAST_SPAN: number;
+        private static EMPTY_STRING_ARRAY;
+        private static ZWNBS_CHAR;
+        private static ARAB_SCRIPT_SUBTAG;
+        private static HEBR_SCRIPT_SUBTAG;
+        static getOffsetBefore(text: String, offset: number): number;
+        static getOffsetAfter(text: String, offset: number): number;
+        static ellipsize(text: String, paint: TextPaint, avail: number, where: TextUtils.TruncateAt, preserveLength?: boolean, callback?: TextUtils.EllipsizeCallback, textDir?: TextDirectionHeuristic, ellipsis?: any): String;
+        private static setPara(mt, paint, text, start, end, textDir);
+        static removeEmptySpans<T>(spans: T[], spanned: Spanned, klass: any): T[];
+        static packRangeInLong(start: number, end: number): number[];
+        static unpackRangeStartFromLong(range: number[]): number;
+        static unpackRangeEndFromLong(range: number[]): number;
+    }
+    module TextUtils {
+        enum TruncateAt {
+            START = 0,
+            MIDDLE = 1,
+            END = 2,
+            MARQUEE = 3,
+            END_SMALL = 4,
+        }
+        interface EllipsizeCallback {
+            ellipsized(start: number, end: number): void;
+        }
+    }
+}
+declare module android.text.style {
+    import ParagraphStyle = android.text.style.ParagraphStyle;
+    interface WrapTogetherSpan extends ParagraphStyle {
+    }
+}
+declare module android.text.style {
+    import Paint = android.graphics.Paint;
+    import Canvas = android.graphics.Canvas;
+    import Layout = android.text.Layout;
+    import ParagraphStyle = android.text.style.ParagraphStyle;
+    import WrapTogetherSpan = android.text.style.WrapTogetherSpan;
+    interface LeadingMarginSpan extends ParagraphStyle {
+        getLeadingMargin(first: boolean): number;
+        drawLeadingMargin(c: Canvas, p: Paint, x: number, dir: number, top: number, baseline: number, bottom: number, text: String, start: number, end: number, first: boolean, layout: Layout): void;
+    }
+    module LeadingMarginSpan {
+        function isImpl(obj: any): boolean;
+        var type: symbol;
+        interface LeadingMarginSpan2 extends LeadingMarginSpan, WrapTogetherSpan {
+            getLeadingMarginLineCount(): number;
+        }
+        module LeadingMarginSpan2 {
+            function isImpl(obj: any): boolean;
+        }
+        class Standard implements LeadingMarginSpan {
+            private mFirst;
+            private mRest;
+            constructor(first: number, rest?: number);
+            getSpanTypeId(): number;
+            describeContents(): number;
+            getLeadingMargin(first: boolean): number;
+            drawLeadingMargin(c: Canvas, p: Paint, x: number, dir: number, top: number, baseline: number, bottom: number, text: String, start: number, end: number, first: boolean, layout: Layout): void;
+        }
+    }
+}
+declare module android.text.style {
+    import Paint = android.graphics.Paint;
+    import Canvas = android.graphics.Canvas;
+    import ParagraphStyle = android.text.style.ParagraphStyle;
+    interface LineBackgroundSpan extends ParagraphStyle {
+        drawBackground(c: Canvas, p: Paint, left: number, right: number, top: number, baseline: number, bottom: number, text: String, start: number, end: number, lnum: number): void;
+    }
+    module LineBackgroundSpan {
+        var type: symbol;
+    }
+}
+declare module android.text.style {
+    import ParagraphStyle = android.text.style.ParagraphStyle;
+    interface TabStopSpan extends ParagraphStyle {
+        getTabStop(): number;
+    }
+    module TabStopSpan {
+        var type: symbol;
+        function isImpl(obj: any): boolean;
+        class Standard implements TabStopSpan {
+            constructor(where: number);
+            getTabStop(): number;
+            private mTab;
+        }
+    }
+}
+declare module java.util {
+    class Arrays {
+        static sort(a: number[], fromIndex: number, toIndex: number): void;
+        private static rangeCheck(arrayLength, fromIndex, toIndex);
+    }
+}
+declare module java.lang {
+    class Float {
+        static MIN_VALUE: number;
+        static MAX_VALUE: number;
+        static parseFloat(value: string): number;
+    }
+}
+declare module android.text {
+    import Spanned = android.text.Spanned;
+    class SpanSet<E> {
+        private classType;
+        numberOfSpans: number;
+        spans: E[];
+        spanStarts: number[];
+        spanEnds: number[];
+        spanFlags: number[];
+        constructor(type: any);
+        init(spanned: Spanned, start: number, limit: number): void;
+        hasSpansIntersecting(start: number, end: number): boolean;
+        getNextTransition(start: number, limit: number): number;
+        recycle(): void;
+    }
+}
+declare module android.text {
+    import Canvas = android.graphics.Canvas;
+    import FontMetricsInt = android.graphics.Paint.FontMetricsInt;
+    import TextPaint = android.text.TextPaint;
+    import Layout = android.text.Layout;
+    class TextLine {
+        private static DEBUG;
+        private mPaint;
         private mText;
-        private mHint;
-        private mGravity;
-        private mSingleLine;
-        private mTextSize;
-        private mTextColor;
-        private mCurTextColor;
-        private mHintColor;
+        private mStart;
+        private mLen;
+        private mDir;
+        private mDirections;
+        private mHasTabs;
+        private mTabs;
+        private mChars;
+        private mCharsValid;
+        private mSpanned;
+        private mWorkPaint;
+        private mMetricAffectingSpanSpanSet;
+        private mCharacterStyleSpanSet;
+        private mReplacementSpanSpanSet;
+        private static sCached;
+        static obtain(): TextLine;
+        static recycle(tl: TextLine): TextLine;
+        set(paint: TextPaint, text: String, start: number, limit: number, dir: number, directions: Layout.Directions, hasTabs: boolean, tabStops: Layout.TabStops): void;
+        draw(c: Canvas, x: number, top: number, y: number, bottom: number): void;
+        metrics(fmi: FontMetricsInt): number;
+        measure(offset: number, trailing: boolean, fmi: FontMetricsInt): number;
+        private drawRun(c, start, limit, runIsRtl, x, top, y, bottom, needWidth);
+        private measureRun(start, offset, limit, runIsRtl, fmi);
+        getOffsetToLeftRightOf(cursor: number, toLeft: boolean): number;
+        private getOffsetBeforeAfter(runIndex, runStart, runLimit, runIsRtl, offset, after);
+        private static expandMetricsFromPaint(fmi, wp);
+        static updateMetrics(fmi: FontMetricsInt, previousTop: number, previousAscent: number, previousDescent: number, previousBottom: number, previousLeading: number): void;
+        private handleText(wp, start, end, contextStart, contextEnd, runIsRtl, c, x, top, y, bottom, fmi, needWidth);
+        private handleReplacement(replacement, wp, start, limit, runIsRtl, c, x, top, y, bottom, fmi, needWidth);
+        private handleRun(start, measureLimit, limit, runIsRtl, c, x, top, y, bottom, fmi, needWidth);
+        private drawTextRun(c, wp, start, end, contextStart, contextEnd, runIsRtl, x, y);
+        ascent(pos: number): number;
+        nextTab(h: number): number;
+        private static TAB_INCREMENT;
+    }
+}
+declare module android.text {
+    interface TextWatcher {
+        beforeTextChanged(s: String, start: number, count: number, after: number): void;
+        onTextChanged(s: String, start: number, before: number, count: number): void;
+        afterTextChanged(s: String): void;
+    }
+}
+declare module android.text {
+    import Canvas = android.graphics.Canvas;
+    import Paint = android.graphics.Paint;
+    import Rect = android.graphics.Rect;
+    import Path = android.graphics.Path;
+    import Spanned = android.text.Spanned;
+    import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
+    import TextPaint = android.text.TextPaint;
+    import TextUtils = android.text.TextUtils;
+    abstract class Layout {
+        private static NO_PARA_SPANS;
+        static getDesiredWidth(source: String, paint: TextPaint): number;
+        static getDesiredWidth(source: String, start: number, end: number, paint: TextPaint): number;
+        private static getDesiredWidth_2(source, paint);
+        private static getDesiredWidth_4(source, start, end, paint);
+        constructor(text: String, paint: TextPaint, width: number, align: Layout.Alignment, textDir?: TextDirectionHeuristic, spacingMult?: number, spacingAdd?: number);
+        replaceWith(text: String, paint: TextPaint, width: number, align: Layout.Alignment, spacingmult: number, spacingadd: number): void;
+        draw(canvas: Canvas, highlight?: Path, highlightPaint?: Paint, cursorOffsetVertical?: number): void;
+        drawText(canvas: Canvas, firstLine: number, lastLine: number): void;
+        drawBackground(canvas: Canvas, highlight: Path, highlightPaint: Paint, cursorOffsetVertical: number, firstLine: number, lastLine: number): void;
+        getLineRangeForDraw(canvas: Canvas): number[];
+        private getLineStartPos(line, left, right);
+        getText(): String;
+        getPaint(): TextPaint;
+        getWidth(): number;
+        getEllipsizedWidth(): number;
+        increaseWidthTo(wid: number): void;
+        getHeight(): number;
+        getAlignment(): Layout.Alignment;
+        getSpacingMultiplier(): number;
+        getSpacingAdd(): number;
+        getTextDirectionHeuristic(): TextDirectionHeuristic;
+        abstract getLineCount(): number;
+        getLineBounds(line: number, bounds: Rect): number;
+        abstract getLineTop(line: number): number;
+        abstract getLineDescent(line: number): number;
+        abstract getLineStart(line: number): number;
+        abstract getParagraphDirection(line: number): number;
+        abstract getLineContainsTab(line: number): boolean;
+        abstract getLineDirections(line: number): Layout.Directions;
+        abstract getTopPadding(): number;
+        abstract getBottomPadding(): number;
+        isLevelBoundary(offset: number): boolean;
+        isRtlCharAt(offset: number): boolean;
+        private primaryIsTrailingPrevious(offset);
+        getPrimaryHorizontal(offset: number, clamped?: boolean): number;
+        getSecondaryHorizontal(offset: number, clamped?: boolean): number;
+        private getHorizontal(offset, trailing, clamped);
+        private getHorizontal_4(offset, trailing, line, clamped);
+        getLineLeft(line: number): number;
+        getLineRight(line: number): number;
+        getLineMax(line: number): number;
+        getLineWidth(line: number): number;
+        private getLineExtent(line, full);
+        private getLineExtent(line, tabStops, full);
+        private getLineExtent_2(line, full);
+        private getLineExtent_3(line, tabStops, full);
+        getLineForVertical(vertical: number): number;
+        getLineForOffset(offset: number): number;
+        getOffsetForHorizontal(line: number, horiz: number): number;
+        getLineEnd(line: number): number;
+        private getLineVisibleEnd(line, start?, end?);
+        getLineBottom(line: number): number;
+        getLineBaseline(line: number): number;
+        getLineAscent(line: number): number;
+        getOffsetToLeftOf(offset: number): number;
+        getOffsetToRightOf(offset: number): number;
+        private getOffsetToLeftRightOf(caret, toLeft);
+        private getOffsetAtStartOf(offset);
+        shouldClampCursor(line: number): boolean;
+        getCursorPath(point: number, dest: Path, editingBuffer: String): void;
+        private addSelection(line, start, end, top, bottom, dest);
+        getSelectionPath(start: number, end: number, dest: Path): void;
+        getParagraphAlignment(line: number): Layout.Alignment;
+        getParagraphLeft(line: number): number;
+        getParagraphRight(line: number): number;
+        private getParagraphLeadingMargin(line);
+        static measurePara(paint: TextPaint, text: String, start: number, end: number): number;
+        static nextTab(text: String, start: number, end: number, h: number, tabs: any[]): number;
+        protected isSpanned(): boolean;
+        static getParagraphSpans<T>(text: Spanned, start: number, end: number, type: any): T[];
+        private getEllipsisChar(method);
+        private ellipsize(start, end, line, dest, destoff, method);
+        abstract getEllipsisStart(line: number): number;
+        abstract getEllipsisCount(line: number): number;
+        private mText;
+        private mPaint;
+        mWorkPaint: TextPaint;
+        private mWidth;
+        private mAlignment;
         private mSpacingMult;
         private mSpacingAdd;
-        private mMaxWidth;
-        private mMaxHeight;
-        private mMaxLineCount;
-        private mMinLineCount;
-        private mTextElement;
+        private static sTempRect;
+        private mSpannedText;
+        private mTextDir;
+        private mLineBackgroundSpans;
+        static DIR_LEFT_TO_RIGHT: number;
+        static DIR_RIGHT_TO_LEFT: number;
+        static DIR_REQUEST_LTR: number;
+        static DIR_REQUEST_RTL: number;
+        static DIR_REQUEST_DEFAULT_LTR: number;
+        static DIR_REQUEST_DEFAULT_RTL: number;
+        static RUN_LENGTH_MASK: number;
+        static RUN_LEVEL_SHIFT: number;
+        static RUN_LEVEL_MASK: number;
+        static RUN_RTL_FLAG: number;
+        private static TAB_INCREMENT;
+        static DIRS_ALL_LEFT_TO_RIGHT: Layout.Directions;
+        static DIRS_ALL_RIGHT_TO_LEFT: Layout.Directions;
+        static ELLIPSIS_NORMAL: string[];
+        static ELLIPSIS_TWO_DOTS: string[];
+    }
+    module Layout {
+        class TabStops {
+            private mStops;
+            private mNumStops;
+            private mIncrement;
+            constructor(increment: number, spans: any[]);
+            reset(increment: number, spans: any[]): void;
+            nextTab(h: number): number;
+            static nextDefaultStop(h: number, inc: number): number;
+        }
+        class Directions {
+            mDirections: number[];
+            constructor(dirs: number[]);
+        }
+        class Ellipsizer extends String {
+            mText: String;
+            mLayout: Layout;
+            mWidth: number;
+            mMethod: TextUtils.TruncateAt;
+            constructor(s: String);
+            toString(): string;
+        }
+        class SpannedEllipsizer extends Layout.Ellipsizer implements Spanned {
+            private mSpanned;
+            constructor(display: String);
+            getSpans<T>(start: number, end: number, type: any): T[];
+            getSpanStart(tag: any): number;
+            getSpanEnd(tag: any): number;
+            getSpanFlags(tag: any): number;
+            nextSpanTransition(start: number, limit: number, type: any): number;
+        }
+        enum Alignment {
+            ALIGN_NORMAL = 0,
+            ALIGN_OPPOSITE = 1,
+            ALIGN_CENTER = 2,
+            ALIGN_LEFT = 3,
+            ALIGN_RIGHT = 4,
+        }
+    }
+}
+declare module android.text {
+    import Canvas = android.graphics.Canvas;
+    import Paint = android.graphics.Paint;
+    import Path = android.graphics.Path;
+    import Layout = android.text.Layout;
+    import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
+    import TextPaint = android.text.TextPaint;
+    import TextUtils = android.text.TextUtils;
+    class BoringLayout extends Layout implements TextUtils.EllipsizeCallback {
+        static make(source: String, paint: TextPaint, outerwidth: number, align: Layout.Alignment, spacingmult: number, spacingadd: number, metrics: BoringLayout.Metrics, includepad: boolean, ellipsize?: TextUtils.TruncateAt, ellipsizedWidth?: number): BoringLayout;
+        replaceOrMake(source: String, paint: TextPaint, outerwidth: number, align: Layout.Alignment, spacingmult: number, spacingadd: number, metrics: BoringLayout.Metrics, includepad: boolean, ellipsize?: TextUtils.TruncateAt, ellipsizedWidth?: number): BoringLayout;
+        constructor(source: String, paint: TextPaint, outerwidth: number, align: Layout.Alignment, spacingmult: number, spacingadd: number, metrics: BoringLayout.Metrics, includepad: boolean, ellipsize?: TextUtils.TruncateAt, ellipsizedWidth?: number);
+        init(source: String, paint: TextPaint, outerwidth: number, align: Layout.Alignment, spacingmult: number, spacingadd: number, metrics: BoringLayout.Metrics, includepad: boolean, trustWidth: boolean): void;
+        static isBoring(text: String, paint: TextPaint, textDir?: TextDirectionHeuristic, metrics?: BoringLayout.Metrics): BoringLayout.Metrics;
+        getHeight(): number;
+        getLineCount(): number;
+        getLineTop(line: number): number;
+        getLineDescent(line: number): number;
+        getLineStart(line: number): number;
+        getParagraphDirection(line: number): number;
+        getLineContainsTab(line: number): boolean;
+        getLineMax(line: number): number;
+        getLineDirections(line: number): Layout.Directions;
+        getTopPadding(): number;
+        getBottomPadding(): number;
+        getEllipsisCount(line: number): number;
+        getEllipsisStart(line: number): number;
+        getEllipsizedWidth(): number;
+        draw(c: Canvas, highlight: Path, highlightpaint: Paint, cursorOffset: number): void;
+        ellipsized(start: number, end: number): void;
+        private static FIRST_RIGHT_TO_LEFT;
+        private mDirect;
+        mBottom: number;
+        mDesc: number;
+        private mTopPadding;
+        private mBottomPadding;
+        private mMax;
+        private mEllipsizedWidth;
+        private mEllipsizedStart;
+        private mEllipsizedCount;
+        private static sTemp;
+    }
+    module BoringLayout {
+        class Metrics extends Paint.FontMetricsInt {
+            width: number;
+            toString(): string;
+        }
+    }
+}
+declare module android.text {
+    class PackedIntVector {
+        private mColumns;
+        private mRows;
+        private mRowGapStart;
+        private mRowGapLength;
+        private mValues;
+        private mValueGap;
+        constructor(columns: number);
+        getValue(row: number, column: number): number;
+        setValue(row: number, column: number, value: number): void;
+        private setValueInternal(row, column, value);
+        adjustValuesBelow(startRow: number, column: number, delta: number): void;
+        insertAt(row: number, values: number[]): void;
+        deleteAt(row: number, count: number): void;
+        size(): number;
+        width(): number;
+        private growBuffer();
+        private moveValueGapTo(column, where);
+        private moveRowGapTo(where);
+    }
+}
+declare module android.text {
+    class PackedObjectVector<E> {
+        private mColumns;
+        private mRows;
+        private mRowGapStart;
+        private mRowGapLength;
+        private mValues;
+        constructor(columns: number);
+        getValue(row: number, column: number): E;
+        setValue(row: number, column: number, value: E): void;
+        insertAt(row: number, values: E[]): void;
+        deleteAt(row: number, count: number): void;
+        size(): number;
+        width(): number;
+        private growBuffer();
+        private moveRowGapTo(where);
+        dump(): void;
+    }
+}
+declare module android.text {
+    import Spanned = android.text.Spanned;
+    interface Spannable extends Spanned {
+        setSpan(what: any, start: number, end: number, flags: number): void;
+        removeSpan(what: any): void;
+    }
+    module Spannable {
+        function isImpl(obj: any): boolean;
+        class Factory {
+            private static sInstance;
+            static getInstance(): Spannable.Factory;
+            newSpannable(source: String): Spannable;
+        }
+    }
+}
+declare module android.text.style {
+    import Paint = android.graphics.Paint;
+    import TextPaint = android.text.TextPaint;
+    import ParagraphStyle = android.text.style.ParagraphStyle;
+    import WrapTogetherSpan = android.text.style.WrapTogetherSpan;
+    interface LineHeightSpan extends ParagraphStyle, WrapTogetherSpan {
+        chooseHeight(text: String, start: number, end: number, spanstartv: number, v: number, fm: Paint.FontMetricsInt): void;
+    }
+    module LineHeightSpan {
+        var type: symbol;
+        interface WithDensity extends LineHeightSpan {
+            chooseHeight(text: String, start: number, end: number, spanstartv: number, v: number, fm: Paint.FontMetricsInt, paint?: TextPaint): void;
+        }
+    }
+}
+declare module java.lang {
+    class Integer {
+        static MIN_VALUE: number;
+        static MAX_VALUE: number;
+        static parseInt(value: string): number;
+    }
+}
+declare module android.text {
+    import Layout = android.text.Layout;
+    import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
+    import TextPaint = android.text.TextPaint;
+    import TextUtils = android.text.TextUtils;
+    class StaticLayout extends Layout {
+        static TAG: string;
+        constructor(source: String, bufstart: number, bufend: number, paint: TextPaint, outerwidth: number, align: Layout.Alignment, textDir: TextDirectionHeuristic, spacingmult: number, spacingadd: number, includepad: boolean, ellipsize?: TextUtils.TruncateAt, ellipsizedWidth?: number, maxLines?: number);
+        generate(source: String, bufStart: number, bufEnd: number, paint: TextPaint, outerWidth: number, textDir: TextDirectionHeuristic, spacingmult: number, spacingadd: number, includepad: boolean, trackpad: boolean, ellipsizedWidth: number, ellipsize: TextUtils.TruncateAt): void;
+        private static isIdeographic(c, includeNonStarters);
+        private out(text, start, end, above, below, top, bottom, v, spacingmult, spacingadd, chooseHt, chooseHtv, fm, hasTabOrEmoji, needMultiply, chdirs, dir, easy, bufEnd, includePad, trackPad, chs, widths, widthStart, ellipsize, ellipsisWidth, textWidth, paint, moreChars);
+        private calculateEllipsis(lineStart, lineEnd, widths, widthStart, avail, where, line, textWidth, paint, forceEllipsis);
+        getLineForVertical(vertical: number): number;
+        getLineCount(): number;
+        getLineTop(line: number): number;
+        getLineDescent(line: number): number;
+        getLineStart(line: number): number;
+        getParagraphDirection(line: number): number;
+        getLineContainsTab(line: number): boolean;
+        getLineDirections(line: number): Layout.Directions;
+        getTopPadding(): number;
+        getBottomPadding(): number;
+        getEllipsisCount(line: number): number;
+        getEllipsisStart(line: number): number;
+        getEllipsizedWidth(): number;
+        prepare(): void;
+        finish(): void;
+        private mLineCount;
+        private mTopPadding;
+        private mBottomPadding;
+        private mColumns;
+        private mEllipsizedWidth;
+        private static COLUMNS_NORMAL;
+        private static COLUMNS_ELLIPSIZE;
+        private static START;
+        private static DIR;
+        private static TAB;
+        private static TOP;
+        private static DESCENT;
+        private static ELLIPSIS_START;
+        private static ELLIPSIS_COUNT;
+        private mLines;
+        private mLineDirections;
+        private mMaximumVisibleLineCount;
+        private static START_MASK;
+        private static DIR_SHIFT;
+        private static TAB_MASK;
+        private static CHAR_FIRST_CJK;
+        private static CHAR_NEW_LINE;
+        private static CHAR_TAB;
+        private static CHAR_SPACE;
+        private static CHAR_SLASH;
+        private static CHAR_HYPHEN;
+        private static CHAR_ZWSP;
+        private static EXTRA_ROUNDING;
+        private static CHAR_FIRST_HIGH_SURROGATE;
+        private static CHAR_LAST_LOW_SURROGATE;
+        private mMeasured;
+        private mFontMetricsInt;
+    }
+}
+declare module android.text {
+    import Layout = android.text.Layout;
+    import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
+    import TextPaint = android.text.TextPaint;
+    import TextUtils = android.text.TextUtils;
+    class DynamicLayout extends Layout {
+        private static PRIORITY;
+        private static BLOCK_MINIMUM_CHARACTER_LENGTH;
+        constructor(base: String, display: String, paint: TextPaint, width: number, align: Layout.Alignment, textDir: TextDirectionHeuristic, spacingmult: number, spacingadd: number, includepad: boolean, ellipsize?: TextUtils.TruncateAt, ellipsizedWidth?: number);
+        private reflow(s, where, before, after);
+        private createBlocks();
+        private addBlockAtOffset(offset);
+        updateBlocks(startLine: number, endLine: number, newLineCount: number): void;
+        setBlocksDataForTest(blockEndLines: number[], blockIndices: number[], numberOfBlocks: number): void;
+        getBlockEndLines(): number[];
+        getBlockIndices(): number[];
+        getNumberOfBlocks(): number;
+        getIndexFirstChangedBlock(): number;
+        setIndexFirstChangedBlock(i: number): void;
+        getLineCount(): number;
+        getLineTop(line: number): number;
+        getLineDescent(line: number): number;
+        getLineStart(line: number): number;
+        getLineContainsTab(line: number): boolean;
+        getParagraphDirection(line: number): number;
+        getLineDirections(line: number): Layout.Directions;
+        getTopPadding(): number;
+        getBottomPadding(): number;
+        getEllipsizedWidth(): number;
+        getEllipsisStart(line: number): number;
+        getEllipsisCount(line: number): number;
+        private mBase;
+        private mDisplay;
+        private mWatcher;
+        private mIncludePad;
+        private mEllipsize;
+        private mEllipsizedWidth;
+        private mEllipsizeAt;
+        private mInts;
+        private mObjects;
+        static INVALID_BLOCK_INDEX: number;
+        private mBlockEndLines;
+        private mBlockIndices;
+        private mNumberOfBlocks;
+        private mIndexFirstChangedBlock;
+        private mTopPadding;
+        private mBottomPadding;
+        private static sStaticLayout;
+        private static sLock;
+        private static START;
+        private static DIR;
+        private static TAB;
+        private static TOP;
+        private static DESCENT;
+        private static COLUMNS_NORMAL;
+        private static ELLIPSIS_START;
+        private static ELLIPSIS_COUNT;
+        private static COLUMNS_ELLIPSIZE;
+        private static START_MASK;
+        private static DIR_SHIFT;
+        private static TAB_MASK;
+        private static ELLIPSIS_UNDEFINED;
+    }
+    module DynamicLayout {
+    }
+}
+declare module android.text {
+    class InputType {
+        static TYPE_MASK_CLASS: number;
+        static TYPE_MASK_VARIATION: number;
+        static TYPE_MASK_FLAGS: number;
+        static TYPE_NULL: number;
+        static TYPE_CLASS_TEXT: number;
+        static TYPE_TEXT_FLAG_CAP_CHARACTERS: number;
+        static TYPE_TEXT_FLAG_CAP_WORDS: number;
+        static TYPE_TEXT_FLAG_CAP_SENTENCES: number;
+        static TYPE_TEXT_FLAG_AUTO_CORRECT: number;
+        static TYPE_TEXT_FLAG_AUTO_COMPLETE: number;
+        static TYPE_TEXT_FLAG_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_IME_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_NO_SUGGESTIONS: number;
+        static TYPE_TEXT_VARIATION_NORMAL: number;
+        static TYPE_TEXT_VARIATION_URI: number;
+        static TYPE_TEXT_VARIATION_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_EMAIL_SUBJECT: number;
+        static TYPE_TEXT_VARIATION_SHORT_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_LONG_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_PERSON_NAME: number;
+        static TYPE_TEXT_VARIATION_POSTAL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_VISIBLE_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_WEB_EDIT_TEXT: number;
+        static TYPE_TEXT_VARIATION_FILTER: number;
+        static TYPE_TEXT_VARIATION_PHONETIC: number;
+        static TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_WEB_PASSWORD: number;
+        static TYPE_CLASS_NUMBER: number;
+        static TYPE_NUMBER_FLAG_SIGNED: number;
+        static TYPE_NUMBER_FLAG_DECIMAL: number;
+        static TYPE_NUMBER_VARIATION_NORMAL: number;
+        static TYPE_NUMBER_VARIATION_PASSWORD: number;
+        static TYPE_CLASS_PHONE: number;
+        static TYPE_CLASS_DATETIME: number;
+        static TYPE_DATETIME_VARIATION_NORMAL: number;
+        static TYPE_DATETIME_VARIATION_DATE: number;
+        static TYPE_DATETIME_VARIATION_TIME: number;
+    }
+}
+declare module android.text {
+    import Spannable = android.text.Spannable;
+    interface SpanWatcher {
+        onSpanAdded(text: Spannable, what: any, start: number, end: number): void;
+        onSpanRemoved(text: Spannable, what: any, start: number, end: number): void;
+        onSpanChanged(text: Spannable, what: any, ostart: number, oend: number, nstart: number, nend: number): void;
+    }
+}
+declare module android.text.method {
+    import Rect = android.graphics.Rect;
+    import View = android.view.View;
+    interface TransformationMethod {
+        getTransformation(source: String, view: View): String;
+        onFocusChanged(view: View, sourceText: String, focused: boolean, direction: number, previouslyFocusedRect: Rect): void;
+    }
+    module TransformationMethod {
+        function isImpl(obj: any): boolean;
+    }
+}
+declare module android.text.method {
+    import TransformationMethod = android.text.method.TransformationMethod;
+    interface TransformationMethod2 extends TransformationMethod {
+        setLengthChangesAllowed(allowLengthChanges: boolean): void;
+    }
+    module TransformationMethod2 {
+        function isImpl(obj: any): boolean;
+    }
+}
+declare module android.text.method {
+    import Rect = android.graphics.Rect;
+    import View = android.view.View;
+    import TransformationMethod2 = android.text.method.TransformationMethod2;
+    class AllCapsTransformationMethod implements TransformationMethod2 {
+        private static TAG;
+        private mEnabled;
+        constructor(context?: any);
+        getTransformation(source: String, view: View): String;
+        onFocusChanged(view: View, sourceText: String, focused: boolean, direction: number, previouslyFocusedRect: Rect): void;
+        setLengthChangesAllowed(allowLengthChanges: boolean): void;
+    }
+}
+declare module android.text.method {
+    import TextView = android.widget.TextView;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import Spannable = android.text.Spannable;
+    interface MovementMethod {
+        initialize(widget: TextView, text: Spannable): void;
+        onKeyDown(widget: TextView, text: Spannable, keyCode: number, event: KeyEvent): boolean;
+        onKeyUp(widget: TextView, text: Spannable, keyCode: number, event: KeyEvent): boolean;
+        onKeyOther(view: TextView, text: Spannable, event: KeyEvent): boolean;
+        onTakeFocus(widget: TextView, text: Spannable, direction: number): void;
+        onTrackballEvent(widget: TextView, text: Spannable, event: MotionEvent): boolean;
+        onTouchEvent(widget: TextView, text: Spannable, event: MotionEvent): boolean;
+        onGenericMotionEvent(widget: TextView, text: Spannable, event: MotionEvent): boolean;
+        canSelectArbitrarily(): boolean;
+    }
+}
+declare module android.text.method {
+    import Rect = android.graphics.Rect;
+    import View = android.view.View;
+    import TransformationMethod = android.text.method.TransformationMethod;
+    abstract class ReplacementTransformationMethod implements TransformationMethod {
+        protected abstract getOriginal(): string[];
+        protected abstract getReplacement(): string[];
+        getTransformation(source: String, v: View): String;
+        onFocusChanged(view: View, sourceText: String, focused: boolean, direction: number, previouslyFocusedRect: Rect): void;
+    }
+    module ReplacementTransformationMethod {
+        class ReplacementCharSequence extends String {
+            private mOriginal;
+            private mReplacement;
+            constructor(source: String, original: string[], replacement: string[]);
+            charAt(i: number): string;
+            toString(): string;
+            substr(from: number, length: number): string;
+            substring(start: number, end: number): string;
+            startReplace(start: number, end: number): string;
+            private mSource;
+        }
+    }
+}
+declare module android.text.method {
+    import ReplacementTransformationMethod = android.text.method.ReplacementTransformationMethod;
+    class SingleLineTransformationMethod extends ReplacementTransformationMethod {
+        private static ORIGINAL;
+        private static REPLACEMENT;
+        protected getOriginal(): string[];
+        protected getReplacement(): string[];
+        static getInstance(): SingleLineTransformationMethod;
+        private static sInstance;
+    }
+}
+declare module android.view {
+    class HapticFeedbackConstants {
+        static LONG_PRESS: number;
+        static VIRTUAL_KEY: number;
+        static KEYBOARD_TAP: number;
+        static SAFE_MODE_DISABLED: number;
+        static SAFE_MODE_ENABLED: number;
+        static FLAG_IGNORE_VIEW_SETTING: number;
+        static FLAG_IGNORE_GLOBAL_SETTING: number;
+    }
+}
+declare module android.widget {
+    import ColorStateList = android.content.res.ColorStateList;
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Handler = android.os.Handler;
+    import Message = android.os.Message;
+    import BoringLayout = android.text.BoringLayout;
+    import Layout = android.text.Layout;
+    import SpanWatcher = android.text.SpanWatcher;
+    import Spannable = android.text.Spannable;
+    import Spanned = android.text.Spanned;
+    import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
+    import TextPaint = android.text.TextPaint;
+    import TextUtils = android.text.TextUtils;
+    import TextWatcher = android.text.TextWatcher;
+    import MovementMethod = android.text.method.MovementMethod;
+    import TransformationMethod = android.text.method.TransformationMethod;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import ViewTreeObserver = android.view.ViewTreeObserver;
+    import OverScroller = android.widget.OverScroller;
+    class TextView extends View implements ViewTreeObserver.OnPreDrawListener {
+        static LOG_TAG: string;
+        static DEBUG_EXTRACT: boolean;
+        private static SANS;
+        private static SERIF;
+        private static MONOSPACE;
+        private static SIGNED;
+        private static DECIMAL;
+        private static MARQUEE_FADE_NORMAL;
+        private static MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
+        private static MARQUEE_FADE_SWITCH_SHOW_FADE;
+        private static LINES;
+        private static EMS;
+        private static PIXELS;
+        private static TEMP_RECTF;
+        private static VERY_WIDE;
+        private static ANIMATED_SCROLL_GAP;
+        private static NO_FILTERS;
+        private static CHANGE_WATCHER_PRIORITY;
+        private static MULTILINE_STATE_SET;
+        static LAST_CUT_OR_COPY_TIME: number;
+        private mTextColor;
+        private mHintTextColor;
+        private mLinkTextColor;
+        private mCurTextColor;
+        private mCurHintTextColor;
+        private mFreezesText;
+        private mTemporaryDetach;
+        private mDispatchTemporaryDetach;
+        private mSpannableFactory;
+        private mShadowRadius;
+        private mShadowDx;
+        private mShadowDy;
+        private mPreDrawRegistered;
+        private mPreventDefaultMovement;
+        private mEllipsize;
+        mDrawables: TextView.Drawables;
+        private mMarquee;
+        private mRestartMarquee;
+        private mMarqueeRepeatLimit;
+        private mLastLayoutDirection;
+        private mMarqueeFadeMode;
+        private mSavedMarqueeModeLayout;
+        private mText;
+        private mTransformed;
+        private mBufferType;
+        private mHint;
+        private mHintLayout;
+        private mMovement;
+        private mTransformation;
+        private mAllowTransformationLengthChange;
+        private mChangeWatcher;
+        private mListeners;
+        private mTextPaint;
+        private mUserSetTextScaleX;
+        private mLayout;
+        private mGravity;
+        private mHorizontallyScrolling;
+        private mAutoLinkMask;
+        private mLinksClickable;
+        private mSpacingMult;
+        private mSpacingAdd;
+        private mMaximum;
+        private mMaxMode;
+        private mMinimum;
+        private mMinMode;
+        private mOldMaximum;
+        private mOldMaxMode;
+        private mMaxWidthValue;
+        private mMaxWidthMode;
+        private mMinWidthValue;
+        private mMinWidthMode;
+        private mSingleLine;
+        private mDesiredHeightAtMeasure;
+        private mIncludePad;
+        private mDeferScroll;
+        private mTempRect;
+        private mLastScroll;
+        private mScroller;
+        private mBoring;
+        private mHintBoring;
+        private mSavedLayout;
+        private mSavedHintLayout;
+        private mTextDir;
+        private mFilters;
+        mHighlightColor: number;
+        private mHighlightPath;
+        private mHighlightPaint;
+        private mHighlightPathBogus;
+        mCursorDrawableRes: number;
+        mTextSelectHandleLeftRes: number;
+        mTextSelectHandleRightRes: number;
+        mTextSelectHandleRes: number;
+        mTextEditSuggestionItemLayout: number;
+        private mEditor;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        private initTextElement();
-        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
-        onFinishInflate(): void;
-        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
-        private getDesiredHeight();
-        setTextColor(color: number | ColorStateList): void;
-        getTextColors(): ColorStateList;
-        getCurrentTextColor(): number;
-        private updateTextColors();
-        drawableStateChanged(): void;
+        private setTypefaceFromAttrs(familyName, typefaceIndex, styleIndex);
+        private setRelativeDrawablesIfNeeded(start, end);
+        setEnabled(enabled: boolean): void;
+        setTypeface(tf: any, style: number): void;
+        protected getDefaultEditable(): boolean;
+        protected getDefaultMovementMethod(): MovementMethod;
+        getText(): String;
+        length(): number;
+        getEditableText(): any;
+        getLineHeight(): number;
+        getLayout(): Layout;
+        getHintLayout(): Layout;
+        getUndoManager(): any;
+        setUndoManager(undoManager: any, tag: string): void;
+        getKeyListener(): any;
+        setKeyListener(input: any): void;
+        private setKeyListenerOnly(input);
+        getMovementMethod(): MovementMethod;
+        setMovementMethod(movement: MovementMethod): void;
+        private fixFocusableAndClickableSettings();
+        getTransformationMethod(): TransformationMethod;
+        setTransformationMethod(method: TransformationMethod): void;
         getCompoundPaddingTop(): number;
         getCompoundPaddingBottom(): number;
         getCompoundPaddingLeft(): number;
         getCompoundPaddingRight(): number;
-        setGravity(gravity: number): void;
-        setLineSpacing(add: number, mult: number): void;
-        setTextSizeInPx(sizeInPx: number): void;
+        getCompoundPaddingStart(): number;
+        getCompoundPaddingEnd(): number;
+        getExtendedPaddingTop(): number;
+        getExtendedPaddingBottom(): number;
+        getTotalPaddingLeft(): number;
+        getTotalPaddingRight(): number;
+        getTotalPaddingStart(): number;
+        getTotalPaddingEnd(): number;
+        getTotalPaddingTop(): number;
+        getTotalPaddingBottom(): number;
+        setCompoundDrawables(left: Drawable, top: Drawable, right: Drawable, bottom: Drawable): void;
+        setCompoundDrawablesWithIntrinsicBounds(left: Drawable, top: Drawable, right: Drawable, bottom: Drawable): void;
+        setCompoundDrawablesRelative(start: Drawable, top: Drawable, end: Drawable, bottom: Drawable): void;
+        setCompoundDrawablesRelativeWithIntrinsicBounds(start: Drawable, top: Drawable, end: Drawable, bottom: Drawable): void;
+        getCompoundDrawables(): Drawable[];
+        getCompoundDrawablesRelative(): Drawable[];
+        setCompoundDrawablePadding(pad: number): void;
+        getCompoundDrawablePadding(): number;
+        setPadding(left: number, top: number, right: number, bottom: number): void;
+        getAutoLinkMask(): number;
+        getTextLocale(): any;
+        setTextLocale(locale: any): void;
+        getTextSize(): number;
         setTextSize(size: number): void;
-        getLineHeight(): number;
-        setHeight(pixels: number): void;
-        setMaxLines(max: number): void;
+        setTextSize(unit: string, size: number): void;
+        private setRawTextSize(size);
+        getTextScaleX(): number;
+        setTextScaleX(size: number): void;
+        getTypeface(): any;
+        setTextColor(colors: ColorStateList | number): void;
+        getTextColors(): ColorStateList;
+        getCurrentTextColor(): number;
+        setHighlightColor(color: number): void;
+        getHighlightColor(): number;
+        setShowSoftInputOnFocus(show: boolean): void;
+        getShowSoftInputOnFocus(): boolean;
+        setShadowLayer(radius: number, dx: number, dy: number, color: number): void;
+        getShadowRadius(): number;
+        getShadowDx(): number;
+        getShadowDy(): number;
+        getShadowColor(): number;
+        getPaint(): TextPaint;
+        setAutoLinkMask(mask: number): void;
+        setLinksClickable(whether: boolean): void;
+        getLinksClickable(): boolean;
+        getUrls(): any[];
+        setHintTextColor(colors: ColorStateList | number): void;
+        getHintTextColors(): ColorStateList;
+        getCurrentHintTextColor(): number;
+        setGravity(gravity: number): void;
+        getGravity(): number;
+        getPaintFlags(): number;
+        setPaintFlags(flags: number): void;
+        setHorizontallyScrolling(whether: boolean): void;
+        getHorizontallyScrolling(): boolean;
+        setMinLines(minlines: number): void;
+        getMinLines(): number;
+        setMinHeight(minHeight: number): void;
+        getMinHeight(): number;
+        setMaxLines(maxlines: number): void;
         getMaxLines(): number;
         setMaxHeight(maxHeight: number): void;
         getMaxHeight(): number;
+        setLines(lines: number): void;
+        setHeight(pixels: number): void;
+        setMinEms(minems: number): void;
+        getMinEms(): number;
+        setMinWidth(minpixels: number): void;
+        getMinWidth(): number;
+        setMaxEms(maxems: number): void;
+        getMaxEms(): number;
         setMaxWidth(maxpixels: number): void;
         getMaxWidth(): number;
+        setEms(ems: number): void;
         setWidth(pixels: number): void;
-        setMinLines(min: number): void;
-        getMinLines(): number;
+        setLineSpacing(add: number, mult: number): void;
+        getLineSpacingMultiplier(): number;
+        getLineSpacingExtra(): number;
+        private updateTextColors();
+        protected drawableStateChanged(): void;
+        removeMisspelledSpans(spannable: Spannable): void;
+        setFreezesText(freezesText: boolean): void;
+        getFreezesText(): boolean;
+        setSpannableFactory(factory: Spannable.Factory): void;
+        private setText(text, type?, notifyBefore?, oldlen?);
+        setHint(hint: String): void;
+        getHint(): String;
+        isSingleLine(): boolean;
+        private static isMultilineInputType(type);
+        removeSuggestionSpans(text: String): String;
+        private hasPasswordTransformationMethod();
+        private static isPasswordInputType(inputType);
+        private static isVisiblePasswordInputType(inputType);
+        setRawInputType(type: number): void;
+        setInputType(type: number, direct?: boolean): void;
+        getInputType(): number;
+        setImeOptions(imeOptions: number): void;
+        getImeOptions(): number;
+        setImeActionLabel(label: String, actionId: number): void;
+        getImeActionLabel(): String;
+        getImeActionId(): number;
+        setOnEditorActionListener(l: TextView.OnEditorActionListener): void;
+        protected setFrame(l: number, t: number, r: number, b: number): boolean;
+        private restartMarqueeIfNeeded();
+        setFilters(filters: any[]): void;
+        setFilters(e: any, filters: any[]): void;
+        getFilters(): any[];
+        private getBoxHeight(l);
+        getVerticalOffset(forceNormal: boolean): number;
+        private getBottomVerticalOffset(forceNormal);
+        invalidateRegion(start: number, end: number, invalidateCursor: boolean): void;
+        private registerForPreDraw();
+        onPreDraw(): boolean;
+        protected onAttachedToWindow(): void;
+        protected onDetachedFromWindow(): void;
+        protected isPaddingOffsetRequired(): boolean;
+        protected getLeftPaddingOffset(): number;
+        protected getTopPaddingOffset(): number;
+        protected getBottomPaddingOffset(): number;
+        protected getRightPaddingOffset(): number;
+        protected verifyDrawable(who: Drawable): boolean;
+        jumpDrawablesToCurrentState(): void;
+        invalidateDrawable(drawable: Drawable): void;
+        isTextSelectable(): boolean;
+        setTextIsSelectable(selectable: boolean): void;
+        protected onCreateDrawableState(extraSpace: number): number[];
+        private getUpdatedHighlightPath();
+        getHorizontalOffsetForDrawables(): number;
+        protected onDraw(canvas: Canvas): void;
+        getFocusedRect(r: Rect): void;
+        getLineCount(): number;
+        getLineBounds(line: number, bounds: Rect): number;
+        getBaseline(): number;
+        protected getFadeTop(offsetRequired: boolean): number;
+        protected getFadeHeight(offsetRequired: boolean): number;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        private shouldAdvanceFocusOnEnter();
+        private shouldAdvanceFocusOnTab();
+        private doKeyDown(keyCode, event, otherEvent);
+        resetErrorChangedFlag(): void;
+        hideErrorIfUnchanged(): void;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+        onCheckIsTextEditor(): boolean;
+        private nullLayouts();
+        private assumeLayout();
+        private getLayoutAlignment();
+        protected makeNewLayout(wantWidth: number, hintWidth: number, boring: BoringLayout.Metrics, hintBoring: BoringLayout.Metrics, ellipsisWidth: number, bringIntoView: boolean): void;
+        private makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment, shouldEllipsize, effectiveEllipsize, useSaved);
+        private compressText(width);
+        private static desired(layout);
+        setIncludeFontPadding(includepad: boolean): void;
+        getIncludeFontPadding(): boolean;
+        private static UNKNOWN_BORING;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        private getDesiredHeight(layout?, cap?);
+        private checkForResize();
+        private checkForRelayout();
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        private isShowingHint();
+        private bringTextIntoView();
+        bringPointIntoView(offset: number): boolean;
+        moveCursorToVisibleOffset(): boolean;
+        computeScroll(): void;
+        private getInterestingRect(r, line);
+        private convertFromViewportToContentCoordinates(r);
+        viewportToContentHorizontalOffset(): number;
+        viewportToContentVerticalOffset(): number;
+        getSelectionStart(): number;
+        getSelectionEnd(): number;
+        hasSelection(): boolean;
+        setAllCaps(allCaps: boolean): void;
         setSingleLine(singleLine?: boolean): void;
-        setLines(lines: number): void;
-        setText(text?: string): void;
-        getText(): string;
-        setHtml(html: string): void;
-        getHtml(): string;
-        getTextElement(): HTMLElement;
+        private setInputTypeSingleLine(singleLine);
+        private applySingleLine(singleLine, applyTransformation, changeMaxLines);
+        setEllipsize(where: TextUtils.TruncateAt): void;
+        setMarqueeRepeatLimit(marqueeLimit: number): void;
+        getMarqueeRepeatLimit(): number;
+        getEllipsize(): TextUtils.TruncateAt;
+        setSelectAllOnFocus(selectAllOnFocus: boolean): void;
+        setCursorVisible(visible: boolean): void;
+        isCursorVisible(): boolean;
+        private canMarquee();
+        private startMarquee();
+        private stopMarquee();
+        private startStopMarquee(start);
+        protected onTextChanged(text: String, start: number, lengthBefore: number, lengthAfter: number): void;
+        protected onSelectionChanged(selStart: number, selEnd: number): void;
+        addTextChangedListener(watcher: TextWatcher): void;
+        removeTextChangedListener(watcher: TextWatcher): void;
+        private sendBeforeTextChanged(text, start, before, after);
+        removeAdjacentSuggestionSpans(pos: number): void;
+        sendOnTextChanged(text: String, start: number, before: number, after: number): void;
+        sendAfterTextChanged(text: any): void;
+        updateAfterEdit(): void;
+        handleTextChanged(buffer: String, start: number, before: number, after: number): void;
+        spanChange(buf: Spanned, what: any, oldStart: number, newStart: number, oldEnd: number, newEnd: number): void;
+        dispatchFinishTemporaryDetach(): void;
+        onStartTemporaryDetach(): void;
+        onFinishTemporaryDetach(): void;
+        protected onFocusChanged(focused: boolean, direction: number, previouslyFocusedRect: Rect): void;
+        onWindowFocusChanged(hasWindowFocus: boolean): void;
+        protected onVisibilityChanged(changedView: View, visibility: number): void;
+        clearComposingText(): void;
+        setSelected(selected: boolean): void;
+        onTouchEvent(event: MotionEvent): boolean;
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        isTextEditable(): boolean;
+        didTouchFocusSelect(): boolean;
+        cancelLongPress(): void;
+        setScroller(s: OverScroller): void;
+        protected getLeftFadingEdgeStrength(): number;
+        protected getRightFadingEdgeStrength(): number;
+        protected computeHorizontalScrollRange(): number;
+        protected computeVerticalScrollRange(): number;
+        protected computeVerticalScrollExtent(): number;
+        static getTextColors(): ColorStateList;
+        static getTextColor(def: number): number;
+        private canSelectText();
+        textCanBeSelected(): boolean;
+        getTransformedText(start: number, end: number): String;
+        performLongClick(): boolean;
+        isSuggestionsEnabled(): boolean;
+        setCustomSelectionActionModeCallback(actionModeCallback: any): void;
+        getCustomSelectionActionModeCallback(): any;
+        protected stopSelectionActionMode(): void;
+        canCut(): boolean;
+        canCopy(): boolean;
+        canPaste(): boolean;
+        selectAllText(): boolean;
+        getOffsetForPosition(x: number, y: number): number;
+        convertToLocalHorizontalCoordinate(x: number): number;
+        getLineAtCoordinate(y: number): number;
+        private getOffsetAtCoordinate(line, x);
+        isInBatchEditMode(): boolean;
+        getTextDirectionHeuristic(): TextDirectionHeuristic;
+        onResolveDrawables(layoutDirection: number): void;
+        protected resetResolvedDrawables(): void;
+        protected deleteText_internal(start: number, end: number): void;
+        protected replaceText_internal(start: number, end: number, text: String): void;
+        protected setSpan_internal(span: any, start: number, end: number, flags: number): void;
+        protected setCursorPosition_internal(start: number, end: number): void;
+        private createEditorIfNeeded();
+    }
+    module TextView {
+        class Drawables {
+            static DRAWABLE_NONE: number;
+            static DRAWABLE_RIGHT: number;
+            static DRAWABLE_LEFT: number;
+            mCompoundRect: Rect;
+            mDrawableTop: Drawable;
+            mDrawableBottom: Drawable;
+            mDrawableLeft: Drawable;
+            mDrawableRight: Drawable;
+            mDrawableStart: Drawable;
+            mDrawableEnd: Drawable;
+            mDrawableError: Drawable;
+            mDrawableTemp: Drawable;
+            mDrawableLeftInitial: Drawable;
+            mDrawableRightInitial: Drawable;
+            mIsRtlCompatibilityMode: boolean;
+            mOverride: boolean;
+            mDrawableSizeTop: number;
+            mDrawableSizeBottom: number;
+            mDrawableSizeLeft: number;
+            mDrawableSizeRight: number;
+            mDrawableSizeStart: number;
+            mDrawableSizeEnd: number;
+            mDrawableSizeError: number;
+            mDrawableSizeTemp: number;
+            mDrawableWidthTop: number;
+            mDrawableWidthBottom: number;
+            mDrawableHeightLeft: number;
+            mDrawableHeightRight: number;
+            mDrawableHeightStart: number;
+            mDrawableHeightEnd: number;
+            mDrawableHeightError: number;
+            mDrawableHeightTemp: number;
+            mDrawablePadding: number;
+            mDrawableSaved: number;
+            constructor(context?: any);
+            resolveWithLayoutDirection(layoutDirection: number): void;
+            private updateDrawablesLayoutDirection(layoutDirection);
+            setErrorDrawable(dr: Drawable, tv: TextView): void;
+            private applyErrorDrawableIfNeeded(layoutDirection);
+        }
+        interface OnEditorActionListener {
+            onEditorAction(v: TextView, actionId: number, event: KeyEvent): boolean;
+        }
+        class Marquee extends Handler {
+            private static MARQUEE_DELTA_MAX;
+            private static MARQUEE_DELAY;
+            private static MARQUEE_RESTART_DELAY;
+            private static MARQUEE_RESOLUTION;
+            private static MARQUEE_PIXELS_PER_SECOND;
+            private static MARQUEE_STOPPED;
+            private static MARQUEE_STARTING;
+            private static MARQUEE_RUNNING;
+            private static MESSAGE_START;
+            private static MESSAGE_TICK;
+            private static MESSAGE_RESTART;
+            private mView;
+            private mStatus;
+            private mScrollUnit;
+            private mMaxScroll;
+            private mMaxFadeScroll;
+            private mGhostStart;
+            private mGhostOffset;
+            private mFadeStop;
+            private mRepeatLimit;
+            private mScroll;
+            constructor(v: TextView);
+            handleMessage(msg: Message): void;
+            tick(): void;
+            stop(): void;
+            private resetScroll();
+            start(repeatLimit: number): void;
+            getGhostOffset(): number;
+            getScroll(): number;
+            getMaxFadeScroll(): number;
+            shouldDrawLeftFade(): boolean;
+            shouldDrawGhost(): boolean;
+            isRunning(): boolean;
+            isStopped(): boolean;
+        }
+        class ChangeWatcher implements TextWatcher, SpanWatcher {
+            _TextView_this: TextView;
+            constructor(arg: TextView);
+            private mBeforeText;
+            beforeTextChanged(buffer: String, start: number, before: number, after: number): void;
+            onTextChanged(buffer: String, start: number, before: number, after: number): void;
+            afterTextChanged(buffer: String): void;
+            onSpanChanged(buf: Spannable, what: any, s: number, e: number, st: number, en: number): void;
+            onSpanAdded(buf: Spannable, what: any, s: number, e: number): void;
+            onSpanRemoved(buf: Spannable, what: any, s: number, e: number): void;
+        }
+        enum BufferType {
+            NORMAL = 0,
+            SPANNABLE = 1,
+            EDITABLE = 2,
+        }
     }
 }
 declare module android.widget {
@@ -2847,7 +4318,7 @@ declare module androidui.widget {
         getScaleType(): ImageView.ScaleType;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         private resolveAdjustedSize(desiredSize, maxSize, measureSpec);
-        setFrame(left: number, top: number, right: number, bottom: number): boolean;
+        protected setFrame(left: number, top: number, right: number, bottom: number): boolean;
         private configureBounds();
         getImageAlpha(): number;
         setImageAlpha(alpha: number): void;
@@ -2966,73 +4437,8 @@ declare module android.os {
         static endSection(): void;
     }
 }
-declare module java.lang {
-    class Integer {
-        static MIN_VALUE: number;
-        static MAX_VALUE: number;
-        static parseInt(value: string): number;
-    }
-}
-declare module android.text {
-    class InputType {
-        static TYPE_MASK_CLASS: number;
-        static TYPE_MASK_VARIATION: number;
-        static TYPE_MASK_FLAGS: number;
-        static TYPE_NULL: number;
-        static TYPE_CLASS_TEXT: number;
-        static TYPE_TEXT_FLAG_CAP_CHARACTERS: number;
-        static TYPE_TEXT_FLAG_CAP_WORDS: number;
-        static TYPE_TEXT_FLAG_CAP_SENTENCES: number;
-        static TYPE_TEXT_FLAG_AUTO_CORRECT: number;
-        static TYPE_TEXT_FLAG_AUTO_COMPLETE: number;
-        static TYPE_TEXT_FLAG_MULTI_LINE: number;
-        static TYPE_TEXT_FLAG_IME_MULTI_LINE: number;
-        static TYPE_TEXT_FLAG_NO_SUGGESTIONS: number;
-        static TYPE_TEXT_VARIATION_NORMAL: number;
-        static TYPE_TEXT_VARIATION_URI: number;
-        static TYPE_TEXT_VARIATION_EMAIL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_EMAIL_SUBJECT: number;
-        static TYPE_TEXT_VARIATION_SHORT_MESSAGE: number;
-        static TYPE_TEXT_VARIATION_LONG_MESSAGE: number;
-        static TYPE_TEXT_VARIATION_PERSON_NAME: number;
-        static TYPE_TEXT_VARIATION_POSTAL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_PASSWORD: number;
-        static TYPE_TEXT_VARIATION_VISIBLE_PASSWORD: number;
-        static TYPE_TEXT_VARIATION_WEB_EDIT_TEXT: number;
-        static TYPE_TEXT_VARIATION_FILTER: number;
-        static TYPE_TEXT_VARIATION_PHONETIC: number;
-        static TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_WEB_PASSWORD: number;
-        static TYPE_CLASS_NUMBER: number;
-        static TYPE_NUMBER_FLAG_SIGNED: number;
-        static TYPE_NUMBER_FLAG_DECIMAL: number;
-        static TYPE_NUMBER_VARIATION_NORMAL: number;
-        static TYPE_NUMBER_VARIATION_PASSWORD: number;
-        static TYPE_CLASS_PHONE: number;
-        static TYPE_CLASS_DATETIME: number;
-        static TYPE_DATETIME_VARIATION_NORMAL: number;
-        static TYPE_DATETIME_VARIATION_DATE: number;
-        static TYPE_DATETIME_VARIATION_TIME: number;
-    }
-}
-declare module android.text {
-    class TextUtils {
-        static isEmpty(str: string): boolean;
-    }
-}
 declare module android.util {
     class LongSparseArray<T> extends SparseArray<T> {
-    }
-}
-declare module android.view {
-    class HapticFeedbackConstants {
-        static LONG_PRESS: number;
-        static VIRTUAL_KEY: number;
-        static KEYBOARD_TAP: number;
-        static SAFE_MODE_DISABLED: number;
-        static SAFE_MODE_ENABLED: number;
-        static FLAG_IGNORE_VIEW_SETTING: number;
-        static FLAG_IGNORE_GLOBAL_SETTING: number;
     }
 }
 declare module android.database {
@@ -3367,7 +4773,7 @@ declare module android.widget {
         protected getBottomFadingEdgeStrength(): number;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
-        setFrame(left: number, top: number, right: number, bottom: number): boolean;
+        protected setFrame(left: number, top: number, right: number, bottom: number): boolean;
         protected layoutChildren(): void;
         updateScrollIndicators(): void;
         getSelectedView(): View;
@@ -3394,9 +4800,9 @@ declare module android.widget {
         keyPressed(): void;
         setScrollIndicators(up: View, down: View): void;
         private updateSelectorState();
-        drawableStateChanged(): void;
-        onCreateDrawableState(extraSpace: number): number[];
-        verifyDrawable(dr: Drawable): boolean;
+        protected drawableStateChanged(): void;
+        protected onCreateDrawableState(extraSpace: number): number[];
+        protected verifyDrawable(dr: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
         protected onAttachedToWindow(): void;
         protected onDetachedFromWindow(): void;
@@ -4360,8 +5766,8 @@ declare module android.support.v4.view {
         setPageMargin(marginPixels: number): void;
         getPageMargin(): number;
         setPageMarginDrawable(d: Drawable): void;
-        verifyDrawable(who: Drawable): boolean;
-        drawableStateChanged(): void;
+        protected verifyDrawable(who: Drawable): boolean;
+        protected drawableStateChanged(): void;
         distanceInfluenceForSnapDuration(f: number): number;
         smoothScrollTo(x: number, y: number, velocity?: number): void;
         private addNewItem(position, index);
@@ -4637,6 +6043,64 @@ declare module android.app {
 }
 declare module androidui.widget {
     import View = android.view.View;
+    import ColorStateList = android.content.res.ColorStateList;
+    class HtmlView extends View {
+        private mText;
+        private mHint;
+        private mGravity;
+        private mSingleLine;
+        private mTextSize;
+        private mTextColor;
+        private mCurTextColor;
+        private mHintColor;
+        private mSpacingMult;
+        private mSpacingAdd;
+        private mMaxWidth;
+        private mMaxHeight;
+        private mMaxLineCount;
+        private mMinLineCount;
+        private mTextElement;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        private initTextElement();
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        onFinishInflate(): void;
+        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        private getDesiredHeight();
+        setTextColor(color: number | ColorStateList): void;
+        getTextColors(): ColorStateList;
+        getCurrentTextColor(): number;
+        private updateTextColors();
+        protected drawableStateChanged(): void;
+        getCompoundPaddingTop(): number;
+        getCompoundPaddingBottom(): number;
+        getCompoundPaddingLeft(): number;
+        getCompoundPaddingRight(): number;
+        setGravity(gravity: number): void;
+        setLineSpacing(add: number, mult: number): void;
+        setTextSizeInPx(sizeInPx: number): void;
+        setTextSize(size: number): void;
+        getLineHeight(): number;
+        setHeight(pixels: number): void;
+        setMaxLines(max: number): void;
+        getMaxLines(): number;
+        setMaxHeight(maxHeight: number): void;
+        getMaxHeight(): number;
+        setMaxWidth(maxpixels: number): void;
+        getMaxWidth(): number;
+        setWidth(pixels: number): void;
+        setMinLines(min: number): void;
+        getMinLines(): number;
+        setSingleLine(singleLine?: boolean): void;
+        setLines(lines: number): void;
+        setText(text?: string): void;
+        getText(): string;
+        setHtml(html: string): void;
+        getHtml(): string;
+        getTextElement(): HTMLElement;
+    }
+}
+declare module androidui.widget {
+    import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import BaseAdapter = android.widget.BaseAdapter;
     class HtmlDataListAdapter extends BaseAdapter implements HtmlDataAdapter {
@@ -4683,20 +6147,6 @@ declare module androidui.widget {
         bindElementData: HTMLElement;
         rootElement: HTMLElement;
         onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
-    }
-}
-declare module android.R {
-    class string_ {
-        static prll_header_state_normal: string;
-        static prll_header_state_ready: string;
-        static prll_header_state_loading: string;
-        static prll_header_state_fail: string;
-        static prll_footer_state_normal: string;
-        static prll_footer_state_loading: string;
-        static prll_footer_state_ready: string;
-        static prll_footer_state_fail: string;
-        static prll_footer_state_no_more: string;
-        static zh(): void;
     }
 }
 declare module androidui.widget {
@@ -4838,10 +6288,5 @@ declare module androidui.widget {
             onRefresh(prScroll: PullRefreshNativeScrollView): void;
             onLoadMore(prScroll: PullRefreshNativeScrollView): void;
         }
-    }
-}
-declare module androidui.util {
-    class PerformanceAdjuster {
-        static noCanvasMode(): void;
     }
 }
