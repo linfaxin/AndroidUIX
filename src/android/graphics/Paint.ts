@@ -334,6 +334,7 @@ module android.graphics{
             this.setColor((a << 24) | (r << 16) | (g << 8) | b);
         }
         getAlpha():number{
+            if(this.mAlpha==null) return 255;
             return this.mAlpha;
         }
         setAlpha(alpha:number){
@@ -770,6 +771,12 @@ module android.graphics{
 
             if(Number.isInteger(this.mColor)) {
                 context.fillStyle = Color.toRGBAFunc(this.mColor);
+            }
+
+            if(this.mAlpha!=null){
+                let alpha = context.globalAlpha;
+                if(alpha == null) alpha = 1;
+                context.globalAlpha = this.mAlpha/255 * alpha;
             }
 
             if(this.align!=null){

@@ -3682,6 +3682,9 @@ module android.view {
         setBackground(background:Drawable) {
             this.setBackgroundDrawable(background);
         }
+        getBackground():Drawable {
+            return this.mBackground;
+        }
         setBackgroundDrawable(background:Drawable) {
             this.computeOpaqueFlags();
 

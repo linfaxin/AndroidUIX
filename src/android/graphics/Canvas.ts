@@ -7,11 +7,15 @@
 ///<reference path="Color.ts"/>
 ///<reference path="Paint.ts"/>
 ///<reference path="Path.ts"/>
+///<reference path="Matrix.ts"/>
+///<reference path="../../androidui/image/PlatformImage.ts"/>
+
 module android.graphics {
     import Pools = android.util.Pools;
     import Log = android.util.Log;
     import Rect = android.graphics.Rect;
     import Color = android.graphics.Color;
+    import PlatformImage = androidui.image.PlatformImage;
 
     export class Canvas {
         private static FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
@@ -23,6 +27,7 @@ module android.graphics {
         mCurrentClip:Rect;
         private shouldDoRectBeforeRestoreMap = new Map<number, Array<Rect>>();
         private mClipStateMap = new Map<number, Rect>();
+        private mTempMatrixValue = new Array<number>(9);
 
 
         /**
@@ -65,7 +70,7 @@ module android.graphics {
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
             this.mCurrentClip = Canvas.obtainRect();
             this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
-            this._saveCount = 0;
+            this._saveCount = this.save();
 
             //let content = this._mCanvasContent;
             //function logMethod (old){
@@ -82,9 +87,6 @@ module android.graphics {
             //content.translate = logMethod(content.translate);
             //content.fillRect = logMethod(content.fillRect);
 
-            this.fullRectForClip();//ready for clip bound
-            //this._mCanvasContent.clip();
-            this.save();
         }
 
         recycle(){
@@ -128,6 +130,14 @@ module android.graphics {
             if (px && py) this.translate(-px, -py);
         }
 
+        concat(m:android.graphics.Matrix):void {
+            //TODO effect mCurrentClip
+            let v = this.mTempMatrixValue;
+            m.getValues(v);
+            this._mCanvasContent.transform(v[Matrix.MSCALE_X], v[Matrix.MSKEW_X], v[Matrix.MSKEW_Y], v[Matrix.MSCALE_Y],
+                                            v[Matrix.MTRANS_X], v[Matrix.MTRANS_Y]);
+        }
+
         drawRGB(r:number, g:number, b:number) {
             this._mCanvasContent.fillStyle = `rgb(${r},${g},${b})`;
             this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
@@ -157,20 +167,6 @@ module android.graphics {
         }
 
         restore() {
-            //let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-            //if(doRects && doRects.length>0){
-            //    doRects.forEach((rect:Rect)=>{
-            //        this._mCanvasContent.rect(rect.left, rect.top, rect.width(), rect.height());
-            //    });
-            //    if(doRects.length%2 == 1){
-            //        this.fullRectForClip();
-            //    }
-            //    while(doRects.length>0){
-            //        Canvas.recycleRect(doRects.pop());
-            //    }
-            //}
-
-
             this._saveCount--;
             this._mCanvasContent.restore();
             let savedClip = this.mClipStateMap.get(this._saveCount);
@@ -192,10 +188,6 @@ module android.graphics {
             return this._saveCount;
         }
 
-        private fullRectForClip(){
-            //this._mCanvasContent.rect(Canvas.FullRect.left, Canvas.FullRect.top, Canvas.FullRect.width(), Canvas.FullRect.height());
-        }
-
         clipRect(rect:Rect):boolean;
         clipRect(left:number, top:number, right:number, bottom:number):boolean;
         clipRect(...args):boolean {
@@ -209,18 +201,11 @@ module android.graphics {
                 rect.set(left, top, right, bottom);
             }
 
-            //this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top),
-            //    Math.ceil(rect.width()), Math.ceil(rect.height()));
-            //this.fullRectForClip();
-            //this._mCanvasContent.clip('evenodd');
-            //
-            //let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-            //if(!doRects){
-            //    doRects = [];
-            //    this.shouldDoRectBeforeRestoreMap.set(this._saveCount, doRects);
-            //}
-            //doRects.push(rect);
-            //
+            this._mCanvasContent.beginPath();
+            this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top),
+                Math.ceil(rect.width()), Math.ceil(rect.height()));
+            this._mCanvasContent.clip();
+
             this.mCurrentClip.intersect(rect);
 
             return rect.isEmpty();
@@ -247,6 +232,22 @@ module android.graphics {
 
         drawCanvas(canvas:Canvas, offsetX:number, offsetY:number):void {
             this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY);
+        }
+
+        drawImage(image:PlatformImage, dstRect?:Rect, paint?:Paint):void {
+
+            if(paint){
+                this._mCanvasContent.save();
+                paint._setToCanvasContent(this._mCanvasContent);
+            }
+
+            if(!dstRect){
+                this._mCanvasContent.drawImage(image.getImage(), 0, 0);
+            }else{
+                this._mCanvasContent.drawImage(image.getImage(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+            }
+
+            if(paint) this._mCanvasContent.restore();
         }
 
         drawRect(rect:Rect, paint:Paint);
@@ -424,5 +425,6 @@ module android.graphics {
             //}
             this.drawText_end(text, start, end, x, y, paint);
         }
+
     }
 }

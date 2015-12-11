@@ -143,66 +143,6 @@ declare module android.util {
         static trimStateSet(states: Array<number>, newSize: number): Array<number>;
     }
 }
-declare module android.graphics.drawable {
-    import Rect = android.graphics.Rect;
-    import WeakReference = java.lang.ref.WeakReference;
-    import Runnable = java.lang.Runnable;
-    class Drawable {
-        private static ZERO_BOUNDS_RECT;
-        mBounds: Rect;
-        mStateSet: number[];
-        mLevel: number;
-        mVisible: boolean;
-        mCallback: WeakReference<Drawable.Callback>;
-        constructor();
-        draw(canvas: any): void;
-        setBounds(rect: Rect): any;
-        setBounds(left: any, top: any, right: any, bottom: any): any;
-        copyBounds(bounds?: Rect): Rect;
-        getBounds(): Rect;
-        setDither(dither: boolean): void;
-        setCallback(cb: Drawable.Callback): void;
-        getCallback(): Drawable.Callback;
-        invalidateSelf(): void;
-        scheduleSelf(what: any, when: any): void;
-        unscheduleSelf(what: any): void;
-        setAlpha(alpha: number): void;
-        getAlpha(): number;
-        isStateful(): boolean;
-        setState(stateSet: Array<number>): boolean;
-        getState(): Array<number>;
-        jumpToCurrentState(): void;
-        getCurrent(): Drawable;
-        setLevel(level: number): boolean;
-        getLevel(): number;
-        setVisible(visible: boolean, restart: boolean): boolean;
-        isVisible(): boolean;
-        setAutoMirrored(mirrored: boolean): void;
-        isAutoMirrored(): boolean;
-        getOpacity(): number;
-        static resolveOpacity(op1: number, op2: number): number;
-        onStateChange(state: Array<number>): boolean;
-        onLevelChange(level: number): boolean;
-        onBoundsChange(bounds: Rect): void;
-        getIntrinsicWidth(): number;
-        getIntrinsicHeight(): number;
-        getMinimumWidth(): number;
-        getMinimumHeight(): number;
-        getPadding(padding: Rect): boolean;
-        mutate(): Drawable;
-        getConstantState(): Drawable.ConstantState;
-    }
-    module Drawable {
-        interface Callback {
-            invalidateDrawable(who: Drawable): void;
-            scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
-            unscheduleDrawable(who: Drawable, what: Runnable): void;
-        }
-        interface ConstantState {
-            newDrawable(): Drawable;
-        }
-    }
-}
 declare module android.util {
     class Pools {
         a: Pools.SimplePool<string>;
@@ -384,7 +324,131 @@ declare module android.graphics {
     }
 }
 declare module android.graphics {
+    class Point {
+        x: number;
+        y: number;
+        constructor();
+        constructor(x: number, y: number);
+        constructor(src: Point);
+        set(x: number, y: number): void;
+        negate(): void;
+        offset(dx: number, dy: number): void;
+        equals(x: number, y: number): boolean;
+        equals(o: any): boolean;
+        toString(): String;
+    }
+}
+declare module android.graphics {
+    class RectF extends Rect {
+    }
+}
+declare module android.graphics {
+    import StringBuilder = java.lang.StringBuilder;
+    import RectF = android.graphics.RectF;
+    class Matrix {
+        static MSCALE_X: number;
+        static MSKEW_X: number;
+        static MTRANS_X: number;
+        static MSKEW_Y: number;
+        static MSCALE_Y: number;
+        static MTRANS_Y: number;
+        static MPERSP_0: number;
+        static MPERSP_1: number;
+        static MPERSP_2: number;
+        private static MATRIX_SIZE;
+        private mValues;
+        static IDENTITY_MATRIX: Matrix;
+        constructor();
+        constructor(src: Matrix);
+        constructor(values: number[]);
+        isIdentity(): boolean;
+        hasPerspective(): boolean;
+        rectStaysRect(): boolean;
+        set(src: Matrix): void;
+        equals(obj: any): boolean;
+        hashCode(): number;
+        reset(): void;
+        setTranslate(dx: number, dy: number): void;
+        setScale(sx: number, sy: number, px?: number, py?: number): void;
+        setRotate(degrees: number, px?: number, py?: number): void;
+        setSinCos(sinValue: number, cosValue: number, px?: number, py?: number): void;
+        setSkew(kx: number, ky: number, px?: number, py?: number): void;
+        setConcat(a: Matrix, b: Matrix): boolean;
+        preTranslate(dx: number, dy: number): boolean;
+        preScale(sx: number, sy: number, px?: number, py?: number): boolean;
+        preRotate(degrees: number, px?: number, py?: number): boolean;
+        preSkew(kx: number, ky: number, px?: number, py?: number): boolean;
+        preConcat(other: Matrix): boolean;
+        postTranslate(dx: number, dy: number): boolean;
+        postScale(sx: number, sy: number, px?: number, py?: number): boolean;
+        postRotate(degrees: number, px?: number, py?: number): boolean;
+        postSkew(kx: number, ky: number, px?: number, py?: number): boolean;
+        postConcat(other: Matrix): boolean;
+        setRectToRect(src: RectF, dst: RectF, stf: Matrix.ScaleToFit): boolean;
+        private static checkPointArrays(src, srcIndex, dst, dstIndex, pointCount);
+        mapPoints(dst: number[], dstIndex?: number, src?: number[], srcIndex?: number, pointCount?: number): void;
+        mapVectors(dst: number[], dstIndex?: number, src?: number[], srcIndex?: number, ptCount?: number): void;
+        mapRect(dst: RectF, src?: RectF): boolean;
+        mapRadius(radius: number): number;
+        getValues(values: number[]): void;
+        setValues(values: number[]): void;
+        toString(): string;
+        toShortString(sb: StringBuilder): void;
+        private postTransform(matrix);
+        private preTransform(matrix);
+        private static getPointLength(src, index);
+        static multiply(dest: number[], a: number[], b: number[]): void;
+        static getTranslate(dx: number, dy: number): number[];
+        static setTranslate(dest: number[], dx: number, dy: number): number[];
+        static getScale(sx: number, sy: number, px?: number, py?: number): number[];
+        static getRotate_1(degrees: number): number[];
+        static getRotate_2(sin: number, cos: number): number[];
+        static setRotate_1(dest: number[], degrees: number): number[];
+        static setRotate_2(dest: number[], sin: number, cos: number): number[];
+        static getRotate_3(degrees: number, px: number, py: number): number[];
+        static getSkew(kx: number, ky: number, px?: number, py?: number): number[];
+        private static reset(mtx);
+        private static kIdentity_Mask;
+        private static kTranslate_Mask;
+        private static kScale_Mask;
+        private static kAffine_Mask;
+        private static kPerspective_Mask;
+        private static kRectStaysRect_Mask;
+        private static kUnknown_Mask;
+        private static kAllMasks;
+        private static kTranslate_Shift;
+        private static kScale_Shift;
+        private static kAffine_Shift;
+        private static kPerspective_Shift;
+        private static kRectStaysRect_Shift;
+        private computeTypeMask();
+    }
+    module Matrix {
+        enum ScaleToFit {
+            FILL = 0,
+            START = 1,
+            CENTER = 2,
+            END = 3,
+        }
+    }
+}
+declare module androidui.image {
+    class PlatformImage {
+        private platformImage;
+        src: string;
+        onload: () => void;
+        onerror: () => void;
+        width: number;
+        height: number;
+        private getImageRatio();
+        constructor(src: string, onload?: () => void, onerror?: () => void);
+        protected init(src: string, onload?: () => void, onerror?: () => void): void;
+        getImage(): any;
+    }
+}
+declare module android.graphics {
     import Rect = android.graphics.Rect;
+    import PlatformImage = androidui.image.PlatformImage;
     class Canvas {
         private static FullRect;
         private mCanvasElement;
@@ -395,6 +459,7 @@ declare module android.graphics {
         mCurrentClip: Rect;
         private shouldDoRectBeforeRestoreMap;
         private mClipStateMap;
+        private mTempMatrixValue;
         static DIRECTION_LTR: number;
         static DIRECTION_RTL: number;
         private static sRectPool;
@@ -409,6 +474,7 @@ declare module android.graphics {
         translate(dx: number, dy: number): void;
         scale(sx: number, sy: number, px?: number, py?: number): void;
         rotate(degrees: number, px?: number, py?: number): void;
+        concat(m: android.graphics.Matrix): void;
         drawRGB(r: number, g: number, b: number): void;
         drawARGB(a: number, r: number, g: number, b: number): void;
         drawColor(color: number): void;
@@ -417,13 +483,13 @@ declare module android.graphics {
         restore(): void;
         restoreToCount(saveCount: number): void;
         getSaveCount(): number;
-        private fullRectForClip();
         clipRect(rect: Rect): boolean;
         clipRect(left: number, top: number, right: number, bottom: number): boolean;
         getClipBounds(bounds?: Rect): Rect;
         quickReject(rect: Rect): boolean;
         quickReject(left: number, top: number, right: number, bottom: number): boolean;
         drawCanvas(canvas: Canvas, offsetX: number, offsetY: number): void;
+        drawImage(image: PlatformImage, dstRect?: Rect, paint?: Paint): void;
         drawRect(rect: Rect, paint: Paint): any;
         drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
         drawPath(path: Path, paint: Paint): void;
@@ -432,6 +498,67 @@ declare module android.graphics {
         drawText(text: string, x: number, y: number, paint: Paint): void;
         drawTextRun_count(text: string, index: number, count: number, contextIndex: number, contextCount: number, x: number, y: number, dir: number, paint: Paint): void;
         drawTextRun_end(text: string, start: number, end: number, contextStart: number, contextEnd: number, x: number, y: number, dir: number, paint: Paint): void;
+    }
+}
+declare module android.graphics.drawable {
+    import Rect = android.graphics.Rect;
+    import WeakReference = java.lang.ref.WeakReference;
+    import Runnable = java.lang.Runnable;
+    import Canvas = android.graphics.Canvas;
+    abstract class Drawable {
+        private static ZERO_BOUNDS_RECT;
+        mBounds: Rect;
+        mStateSet: number[];
+        mLevel: number;
+        mVisible: boolean;
+        mCallback: WeakReference<Drawable.Callback>;
+        constructor();
+        abstract draw(canvas: Canvas): any;
+        setBounds(rect: Rect): any;
+        setBounds(left: any, top: any, right: any, bottom: any): any;
+        copyBounds(bounds?: Rect): Rect;
+        getBounds(): Rect;
+        setDither(dither: boolean): void;
+        setCallback(cb: Drawable.Callback): void;
+        getCallback(): Drawable.Callback;
+        invalidateSelf(): void;
+        scheduleSelf(what: any, when: any): void;
+        unscheduleSelf(what: any): void;
+        abstract setAlpha(alpha: number): void;
+        getAlpha(): number;
+        isStateful(): boolean;
+        setState(stateSet: Array<number>): boolean;
+        getState(): Array<number>;
+        jumpToCurrentState(): void;
+        getCurrent(): Drawable;
+        setLevel(level: number): boolean;
+        getLevel(): number;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        isVisible(): boolean;
+        setAutoMirrored(mirrored: boolean): void;
+        isAutoMirrored(): boolean;
+        getOpacity(): number;
+        static resolveOpacity(op1: number, op2: number): number;
+        onStateChange(state: Array<number>): boolean;
+        onLevelChange(level: number): boolean;
+        onBoundsChange(bounds: Rect): void;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getMinimumWidth(): number;
+        getMinimumHeight(): number;
+        getPadding(padding: Rect): boolean;
+        mutate(): Drawable;
+        getConstantState(): Drawable.ConstantState;
+    }
+    module Drawable {
+        interface Callback {
+            invalidateDrawable(who: Drawable): void;
+            scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
+            unscheduleDrawable(who: Drawable, what: Runnable): void;
+        }
+        interface ConstantState {
+            newDrawable(): Drawable;
+        }
     }
 }
 declare module android.graphics.drawable {
@@ -512,13 +639,6 @@ declare module android.graphics.drawable {
         getConstantState(): Drawable.ConstantState;
         mutate(): Drawable;
         getDrawable(): Drawable;
-    }
-}
-declare module android.graphics {
-    class Matrix {
-        static IDENTITY_MATRIX: Matrix;
-        isIdentity(): boolean;
-        mapRect(boundingRect: Rect): boolean;
     }
 }
 declare module java.lang {
@@ -1789,6 +1909,7 @@ declare module android.view {
         jumpDrawablesToCurrentState(): void;
         setBackgroundColor(color: number): void;
         setBackground(background: Drawable): void;
+        getBackground(): Drawable;
         setBackgroundDrawable(background: Drawable): void;
         getAnimation(): any;
         protected computeHorizontalScrollRange(): number;
@@ -1993,21 +2114,6 @@ declare module android.view {
             static obtain(): InvalidateInfo;
             recycle(): void;
         }
-    }
-}
-declare module android.graphics {
-    class Point {
-        x: number;
-        y: number;
-        constructor();
-        constructor(x: number, y: number);
-        constructor(src: Point);
-        set(x: number, y: number): void;
-        negate(): void;
-        offset(dx: number, dy: number): void;
-        equals(x: number, y: number): boolean;
-        equals(o: any): boolean;
-        toString(): String;
     }
 }
 declare module android.view {
@@ -2849,10 +2955,6 @@ declare module android.R {
         static prll_footer_state_fail: string;
         static prll_footer_state_no_more: string;
         static zh(): void;
-    }
-}
-declare module android.graphics {
-    class RectF extends Rect {
     }
 }
 declare module android.text.style {
@@ -4291,56 +4393,123 @@ declare module android.widget {
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
     }
 }
-declare module androidui.widget {
+declare module androidui.image {
+    import Paint = android.graphics.Paint;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Canvas = android.graphics.Canvas;
+    import Resources = android.content.res.Resources;
+    class NetDrawable extends Drawable {
+        private mImage;
+        private mState;
+        private mLoadListener;
+        private mImageWidth;
+        private mImageHeight;
+        constructor(src: string, res?: Resources, paint?: Paint);
+        draw(canvas: Canvas): void;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        protected onLoad(): void;
+        protected onError(): void;
+        setLoadListener(loadListener: NetDrawable.LoadListener): void;
+        getConstantState(): Drawable.ConstantState;
+    }
+    module NetDrawable {
+        interface LoadListener {
+            onLoad(drawable: NetDrawable): any;
+            onError(drawable: NetDrawable): any;
+        }
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Matrix = android.graphics.Matrix;
+    import Drawable = android.graphics.drawable.Drawable;
     import View = android.view.View;
-    import ImageView = android.widget.ImageView;
-    class HtmlImageView extends View {
+    class ImageView extends View {
+        private mUri;
+        private mMatrix;
         private mScaleType;
         private mHaveFrame;
         private mAdjustViewBounds;
         private mMaxWidth;
         private mMaxHeight;
         private mAlpha;
+        private mViewAlphaScale;
+        private mColorMod;
+        private mDrawable;
+        private mState;
+        private mMergeState;
+        private mLevel;
         private mDrawableWidth;
         private mDrawableHeight;
+        private mDrawMatrix;
+        private mTempSrc;
+        private mTempDst;
+        private mCropToPadding;
+        private mBaseline;
+        private mBaselineAlignBottom;
         private mAdjustViewBoundsCompat;
-        private mImgElement;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
         private initImageView();
+        protected verifyDrawable(dr: Drawable): boolean;
+        jumpDrawablesToCurrentState(): void;
+        invalidateDrawable(dr: Drawable): void;
+        hasOverlappingRendering(): boolean;
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;
         getMaxWidth(): number;
         setMaxWidth(maxWidth: number): void;
         getMaxHeight(): number;
         setMaxHeight(maxHeight: number): void;
+        getDrawable(): Drawable;
         setImageURI(uri: string): void;
+        setImageDrawable(drawable: Drawable): void;
+        setImageState(state: number[], merge: boolean): void;
+        setSelected(selected: boolean): void;
+        setImageLevel(level: number): void;
         setScaleType(scaleType: ImageView.ScaleType): void;
         getScaleType(): ImageView.ScaleType;
-        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        getImageMatrix(): Matrix;
+        setImageMatrix(matrix: Matrix): void;
+        getCropToPadding(): boolean;
+        setCropToPadding(cropToPadding: boolean): void;
+        private resolveUri();
+        onCreateDrawableState(extraSpace: number): number[];
+        private updateDrawable(d);
+        private resizeFromDrawable();
+        private static sS2FArray;
+        private static scaleTypeToScaleToFit(st);
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         private resolveAdjustedSize(desiredSize, maxSize, measureSpec);
-        protected setFrame(left: number, top: number, right: number, bottom: number): boolean;
+        protected setFrame(l: number, t: number, r: number, b: number): boolean;
         private configureBounds();
+        protected drawableStateChanged(): void;
+        protected onDraw(canvas: Canvas): void;
+        getBaseline(): number;
+        setBaseline(baseline: number): void;
+        setBaselineAlignBottom(aligned: boolean): void;
+        getBaselineAlignBottom(): boolean;
         getImageAlpha(): number;
         setImageAlpha(alpha: number): void;
-    }
-}
-declare module android.widget {
-    class ImageView extends androidui.widget.HtmlImageView {
+        setAlpha(alpha: number): void;
+        private applyColorMod();
+        setVisibility(visibility: number): void;
+        protected onAttachedToWindow(): void;
+        protected onDetachedFromWindow(): void;
+        static parseScaleType(s: string, defaultType: ImageView.ScaleType): ImageView.ScaleType;
     }
     module ImageView {
-        class ScaleType {
-            static MATRIX: ScaleType;
-            static FIT_XY: ScaleType;
-            static FIT_START: ScaleType;
-            static FIT_CENTER: ScaleType;
-            static FIT_END: ScaleType;
-            static CENTER: ScaleType;
-            static CENTER_CROP: ScaleType;
-            static CENTER_INSIDE: ScaleType;
-            private mType;
-            constructor(type: string);
-            toString(): string;
-            static parseScaleType(s: string, defaultType: ScaleType): ScaleType;
+        enum ScaleType {
+            MATRIX = 0,
+            FIT_XY = 1,
+            FIT_START = 2,
+            FIT_CENTER = 3,
+            FIT_END = 4,
+            CENTER = 5,
+            CENTER_CROP = 6,
+            CENTER_INSIDE = 7,
         }
     }
 }
@@ -6097,6 +6266,39 @@ declare module androidui.widget {
         setHtml(html: string): void;
         getHtml(): string;
         getTextElement(): HTMLElement;
+    }
+}
+declare module androidui.widget {
+    import View = android.view.View;
+    import ImageView = android.widget.ImageView;
+    class HtmlImageView extends View {
+        private mScaleType;
+        private mHaveFrame;
+        private mAdjustViewBounds;
+        private mMaxWidth;
+        private mMaxHeight;
+        private mAlpha;
+        private mDrawableWidth;
+        private mDrawableHeight;
+        private mAdjustViewBoundsCompat;
+        private mImgElement;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        private initImageView();
+        getAdjustViewBounds(): boolean;
+        setAdjustViewBounds(adjustViewBounds: boolean): void;
+        getMaxWidth(): number;
+        setMaxWidth(maxWidth: number): void;
+        getMaxHeight(): number;
+        setMaxHeight(maxHeight: number): void;
+        setImageURI(uri: string): void;
+        setScaleType(scaleType: ImageView.ScaleType): void;
+        getScaleType(): ImageView.ScaleType;
+        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        private resolveAdjustedSize(desiredSize, maxSize, measureSpec);
+        protected setFrame(left: number, top: number, right: number, bottom: number): boolean;
+        private configureBounds();
+        getImageAlpha(): number;
+        setImageAlpha(alpha: number): void;
     }
 }
 declare module androidui.widget {

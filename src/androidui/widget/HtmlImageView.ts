@@ -57,7 +57,7 @@ module androidui.widget{
                 return this.mMaxHeight;
             });
             this._attrBinder.addAttr('scaleType', (value)=>{
-                this.setScaleType(ImageView.ScaleType.parseScaleType(value, this.mScaleType));
+                this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
             }, ()=>{
                 return this.mScaleType.toString();
             });

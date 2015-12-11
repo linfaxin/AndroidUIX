@@ -1,6 +1,7 @@
 /**
  * Created by linfaxin on 15/10/6.
  */
+
 //use the deepest sub class as enter
 
 ///<reference path="android/view/ViewOverlay.ts"/>
@@ -33,6 +34,7 @@
 
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
+///<reference path="androidui/image/NetDrawable.ts"/>
 ///<reference path="androidui/widget/HtmlView.ts"/>
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>

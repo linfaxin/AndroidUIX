@@ -580,197 +580,6 @@ var android;
         util.StateSet = StateSet;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/3.
- */
-///<reference path="../Rect.ts"/>
-///<reference path="../PixelFormat.ts"/>
-///<reference path="../../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
-///<reference path="../../util/StateSet.ts"/>
-var android;
-(function (android) {
-    var graphics;
-    (function (graphics) {
-        var drawable;
-        (function (drawable) {
-            var Rect = android.graphics.Rect;
-            var PixelFormat = android.graphics.PixelFormat;
-            var WeakReference = java.lang.ref.WeakReference;
-            var StateSet = android.util.StateSet;
-            class Drawable {
-                constructor() {
-                    this.mBounds = Drawable.ZERO_BOUNDS_RECT;
-                    this.mStateSet = StateSet.WILD_CARD;
-                    this.mLevel = 0;
-                    this.mVisible = true;
-                }
-                draw(canvas) {
-                }
-                setBounds(...args) {
-                    if (args.length === 1) {
-                        let rect = args[0];
-                        return this.setBounds(rect.left, rect.top, rect.right, rect.bottom);
-                    }
-                    else {
-                        let [left = 0, top = 0, right = 0, bottom = 0] = args;
-                        let oldBounds = this.mBounds;
-                        if (oldBounds == Drawable.ZERO_BOUNDS_RECT) {
-                            oldBounds = this.mBounds = new Rect();
-                        }
-                        if (oldBounds.left != left || oldBounds.top != top ||
-                            oldBounds.right != right || oldBounds.bottom != bottom) {
-                            if (!oldBounds.isEmpty()) {
-                                this.invalidateSelf();
-                            }
-                            this.mBounds.set(left, top, right, bottom);
-                            this.onBoundsChange(this.mBounds);
-                        }
-                    }
-                }
-                copyBounds(bounds = new Rect()) {
-                    bounds.set(this.mBounds);
-                    return bounds;
-                }
-                getBounds() {
-                    if (this.mBounds == Drawable.ZERO_BOUNDS_RECT) {
-                        this.mBounds = new Rect();
-                    }
-                    return this.mBounds;
-                }
-                setDither(dither) { }
-                setCallback(cb) {
-                    this.mCallback = new WeakReference(cb);
-                }
-                getCallback() {
-                    if (this.mCallback != null) {
-                        return this.mCallback.get();
-                    }
-                    return null;
-                }
-                invalidateSelf() {
-                    let callback = this.getCallback();
-                    if (callback != null) {
-                        callback.invalidateDrawable(this);
-                    }
-                }
-                scheduleSelf(what, when) {
-                    let callback = this.getCallback();
-                    if (callback != null) {
-                        callback.scheduleDrawable(this, what, when);
-                    }
-                }
-                unscheduleSelf(what) {
-                    let callback = this.getCallback();
-                    if (callback != null) {
-                        callback.unscheduleDrawable(this, what);
-                    }
-                }
-                setAlpha(alpha) {
-                }
-                getAlpha() {
-                    return 0xFF;
-                }
-                isStateful() {
-                    return false;
-                }
-                setState(stateSet) {
-                    if (this.mStateSet + '' !== stateSet + '') {
-                        this.mStateSet = stateSet;
-                        return this.onStateChange(stateSet);
-                    }
-                    return false;
-                }
-                getState() {
-                    return this.mStateSet;
-                }
-                jumpToCurrentState() {
-                }
-                getCurrent() {
-                    return this;
-                }
-                setLevel(level) {
-                    if (this.mLevel != level) {
-                        this.mLevel = level;
-                        return this.onLevelChange(level);
-                    }
-                    return false;
-                }
-                getLevel() {
-                    return this.mLevel;
-                }
-                setVisible(visible, restart) {
-                    let changed = this.mVisible != visible;
-                    if (changed) {
-                        this.mVisible = visible;
-                        this.invalidateSelf();
-                    }
-                    return changed;
-                }
-                isVisible() {
-                    return this.mVisible;
-                }
-                setAutoMirrored(mirrored) {
-                }
-                isAutoMirrored() {
-                    return false;
-                }
-                getOpacity() {
-                    return PixelFormat.TRANSLUCENT;
-                }
-                static resolveOpacity(op1, op2) {
-                    if (op1 == op2) {
-                        return op1;
-                    }
-                    if (op1 == PixelFormat.UNKNOWN || op2 == PixelFormat.UNKNOWN) {
-                        return PixelFormat.UNKNOWN;
-                    }
-                    if (op1 == PixelFormat.TRANSLUCENT || op2 == PixelFormat.TRANSLUCENT) {
-                        return PixelFormat.TRANSLUCENT;
-                    }
-                    if (op1 == PixelFormat.TRANSPARENT || op2 == PixelFormat.TRANSPARENT) {
-                        return PixelFormat.TRANSPARENT;
-                    }
-                    return PixelFormat.OPAQUE;
-                }
-                onStateChange(state) {
-                    return false;
-                }
-                onLevelChange(level) {
-                    return false;
-                }
-                onBoundsChange(bounds) {
-                }
-                getIntrinsicWidth() {
-                    return -1;
-                }
-                getIntrinsicHeight() {
-                    return -1;
-                }
-                getMinimumWidth() {
-                    let intrinsicWidth = this.getIntrinsicWidth();
-                    return intrinsicWidth > 0 ? intrinsicWidth : 0;
-                }
-                getMinimumHeight() {
-                    let intrinsicHeight = this.getIntrinsicHeight();
-                    return intrinsicHeight > 0 ? intrinsicHeight : 0;
-                }
-                getPadding(padding) {
-                    padding.set(0, 0, 0, 0);
-                    return false;
-                }
-                mutate() {
-                    return this;
-                }
-                getConstantState() {
-                    return null;
-                }
-            }
-            Drawable.ZERO_BOUNDS_RECT = new Rect();
-            drawable.Drawable = Drawable;
-        })(drawable = graphics.drawable || (graphics.drawable = {}));
-    })(graphics = android.graphics || (android.graphics = {}));
-})(android || (android = {}));
 var android;
 (function (android) {
     var util;
@@ -985,6 +794,8 @@ var android;
                 this.setColor((a << 24) | (r << 16) | (g << 8) | b);
             }
             getAlpha() {
+                if (this.mAlpha == null)
+                    return 255;
                 return this.mAlpha;
             }
             setAlpha(alpha) {
@@ -1179,6 +990,12 @@ var android;
                 if (Number.isInteger(this.mColor)) {
                     context.fillStyle = graphics.Color.toRGBAFunc(this.mColor);
                 }
+                if (this.mAlpha != null) {
+                    let alpha = context.globalAlpha;
+                    if (alpha == null)
+                        alpha = 1;
+                    context.globalAlpha = this.mAlpha / 255 * alpha;
+                }
                 if (this.align != null) {
                     context.textAlign = Paint.Align[this.align].toLowerCase();
                 }
@@ -1303,12 +1120,758 @@ var android;
         graphics.Path = Path;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        class Point {
+            constructor(...args) {
+                this.x = 0;
+                this.y = 0;
+                if (args.length === 1) {
+                    let src = args[0];
+                    this.x = src.x;
+                    this.y = src.y;
+                }
+                else {
+                    let [x = 0, y = 0] = args;
+                    this.x = x;
+                    this.y = y;
+                }
+            }
+            set(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+            negate() {
+                this.x = -this.x;
+                this.y = -this.y;
+            }
+            offset(dx, dy) {
+                this.x += dx;
+                this.y += dy;
+            }
+            equals(...args) {
+                if (args.length === 2) {
+                    let [x = 0, y = 0] = args;
+                    return this.x == x && this.y == y;
+                }
+                else {
+                    let o = args[0];
+                    if (this === o)
+                        return true;
+                    if (!o || !(o instanceof Point))
+                        return false;
+                    let point = o;
+                    if (this.x != point.x)
+                        return false;
+                    if (this.y != point.y)
+                        return false;
+                    return true;
+                }
+            }
+            toString() {
+                return "Point(" + this.x + ", " + this.y + ")";
+            }
+        }
+        graphics.Point = Point;
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/12/6.
+ */
+///<reference path="Rect.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        class RectF extends graphics.Rect {
+        }
+        graphics.RectF = RectF;
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../java/lang/StringBuilder.ts"/>
+///<reference path="../../android/graphics/Point.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/RectF.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var System = java.lang.System;
+        var StringBuilder = java.lang.StringBuilder;
+        class Matrix {
+            constructor(values) {
+                this.mValues = new Array(Matrix.MATRIX_SIZE);
+                if (values instanceof Matrix)
+                    this.set(values);
+                else if (values instanceof Array) {
+                    System.arraycopy(values, 0, this.mValues, 0, Matrix.MATRIX_SIZE);
+                }
+                else {
+                    Matrix.reset(this.mValues);
+                }
+            }
+            isIdentity() {
+                for (let i = 0, k = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++, k++) {
+                        if (this.mValues[k] != ((i == j) ? 1 : 0)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            hasPerspective() {
+                return (this.mValues[6] != 0 || this.mValues[7] != 0 || this.mValues[8] != 1);
+            }
+            rectStaysRect() {
+                return (this.computeTypeMask() & Matrix.kRectStaysRect_Mask) != 0;
+            }
+            set(src) {
+                if (src == null) {
+                    this.reset();
+                }
+                else {
+                    System.arraycopy(src.mValues, 0, this.mValues, 0, Matrix.MATRIX_SIZE);
+                }
+            }
+            equals(obj) {
+                if (!(obj instanceof Matrix))
+                    return false;
+                let another = obj;
+                for (let i = 0; i < Matrix.MATRIX_SIZE; i++) {
+                    if (this.mValues[i] != another.mValues[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            hashCode() {
+                return 44;
+            }
+            reset() {
+                Matrix.reset(this.mValues);
+            }
+            setTranslate(dx, dy) {
+                Matrix.setTranslate(this.mValues, dx, dy);
+            }
+            setScale(sx, sy, px, py) {
+                if (px == null || py == null) {
+                    this.mValues[0] = sx;
+                    this.mValues[1] = 0;
+                    this.mValues[2] = 0;
+                    this.mValues[3] = 0;
+                    this.mValues[4] = sy;
+                    this.mValues[5] = 0;
+                    this.mValues[6] = 0;
+                    this.mValues[7] = 0;
+                    this.mValues[8] = 1;
+                }
+                else {
+                    this.mValues = Matrix.getScale(sx, sy, px, py);
+                }
+            }
+            setRotate(degrees, px, py) {
+                if (px == null || py == null) {
+                    Matrix.setRotate_1(this.mValues, degrees);
+                }
+                else {
+                    this.mValues = Matrix.getRotate_3(degrees, px, py);
+                }
+            }
+            setSinCos(sinValue, cosValue, px, py) {
+                if (px == null || py == null) {
+                    Matrix.setRotate_2(this.mValues, sinValue, cosValue);
+                }
+                else {
+                    Matrix.setTranslate(this.mValues, -px, -py);
+                    this.postTransform(Matrix.getRotate_2(sinValue, cosValue));
+                    this.postTransform(Matrix.getTranslate(px, py));
+                }
+            }
+            setSkew(kx, ky, px, py) {
+                if (px == null || py == null) {
+                    this.mValues[0] = 1;
+                    this.mValues[1] = kx;
+                    this.mValues[2] = -0;
+                    this.mValues[3] = ky;
+                    this.mValues[4] = 1;
+                    this.mValues[5] = 0;
+                    this.mValues[6] = 0;
+                    this.mValues[7] = 0;
+                    this.mValues[8] = 1;
+                }
+                else {
+                    this.mValues = Matrix.getSkew(kx, ky, px, py);
+                }
+            }
+            setConcat(a, b) {
+                Matrix.multiply(this.mValues, a.mValues, b.mValues);
+                return true;
+            }
+            preTranslate(dx, dy) {
+                this.preTransform(Matrix.getTranslate(dx, dy));
+                return true;
+            }
+            preScale(sx, sy, px, py) {
+                this.preTransform(Matrix.getScale(sx, sy, px, py));
+                return true;
+            }
+            preRotate(degrees, px, py) {
+                if (px == null || py == null) {
+                    let rad = Math_toRadians(degrees);
+                    let sin = Math.sin(rad);
+                    let cos = Math.cos(rad);
+                    this.preTransform(Matrix.getRotate_2(sin, cos));
+                    return true;
+                }
+                this.preTransform(Matrix.getRotate_3(degrees, px, py));
+                return true;
+            }
+            preSkew(kx, ky, px, py) {
+                this.preTransform(Matrix.getSkew(kx, ky, px, py));
+                return true;
+            }
+            preConcat(other) {
+                this.preTransform(other.mValues);
+                return true;
+            }
+            postTranslate(dx, dy) {
+                this.postTransform(Matrix.getTranslate(dx, dy));
+                return true;
+            }
+            postScale(sx, sy, px, py) {
+                this.postTransform(Matrix.getScale(sx, sy, px, py));
+                return true;
+            }
+            postRotate(degrees, px, py) {
+                this.postTransform(Matrix.getRotate_3(degrees, px, py));
+                return true;
+            }
+            postSkew(kx, ky, px, py) {
+                this.postTransform(Matrix.getSkew(kx, ky, px, py));
+                return true;
+            }
+            postConcat(other) {
+                this.postTransform(other.mValues);
+                return true;
+            }
+            setRectToRect(src, dst, stf) {
+                if (dst == null || src == null) {
+                    throw Error(`new NullPointerException()`);
+                }
+                let d = this;
+                if (src.isEmpty()) {
+                    Matrix.reset(d.mValues);
+                    return false;
+                }
+                if (dst.isEmpty()) {
+                    d.mValues[0] = d.mValues[1] = d.mValues[2] = d.mValues[3] = d.mValues[4] = d.mValues[5] = d.mValues[6] = d.mValues[7] = 0;
+                    d.mValues[8] = 1;
+                }
+                else {
+                    let tx, sx = dst.width() / src.width();
+                    let ty, sy = dst.height() / src.height();
+                    let xLarger = false;
+                    if (stf != Matrix.ScaleToFit.FILL) {
+                        if (sx > sy) {
+                            xLarger = true;
+                            sx = sy;
+                        }
+                        else {
+                            sy = sx;
+                        }
+                    }
+                    tx = dst.left - src.left * sx;
+                    ty = dst.top - src.top * sy;
+                    if (stf == Matrix.ScaleToFit.CENTER || stf == Matrix.ScaleToFit.END) {
+                        let diff;
+                        if (xLarger) {
+                            diff = dst.width() - src.width() * sy;
+                        }
+                        else {
+                            diff = dst.height() - src.height() * sy;
+                        }
+                        if (stf == Matrix.ScaleToFit.CENTER) {
+                            diff = diff / 2;
+                        }
+                        if (xLarger) {
+                            tx += diff;
+                        }
+                        else {
+                            ty += diff;
+                        }
+                    }
+                    d.mValues[0] = sx;
+                    d.mValues[4] = sy;
+                    d.mValues[2] = tx;
+                    d.mValues[5] = ty;
+                    d.mValues[1] = d.mValues[3] = d.mValues[6] = d.mValues[7] = 0;
+                }
+                d.mValues[8] = 1;
+                return true;
+            }
+            static checkPointArrays(src, srcIndex, dst, dstIndex, pointCount) {
+                let srcStop = srcIndex + (pointCount << 1);
+                let dstStop = dstIndex + (pointCount << 1);
+                if ((pointCount | srcIndex | dstIndex | srcStop | dstStop) < 0 || srcStop > src.length || dstStop > dst.length) {
+                    throw Error(`new ArrayIndexOutOfBoundsException()`);
+                }
+            }
+            mapPoints(dst, dstIndex = 0, src = dst, srcIndex = 0, pointCount = dst.length >> 1) {
+                Matrix.checkPointArrays(src, srcIndex, dst, dstIndex, pointCount);
+                const count = pointCount * 2;
+                let tmpDest = dst;
+                let inPlace = dst == src;
+                if (inPlace) {
+                    tmpDest = new Array(dstIndex + count);
+                }
+                for (let i = 0; i < count; i += 2) {
+                    let x = this.mValues[0] * src[i + srcIndex] + this.mValues[1] * src[i + srcIndex + 1] + this.mValues[2];
+                    let y = this.mValues[3] * src[i + srcIndex] + this.mValues[4] * src[i + srcIndex + 1] + this.mValues[5];
+                    tmpDest[i + dstIndex] = x;
+                    tmpDest[i + dstIndex + 1] = y;
+                }
+                if (inPlace) {
+                    System.arraycopy(tmpDest, dstIndex, dst, dstIndex, count);
+                }
+            }
+            mapVectors(dst, dstIndex = 0, src = dst, srcIndex = 0, ptCount = dst.length >> 1) {
+                Matrix.checkPointArrays(src, srcIndex, dst, dstIndex, ptCount);
+                if (this.hasPerspective()) {
+                    let origin = [0., 0.];
+                    this.mapPoints(origin);
+                    this.mapPoints(dst, dstIndex, src, srcIndex, ptCount);
+                    const count = ptCount * 2;
+                    for (let i = 0; i < count; i += 2) {
+                        dst[dstIndex + i] = dst[dstIndex + i] - origin[0];
+                        dst[dstIndex + i + 1] = dst[dstIndex + i + 1] - origin[1];
+                    }
+                }
+                else {
+                    let copy = new Matrix(this.mValues);
+                    Matrix.setTranslate(copy.mValues, 0, 0);
+                    copy.mapPoints(dst, dstIndex, src, srcIndex, ptCount);
+                }
+            }
+            mapRect(dst, src = dst) {
+                if (dst == null || src == null) {
+                    throw Error(`new NullPointerException()`);
+                }
+                let corners = [src.left, src.top, src.right, src.top, src.right, src.bottom, src.left, src.bottom];
+                this.mapPoints(corners);
+                dst.left = Math.min(Math.min(corners[0], corners[2]), Math.min(corners[4], corners[6]));
+                dst.right = Math.max(Math.max(corners[0], corners[2]), Math.max(corners[4], corners[6]));
+                dst.top = Math.min(Math.min(corners[1], corners[3]), Math.min(corners[5], corners[7]));
+                dst.bottom = Math.max(Math.max(corners[1], corners[3]), Math.max(corners[5], corners[7]));
+                return (this.computeTypeMask() & Matrix.kRectStaysRect_Mask) != 0;
+            }
+            mapRadius(radius) {
+                let src = [radius, 0., 0., radius];
+                this.mapVectors(src, 0, src, 0, 2);
+                let l1 = Matrix.getPointLength(src, 0);
+                let l2 = Matrix.getPointLength(src, 2);
+                return Math.sqrt(l1 * l2);
+            }
+            getValues(values) {
+                if (values.length < 9) {
+                    throw Error(`new ArrayIndexOutOfBoundsException()`);
+                }
+                System.arraycopy(this.mValues, 0, values, 0, Matrix.MATRIX_SIZE);
+            }
+            setValues(values) {
+                if (values.length < 9) {
+                    throw Error(`new ArrayIndexOutOfBoundsException()`);
+                }
+                System.arraycopy(values, 0, this.mValues, 0, Matrix.MATRIX_SIZE);
+            }
+            toString() {
+                let sb = new StringBuilder(64);
+                sb.append("Matrix{");
+                this.toShortString(sb);
+                sb.append('}');
+                return sb.toString();
+            }
+            toShortString(sb) {
+                let values = new Array(9);
+                this.getValues(values);
+                sb.append('[');
+                sb.append(values[0]);
+                sb.append(", ");
+                sb.append(values[1]);
+                sb.append(", ");
+                sb.append(values[2]);
+                sb.append("][");
+                sb.append(values[3]);
+                sb.append(", ");
+                sb.append(values[4]);
+                sb.append(", ");
+                sb.append(values[5]);
+                sb.append("][");
+                sb.append(values[6]);
+                sb.append(", ");
+                sb.append(values[7]);
+                sb.append(", ");
+                sb.append(values[8]);
+                sb.append(']');
+            }
+            postTransform(matrix) {
+                let tmp = new Array(9);
+                Matrix.multiply(tmp, this.mValues, matrix);
+                this.mValues = tmp;
+            }
+            preTransform(matrix) {
+                let tmp = new Array(9);
+                Matrix.multiply(tmp, matrix, this.mValues);
+                this.mValues = tmp;
+            }
+            static getPointLength(src, index) {
+                return Math.sqrt(src[index] * src[index] + src[index + 1] * src[index + 1]);
+            }
+            static multiply(dest, a, b) {
+                dest[0] = b[0] * a[0] + b[1] * a[3] + b[2] * a[6];
+                dest[1] = b[0] * a[1] + b[1] * a[4] + b[2] * a[7];
+                dest[2] = b[0] * a[2] + b[1] * a[5] + b[2] * a[8];
+                dest[3] = b[3] * a[0] + b[4] * a[3] + b[5] * a[6];
+                dest[4] = b[3] * a[1] + b[4] * a[4] + b[5] * a[7];
+                dest[5] = b[3] * a[2] + b[4] * a[5] + b[5] * a[8];
+                dest[6] = b[6] * a[0] + b[7] * a[3] + b[8] * a[6];
+                dest[7] = b[6] * a[1] + b[7] * a[4] + b[8] * a[7];
+                dest[8] = b[6] * a[2] + b[7] * a[5] + b[8] * a[8];
+            }
+            static getTranslate(dx, dy) {
+                return this.setTranslate(new Array(9), dx, dy);
+            }
+            static setTranslate(dest, dx, dy) {
+                dest[0] = 1;
+                dest[1] = 0;
+                dest[2] = dx;
+                dest[3] = 0;
+                dest[4] = 1;
+                dest[5] = dy;
+                dest[6] = 0;
+                dest[7] = 0;
+                dest[8] = 1;
+                return dest;
+            }
+            static getScale(sx, sy, px, py) {
+                if (px == null || py == null) {
+                    return [sx, 0, 0, 0, sy, 0, 0, 0, 1];
+                }
+                let tmp = new Array(9);
+                let tmp2 = new Array(9);
+                this.setTranslate(tmp, -px, -py);
+                Matrix.multiply(tmp2, tmp, Matrix.getScale(sx, sy));
+                Matrix.multiply(tmp, tmp2, Matrix.getTranslate(px, py));
+                return tmp;
+            }
+            static getRotate_1(degrees) {
+                let rad = Math_toRadians(degrees);
+                let sin = Math.sin(rad);
+                let cos = Math.cos(rad);
+                return Matrix.getRotate_2(sin, cos);
+            }
+            static getRotate_2(sin, cos) {
+                return this.setRotate_2(new Array(9), sin, cos);
+            }
+            static setRotate_1(dest, degrees) {
+                let rad = Math_toRadians(degrees);
+                let sin = Math.sin(rad);
+                let cos = Math.cos(rad);
+                return Matrix.setRotate_2(dest, sin, cos);
+            }
+            static setRotate_2(dest, sin, cos) {
+                dest[0] = cos;
+                dest[1] = -sin;
+                dest[2] = 0;
+                dest[3] = sin;
+                dest[4] = cos;
+                dest[5] = 0;
+                dest[6] = 0;
+                dest[7] = 0;
+                dest[8] = 1;
+                return dest;
+            }
+            static getRotate_3(degrees, px, py) {
+                let tmp = new Array(9);
+                let tmp2 = new Array(9);
+                this.setTranslate(tmp, -px, -py);
+                let rad = Math_toRadians(degrees);
+                let cos = Math.cos(rad);
+                let sin = Math.sin(rad);
+                Matrix.multiply(tmp2, tmp, Matrix.getRotate_2(sin, cos));
+                Matrix.multiply(tmp, tmp2, Matrix.getTranslate(px, py));
+                return tmp;
+            }
+            static getSkew(kx, ky, px, py) {
+                if (px == null || py == null) {
+                    return [1, kx, 0, ky, 1, 0, 0, 0, 1];
+                }
+                let tmp = new Array(9);
+                let tmp2 = new Array(9);
+                this.setTranslate(tmp, -px, -py);
+                Matrix.multiply(tmp2, tmp, [1, kx, 0, ky, 1, 0, 0, 0, 1]);
+                Matrix.multiply(tmp, tmp2, Matrix.getTranslate(px, py));
+                return tmp;
+            }
+            static reset(mtx) {
+                for (let i = 0, k = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++, k++) {
+                        mtx[k] = ((i == j) ? 1 : 0);
+                    }
+                }
+            }
+            computeTypeMask() {
+                let mask = 0;
+                if (this.mValues[6] != 0. || this.mValues[7] != 0. || this.mValues[8] != 1.) {
+                    mask |= Matrix.kPerspective_Mask;
+                }
+                if (this.mValues[2] != 0. || this.mValues[5] != 0.) {
+                    mask |= Matrix.kTranslate_Mask;
+                }
+                let m00 = this.mValues[0];
+                let m01 = this.mValues[1];
+                let m10 = this.mValues[3];
+                let m11 = this.mValues[4];
+                if (m01 != 0. || m10 != 0.) {
+                    mask |= Matrix.kAffine_Mask;
+                }
+                if (m00 != 1. || m11 != 1.) {
+                    mask |= Matrix.kScale_Mask;
+                }
+                if ((mask & Matrix.kPerspective_Mask) == 0) {
+                    let im00 = m00 != 0 ? 1 : 0;
+                    let im01 = m01 != 0 ? 1 : 0;
+                    let im10 = m10 != 0 ? 1 : 0;
+                    let im11 = m11 != 0 ? 1 : 0;
+                    let dp0 = (im00 | im11) ^ 1;
+                    let dp1 = im00 & im11;
+                    let ds0 = (im01 | im10) ^ 1;
+                    let ds1 = im01 & im10;
+                    mask |= ((dp0 & ds1) | (dp1 & ds0)) << Matrix.kRectStaysRect_Shift;
+                }
+                return mask;
+            }
+        }
+        Matrix.MSCALE_X = 0;
+        Matrix.MSKEW_X = 1;
+        Matrix.MTRANS_X = 2;
+        Matrix.MSKEW_Y = 3;
+        Matrix.MSCALE_Y = 4;
+        Matrix.MTRANS_Y = 5;
+        Matrix.MPERSP_0 = 6;
+        Matrix.MPERSP_1 = 7;
+        Matrix.MPERSP_2 = 8;
+        Matrix.MATRIX_SIZE = 9;
+        Matrix.IDENTITY_MATRIX = (() => {
+            class _Inner extends Matrix {
+                oops() {
+                    throw Error(`new IllegalStateException("Matrix can not be modified")`);
+                }
+                set(src) {
+                    this.oops();
+                }
+                reset() {
+                    this.oops();
+                }
+                setTranslate(dx, dy) {
+                    this.oops();
+                }
+                setScale(sx, sy, px, py) {
+                    this.oops();
+                }
+                setRotate(degrees, px, py) {
+                    this.oops();
+                }
+                setSinCos(sinValue, cosValue, px, py) {
+                    this.oops();
+                }
+                setSkew(kx, ky, px, py) {
+                    this.oops();
+                }
+                setConcat(a, b) {
+                    this.oops();
+                    return false;
+                }
+                preTranslate(dx, dy) {
+                    this.oops();
+                    return false;
+                }
+                preScale(sx, sy, px, py) {
+                    this.oops();
+                    return false;
+                }
+                preRotate(degrees, px, py) {
+                    this.oops();
+                    return false;
+                }
+                preSkew(kx, ky, px, py) {
+                    this.oops();
+                    return false;
+                }
+                preConcat(other) {
+                    this.oops();
+                    return false;
+                }
+                postTranslate(dx, dy) {
+                    this.oops();
+                    return false;
+                }
+                postScale(sx, sy, px, py) {
+                    this.oops();
+                    return false;
+                }
+                postRotate(degrees, px, py) {
+                    this.oops();
+                    return false;
+                }
+                postSkew(kx, ky, px, py) {
+                    this.oops();
+                    return false;
+                }
+                postConcat(other) {
+                    this.oops();
+                    return false;
+                }
+                setRectToRect(src, dst, stf) {
+                    this.oops();
+                    return false;
+                }
+                setPolyToPoly(src, srcIndex, dst, dstIndex, pointCount) {
+                    this.oops();
+                    return false;
+                }
+                setValues(values) {
+                    this.oops();
+                }
+            }
+            return new _Inner();
+        })();
+        Matrix.kIdentity_Mask = 0;
+        Matrix.kTranslate_Mask = 0x01;
+        Matrix.kScale_Mask = 0x02;
+        Matrix.kAffine_Mask = 0x04;
+        Matrix.kPerspective_Mask = 0x08;
+        Matrix.kRectStaysRect_Mask = 0x10;
+        Matrix.kUnknown_Mask = 0x80;
+        Matrix.kAllMasks = Matrix.kTranslate_Mask | Matrix.kScale_Mask | Matrix.kAffine_Mask | Matrix.kPerspective_Mask | Matrix.kRectStaysRect_Mask;
+        Matrix.kTranslate_Shift = 0;
+        Matrix.kScale_Shift = 1;
+        Matrix.kAffine_Shift = 2;
+        Matrix.kPerspective_Shift = 3;
+        Matrix.kRectStaysRect_Shift = 4;
+        graphics.Matrix = Matrix;
+        (function (Matrix) {
+            (function (ScaleToFit) {
+                ScaleToFit[ScaleToFit["FILL"] = 0] = "FILL";
+                ScaleToFit[ScaleToFit["START"] = 1] = "START";
+                ScaleToFit[ScaleToFit["CENTER"] = 2] = "CENTER";
+                ScaleToFit[ScaleToFit["END"] = 3] = "END";
+            })(Matrix.ScaleToFit || (Matrix.ScaleToFit = {}));
+            var ScaleToFit = Matrix.ScaleToFit;
+        })(Matrix = graphics.Matrix || (graphics.Matrix = {}));
+        function Math_toRadians(angdeg) {
+            return angdeg / 180.0 * Math.PI;
+        }
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/12/11.
+ */
+var androidui;
+(function (androidui) {
+    var image;
+    (function (image) {
+        class PlatformImage {
+            constructor(src, onload, onerror) {
+                this.init(src, onload, onerror);
+            }
+            get src() {
+                return this.platformImage.src;
+            }
+            set src(value) {
+                this.platformImage.src = value;
+            }
+            get onload() {
+                return this.platformImage.onload;
+            }
+            set onload(value) {
+                this.platformImage.onload = value;
+            }
+            get onerror() {
+                return this.platformImage.onerror;
+            }
+            set onerror(value) {
+                this.platformImage.onerror = value;
+            }
+            get width() {
+                return Math.floor(this.platformImage.width / this.getImageRatio());
+            }
+            get height() {
+                return Math.floor(this.platformImage.height / this.getImageRatio());
+            }
+            getImageRatio() {
+                let url = this.src;
+                if (!url)
+                    return 1;
+                let idx = url.lastIndexOf('.');
+                if (idx > 0) {
+                    url = url.substring(0, idx);
+                }
+                if (url.endsWith('@2x'))
+                    return 2;
+                if (url.endsWith('@3x'))
+                    return 3;
+                if (url.endsWith('@4x'))
+                    return 4;
+                if (url.endsWith('@5x'))
+                    return 5;
+                if (url.endsWith('@6x'))
+                    return 6;
+                return 1;
+            }
+            init(src, onload, onerror) {
+                this.platformImage = new Image();
+                this.onload = onload;
+                this.onerror = onerror;
+                this.src = src;
+            }
+            getImage() {
+                return this.platformImage;
+            }
+        }
+        image.PlatformImage = PlatformImage;
+    })(image = androidui.image || (androidui.image = {}));
+})(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/10/13.
+ */
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="../util/Log.ts"/>
 ///<reference path="Rect.ts"/>
 ///<reference path="Color.ts"/>
 ///<reference path="Paint.ts"/>
 ///<reference path="Path.ts"/>
+///<reference path="Matrix.ts"/>
+///<reference path="../../androidui/image/PlatformImage.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -1323,6 +1886,7 @@ var android;
                 this._saveCount = 0;
                 this.shouldDoRectBeforeRestoreMap = new Map();
                 this.mClipStateMap = new Map();
+                this.mTempMatrixValue = new Array(9);
                 this.mWidth = width;
                 this.mHeight = height;
                 this.init();
@@ -1348,9 +1912,7 @@ var android;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
                 this.mCurrentClip = Canvas.obtainRect();
                 this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
-                this._saveCount = 0;
-                this.fullRectForClip();
-                this.save();
+                this._saveCount = this.save();
             }
             recycle() {
                 Canvas.recycleRect(this.mCurrentClip);
@@ -1388,6 +1950,11 @@ var android;
                 if (px && py)
                     this.translate(-px, -py);
             }
+            concat(m) {
+                let v = this.mTempMatrixValue;
+                m.getValues(v);
+                this._mCanvasContent.transform(v[graphics.Matrix.MSCALE_X], v[graphics.Matrix.MSKEW_X], v[graphics.Matrix.MSKEW_Y], v[graphics.Matrix.MSCALE_Y], v[graphics.Matrix.MTRANS_X], v[graphics.Matrix.MTRANS_Y]);
+            }
             drawRGB(r, g, b) {
                 this._mCanvasContent.fillStyle = `rgb(${r},${g},${b})`;
                 this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
@@ -1410,18 +1977,6 @@ var android;
                 return this._saveCount;
             }
             restore() {
-                //let doRects = this.shouldDoRectBeforeRestoreMap.get(this._saveCount);
-                //if(doRects && doRects.length>0){
-                //    doRects.forEach((rect:Rect)=>{
-                //        this._mCanvasContent.rect(rect.left, rect.top, rect.width(), rect.height());
-                //    });
-                //    if(doRects.length%2 == 1){
-                //        this.fullRectForClip();
-                //    }
-                //    while(doRects.length>0){
-                //        Canvas.recycleRect(doRects.pop());
-                //    }
-                //}
                 this._saveCount--;
                 this._mCanvasContent.restore();
                 let savedClip = this.mClipStateMap.get(this._saveCount);
@@ -1441,8 +1996,6 @@ var android;
             getSaveCount() {
                 return this._saveCount;
             }
-            fullRectForClip() {
-            }
             clipRect(...args) {
                 let rect = Canvas.obtainRect();
                 if (args.length === 1) {
@@ -1452,6 +2005,9 @@ var android;
                     let [left = 0, top = 0, right = 0, bottom = 0] = args;
                     rect.set(left, top, right, bottom);
                 }
+                this._mCanvasContent.beginPath();
+                this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
+                this._mCanvasContent.clip();
                 this.mCurrentClip.intersect(rect);
                 return rect.isEmpty();
             }
@@ -1475,6 +2031,20 @@ var android;
             }
             drawCanvas(canvas, offsetX, offsetY) {
                 this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY);
+            }
+            drawImage(image, dstRect, paint) {
+                if (paint) {
+                    this._mCanvasContent.save();
+                    paint._setToCanvasContent(this._mCanvasContent);
+                }
+                if (!dstRect) {
+                    this._mCanvasContent.drawImage(image.getImage(), 0, 0);
+                }
+                else {
+                    this._mCanvasContent.drawImage(image.getImage(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                }
+                if (paint)
+                    this._mCanvasContent.restore();
             }
             drawRect(...args) {
                 if (args.length == 2) {
@@ -1538,6 +2108,194 @@ var android;
         Canvas.DIRECTION_RTL = 1;
         Canvas.sRectPool = new Pools.SynchronizedPool(100);
         graphics.Canvas = Canvas;
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/3.
+ */
+///<reference path="../Rect.ts"/>
+///<reference path="../PixelFormat.ts"/>
+///<reference path="../../../java/lang/ref/WeakReference.ts"/>
+///<reference path="../../../java/lang/Runnable.ts"/>
+///<reference path="../../util/StateSet.ts"/>
+///<reference path="../Canvas.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable) {
+            var Rect = android.graphics.Rect;
+            var PixelFormat = android.graphics.PixelFormat;
+            var WeakReference = java.lang.ref.WeakReference;
+            var StateSet = android.util.StateSet;
+            class Drawable {
+                constructor() {
+                    this.mBounds = Drawable.ZERO_BOUNDS_RECT;
+                    this.mStateSet = StateSet.WILD_CARD;
+                    this.mLevel = 0;
+                    this.mVisible = true;
+                }
+                setBounds(...args) {
+                    if (args.length === 1) {
+                        let rect = args[0];
+                        return this.setBounds(rect.left, rect.top, rect.right, rect.bottom);
+                    }
+                    else {
+                        let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                        let oldBounds = this.mBounds;
+                        if (oldBounds == Drawable.ZERO_BOUNDS_RECT) {
+                            oldBounds = this.mBounds = new Rect();
+                        }
+                        if (oldBounds.left != left || oldBounds.top != top ||
+                            oldBounds.right != right || oldBounds.bottom != bottom) {
+                            if (!oldBounds.isEmpty()) {
+                                this.invalidateSelf();
+                            }
+                            this.mBounds.set(left, top, right, bottom);
+                            this.onBoundsChange(this.mBounds);
+                        }
+                    }
+                }
+                copyBounds(bounds = new Rect()) {
+                    bounds.set(this.mBounds);
+                    return bounds;
+                }
+                getBounds() {
+                    if (this.mBounds == Drawable.ZERO_BOUNDS_RECT) {
+                        this.mBounds = new Rect();
+                    }
+                    return this.mBounds;
+                }
+                setDither(dither) { }
+                setCallback(cb) {
+                    this.mCallback = new WeakReference(cb);
+                }
+                getCallback() {
+                    if (this.mCallback != null) {
+                        return this.mCallback.get();
+                    }
+                    return null;
+                }
+                invalidateSelf() {
+                    let callback = this.getCallback();
+                    if (callback != null) {
+                        callback.invalidateDrawable(this);
+                    }
+                }
+                scheduleSelf(what, when) {
+                    let callback = this.getCallback();
+                    if (callback != null) {
+                        callback.scheduleDrawable(this, what, when);
+                    }
+                }
+                unscheduleSelf(what) {
+                    let callback = this.getCallback();
+                    if (callback != null) {
+                        callback.unscheduleDrawable(this, what);
+                    }
+                }
+                getAlpha() {
+                    return 0xFF;
+                }
+                isStateful() {
+                    return false;
+                }
+                setState(stateSet) {
+                    if (this.mStateSet + '' !== stateSet + '') {
+                        this.mStateSet = stateSet;
+                        return this.onStateChange(stateSet);
+                    }
+                    return false;
+                }
+                getState() {
+                    return this.mStateSet;
+                }
+                jumpToCurrentState() {
+                }
+                getCurrent() {
+                    return this;
+                }
+                setLevel(level) {
+                    if (this.mLevel != level) {
+                        this.mLevel = level;
+                        return this.onLevelChange(level);
+                    }
+                    return false;
+                }
+                getLevel() {
+                    return this.mLevel;
+                }
+                setVisible(visible, restart) {
+                    let changed = this.mVisible != visible;
+                    if (changed) {
+                        this.mVisible = visible;
+                        this.invalidateSelf();
+                    }
+                    return changed;
+                }
+                isVisible() {
+                    return this.mVisible;
+                }
+                setAutoMirrored(mirrored) {
+                }
+                isAutoMirrored() {
+                    return false;
+                }
+                getOpacity() {
+                    return PixelFormat.TRANSLUCENT;
+                }
+                static resolveOpacity(op1, op2) {
+                    if (op1 == op2) {
+                        return op1;
+                    }
+                    if (op1 == PixelFormat.UNKNOWN || op2 == PixelFormat.UNKNOWN) {
+                        return PixelFormat.UNKNOWN;
+                    }
+                    if (op1 == PixelFormat.TRANSLUCENT || op2 == PixelFormat.TRANSLUCENT) {
+                        return PixelFormat.TRANSLUCENT;
+                    }
+                    if (op1 == PixelFormat.TRANSPARENT || op2 == PixelFormat.TRANSPARENT) {
+                        return PixelFormat.TRANSPARENT;
+                    }
+                    return PixelFormat.OPAQUE;
+                }
+                onStateChange(state) {
+                    return false;
+                }
+                onLevelChange(level) {
+                    return false;
+                }
+                onBoundsChange(bounds) {
+                }
+                getIntrinsicWidth() {
+                    return -1;
+                }
+                getIntrinsicHeight() {
+                    return -1;
+                }
+                getMinimumWidth() {
+                    let intrinsicWidth = this.getIntrinsicWidth();
+                    return intrinsicWidth > 0 ? intrinsicWidth : 0;
+                }
+                getMinimumHeight() {
+                    let intrinsicHeight = this.getIntrinsicHeight();
+                    return intrinsicHeight > 0 ? intrinsicHeight : 0;
+                }
+                getPadding(padding) {
+                    padding.set(0, 0, 0, 0);
+                    return false;
+                }
+                mutate() {
+                    return this;
+                }
+                getConstantState() {
+                    return null;
+                }
+            }
+            Drawable.ZERO_BOUNDS_RECT = new Rect();
+            drawable.Drawable = Drawable;
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
 /**
@@ -1949,26 +2707,6 @@ var android;
                 }
             }
         })(drawable = graphics.drawable || (graphics.drawable = {}));
-    })(graphics = android.graphics || (android.graphics = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/18.
- */
-///<reference path="Rect.ts"/>
-var android;
-(function (android) {
-    var graphics;
-    (function (graphics) {
-        class Matrix {
-            isIdentity() {
-                return true;
-            }
-            mapRect(boundingRect) {
-                return false;
-            }
-        }
-        Matrix.IDENTITY_MATRIX = new Matrix();
-        graphics.Matrix = Matrix;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
 var java;
@@ -7918,6 +8656,9 @@ var android;
             setBackground(background) {
                 this.setBackgroundDrawable(background);
             }
+            getBackground() {
+                return this.mBackground;
+            }
             setBackgroundDrawable(background) {
                 this.computeOpaqueFlags();
                 if (background == this.mBackground) {
@@ -9156,63 +9897,6 @@ var android;
             }
         }
     })(view = android.view || (android.view = {}));
-})(android || (android = {}));
-var android;
-(function (android) {
-    var graphics;
-    (function (graphics) {
-        class Point {
-            constructor(...args) {
-                this.x = 0;
-                this.y = 0;
-                if (args.length === 1) {
-                    let src = args[0];
-                    this.x = src.x;
-                    this.y = src.y;
-                }
-                else {
-                    let [x = 0, y = 0] = args;
-                    this.x = x;
-                    this.y = y;
-                }
-            }
-            set(x, y) {
-                this.x = x;
-                this.y = y;
-            }
-            negate() {
-                this.x = -this.x;
-                this.y = -this.y;
-            }
-            offset(dx, dy) {
-                this.x += dx;
-                this.y += dy;
-            }
-            equals(...args) {
-                if (args.length === 2) {
-                    let [x = 0, y = 0] = args;
-                    return this.x == x && this.y == y;
-                }
-                else {
-                    let o = args[0];
-                    if (this === o)
-                        return true;
-                    if (!o || !(o instanceof Point))
-                        return false;
-                    let point = o;
-                    if (this.x != point.x)
-                        return false;
-                    if (this.y != point.y)
-                        return false;
-                    return true;
-                }
-            }
-            toString() {
-                return "Point(" + this.x + ", " + this.y + ")";
-            }
-        }
-        graphics.Point = Point;
-    })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/5.
@@ -15950,19 +16634,6 @@ var android;
         if (typeof string_[lang] === 'function')
             string_[lang].call(string_);
     })(R = android.R || (android.R = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/6.
- */
-///<reference path="Rect.ts"/>
-var android;
-(function (android) {
-    var graphics;
-    (function (graphics) {
-        class RectF extends graphics.Rect {
-        }
-        graphics.RectF = RectF;
-    })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -24144,36 +24815,142 @@ var android;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
- * Created by linfaxin on 15/11/7.
+ * Created by linfaxin on 15/12/11.
  */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/widget/ImageView.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="PlatformImage.ts"/>
 var androidui;
 (function (androidui) {
+    var image;
+    (function (image) {
+        var Paint = android.graphics.Paint;
+        var Drawable = android.graphics.drawable.Drawable;
+        class NetDrawable extends Drawable {
+            constructor(src, res, paint) {
+                super();
+                this.mImageWidth = -1;
+                this.mImageHeight = -1;
+                this.mState = new State(src, res, paint);
+                this.mImage = new image.PlatformImage(src, () => this.onLoad(), () => this.onError());
+            }
+            draw(canvas) {
+                canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+            }
+            setAlpha(alpha) {
+                this.mState.paint.setAlpha(alpha);
+            }
+            getAlpha() {
+                return this.mState.paint.getAlpha();
+            }
+            getIntrinsicWidth() {
+                return this.mImageWidth;
+            }
+            getIntrinsicHeight() {
+                return this.mImageHeight;
+            }
+            onLoad() {
+                this.mImageWidth = this.mImage.width * this.mState.res.getDisplayMetrics().density;
+                this.mImageHeight = this.mImage.height * this.mState.res.getDisplayMetrics().density;
+                if (this.mLoadListener)
+                    this.mLoadListener.onLoad(this);
+                this.invalidateSelf();
+            }
+            onError() {
+                if (this.mLoadListener)
+                    this.mLoadListener.onError(this);
+            }
+            setLoadListener(loadListener) {
+                this.mLoadListener = loadListener;
+            }
+            getConstantState() {
+                return this.mState;
+            }
+        }
+        image.NetDrawable = NetDrawable;
+        class State {
+            constructor(src, res, paint = new Paint()) {
+                this.res = res;
+                this.src = src;
+                this.paint = new Paint();
+                this.paint.set(paint);
+            }
+            newDrawable() {
+                return new NetDrawable(this.src, this.res, this.paint);
+            }
+        }
+    })(image = androidui.image || (androidui.image = {}));
+})(androidui || (androidui = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Matrix.ts"/>
+///<reference path="../../android/graphics/RectF.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../androidui/image/NetDrawable.ts"/>
+var android;
+(function (android) {
     var widget;
     (function (widget) {
+        var Matrix = android.graphics.Matrix;
+        var RectF = android.graphics.RectF;
         var View = android.view.View;
-        var MeasureSpec = View.MeasureSpec;
-        var ImageView = android.widget.ImageView;
-        window.addEventListener('AndroidUILoadFinish', () => {
-            eval('ImageView = android.widget.ImageView;');
-        });
-        class HtmlImageView extends View {
+        var Integer = java.lang.Integer;
+        class ImageView extends View {
             constructor(bindElement, rootElement) {
                 super(bindElement, rootElement);
                 this.mHaveFrame = false;
                 this.mAdjustViewBounds = false;
-                this.mMaxWidth = Number.MAX_SAFE_INTEGER;
-                this.mMaxHeight = Number.MAX_SAFE_INTEGER;
+                this.mMaxWidth = Integer.MAX_VALUE;
+                this.mMaxHeight = Integer.MAX_VALUE;
                 this.mAlpha = 255;
+                this.mViewAlphaScale = 256;
+                this.mColorMod = false;
+                this.mDrawable = null;
+                this.mState = null;
+                this.mMergeState = false;
+                this.mLevel = 0;
                 this.mDrawableWidth = 0;
                 this.mDrawableHeight = 0;
+                this.mDrawMatrix = null;
+                this.mTempSrc = new RectF();
+                this.mTempDst = new RectF();
+                this.mBaseline = -1;
+                this.mBaselineAlignBottom = false;
                 this.mAdjustViewBoundsCompat = false;
                 this.initImageView();
                 this._attrBinder.addAttr('src', (value) => {
                     this.setImageURI(value);
                 }, () => {
-                    return this.mImgElement.src;
+                    return this.mUri;
+                });
+                this._attrBinder.addAttr('baselineAlignBottom', (value) => {
+                    this.setBaselineAlignBottom(this._attrBinder.parseBoolean(value, this.mBaselineAlignBottom));
+                });
+                this._attrBinder.addAttr('baseline', (value) => {
+                    this.setBaseline(this._attrBinder.parseNumber(value, this.mBaseline));
+                }, () => {
+                    return this.mBaseline;
                 });
                 this._attrBinder.addAttr('adjustViewBounds', (value) => {
                     this.setAdjustViewBounds(this._attrBinder.parseBoolean(value, false));
@@ -24191,27 +24968,42 @@ var androidui;
                     return this.mMaxHeight;
                 });
                 this._attrBinder.addAttr('scaleType', (value) => {
-                    this.setScaleType(ImageView.ScaleType.parseScaleType(value, this.mScaleType));
+                    this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
                 }, () => {
                     return this.mScaleType.toString();
                 });
+                this._attrBinder.addAttr('drawableAlpha', (value) => {
+                    this.setAlpha(this._attrBinder.parseNumber(value, this.mAlpha));
+                }, () => {
+                    return this.mAlpha;
+                });
+                this._attrBinder.addAttr('cropToPadding', (value) => {
+                    this.setCropToPadding(this._attrBinder.parseBoolean(value, false));
+                });
             }
             initImageView() {
+                this.mMatrix = new Matrix();
                 this.mScaleType = ImageView.ScaleType.FIT_CENTER;
-                this.mImgElement = document.createElement('img');
-                this.mImgElement.style.position = "absolute";
-                this.mImgElement.onload = (() => {
-                    this.mImgElement.style.left = 0 + 'px';
-                    this.mImgElement.style.top = 0 + 'px';
-                    this.mImgElement.style.width = '';
-                    this.mImgElement.style.height = '';
-                    this.mDrawableWidth = this.mImgElement.width;
-                    this.mDrawableHeight = this.mImgElement.height;
-                    this.mImgElement.style.display = 'none';
-                    this.mImgElement.style.opacity = '';
-                    this.requestLayout();
-                });
-                this.bindElement.appendChild(this.mImgElement);
+            }
+            verifyDrawable(dr) {
+                return this.mDrawable == dr || super.verifyDrawable(dr);
+            }
+            jumpDrawablesToCurrentState() {
+                super.jumpDrawablesToCurrentState();
+                if (this.mDrawable != null)
+                    this.mDrawable.jumpToCurrentState();
+            }
+            invalidateDrawable(dr) {
+                if (dr == this.mDrawable) {
+                    this.invalidate();
+                    this.resizeFromDrawable();
+                }
+                else {
+                    super.invalidateDrawable(dr);
+                }
+            }
+            hasOverlappingRendering() {
+                return (this.getBackground() != null && this.getBackground().getCurrent() != null);
             }
             getAdjustViewBounds() {
                 return this.mAdjustViewBounds;
@@ -24234,19 +25026,60 @@ var androidui;
             setMaxHeight(maxHeight) {
                 this.mMaxHeight = maxHeight;
             }
+            getDrawable() {
+                return this.mDrawable;
+            }
             setImageURI(uri) {
-                this.mDrawableWidth = -1;
-                this.mDrawableHeight = -1;
-                this.mImgElement.style.opacity = '0';
-                this.mImgElement.src = uri;
+                if (this.mUri != uri) {
+                    this.updateDrawable(null);
+                    this.mUri = uri;
+                    const oldWidth = this.mDrawableWidth;
+                    const oldHeight = this.mDrawableHeight;
+                    this.resolveUri();
+                    if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
+                        this.requestLayout();
+                    }
+                    this.invalidate();
+                }
+            }
+            setImageDrawable(drawable) {
+                if (this.mDrawable != drawable) {
+                    this.mUri = null;
+                    const oldWidth = this.mDrawableWidth;
+                    const oldHeight = this.mDrawableHeight;
+                    this.updateDrawable(drawable);
+                    if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
+                        this.requestLayout();
+                    }
+                    this.invalidate();
+                }
+            }
+            setImageState(state, merge) {
+                this.mState = state;
+                this.mMergeState = merge;
+                if (this.mDrawable != null) {
+                    this.refreshDrawableState();
+                    this.resizeFromDrawable();
+                }
+            }
+            setSelected(selected) {
+                super.setSelected(selected);
+                this.resizeFromDrawable();
+            }
+            setImageLevel(level) {
+                this.mLevel = level;
+                if (this.mDrawable != null) {
+                    this.mDrawable.setLevel(level);
+                    this.resizeFromDrawable();
+                }
             }
             setScaleType(scaleType) {
                 if (scaleType == null) {
-                    throw new Error('NullPointerException');
+                    throw Error(`new NullPointerException()`);
                 }
                 if (this.mScaleType != scaleType) {
                     this.mScaleType = scaleType;
-                    this.setWillNotCacheDrawing(scaleType == ImageView.ScaleType.CENTER);
+                    this.setWillNotCacheDrawing(this.mScaleType == ImageView.ScaleType.CENTER);
                     this.requestLayout();
                     this.invalidate();
                 }
@@ -24254,15 +25087,107 @@ var androidui;
             getScaleType() {
                 return this.mScaleType;
             }
+            getImageMatrix() {
+                if (this.mDrawMatrix == null) {
+                    return new Matrix(Matrix.IDENTITY_MATRIX);
+                }
+                return this.mDrawMatrix;
+            }
+            setImageMatrix(matrix) {
+                if (matrix != null && matrix.isIdentity()) {
+                    matrix = null;
+                }
+                if (matrix == null && !this.mMatrix.isIdentity() || matrix != null && !this.mMatrix.equals(matrix)) {
+                    this.mMatrix.set(matrix);
+                    this.configureBounds();
+                    this.invalidate();
+                }
+            }
+            getCropToPadding() {
+                return this.mCropToPadding;
+            }
+            setCropToPadding(cropToPadding) {
+                if (this.mCropToPadding != cropToPadding) {
+                    this.mCropToPadding = cropToPadding;
+                    this.requestLayout();
+                    this.invalidate();
+                }
+            }
+            resolveUri() {
+                if (this.mDrawable != null) {
+                    return;
+                }
+                let d = null;
+                if (this.mUri != null) {
+                    d = new androidui.image.NetDrawable(this.mUri, this.getResources());
+                }
+                else {
+                    return;
+                }
+                this.updateDrawable(d);
+            }
+            onCreateDrawableState(extraSpace) {
+                if (this.mState == null) {
+                    return super.onCreateDrawableState(extraSpace);
+                }
+                else if (!this.mMergeState) {
+                    return this.mState;
+                }
+                else {
+                    return ImageView.mergeDrawableStates(super.onCreateDrawableState(extraSpace + this.mState.length), this.mState);
+                }
+            }
+            updateDrawable(d) {
+                if (this.mDrawable != null) {
+                    this.mDrawable.setCallback(null);
+                    this.unscheduleDrawable(this.mDrawable);
+                }
+                this.mDrawable = d;
+                if (d != null) {
+                    d.setCallback(this);
+                    if (d.isStateful()) {
+                        d.setState(this.getDrawableState());
+                    }
+                    d.setLevel(this.mLevel);
+                    d.setVisible(this.getVisibility() == ImageView.VISIBLE, true);
+                    this.mDrawableWidth = d.getIntrinsicWidth();
+                    this.mDrawableHeight = d.getIntrinsicHeight();
+                    this.applyColorMod();
+                    this.configureBounds();
+                }
+                else {
+                    this.mDrawableWidth = this.mDrawableHeight = -1;
+                }
+            }
+            resizeFromDrawable() {
+                let d = this.mDrawable;
+                if (d != null) {
+                    let w = d.getIntrinsicWidth();
+                    if (w < 0)
+                        w = this.mDrawableWidth;
+                    let h = d.getIntrinsicHeight();
+                    if (h < 0)
+                        h = this.mDrawableHeight;
+                    if (w != this.mDrawableWidth || h != this.mDrawableHeight) {
+                        this.mDrawableWidth = w;
+                        this.mDrawableHeight = h;
+                        this.requestLayout();
+                    }
+                }
+            }
+            static scaleTypeToScaleToFit(st) {
+                return ImageView.sS2FArray[st - 1];
+            }
             onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                this.resolveUri();
                 let w;
                 let h;
                 let desiredAspect = 0.0;
                 let resizeWidth = false;
                 let resizeHeight = false;
-                const widthSpecMode = MeasureSpec.getMode(widthMeasureSpec);
-                const heightSpecMode = MeasureSpec.getMode(heightMeasureSpec);
-                if (!this.mImgElement.src || !this.mImgElement.complete) {
+                const widthSpecMode = ImageView.MeasureSpec.getMode(widthMeasureSpec);
+                const heightSpecMode = ImageView.MeasureSpec.getMode(heightMeasureSpec);
+                if (this.mDrawable == null) {
                     this.mDrawableWidth = -1;
                     this.mDrawableHeight = -1;
                     w = h = 0;
@@ -24275,8 +25200,8 @@ var androidui;
                     if (h <= 0)
                         h = 1;
                     if (this.mAdjustViewBounds) {
-                        resizeWidth = widthSpecMode != MeasureSpec.EXACTLY;
-                        resizeHeight = heightSpecMode != MeasureSpec.EXACTLY;
+                        resizeWidth = widthSpecMode != ImageView.MeasureSpec.EXACTLY;
+                        resizeHeight = heightSpecMode != ImageView.MeasureSpec.EXACTLY;
                         desiredAspect = w / h;
                     }
                 }
@@ -24289,13 +25214,12 @@ var androidui;
                 if (resizeWidth || resizeHeight) {
                     widthSize = this.resolveAdjustedSize(w + pleft + pright, this.mMaxWidth, widthMeasureSpec);
                     heightSize = this.resolveAdjustedSize(h + ptop + pbottom, this.mMaxHeight, heightMeasureSpec);
-                    if (desiredAspect != 0) {
+                    if (desiredAspect != 0.0) {
                         let actualAspect = (widthSize - pleft - pright) / (heightSize - ptop - pbottom);
                         if (Math.abs(actualAspect - desiredAspect) > 0.0000001) {
                             let done = false;
                             if (resizeWidth) {
-                                let newWidth = Math.floor(desiredAspect * (heightSize - ptop - pbottom)) +
-                                    pleft + pright;
+                                let newWidth = Math.floor((desiredAspect * (heightSize - ptop - pbottom))) + pleft + pright;
                                 if (!resizeHeight && !this.mAdjustViewBoundsCompat) {
                                     widthSize = this.resolveAdjustedSize(newWidth, this.mMaxWidth, widthMeasureSpec);
                                 }
@@ -24305,8 +25229,7 @@ var androidui;
                                 }
                             }
                             if (!done && resizeHeight) {
-                                let newHeight = Math.floor((widthSize - pleft - pright) / desiredAspect) +
-                                    ptop + pbottom;
+                                let newHeight = Math.floor(((widthSize - pleft - pright) / desiredAspect)) + ptop + pbottom;
                                 if (!resizeWidth && !this.mAdjustViewBoundsCompat) {
                                     heightSize = this.resolveAdjustedSize(newHeight, this.mMaxHeight, heightMeasureSpec);
                                 }
@@ -24322,134 +25245,159 @@ var androidui;
                     h += ptop + pbottom;
                     w = Math.max(w, this.getSuggestedMinimumWidth());
                     h = Math.max(h, this.getSuggestedMinimumHeight());
-                    widthSize = HtmlImageView.resolveSizeAndState(w, widthMeasureSpec, 0);
-                    heightSize = HtmlImageView.resolveSizeAndState(h, heightMeasureSpec, 0);
+                    widthSize = ImageView.resolveSizeAndState(w, widthMeasureSpec, 0);
+                    heightSize = ImageView.resolveSizeAndState(h, heightMeasureSpec, 0);
                 }
                 this.setMeasuredDimension(widthSize, heightSize);
             }
             resolveAdjustedSize(desiredSize, maxSize, measureSpec) {
                 let result = desiredSize;
-                let specMode = MeasureSpec.getMode(measureSpec);
-                let specSize = MeasureSpec.getSize(measureSpec);
+                let specMode = ImageView.MeasureSpec.getMode(measureSpec);
+                let specSize = ImageView.MeasureSpec.getSize(measureSpec);
                 switch (specMode) {
-                    case MeasureSpec.UNSPECIFIED:
+                    case ImageView.MeasureSpec.UNSPECIFIED:
                         result = Math.min(desiredSize, maxSize);
                         break;
-                    case MeasureSpec.AT_MOST:
+                    case ImageView.MeasureSpec.AT_MOST:
                         result = Math.min(Math.min(desiredSize, specSize), maxSize);
                         break;
-                    case MeasureSpec.EXACTLY:
+                    case ImageView.MeasureSpec.EXACTLY:
                         result = specSize;
                         break;
                 }
                 return result;
             }
-            setFrame(left, top, right, bottom) {
-                let changed = super.setFrame(left, top, right, bottom);
+            setFrame(l, t, r, b) {
+                let changed = super.setFrame(l, t, r, b);
                 this.mHaveFrame = true;
                 this.configureBounds();
-                this.mImgElement.style.display = '';
                 return changed;
             }
             configureBounds() {
+                if (this.mDrawable == null || !this.mHaveFrame) {
+                    return;
+                }
                 let dwidth = this.mDrawableWidth;
                 let dheight = this.mDrawableHeight;
                 let vwidth = this.getWidth() - this.mPaddingLeft - this.mPaddingRight;
                 let vheight = this.getHeight() - this.mPaddingTop - this.mPaddingBottom;
                 let fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
-                this.mImgElement.style.left = 0 + 'px';
-                this.mImgElement.style.top = 0 + 'px';
-                this.mImgElement.style.width = '';
-                this.mImgElement.style.height = '';
-                if (dwidth <= 0 || dheight <= 0) {
-                    return;
-                }
-                if (this.mScaleType === ImageView.ScaleType.FIT_XY) {
-                    this.mImgElement.style.width = vwidth + 'px';
-                    this.mImgElement.style.height = vheight + 'px';
-                    return;
-                }
-                this.mImgElement.style.width = dwidth + 'px';
-                this.mImgElement.style.height = dheight + 'px';
-                if (ImageView.ScaleType.MATRIX === this.mScaleType) {
-                }
-                else if (fits) {
-                }
-                else if (ImageView.ScaleType.CENTER === this.mScaleType) {
-                    let left = Math.round((vwidth - dwidth) * 0.5);
-                    let top = Math.round((vheight - dheight) * 0.5);
-                    this.mImgElement.style.left = left + 'px';
-                    this.mImgElement.style.top = top + 'px';
-                }
-                else if (ImageView.ScaleType.CENTER_CROP === this.mScaleType) {
-                    let scale;
-                    let dx = 0, dy = 0;
-                    if (dwidth * vheight > vwidth * dheight) {
-                        scale = vheight / dheight;
-                        dx = (vwidth - dwidth * scale) * 0.5;
-                        this.mImgElement.style.width = 'auto';
-                        this.mImgElement.style.height = vheight + 'px';
-                        this.mImgElement.style.left = Math.round(dx) + 'px';
-                        this.mImgElement.style.top = '0px';
-                    }
-                    else {
-                        scale = vwidth / dwidth;
-                        dy = (vheight - dheight * scale) * 0.5;
-                        this.mImgElement.style.width = vwidth + 'px';
-                        this.mImgElement.style.height = 'auto';
-                        this.mImgElement.style.left = '0px';
-                        this.mImgElement.style.top = Math.round(dy) + 'px';
-                    }
-                }
-                else if (ImageView.ScaleType.CENTER_INSIDE === this.mScaleType) {
-                    let scale = 1;
-                    if (dwidth <= vwidth && dheight <= vheight) {
-                    }
-                    else {
-                        let wScale = vwidth / dwidth;
-                        let hScale = vheight / dheight;
-                        if (wScale < hScale) {
-                            this.mImgElement.style.width = vwidth + 'px';
-                            this.mImgElement.style.height = 'auto';
-                        }
-                        else {
-                            this.mImgElement.style.width = 'auto';
-                            this.mImgElement.style.height = vheight + 'px';
-                        }
-                        scale = Math.min(wScale, hScale);
-                    }
-                    let dx = Math.round((vwidth - dwidth * scale) * 0.5);
-                    let dy = Math.round((vheight - dheight * scale) * 0.5);
-                    this.mImgElement.style.left = dx + 'px';
-                    this.mImgElement.style.top = dy + 'px';
+                if (dwidth <= 0 || dheight <= 0 || ImageView.ScaleType.FIT_XY == this.mScaleType) {
+                    this.mDrawable.setBounds(0, 0, vwidth, vheight);
+                    this.mDrawMatrix = null;
                 }
                 else {
-                    let wScale = vwidth / dwidth;
-                    let hScale = vheight / dheight;
-                    if (wScale < hScale) {
-                        this.mImgElement.style.width = vwidth + 'px';
-                        this.mImgElement.style.height = 'auto';
+                    this.mDrawable.setBounds(0, 0, dwidth, dheight);
+                    if (ImageView.ScaleType.MATRIX == this.mScaleType) {
+                        if (this.mMatrix.isIdentity()) {
+                            this.mDrawMatrix = null;
+                        }
+                        else {
+                            this.mDrawMatrix = this.mMatrix;
+                        }
+                    }
+                    else if (fits) {
+                        this.mDrawMatrix = null;
+                    }
+                    else if (ImageView.ScaleType.CENTER == this.mScaleType) {
+                        this.mDrawMatrix = this.mMatrix;
+                        this.mDrawMatrix.setTranslate(Math.floor(((vwidth - dwidth) * 0.5 + 0.5)), Math.floor(((vheight - dheight) * 0.5 + 0.5)));
+                    }
+                    else if (ImageView.ScaleType.CENTER_CROP == this.mScaleType) {
+                        this.mDrawMatrix = this.mMatrix;
+                        let scale;
+                        let dx = 0, dy = 0;
+                        if (dwidth * vheight > vwidth * dheight) {
+                            scale = vheight / dheight;
+                            dx = (vwidth - dwidth * scale) * 0.5;
+                        }
+                        else {
+                            scale = vwidth / dwidth;
+                            dy = (vheight - dheight * scale) * 0.5;
+                        }
+                        this.mDrawMatrix.setScale(scale, scale);
+                        this.mDrawMatrix.postTranslate(Math.floor((dx + 0.5)), Math.floor((dy + 0.5)));
+                    }
+                    else if (ImageView.ScaleType.CENTER_INSIDE == this.mScaleType) {
+                        this.mDrawMatrix = this.mMatrix;
+                        let scale;
+                        let dx;
+                        let dy;
+                        if (dwidth <= vwidth && dheight <= vheight) {
+                            scale = 1.0;
+                        }
+                        else {
+                            scale = Math.min(vwidth / dwidth, vheight / dheight);
+                        }
+                        dx = Math.floor(((vwidth - dwidth * scale) * 0.5 + 0.5));
+                        dy = Math.floor(((vheight - dheight * scale) * 0.5 + 0.5));
+                        this.mDrawMatrix.setScale(scale, scale);
+                        this.mDrawMatrix.postTranslate(dx, dy);
                     }
                     else {
-                        this.mImgElement.style.width = 'auto';
-                        this.mImgElement.style.height = vheight + 'px';
-                    }
-                    let scale = Math.min(wScale, hScale);
-                    if (ImageView.ScaleType.FIT_CENTER === this.mScaleType) {
-                        let dx = Math.round((vwidth - dwidth * scale) * 0.5);
-                        let dy = Math.round((vheight - dheight * scale) * 0.5);
-                        this.mImgElement.style.left = dx + 'px';
-                        this.mImgElement.style.top = dy + 'px';
-                    }
-                    else if (ImageView.ScaleType.FIT_END === this.mScaleType) {
-                        let dx = Math.round((vwidth - dwidth * scale));
-                        let dy = Math.round((vheight - dheight * scale));
-                        this.mImgElement.style.left = dx + 'px';
-                        this.mImgElement.style.top = dy + 'px';
-                    }
-                    else if (ImageView.ScaleType.FIT_START === this.mScaleType) {
+                        this.mTempSrc.set(0, 0, dwidth, dheight);
+                        this.mTempDst.set(0, 0, vwidth, vheight);
+                        this.mDrawMatrix = this.mMatrix;
+                        this.mDrawMatrix.setRectToRect(this.mTempSrc, this.mTempDst, ImageView.scaleTypeToScaleToFit(this.mScaleType));
                     }
                 }
+            }
+            drawableStateChanged() {
+                super.drawableStateChanged();
+                let d = this.mDrawable;
+                if (d != null && d.isStateful()) {
+                    d.setState(this.getDrawableState());
+                }
+            }
+            onDraw(canvas) {
+                super.onDraw(canvas);
+                if (this.mDrawable == null) {
+                    return;
+                }
+                if (this.mDrawableWidth == 0 || this.mDrawableHeight == 0) {
+                    return;
+                }
+                if (this.mDrawMatrix == null && this.mPaddingTop == 0 && this.mPaddingLeft == 0) {
+                    this.mDrawable.draw(canvas);
+                }
+                else {
+                    let saveCount = canvas.getSaveCount();
+                    canvas.save();
+                    if (this.mCropToPadding) {
+                        const scrollX = this.mScrollX;
+                        const scrollY = this.mScrollY;
+                        canvas.clipRect(scrollX + this.mPaddingLeft, scrollY + this.mPaddingTop, scrollX + this.mRight - this.mLeft - this.mPaddingRight, scrollY + this.mBottom - this.mTop - this.mPaddingBottom);
+                    }
+                    canvas.translate(this.mPaddingLeft, this.mPaddingTop);
+                    if (this.mDrawMatrix != null) {
+                        canvas.concat(this.mDrawMatrix);
+                    }
+                    this.mDrawable.draw(canvas);
+                    canvas.restoreToCount(saveCount);
+                }
+            }
+            getBaseline() {
+                if (this.mBaselineAlignBottom) {
+                    return this.getMeasuredHeight();
+                }
+                else {
+                    return this.mBaseline;
+                }
+            }
+            setBaseline(baseline) {
+                if (this.mBaseline != baseline) {
+                    this.mBaseline = baseline;
+                    this.requestLayout();
+                }
+            }
+            setBaselineAlignBottom(aligned) {
+                if (this.mBaselineAlignBottom != aligned) {
+                    this.mBaselineAlignBottom = aligned;
+                    this.requestLayout();
+                }
+            }
+            getBaselineAlignBottom() {
+                return this.mBaselineAlignBottom;
             }
             getImageAlpha() {
                 return this.mAlpha;
@@ -24457,58 +25405,76 @@ var androidui;
             setImageAlpha(alpha) {
                 this.setAlpha(alpha);
             }
-        }
-        widget.HtmlImageView = HtmlImageView;
-    })(widget = androidui.widget || (androidui.widget = {}));
-})(androidui || (androidui = {}));
-///<reference path="../view/View.ts"/>
-///<reference path="../../androidui/widget/HtmlImageView.ts"/>
-var android;
-(function (android) {
-    var widget;
-    (function (widget) {
-        class ImageView extends androidui.widget.HtmlImageView {
-        }
-        widget.ImageView = ImageView;
-        (function (ImageView) {
-            class ScaleType {
-                constructor(type) {
-                    this.mType = type;
-                }
-                toString() {
-                    return this.mType;
-                }
-                static parseScaleType(s, defaultType) {
-                    if (s == null)
-                        return defaultType;
-                    if (s.toLowerCase() === ScaleType.MATRIX.mType.toLowerCase())
-                        return ScaleType.MATRIX;
-                    if (s.toLowerCase() === ScaleType.FIT_XY.mType.toLowerCase())
-                        return ScaleType.FIT_XY;
-                    if (s.toLowerCase() === ScaleType.FIT_START.mType.toLowerCase())
-                        return ScaleType.FIT_START;
-                    if (s.toLowerCase() === ScaleType.FIT_CENTER.mType.toLowerCase())
-                        return ScaleType.FIT_CENTER;
-                    if (s.toLowerCase() === ScaleType.FIT_END.mType.toLowerCase())
-                        return ScaleType.FIT_END;
-                    if (s.toLowerCase() === ScaleType.CENTER.mType.toLowerCase())
-                        return ScaleType.CENTER;
-                    if (s.toLowerCase() === ScaleType.CENTER_CROP.mType.toLowerCase())
-                        return ScaleType.CENTER_CROP;
-                    if (s.toLowerCase() === ScaleType.CENTER_INSIDE.mType.toLowerCase())
-                        return ScaleType.CENTER_INSIDE;
-                    return defaultType;
+            setAlpha(alpha) {
+                alpha &= 0xFF;
+                if (this.mAlpha != alpha) {
+                    this.mAlpha = alpha;
+                    this.mColorMod = true;
+                    this.applyColorMod();
+                    this.invalidate();
                 }
             }
-            ScaleType.MATRIX = new ScaleType("matrix");
-            ScaleType.FIT_XY = new ScaleType("fitXY");
-            ScaleType.FIT_START = new ScaleType("fitStart");
-            ScaleType.FIT_CENTER = new ScaleType("fitCenter");
-            ScaleType.FIT_END = new ScaleType("fitEnd");
-            ScaleType.CENTER = new ScaleType("center");
-            ScaleType.CENTER_CROP = new ScaleType("centerCrop");
-            ScaleType.CENTER_INSIDE = new ScaleType("centerInside");
-            ImageView.ScaleType = ScaleType;
+            applyColorMod() {
+                if (this.mDrawable != null && this.mColorMod) {
+                    this.mDrawable = this.mDrawable.mutate();
+                    this.mDrawable.setAlpha(this.mAlpha * this.mViewAlphaScale >> 8);
+                }
+            }
+            setVisibility(visibility) {
+                super.setVisibility(visibility);
+                if (this.mDrawable != null) {
+                    this.mDrawable.setVisible(visibility == ImageView.VISIBLE, false);
+                }
+            }
+            onAttachedToWindow() {
+                super.onAttachedToWindow();
+                if (this.mDrawable != null) {
+                    this.mDrawable.setVisible(this.getVisibility() == ImageView.VISIBLE, false);
+                }
+            }
+            onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                if (this.mDrawable != null) {
+                    this.mDrawable.setVisible(false, false);
+                }
+            }
+            static parseScaleType(s, defaultType) {
+                if (s == null)
+                    return defaultType;
+                s = s.toLowerCase();
+                if (s === 'matrix'.toLowerCase())
+                    return ImageView.ScaleType.MATRIX;
+                if (s === 'fitXY'.toLowerCase())
+                    return ImageView.ScaleType.FIT_XY;
+                if (s === 'fitStart'.toLowerCase())
+                    return ImageView.ScaleType.FIT_START;
+                if (s === 'fitCenter'.toLowerCase())
+                    return ImageView.ScaleType.FIT_CENTER;
+                if (s === 'fitEnd'.toLowerCase())
+                    return ImageView.ScaleType.FIT_END;
+                if (s === 'center'.toLowerCase())
+                    return ImageView.ScaleType.CENTER;
+                if (s === 'centerCrop'.toLowerCase())
+                    return ImageView.ScaleType.CENTER_CROP;
+                if (s === 'centerInside'.toLowerCase())
+                    return ImageView.ScaleType.CENTER_INSIDE;
+                return defaultType;
+            }
+        }
+        ImageView.sS2FArray = [Matrix.ScaleToFit.FILL, Matrix.ScaleToFit.START, Matrix.ScaleToFit.CENTER, Matrix.ScaleToFit.END];
+        widget.ImageView = ImageView;
+        (function (ImageView) {
+            (function (ScaleType) {
+                ScaleType[ScaleType["MATRIX"] = 0] = "MATRIX";
+                ScaleType[ScaleType["FIT_XY"] = 1] = "FIT_XY";
+                ScaleType[ScaleType["FIT_START"] = 2] = "FIT_START";
+                ScaleType[ScaleType["FIT_CENTER"] = 3] = "FIT_CENTER";
+                ScaleType[ScaleType["FIT_END"] = 4] = "FIT_END";
+                ScaleType[ScaleType["CENTER"] = 5] = "CENTER";
+                ScaleType[ScaleType["CENTER_CROP"] = 6] = "CENTER_CROP";
+                ScaleType[ScaleType["CENTER_INSIDE"] = 7] = "CENTER_INSIDE";
+            })(ImageView.ScaleType || (ImageView.ScaleType = {}));
+            var ScaleType = ImageView.ScaleType;
         })(ImageView = widget.ImageView || (widget.ImageView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
@@ -38712,6 +39678,324 @@ var androidui;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
 /**
+ * Created by linfaxin on 15/11/7.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/widget/ImageView.ts"/>
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var View = android.view.View;
+        var MeasureSpec = View.MeasureSpec;
+        var ImageView = android.widget.ImageView;
+        window.addEventListener('AndroidUILoadFinish', () => {
+            eval('ImageView = android.widget.ImageView;');
+        });
+        class HtmlImageView extends View {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.mHaveFrame = false;
+                this.mAdjustViewBounds = false;
+                this.mMaxWidth = Number.MAX_SAFE_INTEGER;
+                this.mMaxHeight = Number.MAX_SAFE_INTEGER;
+                this.mAlpha = 255;
+                this.mDrawableWidth = 0;
+                this.mDrawableHeight = 0;
+                this.mAdjustViewBoundsCompat = false;
+                this.initImageView();
+                this._attrBinder.addAttr('src', (value) => {
+                    this.setImageURI(value);
+                }, () => {
+                    return this.mImgElement.src;
+                });
+                this._attrBinder.addAttr('adjustViewBounds', (value) => {
+                    this.setAdjustViewBounds(this._attrBinder.parseBoolean(value, false));
+                });
+                this._attrBinder.addAttr('maxWidth', (value) => {
+                    let baseValue = this.getParent() instanceof View ? this.getParent().getWidth() : 0;
+                    this.setMaxWidth(this._attrBinder.parseNumber(value, this.mMaxWidth, baseValue));
+                }, () => {
+                    return this.mMaxWidth;
+                });
+                this._attrBinder.addAttr('maxHeight', (value) => {
+                    let baseValue = this.getParent() instanceof View ? this.getParent().getHeight() : 0;
+                    this.setMaxHeight(this._attrBinder.parseNumber(value, this.mMaxHeight, baseValue));
+                }, () => {
+                    return this.mMaxHeight;
+                });
+                this._attrBinder.addAttr('scaleType', (value) => {
+                    this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
+                }, () => {
+                    return this.mScaleType.toString();
+                });
+            }
+            initImageView() {
+                this.mScaleType = ImageView.ScaleType.FIT_CENTER;
+                this.mImgElement = document.createElement('img');
+                this.mImgElement.style.position = "absolute";
+                this.mImgElement.onload = (() => {
+                    this.mImgElement.style.left = 0 + 'px';
+                    this.mImgElement.style.top = 0 + 'px';
+                    this.mImgElement.style.width = '';
+                    this.mImgElement.style.height = '';
+                    this.mDrawableWidth = this.mImgElement.width;
+                    this.mDrawableHeight = this.mImgElement.height;
+                    this.mImgElement.style.display = 'none';
+                    this.mImgElement.style.opacity = '';
+                    this.requestLayout();
+                });
+                this.bindElement.appendChild(this.mImgElement);
+            }
+            getAdjustViewBounds() {
+                return this.mAdjustViewBounds;
+            }
+            setAdjustViewBounds(adjustViewBounds) {
+                this.mAdjustViewBounds = adjustViewBounds;
+                if (adjustViewBounds) {
+                    this.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                }
+            }
+            getMaxWidth() {
+                return this.mMaxWidth;
+            }
+            setMaxWidth(maxWidth) {
+                this.mMaxWidth = maxWidth;
+            }
+            getMaxHeight() {
+                return this.mMaxHeight;
+            }
+            setMaxHeight(maxHeight) {
+                this.mMaxHeight = maxHeight;
+            }
+            setImageURI(uri) {
+                this.mDrawableWidth = -1;
+                this.mDrawableHeight = -1;
+                this.mImgElement.style.opacity = '0';
+                this.mImgElement.src = uri;
+            }
+            setScaleType(scaleType) {
+                if (scaleType == null) {
+                    throw new Error('NullPointerException');
+                }
+                if (this.mScaleType != scaleType) {
+                    this.mScaleType = scaleType;
+                    this.setWillNotCacheDrawing(scaleType == ImageView.ScaleType.CENTER);
+                    this.requestLayout();
+                    this.invalidate();
+                }
+            }
+            getScaleType() {
+                return this.mScaleType;
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                let w;
+                let h;
+                let desiredAspect = 0.0;
+                let resizeWidth = false;
+                let resizeHeight = false;
+                const widthSpecMode = MeasureSpec.getMode(widthMeasureSpec);
+                const heightSpecMode = MeasureSpec.getMode(heightMeasureSpec);
+                if (!this.mImgElement.src || !this.mImgElement.complete) {
+                    this.mDrawableWidth = -1;
+                    this.mDrawableHeight = -1;
+                    w = h = 0;
+                }
+                else {
+                    w = this.mDrawableWidth;
+                    h = this.mDrawableHeight;
+                    if (w <= 0)
+                        w = 1;
+                    if (h <= 0)
+                        h = 1;
+                    if (this.mAdjustViewBounds) {
+                        resizeWidth = widthSpecMode != MeasureSpec.EXACTLY;
+                        resizeHeight = heightSpecMode != MeasureSpec.EXACTLY;
+                        desiredAspect = w / h;
+                    }
+                }
+                let pleft = this.mPaddingLeft;
+                let pright = this.mPaddingRight;
+                let ptop = this.mPaddingTop;
+                let pbottom = this.mPaddingBottom;
+                let widthSize;
+                let heightSize;
+                if (resizeWidth || resizeHeight) {
+                    widthSize = this.resolveAdjustedSize(w + pleft + pright, this.mMaxWidth, widthMeasureSpec);
+                    heightSize = this.resolveAdjustedSize(h + ptop + pbottom, this.mMaxHeight, heightMeasureSpec);
+                    if (desiredAspect != 0) {
+                        let actualAspect = (widthSize - pleft - pright) / (heightSize - ptop - pbottom);
+                        if (Math.abs(actualAspect - desiredAspect) > 0.0000001) {
+                            let done = false;
+                            if (resizeWidth) {
+                                let newWidth = Math.floor(desiredAspect * (heightSize - ptop - pbottom)) +
+                                    pleft + pright;
+                                if (!resizeHeight && !this.mAdjustViewBoundsCompat) {
+                                    widthSize = this.resolveAdjustedSize(newWidth, this.mMaxWidth, widthMeasureSpec);
+                                }
+                                if (newWidth <= widthSize) {
+                                    widthSize = newWidth;
+                                    done = true;
+                                }
+                            }
+                            if (!done && resizeHeight) {
+                                let newHeight = Math.floor((widthSize - pleft - pright) / desiredAspect) +
+                                    ptop + pbottom;
+                                if (!resizeWidth && !this.mAdjustViewBoundsCompat) {
+                                    heightSize = this.resolveAdjustedSize(newHeight, this.mMaxHeight, heightMeasureSpec);
+                                }
+                                if (newHeight <= heightSize) {
+                                    heightSize = newHeight;
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    w += pleft + pright;
+                    h += ptop + pbottom;
+                    w = Math.max(w, this.getSuggestedMinimumWidth());
+                    h = Math.max(h, this.getSuggestedMinimumHeight());
+                    widthSize = HtmlImageView.resolveSizeAndState(w, widthMeasureSpec, 0);
+                    heightSize = HtmlImageView.resolveSizeAndState(h, heightMeasureSpec, 0);
+                }
+                this.setMeasuredDimension(widthSize, heightSize);
+            }
+            resolveAdjustedSize(desiredSize, maxSize, measureSpec) {
+                let result = desiredSize;
+                let specMode = MeasureSpec.getMode(measureSpec);
+                let specSize = MeasureSpec.getSize(measureSpec);
+                switch (specMode) {
+                    case MeasureSpec.UNSPECIFIED:
+                        result = Math.min(desiredSize, maxSize);
+                        break;
+                    case MeasureSpec.AT_MOST:
+                        result = Math.min(Math.min(desiredSize, specSize), maxSize);
+                        break;
+                    case MeasureSpec.EXACTLY:
+                        result = specSize;
+                        break;
+                }
+                return result;
+            }
+            setFrame(left, top, right, bottom) {
+                let changed = super.setFrame(left, top, right, bottom);
+                this.mHaveFrame = true;
+                this.configureBounds();
+                this.mImgElement.style.display = '';
+                return changed;
+            }
+            configureBounds() {
+                let dwidth = this.mDrawableWidth;
+                let dheight = this.mDrawableHeight;
+                let vwidth = this.getWidth() - this.mPaddingLeft - this.mPaddingRight;
+                let vheight = this.getHeight() - this.mPaddingTop - this.mPaddingBottom;
+                let fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
+                this.mImgElement.style.left = 0 + 'px';
+                this.mImgElement.style.top = 0 + 'px';
+                this.mImgElement.style.width = '';
+                this.mImgElement.style.height = '';
+                if (dwidth <= 0 || dheight <= 0) {
+                    return;
+                }
+                if (this.mScaleType === ImageView.ScaleType.FIT_XY) {
+                    this.mImgElement.style.width = vwidth + 'px';
+                    this.mImgElement.style.height = vheight + 'px';
+                    return;
+                }
+                this.mImgElement.style.width = dwidth + 'px';
+                this.mImgElement.style.height = dheight + 'px';
+                if (ImageView.ScaleType.MATRIX === this.mScaleType) {
+                }
+                else if (fits) {
+                }
+                else if (ImageView.ScaleType.CENTER === this.mScaleType) {
+                    let left = Math.round((vwidth - dwidth) * 0.5);
+                    let top = Math.round((vheight - dheight) * 0.5);
+                    this.mImgElement.style.left = left + 'px';
+                    this.mImgElement.style.top = top + 'px';
+                }
+                else if (ImageView.ScaleType.CENTER_CROP === this.mScaleType) {
+                    let scale;
+                    let dx = 0, dy = 0;
+                    if (dwidth * vheight > vwidth * dheight) {
+                        scale = vheight / dheight;
+                        dx = (vwidth - dwidth * scale) * 0.5;
+                        this.mImgElement.style.width = 'auto';
+                        this.mImgElement.style.height = vheight + 'px';
+                        this.mImgElement.style.left = Math.round(dx) + 'px';
+                        this.mImgElement.style.top = '0px';
+                    }
+                    else {
+                        scale = vwidth / dwidth;
+                        dy = (vheight - dheight * scale) * 0.5;
+                        this.mImgElement.style.width = vwidth + 'px';
+                        this.mImgElement.style.height = 'auto';
+                        this.mImgElement.style.left = '0px';
+                        this.mImgElement.style.top = Math.round(dy) + 'px';
+                    }
+                }
+                else if (ImageView.ScaleType.CENTER_INSIDE === this.mScaleType) {
+                    let scale = 1;
+                    if (dwidth <= vwidth && dheight <= vheight) {
+                    }
+                    else {
+                        let wScale = vwidth / dwidth;
+                        let hScale = vheight / dheight;
+                        if (wScale < hScale) {
+                            this.mImgElement.style.width = vwidth + 'px';
+                            this.mImgElement.style.height = 'auto';
+                        }
+                        else {
+                            this.mImgElement.style.width = 'auto';
+                            this.mImgElement.style.height = vheight + 'px';
+                        }
+                        scale = Math.min(wScale, hScale);
+                    }
+                    let dx = Math.round((vwidth - dwidth * scale) * 0.5);
+                    let dy = Math.round((vheight - dheight * scale) * 0.5);
+                    this.mImgElement.style.left = dx + 'px';
+                    this.mImgElement.style.top = dy + 'px';
+                }
+                else {
+                    let wScale = vwidth / dwidth;
+                    let hScale = vheight / dheight;
+                    if (wScale < hScale) {
+                        this.mImgElement.style.width = vwidth + 'px';
+                        this.mImgElement.style.height = 'auto';
+                    }
+                    else {
+                        this.mImgElement.style.width = 'auto';
+                        this.mImgElement.style.height = vheight + 'px';
+                    }
+                    let scale = Math.min(wScale, hScale);
+                    if (ImageView.ScaleType.FIT_CENTER === this.mScaleType) {
+                        let dx = Math.round((vwidth - dwidth * scale) * 0.5);
+                        let dy = Math.round((vheight - dheight * scale) * 0.5);
+                        this.mImgElement.style.left = dx + 'px';
+                        this.mImgElement.style.top = dy + 'px';
+                    }
+                    else if (ImageView.ScaleType.FIT_END === this.mScaleType) {
+                        let dx = Math.round((vwidth - dwidth * scale));
+                        let dy = Math.round((vheight - dheight * scale));
+                        this.mImgElement.style.left = dx + 'px';
+                        this.mImgElement.style.top = dy + 'px';
+                    }
+                    else if (ImageView.ScaleType.FIT_START === this.mScaleType) {
+                    }
+                }
+            }
+            getImageAlpha() {
+                return this.mAlpha;
+            }
+            setImageAlpha(alpha) {
+                this.setAlpha(alpha);
+            }
+        }
+        widget.HtmlImageView = HtmlImageView;
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
+/**
  * Created by linfaxin on 15/11/16.
  */
 ///<reference path="../../android/view/View.ts"/>
@@ -40007,7 +41291,6 @@ var androidui;
 /**
  * Created by linfaxin on 15/10/6.
  */
-//use the deepest sub class as enter
 ///<reference path="android/view/ViewOverlay.ts"/>
 ///<reference path="android/view/GestureDetector.ts"/>
 ///<reference path="android/widget/FrameLayout.ts"/>
@@ -40030,6 +41313,7 @@ var androidui;
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
+///<reference path="androidui/image/NetDrawable.ts"/>
 ///<reference path="androidui/widget/HtmlView.ts"/>
 ///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>

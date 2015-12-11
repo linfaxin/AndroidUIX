@@ -7,6 +7,7 @@
 ///<reference path="../../../java/lang/ref/WeakReference.ts"/>
 ///<reference path="../../../java/lang/Runnable.ts"/>
 ///<reference path="../../util/StateSet.ts"/>
+///<reference path="../Canvas.ts"/>
 
 module android.graphics.drawable {
 
@@ -15,11 +16,12 @@ module android.graphics.drawable {
     import WeakReference = java.lang.ref.WeakReference;
     import Runnable = java.lang.Runnable;
     import StateSet = android.util.StateSet;
+    import Canvas = android.graphics.Canvas;
 
 
 
-
-    export class Drawable {
+    export abstract
+    class Drawable {
         private static ZERO_BOUNDS_RECT = new Rect();
 
         mBounds:Rect = Drawable.ZERO_BOUNDS_RECT;
@@ -31,9 +33,8 @@ module android.graphics.drawable {
         constructor() {
         }
 
-        //abstract
-        draw(canvas) {
-        }
+        abstract
+        draw(canvas:Canvas);
 
         setBounds(rect:Rect);
         setBounds(left, top, right, bottom);
@@ -107,9 +108,9 @@ module android.graphics.drawable {
             }
         }
 
-        //abstract
-        setAlpha(alpha:number) {
-        }
+
+        abstract
+        setAlpha(alpha:number):void;
 
         getAlpha():number {
             return 0xFF;
