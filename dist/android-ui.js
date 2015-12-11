@@ -6303,14 +6303,6 @@ var android;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
                 this._attrBinder = new AttrBinder(this);
-                this._syncToElementLock = false;
-                this.syncToElementFunc = () => {
-                    this._syncToElementLock = false;
-                    this._syncBoundToElement();
-                    this._syncScrollToElement();
-                };
-                this._lastSyncScrollX = 0;
-                this._lastSyncScrollY = 0;
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
                 this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
                 this._attrBinder.addAttr('background', (value) => {
@@ -6505,22 +6497,22 @@ var android;
             get mLeft() { return this._mLeft; }
             set mLeft(value) {
                 this._mLeft = Math.floor(value);
-                this.syncBoundToElement();
+                this.requestSyncBoundToElement();
             }
             get mRight() { return this._mRight; }
             set mRight(value) {
                 this._mRight = Math.floor(value);
-                this.syncBoundToElement();
+                this.requestSyncBoundToElement();
             }
             get mTop() { return this._mTop; }
             set mTop(value) {
                 this._mTop = Math.floor(value);
-                this.syncBoundToElement();
+                this.requestSyncBoundToElement();
             }
             get mBottom() { return this._mBottom; }
             set mBottom(value) {
                 this._mBottom = Math.floor(value);
-                this.syncBoundToElement();
+                this.requestSyncBoundToElement();
             }
             get mScrollX() { return this._mScrollX; }
             set mScrollX(value) { this._mScrollX = Math.floor(value); }
@@ -8271,7 +8263,7 @@ var android;
                 this.computeScroll();
                 let sx = this.mScrollX;
                 let sy = this.mScrollY;
-                this.syncScrollToElement();
+                this.requestSyncBoundToElement();
                 let hasNoCache = cache == null;
                 let offsetForScroll = cache == null;
                 let restoreTo = canvas.save();
@@ -9260,6 +9252,8 @@ var android;
                 if (!rootViewClass)
                     rootViewClass = ClassFinder.findClass(className, android['widget']);
                 if (!rootViewClass)
+                    rootViewClass = ClassFinder.findClass(className, androidui['widget']);
+                if (!rootViewClass)
                     rootViewClass = ClassFinder.findClass(className);
                 if (!rootViewClass) {
                     if (document.createElement(className) instanceof HTMLUnknownElement) {
@@ -9366,20 +9360,34 @@ var android;
                 this._parseInitedAttribute();
                 this._initAttrObserver();
             }
-            syncBoundToElement() {
-                if (!this._syncToElementLock) {
-                    this._syncToElementLock = true;
-                    setTimeout(this.syncToElementFunc, 300);
+            requestSyncBoundToElement(immediately = false) {
+                let rootView = this.getRootView();
+                if (!rootView)
+                    return;
+                if (!rootView._syncToElementRun) {
+                    rootView._syncToElementRun = {
+                        run: () => {
+                            rootView._syncToElementLock = false;
+                            rootView._syncToElementImmediatelyLock = false;
+                            rootView._syncBoundToElement();
+                        }
+                    };
                 }
-            }
-            syncScrollToElement() {
-                if (!this._syncToElementLock) {
-                    this._syncToElementLock = true;
-                    setTimeout(this.syncToElementFunc, 300);
+                if (immediately) {
+                    if (rootView._syncToElementImmediatelyLock)
+                        return;
+                    rootView._syncToElementImmediatelyLock = true;
+                    rootView._syncToElementLock = true;
+                    rootView.removeCallbacks(rootView._syncToElementRun);
+                    rootView.post(rootView._syncToElementRun);
+                    return;
                 }
+                if (rootView._syncToElementLock)
+                    return;
+                rootView._syncToElementLock = true;
+                rootView.postDelayed(rootView._syncToElementRun, 300);
             }
             _syncBoundToElement() {
-                let change = false;
                 const left = this.mLeft;
                 const top = this.mTop;
                 const width = this.getWidth();
@@ -9390,16 +9398,12 @@ var android;
                     this._lastSyncTop = top;
                     this._lastSyncWidth = width;
                     this._lastSyncHeight = height;
+                    const density = this.getResources().getDisplayMetrics().density;
                     let bind = this.bindElement;
-                    bind.style.transform = bind.style.webkitTransform = `translate(${left}px, ${top}px)`;
-                    bind.style.width = width + 'px';
-                    bind.style.height = height + 'px';
-                    change = true;
+                    bind.style.transform = bind.style.webkitTransform = `translate(${left / density}px, ${top / density}px)`;
+                    bind.style.width = width / density + 'px';
+                    bind.style.height = height / density + 'px';
                 }
-                return change;
-            }
-            _syncScrollToElement() {
-                let change = false;
                 let sx = this.mScrollX;
                 let sy = this.mScrollY;
                 if (this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
@@ -9410,12 +9414,19 @@ var android;
                         for (let i = 0, count = group.getChildCount(); i < count; i++) {
                             let child = group.getChildAt(i);
                             let item = child.bindElement;
-                            item.style.transform = item.style.webkitTransform = `translate(${child.mLeft - sx}px, ${child.mTop - sy}px)`;
+                            const density = this.getResources().getDisplayMetrics().density;
+                            let tx = (child.mLeft - sx) / density;
+                            let ty = (child.mTop - sy) / density;
+                            item.style.transform = item.style.webkitTransform = `translate(${tx}px, ${ty}px)`;
                         }
                     }
-                    change = true;
                 }
-                return change;
+                if (this instanceof view_1.ViewGroup) {
+                    const group = this;
+                    for (let i = 0, count = group.getChildCount(); i < count; i++) {
+                        group.getChildAt(i)._syncBoundToElement();
+                    }
+                }
             }
             syncVisibleToElement() {
                 let visibility = this.getVisibility();
@@ -10566,7 +10577,9 @@ var android;
                 let result = event[InputStage.FLAG_FINISHED_HANDLED];
                 event[InputStage.FLAG_FINISHED] = false;
                 event[InputStage.FLAG_FINISHED_HANDLED] = false;
-                return result;
+                let continueToDom = event[ViewRootImpl.ContinueEventToDom];
+                event[ViewRootImpl.ContinueEventToDom] = null;
+                return result && !continueToDom;
             }
             deliverInputEvent(event) {
                 this.mFirstInputStage.deliver(event);
@@ -10710,6 +10723,7 @@ var android;
         ViewRootImpl.DEBUG_ORIENTATION = false || ViewRootImpl.LOCAL_LOGV;
         ViewRootImpl.DEBUG_CONFIGURATION = false || ViewRootImpl.LOCAL_LOGV;
         ViewRootImpl.DEBUG_FPS = false || ViewRootImpl.LOCAL_LOGV;
+        ViewRootImpl.ContinueEventToDom = Symbol();
         view_2.ViewRootImpl = ViewRootImpl;
         (function (ViewRootImpl) {
             class RunQueue {
@@ -38958,29 +38972,33 @@ var androidui;
                 this.element.focus();
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('touchmove', (e) => {
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_MOVE, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('touchend', (e) => {
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_UP, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('touchcancel', (e) => {
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_CANCEL, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
         }
@@ -39012,8 +39030,9 @@ var androidui;
                 this.element.focus();
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('mousemove', (e) => {
@@ -39023,8 +39042,9 @@ var androidui;
                     return;
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('mouseup', (e) => {
@@ -39033,8 +39053,9 @@ var androidui;
                 isMouseDown = false;
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('mouseleave', (e) => {
@@ -39044,8 +39065,9 @@ var androidui;
                     isMouseDown = false;
                     this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
                     if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                        e.preventDefault();
                         e.stopPropagation();
+                        e.preventDefault();
+                        return true;
                     }
                 }
             }, true);
@@ -39053,8 +39075,9 @@ var androidui;
             this.element.addEventListener('mousewheel', (e) => {
                 scrollEvent.initWithMouseWheel(e);
                 if (this._viewRootImpl.dispatchInputEvent(scrollEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
         }
@@ -39062,15 +39085,17 @@ var androidui;
             this.element.addEventListener('keydown', (e) => {
                 this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_DOWN);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('keyup', (e) => {
                 this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_UP);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
         }
@@ -39149,17 +39174,6 @@ var androidui;
         `;
     document.head.appendChild(styleElement);
     class RootLayout extends FrameLayout {
-        _syncBoundToElement() {
-            let change = super._syncBoundToElement();
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            if (change && density !== 1) {
-                this.bindElement.style.cssText += `transform:scale(${1 / density},${1 / density});
-                    -webkit-transform:scale(${1 / density},${1 / density});
-                    transform-origin:0 0;
-                    -webkit-transform-origin:0 0;`;
-            }
-            return change;
-        }
     }
 })(androidui || (androidui = {}));
 /**
@@ -39239,188 +39253,10 @@ var androidui;
     var widget;
     (function (widget) {
         var View = android.view.View;
-        var Gravity = android.view.Gravity;
-        var Resources = android.content.res.Resources;
-        var Color = android.graphics.Color;
-        var ColorStateList = android.content.res.ColorStateList;
         var MeasureSpec = View.MeasureSpec;
-        var TypedValue = android.util.TypedValue;
         class HtmlView extends View {
             constructor(bindElement, rootElement) {
                 super(bindElement, rootElement);
-                this.mGravity = Gravity.TOP | Gravity.LEFT;
-                this.mSingleLine = false;
-                this.mTextColor = ColorStateList.valueOf(Color.BLACK);
-                this.mCurTextColor = Color.BLACK;
-                this.mHintColor = Color.LTGRAY;
-                this.mSpacingMult = 1.2;
-                this.mSpacingAdd = 0;
-                this.mMaxWidth = Number.MAX_SAFE_INTEGER;
-                this.mMaxHeight = Number.MAX_SAFE_INTEGER;
-                this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
-                this.mMinLineCount = 0;
-                this.initTextElement();
-                this._attrBinder.addAttr('enabled', (value) => {
-                    this.setEnabled(this._attrBinder.parseBoolean(value, true));
-                }, () => {
-                    return this.isEnabled();
-                });
-                this._attrBinder.addAttr('textColorHighlight', (value) => {
-                });
-                this._attrBinder.addAttr('textColor', (value) => {
-                    let colorList = this._attrBinder.parseColorList(value);
-                    if (colorList instanceof ColorStateList) {
-                        this.setTextColor(colorList);
-                        return;
-                    }
-                    let color = this._attrBinder.parseColor(value);
-                    if (Number.isInteger(color))
-                        this.setTextColor(color);
-                }, () => {
-                    if (this.mTextColor.isStateful())
-                        return this.mTextColor;
-                    return this.mTextColor.getDefaultColor();
-                });
-                this._attrBinder.addAttr('textColorHint', (value) => {
-                });
-                this._attrBinder.addAttr('textSize', (value) => {
-                    if (value !== undefined && value !== null) {
-                        value = TypedValue.complexToDimensionPixelSize(value, 0, Resources.getDisplayMetrics());
-                        this.setTextSizeInPx(value);
-                    }
-                }, () => {
-                    return this.mTextSize;
-                });
-                this._attrBinder.addAttr('textStyle', (value) => {
-                });
-                this._attrBinder.addAttr('textAllCaps', (value) => {
-                });
-                this._attrBinder.addAttr('drawableLeft', (value) => {
-                });
-                this._attrBinder.addAttr('drawableTop', (value) => {
-                });
-                this._attrBinder.addAttr('drawableRight', (value) => {
-                });
-                this._attrBinder.addAttr('drawableBottom', (value) => {
-                });
-                this._attrBinder.addAttr('drawablePadding', (value) => {
-                });
-                this._attrBinder.addAttr('maxLines', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMaxLines(value);
-                }, () => {
-                    return this.mMaxLineCount;
-                });
-                this._attrBinder.addAttr('maxHeight', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMaxHeight(value);
-                }, () => {
-                    return this.mMaxHeight;
-                });
-                this._attrBinder.addAttr('lines', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setLines(value);
-                }, () => {
-                    if (this.mMaxLineCount === this.mMinLineCount)
-                        return this.mMaxLineCount;
-                    return null;
-                });
-                this._attrBinder.addAttr('height', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setHeight(value);
-                }, () => {
-                    if (this.mMaxHeight === this.getMinimumHeight())
-                        return this.mMaxHeight;
-                    return null;
-                });
-                this._attrBinder.addAttr('minLines', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMinLines(value);
-                }, () => {
-                    return this.mMinLineCount;
-                });
-                this._attrBinder.addAttr('minHeight', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMinimumHeight(value);
-                });
-                this._attrBinder.addAttr('maxWidth', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMaxWidth(value);
-                }, () => {
-                    return this.mMaxWidth;
-                });
-                this._attrBinder.addAttr('width', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setWidth(value);
-                }, () => {
-                    if (this.mMinWidth === this.mMaxWidth)
-                        return this.mMinWidth;
-                    return null;
-                });
-                this._attrBinder.addAttr('gravity', (value) => {
-                    this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
-                }, () => {
-                    return this.mGravity;
-                });
-                this._attrBinder.addAttr('text', (value) => {
-                    this.setText(value);
-                }, () => {
-                    return this.getText();
-                });
-                this._attrBinder.addAttr('singleLine', (value) => {
-                    if (this._attrBinder.parseBoolean(value, false))
-                        this.setSingleLine();
-                }, () => {
-                    if (this.mMinLineCount === 1 && this.mMaxLineCount === 1)
-                        return true;
-                    return false;
-                });
-                this._attrBinder.addAttr('textScaleX', (value) => {
-                });
-                this._attrBinder.addAttr('lineSpacingExtra', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setLineSpacing(value, this.mSpacingMult);
-                }, () => {
-                    return this.mSpacingAdd;
-                });
-                this._attrBinder.addAttr('lineSpacingMultiplier', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setLineSpacing(this.mSpacingAdd, value);
-                }, () => {
-                    return this.mSpacingMult;
-                });
-                this.applyDefaultAttributes(android.R.attr.textViewStyle);
-            }
-            initTextElement() {
-                this.mTextElement = document.createElement('div');
-                this.mTextElement.style.position = "absolute";
-                this.mTextElement.style.boxSizing = "border-box";
-                this.mTextElement.style.overflow = "hidden";
-                this.mTextElement.style.opacity = "0";
-                this.bindElement.appendChild(this.mTextElement);
-            }
-            onLayout(changed, left, top, right, bottom) {
-                super.onLayout(changed, left, top, right, bottom);
-                this.mTextElement.style.opacity = "";
-            }
-            onFinishInflate() {
-                super.onFinishInflate();
-                Array.from(this.bindElement.childNodes).forEach((item) => {
-                    if (item === this.mTextElement)
-                        return;
-                    this.bindElement.removeChild(item);
-                    this.mTextElement.appendChild(item);
-                });
             }
             onMeasure(widthMeasureSpec, heightMeasureSpec) {
                 let widthMode = MeasureSpec.getMode(widthMeasureSpec);
@@ -39428,250 +39264,50 @@ var androidui;
                 let widthSize = MeasureSpec.getSize(widthMeasureSpec);
                 let heightSize = MeasureSpec.getSize(heightMeasureSpec);
                 let width, height;
-                let padLeft = this.getCompoundPaddingLeft();
-                let padTop = this.getCompoundPaddingTop();
-                let padRight = this.getCompoundPaddingRight();
-                let padBottom = this.getCompoundPaddingBottom();
-                this.mTextElement.style.height = "";
-                this.mTextElement.style.width = "";
-                this.mTextElement.style.left = -Resources.getDisplayMetrics().widthPixels * Resources.getDisplayMetrics().density + 'px';
-                this.mTextElement.style.top = "";
+                const density = this.getResources().getDisplayMetrics().density;
                 if (widthMode == MeasureSpec.EXACTLY) {
                     width = widthSize;
                 }
                 else {
-                    width = this.mTextElement.offsetWidth + 2;
-                    width += padLeft + padRight;
-                    width = Math.min(width, this.mMaxWidth);
+                    let sWidth = this.bindElement.style.width, sLeft = this.bindElement.style.left;
+                    this.bindElement.style.width = '';
+                    this.bindElement.style.left = '';
+                    width = this.bindElement.offsetWidth * density + 2;
+                    this.bindElement.style.width = sWidth;
+                    this.bindElement.style.left = sLeft;
                     width = Math.max(width, this.getSuggestedMinimumWidth());
                     if (widthMode == MeasureSpec.AT_MOST) {
                         width = Math.min(widthSize, width);
                     }
                 }
-                let unpaddedWidth = width - padLeft - padRight;
-                this.mTextElement.style.width = unpaddedWidth + "px";
-                this.mTextElement.style.left = padLeft + "px";
                 if (heightMode == MeasureSpec.EXACTLY) {
                     height = heightSize;
-                    let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
-                    if (this.mMaxLineCount < Number.MAX_SAFE_INTEGER) {
-                        let maxHeightWithLineCount = pad + this.mMaxLineCount * this.getLineHeight();
-                        height = Math.min(maxHeightWithLineCount, height);
-                    }
                 }
                 else {
-                    let desired = this.getDesiredHeight();
-                    height = desired;
+                    let sWidth = this.bindElement.style.width;
+                    this.bindElement.style.width = width / density + "px";
+                    height = this.bindElement.offsetHeight * density;
+                    this.bindElement.style.width = sWidth;
+                    height = Math.max(height, this.getSuggestedMinimumHeight());
                     if (heightMode == MeasureSpec.AT_MOST) {
-                        height = Math.min(desired, heightSize);
+                        height = Math.min(height, heightSize);
                     }
                 }
-                let contextHeight = height - padTop - padBottom;
-                const verticalGravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
-                let finalTop = padTop;
-                if (verticalGravity !== Gravity.TOP) {
-                    let textHeight = this.mTextElement.offsetHeight;
-                    if (textHeight < contextHeight) {
-                        switch (verticalGravity) {
-                            case Gravity.CENTER_VERTICAL:
-                                finalTop += (contextHeight - textHeight) / 2;
-                                break;
-                            case Gravity.BOTTOM:
-                                finalTop += (contextHeight - textHeight);
-                                break;
-                            case Gravity.TOP:
-                                break;
-                        }
-                        contextHeight = textHeight;
-                    }
-                }
-                this.mTextElement.style.height = contextHeight + "px";
-                this.mTextElement.style.top = finalTop + "px";
                 this.setMeasuredDimension(width, height);
             }
-            getDesiredHeight() {
-                let desired = this.mTextElement.offsetHeight;
-                let pad = this.getCompoundPaddingTop() + this.getCompoundPaddingBottom();
-                desired += pad;
-                desired = Math.min(this.mMaxHeight, desired);
-                if (this.mMaxLineCount < Number.MAX_SAFE_INTEGER) {
-                    let maxHeightWithLineCount = pad + this.mMaxLineCount * this.getLineHeight();
-                    desired = Math.min(maxHeightWithLineCount, desired);
-                }
-                if (this.mMinLineCount > 0) {
-                    let minHeightWithLineCount = pad + this.mMinLineCount * this.getLineHeight();
-                    desired = Math.max(minHeightWithLineCount, desired);
-                }
-                desired = Math.max(desired, this.getSuggestedMinimumHeight());
-                return desired;
-            }
-            setTextColor(color) {
-                if (Number.isInteger(color)) {
-                    this.mTextColor = ColorStateList.valueOf(color);
-                }
-                else {
-                    if (color === null || color === undefined) {
-                        throw new Error('colors is null');
-                    }
-                    this.mTextColor = color;
-                }
-                this.updateTextColors();
-            }
-            getTextColors() {
-                return this.mTextColor;
-            }
-            getCurrentTextColor() {
-                return this.mCurTextColor;
-            }
-            updateTextColors() {
-                let inval = false;
-                let color = this.mTextColor.getColorForState(this.getDrawableState(), 0);
-                if (color != this.mCurTextColor) {
-                    this.mCurTextColor = color;
-                    let r = Color.red(this.mCurTextColor);
-                    let g = Color.green(this.mCurTextColor);
-                    let b = Color.blue(this.mCurTextColor);
-                    let a = Color.alpha(this.mCurTextColor);
-                    this.mTextElement.style.color = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-                    inval = false;
-                }
-                if (inval) {
-                    this.invalidate();
-                }
-            }
-            drawableStateChanged() {
-                super.drawableStateChanged();
-                if (this.mTextColor != null && this.mTextColor.isStateful()) {
-                    this.updateTextColors();
-                }
-            }
-            getCompoundPaddingTop() {
-                return this.mPaddingTop;
-            }
-            getCompoundPaddingBottom() {
-                return this.mPaddingBottom;
-            }
-            getCompoundPaddingLeft() {
-                return this.mPaddingLeft;
-            }
-            getCompoundPaddingRight() {
-                return this.mPaddingRight;
-            }
-            setGravity(gravity) {
-                switch (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
-                    case Gravity.CENTER_HORIZONTAL:
-                        this.mTextElement.style.textAlign = "center";
-                        break;
-                    case Gravity.RIGHT:
-                        this.mTextElement.style.textAlign = "right";
-                        break;
-                    case Gravity.LEFT:
-                        this.mTextElement.style.textAlign = "left";
-                        break;
-                }
-                if ((gravity & Gravity.VERTICAL_GRAVITY_MASK) !=
-                    (this.mGravity & Gravity.VERTICAL_GRAVITY_MASK)) {
-                    this.requestLayout();
-                }
-                this.mGravity = gravity;
-            }
-            setLineSpacing(add, mult) {
-                if (this.mSpacingAdd != add || this.mSpacingMult != mult) {
-                    this.mSpacingAdd = add;
-                    this.mSpacingMult = mult;
-                    this.setTextSize(this.mTextSize);
-                }
-            }
-            setTextSizeInPx(sizeInPx) {
-                if (this.mTextSize !== sizeInPx) {
-                    this.mTextSize = sizeInPx;
-                    this.mTextElement.style.fontSize = sizeInPx + "px";
-                    this.mTextElement.style.lineHeight = this.getLineHeight() + "px";
-                    this.requestLayout();
-                }
-            }
-            setTextSize(size) {
-                let sizeInPx = size * Resources.getDisplayMetrics().density;
-                this.setTextSizeInPx(sizeInPx);
-            }
-            getLineHeight() {
-                return Math.ceil(this.mTextSize * this.mSpacingMult + this.mSpacingAdd);
-            }
-            setHeight(pixels) {
-                this.mMaxHeight = pixels;
-                this.setMinimumHeight(pixels);
-                this.requestLayout();
-                this.invalidate();
-            }
-            setMaxLines(max) {
-                this.mMaxLineCount = max;
-                this.requestLayout();
-                this.invalidate();
-            }
-            getMaxLines() {
-                return this.mMaxLineCount;
-            }
-            setMaxHeight(maxHeight) {
-                this.mMaxHeight = maxHeight;
-                this.requestLayout();
-                this.invalidate();
-            }
-            getMaxHeight() {
-                return this.mMaxHeight;
-            }
-            setMaxWidth(maxpixels) {
-                this.mMaxWidth = maxpixels;
-                this.requestLayout();
-                this.invalidate();
-            }
-            getMaxWidth() {
-                return this.mMaxWidth;
-            }
-            setWidth(pixels) {
-                this.mMaxWidth = pixels;
-                this.setMinimumWidth(pixels);
-                this.requestLayout();
-                this.invalidate();
-            }
-            setMinLines(min) {
-                this.mMinLineCount = min;
-                this.requestLayout();
-                this.invalidate();
-            }
-            getMinLines() {
-                return this.mMinLineCount;
-            }
-            setSingleLine(singleLine = true) {
-                if (singleLine)
-                    this.setLines(1);
-                else {
-                    this.mMaxLineCount = Number.MAX_SAFE_INTEGER;
-                    this.mMinLineCount = 0;
-                    this.requestLayout();
-                    this.invalidate();
-                }
-            }
-            setLines(lines) {
-                this.mMaxLineCount = this.mMinLineCount = lines;
-                this.requestLayout();
-                this.invalidate();
-            }
-            setText(text = '') {
-                this.mTextElement.innerText = text;
-                this.requestLayout();
-            }
-            getText() {
-                return this.mTextElement.innerText;
+            onTouchEvent(event) {
+                event[android.view.ViewRootImpl.ContinueEventToDom] = true;
+                return super.onTouchEvent(event) || true;
             }
             setHtml(html) {
-                this.mTextElement.innerHTML = html;
+                this.bindElement.innerHTML = html;
                 this.requestLayout();
             }
             getHtml() {
-                return this.mTextElement.innerHTML;
+                return this.bindElement.innerHTML;
             }
-            getTextElement() {
-                return this.mTextElement;
+            requestSyncBoundToElement(immediately = true) {
+                super.requestSyncBoundToElement(immediately);
             }
         }
         widget.HtmlView = HtmlView;

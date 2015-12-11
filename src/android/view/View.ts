@@ -639,22 +639,22 @@ module android.view {
         get mLeft():number{return this._mLeft;}
         set mLeft(value:number){
             this._mLeft = Math.floor(value);
-            this.syncBoundToElement();
+            this.requestSyncBoundToElement();
         }
         get mRight():number{return this._mRight;}
         set mRight(value:number){
             this._mRight = Math.floor(value);
-            this.syncBoundToElement();
+            this.requestSyncBoundToElement();
         }
         get mTop():number{return this._mTop;}
         set mTop(value:number){
             this._mTop = Math.floor(value);
-            this.syncBoundToElement();
+            this.requestSyncBoundToElement();
         }
         get mBottom():number{return this._mBottom;}
         set mBottom(value:number){
             this._mBottom = Math.floor(value);
-            this.syncBoundToElement();
+            this.requestSyncBoundToElement();
         }
 
         private _mScrollX = 0;
@@ -3117,7 +3117,7 @@ module android.view {
             let sx = this.mScrollX;
             let sy = this.mScrollY;
 
-            this.syncScrollToElement();
+            this.requestSyncBoundToElement();
 
             let hasNoCache = cache == null;
             let offsetForScroll = cache == null;
@@ -4467,6 +4467,7 @@ module android.view {
 
             let rootViewClass = ClassFinder.findClass(className, android.view);
             if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android['widget']);
+            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, androidui['widget']);
             if(!rootViewClass) rootViewClass = ClassFinder.findClass(className);
             if(!rootViewClass){
                 if(document.createElement(className) instanceof HTMLUnknownElement){
@@ -4591,24 +4592,46 @@ module android.view {
         }
 
 
-        private _syncToElementLock = false;
-        private syncToElementFunc = ()=>{
-            this._syncToElementLock = false;
+        private _syncToElementLock:boolean;
+        private _syncToElementImmediatelyLock:boolean;
+        private _syncToElementRun: Runnable;
+
+        requestSyncBoundToElement(immediately=false):void {
+            let rootView = this.getRootView();
+            if(!rootView) return;
+
+            if(!rootView._syncToElementRun){
+                rootView._syncToElementRun = {
+                    run:()=>{
+                        rootView._syncToElementLock = false;
+                        rootView._syncToElementImmediatelyLock = false
+                        this._syncBoundAndScrollToElement();
+                    }
+                };
+            }
+
+            if(immediately){
+                if(rootView._syncToElementImmediatelyLock) return;
+                rootView._syncToElementImmediatelyLock = true;
+                rootView._syncToElementLock = true;
+                rootView.removeCallbacks(rootView._syncToElementRun);
+                rootView.post(rootView._syncToElementRun);
+                return;
+            }
+            if(rootView._syncToElementLock) return;
+            rootView._syncToElementLock = true;
+            rootView.postDelayed(rootView._syncToElementRun, 300);
+        }
+
+        protected _syncBoundAndScrollToElement():void {
             this._syncBoundToElement();
             this._syncScrollToElement();
-        };
 
-        syncBoundToElement(){
-            //TODO sync from view root.
-            if(!this._syncToElementLock){
-                this._syncToElementLock = true;
-                setTimeout(this.syncToElementFunc, 300);
-            }
-        }
-        syncScrollToElement(){
-            if(!this._syncToElementLock){
-                this._syncToElementLock = true;
-                setTimeout(this.syncToElementFunc, 300);
+            if(this instanceof ViewGroup){
+                const group = <ViewGroup>this;
+                for (var i = 0 ,  count = group.getChildCount(); i<count; i++){
+                    group.getChildAt(i)._syncBoundAndScrollToElement();
+                }
             }
         }
 
@@ -4616,9 +4639,7 @@ module android.view {
         private _lastSyncTop:number;
         private _lastSyncWidth:number;
         private _lastSyncHeight:number;
-        protected _syncBoundToElement():boolean {
-            let change = false;
-
+        protected _syncBoundToElement() {
             //bound
             const left = this.mLeft;
             const top = this.mTop;
@@ -4632,41 +4653,43 @@ module android.view {
                 this._lastSyncHeight = height;
 
 
+                const density = this.getResources().getDisplayMetrics().density;
                 let bind = this.bindElement;
 
                 //bind.style.transform = bind.style.webkitTransform = `translate3d(${left}px, ${top}px, 0px)`;
-                bind.style.transform = bind.style.webkitTransform = `translate(${left}px, ${top}px)`;
+                bind.style.transform = bind.style.webkitTransform = `translate(${left/density}px, ${top/density}px)`;
 
-                bind.style.width = width + 'px';
-                bind.style.height = height + 'px';
-                change = true;
+                bind.style.width = width / density + 'px';
+                bind.style.height = height / density + 'px';
             }
-            return change;
         }
 
-        private _lastSyncScrollX=0;
-        private _lastSyncScrollY=0;
-        protected _syncScrollToElement():boolean {
-            let change = false;
+        private _lastSyncScrollX:number;
+        private _lastSyncScrollY:number;
+        protected _syncScrollToElement() {
             //scroll
             let sx = this.mScrollX;
             let sy = this.mScrollY;
+
             if(this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
                 this._lastSyncScrollX = sx;
                 this._lastSyncScrollY = sy;
+
                 if (this instanceof ViewGroup) {
                     let group = <ViewGroup><any>this;
                     for (let i = 0, count = group.getChildCount(); i < count; i++) {
                         let child = group.getChildAt(i);
                         let item = child.bindElement;
 
+                        const density = this.getResources().getDisplayMetrics().density;
+                        let tx = (child.mLeft - sx) / density;
+                        let ty = (child.mTop - sy) / density;
+
                         //item.style.transform = item.style.webkitTransform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px)`;
-                        item.style.transform = item.style.webkitTransform = `translate(${child.mLeft - sx}px, ${child.mTop - sy}px)`;
+                        item.style.transform = item.style.webkitTransform = `translate(${tx}px, ${ty}px)`;
                     }
                 }
-                change = true;
             }
-            return change;
         }
 
         syncVisibleToElement(){

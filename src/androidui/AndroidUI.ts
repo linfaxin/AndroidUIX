@@ -139,30 +139,34 @@ module androidui {
 
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
 
             }, true);
             this.element.addEventListener('touchmove', (e)=> {
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_MOVE, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('touchend', (e)=> {
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_UP, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('touchcancel', (e)=> {
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_CANCEL, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
         }
@@ -197,8 +201,9 @@ module androidui {
 
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
 
@@ -207,8 +212,9 @@ module androidui {
                 if(!isMouseDown) return;
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
 
@@ -217,8 +223,9 @@ module androidui {
                 isMouseDown = false;
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
 
@@ -228,8 +235,9 @@ module androidui {
                     isMouseDown = false;
                     this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
                     if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
-                        e.preventDefault();
                         e.stopPropagation();
+                        e.preventDefault();
+                        return true;
                     }
                 }
             }, true);
@@ -240,8 +248,9 @@ module androidui {
             this.element.addEventListener('mousewheel', (e:MouseWheelEvent)=> {
                 scrollEvent.initWithMouseWheel(<WheelEvent><any>e);
                 if(this._viewRootImpl.dispatchInputEvent(scrollEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
         }
@@ -250,15 +259,17 @@ module androidui {
             this.element.addEventListener('keydown', (e:KeyboardEvent)=> {
                 this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_DOWN);
                 if(this._viewRootImpl.dispatchInputEvent(this.ketEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
             this.element.addEventListener('keyup', (e:KeyboardEvent)=> {
                 this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_UP);
                 if(this._viewRootImpl.dispatchInputEvent(this.ketEvent)){
-                    e.preventDefault();
                     e.stopPropagation();
+                    e.preventDefault();
+                    return true;
                 }
             }, true);
 
@@ -344,17 +355,5 @@ module androidui {
     document.head.appendChild(styleElement);
 
     class RootLayout extends FrameLayout{
-
-        protected _syncBoundToElement():boolean {
-            let change = super._syncBoundToElement();
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            if(change && density!==1){
-                this.bindElement.style.cssText += `transform:scale(${1/density},${1/density});
-                    -webkit-transform:scale(${1/density},${1/density});
-                    transform-origin:0 0;
-                    -webkit-transform-origin:0 0;`;
-            }
-            return change;
-        }
     }
 }

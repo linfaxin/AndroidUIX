@@ -41,6 +41,8 @@ module android.view {
         static DEBUG_CONFIGURATION = false || ViewRootImpl.LOCAL_LOGV;
         static DEBUG_FPS = false || ViewRootImpl.LOCAL_LOGV;
 
+        static ContinueEventToDom = Symbol();
+
         private mView:View;
         rootElement:HTMLElement;
         private mViewVisibility = View.GONE;
@@ -869,7 +871,9 @@ module android.view {
             event[InputStage.FLAG_FINISHED] = false;
             event[InputStage.FLAG_FINISHED_HANDLED] = false;
 
-            return result;
+            let continueToDom = event[ViewRootImpl.ContinueEventToDom];
+            event[ViewRootImpl.ContinueEventToDom] = null;
+            return result && !continueToDom;
             //let view = this.mView;
             //let isTouchEvent = event instanceof MotionEvent && event.isTouchEvent();
             //let disallowIntercept = view instanceof ViewGroup ? (view.mGroupFlags & ViewGroup.FLAG_DISALLOW_INTERCEPT) != 0 : false;

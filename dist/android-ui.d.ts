@@ -2004,17 +2004,16 @@ declare module android.view {
         private _AttrObserverCallBack(arr, observer);
         protected initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
         private _syncToElementLock;
-        private syncToElementFunc;
-        syncBoundToElement(): void;
-        syncScrollToElement(): void;
+        private _syncToElementImmediatelyLock;
+        private _syncToElementRun;
+        requestSyncBoundToElement(immediately?: boolean): void;
         private _lastSyncLeft;
         private _lastSyncTop;
         private _lastSyncWidth;
         private _lastSyncHeight;
-        protected _syncBoundToElement(): boolean;
         private _lastSyncScrollX;
         private _lastSyncScrollY;
-        protected _syncScrollToElement(): boolean;
+        protected _syncBoundToElement(): void;
         syncVisibleToElement(): void;
         syncDrawStateToElement(): void;
         private _initAttrObserver();
@@ -2166,6 +2165,7 @@ declare module android.view {
         static DEBUG_ORIENTATION: boolean;
         static DEBUG_CONFIGURATION: boolean;
         static DEBUG_FPS: boolean;
+        static ContinueEventToDom: symbol;
         private mView;
         rootElement: HTMLElement;
         private mViewVisibility;
@@ -6212,60 +6212,13 @@ declare module android.app {
 }
 declare module androidui.widget {
     import View = android.view.View;
-    import ColorStateList = android.content.res.ColorStateList;
     class HtmlView extends View {
-        private mText;
-        private mHint;
-        private mGravity;
-        private mSingleLine;
-        private mTextSize;
-        private mTextColor;
-        private mCurTextColor;
-        private mHintColor;
-        private mSpacingMult;
-        private mSpacingAdd;
-        private mMaxWidth;
-        private mMaxHeight;
-        private mMaxLineCount;
-        private mMinLineCount;
-        private mTextElement;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        private initTextElement();
-        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
-        onFinishInflate(): void;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
-        private getDesiredHeight();
-        setTextColor(color: number | ColorStateList): void;
-        getTextColors(): ColorStateList;
-        getCurrentTextColor(): number;
-        private updateTextColors();
-        protected drawableStateChanged(): void;
-        getCompoundPaddingTop(): number;
-        getCompoundPaddingBottom(): number;
-        getCompoundPaddingLeft(): number;
-        getCompoundPaddingRight(): number;
-        setGravity(gravity: number): void;
-        setLineSpacing(add: number, mult: number): void;
-        setTextSizeInPx(sizeInPx: number): void;
-        setTextSize(size: number): void;
-        getLineHeight(): number;
-        setHeight(pixels: number): void;
-        setMaxLines(max: number): void;
-        getMaxLines(): number;
-        setMaxHeight(maxHeight: number): void;
-        getMaxHeight(): number;
-        setMaxWidth(maxpixels: number): void;
-        getMaxWidth(): number;
-        setWidth(pixels: number): void;
-        setMinLines(min: number): void;
-        getMinLines(): number;
-        setSingleLine(singleLine?: boolean): void;
-        setLines(lines: number): void;
-        setText(text?: string): void;
-        getText(): string;
+        onTouchEvent(event: android.view.MotionEvent): boolean;
         setHtml(html: string): void;
         getHtml(): string;
-        getTextElement(): HTMLElement;
+        requestSyncBoundToElement(immediately?: boolean): void;
     }
 }
 declare module androidui.widget {

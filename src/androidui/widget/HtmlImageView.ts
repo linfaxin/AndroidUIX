@@ -15,8 +15,7 @@ module androidui.widget{
     });
 
     /**
-     * simple impl to show image
-     * hold a img element in bind element.
+     * use a img element draw Image. It's better to use {@see ImageView} draw image on Canvas.
      */
     export class HtmlImageView extends View{
         private mScaleType:ImageView.ScaleType;
