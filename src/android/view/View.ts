@@ -34,6 +34,7 @@
 ///<reference path="Gravity.ts"/>
 ///<reference path="../view/animation/LinearInterpolator.ts"/>
 ///<reference path="../view/animation/AnimationUtils.ts"/>
+///<reference path="../../android/util/LayoutDirection.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
@@ -47,6 +48,7 @@
 
 module android.view {
     import SparseArray = android.util.SparseArray;
+    import LayoutDirection = android.util.LayoutDirection;
     import Drawable = android.graphics.drawable.Drawable;
     import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
@@ -568,6 +570,32 @@ module android.view {
 
         static LAYER_TYPE_NONE = 0;
         static LAYER_TYPE_SOFTWARE = 1;
+
+
+        /**
+         * Horizontal layout direction of this view is from Left to Right.
+         * Use with {@link #setLayoutDirection}.
+         */
+        static LAYOUT_DIRECTION_LTR:number = LayoutDirection.LTR;
+
+        /**
+         * Horizontal layout direction of this view is from Right to Left.
+         * Use with {@link #setLayoutDirection}.
+         */
+        static LAYOUT_DIRECTION_RTL:number = LayoutDirection.RTL;
+
+        /**
+         * Horizontal layout direction of this view is inherited from its parent.
+         * Use with {@link #setLayoutDirection}.
+         */
+        static LAYOUT_DIRECTION_INHERIT:number = LayoutDirection.INHERIT;
+
+        /**
+         * Horizontal layout direction of this view is from deduced from the default language
+         * script for the locale. Use with {@link #setLayoutDirection}.
+         */
+        static LAYOUT_DIRECTION_LOCALE:number = LayoutDirection.LOCALE;
+
 
         get mID():string{
             if(this.bindElement){
@@ -2463,9 +2491,15 @@ module android.view {
             return this.mFloatingTreeObserver;
         }
 
-        isLayoutRtl():boolean{
-            return false;
+        setLayoutDirection(layoutDirection:number):void  {
         }
+        getLayoutDirection():number  {
+            return View.LAYOUT_DIRECTION_LTR;
+        }
+        isLayoutRtl():boolean  {
+            return (this.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL);
+        }
+
         getBaseline():number {
             return -1;
         }

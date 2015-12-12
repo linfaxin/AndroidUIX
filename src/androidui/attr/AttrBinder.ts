@@ -106,7 +106,7 @@ module androidui.attr {
         }
 
         parseBoolean(value, defaultValue = true):boolean{
-            if(value===false || value ==='fales' || value === '0') return false;
+            if(value===false || value ==='false' || value === '0') return false;
             else if(value===true || value ==='true' || value === '1' || value === '') return true;
             return defaultValue;
         }

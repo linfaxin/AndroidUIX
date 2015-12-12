@@ -14,7 +14,7 @@ module java.util{
             return this.array.length;
         }
         isEmpty():boolean {
-            return this.size() === 0;
+            return this.size() <= 0;
         }
         contains(o:T) {
             return this.indexOf(o) >= 0;

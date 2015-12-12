@@ -1407,7 +1407,7 @@ module android.widget{
         }
 
 
-        generateDefaultLayoutParams():android.view.ViewGroup.LayoutParams {
+        protected generateDefaultLayoutParams():android.view.ViewGroup.LayoutParams {
             let LayoutParams = LinearLayout.LayoutParams;
             if (this.mOrientation == LinearLayout.HORIZONTAL) {
                 return new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
@@ -1417,11 +1417,11 @@ module android.widget{
             return super.generateDefaultLayoutParams();
         }
 
-        generateLayoutParams(p:android.view.ViewGroup.LayoutParams):android.view.ViewGroup.LayoutParams {
+        protected generateLayoutParams(p:android.view.ViewGroup.LayoutParams):android.view.ViewGroup.LayoutParams {
             return new LinearLayout.LayoutParams(p);
         }
 
-        checkLayoutParams(p:android.view.ViewGroup.LayoutParams):boolean {
+        protected checkLayoutParams(p:android.view.ViewGroup.LayoutParams):boolean {
             return p instanceof LinearLayout.LayoutParams;
         }
     }

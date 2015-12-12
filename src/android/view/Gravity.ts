@@ -34,6 +34,8 @@ module android.view{
         static LEFT = (Gravity.AXIS_PULL_BEFORE|Gravity.AXIS_SPECIFIED)<<Gravity.AXIS_X_SHIFT;
         /** Push object to the right of its container, not changing its size. */
         static RIGHT = (Gravity.AXIS_PULL_AFTER|Gravity.AXIS_SPECIFIED)<<Gravity.AXIS_X_SHIFT;
+        static START = Gravity.LEFT;
+        static END = Gravity.RIGHT;
 
         /** Place object in the vertical center of its container, not changing its
          *  size. */
@@ -81,6 +83,8 @@ module android.view{
         static VERTICAL_GRAVITY_MASK = (Gravity.AXIS_SPECIFIED |
             Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_Y_SHIFT;
 
+        static RELATIVE_HORIZONTAL_GRAVITY_MASK = Gravity.HORIZONTAL_GRAVITY_MASK;
+
         /** Special constant to enable clipping to an overall display along the
          *  vertical dimension.  This is not applied by default by
          *  {@link #apply(int, int, int, Rect, int, int, Rect)}; you must do so
@@ -106,15 +110,15 @@ module android.view{
          */
         //static RELATIVE_HORIZONTAL_GRAVITY_MASK = Gravity.START | Gravity.END;
 
-        static apply(gravity:number, w:number, h:number, container:Rect, outRect:Rect){
+        static apply(gravity:number, w:number, h:number, container:Rect, outRect:Rect, layoutDirection?:number) {
             let xAdj = 0, yAdj = 0;
-            switch (gravity&((Gravity.AXIS_PULL_BEFORE|Gravity.AXIS_PULL_AFTER)<<Gravity.AXIS_X_SHIFT)) {
+            if(layoutDirection!=null) gravity = Gravity.getAbsoluteGravity(gravity, layoutDirection);
+
+            switch (gravity & ((Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_X_SHIFT)) {
                 case 0:
-                    outRect.left = container.left
-                        + ((container.right - container.left - w)/2) + xAdj;
+                    outRect.left = container.left + ((container.right - container.left - w) / 2) + xAdj;
                     outRect.right = outRect.left + w;
-                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT))
-                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT)) {
+                    if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
                         if (outRect.left < container.left) {
                             outRect.left = container.left;
                         }
@@ -123,21 +127,19 @@ module android.view{
                         }
                     }
                     break;
-                case Gravity.AXIS_PULL_BEFORE<<Gravity.AXIS_X_SHIFT:
+                case Gravity.AXIS_PULL_BEFORE << Gravity.AXIS_X_SHIFT:
                     outRect.left = container.left + xAdj;
                     outRect.right = outRect.left + w;
-                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT))
-                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT)) {
+                    if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
                         if (outRect.right > container.right) {
                             outRect.right = container.right;
                         }
                     }
                     break;
-                case Gravity.AXIS_PULL_AFTER<<Gravity.AXIS_X_SHIFT:
+                case Gravity.AXIS_PULL_AFTER << Gravity.AXIS_X_SHIFT:
                     outRect.right = container.right - xAdj;
                     outRect.left = outRect.right - w;
-                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT))
-                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_X_SHIFT)) {
+                    if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
                         if (outRect.left < container.left) {
                             outRect.left = container.left;
                         }
@@ -148,14 +150,11 @@ module android.view{
                     outRect.right = container.right + xAdj;
                     break;
             }
-
-            switch (gravity&((Gravity.AXIS_PULL_BEFORE|Gravity.AXIS_PULL_AFTER)<<Gravity.AXIS_Y_SHIFT)) {
+            switch (gravity & ((Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_Y_SHIFT)) {
                 case 0:
-                    outRect.top = container.top
-                        + ((container.bottom - container.top - h)/2) + yAdj;
+                    outRect.top = container.top + ((container.bottom - container.top - h) / 2) + yAdj;
                     outRect.bottom = outRect.top + h;
-                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT))
-                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT)) {
+                    if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
                         if (outRect.top < container.top) {
                             outRect.top = container.top;
                         }
@@ -164,21 +163,19 @@ module android.view{
                         }
                     }
                     break;
-                case Gravity.AXIS_PULL_BEFORE<<Gravity.AXIS_Y_SHIFT:
+                case Gravity.AXIS_PULL_BEFORE << Gravity.AXIS_Y_SHIFT:
                     outRect.top = container.top + yAdj;
                     outRect.bottom = outRect.top + h;
-                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT))
-                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT)) {
+                    if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
                         if (outRect.bottom > container.bottom) {
                             outRect.bottom = container.bottom;
                         }
                     }
                     break;
-                case Gravity.AXIS_PULL_AFTER<<Gravity.AXIS_Y_SHIFT:
+                case Gravity.AXIS_PULL_AFTER << Gravity.AXIS_Y_SHIFT:
                     outRect.bottom = container.bottom - yAdj;
                     outRect.top = outRect.bottom - h;
-                    if ((gravity&(Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT))
-                        == (Gravity.AXIS_CLIP<<Gravity.AXIS_Y_SHIFT)) {
+                    if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
                         if (outRect.top < container.top) {
                             outRect.top = container.top;
                         }
@@ -189,6 +186,10 @@ module android.view{
                     outRect.bottom = container.bottom + yAdj;
                     break;
             }
+        }
+
+        static getAbsoluteGravity(gravity:number, layoutDirection:number):number {
+            return gravity;//no need parse.
         }
         
     }

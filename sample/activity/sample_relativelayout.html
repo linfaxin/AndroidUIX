@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>RelativeLayout展示</title>
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+</head>
+<body>
+    <android-Activity debug style="width: 100%; height:100%;display: none;">
+        <resources>
+            <android-style id="textStyle"
+                           android:textSize="12sp"
+                           android:padding="8dp"
+                           android:textColor="#333"
+                           android:background="#eee"
+                           android:layout_width="wrap_content"
+                           android:layout_height="wrap_content"
+                    ></android-style>
+        </resources>
+        <RelativeLayout>
+            <TextView id="text1"
+                      android:style="@style/textStyle"
+                      android:text="左上角"
+                    ></TextView>
+            <TextView id="text2"
+                      android:style="@style/textStyle"
+                      android:text="右上角"
+                      android:layout_alignParentRight="true"
+                    ></TextView>
+            <TextView id="text3"
+                      android:style="@style/textStyle"
+                      android:text="左下角"
+                      android:layout_alignParentBottom="true"
+                    ></TextView>
+            <TextView id="text4"
+                      android:style="@style/textStyle"
+                      android:text="右下角"
+                      android:layout_alignParentRight="true"
+                      android:layout_alignParentBottom="true"
+                    ></TextView>
+            <TextView id="text5"
+                      android:style="@style/textStyle"
+                      android:text="垂直居中"
+                      android:layout_centerVertical="true"
+                    ></TextView>
+            <TextView id="text6"
+                      android:style="@style/textStyle"
+                      android:text="水平居中"
+                      android:layout_centerHorizontal="true"
+                    ></TextView>
+            <TextView id="text7"
+                      android:style="@style/textStyle"
+                      android:text="垂直水平居中"
+                      android:layout_centerInParent="true"
+                    ></TextView>
+
+            <TextView
+                    android:style="@style/textStyle"
+                    android:text="below"
+                    android:layout_marginTop="4dp"
+                    android:layout_below="text1"
+                    ></TextView>
+
+            <TextView
+                      android:style="@style/textStyle"
+                      android:text="toRightOf"
+                      android:layout_marginLeft="4dp"
+                      android:layout_toRightOf="text3"
+                      android:layout_alignParentBottom="true"
+                    ></TextView>
+            <TextView
+                      android:style="@style/textStyle"
+                      android:text="above"
+                      android:layout_marginBottom="4dp"
+                      android:layout_above="text3"
+                    ></TextView>
+            <TextView
+                      android:style="@style/textStyle"
+                      android:text="toLeftOf"
+                      android:layout_marginRight="4dp"
+                      android:layout_toLeftOf="text4"
+                      android:layout_alignParentBottom="true"
+                    ></TextView>
+
+            <TextView
+                    id="alignLeft"
+                      android:style="@style/textStyle"
+                      android:text="  alignLeft  "
+                      android:layout_marginTop="4dp"
+                      android:layout_alignLeft="text6"
+                      android:layout_below="text2"
+                    ></TextView>
+            <TextView
+                      android:style="@style/textStyle"
+                      android:text="  alignRight  "
+                      android:layout_marginTop="4dp"
+                      android:layout_alignRight="text6"
+                      android:layout_below="alignLeft"
+                    ></TextView>
+            <TextView
+                    id="alignTop"
+                      android:style="@style/textStyle"
+                      android:text="alignTop"
+                      android:maxWidth="46dp"
+                      android:layout_marginLeft="4dp"
+                      android:layout_alignTop="text7"
+                      android:layout_toRightOf="text7"
+                    ></TextView>
+            <TextView
+                      android:style="@style/textStyle"
+                      android:text="alignBottom"
+                      android:maxWidth="52dp"
+                      android:layout_marginLeft="4dp"
+                      android:layout_alignBottom="text7"
+                      android:layout_toRightOf="alignTop"
+                    ></TextView>
+            <TextView
+                      android:style="@style/textStyle"
+                      android:text="above&toLeftOf"
+                      android:layout_above="text7"
+                      android:layout_toLeftOf="text7"
+                    ></TextView>
+            <TextView
+                      android:style="@style/textStyle"
+                      android:text="toRightOf & toLeftOf & below"
+                      android:layout_below="text7"
+                      android:layout_toLeftOf="text7"
+                      android:layout_toRightOf="text5"
+                    ></TextView>
+        </RelativeLayout>
+    </android-Activity>
+
+    <script src="../lib/browser-polyfill.min.js"></script>
+    <script src="../lib/CustomElements.min.js"></script>
+    <script src="../../dist/android-ui.es5.js"></script>
+    <script src="../build/main.es5.js"></script>
+
+</body>
+</html>

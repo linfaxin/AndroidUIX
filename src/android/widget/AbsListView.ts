@@ -4328,11 +4328,11 @@ module android.widget {
         //    }
         //}
 
-        generateDefaultLayoutParams():ViewGroup.LayoutParams {
+        protected generateDefaultLayoutParams():ViewGroup.LayoutParams {
             return new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 0);
         }
 
-        generateLayoutParams(p:ViewGroup.LayoutParams):ViewGroup.LayoutParams {
+        protected generateLayoutParams(p:ViewGroup.LayoutParams):ViewGroup.LayoutParams {
             return new AbsListView.LayoutParams(p);
         }
 
@@ -4340,7 +4340,7 @@ module android.widget {
         //    return new AbsListView.LayoutParams(this.getContext(), attrs);
         //}
 
-        checkLayoutParams(p:ViewGroup.LayoutParams):boolean {
+        protected checkLayoutParams(p:ViewGroup.LayoutParams):boolean {
             return p instanceof AbsListView.LayoutParams;
         }
 

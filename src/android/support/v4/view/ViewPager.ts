@@ -2483,16 +2483,16 @@ module android.support.v4.view {
         }
 
 
-        generateDefaultLayoutParams():android.view.ViewGroup.LayoutParams {
+        protected generateDefaultLayoutParams():android.view.ViewGroup.LayoutParams {
             return new ViewPager.LayoutParams();
         }
 
 
-        generateLayoutParams(p:android.view.ViewGroup.LayoutParams):android.view.ViewGroup.LayoutParams {
+        protected generateLayoutParams(p:android.view.ViewGroup.LayoutParams):android.view.ViewGroup.LayoutParams {
             return this.generateDefaultLayoutParams();
         }
 
-        checkLayoutParams(p:android.view.ViewGroup.LayoutParams):boolean {
+        protected checkLayoutParams(p:android.view.ViewGroup.LayoutParams):boolean {
             return p instanceof ViewPager.LayoutParams && super.checkLayoutParams(p);
         }
 

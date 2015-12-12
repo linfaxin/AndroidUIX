@@ -53,7 +53,7 @@ module android.app{
         }
 
         attributeChangedCallback(attributeName:string, oldVal:string, newVal:string):void {
-            if(attributeName==='debug' && newVal && newVal!='false' && newVal!='0'){
+            if(attributeName==='debug' && newVal!=null && newVal!='false' && newVal!='0'){
                 this.AndroidUI.showDebugLayout();
             }
         }

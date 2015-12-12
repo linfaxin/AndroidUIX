@@ -82,7 +82,7 @@ module androidui {
 
 
             let debugAttr = this.element.getAttribute('debug');
-            if(debugAttr && debugAttr!='0' && debugAttr!='false') this.showDebugLayout();
+            if(debugAttr!=null && debugAttr!='0' && debugAttr!='false') this.showDebugLayout();
         }
 
         private initInflateView() {

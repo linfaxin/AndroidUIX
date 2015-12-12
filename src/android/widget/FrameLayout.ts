@@ -93,7 +93,7 @@ module android.widget {
             }
         }
 
-        generateDefaultLayoutParams():FrameLayout.LayoutParams {
+        protected generateDefaultLayoutParams():FrameLayout.LayoutParams {
             return new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
         }
@@ -361,10 +361,10 @@ module android.widget {
         shouldDelayChildPressedState():boolean {
             return false;
         }
-        checkLayoutParams(p:ViewGroup.LayoutParams){
+        protected checkLayoutParams(p:ViewGroup.LayoutParams){
             return p instanceof FrameLayout.LayoutParams;
         }
-        generateLayoutParams(p:ViewGroup.LayoutParams){
+        protected generateLayoutParams(p:ViewGroup.LayoutParams){
             return new FrameLayout.LayoutParams(p);
         }
     }

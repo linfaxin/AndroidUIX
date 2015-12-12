@@ -12,6 +12,7 @@
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
 ///<reference path="FocusFinder.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
 
 
 
@@ -25,6 +26,7 @@ module android.view {
     import System = java.lang.System;
     import ArrayList = java.util.ArrayList;
     import AttrBinder = androidui.attr.AttrBinder;
+    import Integer = java.lang.Integer;
 
     export abstract
     class ViewGroup extends View implements ViewParent {
@@ -462,7 +464,7 @@ module android.view {
 
         }
 
-        checkLayoutParams(p:ViewGroup.LayoutParams):boolean {
+        protected checkLayoutParams(p:ViewGroup.LayoutParams):boolean {
             return p != null;
         }
 
@@ -1443,11 +1445,11 @@ module android.view {
             return i;
         }
 
-        generateLayoutParams(p:ViewGroup.LayoutParams):ViewGroup.LayoutParams {
+        protected generateLayoutParams(p:ViewGroup.LayoutParams):ViewGroup.LayoutParams {
             return p;
         }
 
-        generateDefaultLayoutParams():ViewGroup.LayoutParams {
+        protected generateDefaultLayoutParams():ViewGroup.LayoutParams {
             return new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
@@ -2370,6 +2372,8 @@ module android.view {
             private _rightMarginOrig:any = 0;
             private _bottomMarginOrig:any = 0;
 
+            static DEFAULT_MARGIN_RELATIVE:number = Integer.MIN_VALUE;
+
             public get leftMargin():number{
                 if(typeof this._leftMargin === 'number') return this._leftMargin;
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
@@ -2436,6 +2440,7 @@ module android.view {
             constructor();
             constructor(src:LayoutParams);
             constructor(width:number, height:number);
+            constructor(...args);
             constructor(...args) {
                 super();
 
@@ -2492,6 +2497,21 @@ module android.view {
                 this.topMargin = top;
                 this.rightMargin = right;
                 this.bottomMargin = bottom;
+            }
+
+            setLayoutDirection(layoutDirection:number):void  {
+            }
+
+            getLayoutDirection():number  {
+                return View.LAYOUT_DIRECTION_LTR;
+            }
+
+            isLayoutRtl():boolean  {
+                return this.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
+            }
+
+            resolveLayoutDirection(layoutDirection:number):void  {
+                //do no
             }
         }
         export interface OnHierarchyChangeListener {

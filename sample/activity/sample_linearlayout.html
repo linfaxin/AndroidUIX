@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>线性布局</title>
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+</head>
+<body>
+    <android-Activity debug style="width: 100%; height:100%;display: none;">
+        <resources>
+            <android-style id="textStyle"
+                   android:textSize="14dp"
+                   android:textColor="#333"
+                   android:background="#eee"
+                   android:layout_margin="4dp"
+                   android:padding="8dp"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                    ></android-style>
+        </resources>
+        <LinearLayout
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+            <LinearLayout
+                    android:orientation="vertical">
+                <TextView
+                        android:text="垂直线性布局"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="垂直线性布局"
+                        android:style="@style/textStyle"
+                        ></TextView>
+
+            </LinearLayout>
+            <LinearLayout
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                <TextView
+                        android:text="垂直线性布局-居中"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="垂直线性布局-居中"
+                        android:style="@style/textStyle"
+                        ></TextView>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+                <TextView
+                        android:text="水平"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="线性"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="布局"
+                        android:style="@style/textStyle"
+                        ></TextView>
+
+            </LinearLayout>
+            <LinearLayout
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+                <TextView
+                        android:text="水平"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="线性"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="布局"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="-居中"
+                        android:style="@style/textStyle"
+                        ></TextView>
+
+            </LinearLayout>
+            <LinearLayout
+                    android:layout_marginTop="12dp"
+                    android:gravity="right"
+                    android:orientation="horizontal">
+                <TextView
+                        android:text="水平"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="线性"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="布局"
+                        android:style="@style/textStyle"
+                        ></TextView>
+                <TextView
+                        android:text="-居右"
+                        android:style="@style/textStyle"
+                        ></TextView>
+
+            </LinearLayout>
+
+            <TextView
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="更多用法请看官方文档"
+                    ></TextView>
+
+        </LinearLayout>
+    </android-Activity>
+
+    <script src="../lib/browser-polyfill.min.js"></script>
+    <script src="../lib/CustomElements.min.js"></script>
+    <script src="../../dist/android-ui.es5.js"></script>
+    <script src="../build/main.es5.js"></script>
+
+</body>
+</html>

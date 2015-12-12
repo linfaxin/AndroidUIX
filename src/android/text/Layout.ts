@@ -61,6 +61,10 @@ import TextLine = android.text.TextLine;
 import TextPaint = android.text.TextPaint;
 import TextUtils = android.text.TextUtils;
 import TextWatcher = android.text.TextWatcher;
+    window.addEventListener('AndroidUILoadFinish', ()=>{
+        eval('TextUtils = android.text.TextUtils;');//real import now
+    });
+
 /**
  * A base class that manages text layout in visual elements on
  * the screen.

@@ -5,7 +5,6 @@
 ///<reference path="style/ReplacementSpan.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
 ///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
 ///<reference path="../../android/text/MeasuredText.ts"/>
 ///<reference path="../../android/text/Spanned.ts"/>
 ///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>

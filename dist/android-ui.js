@@ -2,12 +2,12 @@ var android;
 (function (android) {
     var util;
     (function (util) {
-        class SparseArray {
+        class SparseMap {
             constructor(initialCapacity) {
                 this.map = new Map();
             }
             clone() {
-                let clone = new SparseArray();
+                let clone = new SparseMap();
                 clone.map = new Map(this.map);
                 return clone;
             }
@@ -61,6 +61,19 @@ var android;
             append(key, value) {
                 this.put(key, value);
             }
+        }
+        util.SparseMap = SparseMap;
+    })(util = android.util || (android.util = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/3.
+ */
+///<reference path="SparseMap.ts"/>
+var android;
+(function (android) {
+    var util;
+    (function (util) {
+        class SparseArray extends util.SparseMap {
         }
         util.SparseArray = SparseArray;
     })(util = android.util || (android.util = {}));
@@ -2804,7 +2817,7 @@ var java;
                 return this.array.length;
             }
             isEmpty() {
-                return this.size() === 0;
+                return this.size() <= 0;
             }
             contains(o) {
                 return this.indexOf(o) >= 0;
@@ -4340,15 +4353,15 @@ var android;
     var view;
     (function (view) {
         class Gravity {
-            static apply(gravity, w, h, container, outRect) {
+            static apply(gravity, w, h, container, outRect, layoutDirection) {
                 let xAdj = 0, yAdj = 0;
+                if (layoutDirection != null)
+                    gravity = Gravity.getAbsoluteGravity(gravity, layoutDirection);
                 switch (gravity & ((Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_X_SHIFT)) {
                     case 0:
-                        outRect.left = container.left
-                            + ((container.right - container.left - w) / 2) + xAdj;
+                        outRect.left = container.left + ((container.right - container.left - w) / 2) + xAdj;
                         outRect.right = outRect.left + w;
-                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT))
-                            == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
                             if (outRect.left < container.left) {
                                 outRect.left = container.left;
                             }
@@ -4360,8 +4373,7 @@ var android;
                     case Gravity.AXIS_PULL_BEFORE << Gravity.AXIS_X_SHIFT:
                         outRect.left = container.left + xAdj;
                         outRect.right = outRect.left + w;
-                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT))
-                            == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
                             if (outRect.right > container.right) {
                                 outRect.right = container.right;
                             }
@@ -4370,8 +4382,7 @@ var android;
                     case Gravity.AXIS_PULL_AFTER << Gravity.AXIS_X_SHIFT:
                         outRect.right = container.right - xAdj;
                         outRect.left = outRect.right - w;
-                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT))
-                            == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_X_SHIFT)) {
                             if (outRect.left < container.left) {
                                 outRect.left = container.left;
                             }
@@ -4384,11 +4395,9 @@ var android;
                 }
                 switch (gravity & ((Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_Y_SHIFT)) {
                     case 0:
-                        outRect.top = container.top
-                            + ((container.bottom - container.top - h) / 2) + yAdj;
+                        outRect.top = container.top + ((container.bottom - container.top - h) / 2) + yAdj;
                         outRect.bottom = outRect.top + h;
-                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT))
-                            == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
                             if (outRect.top < container.top) {
                                 outRect.top = container.top;
                             }
@@ -4400,8 +4409,7 @@ var android;
                     case Gravity.AXIS_PULL_BEFORE << Gravity.AXIS_Y_SHIFT:
                         outRect.top = container.top + yAdj;
                         outRect.bottom = outRect.top + h;
-                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT))
-                            == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
                             if (outRect.bottom > container.bottom) {
                                 outRect.bottom = container.bottom;
                             }
@@ -4410,8 +4418,7 @@ var android;
                     case Gravity.AXIS_PULL_AFTER << Gravity.AXIS_Y_SHIFT:
                         outRect.bottom = container.bottom - yAdj;
                         outRect.top = outRect.bottom - h;
-                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT))
-                            == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
+                        if ((gravity & (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) == (Gravity.AXIS_CLIP << Gravity.AXIS_Y_SHIFT)) {
                             if (outRect.top < container.top) {
                                 outRect.top = container.top;
                             }
@@ -4422,6 +4429,9 @@ var android;
                         outRect.bottom = container.bottom + yAdj;
                         break;
                 }
+            }
+            static getAbsoluteGravity(gravity, layoutDirection) {
+                return gravity;
             }
         }
         Gravity.NO_GRAVITY = 0x0000;
@@ -4435,6 +4445,8 @@ var android;
         Gravity.BOTTOM = (Gravity.AXIS_PULL_AFTER | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_Y_SHIFT;
         Gravity.LEFT = (Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_X_SHIFT;
         Gravity.RIGHT = (Gravity.AXIS_PULL_AFTER | Gravity.AXIS_SPECIFIED) << Gravity.AXIS_X_SHIFT;
+        Gravity.START = Gravity.LEFT;
+        Gravity.END = Gravity.RIGHT;
         Gravity.CENTER_VERTICAL = Gravity.AXIS_SPECIFIED << Gravity.AXIS_Y_SHIFT;
         Gravity.FILL_VERTICAL = Gravity.TOP | Gravity.BOTTOM;
         Gravity.CENTER_HORIZONTAL = Gravity.AXIS_SPECIFIED << Gravity.AXIS_X_SHIFT;
@@ -4447,6 +4459,7 @@ var android;
             Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_X_SHIFT;
         Gravity.VERTICAL_GRAVITY_MASK = (Gravity.AXIS_SPECIFIED |
             Gravity.AXIS_PULL_BEFORE | Gravity.AXIS_PULL_AFTER) << Gravity.AXIS_Y_SHIFT;
+        Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK = Gravity.HORIZONTAL_GRAVITY_MASK;
         Gravity.DISPLAY_CLIP_VERTICAL = 0x10000000;
         Gravity.DISPLAY_CLIP_HORIZONTAL = 0x01000000;
         view.Gravity = Gravity;
@@ -4490,6 +4503,34 @@ var android;
             animation.AnimationUtils = AnimationUtils;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var android;
+(function (android) {
+    var util;
+    (function (util) {
+        class LayoutDirection {
+        }
+        LayoutDirection.LTR = 0;
+        LayoutDirection.RTL = 1;
+        LayoutDirection.INHERIT = 2;
+        LayoutDirection.LOCALE = 3;
+        util.LayoutDirection = LayoutDirection;
+    })(util = android.util || (android.util = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/3.
@@ -4772,7 +4813,7 @@ var androidui;
                 throw Error('not a padding or margin value : ' + value);
             }
             parseBoolean(value, defaultValue = true) {
-                if (value === false || value === 'fales' || value === '0')
+                if (value === false || value === 'false' || value === '0')
                     return false;
                 else if (value === true || value === 'true' || value === '1' || value === '')
                     return true;
@@ -6227,6 +6268,7 @@ var android;
 ///<reference path="Gravity.ts"/>
 ///<reference path="../view/animation/LinearInterpolator.ts"/>
 ///<reference path="../view/animation/AnimationUtils.ts"/>
+///<reference path="../../android/util/LayoutDirection.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
@@ -6240,6 +6282,7 @@ var android;
 (function (android) {
     var view;
     (function (view_1) {
+        var LayoutDirection = android.util.LayoutDirection;
         var ColorDrawable = android.graphics.drawable.ColorDrawable;
         var ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
         var InsetDrawable = android.graphics.drawable.InsetDrawable;
@@ -7778,8 +7821,13 @@ var android;
                 }
                 return this.mFloatingTreeObserver;
             }
+            setLayoutDirection(layoutDirection) {
+            }
+            getLayoutDirection() {
+                return View.LAYOUT_DIRECTION_LTR;
+            }
             isLayoutRtl() {
-                return false;
+                return (this.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL);
             }
             getBaseline() {
                 return -1;
@@ -9734,6 +9782,10 @@ var android;
         View.DUPLICATE_PARENT_STATE = 0x00400000;
         View.LAYER_TYPE_NONE = 0;
         View.LAYER_TYPE_SOFTWARE = 1;
+        View.LAYOUT_DIRECTION_LTR = LayoutDirection.LTR;
+        View.LAYOUT_DIRECTION_RTL = LayoutDirection.RTL;
+        View.LAYOUT_DIRECTION_INHERIT = LayoutDirection.INHERIT;
+        View.LAYOUT_DIRECTION_LOCALE = LayoutDirection.LOCALE;
         View.AndroidViewProperty = 'AndroidView';
         view_1.View = View;
         (function (View) {
@@ -11469,6 +11521,20 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        class Integer {
+            static parseInt(value) {
+                return Number.parseInt(value);
+            }
+        }
+        Integer.MIN_VALUE = Number.MIN_SAFE_INTEGER;
+        Integer.MAX_VALUE = Number.MAX_SAFE_INTEGER;
+        lang.Integer = Integer;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
 /**
  * Created by linfaxin on 15/10/5.
  */
@@ -11483,6 +11549,7 @@ var android;
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
 ///<reference path="FocusFinder.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
 var android;
 (function (android) {
     var view;
@@ -11492,6 +11559,7 @@ var android;
         var TypedValue = android.util.TypedValue;
         var System = java.lang.System;
         var AttrBinder = androidui.attr.AttrBinder;
+        var Integer = java.lang.Integer;
         class ViewGroup extends view_4.View {
             constructor(bindElement, rootElement) {
                 super(bindElement, rootElement);
@@ -13255,7 +13323,18 @@ var android;
                     this.rightMargin = right;
                     this.bottomMargin = bottom;
                 }
+                setLayoutDirection(layoutDirection) {
+                }
+                getLayoutDirection() {
+                    return view_4.View.LAYOUT_DIRECTION_LTR;
+                }
+                isLayoutRtl() {
+                    return this.getLayoutDirection() == view_4.View.LAYOUT_DIRECTION_RTL;
+                }
+                resolveLayoutDirection(layoutDirection) {
+                }
             }
+            MarginLayoutParams.DEFAULT_MARGIN_RELATIVE = Integer.MIN_VALUE;
             ViewGroup.MarginLayoutParams = MarginLayoutParams;
         })(ViewGroup = view_4.ViewGroup || (view_4.ViewGroup = {}));
         class TouchTarget {
@@ -16622,38 +16701,477 @@ var android;
 })(android || (android = {}));
 var android;
 (function (android) {
-    var R;
-    (function (R) {
-        class string_ {
-            static zh() {
-                this.prll_header_state_normal = '下拉以刷新';
-                this.prll_header_state_ready = '松开马上刷新';
-                this.prll_header_state_loading = '正在刷新...';
-                this.prll_header_state_fail = '刷新失败';
-                this.prll_footer_state_normal = '点击加载更多';
-                this.prll_footer_state_loading = '正在加载...';
-                this.prll_footer_state_ready = '松开加载更多';
-                this.prll_footer_state_no_more = '加载完毕';
-                this.prll_footer_state_fail = '加载失败,点击重试';
+    var util;
+    (function (util) {
+        class ArrayMap {
+            constructor(capacity) {
+                this.map = new Map();
+            }
+            clear() {
+                this.map.clear();
+            }
+            erase() {
+                this.map.clear();
+            }
+            ensureCapacity(minimumCapacity) {
+            }
+            containsKey(key) {
+                return this.map.has(key);
+            }
+            indexOfValue(value) {
+                return [...this.map.values()].indexOf(value);
+            }
+            containsValue(value) {
+                return this.indexOfValue(value) >= 0;
+            }
+            get(key) {
+                return this.map.get(key);
+            }
+            keyAt(index) {
+                return [...this.map.keys()][index];
+            }
+            valueAt(index) {
+                return [...this.map.values()][index];
+            }
+            setValueAt(index, value) {
+                let key = this.keyAt(index);
+                if (key == null)
+                    throw Error('index error');
+                let oldV = this.get(key);
+                this.map.set(key, value);
+                return oldV;
+            }
+            isEmpty() {
+                return this.map.size <= 0;
+            }
+            put(key, value) {
+                let oldV = this.get(key);
+                this.map.set(key, value);
+                return oldV;
+            }
+            append(key, value) {
+                this.map.set(key, value);
+            }
+            remove(key) {
+                let oldV = this.get(key);
+                this.map.delete(key);
+                return oldV;
+            }
+            removeAt(index) {
+                let key = this.keyAt(index);
+                if (key == null)
+                    throw Error('index error');
+                let oldV = this.get(key);
+                this.map.delete(key);
+                return oldV;
+            }
+            keySet() {
+                return new Set(this.map.keys());
+            }
+            size() {
+                return this.map.size;
             }
         }
-        string_.prll_header_state_normal = 'Pull to refresh';
-        string_.prll_header_state_ready = 'Release to refresh';
-        string_.prll_header_state_loading = 'Loading';
-        string_.prll_header_state_fail = 'Refresh fail';
-        string_.prll_footer_state_normal = 'Load more';
-        string_.prll_footer_state_loading = 'Loading';
-        string_.prll_footer_state_ready = 'Pull to load more';
-        string_.prll_footer_state_fail = 'Click to reload';
-        string_.prll_footer_state_no_more = 'Load Finish';
-        R.string_ = string_;
-        const lang = navigator.language.split('-')[0].toLowerCase();
-        if (typeof string_[lang] === 'function')
-            string_[lang].call(string_);
-    })(R = android.R || (android.R = {}));
+        util.ArrayMap = ArrayMap;
+    })(util = android.util || (android.util = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/12/12.
+ */
+///<reference path="ArrayList.ts"/>
+var java;
+(function (java) {
+    var util;
+    (function (util) {
+        class ArrayDeque extends util.ArrayList {
+            addFirst(e) {
+                this.add(0, e);
+            }
+            addLast(e) {
+                this.add(e);
+            }
+            offerFirst(e) {
+                this.addFirst(e);
+                return true;
+            }
+            offerLast(e) {
+                this.addLast(e);
+                return true;
+            }
+            removeFirst() {
+                let x = this.pollFirst();
+                if (x == null)
+                    throw Error('NoSuchElementException');
+                return x;
+            }
+            removeLast() {
+                let x = this.pollLast();
+                if (x == null)
+                    throw Error('NoSuchElementException');
+                return x;
+            }
+            pollFirst() {
+                return this.array.shift();
+            }
+            pollLast() {
+                return this.array.splice(this.array.length - 1)[0];
+            }
+            getFirst() {
+                let x = this.peekFirst();
+                if (x == null)
+                    throw Error('NoSuchElementException');
+                return x;
+            }
+            getLast() {
+                let x = this.peekLast();
+                if (x == null)
+                    throw Error('NoSuchElementException');
+                return x;
+            }
+            peekFirst() {
+                return this.array[0];
+            }
+            peekLast() {
+                return this.array[this.array.length - 1];
+            }
+            removeFirstOccurrence(o) {
+                if (o == null)
+                    return false;
+                for (let i = 0, count = this.size(); i < count; i++) {
+                    if (this.array[i] == o) {
+                        this.delete(i);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            removeLastOccurrence(o) {
+                if (o == null)
+                    return false;
+                for (let i = this.size(); i >= 0; i--) {
+                    if (this.array[i] == o) {
+                        this.delete(i);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            offer(e) {
+                return this.offerLast(e);
+            }
+            remove() {
+                return this.removeFirst();
+            }
+            poll() {
+                return this.pollFirst();
+            }
+            element() {
+                return this.getFirst();
+            }
+            peek() {
+                return this.peekFirst();
+            }
+            push(e) {
+                this.addFirst(e);
+            }
+            pop() {
+                return this.removeFirst();
+            }
+            delete(i) {
+                if (i >= this.array.length)
+                    return false;
+                this.array.splice(i, 1);
+                return true;
+            }
+        }
+        util.ArrayDeque = ArrayDeque;
+    })(util = java.util || (java.util = {}));
+})(java || (java = {}));
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var android;
+(function (android) {
+    var util;
+    (function (util) {
+        class MathUtils {
+            constructor() {
+            }
+            static abs(v) {
+                return v > 0 ? v : -v;
+            }
+            static constrain(amount, low, high) {
+                return amount < low ? low : (amount > high ? high : amount);
+            }
+            static log(a) {
+                return Math.log(a);
+            }
+            static exp(a) {
+                return Math.exp(a);
+            }
+            static pow(a, b) {
+                return Math.pow(a, b);
+            }
+            static max(a, b, c) {
+                if (c == null)
+                    return a > b ? a : b;
+                return a > b ? (a > c ? a : c) : (b > c ? b : c);
+            }
+            static min(a, b, c) {
+                if (c == null)
+                    return a < b ? a : b;
+                return a < b ? (a < c ? a : c) : (b < c ? b : c);
+            }
+            static dist(x1, y1, x2, y2) {
+                const x = (x2 - x1);
+                const y = (y2 - y1);
+                return Math.sqrt(x * x + y * y);
+            }
+            static dist3(x1, y1, z1, x2, y2, z2) {
+                const x = (x2 - x1);
+                const y = (y2 - y1);
+                const z = (z2 - z1);
+                return Math.sqrt(x * x + y * y + z * z);
+            }
+            static mag(a, b, c) {
+                if (c == null)
+                    return Math.sqrt(a * a + b * b);
+                return Math.sqrt(a * a + b * b + c * c);
+            }
+            static sq(v) {
+                return v * v;
+            }
+            static radians(degrees) {
+                return degrees * MathUtils.DEG_TO_RAD;
+            }
+            static degrees(radians) {
+                return radians * MathUtils.RAD_TO_DEG;
+            }
+            static acos(value) {
+                return Math.acos(value);
+            }
+            static asin(value) {
+                return Math.asin(value);
+            }
+            static atan(value) {
+                return Math.atan(value);
+            }
+            static atan2(a, b) {
+                return Math.atan2(a, b);
+            }
+            static tan(angle) {
+                return Math.tan(angle);
+            }
+            static lerp(start, stop, amount) {
+                return start + (stop - start) * amount;
+            }
+            static norm(start, stop, value) {
+                return (value - start) / (stop - start);
+            }
+            static map(minStart, minStop, maxStart, maxStop, value) {
+                return maxStart + (maxStart - maxStop) * ((value - minStart) / (minStop - minStart));
+            }
+            static random(...args) {
+                if (args.length == 1)
+                    return Math.random() * args[0];
+                let [howsmall, howbig] = args;
+                if (howsmall >= howbig)
+                    return howsmall;
+                return Math.random() * (howbig - howsmall) + howsmall;
+            }
+        }
+        MathUtils.DEG_TO_RAD = 3.1415926 / 180.0;
+        MathUtils.RAD_TO_DEG = 180.0 / 3.1415926;
+        util.MathUtils = MathUtils;
+    })(util = android.util || (android.util = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/3.
+ */
+///<reference path="SparseArray.ts"/>
+var android;
+(function (android) {
+    var util;
+    (function (util) {
+        class SparseBooleanArray extends util.SparseArray {
+        }
+        util.SparseBooleanArray = SparseBooleanArray;
+    })(util = android.util || (android.util = {}));
 })(android || (android = {}));
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="View.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        class SoundEffectConstants {
+            static getContantForFocusDirection(direction) {
+                switch (direction) {
+                    case view.View.FOCUS_RIGHT:
+                        return SoundEffectConstants.NAVIGATION_RIGHT;
+                    case view.View.FOCUS_FORWARD:
+                    case view.View.FOCUS_DOWN:
+                        return SoundEffectConstants.NAVIGATION_DOWN;
+                    case view.View.FOCUS_LEFT:
+                        return SoundEffectConstants.NAVIGATION_LEFT;
+                    case view.View.FOCUS_BACKWARD:
+                    case view.View.FOCUS_UP:
+                        return SoundEffectConstants.NAVIGATION_UP;
+                }
+                throw Error(`new IllegalArgumentException("direction must be one of " + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT, FOCUS_FORWARD, FOCUS_BACKWARD}.")`);
+            }
+        }
+        SoundEffectConstants.CLICK = 0;
+        SoundEffectConstants.NAVIGATION_LEFT = 1;
+        SoundEffectConstants.NAVIGATION_UP = 2;
+        SoundEffectConstants.NAVIGATION_RIGHT = 3;
+        SoundEffectConstants.NAVIGATION_DOWN = 4;
+        view.SoundEffectConstants = SoundEffectConstants;
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/util/Log.ts"/>
+var android;
+(function (android) {
+    var os;
+    (function (os) {
+        class Trace {
+            static nativeGetEnabledTags() {
+                return Trace.TRACE_TAG_ALWAYS;
+            }
+            static nativeTraceCounter(tag, name, value) {
+            }
+            static nativeTraceBegin(tag, name) { }
+            static nativeTraceEnd(tag) { }
+            static nativeAsyncTraceBegin(tag, name, cookie) { }
+            static nativeAsyncTraceEnd(tag, name, cookie) { }
+            static nativeSetAppTracingAllowed(allowed) { }
+            static nativeSetTracingEnabled(allowed) { }
+            static cacheEnabledTags() {
+                let tags = Trace.nativeGetEnabledTags();
+                Trace.sEnabledTags = tags;
+                return tags;
+            }
+            static isTagEnabled(traceTag) {
+                let tags = Trace.sEnabledTags;
+                if (tags == Trace.TRACE_TAG_NOT_READY) {
+                    tags = Trace.cacheEnabledTags();
+                }
+                return (tags & traceTag) != 0;
+            }
+            static traceCounter(traceTag, counterName, counterValue) {
+                if (Trace.isTagEnabled(traceTag)) {
+                    Trace.nativeTraceCounter(traceTag, counterName, counterValue);
+                }
+            }
+            static setAppTracingAllowed(allowed) {
+                Trace.nativeSetAppTracingAllowed(allowed);
+                Trace.cacheEnabledTags();
+            }
+            static setTracingEnabled(enabled) {
+                Trace.nativeSetTracingEnabled(enabled);
+                Trace.cacheEnabledTags();
+            }
+            static traceBegin(traceTag, methodName) {
+                if (Trace.isTagEnabled(traceTag)) {
+                    Trace.nativeTraceBegin(traceTag, methodName);
+                }
+            }
+            static traceEnd(traceTag) {
+                if (Trace.isTagEnabled(traceTag)) {
+                    Trace.nativeTraceEnd(traceTag);
+                }
+            }
+            static asyncTraceBegin(traceTag, methodName, cookie) {
+                if (Trace.isTagEnabled(traceTag)) {
+                    Trace.nativeAsyncTraceBegin(traceTag, methodName, cookie);
+                }
+            }
+            static asyncTraceEnd(traceTag, methodName, cookie) {
+                if (Trace.isTagEnabled(traceTag)) {
+                    Trace.nativeAsyncTraceEnd(traceTag, methodName, cookie);
+                }
+            }
+            static beginSection(sectionName) {
+                if (Trace.isTagEnabled(Trace.TRACE_TAG_APP)) {
+                    if (sectionName.length > Trace.MAX_SECTION_NAME_LEN) {
+                        throw Error(`new IllegalArgumentException("sectionName is too long")`);
+                    }
+                    Trace.nativeTraceBegin(Trace.TRACE_TAG_APP, sectionName);
+                }
+            }
+            static endSection() {
+                if (Trace.isTagEnabled(Trace.TRACE_TAG_APP)) {
+                    Trace.nativeTraceEnd(Trace.TRACE_TAG_APP);
+                }
+            }
+        }
+        Trace.TAG = "Trace";
+        Trace.TRACE_TAG_NEVER = 0;
+        Trace.TRACE_TAG_ALWAYS = 1 << 0;
+        Trace.TRACE_TAG_GRAPHICS = 1 << 1;
+        Trace.TRACE_TAG_INPUT = 1 << 2;
+        Trace.TRACE_TAG_VIEW = 1 << 3;
+        Trace.TRACE_TAG_WEBVIEW = 1 << 4;
+        Trace.TRACE_TAG_WINDOW_MANAGER = 1 << 5;
+        Trace.TRACE_TAG_ACTIVITY_MANAGER = 1 << 6;
+        Trace.TRACE_TAG_SYNC_MANAGER = 1 << 7;
+        Trace.TRACE_TAG_AUDIO = 1 << 8;
+        Trace.TRACE_TAG_VIDEO = 1 << 9;
+        Trace.TRACE_TAG_CAMERA = 1 << 10;
+        Trace.TRACE_TAG_HAL = 1 << 11;
+        Trace.TRACE_TAG_APP = 1 << 12;
+        Trace.TRACE_TAG_RESOURCES = 1 << 13;
+        Trace.TRACE_TAG_DALVIK = 1 << 14;
+        Trace.TRACE_TAG_RS = 1 << 15;
+        Trace.TRACE_TAG_NOT_READY = 1 << 63;
+        Trace.MAX_SECTION_NAME_LEN = 127;
+        Trace.sEnabledTags = Trace.TRACE_TAG_NOT_READY;
+        os.Trace = Trace;
+    })(os = android.os || (android.os = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16671,13 +17189,47 @@ var android;
 (function (android) {
     var text;
     (function (text) {
-        var style;
-        (function (style) {
-            var ParagraphStyle;
-            (function (ParagraphStyle) {
-                ParagraphStyle.type = Symbol();
-            })(ParagraphStyle = style.ParagraphStyle || (style.ParagraphStyle = {}));
-        })(style = text.style || (text.style = {}));
+        class InputType {
+        }
+        InputType.TYPE_MASK_CLASS = 0x0000000f;
+        InputType.TYPE_MASK_VARIATION = 0x00000ff0;
+        InputType.TYPE_MASK_FLAGS = 0x00fff000;
+        InputType.TYPE_NULL = 0x00000000;
+        InputType.TYPE_CLASS_TEXT = 0x00000001;
+        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS = 0x00001000;
+        InputType.TYPE_TEXT_FLAG_CAP_WORDS = 0x00002000;
+        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES = 0x00004000;
+        InputType.TYPE_TEXT_FLAG_AUTO_CORRECT = 0x00008000;
+        InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE = 0x00010000;
+        InputType.TYPE_TEXT_FLAG_MULTI_LINE = 0x00020000;
+        InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE = 0x00040000;
+        InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS = 0x00080000;
+        InputType.TYPE_TEXT_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_TEXT_VARIATION_URI = 0x00000010;
+        InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
+        InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT = 0x00000030;
+        InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE = 0x00000040;
+        InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE = 0x00000050;
+        InputType.TYPE_TEXT_VARIATION_PERSON_NAME = 0x00000060;
+        InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS = 0x00000070;
+        InputType.TYPE_TEXT_VARIATION_PASSWORD = 0x00000080;
+        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD = 0x00000090;
+        InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT = 0x000000a0;
+        InputType.TYPE_TEXT_VARIATION_FILTER = 0x000000b0;
+        InputType.TYPE_TEXT_VARIATION_PHONETIC = 0x000000c0;
+        InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS = 0x000000d0;
+        InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD = 0x000000e0;
+        InputType.TYPE_CLASS_NUMBER = 0x00000002;
+        InputType.TYPE_NUMBER_FLAG_SIGNED = 0x00001000;
+        InputType.TYPE_NUMBER_FLAG_DECIMAL = 0x00002000;
+        InputType.TYPE_NUMBER_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_NUMBER_VARIATION_PASSWORD = 0x00000010;
+        InputType.TYPE_CLASS_PHONE = 0x00000003;
+        InputType.TYPE_CLASS_DATETIME = 0x00000004;
+        InputType.TYPE_DATETIME_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_DATETIME_VARIATION_DATE = 0x00000010;
+        InputType.TYPE_DATETIME_VARIATION_TIME = 0x00000020;
+        text.InputType = InputType;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 /*
@@ -16951,7 +17503,7 @@ var android;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16965,601 +17517,17 @@ var android;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
-///<reference path="../../android/text/style/ReplacementSpan.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-var android;
-(function (android) {
-    var text;
-    (function (text_2) {
-        var Canvas = android.graphics.Canvas;
-        var ReplacementSpan = android.text.style.ReplacementSpan;
-        var Log = android.util.Log;
-        var Spanned = android.text.Spanned;
-        var TextPaint = android.text.TextPaint;
-        class MeasuredText {
-            constructor() {
-                this.mTextStart = 0;
-                this.mDir = 0;
-                this.mLen = 0;
-                this.mPos = 0;
-                this.mWorkPaint = new TextPaint();
-            }
-            static obtain() {
-                let mt;
-                {
-                    for (let i = MeasuredText.sCached.length; --i >= 0;) {
-                        if (MeasuredText.sCached[i] != null) {
-                            mt = MeasuredText.sCached[i];
-                            MeasuredText.sCached[i] = null;
-                            return mt;
-                        }
-                    }
-                }
-                mt = new MeasuredText();
-                if (MeasuredText.localLOGV) {
-                    Log.v("MEAS", "new: " + mt);
-                }
-                return mt;
-            }
-            static recycle(mt) {
-                mt.mText = null;
-                if (mt.mLen < 1000) {
-                    {
-                        for (let i = 0; i < MeasuredText.sCached.length; ++i) {
-                            if (MeasuredText.sCached[i] == null) {
-                                MeasuredText.sCached[i] = mt;
-                                mt.mText = null;
-                                break;
-                            }
-                        }
-                    }
-                }
-                return null;
-            }
-            setPos(pos) {
-                this.mPos = pos - this.mTextStart;
-            }
-            setPara(text, start, end, textDir) {
-                this.mText = text;
-                this.mTextStart = start;
-                let len = end - start;
-                this.mLen = len;
-                this.mPos = 0;
-                if (this.mWidths == null || this.mWidths.length < len) {
-                    this.mWidths = new Array(len);
-                }
-                this.mChars = text.toString().substring(start, end);
-                if (Spanned.isImplements(text)) {
-                    let spanned = text;
-                    let spans = spanned.getSpans(start, end, ReplacementSpan.type);
-                    for (let i = 0; i < spans.length; i++) {
-                        let startInPara = spanned.getSpanStart(spans[i]) - start;
-                        let endInPara = spanned.getSpanEnd(spans[i]) - start;
-                        if (startInPara < 0)
-                            startInPara = 0;
-                        if (endInPara > len)
-                            endInPara = len;
-                        for (let j = startInPara; j < endInPara; j++) {
-                            this.mChars[j] = '￼';
-                        }
-                    }
-                }
-                this.mDir = android.text.Layout.DIR_LEFT_TO_RIGHT;
-                this.mEasy = true;
-            }
-            addStyleRun(...args) {
-                if (args.length === 3)
-                    return this.addStyleRun_3(...args);
-                if (args.length === 4)
-                    return this.addStyleRun_4(...args);
-            }
-            addStyleRun_3(paint, len, fm) {
-                if (fm != null) {
-                    paint.getFontMetricsInt(fm);
-                }
-                let p = this.mPos;
-                this.mPos = p + len;
-                if (this.mEasy) {
-                    let flags = this.mDir == android.text.Layout.DIR_LEFT_TO_RIGHT ? Canvas.DIRECTION_LTR : Canvas.DIRECTION_RTL;
-                    return paint.getTextRunAdvances_count(this.mChars, p, len, p, len, flags, this.mWidths, p);
-                }
-                let totalAdvance = 0;
-                let level = this.mLevels[p];
-                for (let q = p, i = p + 1, e = p + len;; ++i) {
-                    if (i == e || this.mLevels[i] != level) {
-                        let flags = (level & 0x1) == 0 ? Canvas.DIRECTION_LTR : Canvas.DIRECTION_RTL;
-                        totalAdvance += paint.getTextRunAdvances_count(this.mChars, q, i - q, q, i - q, flags, this.mWidths, q);
-                        if (i == e) {
-                            break;
-                        }
-                        q = i;
-                        level = this.mLevels[i];
-                    }
-                }
-                return totalAdvance;
-            }
-            addStyleRun_4(paint, spans, len, fm) {
-                let workPaint = this.mWorkPaint;
-                workPaint.set(paint);
-                workPaint.baselineShift = 0;
-                let replacement = null;
-                for (let i = 0; i < spans.length; i++) {
-                    let span = spans[i];
-                    if (span instanceof ReplacementSpan) {
-                        replacement = span;
-                    }
-                    else {
-                        span.updateMeasureState(workPaint);
-                    }
-                }
-                let wid;
-                if (replacement == null) {
-                    wid = this.addStyleRun(workPaint, len, fm);
-                }
-                else {
-                    wid = replacement.getSize(workPaint, this.mText, this.mTextStart + this.mPos, this.mTextStart + this.mPos + len, fm);
-                    let w = this.mWidths;
-                    w[this.mPos] = wid;
-                    for (let i = this.mPos + 1, e = this.mPos + len; i < e; i++)
-                        w[i] = 0;
-                    this.mPos += len;
-                }
-                if (fm != null) {
-                    if (workPaint.baselineShift < 0) {
-                        fm.ascent += workPaint.baselineShift;
-                        fm.top += workPaint.baselineShift;
-                    }
-                    else {
-                        fm.descent += workPaint.baselineShift;
-                        fm.bottom += workPaint.baselineShift;
-                    }
-                }
-                return wid;
-            }
-            breakText(limit, forwards, width) {
-                let w = this.mWidths;
-                if (forwards) {
-                    let i = 0;
-                    while (i < limit) {
-                        width -= w[i];
-                        if (width < 0.0)
-                            break;
-                        i++;
-                    }
-                    while (i > 0 && this.mChars[i - 1] == ' ')
-                        i--;
-                    return i;
-                }
-                else {
-                    let i = limit - 1;
-                    while (i >= 0) {
-                        width -= w[i];
-                        if (width < 0.0)
-                            break;
-                        i--;
-                    }
-                    while (i < limit - 1 && this.mChars[i + 1] == ' ')
-                        i++;
-                    return limit - i - 1;
-                }
-            }
-            measure(start, limit) {
-                let width = 0;
-                let w = this.mWidths;
-                for (let i = start; i < limit; ++i) {
-                    width += w[i];
-                }
-                return width;
-            }
-        }
-        MeasuredText.localLOGV = false;
-        MeasuredText.sLock = new Array(0);
-        MeasuredText.sCached = new Array(3);
-        text_2.MeasuredText = MeasuredText;
-    })(text = android.text || (android.text = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
 var android;
 (function (android) {
     var text;
     (function (text) {
-        class TextDirectionHeuristics {
-            static isRtlText(directionality) {
-                return TextDirectionHeuristics.STATE_FALSE;
-            }
-            static isRtlTextOrFormat(directionality) {
-                return TextDirectionHeuristics.STATE_FALSE;
-            }
-        }
-        TextDirectionHeuristics.STATE_TRUE = 0;
-        TextDirectionHeuristics.STATE_FALSE = 1;
-        TextDirectionHeuristics.STATE_UNKNOWN = 2;
-        text.TextDirectionHeuristics = TextDirectionHeuristics;
-        (function (TextDirectionHeuristics) {
-            class TextDirectionHeuristicImpl {
-                constructor(algorithm) {
-                    this.mAlgorithm = algorithm;
-                }
-                isRtl(cs, start, count) {
-                    if (cs == null || start < 0 || count < 0 || cs.length - count < start) {
-                        throw Error(`new IllegalArgumentException()`);
-                    }
-                    if (this.mAlgorithm == null) {
-                        return this.defaultIsRtl();
-                    }
-                    return this.doCheck(cs, start, count);
-                }
-                doCheck(cs, start, count) {
-                    switch (this.mAlgorithm.checkRtl(cs, start, count)) {
-                        case TextDirectionHeuristics.STATE_TRUE:
-                            return true;
-                        case TextDirectionHeuristics.STATE_FALSE:
-                            return false;
-                        default:
-                            return this.defaultIsRtl();
-                    }
-                }
-            }
-            TextDirectionHeuristics.TextDirectionHeuristicImpl = TextDirectionHeuristicImpl;
-            class TextDirectionHeuristicInternal extends TextDirectionHeuristics.TextDirectionHeuristicImpl {
-                constructor(algorithm, defaultIsRtl) {
-                    super(algorithm);
-                    this.mDefaultIsRtl = defaultIsRtl;
-                }
-                defaultIsRtl() {
-                    return this.mDefaultIsRtl;
-                }
-            }
-            TextDirectionHeuristics.TextDirectionHeuristicInternal = TextDirectionHeuristicInternal;
-            class FirstStrong {
-                constructor() {
-                }
-                checkRtl(cs, start, count) {
-                    let result = TextDirectionHeuristics.STATE_UNKNOWN;
-                    for (let i = start, e = start + count; i < e && result == TextDirectionHeuristics.STATE_UNKNOWN; ++i) {
-                        result = TextDirectionHeuristics.STATE_FALSE;
-                    }
-                    return result;
-                }
-            }
-            FirstStrong.INSTANCE = new FirstStrong();
-            TextDirectionHeuristics.FirstStrong = FirstStrong;
-            class AnyStrong {
-                constructor(lookForRtl) {
-                    this.mLookForRtl = lookForRtl;
-                }
-                checkRtl(cs, start, count) {
-                    let haveUnlookedFor = false;
-                    for (let i = start, e = start + count; i < e; ++i) {
-                        switch (TextDirectionHeuristics.isRtlText(0)) {
-                            case TextDirectionHeuristics.STATE_TRUE:
-                                if (this.mLookForRtl) {
-                                    return TextDirectionHeuristics.STATE_TRUE;
-                                }
-                                haveUnlookedFor = true;
-                                break;
-                            case TextDirectionHeuristics.STATE_FALSE:
-                                if (!this.mLookForRtl) {
-                                    return TextDirectionHeuristics.STATE_FALSE;
-                                }
-                                haveUnlookedFor = true;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    if (haveUnlookedFor) {
-                        return this.mLookForRtl ? TextDirectionHeuristics.STATE_FALSE : TextDirectionHeuristics.STATE_TRUE;
-                    }
-                    return TextDirectionHeuristics.STATE_UNKNOWN;
-                }
-            }
-            AnyStrong.INSTANCE_RTL = new AnyStrong(true);
-            AnyStrong.INSTANCE_LTR = new AnyStrong(false);
-            TextDirectionHeuristics.AnyStrong = AnyStrong;
-            class TextDirectionHeuristicLocale extends TextDirectionHeuristics.TextDirectionHeuristicImpl {
-                constructor() {
-                    super(null);
-                }
-                defaultIsRtl() {
-                    return false;
-                }
-            }
-            TextDirectionHeuristicLocale.INSTANCE = new TextDirectionHeuristicLocale();
-            TextDirectionHeuristics.TextDirectionHeuristicLocale = TextDirectionHeuristicLocale;
-        })(TextDirectionHeuristics = text.TextDirectionHeuristics || (text.TextDirectionHeuristics = {}));
-        TextDirectionHeuristics.LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(null, false);
-        TextDirectionHeuristics.RTL = new TextDirectionHeuristics.TextDirectionHeuristicInternal(null, true);
-        TextDirectionHeuristics.FIRSTSTRONG_LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.FirstStrong.INSTANCE, false);
-        TextDirectionHeuristics.FIRSTSTRONG_RTL = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.FirstStrong.INSTANCE, true);
-        TextDirectionHeuristics.ANYRTL_LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.AnyStrong.INSTANCE_RTL, false);
-        TextDirectionHeuristics.LOCALE = TextDirectionHeuristics.TextDirectionHeuristicLocale.INSTANCE;
-    })(text = android.text || (android.text = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/14.
- */
-///<reference path="Spanned.ts"/>
-///<reference path="style/ReplacementSpan.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/MeasuredText.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-var android;
-(function (android) {
-    var text;
-    (function (text_3) {
-        var System = java.lang.System;
-        var StringBuilder = java.lang.StringBuilder;
-        var MeasuredText = android.text.MeasuredText;
-        var Spanned = android.text.Spanned;
-        var TextDirectionHeuristics = android.text.TextDirectionHeuristics;
-        class TextUtils {
-            static isEmpty(str) {
-                if (str == null || str.length == 0)
-                    return true;
-                else
-                    return false;
-            }
-            static getOffsetBefore(text, offset) {
-                if (offset == 0)
-                    return 0;
-                if (offset == 1)
-                    return 0;
-                let c = text.codePointAt(offset - 1);
-                if (c >= '?'.codePointAt(0) && c <= '?'.codePointAt(0)) {
-                    let c1 = text.codePointAt(offset - 2);
-                    if (c1 >= '?'.codePointAt(0) && c1 <= '?'.codePointAt(0))
-                        offset -= 2;
-                    else
-                        offset -= 1;
-                }
-                else {
-                    offset -= 1;
-                }
-                if (Spanned.isImplements(text)) {
-                    let spans = text.getSpans(offset, offset, android.text.style.ReplacementSpan.type);
-                    for (let i = 0; i < spans.length; i++) {
-                        let start = text.getSpanStart(spans[i]);
-                        let end = text.getSpanEnd(spans[i]);
-                        if (start < offset && end > offset)
-                            offset = start;
-                    }
-                }
-                return offset;
-            }
-            static getOffsetAfter(text, offset) {
-                let len = text.length;
-                if (offset == len)
-                    return len;
-                if (offset == len - 1)
-                    return len;
-                let c = text.codePointAt(offset);
-                if (c >= '?'.codePointAt(0) && c <= '?'.codePointAt(0)) {
-                    let c1 = text.codePointAt(offset + 1);
-                    if (c1 >= '?'.codePointAt(0) && c1 <= '?'.codePointAt(0))
-                        offset += 2;
-                    else
-                        offset += 1;
-                }
-                else {
-                    offset += 1;
-                }
-                if (Spanned.isImplements(text)) {
-                    let spans = text.getSpans(offset, offset, android.text.style.ReplacementSpan.type);
-                    for (let i = 0; i < spans.length; i++) {
-                        let start = text.getSpanStart(spans[i]);
-                        let end = text.getSpanEnd(spans[i]);
-                        if (start < offset && end > offset)
-                            offset = end;
-                    }
-                }
-                return offset;
-            }
-            static ellipsize(text, paint, avail, where, preserveLength = false, callback = null, textDir = TextDirectionHeuristics.FIRSTSTRONG_LTR, ellipsis = undefined) {
-                ellipsis = ellipsis || (where == TextUtils.TruncateAt.END_SMALL ? android.text.Layout.ELLIPSIS_TWO_DOTS[0] : android.text.Layout.ELLIPSIS_NORMAL[0]);
-                let len = text.length;
-                let mt = MeasuredText.obtain();
-                try {
-                    let width = TextUtils.setPara(mt, paint, text, 0, text.length, textDir);
-                    if (width <= avail) {
-                        if (callback != null) {
-                            callback.ellipsized(0, 0);
-                        }
-                        return text;
-                    }
-                    let ellipsiswid = paint.measureText(ellipsis);
-                    avail -= ellipsiswid;
-                    let left = 0;
-                    let right = len;
-                    if (avail < 0) {
-                    }
-                    else if (where == TextUtils.TruncateAt.START) {
-                        right = len - mt.breakText(len, false, avail);
-                    }
-                    else if (where == TextUtils.TruncateAt.END || where == TextUtils.TruncateAt.END_SMALL) {
-                        left = mt.breakText(len, true, avail);
-                    }
-                    else {
-                        right = len - mt.breakText(len, false, avail / 2);
-                        avail -= mt.measure(right, len);
-                        left = mt.breakText(right, true, avail);
-                    }
-                    if (callback != null) {
-                        callback.ellipsized(left, right);
-                    }
-                    let buf = mt.mChars.split('');
-                    let sp = Spanned.isImplements(text) ? text : null;
-                    let remaining = len - (right - left);
-                    if (preserveLength) {
-                        if (remaining > 0) {
-                            buf[left++] = ellipsis.charAt(0);
-                        }
-                        for (let i = left; i < right; i++) {
-                            buf[i] = TextUtils.ZWNBS_CHAR;
-                        }
-                        let s = buf.join('');
-                        return s;
-                    }
-                    if (remaining == 0) {
-                        return "";
-                    }
-                    let sb = new StringBuilder(remaining + ellipsis.length());
-                    sb.append(buf.join('').substr(0, left));
-                    sb.append(ellipsis);
-                    sb.append(buf.join('').substr(right, len - right));
-                    return sb.toString();
-                }
-                finally {
-                    MeasuredText.recycle(mt);
-                }
-            }
-            static setPara(mt, paint, text, start, end, textDir) {
-                mt.setPara(text, start, end, textDir);
-                let width;
-                let sp = Spanned.isImplements(text) ? text : null;
-                let len = end - start;
-                if (sp == null) {
-                    width = mt.addStyleRun(paint, len, null);
-                }
-                else {
-                    width = 0;
-                    let spanEnd;
-                    for (let spanStart = 0; spanStart < len; spanStart = spanEnd) {
-                        spanEnd = sp.nextSpanTransition(spanStart, len, android.text.style.MetricAffectingSpan.type);
-                        let spans = sp.getSpans(spanStart, spanEnd, android.text.style.MetricAffectingSpan.type);
-                        spans = TextUtils.removeEmptySpans(spans, sp, android.text.style.MetricAffectingSpan.type);
-                        width += mt.addStyleRun(paint, spans, spanEnd - spanStart, null);
-                    }
-                }
-                return width;
-            }
-            static removeEmptySpans(spans, spanned, klass) {
-                let copy = null;
-                let count = 0;
-                for (let i = 0; i < spans.length; i++) {
-                    const span = spans[i];
-                    const start = spanned.getSpanStart(span);
-                    const end = spanned.getSpanEnd(span);
-                    if (start == end) {
-                        if (copy == null) {
-                            copy = new Array(spans.length - 1);
-                            System.arraycopy(spans, 0, copy, 0, i);
-                            count = i;
-                        }
-                    }
-                    else {
-                        if (copy != null) {
-                            copy[count] = span;
-                            count++;
-                        }
-                    }
-                }
-                if (copy != null) {
-                    let result = new Array(count);
-                    System.arraycopy(copy, 0, result, 0, count);
-                    return result;
-                }
-                else {
-                    return spans;
-                }
-            }
-            static packRangeInLong(start, end) {
-                return [start, end];
-            }
-            static unpackRangeStartFromLong(range) {
-                return range[0] || 0;
-            }
-            static unpackRangeEndFromLong(range) {
-                return range[1] || 0;
-            }
-        }
-        TextUtils.ALIGNMENT_SPAN = 1;
-        TextUtils.FIRST_SPAN = TextUtils.ALIGNMENT_SPAN;
-        TextUtils.FOREGROUND_COLOR_SPAN = 2;
-        TextUtils.RELATIVE_SIZE_SPAN = 3;
-        TextUtils.SCALE_X_SPAN = 4;
-        TextUtils.STRIKETHROUGH_SPAN = 5;
-        TextUtils.UNDERLINE_SPAN = 6;
-        TextUtils.STYLE_SPAN = 7;
-        TextUtils.BULLET_SPAN = 8;
-        TextUtils.QUOTE_SPAN = 9;
-        TextUtils.LEADING_MARGIN_SPAN = 10;
-        TextUtils.URL_SPAN = 11;
-        TextUtils.BACKGROUND_COLOR_SPAN = 12;
-        TextUtils.TYPEFACE_SPAN = 13;
-        TextUtils.SUPERSCRIPT_SPAN = 14;
-        TextUtils.SUBSCRIPT_SPAN = 15;
-        TextUtils.ABSOLUTE_SIZE_SPAN = 16;
-        TextUtils.TEXT_APPEARANCE_SPAN = 17;
-        TextUtils.ANNOTATION = 18;
-        TextUtils.SUGGESTION_SPAN = 19;
-        TextUtils.SPELL_CHECK_SPAN = 20;
-        TextUtils.SUGGESTION_RANGE_SPAN = 21;
-        TextUtils.EASY_EDIT_SPAN = 22;
-        TextUtils.LOCALE_SPAN = 23;
-        TextUtils.LAST_SPAN = TextUtils.LOCALE_SPAN;
-        TextUtils.EMPTY_STRING_ARRAY = [];
-        TextUtils.ZWNBS_CHAR = String.fromCodePoint(20);
-        TextUtils.ARAB_SCRIPT_SUBTAG = "Arab";
-        TextUtils.HEBR_SCRIPT_SUBTAG = "Hebr";
-        text_3.TextUtils = TextUtils;
-        (function (TextUtils) {
-            (function (TruncateAt) {
-                TruncateAt[TruncateAt["START"] = 0] = "START";
-                TruncateAt[TruncateAt["MIDDLE"] = 1] = "MIDDLE";
-                TruncateAt[TruncateAt["END"] = 2] = "END";
-                TruncateAt[TruncateAt["MARQUEE"] = 3] = "MARQUEE";
-                TruncateAt[TruncateAt["END_SMALL"] = 4] = "END_SMALL";
-            })(TextUtils.TruncateAt || (TextUtils.TruncateAt = {}));
-            var TruncateAt = TextUtils.TruncateAt;
-        })(TextUtils = text_3.TextUtils || (text_3.TextUtils = {}));
+        var style;
+        (function (style) {
+            var ParagraphStyle;
+            (function (ParagraphStyle) {
+                ParagraphStyle.type = Symbol();
+            })(ParagraphStyle = style.ParagraphStyle || (style.ParagraphStyle = {}));
+        })(style = text.style || (text.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 /*
@@ -17602,7 +17570,7 @@ var android;
 var android;
 (function (android) {
     var text;
-    (function (text_4) {
+    (function (text_2) {
         var style;
         (function (style) {
             var TextUtils = android.text.TextUtils;
@@ -17642,7 +17610,7 @@ var android;
                 }
                 LeadingMarginSpan.Standard = Standard;
             })(LeadingMarginSpan = style.LeadingMarginSpan || (style.LeadingMarginSpan = {}));
-        })(style = text_4.style || (text_4.style = {}));
+        })(style = text_2.style || (text_2.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 /*
@@ -17666,14 +17634,14 @@ var android;
 var android;
 (function (android) {
     var text;
-    (function (text_5) {
+    (function (text_3) {
         var style;
         (function (style) {
             var LineBackgroundSpan;
             (function (LineBackgroundSpan) {
                 LineBackgroundSpan.type = Symbol();
             })(LineBackgroundSpan = style.LineBackgroundSpan || (style.LineBackgroundSpan = {}));
-        })(style = text_5.style || (text_5.style = {}));
+        })(style = text_3.style || (text_3.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 /*
@@ -17845,6 +17813,157 @@ var android;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 /*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        class TextDirectionHeuristics {
+            static isRtlText(directionality) {
+                return TextDirectionHeuristics.STATE_FALSE;
+            }
+            static isRtlTextOrFormat(directionality) {
+                return TextDirectionHeuristics.STATE_FALSE;
+            }
+        }
+        TextDirectionHeuristics.STATE_TRUE = 0;
+        TextDirectionHeuristics.STATE_FALSE = 1;
+        TextDirectionHeuristics.STATE_UNKNOWN = 2;
+        text.TextDirectionHeuristics = TextDirectionHeuristics;
+        (function (TextDirectionHeuristics) {
+            class TextDirectionHeuristicImpl {
+                constructor(algorithm) {
+                    this.mAlgorithm = algorithm;
+                }
+                isRtl(cs, start, count) {
+                    if (cs == null || start < 0 || count < 0 || cs.length - count < start) {
+                        throw Error(`new IllegalArgumentException()`);
+                    }
+                    if (this.mAlgorithm == null) {
+                        return this.defaultIsRtl();
+                    }
+                    return this.doCheck(cs, start, count);
+                }
+                doCheck(cs, start, count) {
+                    switch (this.mAlgorithm.checkRtl(cs, start, count)) {
+                        case TextDirectionHeuristics.STATE_TRUE:
+                            return true;
+                        case TextDirectionHeuristics.STATE_FALSE:
+                            return false;
+                        default:
+                            return this.defaultIsRtl();
+                    }
+                }
+            }
+            TextDirectionHeuristics.TextDirectionHeuristicImpl = TextDirectionHeuristicImpl;
+            class TextDirectionHeuristicInternal extends TextDirectionHeuristics.TextDirectionHeuristicImpl {
+                constructor(algorithm, defaultIsRtl) {
+                    super(algorithm);
+                    this.mDefaultIsRtl = defaultIsRtl;
+                }
+                defaultIsRtl() {
+                    return this.mDefaultIsRtl;
+                }
+            }
+            TextDirectionHeuristics.TextDirectionHeuristicInternal = TextDirectionHeuristicInternal;
+            class FirstStrong {
+                constructor() {
+                }
+                checkRtl(cs, start, count) {
+                    let result = TextDirectionHeuristics.STATE_UNKNOWN;
+                    for (let i = start, e = start + count; i < e && result == TextDirectionHeuristics.STATE_UNKNOWN; ++i) {
+                        result = TextDirectionHeuristics.STATE_FALSE;
+                    }
+                    return result;
+                }
+            }
+            FirstStrong.INSTANCE = new FirstStrong();
+            TextDirectionHeuristics.FirstStrong = FirstStrong;
+            class AnyStrong {
+                constructor(lookForRtl) {
+                    this.mLookForRtl = lookForRtl;
+                }
+                checkRtl(cs, start, count) {
+                    let haveUnlookedFor = false;
+                    for (let i = start, e = start + count; i < e; ++i) {
+                        switch (TextDirectionHeuristics.isRtlText(0)) {
+                            case TextDirectionHeuristics.STATE_TRUE:
+                                if (this.mLookForRtl) {
+                                    return TextDirectionHeuristics.STATE_TRUE;
+                                }
+                                haveUnlookedFor = true;
+                                break;
+                            case TextDirectionHeuristics.STATE_FALSE:
+                                if (!this.mLookForRtl) {
+                                    return TextDirectionHeuristics.STATE_FALSE;
+                                }
+                                haveUnlookedFor = true;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    if (haveUnlookedFor) {
+                        return this.mLookForRtl ? TextDirectionHeuristics.STATE_FALSE : TextDirectionHeuristics.STATE_TRUE;
+                    }
+                    return TextDirectionHeuristics.STATE_UNKNOWN;
+                }
+            }
+            AnyStrong.INSTANCE_RTL = new AnyStrong(true);
+            AnyStrong.INSTANCE_LTR = new AnyStrong(false);
+            TextDirectionHeuristics.AnyStrong = AnyStrong;
+            class TextDirectionHeuristicLocale extends TextDirectionHeuristics.TextDirectionHeuristicImpl {
+                constructor() {
+                    super(null);
+                }
+                defaultIsRtl() {
+                    return false;
+                }
+            }
+            TextDirectionHeuristicLocale.INSTANCE = new TextDirectionHeuristicLocale();
+            TextDirectionHeuristics.TextDirectionHeuristicLocale = TextDirectionHeuristicLocale;
+        })(TextDirectionHeuristics = text.TextDirectionHeuristics || (text.TextDirectionHeuristics = {}));
+        TextDirectionHeuristics.LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(null, false);
+        TextDirectionHeuristics.RTL = new TextDirectionHeuristics.TextDirectionHeuristicInternal(null, true);
+        TextDirectionHeuristics.FIRSTSTRONG_LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.FirstStrong.INSTANCE, false);
+        TextDirectionHeuristics.FIRSTSTRONG_RTL = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.FirstStrong.INSTANCE, true);
+        TextDirectionHeuristics.ANYRTL_LTR = new TextDirectionHeuristics.TextDirectionHeuristicInternal(TextDirectionHeuristics.AnyStrong.INSTANCE_RTL, false);
+        TextDirectionHeuristics.LOCALE = TextDirectionHeuristics.TextDirectionHeuristicLocale.INSTANCE;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
  * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17874,7 +17993,7 @@ var android;
 var android;
 (function (android) {
     var text;
-    (function (text_6) {
+    (function (text_4) {
         var Canvas = android.graphics.Canvas;
         var Paint = android.graphics.Paint;
         var CharacterStyle = android.text.style.CharacterStyle;
@@ -18428,7 +18547,7 @@ var android;
         TextLine.DEBUG = false;
         TextLine.sCached = new Array(3);
         TextLine.TAB_INCREMENT = 20;
-        text_6.TextLine = TextLine;
+        text_4.TextLine = TextLine;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 /*
@@ -18486,7 +18605,7 @@ var android;
 var android;
 (function (android) {
     var text;
-    (function (text_7) {
+    (function (text_5) {
         var Rect = android.graphics.Rect;
         var LeadingMarginSpan = android.text.style.LeadingMarginSpan;
         var LeadingMarginSpan2 = android.text.style.LeadingMarginSpan.LeadingMarginSpan2;
@@ -18504,6 +18623,9 @@ var android;
         var TextLine = android.text.TextLine;
         var TextPaint = android.text.TextPaint;
         var TextUtils = android.text.TextUtils;
+        window.addEventListener('AndroidUILoadFinish', () => {
+            eval('TextUtils = android.text.TextUtils;');
+        });
         class Layout {
             constructor(text, paint, width, align, textDir = TextDirectionHeuristics.FIRSTSTRONG_LTR, spacingMult = 1, spacingAdd = 0) {
                 this.mWidth = 0;
@@ -19416,7 +19538,7 @@ var android;
         Layout.TAB_INCREMENT = 20;
         Layout.ELLIPSIS_NORMAL = ['…'];
         Layout.ELLIPSIS_TWO_DOTS = ['‥'];
-        text_7.Layout = Layout;
+        text_5.Layout = Layout;
         (function (Layout) {
             class TabStops {
                 constructor(increment, spans) {
@@ -19524,10 +19646,1064 @@ var android;
                 Alignment[Alignment["ALIGN_RIGHT"] = 4] = "ALIGN_RIGHT";
             })(Layout.Alignment || (Layout.Alignment = {}));
             var Alignment = Layout.Alignment;
-        })(Layout = text_7.Layout || (text_7.Layout = {}));
+        })(Layout = text_5.Layout || (text_5.Layout = {}));
         Layout.DIRS_ALL_LEFT_TO_RIGHT = new Layout.Directions([0, Layout.RUN_LENGTH_MASK]);
         Layout.DIRS_ALL_RIGHT_TO_LEFT = new Layout.Directions([0, Layout.RUN_LENGTH_MASK | Layout.RUN_RTL_FLAG]);
     })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
+///<reference path="../../android/text/style/ReplacementSpan.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/text/Layout.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_6) {
+        var Canvas = android.graphics.Canvas;
+        var ReplacementSpan = android.text.style.ReplacementSpan;
+        var Log = android.util.Log;
+        var Spanned = android.text.Spanned;
+        var TextPaint = android.text.TextPaint;
+        class MeasuredText {
+            constructor() {
+                this.mTextStart = 0;
+                this.mDir = 0;
+                this.mLen = 0;
+                this.mPos = 0;
+                this.mWorkPaint = new TextPaint();
+            }
+            static obtain() {
+                let mt;
+                {
+                    for (let i = MeasuredText.sCached.length; --i >= 0;) {
+                        if (MeasuredText.sCached[i] != null) {
+                            mt = MeasuredText.sCached[i];
+                            MeasuredText.sCached[i] = null;
+                            return mt;
+                        }
+                    }
+                }
+                mt = new MeasuredText();
+                if (MeasuredText.localLOGV) {
+                    Log.v("MEAS", "new: " + mt);
+                }
+                return mt;
+            }
+            static recycle(mt) {
+                mt.mText = null;
+                if (mt.mLen < 1000) {
+                    {
+                        for (let i = 0; i < MeasuredText.sCached.length; ++i) {
+                            if (MeasuredText.sCached[i] == null) {
+                                MeasuredText.sCached[i] = mt;
+                                mt.mText = null;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            setPos(pos) {
+                this.mPos = pos - this.mTextStart;
+            }
+            setPara(text, start, end, textDir) {
+                this.mText = text;
+                this.mTextStart = start;
+                let len = end - start;
+                this.mLen = len;
+                this.mPos = 0;
+                if (this.mWidths == null || this.mWidths.length < len) {
+                    this.mWidths = new Array(len);
+                }
+                this.mChars = text.toString().substring(start, end);
+                if (Spanned.isImplements(text)) {
+                    let spanned = text;
+                    let spans = spanned.getSpans(start, end, ReplacementSpan.type);
+                    for (let i = 0; i < spans.length; i++) {
+                        let startInPara = spanned.getSpanStart(spans[i]) - start;
+                        let endInPara = spanned.getSpanEnd(spans[i]) - start;
+                        if (startInPara < 0)
+                            startInPara = 0;
+                        if (endInPara > len)
+                            endInPara = len;
+                        for (let j = startInPara; j < endInPara; j++) {
+                            this.mChars[j] = '￼';
+                        }
+                    }
+                }
+                this.mDir = android.text.Layout.DIR_LEFT_TO_RIGHT;
+                this.mEasy = true;
+            }
+            addStyleRun(...args) {
+                if (args.length === 3)
+                    return this.addStyleRun_3(...args);
+                if (args.length === 4)
+                    return this.addStyleRun_4(...args);
+            }
+            addStyleRun_3(paint, len, fm) {
+                if (fm != null) {
+                    paint.getFontMetricsInt(fm);
+                }
+                let p = this.mPos;
+                this.mPos = p + len;
+                if (this.mEasy) {
+                    let flags = this.mDir == android.text.Layout.DIR_LEFT_TO_RIGHT ? Canvas.DIRECTION_LTR : Canvas.DIRECTION_RTL;
+                    return paint.getTextRunAdvances_count(this.mChars, p, len, p, len, flags, this.mWidths, p);
+                }
+                let totalAdvance = 0;
+                let level = this.mLevels[p];
+                for (let q = p, i = p + 1, e = p + len;; ++i) {
+                    if (i == e || this.mLevels[i] != level) {
+                        let flags = (level & 0x1) == 0 ? Canvas.DIRECTION_LTR : Canvas.DIRECTION_RTL;
+                        totalAdvance += paint.getTextRunAdvances_count(this.mChars, q, i - q, q, i - q, flags, this.mWidths, q);
+                        if (i == e) {
+                            break;
+                        }
+                        q = i;
+                        level = this.mLevels[i];
+                    }
+                }
+                return totalAdvance;
+            }
+            addStyleRun_4(paint, spans, len, fm) {
+                let workPaint = this.mWorkPaint;
+                workPaint.set(paint);
+                workPaint.baselineShift = 0;
+                let replacement = null;
+                for (let i = 0; i < spans.length; i++) {
+                    let span = spans[i];
+                    if (span instanceof ReplacementSpan) {
+                        replacement = span;
+                    }
+                    else {
+                        span.updateMeasureState(workPaint);
+                    }
+                }
+                let wid;
+                if (replacement == null) {
+                    wid = this.addStyleRun(workPaint, len, fm);
+                }
+                else {
+                    wid = replacement.getSize(workPaint, this.mText, this.mTextStart + this.mPos, this.mTextStart + this.mPos + len, fm);
+                    let w = this.mWidths;
+                    w[this.mPos] = wid;
+                    for (let i = this.mPos + 1, e = this.mPos + len; i < e; i++)
+                        w[i] = 0;
+                    this.mPos += len;
+                }
+                if (fm != null) {
+                    if (workPaint.baselineShift < 0) {
+                        fm.ascent += workPaint.baselineShift;
+                        fm.top += workPaint.baselineShift;
+                    }
+                    else {
+                        fm.descent += workPaint.baselineShift;
+                        fm.bottom += workPaint.baselineShift;
+                    }
+                }
+                return wid;
+            }
+            breakText(limit, forwards, width) {
+                let w = this.mWidths;
+                if (forwards) {
+                    let i = 0;
+                    while (i < limit) {
+                        width -= w[i];
+                        if (width < 0.0)
+                            break;
+                        i++;
+                    }
+                    while (i > 0 && this.mChars[i - 1] == ' ')
+                        i--;
+                    return i;
+                }
+                else {
+                    let i = limit - 1;
+                    while (i >= 0) {
+                        width -= w[i];
+                        if (width < 0.0)
+                            break;
+                        i--;
+                    }
+                    while (i < limit - 1 && this.mChars[i + 1] == ' ')
+                        i++;
+                    return limit - i - 1;
+                }
+            }
+            measure(start, limit) {
+                let width = 0;
+                let w = this.mWidths;
+                for (let i = start; i < limit; ++i) {
+                    width += w[i];
+                }
+                return width;
+            }
+        }
+        MeasuredText.localLOGV = false;
+        MeasuredText.sLock = new Array(0);
+        MeasuredText.sCached = new Array(3);
+        text_6.MeasuredText = MeasuredText;
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/14.
+ */
+///<reference path="Spanned.ts"/>
+///<reference path="style/ReplacementSpan.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../java/lang/StringBuilder.ts"/>
+///<reference path="../../android/text/MeasuredText.ts"/>
+///<reference path="../../android/text/Spanned.ts"/>
+///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
+///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
+///<reference path="../../android/text/TextPaint.ts"/>
+var android;
+(function (android) {
+    var text;
+    (function (text_7) {
+        var System = java.lang.System;
+        var StringBuilder = java.lang.StringBuilder;
+        var MeasuredText = android.text.MeasuredText;
+        var Spanned = android.text.Spanned;
+        var TextDirectionHeuristics = android.text.TextDirectionHeuristics;
+        class TextUtils {
+            static isEmpty(str) {
+                if (str == null || str.length == 0)
+                    return true;
+                else
+                    return false;
+            }
+            static getOffsetBefore(text, offset) {
+                if (offset == 0)
+                    return 0;
+                if (offset == 1)
+                    return 0;
+                let c = text.codePointAt(offset - 1);
+                if (c >= '?'.codePointAt(0) && c <= '?'.codePointAt(0)) {
+                    let c1 = text.codePointAt(offset - 2);
+                    if (c1 >= '?'.codePointAt(0) && c1 <= '?'.codePointAt(0))
+                        offset -= 2;
+                    else
+                        offset -= 1;
+                }
+                else {
+                    offset -= 1;
+                }
+                if (Spanned.isImplements(text)) {
+                    let spans = text.getSpans(offset, offset, android.text.style.ReplacementSpan.type);
+                    for (let i = 0; i < spans.length; i++) {
+                        let start = text.getSpanStart(spans[i]);
+                        let end = text.getSpanEnd(spans[i]);
+                        if (start < offset && end > offset)
+                            offset = start;
+                    }
+                }
+                return offset;
+            }
+            static getOffsetAfter(text, offset) {
+                let len = text.length;
+                if (offset == len)
+                    return len;
+                if (offset == len - 1)
+                    return len;
+                let c = text.codePointAt(offset);
+                if (c >= '?'.codePointAt(0) && c <= '?'.codePointAt(0)) {
+                    let c1 = text.codePointAt(offset + 1);
+                    if (c1 >= '?'.codePointAt(0) && c1 <= '?'.codePointAt(0))
+                        offset += 2;
+                    else
+                        offset += 1;
+                }
+                else {
+                    offset += 1;
+                }
+                if (Spanned.isImplements(text)) {
+                    let spans = text.getSpans(offset, offset, android.text.style.ReplacementSpan.type);
+                    for (let i = 0; i < spans.length; i++) {
+                        let start = text.getSpanStart(spans[i]);
+                        let end = text.getSpanEnd(spans[i]);
+                        if (start < offset && end > offset)
+                            offset = end;
+                    }
+                }
+                return offset;
+            }
+            static ellipsize(text, paint, avail, where, preserveLength = false, callback = null, textDir = TextDirectionHeuristics.FIRSTSTRONG_LTR, ellipsis = undefined) {
+                ellipsis = ellipsis || (where == TextUtils.TruncateAt.END_SMALL ? android.text.Layout.ELLIPSIS_TWO_DOTS[0] : android.text.Layout.ELLIPSIS_NORMAL[0]);
+                let len = text.length;
+                let mt = MeasuredText.obtain();
+                try {
+                    let width = TextUtils.setPara(mt, paint, text, 0, text.length, textDir);
+                    if (width <= avail) {
+                        if (callback != null) {
+                            callback.ellipsized(0, 0);
+                        }
+                        return text;
+                    }
+                    let ellipsiswid = paint.measureText(ellipsis);
+                    avail -= ellipsiswid;
+                    let left = 0;
+                    let right = len;
+                    if (avail < 0) {
+                    }
+                    else if (where == TextUtils.TruncateAt.START) {
+                        right = len - mt.breakText(len, false, avail);
+                    }
+                    else if (where == TextUtils.TruncateAt.END || where == TextUtils.TruncateAt.END_SMALL) {
+                        left = mt.breakText(len, true, avail);
+                    }
+                    else {
+                        right = len - mt.breakText(len, false, avail / 2);
+                        avail -= mt.measure(right, len);
+                        left = mt.breakText(right, true, avail);
+                    }
+                    if (callback != null) {
+                        callback.ellipsized(left, right);
+                    }
+                    let buf = mt.mChars.split('');
+                    let sp = Spanned.isImplements(text) ? text : null;
+                    let remaining = len - (right - left);
+                    if (preserveLength) {
+                        if (remaining > 0) {
+                            buf[left++] = ellipsis.charAt(0);
+                        }
+                        for (let i = left; i < right; i++) {
+                            buf[i] = TextUtils.ZWNBS_CHAR;
+                        }
+                        let s = buf.join('');
+                        return s;
+                    }
+                    if (remaining == 0) {
+                        return "";
+                    }
+                    let sb = new StringBuilder(remaining + ellipsis.length());
+                    sb.append(buf.join('').substr(0, left));
+                    sb.append(ellipsis);
+                    sb.append(buf.join('').substr(right, len - right));
+                    return sb.toString();
+                }
+                finally {
+                    MeasuredText.recycle(mt);
+                }
+            }
+            static setPara(mt, paint, text, start, end, textDir) {
+                mt.setPara(text, start, end, textDir);
+                let width;
+                let sp = Spanned.isImplements(text) ? text : null;
+                let len = end - start;
+                if (sp == null) {
+                    width = mt.addStyleRun(paint, len, null);
+                }
+                else {
+                    width = 0;
+                    let spanEnd;
+                    for (let spanStart = 0; spanStart < len; spanStart = spanEnd) {
+                        spanEnd = sp.nextSpanTransition(spanStart, len, android.text.style.MetricAffectingSpan.type);
+                        let spans = sp.getSpans(spanStart, spanEnd, android.text.style.MetricAffectingSpan.type);
+                        spans = TextUtils.removeEmptySpans(spans, sp, android.text.style.MetricAffectingSpan.type);
+                        width += mt.addStyleRun(paint, spans, spanEnd - spanStart, null);
+                    }
+                }
+                return width;
+            }
+            static removeEmptySpans(spans, spanned, klass) {
+                let copy = null;
+                let count = 0;
+                for (let i = 0; i < spans.length; i++) {
+                    const span = spans[i];
+                    const start = spanned.getSpanStart(span);
+                    const end = spanned.getSpanEnd(span);
+                    if (start == end) {
+                        if (copy == null) {
+                            copy = new Array(spans.length - 1);
+                            System.arraycopy(spans, 0, copy, 0, i);
+                            count = i;
+                        }
+                    }
+                    else {
+                        if (copy != null) {
+                            copy[count] = span;
+                            count++;
+                        }
+                    }
+                }
+                if (copy != null) {
+                    let result = new Array(count);
+                    System.arraycopy(copy, 0, result, 0, count);
+                    return result;
+                }
+                else {
+                    return spans;
+                }
+            }
+            static packRangeInLong(start, end) {
+                return [start, end];
+            }
+            static unpackRangeStartFromLong(range) {
+                return range[0] || 0;
+            }
+            static unpackRangeEndFromLong(range) {
+                return range[1] || 0;
+            }
+        }
+        TextUtils.ALIGNMENT_SPAN = 1;
+        TextUtils.FIRST_SPAN = TextUtils.ALIGNMENT_SPAN;
+        TextUtils.FOREGROUND_COLOR_SPAN = 2;
+        TextUtils.RELATIVE_SIZE_SPAN = 3;
+        TextUtils.SCALE_X_SPAN = 4;
+        TextUtils.STRIKETHROUGH_SPAN = 5;
+        TextUtils.UNDERLINE_SPAN = 6;
+        TextUtils.STYLE_SPAN = 7;
+        TextUtils.BULLET_SPAN = 8;
+        TextUtils.QUOTE_SPAN = 9;
+        TextUtils.LEADING_MARGIN_SPAN = 10;
+        TextUtils.URL_SPAN = 11;
+        TextUtils.BACKGROUND_COLOR_SPAN = 12;
+        TextUtils.TYPEFACE_SPAN = 13;
+        TextUtils.SUPERSCRIPT_SPAN = 14;
+        TextUtils.SUBSCRIPT_SPAN = 15;
+        TextUtils.ABSOLUTE_SIZE_SPAN = 16;
+        TextUtils.TEXT_APPEARANCE_SPAN = 17;
+        TextUtils.ANNOTATION = 18;
+        TextUtils.SUGGESTION_SPAN = 19;
+        TextUtils.SPELL_CHECK_SPAN = 20;
+        TextUtils.SUGGESTION_RANGE_SPAN = 21;
+        TextUtils.EASY_EDIT_SPAN = 22;
+        TextUtils.LOCALE_SPAN = 23;
+        TextUtils.LAST_SPAN = TextUtils.LOCALE_SPAN;
+        TextUtils.EMPTY_STRING_ARRAY = [];
+        TextUtils.ZWNBS_CHAR = String.fromCodePoint(20);
+        TextUtils.ARAB_SCRIPT_SUBTAG = "Arab";
+        TextUtils.HEBR_SCRIPT_SUBTAG = "Hebr";
+        text_7.TextUtils = TextUtils;
+        (function (TextUtils) {
+            (function (TruncateAt) {
+                TruncateAt[TruncateAt["START"] = 0] = "START";
+                TruncateAt[TruncateAt["MIDDLE"] = 1] = "MIDDLE";
+                TruncateAt[TruncateAt["END"] = 2] = "END";
+                TruncateAt[TruncateAt["MARQUEE"] = 3] = "MARQUEE";
+                TruncateAt[TruncateAt["END_SMALL"] = 4] = "END_SMALL";
+            })(TextUtils.TruncateAt || (TextUtils.TruncateAt = {}));
+            var TruncateAt = TextUtils.TruncateAt;
+        })(TextUtils = text_7.TextUtils || (text_7.TextUtils = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/3.
+ */
+///<reference path="SparseArray.ts"/>
+var android;
+(function (android) {
+    var util;
+    (function (util) {
+        class LongSparseArray extends util.SparseArray {
+        }
+        util.LongSparseArray = LongSparseArray;
+    })(util = android.util || (android.util = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/view/View.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        class HapticFeedbackConstants {
+        }
+        HapticFeedbackConstants.LONG_PRESS = 0;
+        HapticFeedbackConstants.VIRTUAL_KEY = 1;
+        HapticFeedbackConstants.KEYBOARD_TAP = 3;
+        HapticFeedbackConstants.SAFE_MODE_DISABLED = 10000;
+        HapticFeedbackConstants.SAFE_MODE_ENABLED = 10001;
+        HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING = 0x0001;
+        HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING = 0x0002;
+        view.HapticFeedbackConstants = HapticFeedbackConstants;
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/5.
+ */
+var android;
+(function (android) {
+    var database;
+    (function (database) {
+        class DataSetObserver {
+            onChanged() { }
+            onInvalidated() { }
+        }
+        database.DataSetObserver = DataSetObserver;
+    })(database = android.database || (android.database = {}));
+})(android || (android = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        class Long {
+        }
+        Long.MIN_VALUE = Number.MIN_SAFE_INTEGER;
+        Long.MAX_VALUE = Number.MAX_SAFE_INTEGER;
+        lang.Long = Long;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/os/SystemClock.ts"/>
+///<reference path="../../android/util/SparseArray.ts"/>
+///<reference path="../../android/view/SoundEffectConstants.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../java/lang/Long.ts"/>
+///<reference path="Adapter.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var DataSetObserver = android.database.DataSetObserver;
+        var SystemClock = android.os.SystemClock;
+        var SoundEffectConstants = android.view.SoundEffectConstants;
+        var View = android.view.View;
+        var ViewGroup = android.view.ViewGroup;
+        var Long = java.lang.Long;
+        class AdapterView extends ViewGroup {
+            constructor(...args) {
+                super(...args);
+                this.mFirstPosition = 0;
+                this.mSpecificTop = 0;
+                this.mSyncPosition = 0;
+                this.mSyncRowId = AdapterView.INVALID_ROW_ID;
+                this.mSyncHeight = 0;
+                this.mNeedSync = false;
+                this.mSyncMode = 0;
+                this.mLayoutHeight = 0;
+                this.mInLayout = false;
+                this.mNextSelectedPosition = AdapterView.INVALID_POSITION;
+                this.mNextSelectedRowId = AdapterView.INVALID_ROW_ID;
+                this.mSelectedPosition = AdapterView.INVALID_POSITION;
+                this.mSelectedRowId = AdapterView.INVALID_ROW_ID;
+                this.mItemCount = 0;
+                this.mOldItemCount = 0;
+                this.mOldSelectedPosition = AdapterView.INVALID_POSITION;
+                this.mOldSelectedRowId = AdapterView.INVALID_ROW_ID;
+                this.mBlockLayoutRequests = false;
+            }
+            setOnItemClickListener(listener) {
+                this.mOnItemClickListener = listener;
+            }
+            getOnItemClickListener() {
+                return this.mOnItemClickListener;
+            }
+            performItemClick(view, position, id) {
+                if (this.mOnItemClickListener != null) {
+                    this.playSoundEffect(SoundEffectConstants.CLICK);
+                    this.mOnItemClickListener.onItemClick(this, view, position, id);
+                    return true;
+                }
+                return false;
+            }
+            setOnItemLongClickListener(listener) {
+                if (!this.isLongClickable()) {
+                    this.setLongClickable(true);
+                }
+                this.mOnItemLongClickListener = listener;
+            }
+            getOnItemLongClickListener() {
+                return this.mOnItemLongClickListener;
+            }
+            setOnItemSelectedListener(listener) {
+                this.mOnItemSelectedListener = listener;
+            }
+            getOnItemSelectedListener() {
+                return this.mOnItemSelectedListener;
+            }
+            addView(...args) {
+                throw Error(`new UnsupportedOperationException("addView() is not supported in AdapterView")`);
+            }
+            removeView(child) {
+                throw Error(`new UnsupportedOperationException("removeView(View) is not supported in AdapterView")`);
+            }
+            removeViewAt(index) {
+                throw Error(`new UnsupportedOperationException("removeViewAt(int) is not supported in AdapterView")`);
+            }
+            removeAllViews() {
+                throw Error(`new UnsupportedOperationException("removeAllViews() is not supported in AdapterView")`);
+            }
+            onLayout(changed, left, top, right, bottom) {
+                this.mLayoutHeight = this.getHeight();
+            }
+            getSelectedItemPosition() {
+                return this.mNextSelectedPosition;
+            }
+            getSelectedItemId() {
+                return this.mNextSelectedRowId;
+            }
+            getSelectedItem() {
+                let adapter = this.getAdapter();
+                let selection = this.getSelectedItemPosition();
+                if (adapter != null && adapter.getCount() > 0 && selection >= 0) {
+                    return adapter.getItem(selection);
+                }
+                else {
+                    return null;
+                }
+            }
+            getCount() {
+                return this.mItemCount;
+            }
+            getPositionForView(view) {
+                let listItem = view;
+                try {
+                    let v;
+                    while (!((v = listItem.getParent()) == (this))) {
+                        listItem = v;
+                    }
+                }
+                catch (e) {
+                    return AdapterView.INVALID_POSITION;
+                }
+                const childCount = this.getChildCount();
+                for (let i = 0; i < childCount; i++) {
+                    if (this.getChildAt(i) == (listItem)) {
+                        return this.mFirstPosition + i;
+                    }
+                }
+                return AdapterView.INVALID_POSITION;
+            }
+            getFirstVisiblePosition() {
+                return this.mFirstPosition;
+            }
+            getLastVisiblePosition() {
+                return this.mFirstPosition + this.getChildCount() - 1;
+            }
+            setEmptyView(emptyView) {
+                this.mEmptyView = emptyView;
+                const adapter = this.getAdapter();
+                const empty = ((adapter == null) || adapter.isEmpty());
+                this.updateEmptyStatus(empty);
+            }
+            getEmptyView() {
+                return this.mEmptyView;
+            }
+            isInFilterMode() {
+                return false;
+            }
+            setFocusable(focusable) {
+                const adapter = this.getAdapter();
+                const empty = adapter == null || adapter.getCount() == 0;
+                this.mDesiredFocusableState = focusable;
+                if (!focusable) {
+                    this.mDesiredFocusableInTouchModeState = false;
+                }
+                super.setFocusable(focusable && (!empty || this.isInFilterMode()));
+            }
+            setFocusableInTouchMode(focusable) {
+                const adapter = this.getAdapter();
+                const empty = adapter == null || adapter.getCount() == 0;
+                this.mDesiredFocusableInTouchModeState = focusable;
+                if (focusable) {
+                    this.mDesiredFocusableState = true;
+                }
+                super.setFocusableInTouchMode(focusable && (!empty || this.isInFilterMode()));
+            }
+            checkFocus() {
+                const adapter = this.getAdapter();
+                const empty = adapter == null || adapter.getCount() == 0;
+                const focusable = !empty || this.isInFilterMode();
+                super.setFocusableInTouchMode(focusable && this.mDesiredFocusableInTouchModeState);
+                super.setFocusable(focusable && this.mDesiredFocusableState);
+                if (this.mEmptyView != null) {
+                    this.updateEmptyStatus((adapter == null) || adapter.isEmpty());
+                }
+            }
+            updateEmptyStatus(empty) {
+                if (this.isInFilterMode()) {
+                    empty = false;
+                }
+                if (empty) {
+                    if (this.mEmptyView != null) {
+                        this.mEmptyView.setVisibility(View.VISIBLE);
+                        this.setVisibility(View.GONE);
+                    }
+                    else {
+                        this.setVisibility(View.VISIBLE);
+                    }
+                    if (this.mDataChanged) {
+                        this.onLayout(false, this.mLeft, this.mTop, this.mRight, this.mBottom);
+                    }
+                }
+                else {
+                    if (this.mEmptyView != null)
+                        this.mEmptyView.setVisibility(View.GONE);
+                    this.setVisibility(View.VISIBLE);
+                }
+            }
+            getItemAtPosition(position) {
+                let adapter = this.getAdapter();
+                return (adapter == null || position < 0) ? null : adapter.getItem(position);
+            }
+            getItemIdAtPosition(position) {
+                let adapter = this.getAdapter();
+                return (adapter == null || position < 0) ? AdapterView.INVALID_ROW_ID : adapter.getItemId(position);
+            }
+            setOnClickListener(l) {
+                throw Error(`new RuntimeException("Don't call setOnClickListener for an AdapterView. " + "You probably want setOnItemClickListener instead")`);
+            }
+            onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                this.removeCallbacks(this.mSelectionNotifier);
+            }
+            selectionChanged() {
+                if (this.mOnItemSelectedListener != null) {
+                    if (this.mInLayout || this.mBlockLayoutRequests) {
+                        if (this.mSelectionNotifier == null) {
+                            this.mSelectionNotifier = new SelectionNotifier(this);
+                        }
+                        this.post(this.mSelectionNotifier);
+                    }
+                    else {
+                        this.fireOnSelected();
+                        this.performAccessibilityActionsOnSelected();
+                    }
+                }
+            }
+            fireOnSelected() {
+                if (this.mOnItemSelectedListener == null) {
+                    return;
+                }
+                const selection = this.getSelectedItemPosition();
+                if (selection >= 0) {
+                    let v = this.getSelectedView();
+                    this.mOnItemSelectedListener.onItemSelected(this, v, selection, this.getAdapter().getItemId(selection));
+                }
+                else {
+                    this.mOnItemSelectedListener.onNothingSelected(this);
+                }
+            }
+            performAccessibilityActionsOnSelected() {
+            }
+            isScrollableForAccessibility() {
+                let adapter = this.getAdapter();
+                if (adapter != null) {
+                    const itemCount = adapter.getCount();
+                    return itemCount > 0 && (this.getFirstVisiblePosition() > 0 || this.getLastVisiblePosition() < itemCount - 1);
+                }
+                return false;
+            }
+            canAnimate() {
+                return super.canAnimate() && this.mItemCount > 0;
+            }
+            handleDataChanged() {
+                const count = this.mItemCount;
+                let found = false;
+                if (count > 0) {
+                    let newPos;
+                    if (this.mNeedSync) {
+                        this.mNeedSync = false;
+                        newPos = this.findSyncPosition();
+                        if (newPos >= 0) {
+                            let selectablePos = this.lookForSelectablePosition(newPos, true);
+                            if (selectablePos == newPos) {
+                                this.setNextSelectedPositionInt(newPos);
+                                found = true;
+                            }
+                        }
+                    }
+                    if (!found) {
+                        newPos = this.getSelectedItemPosition();
+                        if (newPos >= count) {
+                            newPos = count - 1;
+                        }
+                        if (newPos < 0) {
+                            newPos = 0;
+                        }
+                        let selectablePos = this.lookForSelectablePosition(newPos, true);
+                        if (selectablePos < 0) {
+                            selectablePos = this.lookForSelectablePosition(newPos, false);
+                        }
+                        if (selectablePos >= 0) {
+                            this.setNextSelectedPositionInt(selectablePos);
+                            this.checkSelectionChanged();
+                            found = true;
+                        }
+                    }
+                }
+                if (!found) {
+                    this.mSelectedPosition = AdapterView.INVALID_POSITION;
+                    this.mSelectedRowId = AdapterView.INVALID_ROW_ID;
+                    this.mNextSelectedPosition = AdapterView.INVALID_POSITION;
+                    this.mNextSelectedRowId = AdapterView.INVALID_ROW_ID;
+                    this.mNeedSync = false;
+                    this.checkSelectionChanged();
+                }
+            }
+            checkSelectionChanged() {
+                if ((this.mSelectedPosition != this.mOldSelectedPosition) || (this.mSelectedRowId != this.mOldSelectedRowId)) {
+                    this.selectionChanged();
+                    this.mOldSelectedPosition = this.mSelectedPosition;
+                    this.mOldSelectedRowId = this.mSelectedRowId;
+                }
+            }
+            findSyncPosition() {
+                let count = this.mItemCount;
+                if (count == 0) {
+                    return AdapterView.INVALID_POSITION;
+                }
+                let idToMatch = this.mSyncRowId;
+                let seed = this.mSyncPosition;
+                if (idToMatch == AdapterView.INVALID_ROW_ID) {
+                    return AdapterView.INVALID_POSITION;
+                }
+                seed = Math.max(0, seed);
+                seed = Math.min(count - 1, seed);
+                let endTime = SystemClock.uptimeMillis() + AdapterView.SYNC_MAX_DURATION_MILLIS;
+                let rowId;
+                let first = seed;
+                let last = seed;
+                let next = false;
+                let hitFirst;
+                let hitLast;
+                let adapter = this.getAdapter();
+                if (adapter == null) {
+                    return AdapterView.INVALID_POSITION;
+                }
+                while (SystemClock.uptimeMillis() <= endTime) {
+                    rowId = adapter.getItemId(seed);
+                    if (rowId == idToMatch) {
+                        return seed;
+                    }
+                    hitLast = last == count - 1;
+                    hitFirst = first == 0;
+                    if (hitLast && hitFirst) {
+                        break;
+                    }
+                    if (hitFirst || (next && !hitLast)) {
+                        last++;
+                        seed = last;
+                        next = false;
+                    }
+                    else if (hitLast || (!next && !hitFirst)) {
+                        first--;
+                        seed = first;
+                        next = true;
+                    }
+                }
+                return AdapterView.INVALID_POSITION;
+            }
+            lookForSelectablePosition(position, lookDown) {
+                return position;
+            }
+            setSelectedPositionInt(position) {
+                this.mSelectedPosition = position;
+                this.mSelectedRowId = this.getItemIdAtPosition(position);
+            }
+            setNextSelectedPositionInt(position) {
+                this.mNextSelectedPosition = position;
+                this.mNextSelectedRowId = this.getItemIdAtPosition(position);
+                if (this.mNeedSync && this.mSyncMode == AdapterView.SYNC_SELECTED_POSITION && position >= 0) {
+                    this.mSyncPosition = position;
+                    this.mSyncRowId = this.mNextSelectedRowId;
+                }
+            }
+            rememberSyncState() {
+                if (this.getChildCount() > 0) {
+                    this.mNeedSync = true;
+                    this.mSyncHeight = this.mLayoutHeight;
+                    if (this.mSelectedPosition >= 0) {
+                        let v = this.getChildAt(this.mSelectedPosition - this.mFirstPosition);
+                        this.mSyncRowId = this.mNextSelectedRowId;
+                        this.mSyncPosition = this.mNextSelectedPosition;
+                        if (v != null) {
+                            this.mSpecificTop = v.getTop();
+                        }
+                        this.mSyncMode = AdapterView.SYNC_SELECTED_POSITION;
+                    }
+                    else {
+                        let v = this.getChildAt(0);
+                        let adapter = this.getAdapter();
+                        if (this.mFirstPosition >= 0 && this.mFirstPosition < adapter.getCount()) {
+                            this.mSyncRowId = adapter.getItemId(this.mFirstPosition);
+                        }
+                        else {
+                            this.mSyncRowId = AdapterView.NO_ID;
+                        }
+                        this.mSyncPosition = this.mFirstPosition;
+                        if (v != null) {
+                            this.mSpecificTop = v.getTop();
+                        }
+                        this.mSyncMode = AdapterView.SYNC_FIRST_POSITION;
+                    }
+                }
+            }
+        }
+        AdapterView.ITEM_VIEW_TYPE_IGNORE = -1;
+        AdapterView.ITEM_VIEW_TYPE_HEADER_OR_FOOTER = -2;
+        AdapterView.SYNC_SELECTED_POSITION = 0;
+        AdapterView.SYNC_FIRST_POSITION = 1;
+        AdapterView.SYNC_MAX_DURATION_MILLIS = 100;
+        AdapterView.INVALID_POSITION = -1;
+        AdapterView.INVALID_ROW_ID = Long.MIN_VALUE;
+        widget.AdapterView = AdapterView;
+        (function (AdapterView) {
+            class AdapterDataSetObserver extends DataSetObserver {
+                constructor(AdapterView_this) {
+                    super();
+                    this.AdapterView_this = AdapterView_this;
+                }
+                onChanged() {
+                    this.AdapterView_this.mDataChanged = true;
+                    this.AdapterView_this.mOldItemCount = this.AdapterView_this.mItemCount;
+                    this.AdapterView_this.mItemCount = this.AdapterView_this.getAdapter().getCount();
+                    this.AdapterView_this.rememberSyncState();
+                    this.AdapterView_this.checkFocus();
+                    this.AdapterView_this.requestLayout();
+                }
+                onInvalidated() {
+                    this.AdapterView_this.mDataChanged = true;
+                    this.AdapterView_this.mOldItemCount = this.AdapterView_this.mItemCount;
+                    this.AdapterView_this.mItemCount = 0;
+                    this.AdapterView_this.mSelectedPosition = AdapterView.INVALID_POSITION;
+                    this.AdapterView_this.mSelectedRowId = AdapterView.INVALID_ROW_ID;
+                    this.AdapterView_this.mNextSelectedPosition = AdapterView.INVALID_POSITION;
+                    this.AdapterView_this.mNextSelectedRowId = AdapterView.INVALID_ROW_ID;
+                    this.AdapterView_this.mNeedSync = false;
+                    this.AdapterView_this.checkFocus();
+                    this.AdapterView_this.requestLayout();
+                }
+                clearSavedState() {
+                }
+            }
+            AdapterView.AdapterDataSetObserver = AdapterDataSetObserver;
+        })(AdapterView = widget.AdapterView || (widget.AdapterView = {}));
+        class SelectionNotifier {
+            constructor(AdapterView_this) {
+                this.AdapterView_this = AdapterView_this;
+            }
+            run() {
+                if (this.AdapterView_this.mDataChanged) {
+                    if (this.AdapterView_this.getAdapter() != null) {
+                        this.AdapterView_this.post(this);
+                    }
+                }
+                else {
+                    this.AdapterView_this.fireOnSelected();
+                    this.AdapterView_this.performAccessibilityActionsOnSelected();
+                }
+            }
+        }
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="AdapterView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Integer = java.lang.Integer;
+        var Adapter;
+        (function (Adapter) {
+            Adapter.IGNORE_ITEM_VIEW_TYPE = widget.AdapterView.ITEM_VIEW_TYPE_IGNORE;
+            Adapter.NO_SELECTION = Integer.MIN_VALUE;
+        })(Adapter = widget.Adapter || (widget.Adapter = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        class string_ {
+            static zh() {
+                this.prll_header_state_normal = '下拉以刷新';
+                this.prll_header_state_ready = '松开马上刷新';
+                this.prll_header_state_loading = '正在刷新...';
+                this.prll_header_state_fail = '刷新失败';
+                this.prll_footer_state_normal = '点击加载更多';
+                this.prll_footer_state_loading = '正在加载...';
+                this.prll_footer_state_ready = '松开加载更多';
+                this.prll_footer_state_no_more = '加载完毕';
+                this.prll_footer_state_fail = '加载失败,点击重试';
+            }
+        }
+        string_.prll_header_state_normal = 'Pull to refresh';
+        string_.prll_header_state_ready = 'Release to refresh';
+        string_.prll_header_state_loading = 'Loading';
+        string_.prll_header_state_fail = 'Refresh fail';
+        string_.prll_footer_state_normal = 'Load more';
+        string_.prll_footer_state_loading = 'Loading';
+        string_.prll_footer_state_ready = 'Pull to load more';
+        string_.prll_footer_state_fail = 'Click to reload';
+        string_.prll_footer_state_no_more = 'Load Finish';
+        R.string_ = string_;
+        const lang = navigator.language.split('-')[0].toLowerCase();
+        if (typeof string_[lang] === 'function')
+            string_[lang].call(string_);
+    })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -20183,20 +21359,6 @@ var android;
         })(style = text_9.style || (text_9.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-var java;
-(function (java) {
-    var lang;
-    (function (lang) {
-        class Integer {
-            static parseInt(value) {
-                return Number.parseInt(value);
-            }
-        }
-        Integer.MIN_VALUE = Number.MIN_SAFE_INTEGER;
-        Integer.MAX_VALUE = Number.MAX_SAFE_INTEGER;
-        lang.Integer = Integer;
-    })(lang = java.lang || (java.lang = {}));
-})(java || (java = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
  *
@@ -21227,68 +22389,6 @@ var android;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 /*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-var android;
-(function (android) {
-    var text;
-    (function (text) {
-        class InputType {
-        }
-        InputType.TYPE_MASK_CLASS = 0x0000000f;
-        InputType.TYPE_MASK_VARIATION = 0x00000ff0;
-        InputType.TYPE_MASK_FLAGS = 0x00fff000;
-        InputType.TYPE_NULL = 0x00000000;
-        InputType.TYPE_CLASS_TEXT = 0x00000001;
-        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS = 0x00001000;
-        InputType.TYPE_TEXT_FLAG_CAP_WORDS = 0x00002000;
-        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES = 0x00004000;
-        InputType.TYPE_TEXT_FLAG_AUTO_CORRECT = 0x00008000;
-        InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE = 0x00010000;
-        InputType.TYPE_TEXT_FLAG_MULTI_LINE = 0x00020000;
-        InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE = 0x00040000;
-        InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS = 0x00080000;
-        InputType.TYPE_TEXT_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_TEXT_VARIATION_URI = 0x00000010;
-        InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
-        InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT = 0x00000030;
-        InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE = 0x00000040;
-        InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE = 0x00000050;
-        InputType.TYPE_TEXT_VARIATION_PERSON_NAME = 0x00000060;
-        InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS = 0x00000070;
-        InputType.TYPE_TEXT_VARIATION_PASSWORD = 0x00000080;
-        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD = 0x00000090;
-        InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT = 0x000000a0;
-        InputType.TYPE_TEXT_VARIATION_FILTER = 0x000000b0;
-        InputType.TYPE_TEXT_VARIATION_PHONETIC = 0x000000c0;
-        InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS = 0x000000d0;
-        InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD = 0x000000e0;
-        InputType.TYPE_CLASS_NUMBER = 0x00000002;
-        InputType.TYPE_NUMBER_FLAG_SIGNED = 0x00001000;
-        InputType.TYPE_NUMBER_FLAG_DECIMAL = 0x00002000;
-        InputType.TYPE_NUMBER_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_NUMBER_VARIATION_PASSWORD = 0x00000010;
-        InputType.TYPE_CLASS_PHONE = 0x00000003;
-        InputType.TYPE_CLASS_DATETIME = 0x00000004;
-        InputType.TYPE_DATETIME_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_DATETIME_VARIATION_DATE = 0x00000010;
-        InputType.TYPE_DATETIME_VARIATION_TIME = 0x00000020;
-        text.InputType = InputType;
-    })(text = android.text || (android.text = {}));
-})(android || (android = {}));
-/*
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21581,38 +22681,6 @@ var android;
             method.SingleLineTransformationMethod = SingleLineTransformationMethod;
         })(method = text.method || (text.method = {}));
     })(text = android.text || (android.text = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/View.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        class HapticFeedbackConstants {
-        }
-        HapticFeedbackConstants.LONG_PRESS = 0;
-        HapticFeedbackConstants.VIRTUAL_KEY = 1;
-        HapticFeedbackConstants.KEYBOARD_TAP = 3;
-        HapticFeedbackConstants.SAFE_MODE_DISABLED = 10000;
-        HapticFeedbackConstants.SAFE_MODE_ENABLED = 10001;
-        HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING = 0x0001;
-        HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING = 0x0002;
-        view.HapticFeedbackConstants = HapticFeedbackConstants;
-    })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -24829,1502 +25897,6 @@ var android;
             }
         }
         widget.Button = Button;
-    })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/11.
- */
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="PlatformImage.ts"/>
-var androidui;
-(function (androidui) {
-    var image;
-    (function (image) {
-        var Paint = android.graphics.Paint;
-        var Drawable = android.graphics.drawable.Drawable;
-        class NetDrawable extends Drawable {
-            constructor(src, res, paint) {
-                super();
-                this.mImageWidth = -1;
-                this.mImageHeight = -1;
-                this.mState = new State(src, res, paint);
-                this.mImage = new image.PlatformImage(src, () => this.onLoad(), () => this.onError());
-            }
-            draw(canvas) {
-                canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
-            }
-            setAlpha(alpha) {
-                this.mState.paint.setAlpha(alpha);
-            }
-            getAlpha() {
-                return this.mState.paint.getAlpha();
-            }
-            getIntrinsicWidth() {
-                return this.mImageWidth;
-            }
-            getIntrinsicHeight() {
-                return this.mImageHeight;
-            }
-            onLoad() {
-                this.mImageWidth = this.mImage.width * this.mState.res.getDisplayMetrics().density;
-                this.mImageHeight = this.mImage.height * this.mState.res.getDisplayMetrics().density;
-                if (this.mLoadListener)
-                    this.mLoadListener.onLoad(this);
-                this.invalidateSelf();
-            }
-            onError() {
-                if (this.mLoadListener)
-                    this.mLoadListener.onError(this);
-            }
-            setLoadListener(loadListener) {
-                this.mLoadListener = loadListener;
-            }
-            getConstantState() {
-                return this.mState;
-            }
-        }
-        image.NetDrawable = NetDrawable;
-        class State {
-            constructor(src, res, paint = new Paint()) {
-                this.res = res;
-                this.src = src;
-                this.paint = new Paint();
-                this.paint.set(paint);
-            }
-            newDrawable() {
-                return new NetDrawable(this.src, this.res, this.paint);
-            }
-        }
-    })(image = androidui.image || (androidui.image = {}));
-})(androidui || (androidui = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Matrix.ts"/>
-///<reference path="../../android/graphics/RectF.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../androidui/image/NetDrawable.ts"/>
-var android;
-(function (android) {
-    var widget;
-    (function (widget) {
-        var Matrix = android.graphics.Matrix;
-        var RectF = android.graphics.RectF;
-        var View = android.view.View;
-        var Integer = java.lang.Integer;
-        class ImageView extends View {
-            constructor(bindElement, rootElement) {
-                super(bindElement, rootElement);
-                this.mHaveFrame = false;
-                this.mAdjustViewBounds = false;
-                this.mMaxWidth = Integer.MAX_VALUE;
-                this.mMaxHeight = Integer.MAX_VALUE;
-                this.mAlpha = 255;
-                this.mViewAlphaScale = 256;
-                this.mColorMod = false;
-                this.mDrawable = null;
-                this.mState = null;
-                this.mMergeState = false;
-                this.mLevel = 0;
-                this.mDrawableWidth = 0;
-                this.mDrawableHeight = 0;
-                this.mDrawMatrix = null;
-                this.mTempSrc = new RectF();
-                this.mTempDst = new RectF();
-                this.mBaseline = -1;
-                this.mBaselineAlignBottom = false;
-                this.mAdjustViewBoundsCompat = false;
-                this.initImageView();
-                this._attrBinder.addAttr('src', (value) => {
-                    this.setImageURI(value);
-                }, () => {
-                    return this.mUri;
-                });
-                this._attrBinder.addAttr('baselineAlignBottom', (value) => {
-                    this.setBaselineAlignBottom(this._attrBinder.parseBoolean(value, this.mBaselineAlignBottom));
-                });
-                this._attrBinder.addAttr('baseline', (value) => {
-                    this.setBaseline(this._attrBinder.parseNumber(value, this.mBaseline));
-                }, () => {
-                    return this.mBaseline;
-                });
-                this._attrBinder.addAttr('adjustViewBounds', (value) => {
-                    this.setAdjustViewBounds(this._attrBinder.parseBoolean(value, false));
-                });
-                this._attrBinder.addAttr('maxWidth', (value) => {
-                    let baseValue = this.getParent() instanceof View ? this.getParent().getWidth() : 0;
-                    this.setMaxWidth(this._attrBinder.parseNumber(value, this.mMaxWidth, baseValue));
-                }, () => {
-                    return this.mMaxWidth;
-                });
-                this._attrBinder.addAttr('maxHeight', (value) => {
-                    let baseValue = this.getParent() instanceof View ? this.getParent().getHeight() : 0;
-                    this.setMaxHeight(this._attrBinder.parseNumber(value, this.mMaxHeight, baseValue));
-                }, () => {
-                    return this.mMaxHeight;
-                });
-                this._attrBinder.addAttr('scaleType', (value) => {
-                    this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
-                }, () => {
-                    return this.mScaleType.toString();
-                });
-                this._attrBinder.addAttr('drawableAlpha', (value) => {
-                    this.setAlpha(this._attrBinder.parseNumber(value, this.mAlpha));
-                }, () => {
-                    return this.mAlpha;
-                });
-                this._attrBinder.addAttr('cropToPadding', (value) => {
-                    this.setCropToPadding(this._attrBinder.parseBoolean(value, false));
-                });
-            }
-            initImageView() {
-                this.mMatrix = new Matrix();
-                this.mScaleType = ImageView.ScaleType.FIT_CENTER;
-            }
-            verifyDrawable(dr) {
-                return this.mDrawable == dr || super.verifyDrawable(dr);
-            }
-            jumpDrawablesToCurrentState() {
-                super.jumpDrawablesToCurrentState();
-                if (this.mDrawable != null)
-                    this.mDrawable.jumpToCurrentState();
-            }
-            invalidateDrawable(dr) {
-                if (dr == this.mDrawable) {
-                    this.invalidate();
-                    this.resizeFromDrawable();
-                }
-                else {
-                    super.invalidateDrawable(dr);
-                }
-            }
-            hasOverlappingRendering() {
-                return (this.getBackground() != null && this.getBackground().getCurrent() != null);
-            }
-            getAdjustViewBounds() {
-                return this.mAdjustViewBounds;
-            }
-            setAdjustViewBounds(adjustViewBounds) {
-                this.mAdjustViewBounds = adjustViewBounds;
-                if (adjustViewBounds) {
-                    this.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                }
-            }
-            getMaxWidth() {
-                return this.mMaxWidth;
-            }
-            setMaxWidth(maxWidth) {
-                this.mMaxWidth = maxWidth;
-            }
-            getMaxHeight() {
-                return this.mMaxHeight;
-            }
-            setMaxHeight(maxHeight) {
-                this.mMaxHeight = maxHeight;
-            }
-            getDrawable() {
-                return this.mDrawable;
-            }
-            setImageURI(uri) {
-                if (this.mUri != uri) {
-                    this.updateDrawable(null);
-                    this.mUri = uri;
-                    const oldWidth = this.mDrawableWidth;
-                    const oldHeight = this.mDrawableHeight;
-                    this.resolveUri();
-                    if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
-                        this.requestLayout();
-                    }
-                    this.invalidate();
-                }
-            }
-            setImageDrawable(drawable) {
-                if (this.mDrawable != drawable) {
-                    this.mUri = null;
-                    const oldWidth = this.mDrawableWidth;
-                    const oldHeight = this.mDrawableHeight;
-                    this.updateDrawable(drawable);
-                    if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
-                        this.requestLayout();
-                    }
-                    this.invalidate();
-                }
-            }
-            setImageState(state, merge) {
-                this.mState = state;
-                this.mMergeState = merge;
-                if (this.mDrawable != null) {
-                    this.refreshDrawableState();
-                    this.resizeFromDrawable();
-                }
-            }
-            setSelected(selected) {
-                super.setSelected(selected);
-                this.resizeFromDrawable();
-            }
-            setImageLevel(level) {
-                this.mLevel = level;
-                if (this.mDrawable != null) {
-                    this.mDrawable.setLevel(level);
-                    this.resizeFromDrawable();
-                }
-            }
-            setScaleType(scaleType) {
-                if (scaleType == null) {
-                    throw Error(`new NullPointerException()`);
-                }
-                if (this.mScaleType != scaleType) {
-                    this.mScaleType = scaleType;
-                    this.setWillNotCacheDrawing(this.mScaleType == ImageView.ScaleType.CENTER);
-                    this.requestLayout();
-                    this.invalidate();
-                }
-            }
-            getScaleType() {
-                return this.mScaleType;
-            }
-            getImageMatrix() {
-                if (this.mDrawMatrix == null) {
-                    return new Matrix(Matrix.IDENTITY_MATRIX);
-                }
-                return this.mDrawMatrix;
-            }
-            setImageMatrix(matrix) {
-                if (matrix != null && matrix.isIdentity()) {
-                    matrix = null;
-                }
-                if (matrix == null && !this.mMatrix.isIdentity() || matrix != null && !this.mMatrix.equals(matrix)) {
-                    this.mMatrix.set(matrix);
-                    this.configureBounds();
-                    this.invalidate();
-                }
-            }
-            getCropToPadding() {
-                return this.mCropToPadding;
-            }
-            setCropToPadding(cropToPadding) {
-                if (this.mCropToPadding != cropToPadding) {
-                    this.mCropToPadding = cropToPadding;
-                    this.requestLayout();
-                    this.invalidate();
-                }
-            }
-            resolveUri() {
-                if (this.mDrawable != null) {
-                    return;
-                }
-                let d = null;
-                if (this.mUri != null) {
-                    d = new androidui.image.NetDrawable(this.mUri, this.getResources());
-                }
-                else {
-                    return;
-                }
-                this.updateDrawable(d);
-            }
-            onCreateDrawableState(extraSpace) {
-                if (this.mState == null) {
-                    return super.onCreateDrawableState(extraSpace);
-                }
-                else if (!this.mMergeState) {
-                    return this.mState;
-                }
-                else {
-                    return ImageView.mergeDrawableStates(super.onCreateDrawableState(extraSpace + this.mState.length), this.mState);
-                }
-            }
-            updateDrawable(d) {
-                if (this.mDrawable != null) {
-                    this.mDrawable.setCallback(null);
-                    this.unscheduleDrawable(this.mDrawable);
-                }
-                this.mDrawable = d;
-                if (d != null) {
-                    d.setCallback(this);
-                    if (d.isStateful()) {
-                        d.setState(this.getDrawableState());
-                    }
-                    d.setLevel(this.mLevel);
-                    d.setVisible(this.getVisibility() == ImageView.VISIBLE, true);
-                    this.mDrawableWidth = d.getIntrinsicWidth();
-                    this.mDrawableHeight = d.getIntrinsicHeight();
-                    this.applyColorMod();
-                    this.configureBounds();
-                }
-                else {
-                    this.mDrawableWidth = this.mDrawableHeight = -1;
-                }
-            }
-            resizeFromDrawable() {
-                let d = this.mDrawable;
-                if (d != null) {
-                    let w = d.getIntrinsicWidth();
-                    if (w < 0)
-                        w = this.mDrawableWidth;
-                    let h = d.getIntrinsicHeight();
-                    if (h < 0)
-                        h = this.mDrawableHeight;
-                    if (w != this.mDrawableWidth || h != this.mDrawableHeight) {
-                        this.mDrawableWidth = w;
-                        this.mDrawableHeight = h;
-                        this.requestLayout();
-                    }
-                }
-            }
-            static scaleTypeToScaleToFit(st) {
-                return ImageView.sS2FArray[st - 1];
-            }
-            onMeasure(widthMeasureSpec, heightMeasureSpec) {
-                this.resolveUri();
-                let w;
-                let h;
-                let desiredAspect = 0.0;
-                let resizeWidth = false;
-                let resizeHeight = false;
-                const widthSpecMode = ImageView.MeasureSpec.getMode(widthMeasureSpec);
-                const heightSpecMode = ImageView.MeasureSpec.getMode(heightMeasureSpec);
-                if (this.mDrawable == null) {
-                    this.mDrawableWidth = -1;
-                    this.mDrawableHeight = -1;
-                    w = h = 0;
-                }
-                else {
-                    w = this.mDrawableWidth;
-                    h = this.mDrawableHeight;
-                    if (w <= 0)
-                        w = 1;
-                    if (h <= 0)
-                        h = 1;
-                    if (this.mAdjustViewBounds) {
-                        resizeWidth = widthSpecMode != ImageView.MeasureSpec.EXACTLY;
-                        resizeHeight = heightSpecMode != ImageView.MeasureSpec.EXACTLY;
-                        desiredAspect = w / h;
-                    }
-                }
-                let pleft = this.mPaddingLeft;
-                let pright = this.mPaddingRight;
-                let ptop = this.mPaddingTop;
-                let pbottom = this.mPaddingBottom;
-                let widthSize;
-                let heightSize;
-                if (resizeWidth || resizeHeight) {
-                    widthSize = this.resolveAdjustedSize(w + pleft + pright, this.mMaxWidth, widthMeasureSpec);
-                    heightSize = this.resolveAdjustedSize(h + ptop + pbottom, this.mMaxHeight, heightMeasureSpec);
-                    if (desiredAspect != 0.0) {
-                        let actualAspect = (widthSize - pleft - pright) / (heightSize - ptop - pbottom);
-                        if (Math.abs(actualAspect - desiredAspect) > 0.0000001) {
-                            let done = false;
-                            if (resizeWidth) {
-                                let newWidth = Math.floor((desiredAspect * (heightSize - ptop - pbottom))) + pleft + pright;
-                                if (!resizeHeight && !this.mAdjustViewBoundsCompat) {
-                                    widthSize = this.resolveAdjustedSize(newWidth, this.mMaxWidth, widthMeasureSpec);
-                                }
-                                if (newWidth <= widthSize) {
-                                    widthSize = newWidth;
-                                    done = true;
-                                }
-                            }
-                            if (!done && resizeHeight) {
-                                let newHeight = Math.floor(((widthSize - pleft - pright) / desiredAspect)) + ptop + pbottom;
-                                if (!resizeWidth && !this.mAdjustViewBoundsCompat) {
-                                    heightSize = this.resolveAdjustedSize(newHeight, this.mMaxHeight, heightMeasureSpec);
-                                }
-                                if (newHeight <= heightSize) {
-                                    heightSize = newHeight;
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    w += pleft + pright;
-                    h += ptop + pbottom;
-                    w = Math.max(w, this.getSuggestedMinimumWidth());
-                    h = Math.max(h, this.getSuggestedMinimumHeight());
-                    widthSize = ImageView.resolveSizeAndState(w, widthMeasureSpec, 0);
-                    heightSize = ImageView.resolveSizeAndState(h, heightMeasureSpec, 0);
-                }
-                this.setMeasuredDimension(widthSize, heightSize);
-            }
-            resolveAdjustedSize(desiredSize, maxSize, measureSpec) {
-                let result = desiredSize;
-                let specMode = ImageView.MeasureSpec.getMode(measureSpec);
-                let specSize = ImageView.MeasureSpec.getSize(measureSpec);
-                switch (specMode) {
-                    case ImageView.MeasureSpec.UNSPECIFIED:
-                        result = Math.min(desiredSize, maxSize);
-                        break;
-                    case ImageView.MeasureSpec.AT_MOST:
-                        result = Math.min(Math.min(desiredSize, specSize), maxSize);
-                        break;
-                    case ImageView.MeasureSpec.EXACTLY:
-                        result = specSize;
-                        break;
-                }
-                return result;
-            }
-            setFrame(l, t, r, b) {
-                let changed = super.setFrame(l, t, r, b);
-                this.mHaveFrame = true;
-                this.configureBounds();
-                return changed;
-            }
-            configureBounds() {
-                if (this.mDrawable == null || !this.mHaveFrame) {
-                    return;
-                }
-                let dwidth = this.mDrawableWidth;
-                let dheight = this.mDrawableHeight;
-                let vwidth = this.getWidth() - this.mPaddingLeft - this.mPaddingRight;
-                let vheight = this.getHeight() - this.mPaddingTop - this.mPaddingBottom;
-                let fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
-                if (dwidth <= 0 || dheight <= 0 || ImageView.ScaleType.FIT_XY == this.mScaleType) {
-                    this.mDrawable.setBounds(0, 0, vwidth, vheight);
-                    this.mDrawMatrix = null;
-                }
-                else {
-                    this.mDrawable.setBounds(0, 0, dwidth, dheight);
-                    if (ImageView.ScaleType.MATRIX == this.mScaleType) {
-                        if (this.mMatrix.isIdentity()) {
-                            this.mDrawMatrix = null;
-                        }
-                        else {
-                            this.mDrawMatrix = this.mMatrix;
-                        }
-                    }
-                    else if (fits) {
-                        this.mDrawMatrix = null;
-                    }
-                    else if (ImageView.ScaleType.CENTER == this.mScaleType) {
-                        this.mDrawMatrix = this.mMatrix;
-                        this.mDrawMatrix.setTranslate(Math.floor(((vwidth - dwidth) * 0.5 + 0.5)), Math.floor(((vheight - dheight) * 0.5 + 0.5)));
-                    }
-                    else if (ImageView.ScaleType.CENTER_CROP == this.mScaleType) {
-                        this.mDrawMatrix = this.mMatrix;
-                        let scale;
-                        let dx = 0, dy = 0;
-                        if (dwidth * vheight > vwidth * dheight) {
-                            scale = vheight / dheight;
-                            dx = (vwidth - dwidth * scale) * 0.5;
-                        }
-                        else {
-                            scale = vwidth / dwidth;
-                            dy = (vheight - dheight * scale) * 0.5;
-                        }
-                        this.mDrawMatrix.setScale(scale, scale);
-                        this.mDrawMatrix.postTranslate(Math.floor((dx + 0.5)), Math.floor((dy + 0.5)));
-                    }
-                    else if (ImageView.ScaleType.CENTER_INSIDE == this.mScaleType) {
-                        this.mDrawMatrix = this.mMatrix;
-                        let scale;
-                        let dx;
-                        let dy;
-                        if (dwidth <= vwidth && dheight <= vheight) {
-                            scale = 1.0;
-                        }
-                        else {
-                            scale = Math.min(vwidth / dwidth, vheight / dheight);
-                        }
-                        dx = Math.floor(((vwidth - dwidth * scale) * 0.5 + 0.5));
-                        dy = Math.floor(((vheight - dheight * scale) * 0.5 + 0.5));
-                        this.mDrawMatrix.setScale(scale, scale);
-                        this.mDrawMatrix.postTranslate(dx, dy);
-                    }
-                    else {
-                        this.mTempSrc.set(0, 0, dwidth, dheight);
-                        this.mTempDst.set(0, 0, vwidth, vheight);
-                        this.mDrawMatrix = this.mMatrix;
-                        this.mDrawMatrix.setRectToRect(this.mTempSrc, this.mTempDst, ImageView.scaleTypeToScaleToFit(this.mScaleType));
-                    }
-                }
-            }
-            drawableStateChanged() {
-                super.drawableStateChanged();
-                let d = this.mDrawable;
-                if (d != null && d.isStateful()) {
-                    d.setState(this.getDrawableState());
-                }
-            }
-            onDraw(canvas) {
-                super.onDraw(canvas);
-                if (this.mDrawable == null) {
-                    return;
-                }
-                if (this.mDrawableWidth == 0 || this.mDrawableHeight == 0) {
-                    return;
-                }
-                if (this.mDrawMatrix == null && this.mPaddingTop == 0 && this.mPaddingLeft == 0) {
-                    this.mDrawable.draw(canvas);
-                }
-                else {
-                    let saveCount = canvas.getSaveCount();
-                    canvas.save();
-                    if (this.mCropToPadding) {
-                        const scrollX = this.mScrollX;
-                        const scrollY = this.mScrollY;
-                        canvas.clipRect(scrollX + this.mPaddingLeft, scrollY + this.mPaddingTop, scrollX + this.mRight - this.mLeft - this.mPaddingRight, scrollY + this.mBottom - this.mTop - this.mPaddingBottom);
-                    }
-                    canvas.translate(this.mPaddingLeft, this.mPaddingTop);
-                    if (this.mDrawMatrix != null) {
-                        canvas.concat(this.mDrawMatrix);
-                    }
-                    this.mDrawable.draw(canvas);
-                    canvas.restoreToCount(saveCount);
-                }
-            }
-            getBaseline() {
-                if (this.mBaselineAlignBottom) {
-                    return this.getMeasuredHeight();
-                }
-                else {
-                    return this.mBaseline;
-                }
-            }
-            setBaseline(baseline) {
-                if (this.mBaseline != baseline) {
-                    this.mBaseline = baseline;
-                    this.requestLayout();
-                }
-            }
-            setBaselineAlignBottom(aligned) {
-                if (this.mBaselineAlignBottom != aligned) {
-                    this.mBaselineAlignBottom = aligned;
-                    this.requestLayout();
-                }
-            }
-            getBaselineAlignBottom() {
-                return this.mBaselineAlignBottom;
-            }
-            getImageAlpha() {
-                return this.mAlpha;
-            }
-            setImageAlpha(alpha) {
-                this.setAlpha(alpha);
-            }
-            setAlpha(alpha) {
-                alpha &= 0xFF;
-                if (this.mAlpha != alpha) {
-                    this.mAlpha = alpha;
-                    this.mColorMod = true;
-                    this.applyColorMod();
-                    this.invalidate();
-                }
-            }
-            applyColorMod() {
-                if (this.mDrawable != null && this.mColorMod) {
-                    this.mDrawable = this.mDrawable.mutate();
-                    this.mDrawable.setAlpha(this.mAlpha * this.mViewAlphaScale >> 8);
-                }
-            }
-            setVisibility(visibility) {
-                super.setVisibility(visibility);
-                if (this.mDrawable != null) {
-                    this.mDrawable.setVisible(visibility == ImageView.VISIBLE, false);
-                }
-            }
-            onAttachedToWindow() {
-                super.onAttachedToWindow();
-                if (this.mDrawable != null) {
-                    this.mDrawable.setVisible(this.getVisibility() == ImageView.VISIBLE, false);
-                }
-            }
-            onDetachedFromWindow() {
-                super.onDetachedFromWindow();
-                if (this.mDrawable != null) {
-                    this.mDrawable.setVisible(false, false);
-                }
-            }
-            static parseScaleType(s, defaultType) {
-                if (s == null)
-                    return defaultType;
-                s = s.toLowerCase();
-                if (s === 'matrix'.toLowerCase())
-                    return ImageView.ScaleType.MATRIX;
-                if (s === 'fitXY'.toLowerCase())
-                    return ImageView.ScaleType.FIT_XY;
-                if (s === 'fitStart'.toLowerCase())
-                    return ImageView.ScaleType.FIT_START;
-                if (s === 'fitCenter'.toLowerCase())
-                    return ImageView.ScaleType.FIT_CENTER;
-                if (s === 'fitEnd'.toLowerCase())
-                    return ImageView.ScaleType.FIT_END;
-                if (s === 'center'.toLowerCase())
-                    return ImageView.ScaleType.CENTER;
-                if (s === 'centerCrop'.toLowerCase())
-                    return ImageView.ScaleType.CENTER_CROP;
-                if (s === 'centerInside'.toLowerCase())
-                    return ImageView.ScaleType.CENTER_INSIDE;
-                return defaultType;
-            }
-        }
-        ImageView.sS2FArray = [Matrix.ScaleToFit.FILL, Matrix.ScaleToFit.START, Matrix.ScaleToFit.CENTER, Matrix.ScaleToFit.END];
-        widget.ImageView = ImageView;
-        (function (ImageView) {
-            (function (ScaleType) {
-                ScaleType[ScaleType["MATRIX"] = 0] = "MATRIX";
-                ScaleType[ScaleType["FIT_XY"] = 1] = "FIT_XY";
-                ScaleType[ScaleType["FIT_START"] = 2] = "FIT_START";
-                ScaleType[ScaleType["FIT_CENTER"] = 3] = "FIT_CENTER";
-                ScaleType[ScaleType["FIT_END"] = 4] = "FIT_END";
-                ScaleType[ScaleType["CENTER"] = 5] = "CENTER";
-                ScaleType[ScaleType["CENTER_CROP"] = 6] = "CENTER_CROP";
-                ScaleType[ScaleType["CENTER_INSIDE"] = 7] = "CENTER_INSIDE";
-            })(ImageView.ScaleType || (ImageView.ScaleType = {}));
-            var ScaleType = ImageView.ScaleType;
-        })(ImageView = widget.ImageView || (widget.ImageView = {}));
-    })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/28.
- */
-///<reference path="ImageView.ts"/>
-///<reference path="../view/View.ts"/>
-///<reference path="../R/attr.ts"/>
-var android;
-(function (android) {
-    var widget;
-    (function (widget) {
-        class ImageButton extends widget.ImageView {
-            constructor(bindElement, rootElement) {
-                super(bindElement, rootElement);
-                this.applyDefaultAttributes(android.R.attr.imageButtonStyle);
-            }
-        }
-        widget.ImageButton = ImageButton;
-    })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-var android;
-(function (android) {
-    var util;
-    (function (util) {
-        class MathUtils {
-            constructor() {
-            }
-            static abs(v) {
-                return v > 0 ? v : -v;
-            }
-            static constrain(amount, low, high) {
-                return amount < low ? low : (amount > high ? high : amount);
-            }
-            static log(a) {
-                return Math.log(a);
-            }
-            static exp(a) {
-                return Math.exp(a);
-            }
-            static pow(a, b) {
-                return Math.pow(a, b);
-            }
-            static max(a, b, c) {
-                if (c == null)
-                    return a > b ? a : b;
-                return a > b ? (a > c ? a : c) : (b > c ? b : c);
-            }
-            static min(a, b, c) {
-                if (c == null)
-                    return a < b ? a : b;
-                return a < b ? (a < c ? a : c) : (b < c ? b : c);
-            }
-            static dist(x1, y1, x2, y2) {
-                const x = (x2 - x1);
-                const y = (y2 - y1);
-                return Math.sqrt(x * x + y * y);
-            }
-            static dist3(x1, y1, z1, x2, y2, z2) {
-                const x = (x2 - x1);
-                const y = (y2 - y1);
-                const z = (z2 - z1);
-                return Math.sqrt(x * x + y * y + z * z);
-            }
-            static mag(a, b, c) {
-                if (c == null)
-                    return Math.sqrt(a * a + b * b);
-                return Math.sqrt(a * a + b * b + c * c);
-            }
-            static sq(v) {
-                return v * v;
-            }
-            static radians(degrees) {
-                return degrees * MathUtils.DEG_TO_RAD;
-            }
-            static degrees(radians) {
-                return radians * MathUtils.RAD_TO_DEG;
-            }
-            static acos(value) {
-                return Math.acos(value);
-            }
-            static asin(value) {
-                return Math.asin(value);
-            }
-            static atan(value) {
-                return Math.atan(value);
-            }
-            static atan2(a, b) {
-                return Math.atan2(a, b);
-            }
-            static tan(angle) {
-                return Math.tan(angle);
-            }
-            static lerp(start, stop, amount) {
-                return start + (stop - start) * amount;
-            }
-            static norm(start, stop, value) {
-                return (value - start) / (stop - start);
-            }
-            static map(minStart, minStop, maxStart, maxStop, value) {
-                return maxStart + (maxStart - maxStop) * ((value - minStart) / (minStop - minStart));
-            }
-            static random(...args) {
-                if (args.length == 1)
-                    return Math.random() * args[0];
-                let [howsmall, howbig] = args;
-                if (howsmall >= howbig)
-                    return howsmall;
-                return Math.random() * (howbig - howsmall) + howsmall;
-            }
-        }
-        MathUtils.DEG_TO_RAD = 3.1415926 / 180.0;
-        MathUtils.RAD_TO_DEG = 180.0 / 3.1415926;
-        util.MathUtils = MathUtils;
-    })(util = android.util || (android.util = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/3.
- */
-///<reference path="SparseArray.ts"/>
-var android;
-(function (android) {
-    var util;
-    (function (util) {
-        class SparseBooleanArray extends util.SparseArray {
-        }
-        util.SparseBooleanArray = SparseBooleanArray;
-    })(util = android.util || (android.util = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="View.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        class SoundEffectConstants {
-            static getContantForFocusDirection(direction) {
-                switch (direction) {
-                    case view.View.FOCUS_RIGHT:
-                        return SoundEffectConstants.NAVIGATION_RIGHT;
-                    case view.View.FOCUS_FORWARD:
-                    case view.View.FOCUS_DOWN:
-                        return SoundEffectConstants.NAVIGATION_DOWN;
-                    case view.View.FOCUS_LEFT:
-                        return SoundEffectConstants.NAVIGATION_LEFT;
-                    case view.View.FOCUS_BACKWARD:
-                    case view.View.FOCUS_UP:
-                        return SoundEffectConstants.NAVIGATION_UP;
-                }
-                throw Error(`new IllegalArgumentException("direction must be one of " + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT, FOCUS_FORWARD, FOCUS_BACKWARD}.")`);
-            }
-        }
-        SoundEffectConstants.CLICK = 0;
-        SoundEffectConstants.NAVIGATION_LEFT = 1;
-        SoundEffectConstants.NAVIGATION_UP = 2;
-        SoundEffectConstants.NAVIGATION_RIGHT = 3;
-        SoundEffectConstants.NAVIGATION_DOWN = 4;
-        view.SoundEffectConstants = SoundEffectConstants;
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2012 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/util/Log.ts"/>
-var android;
-(function (android) {
-    var os;
-    (function (os) {
-        class Trace {
-            static nativeGetEnabledTags() {
-                return Trace.TRACE_TAG_ALWAYS;
-            }
-            static nativeTraceCounter(tag, name, value) {
-            }
-            static nativeTraceBegin(tag, name) { }
-            static nativeTraceEnd(tag) { }
-            static nativeAsyncTraceBegin(tag, name, cookie) { }
-            static nativeAsyncTraceEnd(tag, name, cookie) { }
-            static nativeSetAppTracingAllowed(allowed) { }
-            static nativeSetTracingEnabled(allowed) { }
-            static cacheEnabledTags() {
-                let tags = Trace.nativeGetEnabledTags();
-                Trace.sEnabledTags = tags;
-                return tags;
-            }
-            static isTagEnabled(traceTag) {
-                let tags = Trace.sEnabledTags;
-                if (tags == Trace.TRACE_TAG_NOT_READY) {
-                    tags = Trace.cacheEnabledTags();
-                }
-                return (tags & traceTag) != 0;
-            }
-            static traceCounter(traceTag, counterName, counterValue) {
-                if (Trace.isTagEnabled(traceTag)) {
-                    Trace.nativeTraceCounter(traceTag, counterName, counterValue);
-                }
-            }
-            static setAppTracingAllowed(allowed) {
-                Trace.nativeSetAppTracingAllowed(allowed);
-                Trace.cacheEnabledTags();
-            }
-            static setTracingEnabled(enabled) {
-                Trace.nativeSetTracingEnabled(enabled);
-                Trace.cacheEnabledTags();
-            }
-            static traceBegin(traceTag, methodName) {
-                if (Trace.isTagEnabled(traceTag)) {
-                    Trace.nativeTraceBegin(traceTag, methodName);
-                }
-            }
-            static traceEnd(traceTag) {
-                if (Trace.isTagEnabled(traceTag)) {
-                    Trace.nativeTraceEnd(traceTag);
-                }
-            }
-            static asyncTraceBegin(traceTag, methodName, cookie) {
-                if (Trace.isTagEnabled(traceTag)) {
-                    Trace.nativeAsyncTraceBegin(traceTag, methodName, cookie);
-                }
-            }
-            static asyncTraceEnd(traceTag, methodName, cookie) {
-                if (Trace.isTagEnabled(traceTag)) {
-                    Trace.nativeAsyncTraceEnd(traceTag, methodName, cookie);
-                }
-            }
-            static beginSection(sectionName) {
-                if (Trace.isTagEnabled(Trace.TRACE_TAG_APP)) {
-                    if (sectionName.length > Trace.MAX_SECTION_NAME_LEN) {
-                        throw Error(`new IllegalArgumentException("sectionName is too long")`);
-                    }
-                    Trace.nativeTraceBegin(Trace.TRACE_TAG_APP, sectionName);
-                }
-            }
-            static endSection() {
-                if (Trace.isTagEnabled(Trace.TRACE_TAG_APP)) {
-                    Trace.nativeTraceEnd(Trace.TRACE_TAG_APP);
-                }
-            }
-        }
-        Trace.TAG = "Trace";
-        Trace.TRACE_TAG_NEVER = 0;
-        Trace.TRACE_TAG_ALWAYS = 1 << 0;
-        Trace.TRACE_TAG_GRAPHICS = 1 << 1;
-        Trace.TRACE_TAG_INPUT = 1 << 2;
-        Trace.TRACE_TAG_VIEW = 1 << 3;
-        Trace.TRACE_TAG_WEBVIEW = 1 << 4;
-        Trace.TRACE_TAG_WINDOW_MANAGER = 1 << 5;
-        Trace.TRACE_TAG_ACTIVITY_MANAGER = 1 << 6;
-        Trace.TRACE_TAG_SYNC_MANAGER = 1 << 7;
-        Trace.TRACE_TAG_AUDIO = 1 << 8;
-        Trace.TRACE_TAG_VIDEO = 1 << 9;
-        Trace.TRACE_TAG_CAMERA = 1 << 10;
-        Trace.TRACE_TAG_HAL = 1 << 11;
-        Trace.TRACE_TAG_APP = 1 << 12;
-        Trace.TRACE_TAG_RESOURCES = 1 << 13;
-        Trace.TRACE_TAG_DALVIK = 1 << 14;
-        Trace.TRACE_TAG_RS = 1 << 15;
-        Trace.TRACE_TAG_NOT_READY = 1 << 63;
-        Trace.MAX_SECTION_NAME_LEN = 127;
-        Trace.sEnabledTags = Trace.TRACE_TAG_NOT_READY;
-        os.Trace = Trace;
-    })(os = android.os || (android.os = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/3.
- */
-///<reference path="SparseArray.ts"/>
-var android;
-(function (android) {
-    var util;
-    (function (util) {
-        class LongSparseArray extends util.SparseArray {
-        }
-        util.LongSparseArray = LongSparseArray;
-    })(util = android.util || (android.util = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/5.
- */
-var android;
-(function (android) {
-    var database;
-    (function (database) {
-        class DataSetObserver {
-            onChanged() { }
-            onInvalidated() { }
-        }
-        database.DataSetObserver = DataSetObserver;
-    })(database = android.database || (android.database = {}));
-})(android || (android = {}));
-var java;
-(function (java) {
-    var lang;
-    (function (lang) {
-        class Long {
-        }
-        Long.MIN_VALUE = Number.MIN_SAFE_INTEGER;
-        Long.MAX_VALUE = Number.MAX_SAFE_INTEGER;
-        lang.Long = Long;
-    })(lang = java.lang || (java.lang = {}));
-})(java || (java = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/os/SystemClock.ts"/>
-///<reference path="../../android/util/SparseArray.ts"/>
-///<reference path="../../android/view/SoundEffectConstants.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/lang/Long.ts"/>
-///<reference path="Adapter.ts"/>
-var android;
-(function (android) {
-    var widget;
-    (function (widget) {
-        var DataSetObserver = android.database.DataSetObserver;
-        var SystemClock = android.os.SystemClock;
-        var SoundEffectConstants = android.view.SoundEffectConstants;
-        var View = android.view.View;
-        var ViewGroup = android.view.ViewGroup;
-        var Long = java.lang.Long;
-        class AdapterView extends ViewGroup {
-            constructor(...args) {
-                super(...args);
-                this.mFirstPosition = 0;
-                this.mSpecificTop = 0;
-                this.mSyncPosition = 0;
-                this.mSyncRowId = AdapterView.INVALID_ROW_ID;
-                this.mSyncHeight = 0;
-                this.mNeedSync = false;
-                this.mSyncMode = 0;
-                this.mLayoutHeight = 0;
-                this.mInLayout = false;
-                this.mNextSelectedPosition = AdapterView.INVALID_POSITION;
-                this.mNextSelectedRowId = AdapterView.INVALID_ROW_ID;
-                this.mSelectedPosition = AdapterView.INVALID_POSITION;
-                this.mSelectedRowId = AdapterView.INVALID_ROW_ID;
-                this.mItemCount = 0;
-                this.mOldItemCount = 0;
-                this.mOldSelectedPosition = AdapterView.INVALID_POSITION;
-                this.mOldSelectedRowId = AdapterView.INVALID_ROW_ID;
-                this.mBlockLayoutRequests = false;
-            }
-            setOnItemClickListener(listener) {
-                this.mOnItemClickListener = listener;
-            }
-            getOnItemClickListener() {
-                return this.mOnItemClickListener;
-            }
-            performItemClick(view, position, id) {
-                if (this.mOnItemClickListener != null) {
-                    this.playSoundEffect(SoundEffectConstants.CLICK);
-                    this.mOnItemClickListener.onItemClick(this, view, position, id);
-                    return true;
-                }
-                return false;
-            }
-            setOnItemLongClickListener(listener) {
-                if (!this.isLongClickable()) {
-                    this.setLongClickable(true);
-                }
-                this.mOnItemLongClickListener = listener;
-            }
-            getOnItemLongClickListener() {
-                return this.mOnItemLongClickListener;
-            }
-            setOnItemSelectedListener(listener) {
-                this.mOnItemSelectedListener = listener;
-            }
-            getOnItemSelectedListener() {
-                return this.mOnItemSelectedListener;
-            }
-            addView(...args) {
-                throw Error(`new UnsupportedOperationException("addView() is not supported in AdapterView")`);
-            }
-            removeView(child) {
-                throw Error(`new UnsupportedOperationException("removeView(View) is not supported in AdapterView")`);
-            }
-            removeViewAt(index) {
-                throw Error(`new UnsupportedOperationException("removeViewAt(int) is not supported in AdapterView")`);
-            }
-            removeAllViews() {
-                throw Error(`new UnsupportedOperationException("removeAllViews() is not supported in AdapterView")`);
-            }
-            onLayout(changed, left, top, right, bottom) {
-                this.mLayoutHeight = this.getHeight();
-            }
-            getSelectedItemPosition() {
-                return this.mNextSelectedPosition;
-            }
-            getSelectedItemId() {
-                return this.mNextSelectedRowId;
-            }
-            getSelectedItem() {
-                let adapter = this.getAdapter();
-                let selection = this.getSelectedItemPosition();
-                if (adapter != null && adapter.getCount() > 0 && selection >= 0) {
-                    return adapter.getItem(selection);
-                }
-                else {
-                    return null;
-                }
-            }
-            getCount() {
-                return this.mItemCount;
-            }
-            getPositionForView(view) {
-                let listItem = view;
-                try {
-                    let v;
-                    while (!((v = listItem.getParent()) == (this))) {
-                        listItem = v;
-                    }
-                }
-                catch (e) {
-                    return AdapterView.INVALID_POSITION;
-                }
-                const childCount = this.getChildCount();
-                for (let i = 0; i < childCount; i++) {
-                    if (this.getChildAt(i) == (listItem)) {
-                        return this.mFirstPosition + i;
-                    }
-                }
-                return AdapterView.INVALID_POSITION;
-            }
-            getFirstVisiblePosition() {
-                return this.mFirstPosition;
-            }
-            getLastVisiblePosition() {
-                return this.mFirstPosition + this.getChildCount() - 1;
-            }
-            setEmptyView(emptyView) {
-                this.mEmptyView = emptyView;
-                const adapter = this.getAdapter();
-                const empty = ((adapter == null) || adapter.isEmpty());
-                this.updateEmptyStatus(empty);
-            }
-            getEmptyView() {
-                return this.mEmptyView;
-            }
-            isInFilterMode() {
-                return false;
-            }
-            setFocusable(focusable) {
-                const adapter = this.getAdapter();
-                const empty = adapter == null || adapter.getCount() == 0;
-                this.mDesiredFocusableState = focusable;
-                if (!focusable) {
-                    this.mDesiredFocusableInTouchModeState = false;
-                }
-                super.setFocusable(focusable && (!empty || this.isInFilterMode()));
-            }
-            setFocusableInTouchMode(focusable) {
-                const adapter = this.getAdapter();
-                const empty = adapter == null || adapter.getCount() == 0;
-                this.mDesiredFocusableInTouchModeState = focusable;
-                if (focusable) {
-                    this.mDesiredFocusableState = true;
-                }
-                super.setFocusableInTouchMode(focusable && (!empty || this.isInFilterMode()));
-            }
-            checkFocus() {
-                const adapter = this.getAdapter();
-                const empty = adapter == null || adapter.getCount() == 0;
-                const focusable = !empty || this.isInFilterMode();
-                super.setFocusableInTouchMode(focusable && this.mDesiredFocusableInTouchModeState);
-                super.setFocusable(focusable && this.mDesiredFocusableState);
-                if (this.mEmptyView != null) {
-                    this.updateEmptyStatus((adapter == null) || adapter.isEmpty());
-                }
-            }
-            updateEmptyStatus(empty) {
-                if (this.isInFilterMode()) {
-                    empty = false;
-                }
-                if (empty) {
-                    if (this.mEmptyView != null) {
-                        this.mEmptyView.setVisibility(View.VISIBLE);
-                        this.setVisibility(View.GONE);
-                    }
-                    else {
-                        this.setVisibility(View.VISIBLE);
-                    }
-                    if (this.mDataChanged) {
-                        this.onLayout(false, this.mLeft, this.mTop, this.mRight, this.mBottom);
-                    }
-                }
-                else {
-                    if (this.mEmptyView != null)
-                        this.mEmptyView.setVisibility(View.GONE);
-                    this.setVisibility(View.VISIBLE);
-                }
-            }
-            getItemAtPosition(position) {
-                let adapter = this.getAdapter();
-                return (adapter == null || position < 0) ? null : adapter.getItem(position);
-            }
-            getItemIdAtPosition(position) {
-                let adapter = this.getAdapter();
-                return (adapter == null || position < 0) ? AdapterView.INVALID_ROW_ID : adapter.getItemId(position);
-            }
-            setOnClickListener(l) {
-                throw Error(`new RuntimeException("Don't call setOnClickListener for an AdapterView. " + "You probably want setOnItemClickListener instead")`);
-            }
-            onDetachedFromWindow() {
-                super.onDetachedFromWindow();
-                this.removeCallbacks(this.mSelectionNotifier);
-            }
-            selectionChanged() {
-                if (this.mOnItemSelectedListener != null) {
-                    if (this.mInLayout || this.mBlockLayoutRequests) {
-                        if (this.mSelectionNotifier == null) {
-                            this.mSelectionNotifier = new SelectionNotifier(this);
-                        }
-                        this.post(this.mSelectionNotifier);
-                    }
-                    else {
-                        this.fireOnSelected();
-                        this.performAccessibilityActionsOnSelected();
-                    }
-                }
-            }
-            fireOnSelected() {
-                if (this.mOnItemSelectedListener == null) {
-                    return;
-                }
-                const selection = this.getSelectedItemPosition();
-                if (selection >= 0) {
-                    let v = this.getSelectedView();
-                    this.mOnItemSelectedListener.onItemSelected(this, v, selection, this.getAdapter().getItemId(selection));
-                }
-                else {
-                    this.mOnItemSelectedListener.onNothingSelected(this);
-                }
-            }
-            performAccessibilityActionsOnSelected() {
-            }
-            isScrollableForAccessibility() {
-                let adapter = this.getAdapter();
-                if (adapter != null) {
-                    const itemCount = adapter.getCount();
-                    return itemCount > 0 && (this.getFirstVisiblePosition() > 0 || this.getLastVisiblePosition() < itemCount - 1);
-                }
-                return false;
-            }
-            canAnimate() {
-                return super.canAnimate() && this.mItemCount > 0;
-            }
-            handleDataChanged() {
-                const count = this.mItemCount;
-                let found = false;
-                if (count > 0) {
-                    let newPos;
-                    if (this.mNeedSync) {
-                        this.mNeedSync = false;
-                        newPos = this.findSyncPosition();
-                        if (newPos >= 0) {
-                            let selectablePos = this.lookForSelectablePosition(newPos, true);
-                            if (selectablePos == newPos) {
-                                this.setNextSelectedPositionInt(newPos);
-                                found = true;
-                            }
-                        }
-                    }
-                    if (!found) {
-                        newPos = this.getSelectedItemPosition();
-                        if (newPos >= count) {
-                            newPos = count - 1;
-                        }
-                        if (newPos < 0) {
-                            newPos = 0;
-                        }
-                        let selectablePos = this.lookForSelectablePosition(newPos, true);
-                        if (selectablePos < 0) {
-                            selectablePos = this.lookForSelectablePosition(newPos, false);
-                        }
-                        if (selectablePos >= 0) {
-                            this.setNextSelectedPositionInt(selectablePos);
-                            this.checkSelectionChanged();
-                            found = true;
-                        }
-                    }
-                }
-                if (!found) {
-                    this.mSelectedPosition = AdapterView.INVALID_POSITION;
-                    this.mSelectedRowId = AdapterView.INVALID_ROW_ID;
-                    this.mNextSelectedPosition = AdapterView.INVALID_POSITION;
-                    this.mNextSelectedRowId = AdapterView.INVALID_ROW_ID;
-                    this.mNeedSync = false;
-                    this.checkSelectionChanged();
-                }
-            }
-            checkSelectionChanged() {
-                if ((this.mSelectedPosition != this.mOldSelectedPosition) || (this.mSelectedRowId != this.mOldSelectedRowId)) {
-                    this.selectionChanged();
-                    this.mOldSelectedPosition = this.mSelectedPosition;
-                    this.mOldSelectedRowId = this.mSelectedRowId;
-                }
-            }
-            findSyncPosition() {
-                let count = this.mItemCount;
-                if (count == 0) {
-                    return AdapterView.INVALID_POSITION;
-                }
-                let idToMatch = this.mSyncRowId;
-                let seed = this.mSyncPosition;
-                if (idToMatch == AdapterView.INVALID_ROW_ID) {
-                    return AdapterView.INVALID_POSITION;
-                }
-                seed = Math.max(0, seed);
-                seed = Math.min(count - 1, seed);
-                let endTime = SystemClock.uptimeMillis() + AdapterView.SYNC_MAX_DURATION_MILLIS;
-                let rowId;
-                let first = seed;
-                let last = seed;
-                let next = false;
-                let hitFirst;
-                let hitLast;
-                let adapter = this.getAdapter();
-                if (adapter == null) {
-                    return AdapterView.INVALID_POSITION;
-                }
-                while (SystemClock.uptimeMillis() <= endTime) {
-                    rowId = adapter.getItemId(seed);
-                    if (rowId == idToMatch) {
-                        return seed;
-                    }
-                    hitLast = last == count - 1;
-                    hitFirst = first == 0;
-                    if (hitLast && hitFirst) {
-                        break;
-                    }
-                    if (hitFirst || (next && !hitLast)) {
-                        last++;
-                        seed = last;
-                        next = false;
-                    }
-                    else if (hitLast || (!next && !hitFirst)) {
-                        first--;
-                        seed = first;
-                        next = true;
-                    }
-                }
-                return AdapterView.INVALID_POSITION;
-            }
-            lookForSelectablePosition(position, lookDown) {
-                return position;
-            }
-            setSelectedPositionInt(position) {
-                this.mSelectedPosition = position;
-                this.mSelectedRowId = this.getItemIdAtPosition(position);
-            }
-            setNextSelectedPositionInt(position) {
-                this.mNextSelectedPosition = position;
-                this.mNextSelectedRowId = this.getItemIdAtPosition(position);
-                if (this.mNeedSync && this.mSyncMode == AdapterView.SYNC_SELECTED_POSITION && position >= 0) {
-                    this.mSyncPosition = position;
-                    this.mSyncRowId = this.mNextSelectedRowId;
-                }
-            }
-            rememberSyncState() {
-                if (this.getChildCount() > 0) {
-                    this.mNeedSync = true;
-                    this.mSyncHeight = this.mLayoutHeight;
-                    if (this.mSelectedPosition >= 0) {
-                        let v = this.getChildAt(this.mSelectedPosition - this.mFirstPosition);
-                        this.mSyncRowId = this.mNextSelectedRowId;
-                        this.mSyncPosition = this.mNextSelectedPosition;
-                        if (v != null) {
-                            this.mSpecificTop = v.getTop();
-                        }
-                        this.mSyncMode = AdapterView.SYNC_SELECTED_POSITION;
-                    }
-                    else {
-                        let v = this.getChildAt(0);
-                        let adapter = this.getAdapter();
-                        if (this.mFirstPosition >= 0 && this.mFirstPosition < adapter.getCount()) {
-                            this.mSyncRowId = adapter.getItemId(this.mFirstPosition);
-                        }
-                        else {
-                            this.mSyncRowId = AdapterView.NO_ID;
-                        }
-                        this.mSyncPosition = this.mFirstPosition;
-                        if (v != null) {
-                            this.mSpecificTop = v.getTop();
-                        }
-                        this.mSyncMode = AdapterView.SYNC_FIRST_POSITION;
-                    }
-                }
-            }
-        }
-        AdapterView.ITEM_VIEW_TYPE_IGNORE = -1;
-        AdapterView.ITEM_VIEW_TYPE_HEADER_OR_FOOTER = -2;
-        AdapterView.SYNC_SELECTED_POSITION = 0;
-        AdapterView.SYNC_FIRST_POSITION = 1;
-        AdapterView.SYNC_MAX_DURATION_MILLIS = 100;
-        AdapterView.INVALID_POSITION = -1;
-        AdapterView.INVALID_ROW_ID = Long.MIN_VALUE;
-        widget.AdapterView = AdapterView;
-        (function (AdapterView) {
-            class AdapterDataSetObserver extends DataSetObserver {
-                constructor(AdapterView_this) {
-                    super();
-                    this.AdapterView_this = AdapterView_this;
-                }
-                onChanged() {
-                    this.AdapterView_this.mDataChanged = true;
-                    this.AdapterView_this.mOldItemCount = this.AdapterView_this.mItemCount;
-                    this.AdapterView_this.mItemCount = this.AdapterView_this.getAdapter().getCount();
-                    this.AdapterView_this.rememberSyncState();
-                    this.AdapterView_this.checkFocus();
-                    this.AdapterView_this.requestLayout();
-                }
-                onInvalidated() {
-                    this.AdapterView_this.mDataChanged = true;
-                    this.AdapterView_this.mOldItemCount = this.AdapterView_this.mItemCount;
-                    this.AdapterView_this.mItemCount = 0;
-                    this.AdapterView_this.mSelectedPosition = AdapterView.INVALID_POSITION;
-                    this.AdapterView_this.mSelectedRowId = AdapterView.INVALID_ROW_ID;
-                    this.AdapterView_this.mNextSelectedPosition = AdapterView.INVALID_POSITION;
-                    this.AdapterView_this.mNextSelectedRowId = AdapterView.INVALID_ROW_ID;
-                    this.AdapterView_this.mNeedSync = false;
-                    this.AdapterView_this.checkFocus();
-                    this.AdapterView_this.requestLayout();
-                }
-                clearSavedState() {
-                }
-            }
-            AdapterView.AdapterDataSetObserver = AdapterDataSetObserver;
-        })(AdapterView = widget.AdapterView || (widget.AdapterView = {}));
-        class SelectionNotifier {
-            constructor(AdapterView_this) {
-                this.AdapterView_this = AdapterView_this;
-            }
-            run() {
-                if (this.AdapterView_this.mDataChanged) {
-                    if (this.AdapterView_this.getAdapter() != null) {
-                        this.AdapterView_this.post(this);
-                    }
-                }
-                else {
-                    this.AdapterView_this.fireOnSelected();
-                    this.AdapterView_this.performAccessibilityActionsOnSelected();
-                }
-            }
-        }
-    })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="AdapterView.ts"/>
-var android;
-(function (android) {
-    var widget;
-    (function (widget) {
-        var Integer = java.lang.Integer;
-        var Adapter;
-        (function (Adapter) {
-            Adapter.IGNORE_ITEM_VIEW_TYPE = widget.AdapterView.ITEM_VIEW_TYPE_IGNORE;
-            Adapter.NO_SELECTION = Integer.MIN_VALUE;
-        })(Adapter = widget.Adapter || (widget.Adapter = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /*
@@ -32485,6 +32057,2615 @@ var android;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/view/FocusFinder.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/VelocityTracker.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/view/ViewParent.ts"/>
+///<reference path="../../android/view/animation/AnimationUtils.ts"/>
+///<reference path="../../java/util/List.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../android/widget/FrameLayout.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/widget/OverScroller.ts"/>
+///<reference path="../../android/widget/ScrollView.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Rect = android.graphics.Rect;
+        var Log = android.util.Log;
+        var FocusFinder = android.view.FocusFinder;
+        var KeyEvent = android.view.KeyEvent;
+        var MotionEvent = android.view.MotionEvent;
+        var VelocityTracker = android.view.VelocityTracker;
+        var View = android.view.View;
+        var ViewConfiguration = android.view.ViewConfiguration;
+        var ViewGroup = android.view.ViewGroup;
+        var AnimationUtils = android.view.animation.AnimationUtils;
+        var FrameLayout = android.widget.FrameLayout;
+        var OverScroller = android.widget.OverScroller;
+        var ScrollView = android.widget.ScrollView;
+        class HorizontalScrollView extends FrameLayout {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.mLastScroll = 0;
+                this.mTempRect = new Rect();
+                this.mLastMotionX = 0;
+                this.mIsLayoutDirty = true;
+                this.mChildToScrollTo = null;
+                this.mIsBeingDragged = false;
+                this.mSmoothScrollingEnabled = true;
+                this.mMinimumVelocity = 0;
+                this.mMaximumVelocity = 0;
+                this.mOverscrollDistance = 0;
+                this._mOverflingDistance = 0;
+                this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
+                this.initScrollView();
+                this._attrBinder.addAttr('fillViewport', (value) => {
+                    this.setFillViewport(this._attrBinder.parseBoolean(value));
+                });
+            }
+            get mOverflingDistance() {
+                if (this.mScrollX < -this._mOverflingDistance)
+                    return -this.mScrollX;
+                let overDistance = this.mScrollX - this.getScrollRange();
+                if (overDistance > this._mOverflingDistance)
+                    return overDistance;
+                return this._mOverflingDistance;
+            }
+            set mOverflingDistance(value) {
+                this._mOverflingDistance = value;
+            }
+            getLeftFadingEdgeStrength() {
+                if (this.getChildCount() == 0) {
+                    return 0.0;
+                }
+                const length = this.getHorizontalFadingEdgeLength();
+                if (this.mScrollX < length) {
+                    return this.mScrollX / length;
+                }
+                return 1.0;
+            }
+            getRightFadingEdgeStrength() {
+                if (this.getChildCount() == 0) {
+                    return 0.0;
+                }
+                const length = this.getHorizontalFadingEdgeLength();
+                const rightEdge = this.getWidth() - this.mPaddingRight;
+                const span = this.getChildAt(0).getRight() - this.mScrollX - rightEdge;
+                if (span < length) {
+                    return span / length;
+                }
+                return 1.0;
+            }
+            getMaxScrollAmount() {
+                return Math.floor((HorizontalScrollView.MAX_SCROLL_FACTOR * (this.mRight - this.mLeft)));
+            }
+            initScrollView() {
+                this.mScroller = new OverScroller();
+                this.setFocusable(true);
+                this.setDescendantFocusability(HorizontalScrollView.FOCUS_AFTER_DESCENDANTS);
+                this.setWillNotDraw(false);
+                const configuration = ViewConfiguration.get();
+                this.mTouchSlop = configuration.getScaledTouchSlop();
+                this.mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
+                this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
+                this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
+                this._mOverflingDistance = configuration.getScaledOverflingDistance();
+                this.initScrollCache();
+                this.setHorizontalScrollBarEnabled(true);
+            }
+            addView(...args) {
+                if (this.getChildCount() > 0) {
+                    throw new Error("ScrollView can host only one direct child");
+                }
+                return super.addView(...args);
+            }
+            canScroll() {
+                let child = this.getChildAt(0);
+                if (child != null) {
+                    let childWidth = child.getWidth();
+                    return this.getWidth() < childWidth + this.mPaddingLeft + this.mPaddingRight;
+                }
+                return false;
+            }
+            isFillViewport() {
+                return this.mFillViewport;
+            }
+            setFillViewport(fillViewport) {
+                if (fillViewport != this.mFillViewport) {
+                    this.mFillViewport = fillViewport;
+                    this.requestLayout();
+                }
+            }
+            isSmoothScrollingEnabled() {
+                return this.mSmoothScrollingEnabled;
+            }
+            setSmoothScrollingEnabled(smoothScrollingEnabled) {
+                this.mSmoothScrollingEnabled = smoothScrollingEnabled;
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                if (!this.mFillViewport) {
+                    return;
+                }
+                const widthMode = HorizontalScrollView.MeasureSpec.getMode(widthMeasureSpec);
+                if (widthMode == HorizontalScrollView.MeasureSpec.UNSPECIFIED) {
+                    return;
+                }
+                if (this.getChildCount() > 0) {
+                    const child = this.getChildAt(0);
+                    let width = this.getMeasuredWidth();
+                    if (child.getMeasuredWidth() < width) {
+                        const lp = child.getLayoutParams();
+                        let childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(heightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
+                        width -= this.mPaddingLeft;
+                        width -= this.mPaddingRight;
+                        let childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(width, HorizontalScrollView.MeasureSpec.EXACTLY);
+                        child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+                    }
+                }
+            }
+            dispatchKeyEvent(event) {
+                return super.dispatchKeyEvent(event) || this.executeKeyEvent(event);
+            }
+            executeKeyEvent(event) {
+                this.mTempRect.setEmpty();
+                if (!this.canScroll()) {
+                    if (this.isFocused()) {
+                        let currentFocused = this.findFocus();
+                        if (currentFocused == this)
+                            currentFocused = null;
+                        let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, View.FOCUS_RIGHT);
+                        return nextFocused != null && nextFocused != this && nextFocused.requestFocus(View.FOCUS_RIGHT);
+                    }
+                    return false;
+                }
+                let handled = false;
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    switch (event.getKeyCode()) {
+                        case KeyEvent.KEYCODE_DPAD_LEFT:
+                            if (!event.isAltPressed()) {
+                                handled = this.arrowScroll(View.FOCUS_LEFT);
+                            }
+                            else {
+                                handled = this.fullScroll(View.FOCUS_LEFT);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_DPAD_RIGHT:
+                            if (!event.isAltPressed()) {
+                                handled = this.arrowScroll(View.FOCUS_RIGHT);
+                            }
+                            else {
+                                handled = this.fullScroll(View.FOCUS_RIGHT);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_SPACE:
+                            this.pageScroll(event.isShiftPressed() ? View.FOCUS_LEFT : View.FOCUS_RIGHT);
+                            break;
+                    }
+                }
+                return handled;
+            }
+            inChild(x, y) {
+                if (this.getChildCount() > 0) {
+                    const scrollX = this.mScrollX;
+                    const child = this.getChildAt(0);
+                    return !(y < child.getTop() || y >= child.getBottom() || x < child.getLeft() - scrollX || x >= child.getRight() - scrollX);
+                }
+                return false;
+            }
+            initOrResetVelocityTracker() {
+                if (this.mVelocityTracker == null) {
+                    this.mVelocityTracker = VelocityTracker.obtain();
+                }
+                else {
+                    this.mVelocityTracker.clear();
+                }
+            }
+            initVelocityTrackerIfNotExists() {
+                if (this.mVelocityTracker == null) {
+                    this.mVelocityTracker = VelocityTracker.obtain();
+                }
+            }
+            recycleVelocityTracker() {
+                if (this.mVelocityTracker != null) {
+                    this.mVelocityTracker.recycle();
+                    this.mVelocityTracker = null;
+                }
+            }
+            requestDisallowInterceptTouchEvent(disallowIntercept) {
+                if (disallowIntercept) {
+                    this.recycleVelocityTracker();
+                }
+                super.requestDisallowInterceptTouchEvent(disallowIntercept);
+            }
+            onInterceptTouchEvent(ev) {
+                const action = ev.getAction();
+                if ((action == MotionEvent.ACTION_MOVE) && (this.mIsBeingDragged)) {
+                    return true;
+                }
+                switch (action & MotionEvent.ACTION_MASK) {
+                    case MotionEvent.ACTION_MOVE:
+                        {
+                            const activePointerId = this.mActivePointerId;
+                            if (activePointerId == HorizontalScrollView.INVALID_POINTER) {
+                                break;
+                            }
+                            const pointerIndex = ev.findPointerIndex(activePointerId);
+                            if (pointerIndex == -1) {
+                                Log.e(HorizontalScrollView.TAG, "Invalid pointerId=" + activePointerId + " in onInterceptTouchEvent");
+                                break;
+                            }
+                            const x = Math.floor(ev.getX(pointerIndex));
+                            const xDiff = Math.floor(Math.abs(x - this.mLastMotionX));
+                            if (xDiff > this.mTouchSlop) {
+                                this.mIsBeingDragged = true;
+                                this.mLastMotionX = x;
+                                this.initVelocityTrackerIfNotExists();
+                                this.mVelocityTracker.addMovement(ev);
+                                if (this.mParent != null)
+                                    this.mParent.requestDisallowInterceptTouchEvent(true);
+                            }
+                            break;
+                        }
+                    case MotionEvent.ACTION_DOWN:
+                        {
+                            const x = Math.floor(ev.getX());
+                            if (!this.inChild(Math.floor(x), Math.floor(ev.getY()))) {
+                                this.mIsBeingDragged = false;
+                                this.recycleVelocityTracker();
+                                break;
+                            }
+                            this.mLastMotionX = x;
+                            this.mActivePointerId = ev.getPointerId(0);
+                            this.initOrResetVelocityTracker();
+                            this.mVelocityTracker.addMovement(ev);
+                            this.mIsBeingDragged = !this.mScroller.isFinished();
+                            break;
+                        }
+                    case MotionEvent.ACTION_CANCEL:
+                    case MotionEvent.ACTION_UP:
+                        this.mIsBeingDragged = false;
+                        this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
+                        if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
+                            this.postInvalidateOnAnimation();
+                        }
+                        break;
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                        {
+                            const index = ev.getActionIndex();
+                            this.mLastMotionX = Math.floor(ev.getX(index));
+                            this.mActivePointerId = ev.getPointerId(index);
+                            break;
+                        }
+                    case MotionEvent.ACTION_POINTER_UP:
+                        this.onSecondaryPointerUp(ev);
+                        this.mLastMotionX = Math.floor(ev.getX(ev.findPointerIndex(this.mActivePointerId)));
+                        break;
+                }
+                return this.mIsBeingDragged;
+            }
+            onTouchEvent(ev) {
+                this.initVelocityTrackerIfNotExists();
+                this.mVelocityTracker.addMovement(ev);
+                const action = ev.getAction();
+                switch (action & MotionEvent.ACTION_MASK) {
+                    case MotionEvent.ACTION_DOWN:
+                        {
+                            if (this.getChildCount() == 0) {
+                                return false;
+                            }
+                            if ((this.mIsBeingDragged = !this.mScroller.isFinished())) {
+                                const parent = this.getParent();
+                                if (parent != null) {
+                                    parent.requestDisallowInterceptTouchEvent(true);
+                                }
+                            }
+                            if (!this.mScroller.isFinished()) {
+                                this.mScroller.abortAnimation();
+                            }
+                            this.mLastMotionX = Math.floor(ev.getX());
+                            this.mActivePointerId = ev.getPointerId(0);
+                            break;
+                        }
+                    case MotionEvent.ACTION_MOVE:
+                        const activePointerIndex = ev.findPointerIndex(this.mActivePointerId);
+                        if (activePointerIndex == -1) {
+                            Log.e(HorizontalScrollView.TAG, "Invalid pointerId=" + this.mActivePointerId + " in onTouchEvent");
+                            break;
+                        }
+                        const x = Math.floor(ev.getX(activePointerIndex));
+                        let deltaX = this.mLastMotionX - x;
+                        if (!this.mIsBeingDragged && Math.abs(deltaX) > this.mTouchSlop) {
+                            const parent = this.getParent();
+                            if (parent != null) {
+                                parent.requestDisallowInterceptTouchEvent(true);
+                            }
+                            this.mIsBeingDragged = true;
+                            if (deltaX > 0) {
+                                deltaX -= this.mTouchSlop;
+                            }
+                            else {
+                                deltaX += this.mTouchSlop;
+                            }
+                        }
+                        if (this.mIsBeingDragged) {
+                            this.mLastMotionX = x;
+                            const oldX = this.mScrollX;
+                            const oldY = this.mScrollY;
+                            const range = this.getScrollRange();
+                            const overscrollMode = this.getOverScrollMode();
+                            const canOverscroll = overscrollMode == HorizontalScrollView.OVER_SCROLL_ALWAYS || (overscrollMode == HorizontalScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
+                            if (this.overScrollBy(deltaX, 0, this.mScrollX, 0, range, 0, this.mOverscrollDistance, 0, true)) {
+                                this.mVelocityTracker.clear();
+                            }
+                            if (canOverscroll) {
+                            }
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if (this.mIsBeingDragged) {
+                            const velocityTracker = this.mVelocityTracker;
+                            velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
+                            let initialVelocity = Math.floor(velocityTracker.getXVelocity(this.mActivePointerId));
+                            if (this.getChildCount() > 0) {
+                                let isOverDrag = this.mScrollX < 0 || this.mScrollX > this.getScrollRange();
+                                if (!isOverDrag && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
+                                    this.fling(-initialVelocity);
+                                }
+                                else {
+                                    if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
+                                        this.postInvalidateOnAnimation();
+                                    }
+                                }
+                            }
+                            this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
+                            this.mIsBeingDragged = false;
+                            this.recycleVelocityTracker();
+                        }
+                        break;
+                    case MotionEvent.ACTION_CANCEL:
+                        if (this.mIsBeingDragged && this.getChildCount() > 0) {
+                            if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
+                                this.postInvalidateOnAnimation();
+                            }
+                            this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
+                            this.mIsBeingDragged = false;
+                            this.recycleVelocityTracker();
+                        }
+                        break;
+                    case MotionEvent.ACTION_POINTER_UP:
+                        this.onSecondaryPointerUp(ev);
+                        break;
+                }
+                return true;
+            }
+            onSecondaryPointerUp(ev) {
+                const pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                const pointerId = ev.getPointerId(pointerIndex);
+                if (pointerId == this.mActivePointerId) {
+                    const newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                    this.mLastMotionX = Math.floor(ev.getX(newPointerIndex));
+                    this.mActivePointerId = ev.getPointerId(newPointerIndex);
+                    if (this.mVelocityTracker != null) {
+                        this.mVelocityTracker.clear();
+                    }
+                }
+            }
+            onGenericMotionEvent(event) {
+                if (event.isPointerEvent()) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_SCROLL:
+                            {
+                                if (!this.mIsBeingDragged) {
+                                    let hscroll;
+                                    hscroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+                                    if (hscroll != 0) {
+                                        const delta = Math.floor((hscroll * this.getHorizontalScrollFactor()));
+                                        const range = this.getScrollRange();
+                                        let oldScrollX = this.mScrollX;
+                                        let newScrollX = oldScrollX + delta;
+                                        if (newScrollX < 0) {
+                                            newScrollX = 0;
+                                        }
+                                        else if (newScrollX > range) {
+                                            newScrollX = range;
+                                        }
+                                        if (newScrollX != oldScrollX) {
+                                            super.scrollTo(newScrollX, this.mScrollY);
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
+                return super.onGenericMotionEvent(event);
+            }
+            shouldDelayChildPressedState() {
+                return true;
+            }
+            onOverScrolled(scrollX, scrollY, clampedX, clampedY) {
+                if (!this.mScroller.isFinished()) {
+                    const oldX = this.mScrollX;
+                    const oldY = this.mScrollY;
+                    this.mScrollX = scrollX;
+                    this.mScrollY = scrollY;
+                    this.invalidateParentIfNeeded();
+                    this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
+                    if (clampedX) {
+                        this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0);
+                    }
+                }
+                else {
+                    super.scrollTo(scrollX, scrollY);
+                }
+                this.awakenScrollBars();
+            }
+            getScrollRange() {
+                let scrollRange = 0;
+                if (this.getChildCount() > 0) {
+                    let child = this.getChildAt(0);
+                    scrollRange = Math.max(0, child.getWidth() - (this.getWidth() - this.mPaddingLeft - this.mPaddingRight));
+                }
+                return scrollRange;
+            }
+            findFocusableViewInMyBounds(leftFocus, left, preferredFocusable) {
+                const fadingEdgeLength = this.getHorizontalFadingEdgeLength() / 2;
+                const leftWithoutFadingEdge = left + fadingEdgeLength;
+                const rightWithoutFadingEdge = left + this.getWidth() - fadingEdgeLength;
+                if ((preferredFocusable != null) && (preferredFocusable.getLeft() < rightWithoutFadingEdge) && (preferredFocusable.getRight() > leftWithoutFadingEdge)) {
+                    return preferredFocusable;
+                }
+                return this.findFocusableViewInBounds(leftFocus, leftWithoutFadingEdge, rightWithoutFadingEdge);
+            }
+            findFocusableViewInBounds(leftFocus, left, right) {
+                let focusables = this.getFocusables(View.FOCUS_FORWARD);
+                let focusCandidate = null;
+                let foundFullyContainedFocusable = false;
+                let count = focusables.size();
+                for (let i = 0; i < count; i++) {
+                    let view = focusables.get(i);
+                    let viewLeft = view.getLeft();
+                    let viewRight = view.getRight();
+                    if (left < viewRight && viewLeft < right) {
+                        const viewIsFullyContained = (left < viewLeft) && (viewRight < right);
+                        if (focusCandidate == null) {
+                            focusCandidate = view;
+                            foundFullyContainedFocusable = viewIsFullyContained;
+                        }
+                        else {
+                            const viewIsCloserToBoundary = (leftFocus && viewLeft < focusCandidate.getLeft()) || (!leftFocus && viewRight > focusCandidate.getRight());
+                            if (foundFullyContainedFocusable) {
+                                if (viewIsFullyContained && viewIsCloserToBoundary) {
+                                    focusCandidate = view;
+                                }
+                            }
+                            else {
+                                if (viewIsFullyContained) {
+                                    focusCandidate = view;
+                                    foundFullyContainedFocusable = true;
+                                }
+                                else if (viewIsCloserToBoundary) {
+                                    focusCandidate = view;
+                                }
+                            }
+                        }
+                    }
+                }
+                return focusCandidate;
+            }
+            pageScroll(direction) {
+                let right = direction == View.FOCUS_RIGHT;
+                let width = this.getWidth();
+                if (right) {
+                    this.mTempRect.left = this.getScrollX() + width;
+                    let count = this.getChildCount();
+                    if (count > 0) {
+                        let view = this.getChildAt(0);
+                        if (this.mTempRect.left + width > view.getRight()) {
+                            this.mTempRect.left = view.getRight() - width;
+                        }
+                    }
+                }
+                else {
+                    this.mTempRect.left = this.getScrollX() - width;
+                    if (this.mTempRect.left < 0) {
+                        this.mTempRect.left = 0;
+                    }
+                }
+                this.mTempRect.right = this.mTempRect.left + width;
+                return this.scrollAndFocus(direction, this.mTempRect.left, this.mTempRect.right);
+            }
+            fullScroll(direction) {
+                let right = direction == View.FOCUS_RIGHT;
+                let width = this.getWidth();
+                this.mTempRect.left = 0;
+                this.mTempRect.right = width;
+                if (right) {
+                    let count = this.getChildCount();
+                    if (count > 0) {
+                        let view = this.getChildAt(0);
+                        this.mTempRect.right = view.getRight();
+                        this.mTempRect.left = this.mTempRect.right - width;
+                    }
+                }
+                return this.scrollAndFocus(direction, this.mTempRect.left, this.mTempRect.right);
+            }
+            scrollAndFocus(direction, left, right) {
+                let handled = true;
+                let width = this.getWidth();
+                let containerLeft = this.getScrollX();
+                let containerRight = containerLeft + width;
+                let goLeft = direction == View.FOCUS_LEFT;
+                let newFocused = this.findFocusableViewInBounds(goLeft, left, right);
+                if (newFocused == null) {
+                    newFocused = this;
+                }
+                if (left >= containerLeft && right <= containerRight) {
+                    handled = false;
+                }
+                else {
+                    let delta = goLeft ? (left - containerLeft) : (right - containerRight);
+                    this.doScrollX(delta);
+                }
+                if (newFocused != this.findFocus())
+                    newFocused.requestFocus(direction);
+                return handled;
+            }
+            arrowScroll(direction) {
+                let currentFocused = this.findFocus();
+                if (currentFocused == this)
+                    currentFocused = null;
+                let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
+                const maxJump = this.getMaxScrollAmount();
+                if (nextFocused != null && this.isWithinDeltaOfScreen(nextFocused, maxJump)) {
+                    nextFocused.getDrawingRect(this.mTempRect);
+                    this.offsetDescendantRectToMyCoords(nextFocused, this.mTempRect);
+                    let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
+                    this.doScrollX(scrollDelta);
+                    nextFocused.requestFocus(direction);
+                }
+                else {
+                    let scrollDelta = maxJump;
+                    if (direction == View.FOCUS_LEFT && this.getScrollX() < scrollDelta) {
+                        scrollDelta = this.getScrollX();
+                    }
+                    else if (direction == View.FOCUS_RIGHT && this.getChildCount() > 0) {
+                        let daRight = this.getChildAt(0).getRight();
+                        let screenRight = this.getScrollX() + this.getWidth();
+                        if (daRight - screenRight < maxJump) {
+                            scrollDelta = daRight - screenRight;
+                        }
+                    }
+                    if (scrollDelta == 0) {
+                        return false;
+                    }
+                    this.doScrollX(direction == View.FOCUS_RIGHT ? scrollDelta : -scrollDelta);
+                }
+                if (currentFocused != null && currentFocused.isFocused() && this.isOffScreen(currentFocused)) {
+                    const descendantFocusability = this.getDescendantFocusability();
+                    this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                    this.requestFocus();
+                    this.setDescendantFocusability(descendantFocusability);
+                }
+                return true;
+            }
+            isOffScreen(descendant) {
+                return !this.isWithinDeltaOfScreen(descendant, 0);
+            }
+            isWithinDeltaOfScreen(descendant, delta) {
+                descendant.getDrawingRect(this.mTempRect);
+                this.offsetDescendantRectToMyCoords(descendant, this.mTempRect);
+                return (this.mTempRect.right + delta) >= this.getScrollX() && (this.mTempRect.left - delta) <= (this.getScrollX() + this.getWidth());
+            }
+            doScrollX(delta) {
+                if (delta != 0) {
+                    if (this.mSmoothScrollingEnabled) {
+                        this.smoothScrollBy(delta, 0);
+                    }
+                    else {
+                        this.scrollBy(delta, 0);
+                    }
+                }
+            }
+            smoothScrollBy(dx, dy) {
+                if (this.getChildCount() == 0) {
+                    return;
+                }
+                let duration = AnimationUtils.currentAnimationTimeMillis() - this.mLastScroll;
+                if (duration > HorizontalScrollView.ANIMATED_SCROLL_GAP) {
+                    const width = this.getWidth() - this.mPaddingRight - this.mPaddingLeft;
+                    const right = this.getChildAt(0).getWidth();
+                    const maxX = Math.max(0, right - width);
+                    const scrollX = this.mScrollX;
+                    dx = Math.max(0, Math.min(scrollX + dx, maxX)) - scrollX;
+                    this.mScroller.startScroll(scrollX, this.mScrollY, dx, 0);
+                    this.postInvalidateOnAnimation();
+                }
+                else {
+                    if (!this.mScroller.isFinished()) {
+                        this.mScroller.abortAnimation();
+                    }
+                    this.scrollBy(dx, dy);
+                }
+                this.mLastScroll = AnimationUtils.currentAnimationTimeMillis();
+            }
+            smoothScrollTo(x, y) {
+                this.smoothScrollBy(x - this.mScrollX, y - this.mScrollY);
+            }
+            computeHorizontalScrollRange() {
+                const count = this.getChildCount();
+                const contentWidth = this.getWidth() - this.mPaddingLeft - this.mPaddingRight;
+                if (count == 0) {
+                    return contentWidth;
+                }
+                let scrollRange = this.getChildAt(0).getRight();
+                const scrollX = this.mScrollX;
+                const overscrollRight = Math.max(0, scrollRange - contentWidth);
+                if (scrollX < 0) {
+                    scrollRange -= scrollX;
+                }
+                else if (scrollX > overscrollRight) {
+                    scrollRange += scrollX - overscrollRight;
+                }
+                return scrollRange;
+            }
+            computeHorizontalScrollOffset() {
+                return Math.max(0, super.computeHorizontalScrollOffset());
+            }
+            measureChild(child, parentWidthMeasureSpec, parentHeightMeasureSpec) {
+                let lp = child.getLayoutParams();
+                let childWidthMeasureSpec;
+                let childHeightMeasureSpec;
+                childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
+                childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(0, HorizontalScrollView.MeasureSpec.UNSPECIFIED);
+                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+            }
+            measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed) {
+                const lp = child.getLayoutParams();
+                const childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom + lp.topMargin + lp.bottomMargin + heightUsed, lp.height);
+                const childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(lp.leftMargin + lp.rightMargin, HorizontalScrollView.MeasureSpec.UNSPECIFIED);
+                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+            }
+            computeScroll() {
+                if (this.mScroller.computeScrollOffset()) {
+                    let oldX = this.mScrollX;
+                    let oldY = this.mScrollY;
+                    let x = this.mScroller.getCurrX();
+                    let y = this.mScroller.getCurrY();
+                    if (oldX != x || oldY != y) {
+                        const range = this.getScrollRange();
+                        const overscrollMode = this.getOverScrollMode();
+                        const canOverscroll = overscrollMode == HorizontalScrollView.OVER_SCROLL_ALWAYS || (overscrollMode == HorizontalScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
+                        this.overScrollBy(x - oldX, y - oldY, oldX, oldY, range, 0, this.mOverflingDistance, 0, false);
+                        this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
+                        if (canOverscroll) {
+                        }
+                    }
+                    if (!this.awakenScrollBars()) {
+                        this.postInvalidateOnAnimation();
+                    }
+                }
+            }
+            scrollToChild(child) {
+                child.getDrawingRect(this.mTempRect);
+                this.offsetDescendantRectToMyCoords(child, this.mTempRect);
+                let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
+                if (scrollDelta != 0) {
+                    this.scrollBy(scrollDelta, 0);
+                }
+            }
+            scrollToChildRect(rect, immediate) {
+                const delta = this.computeScrollDeltaToGetChildRectOnScreen(rect);
+                const scroll = delta != 0;
+                if (scroll) {
+                    if (immediate) {
+                        this.scrollBy(delta, 0);
+                    }
+                    else {
+                        this.smoothScrollBy(delta, 0);
+                    }
+                }
+                return scroll;
+            }
+            computeScrollDeltaToGetChildRectOnScreen(rect) {
+                if (this.getChildCount() == 0)
+                    return 0;
+                let width = this.getWidth();
+                let screenLeft = this.getScrollX();
+                let screenRight = screenLeft + width;
+                let fadingEdge = this.getHorizontalFadingEdgeLength();
+                if (rect.left > 0) {
+                    screenLeft += fadingEdge;
+                }
+                if (rect.right < this.getChildAt(0).getWidth()) {
+                    screenRight -= fadingEdge;
+                }
+                let scrollXDelta = 0;
+                if (rect.right > screenRight && rect.left > screenLeft) {
+                    if (rect.width() > width) {
+                        scrollXDelta += (rect.left - screenLeft);
+                    }
+                    else {
+                        scrollXDelta += (rect.right - screenRight);
+                    }
+                    let right = this.getChildAt(0).getRight();
+                    let distanceToRight = right - screenRight;
+                    scrollXDelta = Math.min(scrollXDelta, distanceToRight);
+                }
+                else if (rect.left < screenLeft && rect.right < screenRight) {
+                    if (rect.width() > width) {
+                        scrollXDelta -= (screenRight - rect.right);
+                    }
+                    else {
+                        scrollXDelta -= (screenLeft - rect.left);
+                    }
+                    scrollXDelta = Math.max(scrollXDelta, -this.getScrollX());
+                }
+                return scrollXDelta;
+            }
+            requestChildFocus(child, focused) {
+                if (!this.mIsLayoutDirty) {
+                    this.scrollToChild(focused);
+                }
+                else {
+                    this.mChildToScrollTo = focused;
+                }
+                super.requestChildFocus(child, focused);
+            }
+            onRequestFocusInDescendants(direction, previouslyFocusedRect) {
+                if (direction == View.FOCUS_FORWARD) {
+                    direction = View.FOCUS_RIGHT;
+                }
+                else if (direction == View.FOCUS_BACKWARD) {
+                    direction = View.FOCUS_LEFT;
+                }
+                const nextFocus = previouslyFocusedRect == null ? FocusFinder.getInstance().findNextFocus(this, null, direction) : FocusFinder.getInstance().findNextFocusFromRect(this, previouslyFocusedRect, direction);
+                if (nextFocus == null) {
+                    return false;
+                }
+                if (this.isOffScreen(nextFocus)) {
+                    return false;
+                }
+                return nextFocus.requestFocus(direction, previouslyFocusedRect);
+            }
+            requestChildRectangleOnScreen(child, rectangle, immediate) {
+                rectangle.offset(child.getLeft() - child.getScrollX(), child.getTop() - child.getScrollY());
+                return this.scrollToChildRect(rectangle, immediate);
+            }
+            requestLayout() {
+                this.mIsLayoutDirty = true;
+                super.requestLayout();
+            }
+            onLayout(changed, l, t, r, b) {
+                let childWidth = 0;
+                let childMargins = 0;
+                if (this.getChildCount() > 0) {
+                    childWidth = this.getChildAt(0).getMeasuredWidth();
+                    let childParams = this.getChildAt(0).getLayoutParams();
+                    childMargins = childParams.leftMargin + childParams.rightMargin;
+                }
+                const available = r - l - this.getPaddingLeftWithForeground() - this.getPaddingRightWithForeground() - childMargins;
+                const forceLeftGravity = (childWidth > available);
+                this.layoutChildren(l, t, r, b, forceLeftGravity);
+                this.mIsLayoutDirty = false;
+                if (this.mChildToScrollTo != null && HorizontalScrollView.isViewDescendantOf(this.mChildToScrollTo, this)) {
+                    this.scrollToChild(this.mChildToScrollTo);
+                }
+                this.mChildToScrollTo = null;
+                if (!this.isLaidOut()) {
+                    const scrollRange = Math.max(0, childWidth - (r - l - this.mPaddingLeft - this.mPaddingRight));
+                    {
+                        if (this.isLayoutRtl()) {
+                            this.mScrollX = scrollRange - this.mScrollX;
+                        }
+                    }
+                    if (this.mScrollX > scrollRange) {
+                        this.mScrollX = scrollRange;
+                    }
+                    else if (this.mScrollX < 0) {
+                        this.mScrollX = 0;
+                    }
+                }
+                this.scrollTo(this.mScrollX, this.mScrollY);
+            }
+            onSizeChanged(w, h, oldw, oldh) {
+                super.onSizeChanged(w, h, oldw, oldh);
+                let currentFocused = this.findFocus();
+                if (null == currentFocused || this == currentFocused)
+                    return;
+                const maxJump = this.mRight - this.mLeft;
+                if (this.isWithinDeltaOfScreen(currentFocused, maxJump)) {
+                    currentFocused.getDrawingRect(this.mTempRect);
+                    this.offsetDescendantRectToMyCoords(currentFocused, this.mTempRect);
+                    let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
+                    this.doScrollX(scrollDelta);
+                }
+            }
+            static isViewDescendantOf(child, parent) {
+                if (child == parent) {
+                    return true;
+                }
+                const theParent = child.getParent();
+                return (theParent instanceof ViewGroup) && HorizontalScrollView.isViewDescendantOf(theParent, parent);
+            }
+            fling(velocityX) {
+                if (this.getChildCount() > 0) {
+                    let width = this.getWidth() - this.mPaddingRight - this.mPaddingLeft;
+                    let right = this.getChildAt(0).getWidth();
+                    this.mScroller.fling(this.mScrollX, this.mScrollY, velocityX, 0, 0, Math.max(0, right - width), 0, 0, width / 2, 0);
+                    const movingRight = velocityX > 0;
+                    let currentFocused = this.findFocus();
+                    let newFocused = this.findFocusableViewInMyBounds(movingRight, this.mScroller.getFinalX(), currentFocused);
+                    if (newFocused == null) {
+                        newFocused = this;
+                    }
+                    if (newFocused != currentFocused) {
+                        newFocused.requestFocus(movingRight ? View.FOCUS_RIGHT : View.FOCUS_LEFT);
+                    }
+                    this.postInvalidateOnAnimation();
+                }
+            }
+            scrollTo(x, y) {
+                if (this.getChildCount() > 0) {
+                    let child = this.getChildAt(0);
+                    x = HorizontalScrollView.clamp(x, this.getWidth() - this.mPaddingRight - this.mPaddingLeft, child.getWidth());
+                    y = HorizontalScrollView.clamp(y, this.getHeight() - this.mPaddingBottom - this.mPaddingTop, child.getHeight());
+                    if (x != this.mScrollX || y != this.mScrollY) {
+                        super.scrollTo(x, y);
+                    }
+                }
+            }
+            setOverScrollMode(mode) {
+                super.setOverScrollMode(mode);
+            }
+            draw(canvas) {
+                super.draw(canvas);
+            }
+            static clamp(n, my, child) {
+                if (my >= child || n < 0) {
+                    return 0;
+                }
+                if ((my + n) > child) {
+                    return child - my;
+                }
+                return n;
+            }
+        }
+        HorizontalScrollView.ANIMATED_SCROLL_GAP = ScrollView.ANIMATED_SCROLL_GAP;
+        HorizontalScrollView.MAX_SCROLL_FACTOR = ScrollView.MAX_SCROLL_FACTOR;
+        HorizontalScrollView.TAG = "HorizontalScrollView";
+        HorizontalScrollView.INVALID_POINTER = -1;
+        widget.HorizontalScrollView = HorizontalScrollView;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/util/ArrayMap.ts"/>
+///<reference path="../../java/util/ArrayDeque.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/util/Pools.ts"/>
+///<reference path="../../android/util/SparseArray.ts"/>
+///<reference path="../../android/util/SparseMap.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../android/widget/HorizontalScrollView.ts"/>
+///<reference path="../../android/widget/ScrollView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var ArrayMap = android.util.ArrayMap;
+        var ArrayDeque = java.util.ArrayDeque;
+        var ArrayList = java.util.ArrayList;
+        var Rect = android.graphics.Rect;
+        var SynchronizedPool = android.util.Pools.SynchronizedPool;
+        var SparseMap = android.util.SparseMap;
+        var Gravity = android.view.Gravity;
+        var View = android.view.View;
+        var ViewGroup = android.view.ViewGroup;
+        var Integer = java.lang.Integer;
+        var System = java.lang.System;
+        class RelativeLayout extends ViewGroup {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.mBaselineView = null;
+                this.mGravity = Gravity.START | Gravity.TOP;
+                this.mContentBounds = new Rect();
+                this.mSelfBounds = new Rect();
+                this.mIgnoreGravity = View.NO_ID;
+                this.mGraph = new RelativeLayout.DependencyGraph();
+                this.mAllowBrokenMeasureSpecs = false;
+                this.mMeasureVerticalWithPaddingMargin = false;
+                this._attrBinder.addAttr('ignoreGravity', (value) => {
+                    this.setIgnoreGravity(value);
+                });
+                this._attrBinder.addAttr('gravity', (value) => {
+                    this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
+                });
+                this.queryCompatibilityModes();
+            }
+            queryCompatibilityModes() {
+                this.mAllowBrokenMeasureSpecs = false;
+                this.mMeasureVerticalWithPaddingMargin = true;
+            }
+            shouldDelayChildPressedState() {
+                return false;
+            }
+            setIgnoreGravity(viewId) {
+                this.mIgnoreGravity = viewId;
+            }
+            getGravity() {
+                return this.mGravity;
+            }
+            setGravity(gravity) {
+                if (this.mGravity != gravity) {
+                    if ((gravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) == 0) {
+                        gravity |= Gravity.START;
+                    }
+                    if ((gravity & Gravity.VERTICAL_GRAVITY_MASK) == 0) {
+                        gravity |= Gravity.TOP;
+                    }
+                    this.mGravity = gravity;
+                    this.requestLayout();
+                }
+            }
+            setHorizontalGravity(horizontalGravity) {
+                const gravity = horizontalGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;
+                if ((this.mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) != gravity) {
+                    this.mGravity = (this.mGravity & ~Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) | gravity;
+                    this.requestLayout();
+                }
+            }
+            setVerticalGravity(verticalGravity) {
+                const gravity = verticalGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                if ((this.mGravity & Gravity.VERTICAL_GRAVITY_MASK) != gravity) {
+                    this.mGravity = (this.mGravity & ~Gravity.VERTICAL_GRAVITY_MASK) | gravity;
+                    this.requestLayout();
+                }
+            }
+            getBaseline() {
+                return this.mBaselineView != null ? this.mBaselineView.getBaseline() : super.getBaseline();
+            }
+            requestLayout() {
+                super.requestLayout();
+                this.mDirtyHierarchy = true;
+            }
+            sortChildren() {
+                const count = this.getChildCount();
+                if (this.mSortedVerticalChildren == null || this.mSortedVerticalChildren.length != count) {
+                    this.mSortedVerticalChildren = new Array(count);
+                }
+                if (this.mSortedHorizontalChildren == null || this.mSortedHorizontalChildren.length != count) {
+                    this.mSortedHorizontalChildren = new Array(count);
+                }
+                const graph = this.mGraph;
+                graph.clear();
+                for (let i = 0; i < count; i++) {
+                    graph.add(this.getChildAt(i));
+                }
+                graph.getSortedViews(this.mSortedVerticalChildren, RelativeLayout.RULES_VERTICAL);
+                graph.getSortedViews(this.mSortedHorizontalChildren, RelativeLayout.RULES_HORIZONTAL);
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                if (this.mDirtyHierarchy) {
+                    this.mDirtyHierarchy = false;
+                    this.sortChildren();
+                }
+                let myWidth = -1;
+                let myHeight = -1;
+                let width = 0;
+                let height = 0;
+                const widthMode = RelativeLayout.MeasureSpec.getMode(widthMeasureSpec);
+                const heightMode = RelativeLayout.MeasureSpec.getMode(heightMeasureSpec);
+                const widthSize = RelativeLayout.MeasureSpec.getSize(widthMeasureSpec);
+                const heightSize = RelativeLayout.MeasureSpec.getSize(heightMeasureSpec);
+                if (widthMode != RelativeLayout.MeasureSpec.UNSPECIFIED) {
+                    myWidth = widthSize;
+                }
+                if (heightMode != RelativeLayout.MeasureSpec.UNSPECIFIED) {
+                    myHeight = heightSize;
+                }
+                if (widthMode == RelativeLayout.MeasureSpec.EXACTLY) {
+                    width = myWidth;
+                }
+                if (heightMode == RelativeLayout.MeasureSpec.EXACTLY) {
+                    height = myHeight;
+                }
+                this.mHasBaselineAlignedChild = false;
+                let ignore = null;
+                let gravity = this.mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;
+                const horizontalGravity = gravity != Gravity.START && gravity != 0;
+                gravity = this.mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+                const verticalGravity = gravity != Gravity.TOP && gravity != 0;
+                let left = Integer.MAX_VALUE;
+                let top = Integer.MAX_VALUE;
+                let right = Integer.MIN_VALUE;
+                let bottom = Integer.MIN_VALUE;
+                let offsetHorizontalAxis = false;
+                let offsetVerticalAxis = false;
+                if ((horizontalGravity || verticalGravity) && this.mIgnoreGravity != View.NO_ID) {
+                    ignore = this.findViewById(this.mIgnoreGravity);
+                }
+                const isWrapContentWidth = widthMode != RelativeLayout.MeasureSpec.EXACTLY;
+                const isWrapContentHeight = heightMode != RelativeLayout.MeasureSpec.EXACTLY;
+                const layoutDirection = this.getLayoutDirection();
+                if (this.isLayoutRtl() && myWidth == -1) {
+                    myWidth = RelativeLayout.DEFAULT_WIDTH;
+                }
+                let views = this.mSortedHorizontalChildren;
+                let count = views.length;
+                for (let i = 0; i < count; i++) {
+                    let child = views[i];
+                    if (child.getVisibility() != RelativeLayout.GONE) {
+                        let params = child.getLayoutParams();
+                        let rules = params.getRules(layoutDirection);
+                        this.applyHorizontalSizeRules(params, myWidth, rules);
+                        this.measureChildHorizontal(child, params, myWidth, myHeight);
+                        if (this.positionChildHorizontal(child, params, myWidth, isWrapContentWidth)) {
+                            offsetHorizontalAxis = true;
+                        }
+                    }
+                }
+                views = this.mSortedVerticalChildren;
+                count = views.length;
+                for (let i = 0; i < count; i++) {
+                    let child = views[i];
+                    if (child.getVisibility() != RelativeLayout.GONE) {
+                        let params = child.getLayoutParams();
+                        this.applyVerticalSizeRules(params, myHeight);
+                        this._measureChild(child, params, myWidth, myHeight);
+                        if (this.positionChildVertical(child, params, myHeight, isWrapContentHeight)) {
+                            offsetVerticalAxis = true;
+                        }
+                        if (isWrapContentWidth) {
+                            if (this.isLayoutRtl()) {
+                                width = Math.max(width, myWidth - params.mLeft - params.leftMargin);
+                            }
+                            else {
+                                width = Math.max(width, params.mRight + params.rightMargin);
+                            }
+                        }
+                        if (isWrapContentHeight) {
+                            height = Math.max(height, params.mBottom + params.bottomMargin);
+                        }
+                        if (child != ignore || verticalGravity) {
+                            left = Math.min(left, params.mLeft - params.leftMargin);
+                            top = Math.min(top, params.mTop - params.topMargin);
+                        }
+                        if (child != ignore || horizontalGravity) {
+                            right = Math.max(right, params.mRight + params.rightMargin);
+                            bottom = Math.max(bottom, params.mBottom + params.bottomMargin);
+                        }
+                    }
+                }
+                if (this.mHasBaselineAlignedChild) {
+                    for (let i = 0; i < count; i++) {
+                        let child = this.getChildAt(i);
+                        if (child.getVisibility() != RelativeLayout.GONE) {
+                            let params = child.getLayoutParams();
+                            this.alignBaseline(child, params);
+                            if (child != ignore || verticalGravity) {
+                                left = Math.min(left, params.mLeft - params.leftMargin);
+                                top = Math.min(top, params.mTop - params.topMargin);
+                            }
+                            if (child != ignore || horizontalGravity) {
+                                right = Math.max(right, params.mRight + params.rightMargin);
+                                bottom = Math.max(bottom, params.mBottom + params.bottomMargin);
+                            }
+                        }
+                    }
+                }
+                if (isWrapContentWidth) {
+                    width += this.mPaddingRight;
+                    if (this.mLayoutParams != null && this.mLayoutParams.width >= 0) {
+                        width = Math.max(width, this.mLayoutParams.width);
+                    }
+                    width = Math.max(width, this.getSuggestedMinimumWidth());
+                    width = RelativeLayout.resolveSize(width, widthMeasureSpec);
+                    if (offsetHorizontalAxis) {
+                        for (let i = 0; i < count; i++) {
+                            let child = this.getChildAt(i);
+                            if (child.getVisibility() != RelativeLayout.GONE) {
+                                let params = child.getLayoutParams();
+                                const rules = params.getRules(layoutDirection);
+                                if (rules[RelativeLayout.CENTER_IN_PARENT] != null || rules[RelativeLayout.CENTER_HORIZONTAL] != null) {
+                                    RelativeLayout.centerHorizontal(child, params, width);
+                                }
+                                else if (rules[RelativeLayout.ALIGN_PARENT_RIGHT] != null) {
+                                    const childWidth = child.getMeasuredWidth();
+                                    params.mLeft = width - this.mPaddingRight - childWidth;
+                                    params.mRight = params.mLeft + childWidth;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (isWrapContentHeight) {
+                    height += this.mPaddingBottom;
+                    if (this.mLayoutParams != null && this.mLayoutParams.height >= 0) {
+                        height = Math.max(height, this.mLayoutParams.height);
+                    }
+                    height = Math.max(height, this.getSuggestedMinimumHeight());
+                    height = RelativeLayout.resolveSize(height, heightMeasureSpec);
+                    if (offsetVerticalAxis) {
+                        for (let i = 0; i < count; i++) {
+                            let child = this.getChildAt(i);
+                            if (child.getVisibility() != RelativeLayout.GONE) {
+                                let params = child.getLayoutParams();
+                                const rules = params.getRules(layoutDirection);
+                                if (rules[RelativeLayout.CENTER_IN_PARENT] != null || rules[RelativeLayout.CENTER_VERTICAL] != null) {
+                                    RelativeLayout.centerVertical(child, params, height);
+                                }
+                                else if (rules[RelativeLayout.ALIGN_PARENT_BOTTOM] != null) {
+                                    const childHeight = child.getMeasuredHeight();
+                                    params.mTop = height - this.mPaddingBottom - childHeight;
+                                    params.mBottom = params.mTop + childHeight;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (horizontalGravity || verticalGravity) {
+                    const selfBounds = this.mSelfBounds;
+                    selfBounds.set(this.mPaddingLeft, this.mPaddingTop, width - this.mPaddingRight, height - this.mPaddingBottom);
+                    const contentBounds = this.mContentBounds;
+                    Gravity.apply(this.mGravity, right - left, bottom - top, selfBounds, contentBounds, layoutDirection);
+                    const horizontalOffset = contentBounds.left - left;
+                    const verticalOffset = contentBounds.top - top;
+                    if (horizontalOffset != 0 || verticalOffset != 0) {
+                        for (let i = 0; i < count; i++) {
+                            let child = this.getChildAt(i);
+                            if (child.getVisibility() != RelativeLayout.GONE && child != ignore) {
+                                let params = child.getLayoutParams();
+                                if (horizontalGravity) {
+                                    params.mLeft += horizontalOffset;
+                                    params.mRight += horizontalOffset;
+                                }
+                                if (verticalGravity) {
+                                    params.mTop += verticalOffset;
+                                    params.mBottom += verticalOffset;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (this.isLayoutRtl()) {
+                    const offsetWidth = myWidth - width;
+                    for (let i = 0; i < count; i++) {
+                        let child = this.getChildAt(i);
+                        if (child.getVisibility() != RelativeLayout.GONE) {
+                            let params = child.getLayoutParams();
+                            params.mLeft -= offsetWidth;
+                            params.mRight -= offsetWidth;
+                        }
+                    }
+                }
+                this.setMeasuredDimension(width, height);
+            }
+            alignBaseline(child, params) {
+                const layoutDirection = this.getLayoutDirection();
+                let rules = params.getRules(layoutDirection);
+                let anchorBaseline = this.getRelatedViewBaseline(rules, RelativeLayout.ALIGN_BASELINE);
+                if (anchorBaseline != -1) {
+                    let anchorParams = this.getRelatedViewParams(rules, RelativeLayout.ALIGN_BASELINE);
+                    if (anchorParams != null) {
+                        let offset = anchorParams.mTop + anchorBaseline;
+                        let baseline = child.getBaseline();
+                        if (baseline != -1) {
+                            offset -= baseline;
+                        }
+                        let height = params.mBottom - params.mTop;
+                        params.mTop = offset;
+                        params.mBottom = params.mTop + height;
+                    }
+                }
+                if (this.mBaselineView == null) {
+                    this.mBaselineView = child;
+                }
+                else {
+                    let lp = this.mBaselineView.getLayoutParams();
+                    if (params.mTop < lp.mTop || (params.mTop == lp.mTop && params.mLeft < lp.mLeft)) {
+                        this.mBaselineView = child;
+                    }
+                }
+            }
+            _measureChild(child, params, myWidth, myHeight) {
+                let childWidthMeasureSpec = this.getChildMeasureSpec(params.mLeft, params.mRight, params.width, params.leftMargin, params.rightMargin, this.mPaddingLeft, this.mPaddingRight, myWidth);
+                let childHeightMeasureSpec = this.getChildMeasureSpec(params.mTop, params.mBottom, params.height, params.topMargin, params.bottomMargin, this.mPaddingTop, this.mPaddingBottom, myHeight);
+                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+            }
+            measureChildHorizontal(child, params, myWidth, myHeight) {
+                let childWidthMeasureSpec = this.getChildMeasureSpec(params.mLeft, params.mRight, params.width, params.leftMargin, params.rightMargin, this.mPaddingLeft, this.mPaddingRight, myWidth);
+                let maxHeight = myHeight;
+                if (this.mMeasureVerticalWithPaddingMargin) {
+                    maxHeight = Math.max(0, myHeight - this.mPaddingTop - this.mPaddingBottom - params.topMargin - params.bottomMargin);
+                }
+                let childHeightMeasureSpec;
+                if (myHeight < 0 && !this.mAllowBrokenMeasureSpecs) {
+                    if (params.height >= 0) {
+                        childHeightMeasureSpec = RelativeLayout.MeasureSpec.makeMeasureSpec(params.height, RelativeLayout.MeasureSpec.EXACTLY);
+                    }
+                    else {
+                        childHeightMeasureSpec = RelativeLayout.MeasureSpec.makeMeasureSpec(0, RelativeLayout.MeasureSpec.UNSPECIFIED);
+                    }
+                }
+                else if (params.width == RelativeLayout.LayoutParams.MATCH_PARENT) {
+                    childHeightMeasureSpec = RelativeLayout.MeasureSpec.makeMeasureSpec(maxHeight, RelativeLayout.MeasureSpec.EXACTLY);
+                }
+                else {
+                    childHeightMeasureSpec = RelativeLayout.MeasureSpec.makeMeasureSpec(maxHeight, RelativeLayout.MeasureSpec.AT_MOST);
+                }
+                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+            }
+            getChildMeasureSpec(childStart, childEnd, childSize, startMargin, endMargin, startPadding, endPadding, mySize) {
+                if (mySize < 0 && !this.mAllowBrokenMeasureSpecs) {
+                    if (childSize >= 0) {
+                        return RelativeLayout.MeasureSpec.makeMeasureSpec(childSize, RelativeLayout.MeasureSpec.EXACTLY);
+                    }
+                    return RelativeLayout.MeasureSpec.makeMeasureSpec(0, RelativeLayout.MeasureSpec.UNSPECIFIED);
+                }
+                let childSpecMode = 0;
+                let childSpecSize = 0;
+                let tempStart = childStart;
+                let tempEnd = childEnd;
+                if (tempStart < 0) {
+                    tempStart = startPadding + startMargin;
+                }
+                if (tempEnd < 0) {
+                    tempEnd = mySize - endPadding - endMargin;
+                }
+                let maxAvailable = tempEnd - tempStart;
+                if (childStart >= 0 && childEnd >= 0) {
+                    childSpecMode = RelativeLayout.MeasureSpec.EXACTLY;
+                    childSpecSize = maxAvailable;
+                }
+                else {
+                    if (childSize >= 0) {
+                        childSpecMode = RelativeLayout.MeasureSpec.EXACTLY;
+                        if (maxAvailable >= 0) {
+                            childSpecSize = Math.min(maxAvailable, childSize);
+                        }
+                        else {
+                            childSpecSize = childSize;
+                        }
+                    }
+                    else if (childSize == RelativeLayout.LayoutParams.MATCH_PARENT) {
+                        childSpecMode = RelativeLayout.MeasureSpec.EXACTLY;
+                        childSpecSize = maxAvailable;
+                    }
+                    else if (childSize == RelativeLayout.LayoutParams.WRAP_CONTENT) {
+                        if (maxAvailable >= 0) {
+                            childSpecMode = RelativeLayout.MeasureSpec.AT_MOST;
+                            childSpecSize = maxAvailable;
+                        }
+                        else {
+                            childSpecMode = RelativeLayout.MeasureSpec.UNSPECIFIED;
+                            childSpecSize = 0;
+                        }
+                    }
+                }
+                return RelativeLayout.MeasureSpec.makeMeasureSpec(childSpecSize, childSpecMode);
+            }
+            positionChildHorizontal(child, params, myWidth, wrapContent) {
+                const layoutDirection = this.getLayoutDirection();
+                let rules = params.getRules(layoutDirection);
+                if (params.mLeft < 0 && params.mRight >= 0) {
+                    params.mLeft = params.mRight - child.getMeasuredWidth();
+                }
+                else if (params.mLeft >= 0 && params.mRight < 0) {
+                    params.mRight = params.mLeft + child.getMeasuredWidth();
+                }
+                else if (params.mLeft < 0 && params.mRight < 0) {
+                    if (rules[RelativeLayout.CENTER_IN_PARENT] != null || rules[RelativeLayout.CENTER_HORIZONTAL] != null) {
+                        if (!wrapContent) {
+                            RelativeLayout.centerHorizontal(child, params, myWidth);
+                        }
+                        else {
+                            params.mLeft = this.mPaddingLeft + params.leftMargin;
+                            params.mRight = params.mLeft + child.getMeasuredWidth();
+                        }
+                        return true;
+                    }
+                    else {
+                        if (this.isLayoutRtl()) {
+                            params.mRight = myWidth - this.mPaddingRight - params.rightMargin;
+                            params.mLeft = params.mRight - child.getMeasuredWidth();
+                        }
+                        else {
+                            params.mLeft = this.mPaddingLeft + params.leftMargin;
+                            params.mRight = params.mLeft + child.getMeasuredWidth();
+                        }
+                    }
+                }
+                return rules[RelativeLayout.ALIGN_PARENT_END] != null;
+            }
+            positionChildVertical(child, params, myHeight, wrapContent) {
+                let rules = params.getRules();
+                if (params.mTop < 0 && params.mBottom >= 0) {
+                    params.mTop = params.mBottom - child.getMeasuredHeight();
+                }
+                else if (params.mTop >= 0 && params.mBottom < 0) {
+                    params.mBottom = params.mTop + child.getMeasuredHeight();
+                }
+                else if (params.mTop < 0 && params.mBottom < 0) {
+                    if (rules[RelativeLayout.CENTER_IN_PARENT] != null || rules[RelativeLayout.CENTER_VERTICAL] != null) {
+                        if (!wrapContent) {
+                            RelativeLayout.centerVertical(child, params, myHeight);
+                        }
+                        else {
+                            params.mTop = this.mPaddingTop + params.topMargin;
+                            params.mBottom = params.mTop + child.getMeasuredHeight();
+                        }
+                        return true;
+                    }
+                    else {
+                        params.mTop = this.mPaddingTop + params.topMargin;
+                        params.mBottom = params.mTop + child.getMeasuredHeight();
+                    }
+                }
+                return rules[RelativeLayout.ALIGN_PARENT_BOTTOM] != null;
+            }
+            applyHorizontalSizeRules(childParams, myWidth, rules) {
+                let anchorParams;
+                childParams.mLeft = -1;
+                childParams.mRight = -1;
+                anchorParams = this.getRelatedViewParams(rules, RelativeLayout.LEFT_OF);
+                if (anchorParams != null) {
+                    childParams.mRight = anchorParams.mLeft - (anchorParams.leftMargin + childParams.rightMargin);
+                }
+                else if (childParams.alignWithParent && rules[RelativeLayout.LEFT_OF] != null) {
+                    if (myWidth >= 0) {
+                        childParams.mRight = myWidth - this.mPaddingRight - childParams.rightMargin;
+                    }
+                }
+                anchorParams = this.getRelatedViewParams(rules, RelativeLayout.RIGHT_OF);
+                if (anchorParams != null) {
+                    childParams.mLeft = anchorParams.mRight + (anchorParams.rightMargin + childParams.leftMargin);
+                }
+                else if (childParams.alignWithParent && rules[RelativeLayout.RIGHT_OF] != null) {
+                    childParams.mLeft = this.mPaddingLeft + childParams.leftMargin;
+                }
+                anchorParams = this.getRelatedViewParams(rules, RelativeLayout.ALIGN_LEFT);
+                if (anchorParams != null) {
+                    childParams.mLeft = anchorParams.mLeft + childParams.leftMargin;
+                }
+                else if (childParams.alignWithParent && rules[RelativeLayout.ALIGN_LEFT] != null) {
+                    childParams.mLeft = this.mPaddingLeft + childParams.leftMargin;
+                }
+                anchorParams = this.getRelatedViewParams(rules, RelativeLayout.ALIGN_RIGHT);
+                if (anchorParams != null) {
+                    childParams.mRight = anchorParams.mRight - childParams.rightMargin;
+                }
+                else if (childParams.alignWithParent && rules[RelativeLayout.ALIGN_RIGHT] != null) {
+                    if (myWidth >= 0) {
+                        childParams.mRight = myWidth - this.mPaddingRight - childParams.rightMargin;
+                    }
+                }
+                if (null != rules[RelativeLayout.ALIGN_PARENT_LEFT]) {
+                    childParams.mLeft = this.mPaddingLeft + childParams.leftMargin;
+                }
+                if (null != rules[RelativeLayout.ALIGN_PARENT_RIGHT]) {
+                    if (myWidth >= 0) {
+                        childParams.mRight = myWidth - this.mPaddingRight - childParams.rightMargin;
+                    }
+                }
+            }
+            applyVerticalSizeRules(childParams, myHeight) {
+                let rules = childParams.getRules();
+                let anchorParams;
+                childParams.mTop = -1;
+                childParams.mBottom = -1;
+                anchorParams = this.getRelatedViewParams(rules, RelativeLayout.ABOVE);
+                if (anchorParams != null) {
+                    childParams.mBottom = anchorParams.mTop - (anchorParams.topMargin + childParams.bottomMargin);
+                }
+                else if (childParams.alignWithParent && rules[RelativeLayout.ABOVE] != null) {
+                    if (myHeight >= 0) {
+                        childParams.mBottom = myHeight - this.mPaddingBottom - childParams.bottomMargin;
+                    }
+                }
+                anchorParams = this.getRelatedViewParams(rules, RelativeLayout.BELOW);
+                if (anchorParams != null) {
+                    childParams.mTop = anchorParams.mBottom + (anchorParams.bottomMargin + childParams.topMargin);
+                }
+                else if (childParams.alignWithParent && rules[RelativeLayout.BELOW] != null) {
+                    childParams.mTop = this.mPaddingTop + childParams.topMargin;
+                }
+                anchorParams = this.getRelatedViewParams(rules, RelativeLayout.ALIGN_TOP);
+                if (anchorParams != null) {
+                    childParams.mTop = anchorParams.mTop + childParams.topMargin;
+                }
+                else if (childParams.alignWithParent && rules[RelativeLayout.ALIGN_TOP] != null) {
+                    childParams.mTop = this.mPaddingTop + childParams.topMargin;
+                }
+                anchorParams = this.getRelatedViewParams(rules, RelativeLayout.ALIGN_BOTTOM);
+                if (anchorParams != null) {
+                    childParams.mBottom = anchorParams.mBottom - childParams.bottomMargin;
+                }
+                else if (childParams.alignWithParent && rules[RelativeLayout.ALIGN_BOTTOM] != null) {
+                    if (myHeight >= 0) {
+                        childParams.mBottom = myHeight - this.mPaddingBottom - childParams.bottomMargin;
+                    }
+                }
+                if (null != rules[RelativeLayout.ALIGN_PARENT_TOP]) {
+                    childParams.mTop = this.mPaddingTop + childParams.topMargin;
+                }
+                if (null != rules[RelativeLayout.ALIGN_PARENT_BOTTOM]) {
+                    if (myHeight >= 0) {
+                        childParams.mBottom = myHeight - this.mPaddingBottom - childParams.bottomMargin;
+                    }
+                }
+                if (rules[RelativeLayout.ALIGN_BASELINE] != null) {
+                    this.mHasBaselineAlignedChild = true;
+                }
+            }
+            getRelatedView(rules, relation) {
+                let id = rules[relation];
+                if (id != null) {
+                    let node = this.mGraph.mKeyNodes.get(id);
+                    if (node == null)
+                        return null;
+                    let v = node.view;
+                    while (v.getVisibility() == View.GONE) {
+                        rules = v.getLayoutParams().getRules(v.getLayoutDirection());
+                        node = this.mGraph.mKeyNodes.get((rules[relation]));
+                        if (node == null)
+                            return null;
+                        v = node.view;
+                    }
+                    return v;
+                }
+                return null;
+            }
+            getRelatedViewParams(rules, relation) {
+                let v = this.getRelatedView(rules, relation);
+                if (v != null) {
+                    let params = v.getLayoutParams();
+                    if (params instanceof RelativeLayout.LayoutParams) {
+                        return v.getLayoutParams();
+                    }
+                }
+                return null;
+            }
+            getRelatedViewBaseline(rules, relation) {
+                let v = this.getRelatedView(rules, relation);
+                if (v != null) {
+                    return v.getBaseline();
+                }
+                return -1;
+            }
+            static centerHorizontal(child, params, myWidth) {
+                let childWidth = child.getMeasuredWidth();
+                let left = (myWidth - childWidth) / 2;
+                params.mLeft = left;
+                params.mRight = left + childWidth;
+            }
+            static centerVertical(child, params, myHeight) {
+                let childHeight = child.getMeasuredHeight();
+                let top = (myHeight - childHeight) / 2;
+                params.mTop = top;
+                params.mBottom = top + childHeight;
+            }
+            onLayout(changed, l, t, r, b) {
+                const count = this.getChildCount();
+                for (let i = 0; i < count; i++) {
+                    let child = this.getChildAt(i);
+                    if (child.getVisibility() != RelativeLayout.GONE) {
+                        let st = child.getLayoutParams();
+                        child.layout(st.mLeft, st.mTop, st.mRight, st.mBottom);
+                    }
+                }
+            }
+            generateDefaultLayoutParams() {
+                return new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+            }
+            checkLayoutParams(p) {
+                return p instanceof RelativeLayout.LayoutParams;
+            }
+            generateLayoutParams(p) {
+                return new RelativeLayout.LayoutParams(p);
+            }
+        }
+        RelativeLayout.TRUE = -1;
+        RelativeLayout.LEFT_OF = 0;
+        RelativeLayout.RIGHT_OF = 1;
+        RelativeLayout.ABOVE = 2;
+        RelativeLayout.BELOW = 3;
+        RelativeLayout.ALIGN_BASELINE = 4;
+        RelativeLayout.ALIGN_LEFT = 5;
+        RelativeLayout.ALIGN_TOP = 6;
+        RelativeLayout.ALIGN_RIGHT = 7;
+        RelativeLayout.ALIGN_BOTTOM = 8;
+        RelativeLayout.ALIGN_PARENT_LEFT = 9;
+        RelativeLayout.ALIGN_PARENT_TOP = 10;
+        RelativeLayout.ALIGN_PARENT_RIGHT = 11;
+        RelativeLayout.ALIGN_PARENT_BOTTOM = 12;
+        RelativeLayout.CENTER_IN_PARENT = 13;
+        RelativeLayout.CENTER_HORIZONTAL = 14;
+        RelativeLayout.CENTER_VERTICAL = 15;
+        RelativeLayout.START_OF = 16;
+        RelativeLayout.END_OF = 17;
+        RelativeLayout.ALIGN_START = 18;
+        RelativeLayout.ALIGN_END = 19;
+        RelativeLayout.ALIGN_PARENT_START = 20;
+        RelativeLayout.ALIGN_PARENT_END = 21;
+        RelativeLayout.VERB_COUNT = 22;
+        RelativeLayout.RULES_VERTICAL = [RelativeLayout.ABOVE, RelativeLayout.BELOW, RelativeLayout.ALIGN_BASELINE, RelativeLayout.ALIGN_TOP, RelativeLayout.ALIGN_BOTTOM];
+        RelativeLayout.RULES_HORIZONTAL = [RelativeLayout.LEFT_OF, RelativeLayout.RIGHT_OF, RelativeLayout.ALIGN_LEFT, RelativeLayout.ALIGN_RIGHT, RelativeLayout.START_OF, RelativeLayout.END_OF, RelativeLayout.ALIGN_START, RelativeLayout.ALIGN_END];
+        RelativeLayout.DEFAULT_WIDTH = 0x00010000;
+        widget.RelativeLayout = RelativeLayout;
+        (function (RelativeLayout) {
+            class LayoutParams extends ViewGroup.MarginLayoutParams {
+                constructor(...args) {
+                    super(...args);
+                    this.mRules = new Array(RelativeLayout.VERB_COUNT);
+                    this.mInitialRules = new Array(RelativeLayout.VERB_COUNT);
+                    this.mLeft = 0;
+                    this.mTop = 0;
+                    this.mRight = 0;
+                    this.mBottom = 0;
+                    this.mStart = LayoutParams.DEFAULT_MARGIN_RELATIVE;
+                    this.mEnd = LayoutParams.DEFAULT_MARGIN_RELATIVE;
+                    this.mRulesChanged = false;
+                    this.mIsRtlCompatibilityMode = false;
+                    if (args[0] instanceof LayoutParams) {
+                        let source = args[0];
+                        this.mIsRtlCompatibilityMode = source.mIsRtlCompatibilityMode;
+                        this.mRulesChanged = source.mRulesChanged;
+                        this.alignWithParent = source.alignWithParent;
+                        System.arraycopy(source.mRules, RelativeLayout.LEFT_OF, this.mRules, RelativeLayout.LEFT_OF, RelativeLayout.VERB_COUNT);
+                        System.arraycopy(source.mInitialRules, RelativeLayout.LEFT_OF, this.mInitialRules, RelativeLayout.LEFT_OF, RelativeLayout.VERB_COUNT);
+                    }
+                    this._attrBinder.addAttr('alignWithParentIfMissing', (value) => {
+                        this.alignWithParent = this._attrBinder.parseBoolean(value, false);
+                    });
+                    this._attrBinder.addAttr('toLeftOf', (value) => {
+                        this.addRule(RelativeLayout.LEFT_OF, value);
+                    });
+                    this._attrBinder.addAttr('toRightOf', (value) => {
+                        this.addRule(RelativeLayout.RIGHT_OF, value);
+                    });
+                    this._attrBinder.addAttr('above', (value) => {
+                        this.addRule(RelativeLayout.ABOVE, value);
+                    });
+                    this._attrBinder.addAttr('below', (value) => {
+                        this.addRule(RelativeLayout.BELOW, value);
+                    });
+                    this._attrBinder.addAttr('alignBaseline', (value) => {
+                        this.addRule(RelativeLayout.ALIGN_BASELINE, value);
+                    });
+                    this._attrBinder.addAttr('alignLeft', (value) => {
+                        this.addRule(RelativeLayout.ALIGN_LEFT, value);
+                    });
+                    this._attrBinder.addAttr('alignTop', (value) => {
+                        this.addRule(RelativeLayout.ALIGN_TOP, value);
+                    });
+                    this._attrBinder.addAttr('alignRight', (value) => {
+                        this.addRule(RelativeLayout.ALIGN_RIGHT, value);
+                    });
+                    this._attrBinder.addAttr('alignBottom', (value) => {
+                        this.addRule(RelativeLayout.ALIGN_BOTTOM, value);
+                    });
+                    this._attrBinder.addAttr('alignParentLeft', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.ALIGN_PARENT_LEFT, anchor);
+                    });
+                    this._attrBinder.addAttr('alignParentTop', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.ALIGN_PARENT_TOP, anchor);
+                    });
+                    this._attrBinder.addAttr('alignParentRight', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, anchor);
+                    });
+                    this._attrBinder.addAttr('alignParentBottom', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, anchor);
+                    });
+                    this._attrBinder.addAttr('centerInParent', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.CENTER_IN_PARENT, anchor);
+                    });
+                    this._attrBinder.addAttr('centerHorizontal', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.CENTER_HORIZONTAL, anchor);
+                    });
+                    this._attrBinder.addAttr('centerVertical', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.CENTER_VERTICAL, anchor);
+                    });
+                    this._attrBinder.addAttr('toStartOf', (value) => {
+                        this.addRule(RelativeLayout.LEFT_OF, value);
+                    });
+                    this._attrBinder.addAttr('toEndOf', (value) => {
+                        this.addRule(RelativeLayout.RIGHT_OF, value);
+                    });
+                    this._attrBinder.addAttr('alignStart', (value) => {
+                        this.addRule(RelativeLayout.ALIGN_LEFT, value);
+                    });
+                    this._attrBinder.addAttr('alignEnd', (value) => {
+                        this.addRule(RelativeLayout.ALIGN_RIGHT, value);
+                    });
+                    this._attrBinder.addAttr('alignParentStart', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.ALIGN_PARENT_LEFT, anchor);
+                    });
+                    this._attrBinder.addAttr('alignParentEnd', (value) => {
+                        const anchor = this._attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                        this.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, anchor);
+                    });
+                }
+                addRule(verb, anchor = RelativeLayout.TRUE) {
+                    this.mRules[verb] = anchor;
+                    this.mInitialRules[verb] = anchor;
+                    this.mRulesChanged = true;
+                }
+                removeRule(verb) {
+                    this.mRules[verb] = null;
+                    this.mInitialRules[verb] = null;
+                    this.mRulesChanged = true;
+                }
+                hasRelativeRules() {
+                    return (this.mInitialRules[RelativeLayout.START_OF] != null || this.mInitialRules[RelativeLayout.END_OF] != null
+                        || this.mInitialRules[RelativeLayout.ALIGN_START] != null || this.mInitialRules[RelativeLayout.ALIGN_END] != null
+                        || this.mInitialRules[RelativeLayout.ALIGN_PARENT_START] != null || this.mInitialRules[RelativeLayout.ALIGN_PARENT_END] != null);
+                }
+                resolveRules(layoutDirection) {
+                    const isLayoutRtl = (layoutDirection == View.LAYOUT_DIRECTION_RTL);
+                    System.arraycopy(this.mInitialRules, RelativeLayout.LEFT_OF, this.mRules, RelativeLayout.LEFT_OF, RelativeLayout.VERB_COUNT);
+                    if (this.mIsRtlCompatibilityMode) {
+                        if (this.mRules[RelativeLayout.ALIGN_START] != null) {
+                            if (this.mRules[RelativeLayout.ALIGN_LEFT] == null) {
+                                this.mRules[RelativeLayout.ALIGN_LEFT] = this.mRules[RelativeLayout.ALIGN_START];
+                            }
+                            this.mRules[RelativeLayout.ALIGN_START] = null;
+                        }
+                        if (this.mRules[RelativeLayout.ALIGN_END] != null) {
+                            if (this.mRules[RelativeLayout.ALIGN_RIGHT] == null) {
+                                this.mRules[RelativeLayout.ALIGN_RIGHT] = this.mRules[RelativeLayout.ALIGN_END];
+                            }
+                            this.mRules[RelativeLayout.ALIGN_END] = null;
+                        }
+                        if (this.mRules[RelativeLayout.START_OF] != null) {
+                            if (this.mRules[RelativeLayout.LEFT_OF] == null) {
+                                this.mRules[RelativeLayout.LEFT_OF] = this.mRules[RelativeLayout.START_OF];
+                            }
+                            this.mRules[RelativeLayout.START_OF] = null;
+                        }
+                        if (this.mRules[RelativeLayout.END_OF] != null) {
+                            if (this.mRules[RelativeLayout.RIGHT_OF] == null) {
+                                this.mRules[RelativeLayout.RIGHT_OF] = this.mRules[RelativeLayout.END_OF];
+                            }
+                            this.mRules[RelativeLayout.END_OF] = null;
+                        }
+                        if (this.mRules[RelativeLayout.ALIGN_PARENT_START] != null) {
+                            if (this.mRules[RelativeLayout.ALIGN_PARENT_LEFT] == null) {
+                                this.mRules[RelativeLayout.ALIGN_PARENT_LEFT] = this.mRules[RelativeLayout.ALIGN_PARENT_START];
+                            }
+                            this.mRules[RelativeLayout.ALIGN_PARENT_START] = null;
+                        }
+                        if (this.mRules[RelativeLayout.ALIGN_PARENT_RIGHT] == null) {
+                            if (this.mRules[RelativeLayout.ALIGN_PARENT_RIGHT] == null) {
+                                this.mRules[RelativeLayout.ALIGN_PARENT_RIGHT] = this.mRules[RelativeLayout.ALIGN_PARENT_END];
+                            }
+                            this.mRules[RelativeLayout.ALIGN_PARENT_END] = null;
+                        }
+                    }
+                    else {
+                        if ((this.mRules[RelativeLayout.ALIGN_START] != null || this.mRules[RelativeLayout.ALIGN_END] != null)
+                            && (this.mRules[RelativeLayout.ALIGN_LEFT] != null || this.mRules[RelativeLayout.ALIGN_RIGHT] != null)) {
+                            this.mRules[RelativeLayout.ALIGN_LEFT] = null;
+                            this.mRules[RelativeLayout.ALIGN_RIGHT] = null;
+                        }
+                        if (this.mRules[RelativeLayout.ALIGN_START] != null) {
+                            this.mRules[isLayoutRtl ? RelativeLayout.ALIGN_RIGHT : RelativeLayout.ALIGN_LEFT] = this.mRules[RelativeLayout.ALIGN_START];
+                            this.mRules[RelativeLayout.ALIGN_START] = null;
+                        }
+                        if (this.mRules[RelativeLayout.ALIGN_END] != null) {
+                            this.mRules[isLayoutRtl ? RelativeLayout.ALIGN_LEFT : RelativeLayout.ALIGN_RIGHT] = this.mRules[RelativeLayout.ALIGN_END];
+                            this.mRules[RelativeLayout.ALIGN_END] = null;
+                        }
+                        if ((this.mRules[RelativeLayout.START_OF] != null || this.mRules[RelativeLayout.END_OF] != null)
+                            && (this.mRules[RelativeLayout.LEFT_OF] != null || this.mRules[RelativeLayout.RIGHT_OF] != null)) {
+                            this.mRules[RelativeLayout.LEFT_OF] = null;
+                            this.mRules[RelativeLayout.RIGHT_OF] = null;
+                        }
+                        if (this.mRules[RelativeLayout.START_OF] != null) {
+                            this.mRules[isLayoutRtl ? RelativeLayout.RIGHT_OF : RelativeLayout.LEFT_OF] = this.mRules[RelativeLayout.START_OF];
+                            this.mRules[RelativeLayout.START_OF] = null;
+                        }
+                        if (this.mRules[RelativeLayout.END_OF] != null) {
+                            this.mRules[isLayoutRtl ? RelativeLayout.LEFT_OF : RelativeLayout.RIGHT_OF] = this.mRules[RelativeLayout.END_OF];
+                            this.mRules[RelativeLayout.END_OF] = null;
+                        }
+                        if ((this.mRules[RelativeLayout.ALIGN_PARENT_START] != null || this.mRules[RelativeLayout.ALIGN_PARENT_END] != null)
+                            && (this.mRules[RelativeLayout.ALIGN_PARENT_LEFT] != null || this.mRules[RelativeLayout.ALIGN_PARENT_RIGHT] != null)) {
+                            this.mRules[RelativeLayout.ALIGN_PARENT_LEFT] = null;
+                            this.mRules[RelativeLayout.ALIGN_PARENT_RIGHT] = null;
+                        }
+                        if (this.mRules[RelativeLayout.ALIGN_PARENT_START] != null) {
+                            this.mRules[isLayoutRtl ? RelativeLayout.ALIGN_PARENT_RIGHT : RelativeLayout.ALIGN_PARENT_LEFT] = this.mRules[RelativeLayout.ALIGN_PARENT_START];
+                            this.mRules[RelativeLayout.ALIGN_PARENT_START] = null;
+                        }
+                        if (this.mRules[RelativeLayout.ALIGN_PARENT_END] != null) {
+                            this.mRules[isLayoutRtl ? RelativeLayout.ALIGN_PARENT_LEFT : RelativeLayout.ALIGN_PARENT_RIGHT] = this.mRules[RelativeLayout.ALIGN_PARENT_END];
+                            this.mRules[RelativeLayout.ALIGN_PARENT_END] = null;
+                        }
+                    }
+                    this.mRulesChanged = false;
+                }
+                getRules(layoutDirection) {
+                    if (layoutDirection != null) {
+                        if (this.hasRelativeRules() && (this.mRulesChanged || layoutDirection != this.getLayoutDirection())) {
+                            this.resolveRules(layoutDirection);
+                            if (layoutDirection != this.getLayoutDirection()) {
+                                this.setLayoutDirection(layoutDirection);
+                            }
+                        }
+                    }
+                    return this.mRules;
+                }
+                resolveLayoutDirection(layoutDirection) {
+                    const isLayoutRtl = this.isLayoutRtl();
+                    if (isLayoutRtl) {
+                        if (this.mStart != LayoutParams.DEFAULT_MARGIN_RELATIVE)
+                            this.mRight = this.mStart;
+                        if (this.mEnd != LayoutParams.DEFAULT_MARGIN_RELATIVE)
+                            this.mLeft = this.mEnd;
+                    }
+                    else {
+                        if (this.mStart != LayoutParams.DEFAULT_MARGIN_RELATIVE)
+                            this.mLeft = this.mStart;
+                        if (this.mEnd != LayoutParams.DEFAULT_MARGIN_RELATIVE)
+                            this.mRight = this.mEnd;
+                    }
+                    if (this.hasRelativeRules() && layoutDirection != this.getLayoutDirection()) {
+                        this.resolveRules(layoutDirection);
+                    }
+                    super.resolveLayoutDirection(layoutDirection);
+                }
+            }
+            RelativeLayout.LayoutParams = LayoutParams;
+            class DependencyGraph {
+                constructor() {
+                    this.mNodes = new ArrayList();
+                    this.mKeyNodes = new SparseMap();
+                    this.mRoots = new ArrayDeque();
+                }
+                clear() {
+                    const nodes = this.mNodes;
+                    const count = nodes.size();
+                    for (let i = 0; i < count; i++) {
+                        nodes.get(i).release();
+                    }
+                    nodes.clear();
+                    this.mKeyNodes.clear();
+                    this.mRoots.clear();
+                }
+                add(view) {
+                    const id = view.getId();
+                    const node = DependencyGraph.Node.acquire(view);
+                    if (id != View.NO_ID) {
+                        this.mKeyNodes.put(id, node);
+                    }
+                    this.mNodes.add(node);
+                }
+                getSortedViews(sorted, rules) {
+                    const roots = this.findRoots(rules);
+                    let index = 0;
+                    let node;
+                    while ((node = roots.pollLast()) != null) {
+                        const view = node.view;
+                        const key = view.getId();
+                        sorted[index++] = view;
+                        const dependents = node.dependents;
+                        const count = dependents.size();
+                        for (let i = 0; i < count; i++) {
+                            const dependent = dependents.keyAt(i);
+                            const dependencies = dependent.dependencies;
+                            dependencies.remove(key);
+                            if (dependencies.size() == 0) {
+                                roots.add(dependent);
+                            }
+                        }
+                    }
+                    if (index < sorted.length) {
+                        throw Error(`new IllegalStateException("Circular dependencies cannot exist" + " in RelativeLayout")`);
+                    }
+                }
+                findRoots(rulesFilter) {
+                    const keyNodes = this.mKeyNodes;
+                    const nodes = this.mNodes;
+                    const count = nodes.size();
+                    for (let i = 0; i < count; i++) {
+                        const node = nodes.get(i);
+                        node.dependents.clear();
+                        node.dependencies.clear();
+                    }
+                    for (let i = 0; i < count; i++) {
+                        const node = nodes.get(i);
+                        const layoutParams = node.view.getLayoutParams();
+                        const rules = layoutParams.mRules;
+                        const rulesCount = rulesFilter.length;
+                        for (let j = 0; j < rulesCount; j++) {
+                            const rule = rules[rulesFilter[j]];
+                            if (rule != null) {
+                                const dependency = keyNodes.get(rule);
+                                if (dependency == null || dependency == node) {
+                                    continue;
+                                }
+                                dependency.dependents.put(node, this);
+                                node.dependencies.put(rule, dependency);
+                            }
+                        }
+                    }
+                    const roots = this.mRoots;
+                    roots.clear();
+                    for (let i = 0; i < count; i++) {
+                        const node = nodes.get(i);
+                        if (node.dependencies.size() == 0)
+                            roots.addLast(node);
+                    }
+                    return roots;
+                }
+            }
+            RelativeLayout.DependencyGraph = DependencyGraph;
+            (function (DependencyGraph) {
+                class Node {
+                    constructor() {
+                        this.dependents = new ArrayMap();
+                        this.dependencies = new SparseMap();
+                    }
+                    static acquire(view) {
+                        let node = Node.sPool.acquire();
+                        if (node == null) {
+                            node = new Node();
+                        }
+                        node.view = view;
+                        return node;
+                    }
+                    release() {
+                        this.view = null;
+                        this.dependents.clear();
+                        this.dependencies.clear();
+                        Node.sPool.release(this);
+                    }
+                }
+                Node.POOL_LIMIT = 100;
+                Node.sPool = new SynchronizedPool(Node.POOL_LIMIT);
+                DependencyGraph.Node = Node;
+            })(DependencyGraph = RelativeLayout.DependencyGraph || (RelativeLayout.DependencyGraph = {}));
+        })(RelativeLayout = widget.RelativeLayout || (widget.RelativeLayout = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/12/11.
+ */
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="PlatformImage.ts"/>
+var androidui;
+(function (androidui) {
+    var image;
+    (function (image) {
+        var Paint = android.graphics.Paint;
+        var Drawable = android.graphics.drawable.Drawable;
+        class NetDrawable extends Drawable {
+            constructor(src, res, paint) {
+                super();
+                this.mImageWidth = -1;
+                this.mImageHeight = -1;
+                this.mState = new State(src, res, paint);
+                this.mImage = new image.PlatformImage(src, () => this.onLoad(), () => this.onError());
+            }
+            draw(canvas) {
+                canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+            }
+            setAlpha(alpha) {
+                this.mState.paint.setAlpha(alpha);
+            }
+            getAlpha() {
+                return this.mState.paint.getAlpha();
+            }
+            getIntrinsicWidth() {
+                return this.mImageWidth;
+            }
+            getIntrinsicHeight() {
+                return this.mImageHeight;
+            }
+            onLoad() {
+                this.mImageWidth = this.mImage.width * this.mState.res.getDisplayMetrics().density;
+                this.mImageHeight = this.mImage.height * this.mState.res.getDisplayMetrics().density;
+                if (this.mLoadListener)
+                    this.mLoadListener.onLoad(this);
+                this.invalidateSelf();
+            }
+            onError() {
+                if (this.mLoadListener)
+                    this.mLoadListener.onError(this);
+            }
+            setLoadListener(loadListener) {
+                this.mLoadListener = loadListener;
+            }
+            getConstantState() {
+                return this.mState;
+            }
+        }
+        image.NetDrawable = NetDrawable;
+        class State {
+            constructor(src, res, paint = new Paint()) {
+                this.res = res;
+                this.src = src;
+                this.paint = new Paint();
+                this.paint.set(paint);
+            }
+            newDrawable() {
+                return new NetDrawable(this.src, this.res, this.paint);
+            }
+        }
+    })(image = androidui.image || (androidui.image = {}));
+})(androidui || (androidui = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Matrix.ts"/>
+///<reference path="../../android/graphics/RectF.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../androidui/image/NetDrawable.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Matrix = android.graphics.Matrix;
+        var RectF = android.graphics.RectF;
+        var View = android.view.View;
+        var Integer = java.lang.Integer;
+        class ImageView extends View {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.mHaveFrame = false;
+                this.mAdjustViewBounds = false;
+                this.mMaxWidth = Integer.MAX_VALUE;
+                this.mMaxHeight = Integer.MAX_VALUE;
+                this.mAlpha = 255;
+                this.mViewAlphaScale = 256;
+                this.mColorMod = false;
+                this.mDrawable = null;
+                this.mState = null;
+                this.mMergeState = false;
+                this.mLevel = 0;
+                this.mDrawableWidth = 0;
+                this.mDrawableHeight = 0;
+                this.mDrawMatrix = null;
+                this.mTempSrc = new RectF();
+                this.mTempDst = new RectF();
+                this.mBaseline = -1;
+                this.mBaselineAlignBottom = false;
+                this.mAdjustViewBoundsCompat = false;
+                this.initImageView();
+                this._attrBinder.addAttr('src', (value) => {
+                    this.setImageURI(value);
+                }, () => {
+                    return this.mUri;
+                });
+                this._attrBinder.addAttr('baselineAlignBottom', (value) => {
+                    this.setBaselineAlignBottom(this._attrBinder.parseBoolean(value, this.mBaselineAlignBottom));
+                });
+                this._attrBinder.addAttr('baseline', (value) => {
+                    this.setBaseline(this._attrBinder.parseNumber(value, this.mBaseline));
+                }, () => {
+                    return this.mBaseline;
+                });
+                this._attrBinder.addAttr('adjustViewBounds', (value) => {
+                    this.setAdjustViewBounds(this._attrBinder.parseBoolean(value, false));
+                });
+                this._attrBinder.addAttr('maxWidth', (value) => {
+                    let baseValue = this.getParent() instanceof View ? this.getParent().getWidth() : 0;
+                    this.setMaxWidth(this._attrBinder.parseNumber(value, this.mMaxWidth, baseValue));
+                }, () => {
+                    return this.mMaxWidth;
+                });
+                this._attrBinder.addAttr('maxHeight', (value) => {
+                    let baseValue = this.getParent() instanceof View ? this.getParent().getHeight() : 0;
+                    this.setMaxHeight(this._attrBinder.parseNumber(value, this.mMaxHeight, baseValue));
+                }, () => {
+                    return this.mMaxHeight;
+                });
+                this._attrBinder.addAttr('scaleType', (value) => {
+                    this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
+                }, () => {
+                    return this.mScaleType.toString();
+                });
+                this._attrBinder.addAttr('drawableAlpha', (value) => {
+                    this.setAlpha(this._attrBinder.parseNumber(value, this.mAlpha));
+                }, () => {
+                    return this.mAlpha;
+                });
+                this._attrBinder.addAttr('cropToPadding', (value) => {
+                    this.setCropToPadding(this._attrBinder.parseBoolean(value, false));
+                });
+            }
+            initImageView() {
+                this.mMatrix = new Matrix();
+                this.mScaleType = ImageView.ScaleType.FIT_CENTER;
+            }
+            verifyDrawable(dr) {
+                return this.mDrawable == dr || super.verifyDrawable(dr);
+            }
+            jumpDrawablesToCurrentState() {
+                super.jumpDrawablesToCurrentState();
+                if (this.mDrawable != null)
+                    this.mDrawable.jumpToCurrentState();
+            }
+            invalidateDrawable(dr) {
+                if (dr == this.mDrawable) {
+                    this.invalidate();
+                    this.resizeFromDrawable();
+                }
+                else {
+                    super.invalidateDrawable(dr);
+                }
+            }
+            hasOverlappingRendering() {
+                return (this.getBackground() != null && this.getBackground().getCurrent() != null);
+            }
+            getAdjustViewBounds() {
+                return this.mAdjustViewBounds;
+            }
+            setAdjustViewBounds(adjustViewBounds) {
+                this.mAdjustViewBounds = adjustViewBounds;
+                if (adjustViewBounds) {
+                    this.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                }
+            }
+            getMaxWidth() {
+                return this.mMaxWidth;
+            }
+            setMaxWidth(maxWidth) {
+                this.mMaxWidth = maxWidth;
+            }
+            getMaxHeight() {
+                return this.mMaxHeight;
+            }
+            setMaxHeight(maxHeight) {
+                this.mMaxHeight = maxHeight;
+            }
+            getDrawable() {
+                return this.mDrawable;
+            }
+            setImageURI(uri) {
+                if (this.mUri != uri) {
+                    this.updateDrawable(null);
+                    this.mUri = uri;
+                    const oldWidth = this.mDrawableWidth;
+                    const oldHeight = this.mDrawableHeight;
+                    this.resolveUri();
+                    if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
+                        this.requestLayout();
+                    }
+                    this.invalidate();
+                }
+            }
+            setImageDrawable(drawable) {
+                if (this.mDrawable != drawable) {
+                    this.mUri = null;
+                    const oldWidth = this.mDrawableWidth;
+                    const oldHeight = this.mDrawableHeight;
+                    this.updateDrawable(drawable);
+                    if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
+                        this.requestLayout();
+                    }
+                    this.invalidate();
+                }
+            }
+            setImageState(state, merge) {
+                this.mState = state;
+                this.mMergeState = merge;
+                if (this.mDrawable != null) {
+                    this.refreshDrawableState();
+                    this.resizeFromDrawable();
+                }
+            }
+            setSelected(selected) {
+                super.setSelected(selected);
+                this.resizeFromDrawable();
+            }
+            setImageLevel(level) {
+                this.mLevel = level;
+                if (this.mDrawable != null) {
+                    this.mDrawable.setLevel(level);
+                    this.resizeFromDrawable();
+                }
+            }
+            setScaleType(scaleType) {
+                if (scaleType == null) {
+                    throw Error(`new NullPointerException()`);
+                }
+                if (this.mScaleType != scaleType) {
+                    this.mScaleType = scaleType;
+                    this.setWillNotCacheDrawing(this.mScaleType == ImageView.ScaleType.CENTER);
+                    this.requestLayout();
+                    this.invalidate();
+                }
+            }
+            getScaleType() {
+                return this.mScaleType;
+            }
+            getImageMatrix() {
+                if (this.mDrawMatrix == null) {
+                    return new Matrix(Matrix.IDENTITY_MATRIX);
+                }
+                return this.mDrawMatrix;
+            }
+            setImageMatrix(matrix) {
+                if (matrix != null && matrix.isIdentity()) {
+                    matrix = null;
+                }
+                if (matrix == null && !this.mMatrix.isIdentity() || matrix != null && !this.mMatrix.equals(matrix)) {
+                    this.mMatrix.set(matrix);
+                    this.configureBounds();
+                    this.invalidate();
+                }
+            }
+            getCropToPadding() {
+                return this.mCropToPadding;
+            }
+            setCropToPadding(cropToPadding) {
+                if (this.mCropToPadding != cropToPadding) {
+                    this.mCropToPadding = cropToPadding;
+                    this.requestLayout();
+                    this.invalidate();
+                }
+            }
+            resolveUri() {
+                if (this.mDrawable != null) {
+                    return;
+                }
+                let d = null;
+                if (this.mUri != null) {
+                    d = new androidui.image.NetDrawable(this.mUri, this.getResources());
+                }
+                else {
+                    return;
+                }
+                this.updateDrawable(d);
+            }
+            onCreateDrawableState(extraSpace) {
+                if (this.mState == null) {
+                    return super.onCreateDrawableState(extraSpace);
+                }
+                else if (!this.mMergeState) {
+                    return this.mState;
+                }
+                else {
+                    return ImageView.mergeDrawableStates(super.onCreateDrawableState(extraSpace + this.mState.length), this.mState);
+                }
+            }
+            updateDrawable(d) {
+                if (this.mDrawable != null) {
+                    this.mDrawable.setCallback(null);
+                    this.unscheduleDrawable(this.mDrawable);
+                }
+                this.mDrawable = d;
+                if (d != null) {
+                    d.setCallback(this);
+                    if (d.isStateful()) {
+                        d.setState(this.getDrawableState());
+                    }
+                    d.setLevel(this.mLevel);
+                    d.setVisible(this.getVisibility() == ImageView.VISIBLE, true);
+                    this.mDrawableWidth = d.getIntrinsicWidth();
+                    this.mDrawableHeight = d.getIntrinsicHeight();
+                    this.applyColorMod();
+                    this.configureBounds();
+                }
+                else {
+                    this.mDrawableWidth = this.mDrawableHeight = -1;
+                }
+            }
+            resizeFromDrawable() {
+                let d = this.mDrawable;
+                if (d != null) {
+                    let w = d.getIntrinsicWidth();
+                    if (w < 0)
+                        w = this.mDrawableWidth;
+                    let h = d.getIntrinsicHeight();
+                    if (h < 0)
+                        h = this.mDrawableHeight;
+                    if (w != this.mDrawableWidth || h != this.mDrawableHeight) {
+                        this.mDrawableWidth = w;
+                        this.mDrawableHeight = h;
+                        this.requestLayout();
+                    }
+                }
+            }
+            static scaleTypeToScaleToFit(st) {
+                return ImageView.sS2FArray[st - 1];
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                this.resolveUri();
+                let w;
+                let h;
+                let desiredAspect = 0.0;
+                let resizeWidth = false;
+                let resizeHeight = false;
+                const widthSpecMode = ImageView.MeasureSpec.getMode(widthMeasureSpec);
+                const heightSpecMode = ImageView.MeasureSpec.getMode(heightMeasureSpec);
+                if (this.mDrawable == null) {
+                    this.mDrawableWidth = -1;
+                    this.mDrawableHeight = -1;
+                    w = h = 0;
+                }
+                else {
+                    w = this.mDrawableWidth;
+                    h = this.mDrawableHeight;
+                    if (w <= 0)
+                        w = 1;
+                    if (h <= 0)
+                        h = 1;
+                    if (this.mAdjustViewBounds) {
+                        resizeWidth = widthSpecMode != ImageView.MeasureSpec.EXACTLY;
+                        resizeHeight = heightSpecMode != ImageView.MeasureSpec.EXACTLY;
+                        desiredAspect = w / h;
+                    }
+                }
+                let pleft = this.mPaddingLeft;
+                let pright = this.mPaddingRight;
+                let ptop = this.mPaddingTop;
+                let pbottom = this.mPaddingBottom;
+                let widthSize;
+                let heightSize;
+                if (resizeWidth || resizeHeight) {
+                    widthSize = this.resolveAdjustedSize(w + pleft + pright, this.mMaxWidth, widthMeasureSpec);
+                    heightSize = this.resolveAdjustedSize(h + ptop + pbottom, this.mMaxHeight, heightMeasureSpec);
+                    if (desiredAspect != 0.0) {
+                        let actualAspect = (widthSize - pleft - pright) / (heightSize - ptop - pbottom);
+                        if (Math.abs(actualAspect - desiredAspect) > 0.0000001) {
+                            let done = false;
+                            if (resizeWidth) {
+                                let newWidth = Math.floor((desiredAspect * (heightSize - ptop - pbottom))) + pleft + pright;
+                                if (!resizeHeight && !this.mAdjustViewBoundsCompat) {
+                                    widthSize = this.resolveAdjustedSize(newWidth, this.mMaxWidth, widthMeasureSpec);
+                                }
+                                if (newWidth <= widthSize) {
+                                    widthSize = newWidth;
+                                    done = true;
+                                }
+                            }
+                            if (!done && resizeHeight) {
+                                let newHeight = Math.floor(((widthSize - pleft - pright) / desiredAspect)) + ptop + pbottom;
+                                if (!resizeWidth && !this.mAdjustViewBoundsCompat) {
+                                    heightSize = this.resolveAdjustedSize(newHeight, this.mMaxHeight, heightMeasureSpec);
+                                }
+                                if (newHeight <= heightSize) {
+                                    heightSize = newHeight;
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    w += pleft + pright;
+                    h += ptop + pbottom;
+                    w = Math.max(w, this.getSuggestedMinimumWidth());
+                    h = Math.max(h, this.getSuggestedMinimumHeight());
+                    widthSize = ImageView.resolveSizeAndState(w, widthMeasureSpec, 0);
+                    heightSize = ImageView.resolveSizeAndState(h, heightMeasureSpec, 0);
+                }
+                this.setMeasuredDimension(widthSize, heightSize);
+            }
+            resolveAdjustedSize(desiredSize, maxSize, measureSpec) {
+                let result = desiredSize;
+                let specMode = ImageView.MeasureSpec.getMode(measureSpec);
+                let specSize = ImageView.MeasureSpec.getSize(measureSpec);
+                switch (specMode) {
+                    case ImageView.MeasureSpec.UNSPECIFIED:
+                        result = Math.min(desiredSize, maxSize);
+                        break;
+                    case ImageView.MeasureSpec.AT_MOST:
+                        result = Math.min(Math.min(desiredSize, specSize), maxSize);
+                        break;
+                    case ImageView.MeasureSpec.EXACTLY:
+                        result = specSize;
+                        break;
+                }
+                return result;
+            }
+            setFrame(l, t, r, b) {
+                let changed = super.setFrame(l, t, r, b);
+                this.mHaveFrame = true;
+                this.configureBounds();
+                return changed;
+            }
+            configureBounds() {
+                if (this.mDrawable == null || !this.mHaveFrame) {
+                    return;
+                }
+                let dwidth = this.mDrawableWidth;
+                let dheight = this.mDrawableHeight;
+                let vwidth = this.getWidth() - this.mPaddingLeft - this.mPaddingRight;
+                let vheight = this.getHeight() - this.mPaddingTop - this.mPaddingBottom;
+                let fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
+                if (dwidth <= 0 || dheight <= 0 || ImageView.ScaleType.FIT_XY == this.mScaleType) {
+                    this.mDrawable.setBounds(0, 0, vwidth, vheight);
+                    this.mDrawMatrix = null;
+                }
+                else {
+                    this.mDrawable.setBounds(0, 0, dwidth, dheight);
+                    if (ImageView.ScaleType.MATRIX == this.mScaleType) {
+                        if (this.mMatrix.isIdentity()) {
+                            this.mDrawMatrix = null;
+                        }
+                        else {
+                            this.mDrawMatrix = this.mMatrix;
+                        }
+                    }
+                    else if (fits) {
+                        this.mDrawMatrix = null;
+                    }
+                    else if (ImageView.ScaleType.CENTER == this.mScaleType) {
+                        this.mDrawMatrix = this.mMatrix;
+                        this.mDrawMatrix.setTranslate(Math.floor(((vwidth - dwidth) * 0.5 + 0.5)), Math.floor(((vheight - dheight) * 0.5 + 0.5)));
+                    }
+                    else if (ImageView.ScaleType.CENTER_CROP == this.mScaleType) {
+                        this.mDrawMatrix = this.mMatrix;
+                        let scale;
+                        let dx = 0, dy = 0;
+                        if (dwidth * vheight > vwidth * dheight) {
+                            scale = vheight / dheight;
+                            dx = (vwidth - dwidth * scale) * 0.5;
+                        }
+                        else {
+                            scale = vwidth / dwidth;
+                            dy = (vheight - dheight * scale) * 0.5;
+                        }
+                        this.mDrawMatrix.setScale(scale, scale);
+                        this.mDrawMatrix.postTranslate(Math.floor((dx + 0.5)), Math.floor((dy + 0.5)));
+                    }
+                    else if (ImageView.ScaleType.CENTER_INSIDE == this.mScaleType) {
+                        this.mDrawMatrix = this.mMatrix;
+                        let scale;
+                        let dx;
+                        let dy;
+                        if (dwidth <= vwidth && dheight <= vheight) {
+                            scale = 1.0;
+                        }
+                        else {
+                            scale = Math.min(vwidth / dwidth, vheight / dheight);
+                        }
+                        dx = Math.floor(((vwidth - dwidth * scale) * 0.5 + 0.5));
+                        dy = Math.floor(((vheight - dheight * scale) * 0.5 + 0.5));
+                        this.mDrawMatrix.setScale(scale, scale);
+                        this.mDrawMatrix.postTranslate(dx, dy);
+                    }
+                    else {
+                        this.mTempSrc.set(0, 0, dwidth, dheight);
+                        this.mTempDst.set(0, 0, vwidth, vheight);
+                        this.mDrawMatrix = this.mMatrix;
+                        this.mDrawMatrix.setRectToRect(this.mTempSrc, this.mTempDst, ImageView.scaleTypeToScaleToFit(this.mScaleType));
+                    }
+                }
+            }
+            drawableStateChanged() {
+                super.drawableStateChanged();
+                let d = this.mDrawable;
+                if (d != null && d.isStateful()) {
+                    d.setState(this.getDrawableState());
+                }
+            }
+            onDraw(canvas) {
+                super.onDraw(canvas);
+                if (this.mDrawable == null) {
+                    return;
+                }
+                if (this.mDrawableWidth == 0 || this.mDrawableHeight == 0) {
+                    return;
+                }
+                if (this.mDrawMatrix == null && this.mPaddingTop == 0 && this.mPaddingLeft == 0) {
+                    this.mDrawable.draw(canvas);
+                }
+                else {
+                    let saveCount = canvas.getSaveCount();
+                    canvas.save();
+                    if (this.mCropToPadding) {
+                        const scrollX = this.mScrollX;
+                        const scrollY = this.mScrollY;
+                        canvas.clipRect(scrollX + this.mPaddingLeft, scrollY + this.mPaddingTop, scrollX + this.mRight - this.mLeft - this.mPaddingRight, scrollY + this.mBottom - this.mTop - this.mPaddingBottom);
+                    }
+                    canvas.translate(this.mPaddingLeft, this.mPaddingTop);
+                    if (this.mDrawMatrix != null) {
+                        canvas.concat(this.mDrawMatrix);
+                    }
+                    this.mDrawable.draw(canvas);
+                    canvas.restoreToCount(saveCount);
+                }
+            }
+            getBaseline() {
+                if (this.mBaselineAlignBottom) {
+                    return this.getMeasuredHeight();
+                }
+                else {
+                    return this.mBaseline;
+                }
+            }
+            setBaseline(baseline) {
+                if (this.mBaseline != baseline) {
+                    this.mBaseline = baseline;
+                    this.requestLayout();
+                }
+            }
+            setBaselineAlignBottom(aligned) {
+                if (this.mBaselineAlignBottom != aligned) {
+                    this.mBaselineAlignBottom = aligned;
+                    this.requestLayout();
+                }
+            }
+            getBaselineAlignBottom() {
+                return this.mBaselineAlignBottom;
+            }
+            getImageAlpha() {
+                return this.mAlpha;
+            }
+            setImageAlpha(alpha) {
+                this.setAlpha(alpha);
+            }
+            setAlpha(alpha) {
+                alpha &= 0xFF;
+                if (this.mAlpha != alpha) {
+                    this.mAlpha = alpha;
+                    this.mColorMod = true;
+                    this.applyColorMod();
+                    this.invalidate();
+                }
+            }
+            applyColorMod() {
+                if (this.mDrawable != null && this.mColorMod) {
+                    this.mDrawable = this.mDrawable.mutate();
+                    this.mDrawable.setAlpha(this.mAlpha * this.mViewAlphaScale >> 8);
+                }
+            }
+            setVisibility(visibility) {
+                super.setVisibility(visibility);
+                if (this.mDrawable != null) {
+                    this.mDrawable.setVisible(visibility == ImageView.VISIBLE, false);
+                }
+            }
+            onAttachedToWindow() {
+                super.onAttachedToWindow();
+                if (this.mDrawable != null) {
+                    this.mDrawable.setVisible(this.getVisibility() == ImageView.VISIBLE, false);
+                }
+            }
+            onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                if (this.mDrawable != null) {
+                    this.mDrawable.setVisible(false, false);
+                }
+            }
+            static parseScaleType(s, defaultType) {
+                if (s == null)
+                    return defaultType;
+                s = s.toLowerCase();
+                if (s === 'matrix'.toLowerCase())
+                    return ImageView.ScaleType.MATRIX;
+                if (s === 'fitXY'.toLowerCase())
+                    return ImageView.ScaleType.FIT_XY;
+                if (s === 'fitStart'.toLowerCase())
+                    return ImageView.ScaleType.FIT_START;
+                if (s === 'fitCenter'.toLowerCase())
+                    return ImageView.ScaleType.FIT_CENTER;
+                if (s === 'fitEnd'.toLowerCase())
+                    return ImageView.ScaleType.FIT_END;
+                if (s === 'center'.toLowerCase())
+                    return ImageView.ScaleType.CENTER;
+                if (s === 'centerCrop'.toLowerCase())
+                    return ImageView.ScaleType.CENTER_CROP;
+                if (s === 'centerInside'.toLowerCase())
+                    return ImageView.ScaleType.CENTER_INSIDE;
+                return defaultType;
+            }
+        }
+        ImageView.sS2FArray = [Matrix.ScaleToFit.FILL, Matrix.ScaleToFit.START, Matrix.ScaleToFit.CENTER, Matrix.ScaleToFit.END];
+        widget.ImageView = ImageView;
+        (function (ImageView) {
+            (function (ScaleType) {
+                ScaleType[ScaleType["MATRIX"] = 0] = "MATRIX";
+                ScaleType[ScaleType["FIT_XY"] = 1] = "FIT_XY";
+                ScaleType[ScaleType["FIT_START"] = 2] = "FIT_START";
+                ScaleType[ScaleType["FIT_CENTER"] = 3] = "FIT_CENTER";
+                ScaleType[ScaleType["FIT_END"] = 4] = "FIT_END";
+                ScaleType[ScaleType["CENTER"] = 5] = "CENTER";
+                ScaleType[ScaleType["CENTER_CROP"] = 6] = "CENTER_CROP";
+                ScaleType[ScaleType["CENTER_INSIDE"] = 7] = "CENTER_INSIDE";
+            })(ImageView.ScaleType || (ImageView.ScaleType = {}));
+            var ScaleType = ImageView.ScaleType;
+        })(ImageView = widget.ImageView || (widget.ImageView = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/28.
+ */
+///<reference path="ImageView.ts"/>
+///<reference path="../view/View.ts"/>
+///<reference path="../R/attr.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        class ImageButton extends widget.ImageView {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.applyDefaultAttributes(android.R.attr.imageButtonStyle);
+            }
+        }
+        widget.ImageButton = ImageButton;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
  * Copyright (C) 2007 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33892,915 +36073,6 @@ var android;
         GridView.STRETCH_SPACING_UNIFORM = 3;
         GridView.AUTO_FIT = -1;
         widget.GridView = GridView;
-    })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/view/FocusFinder.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/VelocityTracker.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/ViewParent.ts"/>
-///<reference path="../../android/view/animation/AnimationUtils.ts"/>
-///<reference path="../../java/util/List.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/widget/LinearLayout.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/OverScroller.ts"/>
-///<reference path="../../android/widget/ScrollView.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-var android;
-(function (android) {
-    var widget;
-    (function (widget) {
-        var Rect = android.graphics.Rect;
-        var Log = android.util.Log;
-        var FocusFinder = android.view.FocusFinder;
-        var KeyEvent = android.view.KeyEvent;
-        var MotionEvent = android.view.MotionEvent;
-        var VelocityTracker = android.view.VelocityTracker;
-        var View = android.view.View;
-        var ViewConfiguration = android.view.ViewConfiguration;
-        var ViewGroup = android.view.ViewGroup;
-        var AnimationUtils = android.view.animation.AnimationUtils;
-        var FrameLayout = android.widget.FrameLayout;
-        var OverScroller = android.widget.OverScroller;
-        var ScrollView = android.widget.ScrollView;
-        class HorizontalScrollView extends FrameLayout {
-            constructor(bindElement, rootElement) {
-                super(bindElement, rootElement);
-                this.mLastScroll = 0;
-                this.mTempRect = new Rect();
-                this.mLastMotionX = 0;
-                this.mIsLayoutDirty = true;
-                this.mChildToScrollTo = null;
-                this.mIsBeingDragged = false;
-                this.mSmoothScrollingEnabled = true;
-                this.mMinimumVelocity = 0;
-                this.mMaximumVelocity = 0;
-                this.mOverscrollDistance = 0;
-                this._mOverflingDistance = 0;
-                this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
-                this.initScrollView();
-                this._attrBinder.addAttr('fillViewport', (value) => {
-                    this.setFillViewport(this._attrBinder.parseBoolean(value));
-                });
-            }
-            get mOverflingDistance() {
-                if (this.mScrollX < -this._mOverflingDistance)
-                    return -this.mScrollX;
-                let overDistance = this.mScrollX - this.getScrollRange();
-                if (overDistance > this._mOverflingDistance)
-                    return overDistance;
-                return this._mOverflingDistance;
-            }
-            set mOverflingDistance(value) {
-                this._mOverflingDistance = value;
-            }
-            getLeftFadingEdgeStrength() {
-                if (this.getChildCount() == 0) {
-                    return 0.0;
-                }
-                const length = this.getHorizontalFadingEdgeLength();
-                if (this.mScrollX < length) {
-                    return this.mScrollX / length;
-                }
-                return 1.0;
-            }
-            getRightFadingEdgeStrength() {
-                if (this.getChildCount() == 0) {
-                    return 0.0;
-                }
-                const length = this.getHorizontalFadingEdgeLength();
-                const rightEdge = this.getWidth() - this.mPaddingRight;
-                const span = this.getChildAt(0).getRight() - this.mScrollX - rightEdge;
-                if (span < length) {
-                    return span / length;
-                }
-                return 1.0;
-            }
-            getMaxScrollAmount() {
-                return Math.floor((HorizontalScrollView.MAX_SCROLL_FACTOR * (this.mRight - this.mLeft)));
-            }
-            initScrollView() {
-                this.mScroller = new OverScroller();
-                this.setFocusable(true);
-                this.setDescendantFocusability(HorizontalScrollView.FOCUS_AFTER_DESCENDANTS);
-                this.setWillNotDraw(false);
-                const configuration = ViewConfiguration.get();
-                this.mTouchSlop = configuration.getScaledTouchSlop();
-                this.mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
-                this.mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
-                this.mOverscrollDistance = configuration.getScaledOverscrollDistance();
-                this._mOverflingDistance = configuration.getScaledOverflingDistance();
-                this.initScrollCache();
-                this.setHorizontalScrollBarEnabled(true);
-            }
-            addView(...args) {
-                if (this.getChildCount() > 0) {
-                    throw new Error("ScrollView can host only one direct child");
-                }
-                return super.addView(...args);
-            }
-            canScroll() {
-                let child = this.getChildAt(0);
-                if (child != null) {
-                    let childWidth = child.getWidth();
-                    return this.getWidth() < childWidth + this.mPaddingLeft + this.mPaddingRight;
-                }
-                return false;
-            }
-            isFillViewport() {
-                return this.mFillViewport;
-            }
-            setFillViewport(fillViewport) {
-                if (fillViewport != this.mFillViewport) {
-                    this.mFillViewport = fillViewport;
-                    this.requestLayout();
-                }
-            }
-            isSmoothScrollingEnabled() {
-                return this.mSmoothScrollingEnabled;
-            }
-            setSmoothScrollingEnabled(smoothScrollingEnabled) {
-                this.mSmoothScrollingEnabled = smoothScrollingEnabled;
-            }
-            onMeasure(widthMeasureSpec, heightMeasureSpec) {
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-                if (!this.mFillViewport) {
-                    return;
-                }
-                const widthMode = HorizontalScrollView.MeasureSpec.getMode(widthMeasureSpec);
-                if (widthMode == HorizontalScrollView.MeasureSpec.UNSPECIFIED) {
-                    return;
-                }
-                if (this.getChildCount() > 0) {
-                    const child = this.getChildAt(0);
-                    let width = this.getMeasuredWidth();
-                    if (child.getMeasuredWidth() < width) {
-                        const lp = child.getLayoutParams();
-                        let childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(heightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
-                        width -= this.mPaddingLeft;
-                        width -= this.mPaddingRight;
-                        let childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(width, HorizontalScrollView.MeasureSpec.EXACTLY);
-                        child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-                    }
-                }
-            }
-            dispatchKeyEvent(event) {
-                return super.dispatchKeyEvent(event) || this.executeKeyEvent(event);
-            }
-            executeKeyEvent(event) {
-                this.mTempRect.setEmpty();
-                if (!this.canScroll()) {
-                    if (this.isFocused()) {
-                        let currentFocused = this.findFocus();
-                        if (currentFocused == this)
-                            currentFocused = null;
-                        let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, View.FOCUS_RIGHT);
-                        return nextFocused != null && nextFocused != this && nextFocused.requestFocus(View.FOCUS_RIGHT);
-                    }
-                    return false;
-                }
-                let handled = false;
-                if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                    switch (event.getKeyCode()) {
-                        case KeyEvent.KEYCODE_DPAD_LEFT:
-                            if (!event.isAltPressed()) {
-                                handled = this.arrowScroll(View.FOCUS_LEFT);
-                            }
-                            else {
-                                handled = this.fullScroll(View.FOCUS_LEFT);
-                            }
-                            break;
-                        case KeyEvent.KEYCODE_DPAD_RIGHT:
-                            if (!event.isAltPressed()) {
-                                handled = this.arrowScroll(View.FOCUS_RIGHT);
-                            }
-                            else {
-                                handled = this.fullScroll(View.FOCUS_RIGHT);
-                            }
-                            break;
-                        case KeyEvent.KEYCODE_SPACE:
-                            this.pageScroll(event.isShiftPressed() ? View.FOCUS_LEFT : View.FOCUS_RIGHT);
-                            break;
-                    }
-                }
-                return handled;
-            }
-            inChild(x, y) {
-                if (this.getChildCount() > 0) {
-                    const scrollX = this.mScrollX;
-                    const child = this.getChildAt(0);
-                    return !(y < child.getTop() || y >= child.getBottom() || x < child.getLeft() - scrollX || x >= child.getRight() - scrollX);
-                }
-                return false;
-            }
-            initOrResetVelocityTracker() {
-                if (this.mVelocityTracker == null) {
-                    this.mVelocityTracker = VelocityTracker.obtain();
-                }
-                else {
-                    this.mVelocityTracker.clear();
-                }
-            }
-            initVelocityTrackerIfNotExists() {
-                if (this.mVelocityTracker == null) {
-                    this.mVelocityTracker = VelocityTracker.obtain();
-                }
-            }
-            recycleVelocityTracker() {
-                if (this.mVelocityTracker != null) {
-                    this.mVelocityTracker.recycle();
-                    this.mVelocityTracker = null;
-                }
-            }
-            requestDisallowInterceptTouchEvent(disallowIntercept) {
-                if (disallowIntercept) {
-                    this.recycleVelocityTracker();
-                }
-                super.requestDisallowInterceptTouchEvent(disallowIntercept);
-            }
-            onInterceptTouchEvent(ev) {
-                const action = ev.getAction();
-                if ((action == MotionEvent.ACTION_MOVE) && (this.mIsBeingDragged)) {
-                    return true;
-                }
-                switch (action & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_MOVE:
-                        {
-                            const activePointerId = this.mActivePointerId;
-                            if (activePointerId == HorizontalScrollView.INVALID_POINTER) {
-                                break;
-                            }
-                            const pointerIndex = ev.findPointerIndex(activePointerId);
-                            if (pointerIndex == -1) {
-                                Log.e(HorizontalScrollView.TAG, "Invalid pointerId=" + activePointerId + " in onInterceptTouchEvent");
-                                break;
-                            }
-                            const x = Math.floor(ev.getX(pointerIndex));
-                            const xDiff = Math.floor(Math.abs(x - this.mLastMotionX));
-                            if (xDiff > this.mTouchSlop) {
-                                this.mIsBeingDragged = true;
-                                this.mLastMotionX = x;
-                                this.initVelocityTrackerIfNotExists();
-                                this.mVelocityTracker.addMovement(ev);
-                                if (this.mParent != null)
-                                    this.mParent.requestDisallowInterceptTouchEvent(true);
-                            }
-                            break;
-                        }
-                    case MotionEvent.ACTION_DOWN:
-                        {
-                            const x = Math.floor(ev.getX());
-                            if (!this.inChild(Math.floor(x), Math.floor(ev.getY()))) {
-                                this.mIsBeingDragged = false;
-                                this.recycleVelocityTracker();
-                                break;
-                            }
-                            this.mLastMotionX = x;
-                            this.mActivePointerId = ev.getPointerId(0);
-                            this.initOrResetVelocityTracker();
-                            this.mVelocityTracker.addMovement(ev);
-                            this.mIsBeingDragged = !this.mScroller.isFinished();
-                            break;
-                        }
-                    case MotionEvent.ACTION_CANCEL:
-                    case MotionEvent.ACTION_UP:
-                        this.mIsBeingDragged = false;
-                        this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
-                        if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
-                            this.postInvalidateOnAnimation();
-                        }
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        {
-                            const index = ev.getActionIndex();
-                            this.mLastMotionX = Math.floor(ev.getX(index));
-                            this.mActivePointerId = ev.getPointerId(index);
-                            break;
-                        }
-                    case MotionEvent.ACTION_POINTER_UP:
-                        this.onSecondaryPointerUp(ev);
-                        this.mLastMotionX = Math.floor(ev.getX(ev.findPointerIndex(this.mActivePointerId)));
-                        break;
-                }
-                return this.mIsBeingDragged;
-            }
-            onTouchEvent(ev) {
-                this.initVelocityTrackerIfNotExists();
-                this.mVelocityTracker.addMovement(ev);
-                const action = ev.getAction();
-                switch (action & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        {
-                            if (this.getChildCount() == 0) {
-                                return false;
-                            }
-                            if ((this.mIsBeingDragged = !this.mScroller.isFinished())) {
-                                const parent = this.getParent();
-                                if (parent != null) {
-                                    parent.requestDisallowInterceptTouchEvent(true);
-                                }
-                            }
-                            if (!this.mScroller.isFinished()) {
-                                this.mScroller.abortAnimation();
-                            }
-                            this.mLastMotionX = Math.floor(ev.getX());
-                            this.mActivePointerId = ev.getPointerId(0);
-                            break;
-                        }
-                    case MotionEvent.ACTION_MOVE:
-                        const activePointerIndex = ev.findPointerIndex(this.mActivePointerId);
-                        if (activePointerIndex == -1) {
-                            Log.e(HorizontalScrollView.TAG, "Invalid pointerId=" + this.mActivePointerId + " in onTouchEvent");
-                            break;
-                        }
-                        const x = Math.floor(ev.getX(activePointerIndex));
-                        let deltaX = this.mLastMotionX - x;
-                        if (!this.mIsBeingDragged && Math.abs(deltaX) > this.mTouchSlop) {
-                            const parent = this.getParent();
-                            if (parent != null) {
-                                parent.requestDisallowInterceptTouchEvent(true);
-                            }
-                            this.mIsBeingDragged = true;
-                            if (deltaX > 0) {
-                                deltaX -= this.mTouchSlop;
-                            }
-                            else {
-                                deltaX += this.mTouchSlop;
-                            }
-                        }
-                        if (this.mIsBeingDragged) {
-                            this.mLastMotionX = x;
-                            const oldX = this.mScrollX;
-                            const oldY = this.mScrollY;
-                            const range = this.getScrollRange();
-                            const overscrollMode = this.getOverScrollMode();
-                            const canOverscroll = overscrollMode == HorizontalScrollView.OVER_SCROLL_ALWAYS || (overscrollMode == HorizontalScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
-                            if (this.overScrollBy(deltaX, 0, this.mScrollX, 0, range, 0, this.mOverscrollDistance, 0, true)) {
-                                this.mVelocityTracker.clear();
-                            }
-                            if (canOverscroll) {
-                            }
-                        }
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        if (this.mIsBeingDragged) {
-                            const velocityTracker = this.mVelocityTracker;
-                            velocityTracker.computeCurrentVelocity(1000, this.mMaximumVelocity);
-                            let initialVelocity = Math.floor(velocityTracker.getXVelocity(this.mActivePointerId));
-                            if (this.getChildCount() > 0) {
-                                let isOverDrag = this.mScrollX < 0 || this.mScrollX > this.getScrollRange();
-                                if (!isOverDrag && (Math.abs(initialVelocity) > this.mMinimumVelocity)) {
-                                    this.fling(-initialVelocity);
-                                }
-                                else {
-                                    if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
-                                        this.postInvalidateOnAnimation();
-                                    }
-                                }
-                            }
-                            this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
-                            this.mIsBeingDragged = false;
-                            this.recycleVelocityTracker();
-                        }
-                        break;
-                    case MotionEvent.ACTION_CANCEL:
-                        if (this.mIsBeingDragged && this.getChildCount() > 0) {
-                            if (this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0)) {
-                                this.postInvalidateOnAnimation();
-                            }
-                            this.mActivePointerId = HorizontalScrollView.INVALID_POINTER;
-                            this.mIsBeingDragged = false;
-                            this.recycleVelocityTracker();
-                        }
-                        break;
-                    case MotionEvent.ACTION_POINTER_UP:
-                        this.onSecondaryPointerUp(ev);
-                        break;
-                }
-                return true;
-            }
-            onSecondaryPointerUp(ev) {
-                const pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-                const pointerId = ev.getPointerId(pointerIndex);
-                if (pointerId == this.mActivePointerId) {
-                    const newPointerIndex = pointerIndex == 0 ? 1 : 0;
-                    this.mLastMotionX = Math.floor(ev.getX(newPointerIndex));
-                    this.mActivePointerId = ev.getPointerId(newPointerIndex);
-                    if (this.mVelocityTracker != null) {
-                        this.mVelocityTracker.clear();
-                    }
-                }
-            }
-            onGenericMotionEvent(event) {
-                if (event.isPointerEvent()) {
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_SCROLL:
-                            {
-                                if (!this.mIsBeingDragged) {
-                                    let hscroll;
-                                    hscroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
-                                    if (hscroll != 0) {
-                                        const delta = Math.floor((hscroll * this.getHorizontalScrollFactor()));
-                                        const range = this.getScrollRange();
-                                        let oldScrollX = this.mScrollX;
-                                        let newScrollX = oldScrollX + delta;
-                                        if (newScrollX < 0) {
-                                            newScrollX = 0;
-                                        }
-                                        else if (newScrollX > range) {
-                                            newScrollX = range;
-                                        }
-                                        if (newScrollX != oldScrollX) {
-                                            super.scrollTo(newScrollX, this.mScrollY);
-                                            return true;
-                                        }
-                                    }
-                                }
-                            }
-                    }
-                }
-                return super.onGenericMotionEvent(event);
-            }
-            shouldDelayChildPressedState() {
-                return true;
-            }
-            onOverScrolled(scrollX, scrollY, clampedX, clampedY) {
-                if (!this.mScroller.isFinished()) {
-                    const oldX = this.mScrollX;
-                    const oldY = this.mScrollY;
-                    this.mScrollX = scrollX;
-                    this.mScrollY = scrollY;
-                    this.invalidateParentIfNeeded();
-                    this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
-                    if (clampedX) {
-                        this.mScroller.springBack(this.mScrollX, this.mScrollY, 0, this.getScrollRange(), 0, 0);
-                    }
-                }
-                else {
-                    super.scrollTo(scrollX, scrollY);
-                }
-                this.awakenScrollBars();
-            }
-            getScrollRange() {
-                let scrollRange = 0;
-                if (this.getChildCount() > 0) {
-                    let child = this.getChildAt(0);
-                    scrollRange = Math.max(0, child.getWidth() - (this.getWidth() - this.mPaddingLeft - this.mPaddingRight));
-                }
-                return scrollRange;
-            }
-            findFocusableViewInMyBounds(leftFocus, left, preferredFocusable) {
-                const fadingEdgeLength = this.getHorizontalFadingEdgeLength() / 2;
-                const leftWithoutFadingEdge = left + fadingEdgeLength;
-                const rightWithoutFadingEdge = left + this.getWidth() - fadingEdgeLength;
-                if ((preferredFocusable != null) && (preferredFocusable.getLeft() < rightWithoutFadingEdge) && (preferredFocusable.getRight() > leftWithoutFadingEdge)) {
-                    return preferredFocusable;
-                }
-                return this.findFocusableViewInBounds(leftFocus, leftWithoutFadingEdge, rightWithoutFadingEdge);
-            }
-            findFocusableViewInBounds(leftFocus, left, right) {
-                let focusables = this.getFocusables(View.FOCUS_FORWARD);
-                let focusCandidate = null;
-                let foundFullyContainedFocusable = false;
-                let count = focusables.size();
-                for (let i = 0; i < count; i++) {
-                    let view = focusables.get(i);
-                    let viewLeft = view.getLeft();
-                    let viewRight = view.getRight();
-                    if (left < viewRight && viewLeft < right) {
-                        const viewIsFullyContained = (left < viewLeft) && (viewRight < right);
-                        if (focusCandidate == null) {
-                            focusCandidate = view;
-                            foundFullyContainedFocusable = viewIsFullyContained;
-                        }
-                        else {
-                            const viewIsCloserToBoundary = (leftFocus && viewLeft < focusCandidate.getLeft()) || (!leftFocus && viewRight > focusCandidate.getRight());
-                            if (foundFullyContainedFocusable) {
-                                if (viewIsFullyContained && viewIsCloserToBoundary) {
-                                    focusCandidate = view;
-                                }
-                            }
-                            else {
-                                if (viewIsFullyContained) {
-                                    focusCandidate = view;
-                                    foundFullyContainedFocusable = true;
-                                }
-                                else if (viewIsCloserToBoundary) {
-                                    focusCandidate = view;
-                                }
-                            }
-                        }
-                    }
-                }
-                return focusCandidate;
-            }
-            pageScroll(direction) {
-                let right = direction == View.FOCUS_RIGHT;
-                let width = this.getWidth();
-                if (right) {
-                    this.mTempRect.left = this.getScrollX() + width;
-                    let count = this.getChildCount();
-                    if (count > 0) {
-                        let view = this.getChildAt(0);
-                        if (this.mTempRect.left + width > view.getRight()) {
-                            this.mTempRect.left = view.getRight() - width;
-                        }
-                    }
-                }
-                else {
-                    this.mTempRect.left = this.getScrollX() - width;
-                    if (this.mTempRect.left < 0) {
-                        this.mTempRect.left = 0;
-                    }
-                }
-                this.mTempRect.right = this.mTempRect.left + width;
-                return this.scrollAndFocus(direction, this.mTempRect.left, this.mTempRect.right);
-            }
-            fullScroll(direction) {
-                let right = direction == View.FOCUS_RIGHT;
-                let width = this.getWidth();
-                this.mTempRect.left = 0;
-                this.mTempRect.right = width;
-                if (right) {
-                    let count = this.getChildCount();
-                    if (count > 0) {
-                        let view = this.getChildAt(0);
-                        this.mTempRect.right = view.getRight();
-                        this.mTempRect.left = this.mTempRect.right - width;
-                    }
-                }
-                return this.scrollAndFocus(direction, this.mTempRect.left, this.mTempRect.right);
-            }
-            scrollAndFocus(direction, left, right) {
-                let handled = true;
-                let width = this.getWidth();
-                let containerLeft = this.getScrollX();
-                let containerRight = containerLeft + width;
-                let goLeft = direction == View.FOCUS_LEFT;
-                let newFocused = this.findFocusableViewInBounds(goLeft, left, right);
-                if (newFocused == null) {
-                    newFocused = this;
-                }
-                if (left >= containerLeft && right <= containerRight) {
-                    handled = false;
-                }
-                else {
-                    let delta = goLeft ? (left - containerLeft) : (right - containerRight);
-                    this.doScrollX(delta);
-                }
-                if (newFocused != this.findFocus())
-                    newFocused.requestFocus(direction);
-                return handled;
-            }
-            arrowScroll(direction) {
-                let currentFocused = this.findFocus();
-                if (currentFocused == this)
-                    currentFocused = null;
-                let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
-                const maxJump = this.getMaxScrollAmount();
-                if (nextFocused != null && this.isWithinDeltaOfScreen(nextFocused, maxJump)) {
-                    nextFocused.getDrawingRect(this.mTempRect);
-                    this.offsetDescendantRectToMyCoords(nextFocused, this.mTempRect);
-                    let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
-                    this.doScrollX(scrollDelta);
-                    nextFocused.requestFocus(direction);
-                }
-                else {
-                    let scrollDelta = maxJump;
-                    if (direction == View.FOCUS_LEFT && this.getScrollX() < scrollDelta) {
-                        scrollDelta = this.getScrollX();
-                    }
-                    else if (direction == View.FOCUS_RIGHT && this.getChildCount() > 0) {
-                        let daRight = this.getChildAt(0).getRight();
-                        let screenRight = this.getScrollX() + this.getWidth();
-                        if (daRight - screenRight < maxJump) {
-                            scrollDelta = daRight - screenRight;
-                        }
-                    }
-                    if (scrollDelta == 0) {
-                        return false;
-                    }
-                    this.doScrollX(direction == View.FOCUS_RIGHT ? scrollDelta : -scrollDelta);
-                }
-                if (currentFocused != null && currentFocused.isFocused() && this.isOffScreen(currentFocused)) {
-                    const descendantFocusability = this.getDescendantFocusability();
-                    this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
-                    this.requestFocus();
-                    this.setDescendantFocusability(descendantFocusability);
-                }
-                return true;
-            }
-            isOffScreen(descendant) {
-                return !this.isWithinDeltaOfScreen(descendant, 0);
-            }
-            isWithinDeltaOfScreen(descendant, delta) {
-                descendant.getDrawingRect(this.mTempRect);
-                this.offsetDescendantRectToMyCoords(descendant, this.mTempRect);
-                return (this.mTempRect.right + delta) >= this.getScrollX() && (this.mTempRect.left - delta) <= (this.getScrollX() + this.getWidth());
-            }
-            doScrollX(delta) {
-                if (delta != 0) {
-                    if (this.mSmoothScrollingEnabled) {
-                        this.smoothScrollBy(delta, 0);
-                    }
-                    else {
-                        this.scrollBy(delta, 0);
-                    }
-                }
-            }
-            smoothScrollBy(dx, dy) {
-                if (this.getChildCount() == 0) {
-                    return;
-                }
-                let duration = AnimationUtils.currentAnimationTimeMillis() - this.mLastScroll;
-                if (duration > HorizontalScrollView.ANIMATED_SCROLL_GAP) {
-                    const width = this.getWidth() - this.mPaddingRight - this.mPaddingLeft;
-                    const right = this.getChildAt(0).getWidth();
-                    const maxX = Math.max(0, right - width);
-                    const scrollX = this.mScrollX;
-                    dx = Math.max(0, Math.min(scrollX + dx, maxX)) - scrollX;
-                    this.mScroller.startScroll(scrollX, this.mScrollY, dx, 0);
-                    this.postInvalidateOnAnimation();
-                }
-                else {
-                    if (!this.mScroller.isFinished()) {
-                        this.mScroller.abortAnimation();
-                    }
-                    this.scrollBy(dx, dy);
-                }
-                this.mLastScroll = AnimationUtils.currentAnimationTimeMillis();
-            }
-            smoothScrollTo(x, y) {
-                this.smoothScrollBy(x - this.mScrollX, y - this.mScrollY);
-            }
-            computeHorizontalScrollRange() {
-                const count = this.getChildCount();
-                const contentWidth = this.getWidth() - this.mPaddingLeft - this.mPaddingRight;
-                if (count == 0) {
-                    return contentWidth;
-                }
-                let scrollRange = this.getChildAt(0).getRight();
-                const scrollX = this.mScrollX;
-                const overscrollRight = Math.max(0, scrollRange - contentWidth);
-                if (scrollX < 0) {
-                    scrollRange -= scrollX;
-                }
-                else if (scrollX > overscrollRight) {
-                    scrollRange += scrollX - overscrollRight;
-                }
-                return scrollRange;
-            }
-            computeHorizontalScrollOffset() {
-                return Math.max(0, super.computeHorizontalScrollOffset());
-            }
-            measureChild(child, parentWidthMeasureSpec, parentHeightMeasureSpec) {
-                let lp = child.getLayoutParams();
-                let childWidthMeasureSpec;
-                let childHeightMeasureSpec;
-                childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
-                childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(0, HorizontalScrollView.MeasureSpec.UNSPECIFIED);
-                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-            }
-            measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed) {
-                const lp = child.getLayoutParams();
-                const childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom + lp.topMargin + lp.bottomMargin + heightUsed, lp.height);
-                const childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(lp.leftMargin + lp.rightMargin, HorizontalScrollView.MeasureSpec.UNSPECIFIED);
-                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-            }
-            computeScroll() {
-                if (this.mScroller.computeScrollOffset()) {
-                    let oldX = this.mScrollX;
-                    let oldY = this.mScrollY;
-                    let x = this.mScroller.getCurrX();
-                    let y = this.mScroller.getCurrY();
-                    if (oldX != x || oldY != y) {
-                        const range = this.getScrollRange();
-                        const overscrollMode = this.getOverScrollMode();
-                        const canOverscroll = overscrollMode == HorizontalScrollView.OVER_SCROLL_ALWAYS || (overscrollMode == HorizontalScrollView.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
-                        this.overScrollBy(x - oldX, y - oldY, oldX, oldY, range, 0, this.mOverflingDistance, 0, false);
-                        this.onScrollChanged(this.mScrollX, this.mScrollY, oldX, oldY);
-                        if (canOverscroll) {
-                        }
-                    }
-                    if (!this.awakenScrollBars()) {
-                        this.postInvalidateOnAnimation();
-                    }
-                }
-            }
-            scrollToChild(child) {
-                child.getDrawingRect(this.mTempRect);
-                this.offsetDescendantRectToMyCoords(child, this.mTempRect);
-                let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
-                if (scrollDelta != 0) {
-                    this.scrollBy(scrollDelta, 0);
-                }
-            }
-            scrollToChildRect(rect, immediate) {
-                const delta = this.computeScrollDeltaToGetChildRectOnScreen(rect);
-                const scroll = delta != 0;
-                if (scroll) {
-                    if (immediate) {
-                        this.scrollBy(delta, 0);
-                    }
-                    else {
-                        this.smoothScrollBy(delta, 0);
-                    }
-                }
-                return scroll;
-            }
-            computeScrollDeltaToGetChildRectOnScreen(rect) {
-                if (this.getChildCount() == 0)
-                    return 0;
-                let width = this.getWidth();
-                let screenLeft = this.getScrollX();
-                let screenRight = screenLeft + width;
-                let fadingEdge = this.getHorizontalFadingEdgeLength();
-                if (rect.left > 0) {
-                    screenLeft += fadingEdge;
-                }
-                if (rect.right < this.getChildAt(0).getWidth()) {
-                    screenRight -= fadingEdge;
-                }
-                let scrollXDelta = 0;
-                if (rect.right > screenRight && rect.left > screenLeft) {
-                    if (rect.width() > width) {
-                        scrollXDelta += (rect.left - screenLeft);
-                    }
-                    else {
-                        scrollXDelta += (rect.right - screenRight);
-                    }
-                    let right = this.getChildAt(0).getRight();
-                    let distanceToRight = right - screenRight;
-                    scrollXDelta = Math.min(scrollXDelta, distanceToRight);
-                }
-                else if (rect.left < screenLeft && rect.right < screenRight) {
-                    if (rect.width() > width) {
-                        scrollXDelta -= (screenRight - rect.right);
-                    }
-                    else {
-                        scrollXDelta -= (screenLeft - rect.left);
-                    }
-                    scrollXDelta = Math.max(scrollXDelta, -this.getScrollX());
-                }
-                return scrollXDelta;
-            }
-            requestChildFocus(child, focused) {
-                if (!this.mIsLayoutDirty) {
-                    this.scrollToChild(focused);
-                }
-                else {
-                    this.mChildToScrollTo = focused;
-                }
-                super.requestChildFocus(child, focused);
-            }
-            onRequestFocusInDescendants(direction, previouslyFocusedRect) {
-                if (direction == View.FOCUS_FORWARD) {
-                    direction = View.FOCUS_RIGHT;
-                }
-                else if (direction == View.FOCUS_BACKWARD) {
-                    direction = View.FOCUS_LEFT;
-                }
-                const nextFocus = previouslyFocusedRect == null ? FocusFinder.getInstance().findNextFocus(this, null, direction) : FocusFinder.getInstance().findNextFocusFromRect(this, previouslyFocusedRect, direction);
-                if (nextFocus == null) {
-                    return false;
-                }
-                if (this.isOffScreen(nextFocus)) {
-                    return false;
-                }
-                return nextFocus.requestFocus(direction, previouslyFocusedRect);
-            }
-            requestChildRectangleOnScreen(child, rectangle, immediate) {
-                rectangle.offset(child.getLeft() - child.getScrollX(), child.getTop() - child.getScrollY());
-                return this.scrollToChildRect(rectangle, immediate);
-            }
-            requestLayout() {
-                this.mIsLayoutDirty = true;
-                super.requestLayout();
-            }
-            onLayout(changed, l, t, r, b) {
-                let childWidth = 0;
-                let childMargins = 0;
-                if (this.getChildCount() > 0) {
-                    childWidth = this.getChildAt(0).getMeasuredWidth();
-                    let childParams = this.getChildAt(0).getLayoutParams();
-                    childMargins = childParams.leftMargin + childParams.rightMargin;
-                }
-                const available = r - l - this.getPaddingLeftWithForeground() - this.getPaddingRightWithForeground() - childMargins;
-                const forceLeftGravity = (childWidth > available);
-                this.layoutChildren(l, t, r, b, forceLeftGravity);
-                this.mIsLayoutDirty = false;
-                if (this.mChildToScrollTo != null && HorizontalScrollView.isViewDescendantOf(this.mChildToScrollTo, this)) {
-                    this.scrollToChild(this.mChildToScrollTo);
-                }
-                this.mChildToScrollTo = null;
-                if (!this.isLaidOut()) {
-                    const scrollRange = Math.max(0, childWidth - (r - l - this.mPaddingLeft - this.mPaddingRight));
-                    {
-                        if (this.isLayoutRtl()) {
-                            this.mScrollX = scrollRange - this.mScrollX;
-                        }
-                    }
-                    if (this.mScrollX > scrollRange) {
-                        this.mScrollX = scrollRange;
-                    }
-                    else if (this.mScrollX < 0) {
-                        this.mScrollX = 0;
-                    }
-                }
-                this.scrollTo(this.mScrollX, this.mScrollY);
-            }
-            onSizeChanged(w, h, oldw, oldh) {
-                super.onSizeChanged(w, h, oldw, oldh);
-                let currentFocused = this.findFocus();
-                if (null == currentFocused || this == currentFocused)
-                    return;
-                const maxJump = this.mRight - this.mLeft;
-                if (this.isWithinDeltaOfScreen(currentFocused, maxJump)) {
-                    currentFocused.getDrawingRect(this.mTempRect);
-                    this.offsetDescendantRectToMyCoords(currentFocused, this.mTempRect);
-                    let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
-                    this.doScrollX(scrollDelta);
-                }
-            }
-            static isViewDescendantOf(child, parent) {
-                if (child == parent) {
-                    return true;
-                }
-                const theParent = child.getParent();
-                return (theParent instanceof ViewGroup) && HorizontalScrollView.isViewDescendantOf(theParent, parent);
-            }
-            fling(velocityX) {
-                if (this.getChildCount() > 0) {
-                    let width = this.getWidth() - this.mPaddingRight - this.mPaddingLeft;
-                    let right = this.getChildAt(0).getWidth();
-                    this.mScroller.fling(this.mScrollX, this.mScrollY, velocityX, 0, 0, Math.max(0, right - width), 0, 0, width / 2, 0);
-                    const movingRight = velocityX > 0;
-                    let currentFocused = this.findFocus();
-                    let newFocused = this.findFocusableViewInMyBounds(movingRight, this.mScroller.getFinalX(), currentFocused);
-                    if (newFocused == null) {
-                        newFocused = this;
-                    }
-                    if (newFocused != currentFocused) {
-                        newFocused.requestFocus(movingRight ? View.FOCUS_RIGHT : View.FOCUS_LEFT);
-                    }
-                    this.postInvalidateOnAnimation();
-                }
-            }
-            scrollTo(x, y) {
-                if (this.getChildCount() > 0) {
-                    let child = this.getChildAt(0);
-                    x = HorizontalScrollView.clamp(x, this.getWidth() - this.mPaddingRight - this.mPaddingLeft, child.getWidth());
-                    y = HorizontalScrollView.clamp(y, this.getHeight() - this.mPaddingBottom - this.mPaddingTop, child.getHeight());
-                    if (x != this.mScrollX || y != this.mScrollY) {
-                        super.scrollTo(x, y);
-                    }
-                }
-            }
-            setOverScrollMode(mode) {
-                super.setOverScrollMode(mode);
-            }
-            draw(canvas) {
-                super.draw(canvas);
-            }
-            static clamp(n, my, child) {
-                if (my >= child || n < 0) {
-                    return 0;
-                }
-                if ((my + n) > child) {
-                    return child - my;
-                }
-                return n;
-            }
-        }
-        HorizontalScrollView.ANIMATED_SCROLL_GAP = ScrollView.ANIMATED_SCROLL_GAP;
-        HorizontalScrollView.MAX_SCROLL_FACTOR = ScrollView.MAX_SCROLL_FACTOR;
-        HorizontalScrollView.TAG = "HorizontalScrollView";
-        HorizontalScrollView.INVALID_POINTER = -1;
-        widget.HorizontalScrollView = HorizontalScrollView;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
@@ -38926,7 +40198,7 @@ var androidui;
             this.initEvent();
             this.initListenSizeChange();
             let debugAttr = this.element.getAttribute('debug');
-            if (debugAttr && debugAttr != '0' && debugAttr != 'false')
+            if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
                 this.showDebugLayout();
         }
         initInflateView() {
@@ -39230,7 +40502,7 @@ var android;
             detachedCallback() {
             }
             attributeChangedCallback(attributeName, oldVal, newVal) {
-                if (attributeName === 'debug' && newVal && newVal != 'false' && newVal != '0') {
+                if (attributeName === 'debug' && newVal != null && newVal != 'false' && newVal != '0') {
                     this.AndroidUI.showDebugLayout();
                 }
             }
@@ -40592,6 +41864,7 @@ var androidui;
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
 ///<reference path="android/widget/LinearLayout.ts"/>
+///<reference path="android/widget/RelativeLayout.ts"/>
 ///<reference path="android/widget/TextView.ts"/>
 ///<reference path="android/widget/Button.ts"/>
 ///<reference path="android/widget/ImageView.ts"/>
@@ -40600,10 +41873,6 @@ var androidui;
 ///<reference path="android/widget/GridView.ts"/>
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/widget/NumberPicker.ts"/>
-///<reference path="android/text/Layout.ts"/>
-///<reference path="android/text/BoringLayout.ts"/>
-///<reference path="android/text/StaticLayout.ts"/>
-///<reference path="android/text/style/MetricAffectingSpan.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>

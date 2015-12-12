@@ -10,6 +10,7 @@
 ///<reference path="android/widget/FrameLayout.ts"/>
 ///<reference path="android/widget/ScrollView.ts"/>
 ///<reference path="android/widget/LinearLayout.ts"/>
+///<reference path="android/widget/RelativeLayout.ts"/>
 ///<reference path="android/widget/TextView.ts"/>
 ///<reference path="android/widget/Button.ts"/>
 ///<reference path="android/widget/ImageView.ts"/>
@@ -18,11 +19,6 @@
 ///<reference path="android/widget/GridView.ts"/>
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/widget/NumberPicker.ts"/>
-
-///<reference path="android/text/Layout.ts"/>
-///<reference path="android/text/BoringLayout.ts"/>
-///<reference path="android/text/StaticLayout.ts"/>
-///<reference path="android/text/style/MetricAffectingSpan.ts"/>
 
 
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
