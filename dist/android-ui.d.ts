@@ -1233,6 +1233,36 @@ declare module androidui.util {
         static noCanvasMode(): void;
     }
 }
+declare module androidui.image {
+    import Paint = android.graphics.Paint;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Canvas = android.graphics.Canvas;
+    import Resources = android.content.res.Resources;
+    class NetDrawable extends Drawable {
+        private mImage;
+        private mState;
+        private mLoadListener;
+        private mImageWidth;
+        private mImageHeight;
+        constructor(src: string, res?: Resources, paint?: Paint);
+        draw(canvas: Canvas): void;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        protected onLoad(): void;
+        protected onError(): void;
+        getImage(): PlatformImage;
+        setLoadListener(loadListener: NetDrawable.LoadListener): void;
+        getConstantState(): Drawable.ConstantState;
+    }
+    module NetDrawable {
+        interface LoadListener {
+            onLoad(drawable: NetDrawable): any;
+            onError(drawable: NetDrawable): any;
+        }
+    }
+}
 declare module android.view {
     class KeyEvent {
         static KEYCODE_DPAD_UP: number;
@@ -1632,6 +1662,8 @@ declare module android.view {
         private mMeasuredHeight;
         private mBackground;
         private mBackgroundSizeChanged;
+        private mBackgroundWidth;
+        private mBackgroundHeight;
         private mScrollCache;
         private mDrawableState;
         private mNextFocusLeftId;
@@ -1932,6 +1964,7 @@ declare module android.view {
         setBackground(background: Drawable): void;
         getBackground(): Drawable;
         setBackgroundDrawable(background: Drawable): void;
+        private resizeFromBackground();
         getAnimation(): any;
         protected computeHorizontalScrollRange(): number;
         protected computeHorizontalScrollOffset(): number;
@@ -5590,35 +5623,6 @@ declare module android.widget {
                 static acquire(view: View): Node;
                 release(): void;
             }
-        }
-    }
-}
-declare module androidui.image {
-    import Paint = android.graphics.Paint;
-    import Drawable = android.graphics.drawable.Drawable;
-    import Canvas = android.graphics.Canvas;
-    import Resources = android.content.res.Resources;
-    class NetDrawable extends Drawable {
-        private mImage;
-        private mState;
-        private mLoadListener;
-        private mImageWidth;
-        private mImageHeight;
-        constructor(src: string, res?: Resources, paint?: Paint);
-        draw(canvas: Canvas): void;
-        setAlpha(alpha: number): void;
-        getAlpha(): number;
-        getIntrinsicWidth(): number;
-        getIntrinsicHeight(): number;
-        protected onLoad(): void;
-        protected onError(): void;
-        setLoadListener(loadListener: NetDrawable.LoadListener): void;
-        getConstantState(): Drawable.ConstantState;
-    }
-    module NetDrawable {
-        interface LoadListener {
-            onLoad(drawable: NetDrawable): any;
-            onError(drawable: NetDrawable): any;
         }
     }
 }

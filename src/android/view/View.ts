@@ -42,6 +42,7 @@
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
 ///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
 ///<reference path="../../androidui/util/PerformanceAdjuster.ts"/>
+///<reference path="../../androidui/image/NetDrawable.ts"/>
 ///<reference path="KeyEvent.ts"/>
 ///<reference path="../R/attr.ts"/>
 
@@ -84,6 +85,7 @@ module android.view {
     import ClassFinder = androidui.util.ClassFinder;
     import HtmlDataAdapter = androidui.widget.HtmlDataAdapter;
     import PerformanceAdjuster = androidui.util.PerformanceAdjuster;
+    import NetDrawable = androidui.image.NetDrawable;
     import KeyEvent = android.view.KeyEvent;
 
 
@@ -613,6 +615,8 @@ module android.view {
         private mMeasuredHeight = 0;
         private mBackground:Drawable;
         private mBackgroundSizeChanged=false;
+        private mBackgroundWidth = 0;
+        private mBackgroundHeight = 0;
         private mScrollCache:ScrollabilityCache;
         private mDrawableState:Array<number>;
 
@@ -875,6 +879,16 @@ module android.view {
                 this.setOverScrollMode(scrollMode);
             }),
             this._attrBinder.addAttr('layerType', (value)=>{
+                //TODO layerType
+            });
+            this._attrBinder.addAttr('backgroundUri', (value)=>{
+                if(value==null) this.setBackground(null);
+                else{
+                    this.setBackground(new NetDrawable(value, this.getResources()));
+                }
+            }, ()=>{
+                let d = this.mBackground;
+                if(d instanceof NetDrawable) return d.getImage().src;
             });
 
             this.initBindElement(bindElement, rootElement);
@@ -3563,6 +3577,9 @@ module android.view {
 
         invalidateDrawable(drawable:Drawable):void{
             if (this.verifyDrawable(drawable)) {
+                if(drawable==this.mBackground && this.resizeFromBackground()){
+                    return;//requested Layout
+                }
                 const dirty = drawable.getBounds();
                 const scrollX = this.mScrollX;
                 const scrollY = this.mScrollY;
@@ -3761,15 +3778,19 @@ module android.view {
                 }
                 background.setVisible(this.getVisibility() == View.VISIBLE, false);
                 this.mBackground = background;
+                this.mBackgroundWidth = background.getIntrinsicWidth();
+                this.mBackgroundHeight = background.getIntrinsicHeight();
 
                 if ((this.mPrivateFlags & View.PFLAG_SKIP_DRAW) != 0) {
                     this.mPrivateFlags &= ~View.PFLAG_SKIP_DRAW;
                     this.mPrivateFlags |= View.PFLAG_ONLY_DRAWS_BACKGROUND;
                     requestLayout = true;
                 }
+
             } else {
                 /* Remove the background */
                 this.mBackground = null;
+                this.mBackgroundWidth = this.mBackgroundHeight = -1;
 
                 if ((this.mPrivateFlags & View.PFLAG_ONLY_DRAWS_BACKGROUND) != 0) {
                     /*
@@ -3801,6 +3822,23 @@ module android.view {
 
             this.mBackgroundSizeChanged = true;
             this.invalidate(true);
+        }
+
+        private resizeFromBackground():boolean  {
+            let d:Drawable = this.mBackground;
+            if (d != null) {
+                let w:number = d.getIntrinsicWidth();
+                if (w < 0) w = this.mBackgroundWidth;
+                let h:number = d.getIntrinsicHeight();
+                if (h < 0) h = this.mBackgroundHeight;
+                if (w != this.mBackgroundWidth || h != this.mBackgroundHeight) {
+                    this.mBackgroundWidth = w;
+                    this.mBackgroundHeight = h;
+                    this.requestLayout();
+                    return true;
+                }
+            }
+            return false;
         }
 
         getAnimation() {
@@ -4769,9 +4807,9 @@ module android.view {
         private _parseInitedAttribute():void{
             for(let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()){
                 key = 'android:' + key;
-                if( (value===null || value===undefined) && this.bindElement.hasAttribute(key) ){
-                    this.bindElement.removeAttribute(key);
-                }else{
+                //remove first, then set, so the order was same as AttrList
+                this.bindElement.removeAttribute(key);
+                if(value!=null){
                     this.bindElement.setAttribute(key, value);
                 }
             }

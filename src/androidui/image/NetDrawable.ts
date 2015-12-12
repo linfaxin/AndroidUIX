@@ -60,6 +60,10 @@ module androidui.image{
             if(this.mLoadListener) this.mLoadListener.onError(this);
         }
 
+        getImage():PlatformImage {
+            return this.mImage;
+        }
+
         setLoadListener(loadListener:NetDrawable.LoadListener):void {
             this.mLoadListener = loadListener;
         }

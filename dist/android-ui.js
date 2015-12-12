@@ -5050,6 +5050,77 @@ var androidui;
         }
     })(util = androidui.util || (androidui.util = {}));
 })(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/12/11.
+ */
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="PlatformImage.ts"/>
+var androidui;
+(function (androidui) {
+    var image;
+    (function (image) {
+        var Paint = android.graphics.Paint;
+        var Drawable = android.graphics.drawable.Drawable;
+        class NetDrawable extends Drawable {
+            constructor(src, res, paint) {
+                super();
+                this.mImageWidth = -1;
+                this.mImageHeight = -1;
+                this.mState = new State(src, res, paint);
+                this.mImage = new image.PlatformImage(src, () => this.onLoad(), () => this.onError());
+            }
+            draw(canvas) {
+                canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+            }
+            setAlpha(alpha) {
+                this.mState.paint.setAlpha(alpha);
+            }
+            getAlpha() {
+                return this.mState.paint.getAlpha();
+            }
+            getIntrinsicWidth() {
+                return this.mImageWidth;
+            }
+            getIntrinsicHeight() {
+                return this.mImageHeight;
+            }
+            onLoad() {
+                this.mImageWidth = this.mImage.width * this.mState.res.getDisplayMetrics().density;
+                this.mImageHeight = this.mImage.height * this.mState.res.getDisplayMetrics().density;
+                if (this.mLoadListener)
+                    this.mLoadListener.onLoad(this);
+                this.invalidateSelf();
+            }
+            onError() {
+                if (this.mLoadListener)
+                    this.mLoadListener.onError(this);
+            }
+            getImage() {
+                return this.mImage;
+            }
+            setLoadListener(loadListener) {
+                this.mLoadListener = loadListener;
+            }
+            getConstantState() {
+                return this.mState;
+            }
+        }
+        image.NetDrawable = NetDrawable;
+        class State {
+            constructor(src, res, paint = new Paint()) {
+                this.res = res;
+                this.src = src;
+                this.paint = new Paint();
+                this.paint.set(paint);
+            }
+            newDrawable() {
+                return new NetDrawable(this.src, this.res, this.paint);
+            }
+        }
+    })(image = androidui.image || (androidui.image = {}));
+})(androidui || (androidui = {}));
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../view/ViewConfiguration.ts"/>
@@ -6276,6 +6347,7 @@ var android;
 ///<reference path="../../androidui/util/ClassFinder.ts"/>
 ///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
 ///<reference path="../../androidui/util/PerformanceAdjuster.ts"/>
+///<reference path="../../androidui/image/NetDrawable.ts"/>
 ///<reference path="KeyEvent.ts"/>
 ///<reference path="../R/attr.ts"/>
 var android;
@@ -6306,6 +6378,7 @@ var android;
         var StateAttrList = androidui.attr.StateAttrList;
         var AttrBinder = androidui.attr.AttrBinder;
         var ClassFinder = androidui.util.ClassFinder;
+        var NetDrawable = androidui.image.NetDrawable;
         var KeyEvent = android.view.KeyEvent;
         class View extends JavaObject {
             constructor(bindElement, rootElement) {
@@ -6318,6 +6391,8 @@ var android;
                 this.mMeasuredWidth = 0;
                 this.mMeasuredHeight = 0;
                 this.mBackgroundSizeChanged = false;
+                this.mBackgroundWidth = 0;
+                this.mBackgroundHeight = 0;
                 this.mHasPerformedLongPress = false;
                 this.mMinWidth = 0;
                 this.mMinHeight = 0;
@@ -6523,6 +6598,17 @@ var android;
                     }),
                     this._attrBinder.addAttr('layerType', (value) => {
                     });
+                this._attrBinder.addAttr('backgroundUri', (value) => {
+                    if (value == null)
+                        this.setBackground(null);
+                    else {
+                        this.setBackground(new NetDrawable(value, this.getResources()));
+                    }
+                }, () => {
+                    let d = this.mBackground;
+                    if (d instanceof NetDrawable)
+                        return d.getImage().src;
+                });
                 this.initBindElement(bindElement, rootElement);
                 this.applyDefaultAttributes(android.R.attr.viewStyle);
             }
@@ -8568,6 +8654,9 @@ var android;
             }
             invalidateDrawable(drawable) {
                 if (this.verifyDrawable(drawable)) {
+                    if (drawable == this.mBackground && this.resizeFromBackground()) {
+                        return;
+                    }
                     const dirty = drawable.getBounds();
                     const scrollX = this.mScrollX;
                     const scrollY = this.mScrollY;
@@ -8720,6 +8809,8 @@ var android;
                     }
                     background.setVisible(this.getVisibility() == View.VISIBLE, false);
                     this.mBackground = background;
+                    this.mBackgroundWidth = background.getIntrinsicWidth();
+                    this.mBackgroundHeight = background.getIntrinsicHeight();
                     if ((this.mPrivateFlags & View.PFLAG_SKIP_DRAW) != 0) {
                         this.mPrivateFlags &= ~View.PFLAG_SKIP_DRAW;
                         this.mPrivateFlags |= View.PFLAG_ONLY_DRAWS_BACKGROUND;
@@ -8728,6 +8819,7 @@ var android;
                 }
                 else {
                     this.mBackground = null;
+                    this.mBackgroundWidth = this.mBackgroundHeight = -1;
                     if ((this.mPrivateFlags & View.PFLAG_ONLY_DRAWS_BACKGROUND) != 0) {
                         this.mPrivateFlags &= ~View.PFLAG_ONLY_DRAWS_BACKGROUND;
                         this.mPrivateFlags |= View.PFLAG_SKIP_DRAW;
@@ -8740,6 +8832,24 @@ var android;
                 }
                 this.mBackgroundSizeChanged = true;
                 this.invalidate(true);
+            }
+            resizeFromBackground() {
+                let d = this.mBackground;
+                if (d != null) {
+                    let w = d.getIntrinsicWidth();
+                    if (w < 0)
+                        w = this.mBackgroundWidth;
+                    let h = d.getIntrinsicHeight();
+                    if (h < 0)
+                        h = this.mBackgroundHeight;
+                    if (w != this.mBackgroundWidth || h != this.mBackgroundHeight) {
+                        this.mBackgroundWidth = w;
+                        this.mBackgroundHeight = h;
+                        this.requestLayout();
+                        return true;
+                    }
+                }
+                return false;
             }
             getAnimation() {
                 return null;
@@ -9526,10 +9636,8 @@ var android;
             _parseInitedAttribute() {
                 for (let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()) {
                     key = 'android:' + key;
-                    if ((value === null || value === undefined) && this.bindElement.hasAttribute(key)) {
-                        this.bindElement.removeAttribute(key);
-                    }
-                    else {
+                    this.bindElement.removeAttribute(key);
+                    if (value != null) {
                         this.bindElement.setAttribute(key, value);
                     }
                 }
@@ -33985,74 +34093,6 @@ var android;
         })(RelativeLayout = widget.RelativeLayout || (widget.RelativeLayout = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/11.
- */
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="PlatformImage.ts"/>
-var androidui;
-(function (androidui) {
-    var image;
-    (function (image) {
-        var Paint = android.graphics.Paint;
-        var Drawable = android.graphics.drawable.Drawable;
-        class NetDrawable extends Drawable {
-            constructor(src, res, paint) {
-                super();
-                this.mImageWidth = -1;
-                this.mImageHeight = -1;
-                this.mState = new State(src, res, paint);
-                this.mImage = new image.PlatformImage(src, () => this.onLoad(), () => this.onError());
-            }
-            draw(canvas) {
-                canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
-            }
-            setAlpha(alpha) {
-                this.mState.paint.setAlpha(alpha);
-            }
-            getAlpha() {
-                return this.mState.paint.getAlpha();
-            }
-            getIntrinsicWidth() {
-                return this.mImageWidth;
-            }
-            getIntrinsicHeight() {
-                return this.mImageHeight;
-            }
-            onLoad() {
-                this.mImageWidth = this.mImage.width * this.mState.res.getDisplayMetrics().density;
-                this.mImageHeight = this.mImage.height * this.mState.res.getDisplayMetrics().density;
-                if (this.mLoadListener)
-                    this.mLoadListener.onLoad(this);
-                this.invalidateSelf();
-            }
-            onError() {
-                if (this.mLoadListener)
-                    this.mLoadListener.onError(this);
-            }
-            setLoadListener(loadListener) {
-                this.mLoadListener = loadListener;
-            }
-            getConstantState() {
-                return this.mState;
-            }
-        }
-        image.NetDrawable = NetDrawable;
-        class State {
-            constructor(src, res, paint = new Paint()) {
-                this.res = res;
-                this.src = src;
-                this.paint = new Paint();
-                this.paint.set(paint);
-            }
-            newDrawable() {
-                return new NetDrawable(this.src, this.res, this.paint);
-            }
-        }
-    })(image = androidui.image || (androidui.image = {}));
-})(androidui || (androidui = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
  *
