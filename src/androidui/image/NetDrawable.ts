@@ -56,8 +56,12 @@ module androidui.image{
         }
 
         protected onError(){
-
+            this.mImageWidth = this.mImageHeight = 0;
             if(this.mLoadListener) this.mLoadListener.onError(this);
+        }
+
+        isLoadFinish():boolean {
+            return this.mImageWidth >=0 && this.mImageHeight >= 0;
         }
 
         getImage():PlatformImage {
@@ -85,8 +89,8 @@ module androidui.image{
         src:string;
         paint:Paint;
         res:Resources;
-        constructor(src:string, res:Resources, paint=new Paint()) {
-            this.res = res;
+        constructor(src:string, res=Resources.instance, paint=new Paint()) {
+            this.res = res || Resources.instance;
             this.src = src;
             this.paint = new Paint();
             this.paint.set(paint);

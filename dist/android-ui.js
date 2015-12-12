@@ -5063,6 +5063,7 @@ var androidui;
     (function (image) {
         var Paint = android.graphics.Paint;
         var Drawable = android.graphics.drawable.Drawable;
+        var Resources = android.content.res.Resources;
         class NetDrawable extends Drawable {
             constructor(src, res, paint) {
                 super();
@@ -5094,8 +5095,12 @@ var androidui;
                 this.invalidateSelf();
             }
             onError() {
+                this.mImageWidth = this.mImageHeight = 0;
                 if (this.mLoadListener)
                     this.mLoadListener.onError(this);
+            }
+            isLoadFinish() {
+                return this.mImageWidth >= 0 && this.mImageHeight >= 0;
             }
             getImage() {
                 return this.mImage;
@@ -5109,8 +5114,8 @@ var androidui;
         }
         image.NetDrawable = NetDrawable;
         class State {
-            constructor(src, res, paint = new Paint()) {
-                this.res = res;
+            constructor(src, res = Resources.instance, paint = new Paint()) {
+                this.res = res || Resources.instance;
                 this.src = src;
                 this.paint = new Paint();
                 this.paint.set(paint);
@@ -8654,13 +8659,13 @@ var android;
             }
             invalidateDrawable(drawable) {
                 if (this.verifyDrawable(drawable)) {
-                    if (drawable == this.mBackground && this.resizeFromBackground()) {
-                        return;
-                    }
                     const dirty = drawable.getBounds();
                     const scrollX = this.mScrollX;
                     const scrollY = this.mScrollY;
                     this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
+                    if (drawable == this.mBackground) {
+                        this.resizeFromBackground();
+                    }
                 }
             }
             scheduleDrawable(who, what, when) {
@@ -18735,7 +18740,9 @@ var android;
         var TextPaint = android.text.TextPaint;
         var TextUtils = android.text.TextUtils;
         window.addEventListener('AndroidUILoadFinish', () => {
-            eval('TextUtils = android.text.TextUtils;');
+            eval(`TextUtils = android.text.TextUtils;
+              MeasuredText = android.text.MeasuredText;
+              `);
         });
         class Layout {
             constructor(text, paint, width, align, textDir = TextDirectionHeuristics.FIRSTSTRONG_LTR, spacingMult = 1, spacingAdd = 0) {
@@ -22861,6 +22868,7 @@ var android;
 ///<reference path="../../java/lang/System.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../android/widget/OverScroller.ts"/>
+///<reference path="../../androidui/image/NetDrawable.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -22896,6 +22904,7 @@ var android;
         var ArrayList = java.util.ArrayList;
         var Integer = java.lang.Integer;
         var System = java.lang.System;
+        var NetDrawable = androidui.image.NetDrawable;
         class TextView extends View {
             constructor(bindElement, rootElement) {
                 super(bindElement, rootElement);
@@ -22984,26 +22993,47 @@ var android;
                     this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
                 });
                 this._attrBinder.addAttr('drawableLeft', (value) => {
+                    let dr = this.mDrawables || {};
                     let drawable = this._attrBinder.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(drawable, this.mDrawables.mDrawableTop, this.mDrawables.mDrawableRight, this.mDrawables.mDrawableBottom);
+                    this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableTop', (value) => {
+                    let dr = this.mDrawables || {};
                     let drawable = this._attrBinder.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(this.mDrawables.mDrawableLeft, drawable, this.mDrawables.mDrawableRight, this.mDrawables.mDrawableBottom);
+                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableRight', (value) => {
+                    let dr = this.mDrawables || {};
                     let drawable = this._attrBinder.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(this.mDrawables.mDrawableLeft, this.mDrawables.mDrawableTop, drawable, this.mDrawables.mDrawableBottom);
+                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableBottom', (value) => {
+                    let dr = this.mDrawables || {};
                     let drawable = this._attrBinder.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(this.mDrawables.mDrawableLeft, this.mDrawables.mDrawableTop, this.mDrawables.mDrawableRight, drawable);
+                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
+                });
+                this._attrBinder.addAttr('drawableLeftUri', (value) => {
+                    let dr = this.mDrawables || {};
+                    let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+                    this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+                });
+                this._attrBinder.addAttr('drawableTopUri', (value) => {
+                    let dr = this.mDrawables || {};
+                    let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
+                });
+                this._attrBinder.addAttr('drawableRightUri', (value) => {
+                    let dr = this.mDrawables || {};
+                    let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+                });
+                this._attrBinder.addAttr('drawableBottomUri', (value) => {
+                    let dr = this.mDrawables || {};
+                    let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
                 });
                 this._attrBinder.addAttr('drawablePadding', (value) => {
-                    let drawablePadding = this._attrBinder.parseNumber(value, this.mDrawables.mDrawablePadding);
-                    if (drawablePadding !== this.mDrawables.mDrawablePadding) {
-                        this.setCompoundDrawablePadding(drawablePadding);
-                    }
+                    this.setCompoundDrawablePadding(this._attrBinder.parseNumber(value));
                 });
                 this._attrBinder.addAttr('maxLines', (value) => {
                     value = Number.parseInt(value);
@@ -23495,6 +23525,14 @@ var android;
                     bottom.setBounds(0, 0, bottom.getIntrinsicWidth(), bottom.getIntrinsicHeight());
                 }
                 this.setCompoundDrawables(left, top, right, bottom);
+                if (left instanceof NetDrawable)
+                    this.mDrawables.mDrawableLeftLoading = true;
+                if (top instanceof NetDrawable)
+                    this.mDrawables.mDrawableTopLoading = true;
+                if (right instanceof NetDrawable)
+                    this.mDrawables.mDrawableRightLoading = true;
+                if (bottom instanceof NetDrawable)
+                    this.mDrawables.mDrawableBottomLoading = true;
             }
             setCompoundDrawablesRelative(start, top, end, bottom) {
                 let dr = this.mDrawables;
@@ -24273,6 +24311,7 @@ var android;
                     let scrollX = this.mScrollX;
                     let scrollY = this.mScrollY;
                     const drawables = this.mDrawables;
+                    let resetDrawables = false;
                     if (drawables != null) {
                         if (drawable == drawables.mDrawableLeft) {
                             const compoundPaddingTop = this.getCompoundPaddingTop();
@@ -24280,6 +24319,11 @@ var android;
                             const vspace = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
                             scrollX += this.mPaddingLeft;
                             scrollY += compoundPaddingTop + (vspace - drawables.mDrawableHeightLeft) / 2;
+                            if (drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableLeftLoading) {
+                                drawables.mDrawableLeftLoading = false;
+                                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+                                resetDrawables = true;
+                            }
                         }
                         else if (drawable == drawables.mDrawableRight) {
                             const compoundPaddingTop = this.getCompoundPaddingTop();
@@ -24287,6 +24331,11 @@ var android;
                             const vspace = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
                             scrollX += (this.mRight - this.mLeft - this.mPaddingRight - drawables.mDrawableSizeRight);
                             scrollY += compoundPaddingTop + (vspace - drawables.mDrawableHeightRight) / 2;
+                            if (drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableRightLoading) {
+                                drawables.mDrawableRightLoading = false;
+                                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+                                resetDrawables = true;
+                            }
                         }
                         else if (drawable == drawables.mDrawableTop) {
                             const compoundPaddingLeft = this.getCompoundPaddingLeft();
@@ -24294,6 +24343,11 @@ var android;
                             const hspace = this.mRight - this.mLeft - compoundPaddingRight - compoundPaddingLeft;
                             scrollX += compoundPaddingLeft + (hspace - drawables.mDrawableWidthTop) / 2;
                             scrollY += this.mPaddingTop;
+                            if (drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableTopLoading) {
+                                drawables.mDrawableTopLoading = false;
+                                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+                                resetDrawables = true;
+                            }
                         }
                         else if (drawable == drawables.mDrawableBottom) {
                             const compoundPaddingLeft = this.getCompoundPaddingLeft();
@@ -24301,9 +24355,19 @@ var android;
                             const hspace = this.mRight - this.mLeft - compoundPaddingRight - compoundPaddingLeft;
                             scrollX += compoundPaddingLeft + (hspace - drawables.mDrawableWidthBottom) / 2;
                             scrollY += (this.mBottom - this.mTop - this.mPaddingBottom - drawables.mDrawableSizeBottom);
+                            if (drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableBottomLoading) {
+                                drawables.mDrawableBottomLoading = false;
+                                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+                                resetDrawables = true;
+                            }
                         }
                     }
-                    this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
+                    if (resetDrawables) {
+                        this.setCompoundDrawables(drawables.mDrawableLeft, drawables.mDrawableTop, drawables.mDrawableRight, drawables.mDrawableBottom);
+                    }
+                    else {
+                        this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
+                    }
                 }
             }
             isTextSelectable() {

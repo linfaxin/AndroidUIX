@@ -1252,6 +1252,7 @@ declare module androidui.image {
         getIntrinsicHeight(): number;
         protected onLoad(): void;
         protected onError(): void;
+        isLoadFinish(): boolean;
         getImage(): PlatformImage;
         setLoadListener(loadListener: NetDrawable.LoadListener): void;
         getConstantState(): Drawable.ConstantState;
@@ -4644,6 +4645,10 @@ declare module android.widget {
             mDrawableEnd: Drawable;
             mDrawableError: Drawable;
             mDrawableTemp: Drawable;
+            mDrawableTopLoading: boolean;
+            mDrawableBottomLoading: boolean;
+            mDrawableLeftLoading: boolean;
+            mDrawableRightLoading: boolean;
             mDrawableLeftInitial: Drawable;
             mDrawableRightInitial: Drawable;
             mIsRtlCompatibilityMode: boolean;

@@ -3577,15 +3577,16 @@ module android.view {
 
         invalidateDrawable(drawable:Drawable):void{
             if (this.verifyDrawable(drawable)) {
-                if(drawable==this.mBackground && this.resizeFromBackground()){
-                    return;//requested Layout
-                }
                 const dirty = drawable.getBounds();
                 const scrollX = this.mScrollX;
                 const scrollY = this.mScrollY;
 
                 this.invalidate(dirty.left + scrollX, dirty.top + scrollY,
                     dirty.right + scrollX, dirty.bottom + scrollY);
+
+                if(drawable==this.mBackground){
+                    this.resizeFromBackground()
+                }
             }
         }
         scheduleDrawable(who:Drawable, what:Runnable, when:number):void{

@@ -61,8 +61,10 @@ import TextLine = android.text.TextLine;
 import TextPaint = android.text.TextPaint;
 import TextUtils = android.text.TextUtils;
 import TextWatcher = android.text.TextWatcher;
-    window.addEventListener('AndroidUILoadFinish', ()=>{
-        eval('TextUtils = android.text.TextUtils;');//real import now
+    window.addEventListener('AndroidUILoadFinish', ()=>{//real import now
+        eval(`TextUtils = android.text.TextUtils;
+              MeasuredText = android.text.MeasuredText;
+              `);
     });
 
 /**
