@@ -597,10 +597,13 @@ module android.view {
                     if(!this._showFPSNode){
                         this._showFPSNode = document.createElement('div');
                         this._showFPSNode.style.position = 'absolute';
+                        this._showFPSNode.style.top = '0';
                         this._showFPSNode.style.left = '0';
-                        this._showFPSNode.style.bottom = '0';
+                        this._showFPSNode.style.width = '60px';
+                        this._showFPSNode.style.fontSize = '14px';
                         this._showFPSNode.style.background = 'black';
                         this._showFPSNode.style.color = 'white';
+                        this._showFPSNode.style.opacity = '0.7';
                         this.rootElement.appendChild(this._showFPSNode);
                     }
                     this._showFPSNode.innerText = 'FPS:'+fps.toFixed(1);
