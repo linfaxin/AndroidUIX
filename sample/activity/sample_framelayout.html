@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>FrameLayout布局</title>
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+</head>
+<body>
+    <android-Activity debug style="width: 100%; height:100%;display: none;">
+        <resources>
+            <android-style id="textStyle"
+                   android:textSize="14dp"
+                   android:textColor="#333"
+                   android:background="#eee"
+                   android:padding="8dp"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                    ></android-style>
+        </resources>
+        <FrameLayout>
+
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="left|top"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="right|top"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="bottom|right"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="bottom|left"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="center"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="left|center_vertical"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="right|center_vertical"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="top|center_horizontal"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:style="@style/textStyle"
+                    ></TextView>
+            <TextView
+                    android:text="文本MarginBottom50"
+                    android:layout_marginBottom="50dp"
+                    android:layout_gravity="center"
+                    android:style="@style/textStyle"
+                    ></TextView>
+
+        <FrameLayout/>
+    </android-Activity>
+
+    <script src="../lib/browser-polyfill.min.js"></script>
+    <script src="../lib/CustomElements.min.js"></script>
+    <script src="../../dist/android-ui.es5.js"></script>
+    <script src="../build/main.es5.js"></script>
+
+</body>
+</html>
