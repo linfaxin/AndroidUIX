@@ -38910,7 +38910,7 @@ var androidui;
             this.element.classList.add('id-' + this.AndroidID);
             this._viewRootImpl = new ViewRootImpl();
             this._viewRootImpl.rootElement = this.element;
-            this._rootLayout = new RootLayout();
+            this._rootLayout = new DebugLayout();
             this._canvas = document.createElement("canvas");
             this.initInflateView();
             this.element.innerHTML = '';
@@ -39183,7 +39183,7 @@ var androidui;
         }
         `;
     document.head.appendChild(styleElement);
-    class RootLayout extends FrameLayout {
+    class DebugLayout extends FrameLayout {
     }
 })(androidui || (androidui = {}));
 /**
@@ -40616,8 +40616,6 @@ var androidui;
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
-///<reference path="androidui/widget/NativeScrollView.ts"/>
-///<reference path="androidui/widget/PullRefreshNativeScrollView.ts"/>
 ///<reference path="androidui/util/PerformanceAdjuster.ts"/>
 window[`android`] = android;
 window[`java`] = java;
