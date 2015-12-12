@@ -457,9 +457,8 @@ declare module android.graphics {
         private _mCanvasContent;
         private _saveCount;
         mCurrentClip: Rect;
-        private shouldDoRectBeforeRestoreMap;
         private mClipStateMap;
-        private mTempMatrixValue;
+        private static TempMatrixValue;
         static DIRECTION_LTR: number;
         static DIRECTION_RTL: number;
         private static sRectPool;
@@ -2007,13 +2006,15 @@ declare module android.view {
         private _syncToElementImmediatelyLock;
         private _syncToElementRun;
         requestSyncBoundToElement(immediately?: boolean): void;
+        protected _syncBoundAndScrollToElement(): void;
         private _lastSyncLeft;
         private _lastSyncTop;
         private _lastSyncWidth;
         private _lastSyncHeight;
+        protected _syncBoundToElement(): void;
         private _lastSyncScrollX;
         private _lastSyncScrollY;
-        protected _syncBoundToElement(): void;
+        protected _syncScrollToElement(): void;
         syncVisibleToElement(): void;
         syncDrawStateToElement(): void;
         private _initAttrObserver();
@@ -6163,7 +6164,7 @@ declare module androidui {
     import ViewGroup = android.view.ViewGroup;
     class AndroidUI {
         static DomClassName: string;
-        static BindTOElementName: string;
+        static BindToElementName: string;
         element: HTMLElement;
         private _canvas;
         private _viewRootImpl;
@@ -6193,6 +6194,7 @@ declare module androidui {
         setContentView(view: View): void;
         addContentView(view: View, params?: ViewGroup.LayoutParams): void;
         findViewById(id: string): View;
+        showDebugLayout(): void;
     }
 }
 declare module android.app {
@@ -6212,19 +6214,24 @@ declare module android.app {
 }
 declare module androidui.widget {
     import View = android.view.View;
-    class HtmlView extends View {
+    class HtmlBaseView extends View {
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         onTouchEvent(event: android.view.MotionEvent): boolean;
-        setHtml(html: string): void;
-        getHtml(): string;
         requestSyncBoundToElement(immediately?: boolean): void;
+        protected onAttachedToWindow(): void;
     }
 }
 declare module androidui.widget {
-    import View = android.view.View;
+    class HtmlView extends HtmlBaseView {
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        setHtml(html: string): void;
+        getHtml(): string;
+    }
+}
+declare module androidui.widget {
     import ImageView = android.widget.ImageView;
-    class HtmlImageView extends View {
+    class HtmlImageView extends HtmlBaseView {
         private mScaleType;
         private mHaveFrame;
         private mAdjustViewBounds;
@@ -6302,18 +6309,6 @@ declare module androidui.widget {
         bindElementData: HTMLElement;
         rootElement: HTMLElement;
         onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
-    }
-}
-declare module androidui.widget {
-    import ScrollView = android.widget.ScrollView;
-    class NativeScrollView extends ScrollView {
-        isTouching: boolean;
-        protected initBindElement(bindElement: HTMLElement, rootElement: HTMLElement): void;
-        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        onInterceptTouchEvent(ev: android.view.MotionEvent): boolean;
-        onTouchEvent(ev: android.view.MotionEvent): boolean;
-        protected _syncScrollToElement(): boolean;
-        onDrawVerticalScrollBar(canvas: android.graphics.Canvas, scrollBar: android.graphics.drawable.Drawable, l: number, t: number, r: number, b: number): void;
     }
 }
 declare module androidui.widget {
@@ -6402,46 +6397,6 @@ declare module androidui.widget {
             textView: TextView;
             constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
             onStateChange(newState: number, oldState: number): void;
-        }
-    }
-}
-declare module androidui.widget {
-    import NativeScrollView = androidui.widget.NativeScrollView;
-    class PullRefreshNativeScrollView extends NativeScrollView {
-        static State_Disable: number;
-        static State_Header_Normal: number;
-        static State_Header_Refreshing: number;
-        static State_Header_ReadyToRefresh: number;
-        static State_Header_RefreshFail: number;
-        static State_Footer_Normal: number;
-        static State_Footer_Loading: number;
-        static State_Footer_ReadyToLoad: number;
-        static State_Footer_LoadFail: number;
-        static State_Footer_NoMoreToLoad: number;
-        static StateChangeLimit: {};
-        private scrollContentWrap;
-        private headerView;
-        private footerView;
-        contentOverY: number;
-        private autoLoadScrollAtBottom;
-        private footerViewReadyDistance;
-        private refreshLoadListener;
-        addView(...args: any[]): any;
-        protected overScrollBy(deltaX: number, deltaY: number, scrollX: number, scrollY: number, scrollRangeX: number, scrollRangeY: number, maxOverScrollX: number, maxOverScrollY: number, isTouchEvent: boolean): boolean;
-        onTouchEvent(ev: android.view.MotionEvent): boolean;
-        setHeaderState(newState: number): void;
-        getHeaderState(): number;
-        setFooterState(newState: number): void;
-        getFooterState(): number;
-        setAutoLoadMoreWhenScrollBottom(autoLoad: boolean): void;
-        setRefreshLoadListener(refreshLoadListener: PullRefreshNativeScrollView.RefreshLoadListener): void;
-        startRefresh(): void;
-        startLoadMore(): void;
-    }
-    module PullRefreshNativeScrollView {
-        interface RefreshLoadListener {
-            onRefresh(prScroll: PullRefreshNativeScrollView): void;
-            onLoadMore(prScroll: PullRefreshNativeScrollView): void;
         }
     }
 }

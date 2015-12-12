@@ -25,9 +25,9 @@ module android.graphics {
         private _mCanvasContent:CanvasRenderingContext2D;
         private _saveCount = 0;
         mCurrentClip:Rect;
-        private shouldDoRectBeforeRestoreMap = new Map<number, Array<Rect>>();
+        //private shouldDoRectBeforeRestoreMap = new Map<number, Array<Rect>>();
         private mClipStateMap = new Map<number, Rect>();
-        private mTempMatrixValue = new Array<number>(9);
+        private static TempMatrixValue = new Array<number>(9);
 
 
         /**
@@ -43,7 +43,7 @@ module android.graphics {
         static DIRECTION_RTL = 1;
 
 
-        private static sRectPool = new Pools.SynchronizedPool<Rect>(100);
+        private static sRectPool = new Pools.SynchronizedPool<Rect>(20);
         private static obtainRect(copy?:Rect):Rect {
             let rect = Canvas.sRectPool.acquire();
             if(!rect) rect = new Rect();
@@ -92,9 +92,9 @@ module android.graphics {
         recycle(){
             Canvas.recycleRect(this.mCurrentClip);
             Canvas.recycleRect(...this.mClipStateMap.values());
-            for(let rects of this.shouldDoRectBeforeRestoreMap.values()){
-                Canvas.recycleRect(...rects);
-            }
+            //for(let rects of this.shouldDoRectBeforeRestoreMap.values()){
+            //    Canvas.recycleRect(...rects);
+            //}
             this.mCanvasElement.width = this.mCanvasElement.height = 0;
         }
 
@@ -132,7 +132,7 @@ module android.graphics {
 
         concat(m:android.graphics.Matrix):void {
             //TODO effect mCurrentClip
-            let v = this.mTempMatrixValue;
+            let v = Canvas.TempMatrixValue;
             m.getValues(v);
             this._mCanvasContent.transform(v[Matrix.MSCALE_X], v[Matrix.MSKEW_X], v[Matrix.MSKEW_Y], v[Matrix.MSCALE_Y],
                                             v[Matrix.MTRANS_X], v[Matrix.MTRANS_Y]);

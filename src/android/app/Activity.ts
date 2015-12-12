@@ -51,7 +51,11 @@ module android.app{
         }
         detachedCallback():void {
         }
+
         attributeChangedCallback(attributeName:string, oldVal:string, newVal:string):void {
+            if(attributeName==='debug' && newVal && newVal!='false' && newVal!='0'){
+                this.AndroidUI.showDebugLayout();
+            }
         }
 
 

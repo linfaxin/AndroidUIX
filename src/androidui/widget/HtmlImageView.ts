@@ -3,6 +3,7 @@
  */
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/widget/ImageView.ts"/>
+///<reference path="HtmlBaseView.ts"/>
 
 module androidui.widget{
     import View = android.view.View;
@@ -17,7 +18,7 @@ module androidui.widget{
     /**
      * use a img element draw Image. It's better to use {@see ImageView} draw image on Canvas.
      */
-    export class HtmlImageView extends View{
+    export class HtmlImageView extends HtmlBaseView{
         private mScaleType:ImageView.ScaleType;
         private mHaveFrame = false;
         private mAdjustViewBounds = false;

@@ -41,8 +41,6 @@
 ///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
 ///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
-///<reference path="androidui/widget/NativeScrollView.ts"/>
-///<reference path="androidui/widget/PullRefreshNativeScrollView.ts"/>
 
 ///<reference path="androidui/util/PerformanceAdjuster.ts"/>
 

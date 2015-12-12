@@ -8,6 +8,8 @@
 ///<reference path="../../android/content/res/ColorStateList.ts"/>
 ///<reference path="../../android/util/TypedValue.ts"/>
 ///<reference path="../../android/R/attr.ts"/>
+///<reference path="../../androidui/AndroidUI.ts"/>
+///<reference path="HtmlBaseView.ts"/>
 
 module androidui.widget {
     import View = android.view.View;
@@ -18,7 +20,7 @@ module androidui.widget {
     import MeasureSpec = View.MeasureSpec;
     import TypedValue = android.util.TypedValue;
 
-    export class HtmlView extends View {
+    export class HtmlView extends HtmlBaseView {
 
         constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
             super(bindElement, rootElement);
@@ -77,12 +79,6 @@ module androidui.widget {
             this.setMeasuredDimension(width, height);
         }
 
-
-        onTouchEvent(event:android.view.MotionEvent):boolean {
-            event[android.view.ViewRootImpl.ContinueEventToDom] = true;
-            return super.onTouchEvent(event) || true;
-        }
-
         setHtml(html:string) {
             this.bindElement.innerHTML = html;
             this.requestLayout();
@@ -92,11 +88,6 @@ module androidui.widget {
             return this.bindElement.innerHTML;
         }
 
-
-        //default sync bound immediately
-        requestSyncBoundToElement(immediately = true):void {
-            super.requestSyncBoundToElement(immediately);
-        }
     }
 
 }

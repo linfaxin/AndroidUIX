@@ -36,7 +36,7 @@ module android.view{
             //this.mLockedCanvas.clipRect(rect.left, rect.top, width, height);
 
             let canvas = new Canvas(width, height);
-            canvas.translate(-rect.left, -rect.top);
+            if(rect.left!=0||rect.top!=0) canvas.translate(-rect.left, -rect.top);
 
             let mCanvasContent = this.mCanvasElement.getContext('2d');
             mCanvasContent.clearRect(rect.left, rect.top, width, height);

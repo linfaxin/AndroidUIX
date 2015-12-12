@@ -23,13 +23,13 @@ module androidui {
 
     export class AndroidUI {
         static DomClassName = 'AndroidUI';
-        static BindTOElementName = 'AndroidUI';
+        static BindToElementName = 'AndroidUI';
 
         element:HTMLElement;
 
         private _canvas:HTMLCanvasElement;
         private _viewRootImpl:ViewRootImpl;
-        private _rootLayout:RootLayout;
+        private _rootLayout:DebugLayout;
         private rootStyleElement:HTMLStyleElement;
         private rootResourceElement:Element;
 
@@ -46,10 +46,10 @@ module androidui {
 
         constructor(element:HTMLElement) {
             this.element = element;
-            if(element[AndroidUI.BindTOElementName]){
+            if(element[AndroidUI.BindToElementName]){
                 throw Error('already init a AndroidUI with this element');
             }
-            element[AndroidUI.BindTOElementName] = this;
+            element[AndroidUI.BindToElementName] = this;
             this.init();
         }
 
@@ -61,7 +61,7 @@ module androidui {
 
             this._viewRootImpl = new ViewRootImpl();
             this._viewRootImpl.rootElement = this.element;
-            this._rootLayout = new RootLayout();
+            this._rootLayout = new DebugLayout();
             this._canvas = document.createElement("canvas");
 
             this.initInflateView();
@@ -71,7 +71,6 @@ module androidui {
             if(this.rootResourceElement) this.element.appendChild(this.rootResourceElement);
             if(this.rootStyleElement) this.element.appendChild(this.rootStyleElement);
             this.element.appendChild(this._canvas);
-            this.element.appendChild(this._rootLayout.bindElement);
 
             this._viewRootImpl.setView(this._rootLayout);
             this._viewRootImpl.initSurface(this._canvas);
@@ -80,6 +79,10 @@ module androidui {
             this.initEvent();
 
             this.initListenSizeChange();
+
+
+            let debugAttr = this.element.getAttribute('debug');
+            if(debugAttr && debugAttr!='0' && debugAttr!='false') this.showDebugLayout();
         }
 
         private initInflateView() {
@@ -323,6 +326,12 @@ module androidui {
         findViewById(id:string):View{
             return this._rootLayout.findViewById(id);
         }
+
+        showDebugLayout(){
+            if(this._rootLayout.bindElement.parentNode === null){
+                this.element.appendChild(this._rootLayout.bindElement);
+            }
+        }
     }
 
     //init common style
@@ -354,6 +363,7 @@ module androidui {
         `;
     document.head.appendChild(styleElement);
 
-    class RootLayout extends FrameLayout{
+    //debug layout show the layout in dom.
+    class DebugLayout extends FrameLayout{
     }
 }
