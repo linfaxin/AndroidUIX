@@ -13,6 +13,10 @@ module android.os {
     import Pools = android.util.Pools;
 
     export class Message {
+        private static Type_Normal = 0;
+        private static Type_Traversal = 1;
+        private mType:number = Message.Type_Normal;
+
         what:number = 0;
         arg1:number = 0;
         arg2:number = 0;
@@ -29,6 +33,7 @@ module android.os {
         }
 
         copyFrom(o:Message) {
+            this.mType = o.mType;
             this.what = o.what;
             this.arg1 = o.arg1;
             this.arg2 = o.arg2;
@@ -40,6 +45,7 @@ module android.os {
         }
 
         clearForRecycle() {
+            this.mType = Message.Type_Normal;
             this.what = 0;
             this.arg1 = 0;
             this.arg2 = 0;

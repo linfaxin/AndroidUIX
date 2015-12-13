@@ -131,7 +131,7 @@ module android.view {
         private scheduleTraversals() {
             if (!this.mTraversalScheduled) {
                 this.mTraversalScheduled = true;
-                this.mHandler.post(this.mTraversalRunnable);
+                this.mHandler.postAsTraversal(this.mTraversalRunnable);
 
             }
         }

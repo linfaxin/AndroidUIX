@@ -51,6 +51,12 @@ module android.os {
             return this.sendMessageDelayed(Handler.getPostMessage(r), 0);
         }
 
+        private postAsTraversal(r:Runnable):boolean {
+            let msg = Handler.getPostMessage(r);
+            msg.mType = Message.Type_Traversal;
+            return this.sendMessageDelayed(msg, 0);
+        }
+
         postAtTime(r:Runnable, uptimeMillis:number):boolean;
         postAtTime(r:Runnable, token:any, uptimeMillis:number):boolean;
         postAtTime(...args):boolean {

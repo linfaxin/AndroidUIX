@@ -3,10 +3,12 @@
  */
 ///<reference path="Message.ts"/>
 ///<reference path="Handler.ts"/>
+///<reference path="../util/Log.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 
 module android.os {
     import Runnable = java.lang.Runnable;
+    import Log = android.util.Log;
 
 
     var requestAnimationFrame = window["requestAnimationFrame"] ||
@@ -103,21 +105,49 @@ module android.os {
         }
 
         private static loop(){
-            let dispatchMessages:Message[] = [];
+            let normalMessages:Message[] = [];
+            let traversalMessages:Message[] = [];
             const now = SystemClock.uptimeMillis();
             for(let msg of MessageQueue.messages){
-                if(msg.when<=now) dispatchMessages.push(msg);
+                if(msg.when<=now){
+                    if(msg.mType === Message.Type_Traversal) traversalMessages.push(msg);
+                    else normalMessages.push(msg);
+                }
             }
-            for(let msg of dispatchMessages){
-                if(MessageQueue.messages.has(msg)){//dispatchMessage may case remove message
-                    MessageQueue.messages.delete(msg);
-                    msg.target.dispatchMessage(msg);
-                    MessageQueue.recycleMessage(msg.target, msg);
+            //dispatch normal messages first.
+            for(let msg of normalMessages){
+                MessageQueue.dispatchMessage(msg);
+            }
+            //then dispatch traversal messages
+            let dispatchTraversalMessages = false;
+            for(let msg of traversalMessages){
+                MessageQueue.dispatchMessage(msg);
+                dispatchTraversalMessages = true;
+            }
+            if(!dispatchTraversalMessages){
+                //no traversal messages dispatch, but normal message may case traversal. do it here
+                for(let msg of MessageQueue.messages){
+                    if(msg.when<=now && msg.mType === Message.Type_Traversal){
+                        traversalMessages.push(msg);
+                    }
+
+                    for(let msg of traversalMessages){
+                        MessageQueue.dispatchMessage(msg);
+                        dispatchTraversalMessages = true;
+                    }
                 }
             }
 
             if(MessageQueue.messages.size>0) requestAnimationFrame(MessageQueue.loop);
             else MessageQueue._loopActive = false;
+        }
+
+        private static dispatchMessage(msg:Message){
+            if(MessageQueue.messages.has(msg)){
+                MessageQueue.messages.delete(msg);
+                msg.target.dispatchMessage(msg);
+                MessageQueue.recycleMessage(msg.target, msg);
+            }
         }
     }
 }

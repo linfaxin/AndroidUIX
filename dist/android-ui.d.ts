@@ -992,6 +992,9 @@ declare module android.os {
 declare module android.os {
     import Runnable = java.lang.Runnable;
     class Message {
+        private static Type_Normal;
+        private static Type_Traversal;
+        private mType;
         what: number;
         arg1: number;
         arg2: number;
@@ -1031,6 +1034,7 @@ declare module android.os {
         private static _loopActive;
         private static checkLoop();
         private static loop();
+        private static dispatchMessage(msg);
     }
 }
 declare module android.os {
@@ -1046,6 +1050,7 @@ declare module android.os {
         obtainMessage(what: number, arg1: number, arg2: number): Message;
         obtainMessage(what: number, arg1: number, arg2: number, obj: any): Message;
         post(r: Runnable): boolean;
+        private postAsTraversal(r);
         postAtTime(r: Runnable, uptimeMillis: number): boolean;
         postAtTime(r: Runnable, token: any, uptimeMillis: number): boolean;
         postDelayed(r: Runnable, delayMillis: number): boolean;

@@ -3859,6 +3859,7 @@ var android;
         var Pools = android.util.Pools;
         class Message {
             constructor() {
+                this.mType = Message.Type_Normal;
                 this.what = 0;
                 this.arg1 = 0;
                 this.arg2 = 0;
@@ -3869,6 +3870,7 @@ var android;
                 Message.sPool.release(this);
             }
             copyFrom(o) {
+                this.mType = o.mType;
                 this.what = o.what;
                 this.arg1 = o.arg1;
                 this.arg2 = o.arg2;
@@ -3878,6 +3880,7 @@ var android;
                 this.target.sendMessage(this);
             }
             clearForRecycle() {
+                this.mType = Message.Type_Normal;
                 this.what = 0;
                 this.arg1 = 0;
                 this.arg2 = 0;
@@ -3927,6 +3930,8 @@ var android;
                 return m;
             }
         }
+        Message.Type_Normal = 0;
+        Message.Type_Traversal = 1;
         Message.sPool = new Pools.SynchronizedPool(10);
         os.Message = Message;
     })(os = android.os || (android.os = {}));
@@ -3936,6 +3941,7 @@ var android;
  */
 ///<reference path="Message.ts"/>
 ///<reference path="Handler.ts"/>
+///<reference path="../util/Log.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 var android;
 (function (android) {
@@ -4014,23 +4020,47 @@ var android;
                 }
             }
             static loop() {
-                let dispatchMessages = [];
+                let normalMessages = [];
+                let traversalMessages = [];
                 const now = os.SystemClock.uptimeMillis();
                 for (let msg of MessageQueue.messages) {
-                    if (msg.when <= now)
-                        dispatchMessages.push(msg);
+                    if (msg.when <= now) {
+                        if (msg.mType === os.Message.Type_Traversal)
+                            traversalMessages.push(msg);
+                        else
+                            normalMessages.push(msg);
+                    }
                 }
-                for (let msg of dispatchMessages) {
-                    if (MessageQueue.messages.has(msg)) {
-                        MessageQueue.messages.delete(msg);
-                        msg.target.dispatchMessage(msg);
-                        MessageQueue.recycleMessage(msg.target, msg);
+                for (let msg of normalMessages) {
+                    MessageQueue.dispatchMessage(msg);
+                }
+                let dispatchTraversalMessages = false;
+                for (let msg of traversalMessages) {
+                    MessageQueue.dispatchMessage(msg);
+                    dispatchTraversalMessages = true;
+                }
+                if (!dispatchTraversalMessages) {
+                    for (let msg of MessageQueue.messages) {
+                        if (msg.when <= now && msg.mType === os.Message.Type_Traversal) {
+                            traversalMessages.push(msg);
+                        }
+                        for (let msg of traversalMessages) {
+                            MessageQueue.dispatchMessage(msg);
+                            dispatchTraversalMessages = true;
+                        }
                     }
                 }
                 if (MessageQueue.messages.size > 0)
                     requestAnimationFrame(MessageQueue.loop);
                 else
                     MessageQueue._loopActive = false;
+            }
+            static dispatchMessage(msg) {
+                if (MessageQueue.messages.has(msg)) {
+                    MessageQueue.messages.delete(msg);
+                    msg.target.dispatchMessage(msg);
+                    MessageQueue.recycleMessage(msg.target, msg);
+                }
             }
         }
         MessageQueue.messages = new Set();
@@ -4080,6 +4110,11 @@ var android;
             }
             post(r) {
                 return this.sendMessageDelayed(Handler.getPostMessage(r), 0);
+            }
+            postAsTraversal(r) {
+                let msg = Handler.getPostMessage(r);
+                msg.mType = os.Message.Type_Traversal;
+                return this.sendMessageDelayed(msg, 0);
             }
             postAtTime(...args) {
                 if (args.length === 2) {
@@ -10208,7 +10243,7 @@ var android;
             scheduleTraversals() {
                 if (!this.mTraversalScheduled) {
                     this.mTraversalScheduled = true;
-                    this.mHandler.post(this.mTraversalRunnable);
+                    this.mHandler.postAsTraversal(this.mTraversalRunnable);
                 }
             }
             unscheduleTraversals() {
