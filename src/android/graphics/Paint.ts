@@ -545,8 +545,6 @@ module android.graphics{
             return metrics.descent - metrics.ascent;
         }
 
-        private static _measureTextContext = document.createElement('canvas').getContext('2d');
-        private static _measureTextSize = -1;
         /**
          * Return the width of the text.
          *
@@ -556,16 +554,7 @@ module android.graphics{
          * @return      The width of the text
          */
         measureText(text:string, index=0, count=text.length):number  {
-            if(this.textSize!=Paint._measureTextSize) {
-                Paint._measureTextSize = this.textSize;
-                if (this.textSize != null) {
-                    let fontParts = Paint._measureTextContext.font.split(' ');
-                    Paint._measureTextContext.font = this.textSize + 'px ' + fontParts[fontParts.length - 1];
-                } else {
-                    Paint._measureTextContext.font = '';
-                }
-            }
-            return Paint._measureTextContext.measureText(text.substr(index, count)).width;
+            return Canvas.measureText(text.substr(index, count), this.textSize);
         }
 
         /**
@@ -767,49 +756,35 @@ module android.graphics{
             return this.getTextRunCursor_len(text, 0, contextLen, flags, offset - contextStart, cursorOpt);
         }
 
-        _setToCanvasContent(context:CanvasRenderingContext2D){
+        applyToCanvas(canvas:Canvas){
 
             if(Number.isInteger(this.mColor)) {
-                context.fillStyle = Color.toRGBAFunc(this.mColor);
+                canvas.setFillColor(this.mColor);
             }
 
             if(this.mAlpha!=null){
-                let alpha = context.globalAlpha;
-                if(alpha == null) alpha = 1;
-                context.globalAlpha = this.mAlpha/255 * alpha;
+                canvas.multiplyAlpha(this.mAlpha);
             }
 
             if(this.align!=null){
-                context.textAlign = Paint.Align[this.align].toLowerCase();
+                canvas.setTextAlign(Paint.Align[this.align].toLowerCase());
             }
             if(this.mStrokeWidth!=null){
-                context.lineWidth = this.mStrokeWidth;
+                canvas.setLineWidth(this.mStrokeWidth);
             }
             if(this.mStrokeCap!=null){
-                context.lineCap = Paint.Cap[this.mStrokeCap].toLowerCase();
+                canvas.setLineCap(Paint.Cap[this.mStrokeCap].toLowerCase());
             }
             if(this.mStrokeJoin!=null){
-                context.lineJoin = Paint.Join[this.mStrokeJoin].toLowerCase();
+                canvas.setLineJoin(Paint.Join[this.mStrokeJoin].toLowerCase());
             }
 
             if(this.hasShadow){
-                context.shadowBlur = this.shadowRadius;
-                context.shadowOffsetX = this.shadowDx;
-                context.shadowOffsetY = this.shadowDy;
-                context.shadowColor = Color.toRGBAFunc(this.shadowColor);
+                canvas.setShadow(this.shadowRadius, this.shadowDx, this.shadowDy, this.shadowColor);
             }
 
-            //font
-            const fontStyles = [];
-            if (this.textSize != null) {
-                fontStyles.push(this.textSize + 'px');
-            }
-            if (fontStyles.length > 0) {
-                let cFont = context.font;
-                let fontParts = cFont.split(' ');
-                fontStyles.push(fontParts[fontParts.length - 1]);//font family
-                let font = fontStyles.join(' ');
-                if(font!=cFont) context.font = font;
+            if(this.textSize!=null){
+                canvas.setFontSize(this.textSize);
             }
         }
     }

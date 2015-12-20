@@ -4,7 +4,7 @@
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/Paint.ts"/>
 ///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="PlatformImage.ts"/>
+///<reference path="NetImage.ts"/>
 
 
 module androidui.image{
@@ -14,7 +14,7 @@ module androidui.image{
     import Resources = android.content.res.Resources;
 
     export class NetDrawable extends Drawable {
-        private mImage:PlatformImage;
+        private mImage:NetImage;
         private mState:State;
         private mLoadListener:NetDrawable.LoadListener;
         private mImageWidth = -1;
@@ -23,12 +23,14 @@ module androidui.image{
         constructor(src:string, res?:Resources, paint?:Paint){
             super();
             this.mState = new State(src, res, paint);
-            this.mImage = new PlatformImage(src, ()=>this.onLoad(), ()=>this.onError());
+            this.mImage = new NetImage(src, ()=>this.onLoad(), ()=>this.onError());
         }
 
 
         draw(canvas:Canvas):void {
-            canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+            if(this.isLoadFinish()){
+                canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+            }
         }
 
         setAlpha(alpha:number):void {
@@ -58,13 +60,14 @@ module androidui.image{
         protected onError(){
             this.mImageWidth = this.mImageHeight = 0;
             if(this.mLoadListener) this.mLoadListener.onError(this);
+            this.invalidateSelf();
         }
 
         isLoadFinish():boolean {
             return this.mImageWidth >=0 && this.mImageHeight >= 0;
         }
 
-        getImage():PlatformImage {
+        getImage():NetImage {
             return this.mImage;
         }
 
@@ -74,6 +77,10 @@ module androidui.image{
 
         getConstantState():Drawable.ConstantState {
             return this.mState;
+        }
+
+        recycle():void {
+            if(this.mImage) this.mImage.recycle();
         }
 
     }

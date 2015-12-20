@@ -584,6 +584,9 @@ export class ImageView extends View {
         if (this.mDrawable != null) {
             this.mDrawable.setCallback(null);
             this.unscheduleDrawable(this.mDrawable);
+            if(this.mDrawable instanceof androidui.image.NetDrawable){
+                (<androidui.image.NetDrawable>this.mDrawable).recycle();
+            }
         }
         this.mDrawable = d;
         if (d != null) {

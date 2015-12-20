@@ -888,17 +888,7 @@ var android;
                 return metrics.descent - metrics.ascent;
             }
             measureText(text, index = 0, count = text.length) {
-                if (this.textSize != Paint._measureTextSize) {
-                    Paint._measureTextSize = this.textSize;
-                    if (this.textSize != null) {
-                        let fontParts = Paint._measureTextContext.font.split(' ');
-                        Paint._measureTextContext.font = this.textSize + 'px ' + fontParts[fontParts.length - 1];
-                    }
-                    else {
-                        Paint._measureTextContext.font = '';
-                    }
-                }
-                return Paint._measureTextContext.measureText(text.substr(index, count)).width;
+                return graphics.Canvas.measureText(text.substr(index, count), this.textSize);
             }
             getTextWidths_count(text, index, count, widths) {
                 return this.getTextWidths_end(text, index, index + count, widths);
@@ -999,45 +989,30 @@ var android;
                 let contextLen = contextEnd - contextStart;
                 return this.getTextRunCursor_len(text, 0, contextLen, flags, offset - contextStart, cursorOpt);
             }
-            _setToCanvasContent(context) {
+            applyToCanvas(canvas) {
                 if (Number.isInteger(this.mColor)) {
-                    context.fillStyle = graphics.Color.toRGBAFunc(this.mColor);
+                    canvas.setFillColor(this.mColor);
                 }
                 if (this.mAlpha != null) {
-                    let alpha = context.globalAlpha;
-                    if (alpha == null)
-                        alpha = 1;
-                    context.globalAlpha = this.mAlpha / 255 * alpha;
+                    canvas.multiplyAlpha(this.mAlpha);
                 }
                 if (this.align != null) {
-                    context.textAlign = Paint.Align[this.align].toLowerCase();
+                    canvas.setTextAlign(Paint.Align[this.align].toLowerCase());
                 }
                 if (this.mStrokeWidth != null) {
-                    context.lineWidth = this.mStrokeWidth;
+                    canvas.setLineWidth(this.mStrokeWidth);
                 }
                 if (this.mStrokeCap != null) {
-                    context.lineCap = Paint.Cap[this.mStrokeCap].toLowerCase();
+                    canvas.setLineCap(Paint.Cap[this.mStrokeCap].toLowerCase());
                 }
                 if (this.mStrokeJoin != null) {
-                    context.lineJoin = Paint.Join[this.mStrokeJoin].toLowerCase();
+                    canvas.setLineJoin(Paint.Join[this.mStrokeJoin].toLowerCase());
                 }
                 if (this.hasShadow) {
-                    context.shadowBlur = this.shadowRadius;
-                    context.shadowOffsetX = this.shadowDx;
-                    context.shadowOffsetY = this.shadowDy;
-                    context.shadowColor = graphics.Color.toRGBAFunc(this.shadowColor);
+                    canvas.setShadow(this.shadowRadius, this.shadowDx, this.shadowDy, this.shadowColor);
                 }
-                const fontStyles = [];
                 if (this.textSize != null) {
-                    fontStyles.push(this.textSize + 'px');
-                }
-                if (fontStyles.length > 0) {
-                    let cFont = context.font;
-                    let fontParts = cFont.split(' ');
-                    fontStyles.push(fontParts[fontParts.length - 1]);
-                    let font = fontStyles.join(' ');
-                    if (font != cFont)
-                        context.font = font;
+                    canvas.setFontSize(this.textSize);
                 }
             }
         }
@@ -1068,8 +1043,6 @@ var android;
         Paint.AUTO_HINTING_TEXT_FLAG = 0x800;
         Paint.VERTICAL_TEXT_FLAG = 0x1000;
         Paint.DEFAULT_PAINT_FLAGS = Paint.DEV_KERN_TEXT_FLAG | Paint.EMBEDDED_BITMAP_TEXT_FLAG;
-        Paint._measureTextContext = document.createElement('canvas').getContext('2d');
-        Paint._measureTextSize = -1;
         graphics.Paint = Paint;
         (function (Paint) {
             (function (Align) {
@@ -1813,33 +1786,63 @@ var androidui;
 (function (androidui) {
     var image;
     (function (image) {
-        class PlatformImage {
+        class NetImage {
             constructor(src, onload, onerror) {
+                this.mImageWidth = 0;
+                this.mImageHeight = 0;
                 this.init(src, onload, onerror);
             }
+            init(src, onload, onerror) {
+                this.createImage();
+                this.onload = onload;
+                this.onerror = onerror;
+                this.src = src;
+            }
+            createImage() {
+                this.platformImage = new Image();
+            }
+            loadImage() {
+                this.platformImage.src = this.mSrc;
+                this.platformImage.onload = () => {
+                    this.mImageWidth = this.platformImage.width;
+                    this.mImageHeight = this.platformImage.height;
+                    this.fireOnLoad();
+                };
+                this.platformImage.onerror = () => {
+                    this.mImageWidth = this.mImageHeight = 0;
+                    this.fireOnError();
+                };
+            }
+            getImage() {
+                return this.platformImage;
+            }
             get src() {
-                return this.platformImage.src;
+                return this.mSrc;
             }
             set src(value) {
-                this.platformImage.src = value;
+                value = convertToAbsUrl(value);
+                if (value !== this.mSrc) {
+                    this.mSrc = value;
+                    this.loadImage();
+                }
             }
             get onload() {
-                return this.platformImage.onload;
+                return this.mOnLoad;
             }
             set onload(value) {
-                this.platformImage.onload = value;
+                this.mOnLoad = value;
             }
             get onerror() {
-                return this.platformImage.onerror;
+                return this.mOnError;
             }
             set onerror(value) {
-                this.platformImage.onerror = value;
+                this.mOnError = value;
             }
             get width() {
-                return Math.floor(this.platformImage.width / this.getImageRatio());
+                return Math.floor(this.mImageWidth / this.getImageRatio());
             }
             get height() {
-                return Math.floor(this.platformImage.height / this.getImageRatio());
+                return Math.floor(this.mImageHeight / this.getImageRatio());
             }
             getImageRatio() {
                 let url = this.src;
@@ -1861,17 +1864,23 @@ var androidui;
                     return 6;
                 return 1;
             }
-            init(src, onload, onerror) {
-                this.platformImage = new Image();
-                this.onload = onload;
-                this.onerror = onerror;
-                this.src = src;
+            fireOnLoad() {
+                if (this.mOnLoad)
+                    this.mOnLoad();
             }
-            getImage() {
-                return this.platformImage;
+            fireOnError() {
+                if (this.mOnError)
+                    this.mOnError();
+            }
+            recycle() {
             }
         }
-        image.PlatformImage = PlatformImage;
+        image.NetImage = NetImage;
+        let convertA = document.createElement('a');
+        function convertToAbsUrl(url) {
+            convertA.href = url;
+            return convertA.href;
+        }
     })(image = androidui.image || (androidui.image = {}));
 })(androidui || (androidui = {}));
 /**
@@ -1884,7 +1893,7 @@ var androidui;
 ///<reference path="Paint.ts"/>
 ///<reference path="Path.ts"/>
 ///<reference path="Matrix.ts"/>
-///<reference path="../../androidui/image/PlatformImage.ts"/>
+///<reference path="../../androidui/image/NetImage.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -1900,7 +1909,9 @@ var android;
                 this.mClipStateMap = new Map();
                 this.mWidth = width;
                 this.mHeight = height;
-                this.init();
+                this.mCurrentClip = Canvas.obtainRect();
+                this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
+                this.initImpl();
             }
             static obtainRect(copy) {
                 let rect = Canvas.sRectPool.acquire();
@@ -1916,22 +1927,21 @@ var android;
                     Canvas.sRectPool.release(rect);
                 }
             }
-            init() {
+            initImpl() {
                 this.mCanvasElement = document.createElement("canvas");
                 this.mCanvasElement.width = this.mWidth;
                 this.mCanvasElement.height = this.mHeight;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                this.mCurrentClip = Canvas.obtainRect();
-                this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
                 this._saveCount = this.save();
             }
             recycle() {
                 Canvas.recycleRect(this.mCurrentClip);
                 Canvas.recycleRect(...this.mClipStateMap.values());
-                this.mCanvasElement.width = this.mCanvasElement.height = 0;
+                this.recycleImpl();
             }
-            get canvasElement() {
-                return this.mCanvasElement;
+            recycleImpl() {
+                if (this.mCanvasElement)
+                    this.mCanvasElement.width = this.mCanvasElement.height = 0;
             }
             getHeight() {
                 return this.mHeight;
@@ -1942,57 +1952,80 @@ var android;
             translate(dx, dy) {
                 if (this.mCurrentClip)
                     this.mCurrentClip.offset(-dx, -dy);
+                this.translateImpl(dx, dy);
+            }
+            translateImpl(dx, dy) {
                 this._mCanvasContent.translate(dx, dy);
             }
             scale(sx, sy, px, py) {
-                if (px && py)
+                if (px || py)
                     this.translate(px, py);
-                this._mCanvasContent.scale(sx, sy);
-                if (px && py)
+                this.scaleImpl(sx, sy);
+                if (px || py)
                     this.translate(-px, -py);
             }
+            scaleImpl(sx, sy) {
+                this._mCanvasContent.scale(sx, sy);
+            }
             rotate(degrees, px, py) {
-                if (px && py)
+                if (px || py)
                     this.translate(px, py);
-                this._mCanvasContent.rotate(degrees);
-                if (px && py)
+                this.rotateImpl(degrees);
+                if (px || py)
                     this.translate(-px, -py);
+            }
+            rotateImpl(degrees) {
+                this._mCanvasContent.rotate(degrees);
             }
             concat(m) {
                 let v = Canvas.TempMatrixValue;
                 m.getValues(v);
-                this._mCanvasContent.transform(v[graphics.Matrix.MSCALE_X], v[graphics.Matrix.MSKEW_X], v[graphics.Matrix.MSKEW_Y], v[graphics.Matrix.MSCALE_Y], v[graphics.Matrix.MTRANS_X], v[graphics.Matrix.MTRANS_Y]);
+                this.concatImpl(v[graphics.Matrix.MSCALE_X], v[graphics.Matrix.MSKEW_X], v[graphics.Matrix.MTRANS_X], v[graphics.Matrix.MSKEW_Y], v[graphics.Matrix.MSCALE_Y], v[graphics.Matrix.MTRANS_Y], v[graphics.Matrix.MPERSP_0], v[graphics.Matrix.MPERSP_1], v[graphics.Matrix.MPERSP_2]);
+            }
+            concatImpl(MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y, MPERSP_0, MPERSP_1, MPERSP_2) {
+                this._mCanvasContent.transform(MSCALE_X, MSKEW_X, MSKEW_Y, MSCALE_Y, MTRANS_X, MTRANS_Y);
             }
             drawRGB(r, g, b) {
-                this._mCanvasContent.fillStyle = `rgb(${r},${g},${b})`;
-                this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+                this.drawARGB(255, r, g, b);
             }
             drawARGB(a, r, g, b) {
-                this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a / 255})`;
-                this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+                this.drawARGBImpl(a, r, g, b);
             }
             drawColor(color) {
                 this.drawARGB(Color.alpha(color), Color.red(color), Color.green(color), Color.blue(color));
             }
+            drawARGBImpl(a, r, g, b) {
+                this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a / 255})`;
+                this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+            }
             clearColor() {
-                this._mCanvasContent.clearRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+                this.clearRectImpl(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+            }
+            clearRectImpl(left, top, width, height) {
+                this._mCanvasContent.clearRect(left, top, width, height);
             }
             save() {
-                this._mCanvasContent.save();
+                this.saveImpl();
                 if (this.mCurrentClip)
                     this.mClipStateMap.set(this._saveCount, Canvas.obtainRect(this.mCurrentClip));
                 this._saveCount++;
                 return this._saveCount;
             }
+            saveImpl() {
+                this._mCanvasContent.save();
+            }
             restore() {
                 this._saveCount--;
-                this._mCanvasContent.restore();
+                this.restoreImpl();
                 let savedClip = this.mClipStateMap.get(this._saveCount);
                 if (savedClip) {
                     this.mClipStateMap.delete(this._saveCount);
                     this.mCurrentClip.set(savedClip);
                     Canvas.recycleRect(savedClip);
                 }
+            }
+            restoreImpl() {
+                this._mCanvasContent.restore();
             }
             restoreToCount(saveCount) {
                 if (saveCount <= 0)
@@ -2013,11 +2046,16 @@ var android;
                     let [left = 0, top = 0, right = 0, bottom = 0] = args;
                     rect.set(left, top, right, bottom);
                 }
-                this._mCanvasContent.beginPath();
-                this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
-                this._mCanvasContent.clip();
+                this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
                 this.mCurrentClip.intersect(rect);
-                return rect.isEmpty();
+                let r = rect.isEmpty();
+                Canvas.recycleRect(rect);
+                return r;
+            }
+            clipRectImpl(left, top, width, height) {
+                this._mCanvasContent.beginPath();
+                this._mCanvasContent.rect(left, top, width, height);
+                this._mCanvasContent.clip();
             }
             getClipBounds(bounds) {
                 if (!this.mCurrentClip)
@@ -2038,21 +2076,27 @@ var android;
                 }
             }
             drawCanvas(canvas, offsetX, offsetY) {
-                this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY);
+                this.drawCanvasImpl(canvas, offsetX, offsetY);
+            }
+            drawCanvasImpl(canvas, offsetX, offsetY) {
+                this._mCanvasContent.drawImage(canvas.mCanvasElement, offsetX, offsetY);
             }
             drawImage(image, dstRect, paint) {
                 if (paint) {
-                    this._mCanvasContent.save();
-                    paint._setToCanvasContent(this._mCanvasContent);
+                    this.saveImpl();
+                    paint.applyToCanvas(this);
                 }
+                this.drawImageImpl(image, dstRect);
+                if (paint)
+                    this.restoreImpl();
+            }
+            drawImageImpl(image, dstRect) {
                 if (!dstRect) {
                     this._mCanvasContent.drawImage(image.getImage(), 0, 0);
                 }
                 else {
                     this._mCanvasContent.drawImage(image.getImage(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
                 }
-                if (paint)
-                    this._mCanvasContent.restore();
             }
             drawRect(...args) {
                 if (args.length == 2) {
@@ -2061,11 +2105,14 @@ var android;
                 }
                 else {
                     let [left, top, right, bottom, paint] = args;
-                    this._mCanvasContent.save();
-                    paint._setToCanvasContent(this._mCanvasContent);
-                    this._mCanvasContent.fillRect(left, top, right - left, bottom - top);
-                    this._mCanvasContent.restore();
+                    this.saveImpl();
+                    paint.applyToCanvas(this);
+                    this.drawRectImpl(left, top, right - left, bottom - top);
+                    this.restoreImpl();
                 }
+            }
+            drawRectImpl(left, top, width, height) {
+                this._mCanvasContent.fillRect(left, top, width, height);
             }
             drawPath(path, paint) {
             }
@@ -2082,27 +2129,32 @@ var android;
                 this.drawText(text.substring(start, end), x, y, paint);
             }
             drawText(text, x, y, paint) {
-                this._mCanvasContent.save();
+                let style = null;
                 if (paint) {
-                    paint._setToCanvasContent(this._mCanvasContent);
-                    switch (paint.getStyle()) {
-                        case graphics.Paint.Style.STROKE:
-                            this._mCanvasContent.strokeText(text, x, y);
-                            break;
-                        case graphics.Paint.Style.FILL_AND_STROKE:
-                            this._mCanvasContent.strokeText(text, x, y);
-                            this._mCanvasContent.fillText(text, x, y);
-                            break;
-                        case graphics.Paint.Style.FILL:
-                        default:
-                            this._mCanvasContent.fillText(text, x, y);
-                            break;
-                    }
+                    this.saveImpl();
+                    paint.applyToCanvas(this);
+                    style = paint.getStyle();
                 }
-                else {
-                    this._mCanvasContent.fillText(text, x, y);
+                if (style == null)
+                    style = graphics.Paint.Style.FILL;
+                this.drawTextImpl(text, x, y, style);
+                if (paint)
+                    this.restoreImpl();
+            }
+            drawTextImpl(text, x, y, style) {
+                switch (style) {
+                    case graphics.Paint.Style.STROKE:
+                        this._mCanvasContent.strokeText(text, x, y);
+                        break;
+                    case graphics.Paint.Style.FILL_AND_STROKE:
+                        this._mCanvasContent.strokeText(text, x, y);
+                        this._mCanvasContent.fillText(text, x, y);
+                        break;
+                    case graphics.Paint.Style.FILL:
+                    default:
+                        this._mCanvasContent.fillText(text, x, y);
+                        break;
                 }
-                this._mCanvasContent.restore();
             }
             drawTextRun_count(text, index, count, contextIndex, contextCount, x, y, dir, paint) {
                 this.drawText_count(text, index, count, x, y, paint);
@@ -2110,12 +2162,129 @@ var android;
             drawTextRun_end(text, start, end, contextStart, contextEnd, x, y, dir, paint) {
                 this.drawText_end(text, start, end, x, y, paint);
             }
+            static measureText(text, textSize) {
+                if (textSize == null || textSize === 0)
+                    return 0;
+                return Canvas.measureTextImpl(text, textSize);
+            }
+            static measureTextImpl(text, textSize) {
+                if (textSize != Canvas._measureTextSize) {
+                    Canvas._measureTextSize = textSize;
+                    if (textSize != null) {
+                        Canvas._measureTextContext.font = textSize + 'px ' + Canvas.getMeasureTextFontFamily();
+                    }
+                    else {
+                        Canvas._measureTextContext.font = '';
+                    }
+                }
+                return Canvas._measureTextContext.measureText(text).width;
+            }
+            static getMeasureTextFontFamily() {
+                let fontParts = Canvas._measureTextContext.font.split(' ');
+                return fontParts[fontParts.length - 1];
+            }
+            setFillColor(color) {
+                if (typeof color === 'number') {
+                    this.setFillColorImpl(color);
+                }
+            }
+            setFillColorImpl(color) {
+                this._mCanvasContent.fillStyle = Color.toRGBAFunc(color);
+            }
+            multiplyAlpha(alpha) {
+                if (typeof alpha === 'number') {
+                    this.multiplyAlphaImpl(alpha);
+                }
+            }
+            multiplyAlphaImpl(alpha) {
+                this._mCanvasContent.globalAlpha *= alpha;
+            }
+            setAlpha(alpha) {
+                if (typeof alpha === 'number') {
+                    this.setAlphaImpl(alpha);
+                }
+            }
+            setAlphaImpl(alpha) {
+                this._mCanvasContent.globalAlpha = alpha;
+            }
+            setTextAlign(align) {
+                if (align != null)
+                    this.setTextAlignImpl(align);
+            }
+            setTextAlignImpl(align) {
+                this._mCanvasContent.textAlign = align;
+            }
+            setLineWidth(width) {
+                if (width != null)
+                    this.setLineWidthImpl(width);
+            }
+            setLineWidthImpl(width) {
+                this._mCanvasContent.lineWidth = width;
+            }
+            setLineCap(lineCap) {
+                if (lineCap != null)
+                    this.setLineCapImpl(lineCap);
+            }
+            setLineCapImpl(lineCap) {
+                this._mCanvasContent.lineCap = lineCap;
+            }
+            setLineJoin(lineJoin) {
+                if (lineJoin != null)
+                    this.setLineJoinImpl(lineJoin);
+            }
+            setLineJoinImpl(lineJoin) {
+                this._mCanvasContent.lineJoin = lineJoin;
+            }
+            setShadow(radius, dx, dy, color) {
+                if (radius > 0) {
+                    this.setShadowImpl(radius, dx, dy, color);
+                }
+            }
+            setShadowImpl(radius, dx, dy, color) {
+                this._mCanvasContent.shadowBlur = radius;
+                this._mCanvasContent.shadowOffsetX = dx;
+                this._mCanvasContent.shadowOffsetY = dy;
+                this._mCanvasContent.shadowColor = Color.toRGBAFunc(color);
+            }
+            setFontSize(size) {
+                if (typeof size === 'number') {
+                    this.setFontSizeImpl(size);
+                }
+            }
+            setFontSizeImpl(size) {
+                const fontStyles = [];
+                if (size != null) {
+                    fontStyles.push(size + 'px');
+                }
+                if (fontStyles.length > 0) {
+                    let cFont = this._mCanvasContent.font;
+                    let fontParts = cFont.split(' ');
+                    fontStyles.push(fontParts[fontParts.length - 1]);
+                    let font = fontStyles.join(' ');
+                    if (font != cFont)
+                        this._mCanvasContent.font = font;
+                }
+            }
+            setFont(fontName) {
+                if (fontName != null) {
+                    this.setFontImpl(fontName);
+                }
+            }
+            setFontImpl(fontName) {
+                let cFont = this._mCanvasContent.font;
+                let fontParts = cFont.split(' ');
+                fontParts[fontParts.length - 1] = fontName;
+                let font = fontParts.join(' ');
+                if (font != cFont)
+                    this._mCanvasContent.font = font;
+            }
         }
-        Canvas.FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
         Canvas.TempMatrixValue = new Array(9);
         Canvas.DIRECTION_LTR = 0;
         Canvas.DIRECTION_RTL = 1;
         Canvas.sRectPool = new Pools.SynchronizedPool(20);
+        Canvas._measureTextContext = document.createElement('canvas').getContext('2d');
+        Canvas._measureTextSize = -1;
         graphics.Canvas = Canvas;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -5091,7 +5260,7 @@ var androidui;
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/Paint.ts"/>
 ///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="PlatformImage.ts"/>
+///<reference path="NetImage.ts"/>
 var androidui;
 (function (androidui) {
     var image;
@@ -5105,10 +5274,12 @@ var androidui;
                 this.mImageWidth = -1;
                 this.mImageHeight = -1;
                 this.mState = new State(src, res, paint);
-                this.mImage = new image.PlatformImage(src, () => this.onLoad(), () => this.onError());
+                this.mImage = new image.NetImage(src, () => this.onLoad(), () => this.onError());
             }
             draw(canvas) {
-                canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+                if (this.isLoadFinish()) {
+                    canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+                }
             }
             setAlpha(alpha) {
                 this.mState.paint.setAlpha(alpha);
@@ -5133,6 +5304,7 @@ var androidui;
                 this.mImageWidth = this.mImageHeight = 0;
                 if (this.mLoadListener)
                     this.mLoadListener.onError(this);
+                this.invalidateSelf();
             }
             isLoadFinish() {
                 return this.mImageWidth >= 0 && this.mImageHeight >= 0;
@@ -5145,6 +5317,10 @@ var androidui;
             }
             getConstantState() {
                 return this.mState;
+            }
+            recycle() {
+                if (this.mImage)
+                    this.mImage.recycle();
             }
         }
         image.NetDrawable = NetDrawable;
@@ -6298,7 +6474,8 @@ var android;
             static get textViewStyle() {
                 return {
                     textSize: '14sp',
-                    textColor: R.color.textView_textColor
+                    textColor: R.color.textView_textColor,
+                    layerType: 'none'
                 };
             }
             static get imageButtonStyle() {
@@ -6637,6 +6814,12 @@ var android;
                         this.setOverScrollMode(scrollMode);
                     }),
                     this._attrBinder.addAttr('layerType', (value) => {
+                        if ((value + '').toLowerCase() == 'software') {
+                            this.setLayerType(View.LAYER_TYPE_SOFTWARE);
+                        }
+                        else {
+                            this.setLayerType(View.LAYER_TYPE_NONE);
+                        }
                     });
                 this._attrBinder.addAttr('backgroundUri', (value) => {
                     if (value == null)
@@ -8365,6 +8548,25 @@ var android;
                     this.mPrivateFlags &= ~View.PFLAG_OPAQUE_SCROLLBARS;
                 }
             }
+            setLayerType(layerType) {
+                if (layerType < View.LAYER_TYPE_NONE || layerType > View.LAYER_TYPE_SOFTWARE) {
+                    throw Error(`new IllegalArgumentException("Layer type can only be one of: LAYER_TYPE_NONE, " + "LAYER_TYPE_SOFTWARE")`);
+                }
+                if (layerType == this.mLayerType) {
+                    return;
+                }
+                switch (this.mLayerType) {
+                    case View.LAYER_TYPE_SOFTWARE:
+                        this.destroyDrawingCache();
+                        break;
+                    default:
+                        break;
+                }
+                this.mLayerType = layerType;
+                const layerDisabled = this.mLayerType == View.LAYER_TYPE_NONE;
+                this.invalidateParentCaches();
+                this.invalidate(true);
+            }
             getLayerType() {
                 return this.mLayerType;
             }
@@ -8833,6 +9035,9 @@ var android;
                 if (this.mBackground != null) {
                     this.mBackground.setCallback(null);
                     this.unscheduleDrawable(this.mBackground);
+                    if (this.mBackground instanceof NetDrawable) {
+                        this.mBackground.recycle();
+                    }
                 }
                 if (background != null) {
                     let padding = new Rect();
@@ -10123,6 +10328,7 @@ var android;
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
+///<reference path="../view/ViewRootImpl.ts"/>
 var android;
 (function (android) {
     var view;
@@ -10130,33 +10336,43 @@ var android;
         var Rect = android.graphics.Rect;
         var Canvas = android.graphics.Canvas;
         class Surface {
-            constructor(canvasElement) {
+            constructor(canvasElement, viewRoot) {
                 this.mLockedRect = new Rect();
+                this.mSupportDirtyDraw = true;
                 this.mCanvasElement = canvasElement;
+                this.viewRoot = viewRoot;
+                this.initImpl();
+            }
+            initImpl() {
+                this.mClientRect = this.mCanvasElement.getBoundingClientRect();
+            }
+            notifyBoundChange() {
+                this.mClientRect = this.mCanvasElement.getBoundingClientRect();
             }
             lockCanvas(dirty) {
-                let fullWidth = this.mCanvasElement.width;
-                let fullHeight = this.mCanvasElement.height;
+                let fullWidth = this.mClientRect.width;
+                let fullHeight = this.mClientRect.height;
                 let rect = this.mLockedRect;
                 if (dirty.isEmpty()) {
                     rect.set(0, 0, fullWidth, fullHeight);
                 }
                 else {
-                    rect.set(Math.floor(dirty.left - 1), Math.floor(dirty.top - 1), Math.ceil(dirty.right + 1), Math.ceil(dirty.bottom + 1));
+                    rect.set(Math.floor(dirty.left), Math.floor(dirty.top), Math.ceil(dirty.right), Math.ceil(dirty.bottom));
                 }
-                let width = rect.width();
-                let height = rect.height();
+                return this.lockCanvasImpl(rect.left, rect.top, rect.width(), rect.height());
+            }
+            lockCanvasImpl(left, top, width, height) {
                 let canvas = new Canvas(width, height);
-                if (rect.left != 0 || rect.top != 0)
-                    canvas.translate(-rect.left, -rect.top);
+                if (left != 0 || top != 0)
+                    canvas.translate(-left, -top);
                 let mCanvasContent = this.mCanvasElement.getContext('2d');
-                mCanvasContent.clearRect(rect.left, rect.top, width, height);
+                mCanvasContent.clearRect(left, top, width, height);
                 return canvas;
             }
             unlockCanvasAndPost(canvas) {
                 let mCanvasContent = this.mCanvasElement.getContext('2d');
-                if (canvas.canvasElement)
-                    mCanvasContent.drawImage(canvas.canvasElement, this.mLockedRect.left, this.mLockedRect.top);
+                if (canvas.mCanvasElement)
+                    mCanvasContent.drawImage(canvas.mCanvasElement, this.mLockedRect.left, this.mLockedRect.top);
                 canvas.recycle();
             }
         }
@@ -10218,7 +10434,13 @@ var android;
                 this.mTraversalRunnable = new TraversalRunnable(this);
             }
             initSurface(canvasElement) {
-                this.mSurface = new Surface(canvasElement);
+                this.mSurface = new Surface(canvasElement, this);
+            }
+            notifyResized(frame) {
+                this.mWinFrame.set(frame.left, frame.top, frame.right, frame.bottom);
+                this.requestLayout();
+                if (this.mSurface)
+                    this.mSurface.notifyBoundChange();
             }
             setView(view) {
                 if (this.mView == null) {
@@ -10598,7 +10820,7 @@ var android;
                 }
             }
             performDraw() {
-                let fullRedrawNeeded = this.mFullRedrawNeeded;
+                let fullRedrawNeeded = this.mFullRedrawNeeded || !this.mSurface.mSupportDirtyDraw;
                 this.mFullRedrawNeeded = false;
                 this.mIsDrawing = true;
                 try {
@@ -10628,7 +10850,13 @@ var android;
                 this.drawSoftware();
             }
             drawSoftware() {
-                let canvas = this.mSurface.lockCanvas(this.mDirty);
+                let canvas;
+                try {
+                    canvas = this.mSurface.lockCanvas(this.mDirty);
+                }
+                catch (e) {
+                    return;
+                }
                 this.mDirty.setEmpty();
                 let attachInfo = this.mAttachInfo;
                 attachInfo.mDrawingTime = SystemClock.uptimeMillis();
@@ -10773,10 +11001,6 @@ var android;
                 return false;
             }
             childHasTransientStateChanged(child, hasTransientState) {
-            }
-            dispatchResized(frame) {
-                this.mWinFrame.set(frame.left, frame.top, frame.right, frame.bottom);
-                this.requestLayout();
             }
             dispatchInputEvent(event) {
                 this.deliverInputEvent(event);
@@ -23453,17 +23677,33 @@ var android;
                             this.mDrawables = null;
                         }
                         else {
-                            if (dr.mDrawableLeft != null)
+                            if (dr.mDrawableLeft != null) {
                                 dr.mDrawableLeft.setCallback(null);
+                                if (dr.mDrawableLeft instanceof NetDrawable) {
+                                    dr.mDrawableLeft.recycle();
+                                }
+                            }
                             dr.mDrawableLeft = null;
-                            if (dr.mDrawableTop != null)
+                            if (dr.mDrawableTop != null) {
                                 dr.mDrawableTop.setCallback(null);
+                                if (dr.mDrawableTop instanceof NetDrawable) {
+                                    dr.mDrawableTop.recycle();
+                                }
+                            }
                             dr.mDrawableTop = null;
-                            if (dr.mDrawableRight != null)
+                            if (dr.mDrawableRight != null) {
                                 dr.mDrawableRight.setCallback(null);
+                                if (dr.mDrawableRight instanceof NetDrawable) {
+                                    dr.mDrawableRight.recycle();
+                                }
+                            }
                             dr.mDrawableRight = null;
-                            if (dr.mDrawableBottom != null)
+                            if (dr.mDrawableBottom != null) {
                                 dr.mDrawableBottom.setCallback(null);
+                                if (dr.mDrawableBottom instanceof NetDrawable) {
+                                    dr.mDrawableBottom.recycle();
+                                }
+                            }
                             dr.mDrawableBottom = null;
                             dr.mDrawableSizeLeft = dr.mDrawableHeightLeft = 0;
                             dr.mDrawableSizeRight = dr.mDrawableHeightRight = 0;
@@ -23479,18 +23719,30 @@ var android;
                     this.mDrawables.mOverride = false;
                     if (dr.mDrawableLeft != left && dr.mDrawableLeft != null) {
                         dr.mDrawableLeft.setCallback(null);
+                        if (dr.mDrawableLeft instanceof NetDrawable) {
+                            dr.mDrawableLeft.recycle();
+                        }
                     }
                     dr.mDrawableLeft = left;
                     if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
                         dr.mDrawableTop.setCallback(null);
+                        if (dr.mDrawableTop instanceof NetDrawable) {
+                            dr.mDrawableTop.recycle();
+                        }
                     }
                     dr.mDrawableTop = top;
                     if (dr.mDrawableRight != right && dr.mDrawableRight != null) {
                         dr.mDrawableRight.setCallback(null);
+                        if (dr.mDrawableRight instanceof NetDrawable) {
+                            dr.mDrawableRight.recycle();
+                        }
                     }
                     dr.mDrawableRight = right;
                     if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
                         dr.mDrawableBottom.setCallback(null);
+                        if (dr.mDrawableBottom instanceof NetDrawable) {
+                            dr.mDrawableBottom.recycle();
+                        }
                     }
                     dr.mDrawableBottom = bottom;
                     const compoundRect = dr.mCompoundRect;
@@ -23578,17 +23830,33 @@ var android;
                             this.mDrawables = null;
                         }
                         else {
-                            if (dr.mDrawableStart != null)
+                            if (dr.mDrawableStart != null) {
                                 dr.mDrawableStart.setCallback(null);
+                                if (dr.mDrawableStart instanceof NetDrawable) {
+                                    dr.mDrawableStart.recycle();
+                                }
+                            }
                             dr.mDrawableStart = null;
-                            if (dr.mDrawableTop != null)
+                            if (dr.mDrawableTop != null) {
                                 dr.mDrawableTop.setCallback(null);
+                                if (dr.mDrawableTop instanceof NetDrawable) {
+                                    dr.mDrawableTop.recycle();
+                                }
+                            }
                             dr.mDrawableTop = null;
-                            if (dr.mDrawableEnd != null)
+                            if (dr.mDrawableEnd != null) {
                                 dr.mDrawableEnd.setCallback(null);
+                                if (dr.mDrawableEnd instanceof NetDrawable) {
+                                    dr.mDrawableEnd.recycle();
+                                }
+                            }
                             dr.mDrawableEnd = null;
-                            if (dr.mDrawableBottom != null)
+                            if (dr.mDrawableBottom != null) {
                                 dr.mDrawableBottom.setCallback(null);
+                                if (dr.mDrawableBottom instanceof NetDrawable) {
+                                    dr.mDrawableBottom.recycle();
+                                }
+                            }
                             dr.mDrawableBottom = null;
                             dr.mDrawableSizeStart = dr.mDrawableHeightStart = 0;
                             dr.mDrawableSizeEnd = dr.mDrawableHeightEnd = 0;
@@ -23604,18 +23872,30 @@ var android;
                     this.mDrawables.mOverride = true;
                     if (dr.mDrawableStart != start && dr.mDrawableStart != null) {
                         dr.mDrawableStart.setCallback(null);
+                        if (dr.mDrawableStart instanceof NetDrawable) {
+                            dr.mDrawableStart.recycle();
+                        }
                     }
                     dr.mDrawableStart = start;
                     if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
                         dr.mDrawableTop.setCallback(null);
+                        if (dr.mDrawableTop instanceof NetDrawable) {
+                            dr.mDrawableTop.recycle();
+                        }
                     }
                     dr.mDrawableTop = top;
                     if (dr.mDrawableEnd != end && dr.mDrawableEnd != null) {
                         dr.mDrawableEnd.setCallback(null);
+                        if (dr.mDrawableEnd instanceof NetDrawable) {
+                            dr.mDrawableEnd.recycle();
+                        }
                     }
                     dr.mDrawableEnd = end;
                     if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
                         dr.mDrawableBottom.setCallback(null);
+                        if (dr.mDrawableBottom instanceof NetDrawable) {
+                            dr.mDrawableBottom.recycle();
+                        }
                     }
                     dr.mDrawableBottom = bottom;
                     const compoundRect = dr.mCompoundRect;
@@ -25880,6 +26160,9 @@ var android;
                 setErrorDrawable(dr, tv) {
                     if (this.mDrawableError != dr && this.mDrawableError != null) {
                         this.mDrawableError.setCallback(null);
+                        if (this.mDrawableError instanceof NetDrawable) {
+                            this.mDrawableError.recycle();
+                        }
                     }
                     this.mDrawableError = dr;
                     const compoundRect = this.mCompoundRect;
@@ -34451,6 +34734,9 @@ var android;
                 if (this.mDrawable != null) {
                     this.mDrawable.setCallback(null);
                     this.unscheduleDrawable(this.mDrawable);
+                    if (this.mDrawable instanceof androidui.image.NetDrawable) {
+                        this.mDrawable.recycle();
+                    }
                 }
                 this.mDrawable = d;
                 if (d != null) {
@@ -40334,11 +40620,11 @@ var androidui;
             if (this.rootStyleElement)
                 this.element.appendChild(this.rootStyleElement);
             this.element.appendChild(this._canvas);
-            this._viewRootImpl.setView(this._rootLayout);
-            this._viewRootImpl.initSurface(this._canvas);
             this.initFocus();
             this.initEvent();
             this.initListenSizeChange();
+            this._viewRootImpl.setView(this._rootLayout);
+            this._viewRootImpl.initSurface(this._canvas);
             let debugAttr = this.element.getAttribute('debug');
             if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
                 this.showDebugLayout();
@@ -40372,7 +40658,16 @@ var androidui;
         }
         refreshWindowBound() {
             let rootViewBound = this.element.getBoundingClientRect();
-            this._windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
+            let boundLeft = rootViewBound.left;
+            let boundTop = rootViewBound.top;
+            let boundRight = rootViewBound.right;
+            let boundBottom = rootViewBound.bottom;
+            if (this._windowBound && this._windowBound.left == boundLeft && this._windowBound.top == boundTop
+                && this._windowBound.right == boundRight && this._windowBound.bottom == boundBottom) {
+                return false;
+            }
+            this._windowBound.set(boundLeft, boundTop, boundRight, boundBottom);
+            return true;
         }
         initFocus() {
             this.element.setAttribute('tabindex', '0');
@@ -40540,16 +40835,17 @@ var androidui;
             }, 500);
         }
         notifySizeChange() {
-            this.refreshWindowBound();
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            this.tempRect.set(this._windowBound.left * density, this._windowBound.top * density, this._windowBound.right * density, this._windowBound.bottom * density);
-            this._viewRootImpl.dispatchResized(this.tempRect);
-            let width = this._windowBound.width();
-            let height = this._windowBound.height();
-            this._canvas.width = width * density;
-            this._canvas.height = height * density;
-            this._canvas.style.width = width + "px";
-            this._canvas.style.height = height + "px";
+            if (this.refreshWindowBound()) {
+                let density = android.content.res.Resources.getDisplayMetrics().density;
+                this.tempRect.set(this._windowBound.left * density, this._windowBound.top * density, this._windowBound.right * density, this._windowBound.bottom * density);
+                let width = this._windowBound.width();
+                let height = this._windowBound.height();
+                this._canvas.width = width * density;
+                this._canvas.height = height * density;
+                this._canvas.style.width = width + "px";
+                this._canvas.style.height = height + "px";
+                this._viewRootImpl.notifyResized(this.tempRect);
+            }
         }
         setContentView(view) {
             this._rootLayout.removeAllViews();
@@ -41999,6 +42295,372 @@ var androidui;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
 /**
+ * Created by linfaxin on 15/12/14.
+ */
+///<reference path="../../android/view/Surface.ts"/>
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="NativeApi.ts"/>
+var androidui;
+(function (androidui) {
+    var native;
+    (function (native) {
+        var Canvas = android.graphics.Canvas;
+        let sNextID = 0;
+        class NativeCanvas extends Canvas {
+            initImpl() {
+                this.canvasId = ++sNextID;
+                this.createCanvasImpl();
+            }
+            createCanvasImpl() {
+                native.NativeApi.canvas.createCanvas(this.canvasId, this.mWidth, this.mHeight);
+            }
+            recycleImpl() {
+                native.NativeApi.canvas.recycleCanvas(this.canvasId);
+            }
+            translateImpl(dx, dy) {
+                native.NativeApi.canvas.translate(this.canvasId, dx, dy);
+            }
+            scaleImpl(sx, sy) {
+                native.NativeApi.canvas.scale(this.canvasId, sx, sy);
+            }
+            rotateImpl(degrees) {
+                native.NativeApi.canvas.rotate(this.canvasId, degrees);
+            }
+            concatImpl(MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y, MPERSP_0, MPERSP_1, MPERSP_2) {
+                native.NativeApi.canvas.concat(this.canvasId, MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y);
+            }
+            drawARGBImpl(a, r, g, b) {
+                native.NativeApi.canvas.drawColor(this.canvasId, android.graphics.Color.argb(a, r, g, b));
+            }
+            clearRectImpl(left, top, width, height) {
+                native.NativeApi.canvas.clearRect(this.canvasId, left, top, width, height);
+            }
+            saveImpl() {
+                native.NativeApi.canvas.save(this.canvasId);
+            }
+            restoreImpl() {
+                native.NativeApi.canvas.restore(this.canvasId);
+            }
+            clipRectImpl(left, top, width, height) {
+                native.NativeApi.canvas.clipRect(this.canvasId, left, top, width, height);
+            }
+            drawCanvasImpl(canvas, offsetX, offsetY) {
+                if (canvas instanceof NativeCanvas) {
+                    native.NativeApi.canvas.drawCanvas(this.canvasId, canvas.canvasId, offsetX, offsetY);
+                }
+                else {
+                    throw Error('canvas should be NativeCanvas');
+                }
+            }
+            drawImageImpl(image, dstRect) {
+                if (image instanceof native.NativeImage) {
+                    native.NativeApi.canvas.drawImage(this.canvasId, image.imageId, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                }
+                else {
+                    throw Error('image should be NativeImage');
+                }
+            }
+            drawRectImpl(left, top, width, height) {
+                native.NativeApi.canvas.drawRect(this.canvasId, left, top, width, height);
+            }
+            drawTextImpl(text, x, y, style) {
+                native.NativeApi.canvas.drawText(this.canvasId, text, x, y, style);
+            }
+            setFillColorImpl(color) {
+                native.NativeApi.canvas.setFillColor(this.canvasId, color);
+            }
+            multiplyAlphaImpl(alpha) {
+                native.NativeApi.canvas.multiplyAlpha(this.canvasId, alpha);
+            }
+            setAlphaImpl(alpha) {
+                native.NativeApi.canvas.setAlpha(this.canvasId, alpha);
+            }
+            setTextAlignImpl(align) {
+                native.NativeApi.canvas.setTextAlign(this.canvasId, align);
+            }
+            setLineWidthImpl(width) {
+                native.NativeApi.canvas.setLineWidth(this.canvasId, width);
+            }
+            setLineCapImpl(lineCap) {
+                native.NativeApi.canvas.setLineCap(this.canvasId, lineCap);
+            }
+            setLineJoinImpl(lineJoin) {
+                native.NativeApi.canvas.setLineJoin(this.canvasId, lineJoin);
+            }
+            setShadowImpl(radius, dx, dy, color) {
+                native.NativeApi.canvas.setShadow(this.canvasId, radius, dx, dy, color);
+            }
+            setFontSizeImpl(size) {
+                native.NativeApi.canvas.setFontSize(this.canvasId, size);
+            }
+            setFontImpl(fontName) {
+                native.NativeApi.canvas.setFont(this.canvasId, fontName);
+            }
+            static applyTextMeasure(cacheMeasureTextSize, defaultWidth, widths) {
+                android.graphics.Canvas.measureTextImpl = function (text, textSize) {
+                    let width = 0;
+                    for (let i = 0, length = text.length; i < length; i++) {
+                        let c = text.charCodeAt(i);
+                        let cWidth = widths[c] || defaultWidth;
+                        width += cWidth * textSize / cacheMeasureTextSize;
+                    }
+                    return width;
+                };
+            }
+        }
+        native.NativeCanvas = NativeCanvas;
+    })(native = androidui.native || (androidui.native = {}));
+})(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/12/14.
+ */
+///<reference path="../../android/view/Surface.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="NativeCanvas.ts"/>
+///<reference path="NativeApi.ts"/>
+var androidui;
+(function (androidui) {
+    var native;
+    (function (native) {
+        var Surface = android.view.Surface;
+        let sNextSurfaceID = 0;
+        const SurfaceInstances = new Map();
+        class NativeSurface extends Surface {
+            initImpl() {
+                this.mClientRect = this.mCanvasElement.getBoundingClientRect();
+                this.surfaceId = ++sNextSurfaceID;
+                SurfaceInstances.set(this.surfaceId, this);
+                let bound = this.mClientRect;
+                let density = android.content.res.Resources.getDisplayMetrics().density;
+                native.NativeApi.surface.createSurface(this.surfaceId, bound.left * density, bound.top * density, bound.right * density, bound.bottom * density);
+            }
+            notifyBoundChange() {
+                super.notifyBoundChange();
+                let bound = this.mClientRect;
+                native.NativeApi.surface.onSurfaceBoundChange(this.surfaceId, bound.left, bound.top, bound.right, bound.bottom);
+            }
+            lockCanvasImpl(left, top, width, height) {
+                let canvas = new SurfaceLockCanvas(width, height);
+                native.NativeApi.surface.lockCanvas(this.surfaceId, canvas.canvasId, left, top, left + width, top + height);
+                return canvas;
+            }
+            unlockCanvasAndPost(canvas) {
+                if (canvas instanceof native.NativeCanvas) {
+                    native.NativeApi.surface.unlockCanvasAndPost(this.surfaceId, canvas.canvasId);
+                    native.NativeApi.canvas.recycleCanvas(canvas.canvasId);
+                }
+                else {
+                    throw Error('canvas is not NativeCanvas');
+                }
+            }
+            static notifySurfaceReady(surfaceId) {
+                let surface = SurfaceInstances.get(surfaceId);
+                surface.viewRoot.scheduleTraversals();
+            }
+            static notifySurfaceSupportDirtyDraw(surfaceId, dirtyDrawSupport) {
+                let surface = SurfaceInstances.get(surfaceId);
+                surface.mSupportDirtyDraw = dirtyDrawSupport;
+                surface.viewRoot.scheduleTraversals();
+            }
+        }
+        native.NativeSurface = NativeSurface;
+        class SurfaceLockCanvas extends native.NativeCanvas {
+            createCanvasImpl() {
+            }
+        }
+    })(native = androidui.native || (androidui.native = {}));
+})(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/12/14.
+ */
+///<reference path="../image/NetImage"/>
+///<reference path="NativeApi.ts"/>
+var androidui;
+(function (androidui) {
+    var native;
+    (function (native) {
+        var NetImage = androidui.image.NetImage;
+        let sNextId = 0;
+        const NativeImageInstances = new Map();
+        class NativeImage extends NetImage {
+            createImage() {
+                this.imageId = sNextId++;
+                NativeImageInstances.set(this.imageId, this);
+                native.NativeApi.image.createImage(this.imageId);
+            }
+            loadImage() {
+                native.NativeApi.image.loadImage(this.imageId, this.src);
+            }
+            recycle() {
+                native.NativeApi.image.recycleImage(this.imageId);
+                NativeImageInstances.delete(this.imageId);
+            }
+            static notifyLoadFinish(imageId, width, height) {
+                let image = NativeImageInstances.get(imageId);
+                image.mImageWidth = width;
+                image.mImageHeight = height;
+                image.fireOnLoad();
+            }
+            static notifyLoadError(imageId) {
+                let image = NativeImageInstances.get(imageId);
+                image.mImageWidth = image.mImageHeight = 0;
+                image.fireOnError();
+            }
+        }
+        native.NativeImage = NativeImage;
+    })(native = androidui.native || (androidui.native = {}));
+})(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/12/14.
+ */
+///<reference path="../../android/view/Surface.ts"/>
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="NativeSurface.ts"/>
+///<reference path="NativeCanvas.ts"/>
+///<reference path="NativeImage.ts"/>
+var androidui;
+(function (androidui) {
+    var native;
+    (function (native) {
+        const AndroidJsBridgeProperty = 'AndroidUIRuntime';
+        const JSBridge = window[AndroidJsBridgeProperty];
+        class NativeApi {
+        }
+        native.NativeApi = NativeApi;
+        (function (NativeApi) {
+            class CallQueues {
+                constructor() {
+                    this.calls = [];
+                }
+                pushCall(method, methodArgs) {
+                    this.calls.push(new NativeCall(method, methodArgs));
+                }
+                clear() {
+                    this.calls = [];
+                }
+                toString() {
+                    return this.calls.join('\n');
+                }
+            }
+            class NativeCall {
+                constructor(methodName, methodArgs) {
+                    this.method = methodName;
+                    this.args = methodArgs;
+                }
+                toString() {
+                    return this.method + JSON.stringify(this.args);
+                }
+            }
+            let callQueues = new CallQueues();
+            class SurfaceApi {
+                createSurface(surfaceId, left, top, right, bottom) {
+                    JSBridge.createSurface(surfaceId, left, top, right, bottom);
+                }
+                onSurfaceBoundChange(surfaceId, left, top, right, bottom) {
+                    JSBridge.onSurfaceBoundChange(surfaceId, left, top, right, bottom);
+                }
+                lockCanvas(surfaceId, canvasId, left, top, right, bottom) {
+                    callQueues.pushCall('lockCanvas', [surfaceId, canvasId, left, top, right, bottom]);
+                }
+                unlockCanvasAndPost(surfaceId, canvasId) {
+                    callQueues.pushCall('unlockCanvasAndPost', [surfaceId, canvasId]);
+                    JSBridge.batchCall(callQueues.toString());
+                    callQueues.clear();
+                }
+            }
+            NativeApi.SurfaceApi = SurfaceApi;
+            class CanvasApi {
+                createCanvas(canvasId, width, height) {
+                    callQueues.pushCall('createCanvas', [canvasId, width, height]);
+                }
+                recycleCanvas(canvasId) {
+                    callQueues.pushCall('recycleCanvas', [canvasId]);
+                }
+                translate(canvasId, dx, dy) {
+                    callQueues.pushCall('translate', [canvasId, dx, dy]);
+                }
+                scale(canvasId, sx, sy) {
+                    callQueues.pushCall('scale', [canvasId, sx, sy]);
+                }
+                rotate(canvasId, degrees) {
+                    callQueues.pushCall('rotate', [canvasId, degrees]);
+                }
+                concat(canvasId, MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y) {
+                    callQueues.pushCall('concat', [canvasId, MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y]);
+                }
+                drawColor(canvasId, color) {
+                    callQueues.pushCall('drawColor', [canvasId, color]);
+                }
+                clearRect(canvasId, left, top, width, height) {
+                    callQueues.pushCall('clearRect', [canvasId, left, top, width, height]);
+                }
+                drawRect(canvasId, left, top, width, height) {
+                    callQueues.pushCall('drawRect', [canvasId, left, top, width, height]);
+                }
+                clipRect(canvasId, left, top, width, height) {
+                    callQueues.pushCall('clipRect', [canvasId, left, top, width, height]);
+                }
+                save(canvasId) {
+                    callQueues.pushCall('save', [canvasId]);
+                }
+                restore(canvasId) {
+                    callQueues.pushCall('restore', [canvasId]);
+                }
+                drawCanvas(canvasId, drawCanvasId, offsetX, offsetY) {
+                    callQueues.pushCall('drawCanvas', [canvasId, drawCanvasId, offsetX, offsetY]);
+                }
+                drawImage(canvasId, drawImageId, dstLeft, dstTop, dstWidth, dstHeight) {
+                    callQueues.pushCall('drawImage', [canvasId, drawImageId, dstLeft, dstTop, dstWidth, dstHeight]);
+                }
+                drawText(canvasId, text, x, y, fillStyle) {
+                    callQueues.pushCall('drawText', [canvasId, encodeURIComponent(text), x, y, fillStyle]);
+                }
+                setFillColor(canvasId, color) {
+                    callQueues.pushCall('setFillColor', [canvasId, color]);
+                }
+                multiplyAlpha(canvasId, alpha) {
+                    callQueues.pushCall('multiplyAlpha', [canvasId, alpha]);
+                }
+                setAlpha(canvasId, alpha) {
+                    callQueues.pushCall('setAlpha', [canvasId, alpha]);
+                }
+                setTextAlign(canvasId, align) {
+                    callQueues.pushCall('setTextAlign', [canvasId, align]);
+                }
+                setLineWidth(canvasId, width) {
+                    callQueues.pushCall('setLineWidth', [canvasId, width]);
+                }
+                setLineCap(canvasId, lineCap) {
+                    callQueues.pushCall('setLineCap', [canvasId, lineCap]);
+                }
+                setLineJoin(canvasId, lineJoin) {
+                    callQueues.pushCall('setLineJoin', [canvasId, lineJoin]);
+                }
+                setShadow(canvasId, radius, dx, dy, color) {
+                    callQueues.pushCall('setShadow', [canvasId, radius, dx, dy, color]);
+                }
+                setFontSize(canvasId, size) {
+                    callQueues.pushCall('setFontSize', [canvasId, size]);
+                }
+                setFont(canvasId, fontName) {
+                    callQueues.pushCall('setFont', [canvasId, fontName]);
+                }
+            }
+            NativeApi.CanvasApi = CanvasApi;
+        })(NativeApi = native.NativeApi || (native.NativeApi = {}));
+        if (JSBridge) {
+            android.view.Surface.prototype = native.NativeSurface.prototype;
+            android.graphics.Canvas.prototype = native.NativeCanvas.prototype;
+            androidui.image.NetImage.prototype = native.NativeImage.prototype;
+            NativeApi.surface = new NativeApi.SurfaceApi();
+            NativeApi.canvas = new NativeApi.CanvasApi();
+            NativeApi.image = JSBridge;
+        }
+    })(native = androidui.native || (androidui.native = {}));
+})(androidui || (androidui = {}));
+/**
  * Created by linfaxin on 15/10/6.
  */
 ///<reference path="android/view/ViewOverlay.ts"/>
@@ -42028,6 +42690,7 @@ var androidui;
 ///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
 ///<reference path="androidui/util/PerformanceAdjuster.ts"/>
+///<reference path="androidui/native/NativeApi.ts"/>
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;

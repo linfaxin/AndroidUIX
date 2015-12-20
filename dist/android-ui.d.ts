@@ -272,8 +272,6 @@ declare module android.graphics {
         descent(): number;
         getFontMetricsInt(fmi: Paint.FontMetricsInt): number;
         getFontMetrics(metrics: Paint.FontMetrics): number;
-        private static _measureTextContext;
-        private static _measureTextSize;
         measureText(text: string, index?: number, count?: number): number;
         getTextWidths_count(text: string, index: number, count: number, widths: number[]): number;
         getTextWidths_end(text: string, start: number, end: number, widths: number[]): number;
@@ -282,7 +280,7 @@ declare module android.graphics {
         getTextRunAdvances_end(text: string, start: number, end: number, contextStart: number, contextEnd: number, flags: number, advances: number[], advancesIndex: number): number;
         getTextRunCursor_len(text: string, contextStart: number, contextLength: number, flags: number, offset: number, cursorOpt: number): number;
         getTextRunCursor_end(text: string, contextStart: number, contextEnd: number, flags: number, offset: number, cursorOpt: number): number;
-        _setToCanvasContent(context: CanvasRenderingContext2D): void;
+        applyToCanvas(canvas: Canvas): void;
     }
     module Paint {
         enum Align {
@@ -437,30 +435,39 @@ declare module android.graphics {
     }
 }
 declare module androidui.image {
-    class PlatformImage {
+    class NetImage {
         private platformImage;
+        private mSrc;
+        private mImageWidth;
+        private mImageHeight;
+        private mOnLoad;
+        private mOnError;
+        constructor(src: string, onload?: () => void, onerror?: () => void);
+        protected init(src: string, onload?: () => void, onerror?: () => void): void;
+        protected createImage(): void;
+        protected loadImage(): void;
+        getImage(): any;
         src: string;
         onload: () => void;
         onerror: () => void;
         width: number;
         height: number;
         private getImageRatio();
-        constructor(src: string, onload?: () => void, onerror?: () => void);
-        protected init(src: string, onload?: () => void, onerror?: () => void): void;
-        getImage(): any;
+        private fireOnLoad();
+        private fireOnError();
+        recycle(): void;
     }
 }
 declare module android.graphics {
     import Rect = android.graphics.Rect;
-    import PlatformImage = androidui.image.PlatformImage;
+    import NetImage = androidui.image.NetImage;
     class Canvas {
-        private static FullRect;
         private mCanvasElement;
         private mWidth;
         private mHeight;
         private _mCanvasContent;
         private _saveCount;
-        mCurrentClip: Rect;
+        private mCurrentClip;
         private mClipStateMap;
         private static TempMatrixValue;
         static DIRECTION_LTR: number;
@@ -469,38 +476,76 @@ declare module android.graphics {
         private static obtainRect(copy?);
         private static recycleRect(...rects);
         constructor(width: number, height: number);
-        protected init(): void;
+        protected initImpl(): void;
         recycle(): void;
-        canvasElement: HTMLCanvasElement;
+        protected recycleImpl(): void;
         getHeight(): number;
         getWidth(): number;
         translate(dx: number, dy: number): void;
+        protected translateImpl(dx: number, dy: number): void;
         scale(sx: number, sy: number, px?: number, py?: number): void;
+        protected scaleImpl(sx: number, sy: number): void;
         rotate(degrees: number, px?: number, py?: number): void;
+        protected rotateImpl(degrees: number): void;
         concat(m: android.graphics.Matrix): void;
+        protected concatImpl(MSCALE_X: number, MSKEW_X: number, MTRANS_X: number, MSKEW_Y: number, MSCALE_Y: number, MTRANS_Y: number, MPERSP_0: number, MPERSP_1: number, MPERSP_2: number): void;
         drawRGB(r: number, g: number, b: number): void;
         drawARGB(a: number, r: number, g: number, b: number): void;
         drawColor(color: number): void;
+        protected drawARGBImpl(a: number, r: number, g: number, b: number): void;
         clearColor(): void;
+        protected clearRectImpl(left: number, top: number, width: number, height: number): void;
         save(): number;
+        protected saveImpl(): void;
         restore(): void;
+        protected restoreImpl(): void;
         restoreToCount(saveCount: number): void;
         getSaveCount(): number;
         clipRect(rect: Rect): boolean;
         clipRect(left: number, top: number, right: number, bottom: number): boolean;
+        protected clipRectImpl(left: number, top: number, width: number, height: number): void;
         getClipBounds(bounds?: Rect): Rect;
         quickReject(rect: Rect): boolean;
         quickReject(left: number, top: number, right: number, bottom: number): boolean;
         drawCanvas(canvas: Canvas, offsetX: number, offsetY: number): void;
-        drawImage(image: PlatformImage, dstRect?: Rect, paint?: Paint): void;
+        protected drawCanvasImpl(canvas: Canvas, offsetX: number, offsetY: number): void;
+        drawImage(image: NetImage, dstRect?: Rect, paint?: Paint): void;
+        protected drawImageImpl(image: NetImage, dstRect?: Rect): void;
         drawRect(rect: Rect, paint: Paint): any;
         drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
+        protected drawRectImpl(left: number, top: number, width: number, height: number): void;
         drawPath(path: Path, paint: Paint): void;
         drawText_count(text: string, index: number, count: number, x: number, y: number, paint: Paint): void;
         drawText_end(text: string, start: number, end: number, x: number, y: number, paint: Paint): void;
         drawText(text: string, x: number, y: number, paint: Paint): void;
+        protected drawTextImpl(text: string, x: number, y: number, style: Paint.Style): void;
         drawTextRun_count(text: string, index: number, count: number, contextIndex: number, contextCount: number, x: number, y: number, dir: number, paint: Paint): void;
         drawTextRun_end(text: string, start: number, end: number, contextStart: number, contextEnd: number, x: number, y: number, dir: number, paint: Paint): void;
+        static measureText(text: string, textSize: number): number;
+        private static _measureTextContext;
+        private static _measureTextSize;
+        protected static measureTextImpl(text: string, textSize: number): number;
+        protected static getMeasureTextFontFamily(): string;
+        setFillColor(color: number): void;
+        protected setFillColorImpl(color: number): void;
+        multiplyAlpha(alpha: number): void;
+        protected multiplyAlphaImpl(alpha: number): void;
+        setAlpha(alpha: number): void;
+        protected setAlphaImpl(alpha: number): void;
+        setTextAlign(align: string): void;
+        protected setTextAlignImpl(align: string): void;
+        setLineWidth(width: number): void;
+        protected setLineWidthImpl(width: number): void;
+        setLineCap(lineCap: string): void;
+        protected setLineCapImpl(lineCap: string): void;
+        setLineJoin(lineJoin: string): void;
+        protected setLineJoinImpl(lineJoin: string): void;
+        setShadow(radius: number, dx: number, dy: number, color: number): void;
+        protected setShadowImpl(radius: number, dx: number, dy: number, color: number): void;
+        setFontSize(size: number): void;
+        protected setFontSizeImpl(size: number): void;
+        setFont(fontName: string): void;
+        protected setFontImpl(fontName: string): void;
     }
 }
 declare module android.graphics.drawable {
@@ -1258,9 +1303,10 @@ declare module androidui.image {
         protected onLoad(): void;
         protected onError(): void;
         isLoadFinish(): boolean;
-        getImage(): PlatformImage;
+        getImage(): NetImage;
         setLoadListener(loadListener: NetDrawable.LoadListener): void;
         getConstantState(): Drawable.ConstantState;
+        recycle(): void;
     }
     module NetDrawable {
         interface LoadListener {
@@ -1487,6 +1533,7 @@ declare module android.R {
         static textViewStyle: {
             textSize: string;
             textColor: content.res.ColorStateList;
+            layerType: string;
         };
         static imageButtonStyle: {
             background: Drawable;
@@ -1931,6 +1978,7 @@ declare module android.view {
         private skipInvalidate();
         isOpaque(): boolean;
         private computeOpaqueFlags();
+        setLayerType(layerType: number): void;
         getLayerType(): number;
         setClipBounds(clipBounds: Rect): void;
         getClipBounds(): Rect;
@@ -2202,11 +2250,18 @@ declare module android.view {
 declare module android.view {
     import Rect = android.graphics.Rect;
     import Canvas = android.graphics.Canvas;
+    import ViewRootImpl = android.view.ViewRootImpl;
     class Surface {
         private mCanvasElement;
+        private viewRoot;
         private mLockedRect;
-        constructor(canvasElement: HTMLCanvasElement);
+        protected mClientRect: ClientRect;
+        protected mSupportDirtyDraw: boolean;
+        constructor(canvasElement: HTMLCanvasElement, viewRoot: ViewRootImpl);
+        protected initImpl(): void;
+        notifyBoundChange(): void;
         lockCanvas(dirty: Rect): Canvas;
+        protected lockCanvasImpl(left: number, top: number, width: number, height: number): Canvas;
         unlockCanvasAndPost(canvas: Canvas): void;
     }
 }
@@ -2260,6 +2315,7 @@ declare module android.view {
         private mSurface;
         constructor();
         initSurface(canvasElement: HTMLCanvasElement): void;
+        notifyResized(frame: Rect): void;
         setView(view: View): void;
         getView(): View;
         getHostVisibility(): number;
@@ -2304,7 +2360,6 @@ declare module android.view {
         requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
         requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
         childHasTransientStateChanged(child: View, hasTransientState: boolean): void;
-        dispatchResized(frame: Rect): void;
         dispatchInputEvent(event: MotionEvent | KeyEvent | Event): boolean;
         private deliverInputEvent(event);
         private finishInputEvent(event);
@@ -6608,6 +6663,110 @@ declare module androidui.widget {
             textView: TextView;
             constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
             onStateChange(newState: number, oldState: number): void;
+        }
+    }
+}
+declare module androidui.native {
+    import Canvas = android.graphics.Canvas;
+    class NativeCanvas extends Canvas {
+        private canvasId;
+        protected initImpl(): void;
+        protected createCanvasImpl(): void;
+        protected recycleImpl(): void;
+        protected translateImpl(dx: number, dy: number): void;
+        protected scaleImpl(sx: number, sy: number): void;
+        protected rotateImpl(degrees: number): void;
+        protected concatImpl(MSCALE_X: number, MSKEW_X: number, MTRANS_X: number, MSKEW_Y: number, MSCALE_Y: number, MTRANS_Y: number, MPERSP_0: number, MPERSP_1: number, MPERSP_2: number): void;
+        protected drawARGBImpl(a: number, r: number, g: number, b: number): void;
+        protected clearRectImpl(left: number, top: number, width: number, height: number): void;
+        protected saveImpl(): void;
+        protected restoreImpl(): void;
+        protected clipRectImpl(left: number, top: number, width: number, height: number): void;
+        protected drawCanvasImpl(canvas: android.graphics.Canvas, offsetX: number, offsetY: number): void;
+        protected drawImageImpl(image: androidui.image.NetImage, dstRect: android.graphics.Rect): void;
+        protected drawRectImpl(left: number, top: number, width: number, height: number): void;
+        protected drawTextImpl(text: string, x: number, y: number, style: android.graphics.Paint.Style): void;
+        protected setFillColorImpl(color: number): void;
+        protected multiplyAlphaImpl(alpha: number): void;
+        protected setAlphaImpl(alpha: number): void;
+        protected setTextAlignImpl(align: string): void;
+        protected setLineWidthImpl(width: number): void;
+        protected setLineCapImpl(lineCap: string): void;
+        protected setLineJoinImpl(lineJoin: string): void;
+        protected setShadowImpl(radius: number, dx: number, dy: number, color: number): void;
+        protected setFontSizeImpl(size: number): void;
+        protected setFontImpl(fontName: string): void;
+        private static applyTextMeasure(cacheMeasureTextSize, defaultWidth, widths);
+    }
+}
+declare module androidui.native {
+    import Surface = android.view.Surface;
+    class NativeSurface extends Surface {
+        private surfaceId;
+        protected initImpl(): void;
+        notifyBoundChange(): void;
+        protected lockCanvasImpl(left: number, top: number, width: number, height: number): android.graphics.Canvas;
+        unlockCanvasAndPost(canvas: android.graphics.Canvas): void;
+        private static notifySurfaceReady(surfaceId);
+        private static notifySurfaceSupportDirtyDraw(surfaceId, dirtyDrawSupport);
+    }
+}
+declare module androidui.native {
+    import NetImage = androidui.image.NetImage;
+    class NativeImage extends NetImage {
+        imageId: number;
+        protected createImage(): void;
+        protected loadImage(): void;
+        recycle(): void;
+        private static notifyLoadFinish(imageId, width, height);
+        private static notifyLoadError(imageId);
+    }
+}
+declare module androidui.native {
+    class NativeApi {
+        static surface: NativeApi.SurfaceApi;
+        static canvas: NativeApi.CanvasApi;
+        static image: NativeApi.ImageApi;
+    }
+    module NativeApi {
+        class SurfaceApi {
+            createSurface(surfaceId: number, left: number, top: number, right: number, bottom: number): void;
+            onSurfaceBoundChange(surfaceId: number, left: number, top: number, right: number, bottom: number): void;
+            lockCanvas(surfaceId: number, canvasId: number, left: number, top: number, right: number, bottom: number): void;
+            unlockCanvasAndPost(surfaceId: number, canvasId: number): void;
+        }
+        class CanvasApi {
+            createCanvas(canvasId: number, width: number, height: number): void;
+            recycleCanvas(canvasId: number): void;
+            translate(canvasId: number, dx: number, dy: number): void;
+            scale(canvasId: number, sx: number, sy: number): void;
+            rotate(canvasId: number, degrees: number): void;
+            concat(canvasId: number, MSCALE_X: number, MSKEW_X: number, MTRANS_X: number, MSKEW_Y: number, MSCALE_Y: number, MTRANS_Y: number): void;
+            drawColor(canvasId: number, color: number): void;
+            clearRect(canvasId: number, left: number, top: number, width: number, height: number): void;
+            drawRect(canvasId: number, left: number, top: number, width: number, height: number): void;
+            clipRect(canvasId: number, left: number, top: number, width: number, height: number): void;
+            save(canvasId: number): void;
+            restore(canvasId: number): void;
+            drawCanvas(canvasId: number, drawCanvasId: number, offsetX: number, offsetY: number): void;
+            drawImage(canvasId: number, drawImageId: number, dstLeft: number, dstTop: number, dstWidth: number, dstHeight: number): void;
+            drawText(canvasId: number, text: string, x: number, y: number, fillStyle: number): void;
+            setFillColor(canvasId: number, color: number): void;
+            multiplyAlpha(canvasId: number, alpha: number): void;
+            setAlpha(canvasId: number, alpha: number): void;
+            setTextAlign(canvasId: number, align: string): void;
+            setLineWidth(canvasId: number, width: number): void;
+            setLineCap(canvasId: number, lineCap: string): void;
+            setLineJoin(canvasId: number, lineJoin: string): void;
+            setShadow(canvasId: number, radius: number, dx: number, dy: number, color: number): void;
+            setFontSize(canvasId: number, size: number): void;
+            setFont(canvasId: number, fontName: string): void;
+        }
+        interface ImageApi {
+            createImage(imageId: number): void;
+            loadImage(imageId: number, src: string): void;
+            recycleImage(imageId: number): void;
+            measureText(text: string, textSize: number): number;
         }
     }
 }

@@ -879,7 +879,11 @@ module android.view {
                 this.setOverScrollMode(scrollMode);
             }),
             this._attrBinder.addAttr('layerType', (value)=>{
-                //TODO layerType
+                if((value+'').toLowerCase() == 'software'){
+                    this.setLayerType(View.LAYER_TYPE_SOFTWARE);
+                }else{
+                    this.setLayerType(View.LAYER_TYPE_NONE);
+                }
             });
             this._attrBinder.addAttr('backgroundUri', (value)=>{
                 if(value==null) this.setBackground(null);
@@ -3066,7 +3070,34 @@ module android.view {
                 this.mPrivateFlags &= ~View.PFLAG_OPAQUE_SCROLLBARS;
             }
         }
-        getLayerType() {
+
+        setLayerType(layerType:number):void  {
+            if (layerType < View.LAYER_TYPE_NONE || layerType > View.LAYER_TYPE_SOFTWARE) {
+                throw Error(`new IllegalArgumentException("Layer type can only be one of: LAYER_TYPE_NONE, " + "LAYER_TYPE_SOFTWARE")`);
+            }
+            if (layerType == this.mLayerType) {
+                return;
+            }
+            // Destroy any previous software drawing cache if needed
+            switch(this.mLayerType) {
+                //case View.LAYER_TYPE_HARDWARE:
+                //    this.destroyLayer(false);
+                // fall through - non-accelerated views may use software layer mechanism instead
+                case View.LAYER_TYPE_SOFTWARE:
+                    this.destroyDrawingCache();
+                    break;
+                default:
+                    break;
+            }
+            this.mLayerType = layerType;
+            const layerDisabled:boolean = this.mLayerType == View.LAYER_TYPE_NONE;
+            //this.mLayerPaint = layerDisabled ? null : (paint == null ? new Paint() : paint);
+            //this.mLocalDirtyRect = layerDisabled ? null : new Rect();
+            this.invalidateParentCaches();
+            this.invalidate(true);
+        }
+
+        getLayerType():number {
             return this.mLayerType;
         }
         setClipBounds(clipBounds:Rect) {
@@ -3755,6 +3786,9 @@ module android.view {
             if (this.mBackground != null) {
                 this.mBackground.setCallback(null);
                 this.unscheduleDrawable(this.mBackground);
+                if(this.mBackground instanceof NetDrawable){
+                    (<NetDrawable>this.mBackground).recycle();
+                }
             }
 
             if (background != null) {

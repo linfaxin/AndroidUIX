@@ -39,6 +39,7 @@
 ///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
 
 ///<reference path="androidui/util/PerformanceAdjuster.ts"/>
+///<reference path="androidui/native/NativeApi.ts"/>
 
 window[`android`] = android;
 window[`java`] = java;

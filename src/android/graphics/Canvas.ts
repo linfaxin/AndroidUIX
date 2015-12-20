@@ -8,24 +8,22 @@
 ///<reference path="Paint.ts"/>
 ///<reference path="Path.ts"/>
 ///<reference path="Matrix.ts"/>
-///<reference path="../../androidui/image/PlatformImage.ts"/>
+///<reference path="../../androidui/image/NetImage.ts"/>
 
 module android.graphics {
     import Pools = android.util.Pools;
     import Log = android.util.Log;
     import Rect = android.graphics.Rect;
     import Color = android.graphics.Color;
-    import PlatformImage = androidui.image.PlatformImage;
+    import NetImage = androidui.image.NetImage;
 
     export class Canvas {
-        private static FullRect = new Rect(-1000000000, -1000000000, 1000000000, 1000000000);
         private mCanvasElement:HTMLCanvasElement;
         private mWidth = 0;
         private mHeight = 0;
         private _mCanvasContent:CanvasRenderingContext2D;
         private _saveCount = 0;
-        mCurrentClip:Rect;
-        //private shouldDoRectBeforeRestoreMap = new Map<number, Array<Rect>>();
+        private mCurrentClip:Rect;
         private mClipStateMap = new Map<number, Rect>();
         private static TempMatrixValue = new Array<number>(9);
 
@@ -60,46 +58,26 @@ module android.graphics {
         constructor(width:number, height:number) {
             this.mWidth = width;
             this.mHeight = height;
-            this.init();
+            this.mCurrentClip = Canvas.obtainRect();
+            this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
+            this.initImpl();
         }
 
-        protected init() {
+        protected initImpl():void {
             this.mCanvasElement = document.createElement("canvas");
             this.mCanvasElement.width = this.mWidth;
             this.mCanvasElement.height = this.mHeight;
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
-            this.mCurrentClip = Canvas.obtainRect();
-            this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
-            this._saveCount = this.save();
-
-            //let content = this._mCanvasContent;
-            //function logMethod (old){
-            //    return function(...args){
-            //        Log.d('canvas', old.name+"("+args+")");
-            //        old.call(content, ...args);
-            //    };
-            //}
-            //
-            //content.save = logMethod(content.save);
-            //content.restore = logMethod(content.restore);
-            //content.rect = logMethod(content.rect);
-            //content.clip = logMethod(content.clip);
-            //content.translate = logMethod(content.translate);
-            //content.fillRect = logMethod(content.fillRect);
-
+            this._saveCount = this.save();//is need?
         }
 
-        recycle(){
+        recycle():void {
             Canvas.recycleRect(this.mCurrentClip);
             Canvas.recycleRect(...this.mClipStateMap.values());
-            //for(let rects of this.shouldDoRectBeforeRestoreMap.values()){
-            //    Canvas.recycleRect(...rects);
-            //}
-            this.mCanvasElement.width = this.mCanvasElement.height = 0;
+            this.recycleImpl();
         }
-
-        public get canvasElement():HTMLCanvasElement {
-            return this.mCanvasElement;
+        protected recycleImpl():void {
+            if(this.mCanvasElement) this.mCanvasElement.width = this.mCanvasElement.height = 0;
         }
 
         public getHeight():number {
@@ -113,68 +91,97 @@ module android.graphics {
 
         translate(dx:number, dy:number):void {
             if(this.mCurrentClip) this.mCurrentClip.offset(-dx, -dy);
+            this.translateImpl(dx, dy);
+        }
+        protected translateImpl(dx:number, dy:number):void {
             this._mCanvasContent.translate(dx, dy);
         }
 
+
         scale(sx:number, sy:number, px?:number, py?:number):void {
             //TODO effect mCurrentClip
-            if (px && py) this.translate(px, py);
-            this._mCanvasContent.scale(sx, sy);
-            if (px && py) this.translate(-px, -py);
+            if (px || py) this.translate(px, py);
+            this.scaleImpl(sx, sy);
+            if (px || py) this.translate(-px, -py);
         }
 
-        rotate(degrees:number, px?:number, py?:number) {
+        protected scaleImpl(sx:number, sy:number):void {
+            this._mCanvasContent.scale(sx, sy);
+        }
+
+        rotate(degrees:number, px?:number, py?:number):void {
             //TODO effect mCurrentClip
-            if (px && py) this.translate(px, py);
+            if (px || py) this.translate(px, py);
+            this.rotateImpl(degrees);
+            if (px || py) this.translate(-px, -py);
+        }
+
+        protected rotateImpl(degrees:number):void {
             this._mCanvasContent.rotate(degrees);
-            if (px && py) this.translate(-px, -py);
         }
 
         concat(m:android.graphics.Matrix):void {
             //TODO effect mCurrentClip
             let v = Canvas.TempMatrixValue;
             m.getValues(v);
-            this._mCanvasContent.transform(v[Matrix.MSCALE_X], v[Matrix.MSKEW_X], v[Matrix.MSKEW_Y], v[Matrix.MSCALE_Y],
-                                            v[Matrix.MTRANS_X], v[Matrix.MTRANS_Y]);
+            this.concatImpl(v[Matrix.MSCALE_X], v[Matrix.MSKEW_X], v[Matrix.MTRANS_X], v[Matrix.MSKEW_Y], v[Matrix.MSCALE_Y],
+                v[Matrix.MTRANS_Y], v[Matrix.MPERSP_0], v[Matrix.MPERSP_1], v[Matrix.MPERSP_2]);
+        }
+        protected concatImpl(MSCALE_X:number, MSKEW_X:number, MTRANS_X:number, MSKEW_Y:number, MSCALE_Y:number,
+                             MTRANS_Y:number, MPERSP_0:number, MPERSP_1:number, MPERSP_2:number){
+            this._mCanvasContent.transform(MSCALE_X, MSKEW_X, MSKEW_Y, MSCALE_Y, MTRANS_X, MTRANS_Y);
         }
 
-        drawRGB(r:number, g:number, b:number) {
-            this._mCanvasContent.fillStyle = `rgb(${r},${g},${b})`;
-            this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+        drawRGB(r:number, g:number, b:number):void {
+            this.drawARGB(255, r, g, b);
         }
 
-        drawARGB(a:number, r:number, g:number, b:number) {
-            this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a/255})`;
-            this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+        drawARGB(a:number, r:number, g:number, b:number):void {
+            this.drawARGBImpl(a, r, g, b);
         }
 
         drawColor(color:number){
             this.drawARGB(Color.alpha(color), Color.red(color), Color.green(color), Color.blue(color));
         }
 
-        clearColor(){
-            //this._mCanvasContent.clearRect(0, 0, this.getWidth(), this.getHeight());
-            this._mCanvasContent.clearRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+        protected drawARGBImpl(a:number, r:number, g:number, b:number):void {
+            this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a/255})`;
+            this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+        }
+
+        clearColor():void {
+            this.clearRectImpl(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+        }
+
+        protected clearRectImpl(left:number, top:number, width:number, height:number):void {
+            this._mCanvasContent.clearRect(left, top, width, height);
         }
 
 
         save():number {
-            this._mCanvasContent.save();
+            this.saveImpl();
             if(this.mCurrentClip) this.mClipStateMap.set(this._saveCount, Canvas.obtainRect(this.mCurrentClip));
             this._saveCount++;
 
             return this._saveCount;
         }
 
+        protected saveImpl():void {
+            this._mCanvasContent.save();
+        }
+
         restore() {
             this._saveCount--;
-            this._mCanvasContent.restore();
+            this.restoreImpl();
             let savedClip = this.mClipStateMap.get(this._saveCount);
             if(savedClip){
                 this.mClipStateMap.delete(this._saveCount);
                 this.mCurrentClip.set(savedClip);
                 Canvas.recycleRect(savedClip);
             }
+        }
+        protected restoreImpl():void {
+            this._mCanvasContent.restore();
         }
 
         restoreToCount(saveCount:number) {
@@ -201,14 +208,18 @@ module android.graphics {
                 rect.set(left, top, right, bottom);
             }
 
-            this._mCanvasContent.beginPath();
-            this._mCanvasContent.rect(Math.floor(rect.left), Math.floor(rect.top),
-                Math.ceil(rect.width()), Math.ceil(rect.height()));
-            this._mCanvasContent.clip();
-
+            this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
             this.mCurrentClip.intersect(rect);
 
-            return rect.isEmpty();
+            let r = rect.isEmpty();
+            Canvas.recycleRect(rect);
+            return r;
+        }
+
+        protected clipRectImpl(left:number, top:number, width:number, height:number):void {
+            this._mCanvasContent.beginPath();
+            this._mCanvasContent.rect(left, top, width, height);
+            this._mCanvasContent.clip();
         }
 
         getClipBounds(bounds?:Rect):Rect {
@@ -231,23 +242,30 @@ module android.graphics {
         }
 
         drawCanvas(canvas:Canvas, offsetX:number, offsetY:number):void {
-            this._mCanvasContent.drawImage(canvas.canvasElement, offsetX, offsetY);
+            this.drawCanvasImpl(canvas, offsetX, offsetY);
         }
 
-        drawImage(image:PlatformImage, dstRect?:Rect, paint?:Paint):void {
+        protected drawCanvasImpl(canvas:Canvas, offsetX:number, offsetY:number):void {
+            this._mCanvasContent.drawImage(canvas.mCanvasElement, offsetX, offsetY);
+        }
 
+        drawImage(image:NetImage, dstRect?:Rect, paint?:Paint):void {
             if(paint){
-                this._mCanvasContent.save();
-                paint._setToCanvasContent(this._mCanvasContent);
+                this.saveImpl();
+                paint.applyToCanvas(this);
             }
 
+            this.drawImageImpl(image, dstRect);
+
+            if(paint) this.restoreImpl();
+        }
+
+        protected drawImageImpl(image:NetImage, dstRect?:Rect):void {
             if(!dstRect){
                 this._mCanvasContent.drawImage(image.getImage(), 0, 0);
             }else{
                 this._mCanvasContent.drawImage(image.getImage(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
             }
-
-            if(paint) this._mCanvasContent.restore();
         }
 
         drawRect(rect:Rect, paint:Paint);
@@ -258,11 +276,15 @@ module android.graphics {
                 this.drawRect(rect.left, rect.top, rect.right, rect.bottom, args[1]);
             } else {
                 let [left, top, right, bottom, paint] = args;
-                this._mCanvasContent.save();
-                paint._setToCanvasContent(this._mCanvasContent);
-                this._mCanvasContent.fillRect(left, top, right-left, bottom-top);
-                this._mCanvasContent.restore();
+                this.saveImpl();
+                paint.applyToCanvas(this);
+                this.drawRectImpl(left, top, right-left, bottom-top);
+                this.restoreImpl();
             }
+        }
+
+        protected drawRectImpl(left:number, top:number, width:number, height:number){
+            this._mCanvasContent.fillRect(left, top, width, height);
         }
 
 
@@ -322,29 +344,34 @@ module android.graphics {
          * @param y     The y-coordinate of the origin of the text being drawn
          * @param paint The paint used for the text (e.g. color, size, style)
          */
-        drawText(text:string, x:number, y:number, paint:Paint):void  {
-            this._mCanvasContent.save();
+        drawText(text:string, x:number, y:number, paint:Paint):void {
+            let style = null;
             if(paint){
-                paint._setToCanvasContent(this._mCanvasContent);
-                switch (paint.getStyle()){
-                    case Paint.Style.STROKE:
-                        this._mCanvasContent.strokeText(text, x, y);
-                        break;
-                    case Paint.Style.FILL_AND_STROKE:
-                        this._mCanvasContent.strokeText(text, x, y);
-                        this._mCanvasContent.fillText(text, x, y);
-                        break;
-                    case Paint.Style.FILL:
-                    default :
-                        this._mCanvasContent.fillText(text, x, y);
-                        break;
-                }
-            }else{
-                this._mCanvasContent.fillText(text, x, y);
+                this.saveImpl();
+                paint.applyToCanvas(this);
+                style = paint.getStyle();
             }
-            this._mCanvasContent.restore();
+            if(style == null) style = Paint.Style.FILL;
+            this.drawTextImpl(text, x, y, style);
+            if(paint) this.restoreImpl();
         }
 
+
+        protected drawTextImpl(text:string, x:number, y:number, style:Paint.Style):void {
+            switch (style){
+                case Paint.Style.STROKE:
+                    this._mCanvasContent.strokeText(text, x, y);
+                    break;
+                case Paint.Style.FILL_AND_STROKE:
+                    this._mCanvasContent.strokeText(text, x, y);
+                    this._mCanvasContent.fillText(text, x, y);
+                    break;
+                case Paint.Style.FILL:
+                default :
+                    this._mCanvasContent.fillText(text, x, y);
+                    break;
+            }
+        }
 
         /**
          * Render a run of all LTR or all RTL text, with shaping. This does not run
@@ -426,5 +453,136 @@ module android.graphics {
             this.drawText_end(text, start, end, x, y, paint);
         }
 
+        static measureText(text:string, textSize:number):number {
+            if(textSize==null || textSize===0) return 0;
+            return Canvas.measureTextImpl(text, textSize);
+        }
+
+        private static _measureTextContext:CanvasRenderingContext2D = document.createElement('canvas').getContext('2d');
+        private static _measureTextSize = -1;
+        protected static measureTextImpl(text:string, textSize:number):number {
+            if(textSize!=Canvas._measureTextSize) {
+                Canvas._measureTextSize = textSize;
+                if (textSize != null) {
+                    Canvas._measureTextContext.font = textSize + 'px ' + Canvas.getMeasureTextFontFamily();
+                } else {
+                    Canvas._measureTextContext.font = '';
+                }
+            }
+            return Canvas._measureTextContext.measureText(text).width;
+        }
+        protected static getMeasureTextFontFamily():string {
+            let fontParts = Canvas._measureTextContext.font.split(' ');
+            return fontParts[fontParts.length - 1];
+        }
+
+
+        setFillColor(color:number):void {
+            if(typeof color === 'number'){
+                this.setFillColorImpl(color);
+            }
+        }
+        protected setFillColorImpl(color:number):void {
+            this._mCanvasContent.fillStyle = Color.toRGBAFunc(color);
+        }
+
+        multiplyAlpha(alpha:number):void {
+            if(typeof alpha === 'number'){
+                this.multiplyAlphaImpl(alpha);
+            }
+        }
+
+        protected multiplyAlphaImpl(alpha:number):void {
+            this._mCanvasContent.globalAlpha *= alpha;
+        }
+
+        setAlpha(alpha:number):void {
+            if(typeof alpha === 'number'){
+                this.setAlphaImpl(alpha);
+            }
+        }
+
+        protected setAlphaImpl(alpha:number):void {
+            this._mCanvasContent.globalAlpha = alpha;
+        }
+
+        setTextAlign(align:string):void {
+            if(align!=null) this.setTextAlignImpl(align);
+        }
+
+        protected setTextAlignImpl(align:string):void {
+            this._mCanvasContent.textAlign = align;
+        }
+
+        setLineWidth(width:number):void {
+            if(width!=null) this.setLineWidthImpl(width);
+        }
+
+        protected setLineWidthImpl(width:number):void {
+            this._mCanvasContent.lineWidth = width;
+        }
+
+        setLineCap(lineCap:string):void {
+            if(lineCap!=null) this.setLineCapImpl(lineCap);
+        }
+
+        protected setLineCapImpl(lineCap:string):void {
+            this._mCanvasContent.lineCap = lineCap;
+        }
+
+        setLineJoin(lineJoin:string):void {
+            if(lineJoin!=null) this.setLineJoinImpl(lineJoin);
+        }
+
+        protected setLineJoinImpl(lineJoin:string):void {
+            this._mCanvasContent.lineJoin = lineJoin;
+        }
+
+        setShadow(radius:number, dx:number, dy:number, color:number):void {
+            if(radius>0){
+                this.setShadowImpl(radius, dx, dy, color);
+            }
+        }
+
+        protected setShadowImpl(radius:number, dx:number, dy:number, color:number):void {
+            this._mCanvasContent.shadowBlur = radius;
+            this._mCanvasContent.shadowOffsetX = dx;
+            this._mCanvasContent.shadowOffsetY = dy;
+            this._mCanvasContent.shadowColor = Color.toRGBAFunc(color);
+        }
+
+        setFontSize(size:number):void {
+            if(typeof size === 'number'){
+                this.setFontSizeImpl(size);
+            }
+        }
+
+        protected setFontSizeImpl(size:number):void {
+            //font
+            const fontStyles = [];
+            if (size != null) {
+                fontStyles.push(size + 'px');
+            }
+            if (fontStyles.length > 0) {
+                let cFont = this._mCanvasContent.font;
+                let fontParts = cFont.split(' ');
+                fontStyles.push(fontParts[fontParts.length - 1]);//font family
+                let font = fontStyles.join(' ');
+                if(font!=cFont) this._mCanvasContent.font = font;
+            }
+        }
+
+        setFont(fontName:string):void {
+            if(fontName!=null){
+                this.setFontImpl(fontName);
+            }
+        }
+        protected setFontImpl(fontName:string):void {
+            let cFont = this._mCanvasContent.font;
+            let fontParts = cFont.split(' ');
+            fontParts[fontParts.length - 1] = fontName;//font family
+            let font = fontParts.join(' ');
+            if(font!=cFont) this._mCanvasContent.font = font;
+        }
     }
 }

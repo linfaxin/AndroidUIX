@@ -4,42 +4,57 @@
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
+///<reference path="../view/ViewRootImpl.ts"/>
 
 module android.view{
     import Rect = android.graphics.Rect;
     import Canvas = android.graphics.Canvas;
+    import ViewRootImpl = android.view.ViewRootImpl;
 
     export class Surface{
         private mCanvasElement:HTMLCanvasElement;
+        private viewRoot:ViewRootImpl;
         private mLockedRect:Rect = new Rect();
+        protected mClientRect:ClientRect;
+        protected mSupportDirtyDraw = true;
 
-        constructor(canvasElement:HTMLCanvasElement) {
+        constructor(canvasElement:HTMLCanvasElement, viewRoot:ViewRootImpl) {
             this.mCanvasElement = canvasElement;
+            this.viewRoot = viewRoot;
+            this.initImpl();
+        }
+
+        protected initImpl(){
+            this.mClientRect = this.mCanvasElement.getBoundingClientRect();
+
+        }
+
+        notifyBoundChange(){
+            this.mClientRect = this.mCanvasElement.getBoundingClientRect();
         }
 
         /**
          * create a off-screen canvas to draw
          */
         lockCanvas(dirty:Rect):Canvas{
-            let fullWidth = this.mCanvasElement.width;
-            let fullHeight = this.mCanvasElement.height;
+            let fullWidth = this.mClientRect.width;
+            let fullHeight = this.mClientRect.height;
             let rect:Rect = this.mLockedRect;
             if(dirty.isEmpty()){
                 rect.set(0, 0, fullWidth, fullHeight);
             }else{
-                // +1/-1: more space, insure dirty area clear and draw ok
-                rect.set(Math.floor(dirty.left-1), Math.floor(dirty.top-1), Math.ceil(dirty.right+1), Math.ceil(dirty.bottom+1));
+                rect.set(Math.floor(dirty.left), Math.floor(dirty.top), Math.ceil(dirty.right), Math.ceil(dirty.bottom));
             }
-            let width = rect.width();
-            let height = rect.height();
-            //this.mCanvas.clipRect(rect.left, rect.top, width, height);
-            //this.mLockedCanvas.clipRect(rect.left, rect.top, width, height);
 
-            let canvas = new Canvas(width, height);
-            if(rect.left!=0||rect.top!=0) canvas.translate(-rect.left, -rect.top);
+            return this.lockCanvasImpl(rect.left, rect.top, rect.width(), rect.height());
+        }
+
+        protected lockCanvasImpl(left:number, top:number, width:number, height:number):Canvas {
+            let canvas = new Canvas(width, height);//TODO need off-screen canvas?
+            if(left!=0||top!=0) canvas.translate(-left, -top);
 
             let mCanvasContent = this.mCanvasElement.getContext('2d');
-            mCanvasContent.clearRect(rect.left, rect.top, width, height);
+            mCanvasContent.clearRect(left, top, width, height);
             return canvas;
         }
 
@@ -49,7 +64,7 @@ module android.view{
          */
         unlockCanvasAndPost(canvas:Canvas):void {
             let mCanvasContent:CanvasRenderingContext2D = this.mCanvasElement.getContext('2d');
-            if(canvas.canvasElement) mCanvasContent.drawImage(canvas.canvasElement, this.mLockedRect.left, this.mLockedRect.top);
+            if(canvas.mCanvasElement) mCanvasContent.drawImage(canvas.mCanvasElement, this.mLockedRect.left, this.mLockedRect.top);
             //mCanvasContent.putImageData(canvas.canvasElement.getContext('2d').getImageData(rect.left, rect.top, rect.width(), rect.height()), rect.left, rect.top);
             canvas.recycle();
         }

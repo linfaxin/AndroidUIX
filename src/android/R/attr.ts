@@ -41,7 +41,8 @@ module android.R {
         static get textViewStyle() {
             return {
                 textSize: '14sp',
-                textColor: color.textView_textColor
+                textColor: color.textView_textColor,
+                layerType: 'none'
             };
         }
 

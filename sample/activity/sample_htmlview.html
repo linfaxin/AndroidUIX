@@ -28,10 +28,9 @@
                     <p style="font-size: 24px;text-align: center">HtmlView</p>
                 </HtmlView>
                 <HtmlView style="padding:0 20px;box-sizing: border-box;line-height: 20px;">
-                    <p>HtmlView使用浏览器<span style="color: red;font-weight: bold;">DOM</span>渲染, 可与Android的View混用, 但因为DOM的性能差, 会影响移动端流畅度.</p>
+                    <p>HtmlView使用浏览器<span style="color: red;font-weight: bold;">DOM</span>渲染, 可与Android的View混用, 但因为DOM的性能差, 会影响移动端流畅度.不提倡使用</p>
                     <p>HtmlView在Canvas DOM之上, 即会盖在所有Android的View之上.</p>
-                    <p>如果HtmlView高宽在初始之后会变, 要在变化后主动调用requestLayout()同步到AndroidView体系.</p>
-                    <p>提高HtmlView性能的技巧是合并减少使用HtmlView的数量, 尽量不使用自适应高宽布局.</p>
+                    <p>(相反,用Native的Runtime加速时,所有Android的View盖在HtmlView上)</p>
                 </HtmlView>
                 <TextView android:gravity="center">TextView</TextView>
                 <HtmlView style="overflow: visible;text-align: center;">

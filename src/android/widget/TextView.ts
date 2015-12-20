@@ -1293,17 +1293,33 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
                     this.mDrawables = null;
                 } else {
                     // out all of the fields in the existing structure.
-                    if (dr.mDrawableLeft != null)
+                    if (dr.mDrawableLeft != null){
                         dr.mDrawableLeft.setCallback(null);
+                        if(dr.mDrawableLeft instanceof NetDrawable){
+                            (<NetDrawable>dr.mDrawableLeft).recycle();
+                        }
+                    }
                     dr.mDrawableLeft = null;
-                    if (dr.mDrawableTop != null)
+                    if (dr.mDrawableTop != null){
                         dr.mDrawableTop.setCallback(null);
+                        if(dr.mDrawableTop instanceof NetDrawable){
+                            (<NetDrawable>dr.mDrawableTop).recycle();
+                        }
+                    }
                     dr.mDrawableTop = null;
-                    if (dr.mDrawableRight != null)
+                    if (dr.mDrawableRight != null){
                         dr.mDrawableRight.setCallback(null);
+                        if(dr.mDrawableRight instanceof NetDrawable){
+                            (<NetDrawable>dr.mDrawableRight).recycle();
+                        }
+                    }
                     dr.mDrawableRight = null;
-                    if (dr.mDrawableBottom != null)
+                    if (dr.mDrawableBottom != null){
                         dr.mDrawableBottom.setCallback(null);
+                        if(dr.mDrawableBottom instanceof NetDrawable){
+                            (<NetDrawable>dr.mDrawableBottom).recycle();
+                        }
+                    }
                     dr.mDrawableBottom = null;
                     dr.mDrawableSizeLeft = dr.mDrawableHeightLeft = 0;
                     dr.mDrawableSizeRight = dr.mDrawableHeightRight = 0;
@@ -1318,18 +1334,30 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             this.mDrawables.mOverride = false;
             if (dr.mDrawableLeft != left && dr.mDrawableLeft != null) {
                 dr.mDrawableLeft.setCallback(null);
+                if(dr.mDrawableLeft instanceof NetDrawable){
+                    (<NetDrawable>dr.mDrawableLeft).recycle();
+                }
             }
             dr.mDrawableLeft = left;
             if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
                 dr.mDrawableTop.setCallback(null);
+                if(dr.mDrawableTop instanceof NetDrawable){
+                    (<NetDrawable>dr.mDrawableTop).recycle();
+                }
             }
             dr.mDrawableTop = top;
             if (dr.mDrawableRight != right && dr.mDrawableRight != null) {
                 dr.mDrawableRight.setCallback(null);
+                if(dr.mDrawableRight instanceof NetDrawable){
+                    (<NetDrawable>dr.mDrawableRight).recycle();
+                }
             }
             dr.mDrawableRight = right;
             if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
                 dr.mDrawableBottom.setCallback(null);
+                if(dr.mDrawableBottom instanceof NetDrawable){
+                    (<NetDrawable>dr.mDrawableBottom).recycle();
+                }
             }
             dr.mDrawableBottom = bottom;
             const compoundRect:Rect = dr.mCompoundRect;
@@ -1435,17 +1463,33 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
                     this.mDrawables = null;
                 } else {
                     // out all of the fields in the existing structure.
-                    if (dr.mDrawableStart != null)
+                    if (dr.mDrawableStart != null){
                         dr.mDrawableStart.setCallback(null);
+                        if(dr.mDrawableStart instanceof NetDrawable){
+                            (<NetDrawable>dr.mDrawableStart).recycle();
+                        }
+                    }
                     dr.mDrawableStart = null;
-                    if (dr.mDrawableTop != null)
+                    if (dr.mDrawableTop != null){
                         dr.mDrawableTop.setCallback(null);
+                        if(dr.mDrawableTop instanceof NetDrawable){
+                            (<NetDrawable>dr.mDrawableTop).recycle();
+                        }
+                    }
                     dr.mDrawableTop = null;
-                    if (dr.mDrawableEnd != null)
+                    if (dr.mDrawableEnd != null){
                         dr.mDrawableEnd.setCallback(null);
+                        if(dr.mDrawableEnd instanceof NetDrawable){
+                            (<NetDrawable>dr.mDrawableEnd).recycle();
+                        }
+                    }
                     dr.mDrawableEnd = null;
-                    if (dr.mDrawableBottom != null)
+                    if (dr.mDrawableBottom != null){
                         dr.mDrawableBottom.setCallback(null);
+                        if(dr.mDrawableBottom instanceof NetDrawable){
+                            (<NetDrawable>dr.mDrawableBottom).recycle();
+                        }
+                    }
                     dr.mDrawableBottom = null;
                     dr.mDrawableSizeStart = dr.mDrawableHeightStart = 0;
                     dr.mDrawableSizeEnd = dr.mDrawableHeightEnd = 0;
@@ -1460,18 +1504,30 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             this.mDrawables.mOverride = true;
             if (dr.mDrawableStart != start && dr.mDrawableStart != null) {
                 dr.mDrawableStart.setCallback(null);
+                if(dr.mDrawableStart instanceof NetDrawable){
+                    (<NetDrawable>dr.mDrawableStart).recycle();
+                }
             }
             dr.mDrawableStart = start;
             if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
                 dr.mDrawableTop.setCallback(null);
+                if(dr.mDrawableTop instanceof NetDrawable){
+                    (<NetDrawable>dr.mDrawableTop).recycle();
+                }
             }
             dr.mDrawableTop = top;
             if (dr.mDrawableEnd != end && dr.mDrawableEnd != null) {
                 dr.mDrawableEnd.setCallback(null);
+                if(dr.mDrawableEnd instanceof NetDrawable){
+                    (<NetDrawable>dr.mDrawableEnd).recycle();
+                }
             }
             dr.mDrawableEnd = end;
             if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
                 dr.mDrawableBottom.setCallback(null);
+                if(dr.mDrawableBottom instanceof NetDrawable){
+                    (<NetDrawable>dr.mDrawableBottom).recycle();
+                }
             }
             dr.mDrawableBottom = bottom;
             const compoundRect:Rect = dr.mCompoundRect;
@@ -7425,6 +7481,9 @@ export class Drawables {
     setErrorDrawable(dr:Drawable, tv:TextView):void  {
         if (this.mDrawableError != dr && this.mDrawableError != null) {
             this.mDrawableError.setCallback(null);
+            if(this.mDrawableError instanceof NetDrawable){
+                (<NetDrawable>this.mDrawableError).recycle();
+            }
         }
         this.mDrawableError = dr;
         const compoundRect:Rect = this.mCompoundRect;

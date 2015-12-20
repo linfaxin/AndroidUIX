@@ -86,7 +86,13 @@ module android.view {
         }
 
         initSurface(canvasElement:HTMLCanvasElement){
-            this.mSurface = new Surface(canvasElement);
+            this.mSurface = new Surface(canvasElement, this);
+        }
+
+        notifyResized(frame:Rect){
+            this.mWinFrame.set(frame.left, frame.top, frame.right, frame.bottom);
+            this.requestLayout();
+            if(this.mSurface) this.mSurface.notifyBoundChange();
         }
 
         setView(view:View) {
@@ -615,7 +621,7 @@ module android.view {
         }
 
         private performDraw() {
-            let fullRedrawNeeded = this.mFullRedrawNeeded;
+            let fullRedrawNeeded = this.mFullRedrawNeeded || !this.mSurface.mSupportDirtyDraw;
             this.mFullRedrawNeeded = false;
             this.mIsDrawing = true;
             try {
@@ -653,7 +659,13 @@ module android.view {
         }
 
         private drawSoftware(){
-            let canvas = this.mSurface.lockCanvas(this.mDirty);
+            let canvas;
+            try {
+                canvas = this.mSurface.lockCanvas(this.mDirty);
+            } catch (e) {
+                //native surface not ready. wait ready callback
+                return;
+            }
             this.mDirty.setEmpty();
             let attachInfo = this.mAttachInfo;
 
@@ -864,10 +876,6 @@ module android.view {
             // Do nothing.
         }
 
-        dispatchResized(frame:Rect){
-            this.mWinFrame.set(frame.left, frame.top, frame.right, frame.bottom);
-            this.requestLayout();
-        }
         dispatchInputEvent(event:MotionEvent|KeyEvent|Event):boolean {
             this.deliverInputEvent(event);
             let result = event[InputStage.FLAG_FINISHED_HANDLED];

@@ -72,13 +72,14 @@ module androidui {
             if(this.rootStyleElement) this.element.appendChild(this.rootStyleElement);
             this.element.appendChild(this._canvas);
 
-            this._viewRootImpl.setView(this._rootLayout);
-            this._viewRootImpl.initSurface(this._canvas);
 
             this.initFocus();
             this.initEvent();
 
             this.initListenSizeChange();
+
+            this._viewRootImpl.setView(this._rootLayout);
+            this._viewRootImpl.initSurface(this._canvas);
 
 
             let debugAttr = this.element.getAttribute('debug');
@@ -116,9 +117,21 @@ module androidui {
         }
 
 
-        private refreshWindowBound(){
+        /**
+         * @returns {boolean} is bound change
+         */
+        private refreshWindowBound():boolean {
             let rootViewBound = this.element.getBoundingClientRect();//get viewRoot bound on touch start
-            this._windowBound.set(rootViewBound.left, rootViewBound.top, rootViewBound.right, rootViewBound.bottom);
+            let boundLeft = rootViewBound.left;
+            let boundTop = rootViewBound.top;
+            let boundRight = rootViewBound.right;
+            let boundBottom = rootViewBound.bottom;
+            if(this._windowBound && this._windowBound.left == boundLeft && this._windowBound.top == boundTop
+                && this._windowBound.right == boundRight && this._windowBound.bottom == boundBottom){
+                return false;
+            }
+            this._windowBound.set(boundLeft, boundTop, boundRight, boundBottom);
+            return true;
         }
 
         private initFocus(){
@@ -303,17 +316,18 @@ module androidui {
         }
 
         notifySizeChange(){
-            this.refreshWindowBound();
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            this.tempRect.set(this._windowBound.left* density, this._windowBound.top* density,
-                this._windowBound.right * density, this._windowBound.bottom * density);
-            this._viewRootImpl.dispatchResized(this.tempRect);
-            let width = this._windowBound.width();
-            let height = this._windowBound.height();
-            this._canvas.width = width * density;
-            this._canvas.height = height * density;
-            this._canvas.style.width = width + "px";
-            this._canvas.style.height = height + "px";
+            if(this.refreshWindowBound()) {
+                let density = android.content.res.Resources.getDisplayMetrics().density;
+                this.tempRect.set(this._windowBound.left * density, this._windowBound.top * density,
+                    this._windowBound.right * density, this._windowBound.bottom * density);
+                let width = this._windowBound.width();
+                let height = this._windowBound.height();
+                this._canvas.width = width * density;
+                this._canvas.height = height * density;
+                this._canvas.style.width = width + "px";
+                this._canvas.style.height = height + "px";
+                this._viewRootImpl.notifyResized(this.tempRect);
+            }
         }
 
         setContentView(view:View){
