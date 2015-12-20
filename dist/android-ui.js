@@ -778,7 +778,21 @@ var android;
                 }
             }
             setClassVariablesFrom(paint) {
-                Object.assign(this, paint);
+                this.mTextStyle = paint.mTextStyle;
+                this.mColor = paint.mColor;
+                this.mAlpha = paint.mAlpha;
+                this.mStrokeWidth = paint.mStrokeWidth;
+                this.align = paint.align;
+                this.mStrokeCap = paint.mStrokeCap;
+                this.mStrokeJoin = paint.mStrokeJoin;
+                this.textSize = paint.textSize;
+                this.mFlag = paint.mFlag;
+                this.hasShadow = paint.hasShadow;
+                this.shadowDx = paint.shadowDx;
+                this.shadowDy = paint.shadowDy;
+                this.shadowRadius = paint.shadowRadius;
+                this.shadowColor = paint.shadowColor;
+                this.drawableState = paint.drawableState;
             }
             getStyle() {
                 return this.mTextStyle;
@@ -990,7 +1004,7 @@ var android;
                 return this.getTextRunCursor_len(text, 0, contextLen, flags, offset - contextStart, cursorOpt);
             }
             applyToCanvas(canvas) {
-                if (Number.isInteger(this.mColor)) {
+                if (this.mColor != null) {
                     canvas.setFillColor(this.mColor);
                 }
                 if (this.mAlpha != null) {
@@ -1921,11 +1935,9 @@ var android;
                     rect.set(copy);
                 return rect;
             }
-            static recycleRect(...rects) {
-                for (let rect of rects) {
-                    rect.setEmpty();
-                    Canvas.sRectPool.release(rect);
-                }
+            static recycleRect(rect) {
+                rect.setEmpty();
+                Canvas.sRectPool.release(rect);
             }
             initImpl() {
                 this.mCanvasElement = document.createElement("canvas");
@@ -1936,7 +1948,9 @@ var android;
             }
             recycle() {
                 Canvas.recycleRect(this.mCurrentClip);
-                Canvas.recycleRect(...this.mClipStateMap.values());
+                for (let rect of this.mClipStateMap.values()) {
+                    Canvas.recycleRect(rect);
+                }
                 this.recycleImpl();
             }
             recycleImpl() {
@@ -1950,6 +1964,8 @@ var android;
                 return this.mWidth;
             }
             translate(dx, dy) {
+                if (dx == 0 && dy == 0)
+                    return;
                 if (this.mCurrentClip)
                     this.mCurrentClip.offset(-dx, -dy);
                 this.translateImpl(dx, dy);
@@ -2168,16 +2184,17 @@ var android;
                 return Canvas.measureTextImpl(text, textSize);
             }
             static measureTextImpl(text, textSize) {
-                if (textSize != Canvas._measureTextSize) {
-                    Canvas._measureTextSize = textSize;
-                    if (textSize != null) {
-                        Canvas._measureTextContext.font = textSize + 'px ' + Canvas.getMeasureTextFontFamily();
+                let width = 0;
+                for (let i = 0, length = text.length; i < length; i++) {
+                    let c = text.charCodeAt(i);
+                    let cWidth = Canvas._measureCacheMap.get(c);
+                    if (cWidth == null) {
+                        cWidth = Canvas._measureTextContext.measureText(text[i]).width;
+                        Canvas._measureCacheMap.set(c, cWidth);
                     }
-                    else {
-                        Canvas._measureTextContext.font = '';
-                    }
+                    width += (cWidth * textSize / Canvas._measureCacheTextSize);
                 }
-                return Canvas._measureTextContext.measureText(text).width;
+                return width;
             }
             static getMeasureTextFontFamily() {
                 let fontParts = Canvas._measureTextContext.font.split(' ');
@@ -2284,7 +2301,11 @@ var android;
         Canvas.DIRECTION_RTL = 1;
         Canvas.sRectPool = new Pools.SynchronizedPool(20);
         Canvas._measureTextContext = document.createElement('canvas').getContext('2d');
-        Canvas._measureTextSize = -1;
+        Canvas._measureCacheTextSize = 1000;
+        Canvas._static = (() => {
+            Canvas._measureTextContext.font = Canvas._measureCacheTextSize + 'px ' + Canvas.getMeasureTextFontFamily();
+        })();
+        Canvas._measureCacheMap = new Map();
         graphics.Canvas = Canvas;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -6474,8 +6495,7 @@ var android;
             static get textViewStyle() {
                 return {
                     textSize: '14sp',
-                    textColor: R.color.textView_textColor,
-                    layerType: 'none'
+                    textColor: R.color.textView_textColor
                 };
             }
             static get imageButtonStyle() {
@@ -10328,6 +10348,7 @@ var android;
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
+///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../view/ViewRootImpl.ts"/>
 var android;
 (function (android) {
@@ -10338,20 +10359,27 @@ var android;
         class Surface {
             constructor(canvasElement, viewRoot) {
                 this.mLockedRect = new Rect();
+                this.mCanvasBound = new Rect();
                 this.mSupportDirtyDraw = true;
+                this.mLockSaveCount = 1;
                 this.mCanvasElement = canvasElement;
                 this.viewRoot = viewRoot;
                 this.initImpl();
             }
             initImpl() {
-                this.mClientRect = this.mCanvasElement.getBoundingClientRect();
+                this.initCanvasBound();
             }
             notifyBoundChange() {
-                this.mClientRect = this.mCanvasElement.getBoundingClientRect();
+                this.initCanvasBound();
+            }
+            initCanvasBound() {
+                let density = android.content.res.Resources.getDisplayMetrics().density;
+                let clientRect = this.mCanvasElement.getBoundingClientRect();
+                this.mCanvasBound.set(clientRect.left * density, clientRect.top * density, clientRect.right * density, clientRect.bottom * density);
             }
             lockCanvas(dirty) {
-                let fullWidth = this.mClientRect.width;
-                let fullHeight = this.mClientRect.height;
+                let fullWidth = this.mCanvasBound.width();
+                let fullHeight = this.mCanvasBound.height();
                 let rect = this.mLockedRect;
                 if (dirty.isEmpty()) {
                     rect.set(0, 0, fullWidth, fullHeight);
@@ -10362,21 +10390,28 @@ var android;
                 return this.lockCanvasImpl(rect.left, rect.top, rect.width(), rect.height());
             }
             lockCanvasImpl(left, top, width, height) {
-                let canvas = new Canvas(width, height);
-                if (left != 0 || top != 0)
-                    canvas.translate(-left, -top);
-                let mCanvasContent = this.mCanvasElement.getContext('2d');
-                mCanvasContent.clearRect(left, top, width, height);
+                //let canvas = new Canvas(width, height);
+                //if(left!=0||top!=0) canvas.translate(-left, -top);
+                let canvas = new SurfaceLockCanvas(this.mCanvasBound.width(), this.mCanvasBound.height(), this.mCanvasElement);
+                this.mLockSaveCount = canvas.save();
+                canvas.clipRect(left, top, left + width, top + height);
+                canvas.clearColor();
                 return canvas;
             }
             unlockCanvasAndPost(canvas) {
-                let mCanvasContent = this.mCanvasElement.getContext('2d');
-                if (canvas.mCanvasElement)
-                    mCanvasContent.drawImage(canvas.mCanvasElement, this.mLockedRect.left, this.mLockedRect.top);
-                canvas.recycle();
+                canvas.restoreToCount(this.mLockSaveCount);
             }
         }
         view.Surface = Surface;
+        class SurfaceLockCanvas extends Canvas {
+            constructor(width, height, canvasElement) {
+                super(width, height);
+                this.mCanvasElement = canvasElement;
+                this._mCanvasContent = this.mCanvasElement.getContext("2d");
+            }
+            initImpl() {
+            }
+        }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 ///<reference path="ViewParent.ts"/>
@@ -42429,16 +42464,16 @@ var androidui;
         const SurfaceInstances = new Map();
         class NativeSurface extends Surface {
             initImpl() {
-                this.mClientRect = this.mCanvasElement.getBoundingClientRect();
+                this.initCanvasBound();
                 this.surfaceId = ++sNextSurfaceID;
                 SurfaceInstances.set(this.surfaceId, this);
-                let bound = this.mClientRect;
+                let bound = this.mCanvasBound;
                 let density = android.content.res.Resources.getDisplayMetrics().density;
                 native.NativeApi.surface.createSurface(this.surfaceId, bound.left * density, bound.top * density, bound.right * density, bound.bottom * density);
             }
             notifyBoundChange() {
-                super.notifyBoundChange();
-                let bound = this.mClientRect;
+                this.initCanvasBound();
+                let bound = this.mCanvasBound;
                 native.NativeApi.surface.onSurfaceBoundChange(this.surfaceId, bound.left, bound.top, bound.right, bound.bottom);
             }
             lockCanvasImpl(left, top, width, height) {

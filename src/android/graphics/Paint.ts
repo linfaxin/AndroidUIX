@@ -246,28 +246,22 @@ module android.graphics{
          * {@link Paint}.
          */
         private setClassVariablesFrom(paint:Paint):void  {
-            //this.mColorFilter = paint.mColorFilter;
-            //this.mMaskFilter = paint.mMaskFilter;
-            //this.mPathEffect = paint.mPathEffect;
-            //this.mRasterizer = paint.mRasterizer;
-            //if (paint.mShader != null) {
-            //    this.mShader = paint.mShader.copy();
-            //} else {
-            //    this.mShader = null;
-            //}
-            //this.mTypeface = paint.mTypeface;
-            //this.mXfermode = paint.mXfermode;
-            //this.mHasCompatScaling = paint.mHasCompatScaling;
-            //this.mCompatScaling = paint.mCompatScaling;
-            //this.mInvCompatScaling = paint.mInvCompatScaling;
-            //this.hasShadow = paint.hasShadow;
-            //this.shadowDx = paint.shadowDx;
-            //this.shadowDy = paint.shadowDy;
-            //this.shadowRadius = paint.shadowRadius;
-            //this.shadowColor = paint.shadowColor;
-            //this.mBidiFlags = paint.mBidiFlags;
-            //this.mLocale = paint.mLocale;
-            Object.assign(this, paint);
+            this.mTextStyle = paint.mTextStyle;
+            this.mColor = paint.mColor;
+            this.mAlpha = paint.mAlpha;
+            this.mStrokeWidth = paint.mStrokeWidth;
+            this.align = paint.align;
+            this.mStrokeCap = paint.mStrokeCap;
+            this.mStrokeJoin = paint.mStrokeJoin;
+            this.textSize = paint.textSize;
+            this.mFlag = paint.mFlag;
+            this.hasShadow = paint.hasShadow;
+            this.shadowDx = paint.shadowDx;
+            this.shadowDy = paint.shadowDy;
+            this.shadowRadius = paint.shadowRadius;
+            this.shadowColor = paint.shadowColor;
+            this.drawableState = paint.drawableState;
+            //Object.assign(this, paint);
         }
 
         /**
@@ -758,7 +752,7 @@ module android.graphics{
 
         applyToCanvas(canvas:Canvas){
 
-            if(Number.isInteger(this.mColor)) {
+            if(this.mColor!=null) {
                 canvas.setFillColor(this.mColor);
             }
 

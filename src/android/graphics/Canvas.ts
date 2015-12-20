@@ -48,11 +48,9 @@ module android.graphics {
             if(copy) rect.set(copy);
             return rect;
         }
-        private static recycleRect(...rects:Rect[]) {
-            for(let rect of rects){
+        private static recycleRect(rect:Rect) {
                 rect.setEmpty();
                 Canvas.sRectPool.release(rect);
-            }
         }
 
         constructor(width:number, height:number) {
@@ -73,7 +71,9 @@ module android.graphics {
 
         recycle():void {
             Canvas.recycleRect(this.mCurrentClip);
-            Canvas.recycleRect(...this.mClipStateMap.values());
+            for(let rect of this.mClipStateMap.values()) {
+                Canvas.recycleRect(rect);
+            }
             this.recycleImpl();
         }
         protected recycleImpl():void {
@@ -90,6 +90,7 @@ module android.graphics {
 
 
         translate(dx:number, dy:number):void {
+            if(dx==0 && dy==0) return;
             if(this.mCurrentClip) this.mCurrentClip.offset(-dx, -dy);
             this.translateImpl(dx, dy);
         }
@@ -459,17 +460,24 @@ module android.graphics {
         }
 
         private static _measureTextContext:CanvasRenderingContext2D = document.createElement('canvas').getContext('2d');
-        private static _measureTextSize = -1;
+        private static _measureCacheTextSize = 1000;
+        private static _static = (()=>{
+            Canvas._measureTextContext.font = Canvas._measureCacheTextSize + 'px ' + Canvas.getMeasureTextFontFamily();
+        })();
+        private static _measureCacheMap = new Map<number, number>();//<char, width>;
         protected static measureTextImpl(text:string, textSize:number):number {
-            if(textSize!=Canvas._measureTextSize) {
-                Canvas._measureTextSize = textSize;
-                if (textSize != null) {
-                    Canvas._measureTextContext.font = textSize + 'px ' + Canvas.getMeasureTextFontFamily();
-                } else {
-                    Canvas._measureTextContext.font = '';
+            let width = 0;
+            for(let i=0,length=text.length; i<length; i++){
+                let c = text.charCodeAt(i);
+
+                let cWidth:number = Canvas._measureCacheMap.get(c);
+                if(cWidth == null){
+                    cWidth = Canvas._measureTextContext.measureText(text[i]).width;
+                    Canvas._measureCacheMap.set(c, cWidth);
                 }
+                width += (cWidth * textSize / Canvas._measureCacheTextSize);
             }
-            return Canvas._measureTextContext.measureText(text).width;
+            return width;
         }
         protected static getMeasureTextFontFamily():string {
             let fontParts = Canvas._measureTextContext.font.split(' ');

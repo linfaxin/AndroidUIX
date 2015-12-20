@@ -474,7 +474,7 @@ declare module android.graphics {
         static DIRECTION_RTL: number;
         private static sRectPool;
         private static obtainRect(copy?);
-        private static recycleRect(...rects);
+        private static recycleRect(rect);
         constructor(width: number, height: number);
         protected initImpl(): void;
         recycle(): void;
@@ -523,7 +523,9 @@ declare module android.graphics {
         drawTextRun_end(text: string, start: number, end: number, contextStart: number, contextEnd: number, x: number, y: number, dir: number, paint: Paint): void;
         static measureText(text: string, textSize: number): number;
         private static _measureTextContext;
-        private static _measureTextSize;
+        private static _measureCacheTextSize;
+        private static _static;
+        private static _measureCacheMap;
         protected static measureTextImpl(text: string, textSize: number): number;
         protected static getMeasureTextFontFamily(): string;
         setFillColor(color: number): void;
@@ -1533,7 +1535,6 @@ declare module android.R {
         static textViewStyle: {
             textSize: string;
             textColor: content.res.ColorStateList;
-            layerType: string;
         };
         static imageButtonStyle: {
             background: Drawable;
@@ -2255,11 +2256,13 @@ declare module android.view {
         private mCanvasElement;
         private viewRoot;
         private mLockedRect;
-        protected mClientRect: ClientRect;
+        protected mCanvasBound: Rect;
         protected mSupportDirtyDraw: boolean;
+        private mLockSaveCount;
         constructor(canvasElement: HTMLCanvasElement, viewRoot: ViewRootImpl);
         protected initImpl(): void;
         notifyBoundChange(): void;
+        protected initCanvasBound(): void;
         lockCanvas(dirty: Rect): Canvas;
         protected lockCanvasImpl(left: number, top: number, width: number, height: number): Canvas;
         unlockCanvasAndPost(canvas: Canvas): void;
