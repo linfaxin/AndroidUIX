@@ -7,10 +7,10 @@
 ### 特点
 
 1. 完整Native端组件体验
-2. 高性能: 使用 Web Canvas 绘制UI.
-3. 可靠: UI组件由Android源码转换而来, 同Android官方组件一样的可靠.
-4. 拓展: 所有流行的Github第三方Android UI库可以轻易移植到Web端.
-5. 易用: 标签式声明组件.
+2. 高性能: 使用 Web Canvas 绘制UI, 还可以嵌入Runtime方法加速绘制
+3. 可靠: UI组件由Android源码转换而来, 稳定可靠.
+4. 拓展: 第三方Android UI库也可以移植到Web端.
+5. 易用: HTML标签式声明组件.
 
 
 
@@ -32,6 +32,7 @@
 [点击查看Sample](http://linfaxin.com/AndroidUI4Web/sample/main.html)
 
 
-### 最后
+### Runtime
 
-还有很多非核心的UI组件需要移植, 期待Star & PR
+使用Runtime加速后由原生端画布代替Web Canvas的绘制.
+Android端Runtime Sample: [点击下载](http://faxin-10015149.file.myqcloud.com/AndroidUIRuntime.apk)
