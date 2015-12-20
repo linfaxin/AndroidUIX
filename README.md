@@ -18,9 +18,8 @@
 达到60fps非常困难, 目前Sample页面在移动端的fps:
 
 1. IOS:40fps左右
-2. Android Chrome:30-40fps
+2. Android Chrome:40fps左右
 3. Android WebView(4.4):20-30fps
-4. Android Runtime:30-40fps
 
 
 ### 例子
