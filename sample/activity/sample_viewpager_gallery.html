@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>ViewPager Gallery展示</title>
+    <script>
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+
+        }
+    </style>
+
+</head>
+<body>
+<android-Activity style="width: 100%; height:100%;display: none;">
+    <android.support.v4.view.ViewPager>
+        <androidui.widget.HtmlDataPagerAdapter>
+            <uk.co.senab.photoview.PhotoView
+                    android:src="images/logo_android_3.png">
+            </uk.co.senab.photoview.PhotoView>
+            <uk.co.senab.photoview.PhotoView
+                    android:src="images/logo_android_2.png">
+            </uk.co.senab.photoview.PhotoView>
+            <uk.co.senab.photoview.PhotoView
+                    android:src="images/logo_google_1.jpg">
+            </uk.co.senab.photoview.PhotoView>
+            <uk.co.senab.photoview.PhotoView
+                    android:src="images/logo_google_2.png">
+            </uk.co.senab.photoview.PhotoView>
+        </androidui.widget.HtmlDataPagerAdapter>
+    </android.support.v4.view.ViewPager>
+    <LinearLayout
+            android:padding="4dp 12dp"
+            android:layout_gravity="bottom"
+            android:layout_height="wrap_content"
+            android:background="#55000000"
+            >
+        <TextView android:textColor="white">
+            支持双击&双指缩放手势, 移植自
+        </TextView>
+        <TextView android:textColor="#990000FF" android:padding="4dp"
+                  android:state_pressed="background:#33ffffff"
+                onclick="location.href = 'https://github.com/chrisbanes/PhotoView'">
+            PhotoView
+        </TextView>
+
+    </LinearLayout>
+</android-Activity>
+
+<script src="../lib/browser-polyfill.min.js"></script>
+<script src="../lib/CustomElements.min.js"></script>
+<script src="../../dist/android-ui.es5.js"></script>
+<script src="../build/main.es5.js"></script>
+<script>android.view.ViewRootImpl.DEBUG_FPS = true;</script>
+
+</body>
+</html>

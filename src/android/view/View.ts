@@ -4231,7 +4231,7 @@ module android.view {
             }
         }
 
-        onFinishInflate() {
+        onFinishInflate():void {
         }
 
 

@@ -606,21 +606,21 @@ export class ImageView extends View {
         }
     }
 
-    private resizeFromDrawable():void  {
+    protected resizeFromDrawable():boolean  {
         let d:Drawable = this.mDrawable;
         if (d != null) {
             let w:number = d.getIntrinsicWidth();
-            if (w < 0)
-                w = this.mDrawableWidth;
+            if (w < 0) w = this.mDrawableWidth;
             let h:number = d.getIntrinsicHeight();
-            if (h < 0)
-                h = this.mDrawableHeight;
+            if (h < 0) h = this.mDrawableHeight;
             if (w != this.mDrawableWidth || h != this.mDrawableHeight) {
                 this.mDrawableWidth = w;
                 this.mDrawableHeight = h;
                 this.requestLayout();
+                return true;
             }
         }
+        return false;
     }
 
     //onRtlPropertiesChanged(layoutDirection:number):void  {

@@ -1006,6 +1006,8 @@ declare module android.view {
         getHistoricalY(pointerIndex: number, pos: number): number;
         getHistoricalEventTime(pos: number): number;
         getHistoricalEventTime(pointerIndex: number, pos: number): number;
+        getTouchMajor(pointerIndex?: number): number;
+        getHistoricalTouchMajor(pointerIndex?: number, pos?: number): number;
         getEdgeFlags(): number;
         setEdgeFlags(flags: number): void;
         setAction(action: number): void;
@@ -5750,7 +5752,7 @@ declare module android.widget {
         private resolveUri();
         onCreateDrawableState(extraSpace: number): number[];
         private updateDrawable(d);
-        private resizeFromDrawable();
+        protected resizeFromDrawable(): boolean;
         private static sS2FArray;
         private static scaleTypeToScaleToFit(st);
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
@@ -6428,6 +6430,391 @@ declare module com.jakewharton.salvage {
         abstract getView(position: number, convertView: View, parent: ViewGroup): View;
     }
 }
+declare module android.view.animation {
+    class AccelerateDecelerateInterpolator implements Interpolator {
+        getInterpolation(input: number): number;
+    }
+}
+declare module android.view {
+    import MotionEvent = android.view.MotionEvent;
+    class ScaleGestureDetector {
+        private static TAG;
+        private mListener;
+        private mFocusX;
+        private mFocusY;
+        private mQuickScaleEnabled;
+        private mCurrSpan;
+        private mPrevSpan;
+        private mInitialSpan;
+        private mCurrSpanX;
+        private mCurrSpanY;
+        private mPrevSpanX;
+        private mPrevSpanY;
+        private mCurrTime;
+        private mPrevTime;
+        private mInProgress;
+        private mSpanSlop;
+        private mMinSpan;
+        private mTouchUpper;
+        private mTouchLower;
+        private mTouchHistoryLastAccepted;
+        private mTouchHistoryDirection;
+        private mTouchHistoryLastAcceptedTime;
+        private mTouchMinMajor;
+        private mDoubleTapEvent;
+        private mDoubleTapMode;
+        private mHandler;
+        private static TOUCH_STABILIZE_TIME;
+        private static DOUBLE_TAP_MODE_NONE;
+        private static DOUBLE_TAP_MODE_IN_PROGRESS;
+        private static SCALE_FACTOR;
+        private mGestureDetector;
+        private mEventBeforeOrAboveStartingGestureEvent;
+        constructor(listener: ScaleGestureDetector.OnScaleGestureListener, handler?: any);
+        private addTouchHistory(ev);
+        private clearTouchHistory();
+        onTouchEvent(event: MotionEvent): boolean;
+        private inDoubleTapMode();
+        setQuickScaleEnabled(scales: boolean): void;
+        isQuickScaleEnabled(): boolean;
+        isInProgress(): boolean;
+        getFocusX(): number;
+        getFocusY(): number;
+        getCurrentSpan(): number;
+        getCurrentSpanX(): number;
+        getCurrentSpanY(): number;
+        getPreviousSpan(): number;
+        getPreviousSpanX(): number;
+        getPreviousSpanY(): number;
+        getScaleFactor(): number;
+        getTimeDelta(): number;
+        getEventTime(): number;
+    }
+    module ScaleGestureDetector {
+        interface OnScaleGestureListener {
+            onScale(detector: ScaleGestureDetector): boolean;
+            onScaleBegin(detector: ScaleGestureDetector): boolean;
+            onScaleEnd(detector: ScaleGestureDetector): void;
+        }
+        class SimpleOnScaleGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
+            onScale(detector: ScaleGestureDetector): boolean;
+            onScaleBegin(detector: ScaleGestureDetector): boolean;
+            onScaleEnd(detector: ScaleGestureDetector): void;
+        }
+    }
+}
+declare module uk.co.senab.photoview {
+    import MotionEvent = android.view.MotionEvent;
+    import ScaleGestureDetector = android.view.ScaleGestureDetector;
+    class GestureDetector {
+        protected mListener: GestureDetector.OnGestureListener;
+        private static LOG_TAG;
+        private static INVALID_POINTER_ID;
+        private mActivePointerId;
+        private mActivePointerIndex;
+        mLastTouchX: number;
+        mLastTouchY: number;
+        mTouchSlop: number;
+        mMinimumVelocity: number;
+        protected mScaleDetector: ScaleGestureDetector;
+        setOnGestureListener(listener: GestureDetector.OnGestureListener): void;
+        constructor();
+        private mVelocityTracker;
+        private mIsDragging;
+        getActiveX(ev: MotionEvent): number;
+        getActiveY(ev: MotionEvent): number;
+        isScaling(): boolean;
+        isDragging(): boolean;
+        onTouchEvent(ev: MotionEvent): boolean;
+    }
+    module GestureDetector {
+        interface OnGestureListener {
+            onDrag(dx: number, dy: number): void;
+            onFling(startX: number, startY: number, velocityX: number, velocityY: number): void;
+            onScale(scaleFactor: number, focusX: number, focusY: number): void;
+        }
+    }
+}
+declare module uk.co.senab.photoview {
+    import Matrix = android.graphics.Matrix;
+    import Canvas = android.graphics.Canvas;
+    import RectF = android.graphics.RectF;
+    import GestureDetector = android.view.GestureDetector;
+    import View = android.view.View;
+    import ImageView = android.widget.ImageView;
+    import PhotoViewAttacher = uk.co.senab.photoview.PhotoViewAttacher;
+    interface IPhotoView {
+        canZoom(): boolean;
+        getDisplayRect(): RectF;
+        setDisplayMatrix(finalMatrix: Matrix): boolean;
+        getDisplayMatrix(): Matrix;
+        getMinScale(): number;
+        getMinimumScale(): number;
+        getMidScale(): number;
+        getMediumScale(): number;
+        getMaxScale(): number;
+        getMaximumScale(): number;
+        getScale(): number;
+        getScaleType(): ImageView.ScaleType;
+        setAllowParentInterceptOnEdge(allow: boolean): void;
+        setMinScale(minScale: number): void;
+        setMinimumScale(minimumScale: number): void;
+        setMidScale(midScale: number): void;
+        setMediumScale(mediumScale: number): void;
+        setMaxScale(maxScale: number): void;
+        setMaximumScale(maximumScale: number): void;
+        setScaleLevels(minimumScale: number, mediumScale: number, maximumScale: number): void;
+        setOnLongClickListener(listener: View.OnLongClickListener): void;
+        setOnMatrixChangeListener(listener: PhotoViewAttacher.OnMatrixChangedListener): void;
+        setOnPhotoTapListener(listener: PhotoViewAttacher.OnPhotoTapListener): void;
+        getOnPhotoTapListener(): PhotoViewAttacher.OnPhotoTapListener;
+        setOnViewTapListener(listener: PhotoViewAttacher.OnViewTapListener): void;
+        setRotationTo(rotationDegree: number): void;
+        setRotationBy(rotationDegree: number): void;
+        getOnViewTapListener(): PhotoViewAttacher.OnViewTapListener;
+        setScale(scale: number): void;
+        setScale(scale: number, animate: boolean): void;
+        setScale(scale: number, focalX: number, focalY: number, animate: boolean): void;
+        setScaleType(scaleType: ImageView.ScaleType): void;
+        setZoomable(zoomable: boolean): void;
+        setPhotoViewRotation(rotationDegree: number): void;
+        getVisibleRectangleBitmap(): Canvas;
+        setZoomTransitionDuration(milliseconds: number): void;
+        getIPhotoViewImplementation(): IPhotoView;
+        setOnDoubleTapListener(newOnDoubleTapListener: GestureDetector.OnDoubleTapListener): void;
+        setOnScaleChangeListener(onScaleChangeListener: PhotoViewAttacher.OnScaleChangeListener): void;
+    }
+    module IPhotoView {
+        var DEFAULT_MAX_SCALE: number;
+        var DEFAULT_MID_SCALE: number;
+        var DEFAULT_MIN_SCALE: number;
+        var DEFAULT_ZOOM_DURATION: number;
+        function isImpl(obj: any): boolean;
+    }
+}
+declare module uk.co.senab.photoview {
+    import Canvas = android.graphics.Canvas;
+    import Matrix = android.graphics.Matrix;
+    import RectF = android.graphics.RectF;
+    import View = android.view.View;
+    import OnLongClickListener = android.view.View.OnLongClickListener;
+    import ViewTreeObserver = android.view.ViewTreeObserver;
+    import Interpolator = android.view.animation.Interpolator;
+    import ImageView = android.widget.ImageView;
+    import ScaleType = android.widget.ImageView.ScaleType;
+    import MotionEvent = android.view.MotionEvent;
+    import Runnable = java.lang.Runnable;
+    import GestureDetector = uk.co.senab.photoview.GestureDetector;
+    import IPhotoView = uk.co.senab.photoview.IPhotoView;
+    class PhotoViewAttacher implements IPhotoView, View.OnTouchListener, GestureDetector.OnGestureListener, ViewTreeObserver.OnGlobalLayoutListener {
+        private static LOG_TAG;
+        private static DEBUG;
+        static sInterpolator: Interpolator;
+        ZOOM_DURATION: number;
+        static EDGE_NONE: number;
+        static EDGE_LEFT: number;
+        static EDGE_RIGHT: number;
+        static EDGE_BOTH: number;
+        private mMinScale;
+        private mMidScale;
+        private mMaxScale;
+        private mAllowParentInterceptOnEdge;
+        private mBlockParentIntercept;
+        private static checkZoomLevels(minZoom, midZoom, maxZoom);
+        private static hasDrawable(imageView);
+        private static isSupportedScaleType(scaleType);
+        private static setImageViewScaleTypeMatrix(imageView);
+        private mImageView;
+        private mGestureDetector;
+        private mScaleDragDetector;
+        private mBaseMatrix;
+        private mDrawMatrix;
+        private mSuppMatrix;
+        private mDisplayRect;
+        private mMatrixValues;
+        private mMatrixChangeListener;
+        private mPhotoTapListener;
+        private mViewTapListener;
+        private mLongClickListener;
+        private mScaleChangeListener;
+        private mIvTop;
+        private mIvRight;
+        private mIvBottom;
+        private mIvLeft;
+        private mCurrentFlingRunnable;
+        private mScrollEdge;
+        private mZoomEnabled;
+        private mScaleType;
+        constructor(imageView: ImageView, zoomable?: boolean);
+        setOnDoubleTapListener(newOnDoubleTapListener: android.view.GestureDetector.OnDoubleTapListener): void;
+        setOnScaleChangeListener(onScaleChangeListener: PhotoViewAttacher.OnScaleChangeListener): void;
+        canZoom(): boolean;
+        cleanup(): void;
+        getDisplayRect(): RectF;
+        setDisplayMatrix(finalMatrix: Matrix): boolean;
+        setPhotoViewRotation(degrees: number): void;
+        setRotationTo(degrees: number): void;
+        setRotationBy(degrees: number): void;
+        getImageView(): ImageView;
+        getMinScale(): number;
+        getMinimumScale(): number;
+        getMidScale(): number;
+        getMediumScale(): number;
+        getMaxScale(): number;
+        getMaximumScale(): number;
+        getScale(): number;
+        getScaleType(): ScaleType;
+        onDrag(dx: number, dy: number): void;
+        onFling(startX: number, startY: number, velocityX: number, velocityY: number): void;
+        onGlobalLayout(): void;
+        onScale(scaleFactor: number, focusX: number, focusY: number): void;
+        onTouch(v: View, ev: MotionEvent): boolean;
+        setAllowParentInterceptOnEdge(allow: boolean): void;
+        setMinScale(minScale: number): void;
+        setMinimumScale(minimumScale: number): void;
+        setMidScale(midScale: number): void;
+        setMediumScale(mediumScale: number): void;
+        setMaxScale(maxScale: number): void;
+        setMaximumScale(maximumScale: number): void;
+        setScaleLevels(minimumScale: number, mediumScale: number, maximumScale: number): void;
+        setOnLongClickListener(listener: OnLongClickListener): void;
+        setOnMatrixChangeListener(listener: PhotoViewAttacher.OnMatrixChangedListener): void;
+        setOnPhotoTapListener(listener: PhotoViewAttacher.OnPhotoTapListener): void;
+        getOnPhotoTapListener(): PhotoViewAttacher.OnPhotoTapListener;
+        setOnViewTapListener(listener: PhotoViewAttacher.OnViewTapListener): void;
+        getOnViewTapListener(): PhotoViewAttacher.OnViewTapListener;
+        setScale(scale: number, animate?: boolean): void;
+        setScale(scale: number, focalX: number, focalY: number, animate?: boolean): void;
+        private setScale_2(scale, animate?);
+        private setScale_4(scale, focalX, focalY, animate?);
+        setScaleType(scaleType: ScaleType): void;
+        setZoomable(zoomable: boolean): void;
+        update(): void;
+        getDisplayMatrix(): Matrix;
+        getDrawMatrix(): Matrix;
+        private cancelFling();
+        private checkAndDisplayMatrix();
+        private checkImageViewScaleType();
+        private checkMatrixBounds();
+        private _getDisplayRect(matrix);
+        getVisibleRectangleBitmap(): Canvas;
+        setZoomTransitionDuration(milliseconds: number): void;
+        getIPhotoViewImplementation(): IPhotoView;
+        private getValue(matrix, whichValue);
+        private resetMatrix();
+        private setImageViewMatrix(matrix);
+        private updateBaseMatrix(d);
+        private getImageViewWidth(imageView);
+        private getImageViewHeight(imageView);
+    }
+    module PhotoViewAttacher {
+        interface OnMatrixChangedListener {
+            onMatrixChanged(rect: RectF): void;
+        }
+        interface OnScaleChangeListener {
+            onScaleChange(scaleFactor: number, focusX: number, focusY: number): void;
+        }
+        interface OnPhotoTapListener {
+            onPhotoTap(view: View, x: number, y: number): void;
+        }
+        interface OnViewTapListener {
+            onViewTap(view: View, x: number, y: number): void;
+        }
+        class AnimatedZoomRunnable implements Runnable {
+            _PhotoViewAttacher_this: PhotoViewAttacher;
+            private mFocalX;
+            private mFocalY;
+            private mStartTime;
+            private mZoomStart;
+            private mZoomEnd;
+            constructor(arg: PhotoViewAttacher, currentZoom: number, targetZoom: number, focalX: number, focalY: number);
+            run(): void;
+            private interpolate();
+        }
+        class FlingRunnable implements Runnable {
+            _PhotoViewAttacher_this: PhotoViewAttacher;
+            constructor(arg: PhotoViewAttacher);
+            private mScroller;
+            private mCurrentX;
+            private mCurrentY;
+            cancelFling(): void;
+            fling(viewWidth: number, viewHeight: number, velocityX: number, velocityY: number): void;
+            run(): void;
+        }
+        class DefaultOnDoubleTapListener implements android.view.GestureDetector.OnDoubleTapListener {
+            private photoViewAttacher;
+            constructor(photoViewAttacher: PhotoViewAttacher);
+            setPhotoViewAttacher(newPhotoViewAttacher: PhotoViewAttacher): void;
+            onSingleTapConfirmed(e: MotionEvent): boolean;
+            onDoubleTap(ev: MotionEvent): boolean;
+            onDoubleTapEvent(e: MotionEvent): boolean;
+        }
+    }
+}
+declare module uk.co.senab.photoview {
+    import Canvas = android.graphics.Canvas;
+    import Matrix = android.graphics.Matrix;
+    import RectF = android.graphics.RectF;
+    import Drawable = android.graphics.drawable.Drawable;
+    import GestureDetector = android.view.GestureDetector;
+    import View = android.view.View;
+    import ImageView = android.widget.ImageView;
+    import OnMatrixChangedListener = uk.co.senab.photoview.PhotoViewAttacher.OnMatrixChangedListener;
+    import OnPhotoTapListener = uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
+    import OnViewTapListener = uk.co.senab.photoview.PhotoViewAttacher.OnViewTapListener;
+    import PhotoViewAttacher = uk.co.senab.photoview.PhotoViewAttacher;
+    import IPhotoView = uk.co.senab.photoview.IPhotoView;
+    import ScaleType = ImageView.ScaleType;
+    class PhotoView extends ImageView implements IPhotoView {
+        private mAttacher;
+        private mPendingScaleType;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        protected init(): void;
+        setPhotoViewRotation(rotationDegree: number): void;
+        setRotationTo(rotationDegree: number): void;
+        setRotationBy(rotationDegree: number): void;
+        canZoom(): boolean;
+        getDisplayRect(): RectF;
+        getDisplayMatrix(): Matrix;
+        setDisplayMatrix(finalRectangle: Matrix): boolean;
+        getMinScale(): number;
+        getMinimumScale(): number;
+        getMidScale(): number;
+        getMediumScale(): number;
+        getMaxScale(): number;
+        getMaximumScale(): number;
+        getScale(): number;
+        getScaleType(): ScaleType;
+        setAllowParentInterceptOnEdge(allow: boolean): void;
+        setMinScale(minScale: number): void;
+        setMinimumScale(minimumScale: number): void;
+        setMidScale(midScale: number): void;
+        setMediumScale(mediumScale: number): void;
+        setMaxScale(maxScale: number): void;
+        setMaximumScale(maximumScale: number): void;
+        setScaleLevels(minimumScale: number, mediumScale: number, maximumScale: number): void;
+        setImageDrawable(drawable: Drawable): void;
+        setImageURI(uri: string): void;
+        protected resizeFromDrawable(): boolean;
+        setOnMatrixChangeListener(listener: OnMatrixChangedListener): void;
+        setOnLongClickListener(l: View.OnLongClickListener): void;
+        setOnPhotoTapListener(listener: OnPhotoTapListener): void;
+        getOnPhotoTapListener(): OnPhotoTapListener;
+        setOnViewTapListener(listener: OnViewTapListener): void;
+        getOnViewTapListener(): OnViewTapListener;
+        setScale(scale: number, animate?: boolean): void;
+        setScale(scale: number, focalX: number, focalY: number, animate?: boolean): void;
+        setScaleType(scaleType: ScaleType): void;
+        setZoomable(zoomable: boolean): void;
+        getVisibleRectangleBitmap(): Canvas;
+        setZoomTransitionDuration(milliseconds: number): void;
+        getIPhotoViewImplementation(): IPhotoView;
+        setOnDoubleTapListener(newOnDoubleTapListener: GestureDetector.OnDoubleTapListener): void;
+        setOnScaleChangeListener(onScaleChangeListener: PhotoViewAttacher.OnScaleChangeListener): void;
+        protected onDetachedFromWindow(): void;
+        protected onAttachedToWindow(): void;
+    }
+}
 declare module androidui {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
@@ -6458,7 +6845,8 @@ declare module androidui {
         private initMouseEvent();
         private initKeyEvent();
         private initGenericEvent();
-        private initListenSizeChange();
+        private initSizeVisibleChange();
+        private initVisibleChange();
         notifySizeChange(): void;
         setContentView(view: View): void;
         addContentView(view: View, params?: ViewGroup.LayoutParams): void;

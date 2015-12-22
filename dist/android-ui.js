@@ -3705,13 +3705,15 @@ var android;
                     switch (action) {
                         case MotionEvent.ACTION_DOWN:
                             action = MotionEvent.ACTION_POINTER_DOWN;
+                            action = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
                             break;
                         case MotionEvent.ACTION_UP:
                             action = MotionEvent.ACTION_POINTER_UP;
+                            action = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
                             break;
                     }
                 }
-                this.mAction = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
+                this.mAction = action;
                 this.mActivePointerId = activePointerId;
                 if (activePointerId === 0 && action == MotionEvent.ACTION_DOWN) {
                     this.mDownTime = e.timeStamp;
@@ -3839,6 +3841,12 @@ var android;
                 }
                 let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
                 return moveHistory[pos].mEventTime;
+            }
+            getTouchMajor(pointerIndex) {
+                return Math.floor(Resources.getDisplayMetrics().density);
+            }
+            getHistoricalTouchMajor(pointerIndex, pos) {
+                return Math.floor(Resources.getDisplayMetrics().density);
             }
             getEdgeFlags() {
                 return this.mEdgeFlags;
@@ -34803,8 +34811,10 @@ var android;
                         this.mDrawableWidth = w;
                         this.mDrawableHeight = h;
                         this.requestLayout();
+                        return true;
                     }
                 }
+                return false;
             }
             static scaleTypeToScaleToFit(st) {
                 return ImageView.sS2FArray[st - 1];
@@ -40605,6 +40615,1589 @@ var com;
     })(jakewharton = com.jakewharton || (com.jakewharton = {}));
 })(com || (com = {}));
 /**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class AccelerateDecelerateInterpolator {
+                getInterpolation(input) {
+                    return (Math.cos((input + 1) * Math.PI) / 2) + 0.5;
+                }
+            }
+            animation.AccelerateDecelerateInterpolator = AccelerateDecelerateInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="../../android/os/Handler.ts"/>
+///<reference path="../../android/os/SystemClock.ts"/>
+///<reference path="../../java/lang/Float.ts"/>
+///<reference path="../../android/view/GestureDetector.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../android/util/TypedValue.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var SystemClock = android.os.SystemClock;
+        var GestureDetector = android.view.GestureDetector;
+        var MotionEvent = android.view.MotionEvent;
+        var ViewConfiguration = android.view.ViewConfiguration;
+        var TypedValue = android.util.TypedValue;
+        class ScaleGestureDetector {
+            constructor(listener, handler) {
+                this.mFocusX = 0;
+                this.mFocusY = 0;
+                this.mCurrSpan = 0;
+                this.mPrevSpan = 0;
+                this.mInitialSpan = 0;
+                this.mCurrSpanX = 0;
+                this.mCurrSpanY = 0;
+                this.mPrevSpanX = 0;
+                this.mPrevSpanY = 0;
+                this.mCurrTime = 0;
+                this.mPrevTime = 0;
+                this.mSpanSlop = 0;
+                this.mMinSpan = 0;
+                this.mTouchUpper = 0;
+                this.mTouchLower = 0;
+                this.mTouchHistoryLastAccepted = 0;
+                this.mTouchHistoryDirection = 0;
+                this.mTouchHistoryLastAcceptedTime = 0;
+                this.mTouchMinMajor = 0;
+                this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
+                this.mListener = listener;
+                this.mSpanSlop = ViewConfiguration.get().getScaledTouchSlop() * 2;
+                this.mTouchMinMajor = TypedValue.complexToDimensionPixelSize('48dp');
+                this.mMinSpan = TypedValue.complexToDimensionPixelSize('27mm');
+                this.mHandler = handler;
+                this.setQuickScaleEnabled(true);
+            }
+            addTouchHistory(ev) {
+                const currentTime = SystemClock.uptimeMillis();
+                const count = ev.getPointerCount();
+                let accept = currentTime - this.mTouchHistoryLastAcceptedTime >= ScaleGestureDetector.TOUCH_STABILIZE_TIME;
+                let total = 0;
+                let sampleCount = 0;
+                for (let i = 0; i < count; i++) {
+                    const hasLastAccepted = !Number.isNaN(this.mTouchHistoryLastAccepted);
+                    const historySize = ev.getHistorySize();
+                    const pointerSampleCount = historySize + 1;
+                    for (let h = 0; h < pointerSampleCount; h++) {
+                        let major;
+                        if (h < historySize) {
+                            major = ev.getHistoricalTouchMajor(i, h);
+                        }
+                        else {
+                            major = ev.getTouchMajor(i);
+                        }
+                        if (major < this.mTouchMinMajor)
+                            major = this.mTouchMinMajor;
+                        total += major;
+                        if (Number.isNaN(this.mTouchUpper) || major > this.mTouchUpper) {
+                            this.mTouchUpper = major;
+                        }
+                        if (Number.isNaN(this.mTouchLower) || major < this.mTouchLower) {
+                            this.mTouchLower = major;
+                        }
+                        if (hasLastAccepted) {
+                            function Math_signum(value) {
+                                if (value === 0 || Number.isNaN(value))
+                                    return value;
+                                return Math.abs(value) === value ? 1 : -1;
+                            }
+                            const directionSig = Math.floor(Math_signum(major - this.mTouchHistoryLastAccepted));
+                            if (directionSig != this.mTouchHistoryDirection || (directionSig == 0 && this.mTouchHistoryDirection == 0)) {
+                                this.mTouchHistoryDirection = directionSig;
+                                const time = h < historySize ? ev.getHistoricalEventTime(h) : ev.getEventTime();
+                                this.mTouchHistoryLastAcceptedTime = time;
+                                accept = false;
+                            }
+                        }
+                    }
+                    sampleCount += pointerSampleCount;
+                }
+                const avg = total / sampleCount;
+                if (accept) {
+                    let newAccepted = (this.mTouchUpper + this.mTouchLower + avg) / 3;
+                    this.mTouchUpper = (this.mTouchUpper + newAccepted) / 2;
+                    this.mTouchLower = (this.mTouchLower + newAccepted) / 2;
+                    this.mTouchHistoryLastAccepted = newAccepted;
+                    this.mTouchHistoryDirection = 0;
+                    this.mTouchHistoryLastAcceptedTime = ev.getEventTime();
+                }
+            }
+            clearTouchHistory() {
+                this.mTouchUpper = Number.NaN;
+                this.mTouchLower = Number.NaN;
+                this.mTouchHistoryLastAccepted = Number.NaN;
+                this.mTouchHistoryDirection = 0;
+                this.mTouchHistoryLastAcceptedTime = 0;
+            }
+            onTouchEvent(event) {
+                this.mCurrTime = event.getEventTime();
+                const action = event.getActionMasked();
+                if (this.mQuickScaleEnabled) {
+                    this.mGestureDetector.onTouchEvent(event);
+                }
+                const streamComplete = action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL;
+                if (action == MotionEvent.ACTION_DOWN || streamComplete) {
+                    if (this.mInProgress) {
+                        this.mListener.onScaleEnd(this);
+                        this.mInProgress = false;
+                        this.mInitialSpan = 0;
+                        this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
+                    }
+                    else if (this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS && streamComplete) {
+                        this.mInProgress = false;
+                        this.mInitialSpan = 0;
+                        this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
+                    }
+                    if (streamComplete) {
+                        this.clearTouchHistory();
+                        return true;
+                    }
+                }
+                const configChanged = action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_POINTER_DOWN;
+                const pointerUp = action == MotionEvent.ACTION_POINTER_UP;
+                const skipIndex = pointerUp ? event.getActionIndex() : -1;
+                let sumX = 0, sumY = 0;
+                const count = event.getPointerCount();
+                const div = pointerUp ? count - 1 : count;
+                let focusX;
+                let focusY;
+                if (this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS) {
+                    focusX = this.mDoubleTapEvent.getX();
+                    focusY = this.mDoubleTapEvent.getY();
+                    if (event.getY() < focusY) {
+                        this.mEventBeforeOrAboveStartingGestureEvent = true;
+                    }
+                    else {
+                        this.mEventBeforeOrAboveStartingGestureEvent = false;
+                    }
+                }
+                else {
+                    for (let i = 0; i < count; i++) {
+                        if (skipIndex == i)
+                            continue;
+                        sumX += event.getX(i);
+                        sumY += event.getY(i);
+                    }
+                    focusX = sumX / div;
+                    focusY = sumY / div;
+                }
+                this.addTouchHistory(event);
+                let devSumX = 0, devSumY = 0;
+                for (let i = 0; i < count; i++) {
+                    if (skipIndex == i)
+                        continue;
+                    const touchSize = this.mTouchHistoryLastAccepted / 2;
+                    devSumX += Math.abs(event.getX(i) - focusX) + touchSize;
+                    devSumY += Math.abs(event.getY(i) - focusY) + touchSize;
+                }
+                const devX = devSumX / div;
+                const devY = devSumY / div;
+                const spanX = devX * 2;
+                const spanY = devY * 2;
+                let span;
+                if (this.inDoubleTapMode()) {
+                    span = spanY;
+                }
+                else {
+                    span = Math.sqrt(spanX * spanX + spanY * spanY);
+                }
+                const wasInProgress = this.mInProgress;
+                this.mFocusX = focusX;
+                this.mFocusY = focusY;
+                if (!this.inDoubleTapMode() && this.mInProgress && (span < this.mMinSpan || configChanged)) {
+                    this.mListener.onScaleEnd(this);
+                    this.mInProgress = false;
+                    this.mInitialSpan = span;
+                    this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
+                }
+                if (configChanged) {
+                    this.mPrevSpanX = this.mCurrSpanX = spanX;
+                    this.mPrevSpanY = this.mCurrSpanY = spanY;
+                    this.mInitialSpan = this.mPrevSpan = this.mCurrSpan = span;
+                }
+                const minSpan = this.inDoubleTapMode() ? this.mSpanSlop : this.mMinSpan;
+                if (!this.mInProgress && span >= minSpan && (wasInProgress || Math.abs(span - this.mInitialSpan) > this.mSpanSlop)) {
+                    this.mPrevSpanX = this.mCurrSpanX = spanX;
+                    this.mPrevSpanY = this.mCurrSpanY = spanY;
+                    this.mPrevSpan = this.mCurrSpan = span;
+                    this.mPrevTime = this.mCurrTime;
+                    this.mInProgress = this.mListener.onScaleBegin(this);
+                }
+                if (action == MotionEvent.ACTION_MOVE) {
+                    this.mCurrSpanX = spanX;
+                    this.mCurrSpanY = spanY;
+                    this.mCurrSpan = span;
+                    let updatePrev = true;
+                    if (this.mInProgress) {
+                        updatePrev = this.mListener.onScale(this);
+                    }
+                    if (updatePrev) {
+                        this.mPrevSpanX = this.mCurrSpanX;
+                        this.mPrevSpanY = this.mCurrSpanY;
+                        this.mPrevSpan = this.mCurrSpan;
+                        this.mPrevTime = this.mCurrTime;
+                    }
+                }
+                return true;
+            }
+            inDoubleTapMode() {
+                return this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
+            }
+            setQuickScaleEnabled(scales) {
+                this.mQuickScaleEnabled = scales;
+                if (this.mQuickScaleEnabled && this.mGestureDetector == null) {
+                    let gestureListener = (() => {
+                        const _this = this;
+                        class _Inner extends GestureDetector.SimpleOnGestureListener {
+                            onDoubleTap(e) {
+                                _this.mDoubleTapEvent = e;
+                                _this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
+                                return true;
+                            }
+                        }
+                        return new _Inner();
+                    })();
+                    this.mGestureDetector = new GestureDetector(gestureListener, this.mHandler);
+                }
+            }
+            isQuickScaleEnabled() {
+                return this.mQuickScaleEnabled;
+            }
+            isInProgress() {
+                return this.mInProgress;
+            }
+            getFocusX() {
+                return this.mFocusX;
+            }
+            getFocusY() {
+                return this.mFocusY;
+            }
+            getCurrentSpan() {
+                return this.mCurrSpan;
+            }
+            getCurrentSpanX() {
+                return this.mCurrSpanX;
+            }
+            getCurrentSpanY() {
+                return this.mCurrSpanY;
+            }
+            getPreviousSpan() {
+                return this.mPrevSpan;
+            }
+            getPreviousSpanX() {
+                return this.mPrevSpanX;
+            }
+            getPreviousSpanY() {
+                return this.mPrevSpanY;
+            }
+            getScaleFactor() {
+                if (this.inDoubleTapMode()) {
+                    const scaleUp = (this.mEventBeforeOrAboveStartingGestureEvent && (this.mCurrSpan < this.mPrevSpan)) || (!this.mEventBeforeOrAboveStartingGestureEvent && (this.mCurrSpan > this.mPrevSpan));
+                    const spanDiff = (Math.abs(1 - (this.mCurrSpan / this.mPrevSpan)) * ScaleGestureDetector.SCALE_FACTOR);
+                    return this.mPrevSpan <= 0 ? 1 : scaleUp ? (1 + spanDiff) : (1 - spanDiff);
+                }
+                return this.mPrevSpan > 0 ? this.mCurrSpan / this.mPrevSpan : 1;
+            }
+            getTimeDelta() {
+                return this.mCurrTime - this.mPrevTime;
+            }
+            getEventTime() {
+                return this.mCurrTime;
+            }
+        }
+        ScaleGestureDetector.TAG = "ScaleGestureDetector";
+        ScaleGestureDetector.TOUCH_STABILIZE_TIME = 128;
+        ScaleGestureDetector.DOUBLE_TAP_MODE_NONE = 0;
+        ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS = 1;
+        ScaleGestureDetector.SCALE_FACTOR = .5;
+        view.ScaleGestureDetector = ScaleGestureDetector;
+        (function (ScaleGestureDetector) {
+            class SimpleOnScaleGestureListener {
+                onScale(detector) {
+                    return false;
+                }
+                onScaleBegin(detector) {
+                    return true;
+                }
+                onScaleEnd(detector) {
+                }
+            }
+            ScaleGestureDetector.SimpleOnScaleGestureListener = SimpleOnScaleGestureListener;
+        })(ScaleGestureDetector = view.ScaleGestureDetector || (view.ScaleGestureDetector = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*******************************************************************************
+ * Copyright 2011, 2012 Chris Banes.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+///<reference path="../../../../../android/util/Log.ts"/>
+///<reference path="../../../../../android/view/MotionEvent.ts"/>
+///<reference path="../../../../../android/view/ScaleGestureDetector.ts"/>
+///<reference path="../../../../../android/view/VelocityTracker.ts"/>
+///<reference path="../../../../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../../../../java/lang/Float.ts"/>
+var uk;
+(function (uk) {
+    var co;
+    (function (co) {
+        var senab;
+        (function (senab) {
+            var photoview;
+            (function (photoview) {
+                var Log = android.util.Log;
+                var MotionEvent = android.view.MotionEvent;
+                var ScaleGestureDetector = android.view.ScaleGestureDetector;
+                var VelocityTracker = android.view.VelocityTracker;
+                var ViewConfiguration = android.view.ViewConfiguration;
+                class GestureDetector {
+                    constructor() {
+                        this.mActivePointerId = GestureDetector.INVALID_POINTER_ID;
+                        this.mActivePointerIndex = 0;
+                        this.mLastTouchX = 0;
+                        this.mLastTouchY = 0;
+                        this.mTouchSlop = 0;
+                        this.mMinimumVelocity = 0;
+                        const configuration = ViewConfiguration.get();
+                        this.mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
+                        this.mTouchSlop = configuration.getScaledTouchSlop();
+                        const _this = this;
+                        let scaleListener = {
+                            onScale(detector) {
+                                let scaleFactor = detector.getScaleFactor();
+                                if (Number.isNaN(scaleFactor) || !Number.isFinite(scaleFactor))
+                                    return false;
+                                _this.mListener.onScale(scaleFactor, detector.getFocusX(), detector.getFocusY());
+                                return true;
+                            },
+                            onScaleBegin(detector) {
+                                return true;
+                            },
+                            onScaleEnd(detector) {
+                            }
+                        };
+                        this.mScaleDetector = new ScaleGestureDetector(scaleListener);
+                    }
+                    setOnGestureListener(listener) {
+                        this.mListener = listener;
+                    }
+                    getActiveX(ev) {
+                        return ev.getX(this.mActivePointerIndex < 0 ? 0 : this.mActivePointerIndex);
+                    }
+                    getActiveY(ev) {
+                        return ev.getY(this.mActivePointerIndex < 0 ? 0 : this.mActivePointerIndex);
+                    }
+                    isScaling() {
+                        return this.mScaleDetector.isInProgress();
+                    }
+                    isDragging() {
+                        return this.mIsDragging;
+                    }
+                    onTouchEvent(ev) {
+                        this.mScaleDetector.onTouchEvent(ev);
+                        const action = ev.getAction();
+                        switch (action & MotionEvent.ACTION_MASK) {
+                            case MotionEvent.ACTION_DOWN:
+                                this.mActivePointerId = ev.getPointerId(0);
+                                break;
+                            case MotionEvent.ACTION_CANCEL:
+                            case MotionEvent.ACTION_UP:
+                                this.mActivePointerId = GestureDetector.INVALID_POINTER_ID;
+                                break;
+                            case MotionEvent.ACTION_POINTER_UP:
+                                const pointerIndex = ev.getActionIndex();
+                                const pointerId = ev.getPointerId(pointerIndex);
+                                if (pointerId == this.mActivePointerId) {
+                                    const newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                                    this.mActivePointerId = ev.getPointerId(newPointerIndex);
+                                    this.mLastTouchX = ev.getX(newPointerIndex);
+                                    this.mLastTouchY = ev.getY(newPointerIndex);
+                                }
+                                break;
+                        }
+                        this.mActivePointerIndex = ev.findPointerIndex(this.mActivePointerId != GestureDetector.INVALID_POINTER_ID ? this.mActivePointerId : 0);
+                        switch (ev.getAction()) {
+                            case MotionEvent.ACTION_DOWN:
+                                {
+                                    this.mVelocityTracker = VelocityTracker.obtain();
+                                    if (null != this.mVelocityTracker) {
+                                        this.mVelocityTracker.addMovement(ev);
+                                    }
+                                    else {
+                                        Log.i(GestureDetector.LOG_TAG, "Velocity tracker is null");
+                                    }
+                                    this.mLastTouchX = this.getActiveX(ev);
+                                    this.mLastTouchY = this.getActiveY(ev);
+                                    this.mIsDragging = false;
+                                    break;
+                                }
+                            case MotionEvent.ACTION_MOVE:
+                                {
+                                    const x = this.getActiveX(ev);
+                                    const y = this.getActiveY(ev);
+                                    const dx = x - this.mLastTouchX, dy = y - this.mLastTouchY;
+                                    if (!this.mIsDragging) {
+                                        this.mIsDragging = Math.sqrt((dx * dx) + (dy * dy)) >= this.mTouchSlop;
+                                    }
+                                    if (this.mIsDragging) {
+                                        this.mListener.onDrag(dx, dy);
+                                        this.mLastTouchX = x;
+                                        this.mLastTouchY = y;
+                                        if (null != this.mVelocityTracker) {
+                                            this.mVelocityTracker.addMovement(ev);
+                                        }
+                                    }
+                                    break;
+                                }
+                            case MotionEvent.ACTION_CANCEL:
+                                {
+                                    if (null != this.mVelocityTracker) {
+                                        this.mVelocityTracker.recycle();
+                                        this.mVelocityTracker = null;
+                                    }
+                                    break;
+                                }
+                            case MotionEvent.ACTION_UP:
+                                {
+                                    if (this.mIsDragging) {
+                                        if (null != this.mVelocityTracker) {
+                                            this.mLastTouchX = this.getActiveX(ev);
+                                            this.mLastTouchY = this.getActiveY(ev);
+                                            this.mVelocityTracker.addMovement(ev);
+                                            this.mVelocityTracker.computeCurrentVelocity(1000);
+                                            const vX = this.mVelocityTracker.getXVelocity(), vY = this.mVelocityTracker.getYVelocity();
+                                            if (Math.max(Math.abs(vX), Math.abs(vY)) >= this.mMinimumVelocity) {
+                                                this.mListener.onFling(this.mLastTouchX, this.mLastTouchY, -vX, -vY);
+                                            }
+                                        }
+                                    }
+                                    if (null != this.mVelocityTracker) {
+                                        this.mVelocityTracker.recycle();
+                                        this.mVelocityTracker = null;
+                                    }
+                                    break;
+                                }
+                        }
+                        return true;
+                    }
+                }
+                GestureDetector.LOG_TAG = "CupcakeGestureDetector";
+                GestureDetector.INVALID_POINTER_ID = -1;
+                photoview.GestureDetector = GestureDetector;
+            })(photoview = senab.photoview || (senab.photoview = {}));
+        })(senab = co.senab || (co.senab = {}));
+    })(co = uk.co || (uk.co = {}));
+})(uk || (uk = {}));
+/*******************************************************************************
+ * Copyright 2011, 2012 Chris Banes.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+///<reference path="../../../../../android/graphics/Matrix.ts"/>
+///<reference path="../../../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../../../android/graphics/RectF.ts"/>
+///<reference path="../../../../../android/view/GestureDetector.ts"/>
+///<reference path="../../../../../android/view/View.ts"/>
+///<reference path="../../../../../android/widget/ImageView.ts"/>
+///<reference path="../../../../uk/co/senab/photoview/GestureDetector.ts"/>
+///<reference path="../../../../uk/co/senab/photoview/PhotoView.ts"/>
+///<reference path="../../../../uk/co/senab/photoview/PhotoViewAttacher.ts"/>
+var uk;
+(function (uk) {
+    var co;
+    (function (co) {
+        var senab;
+        (function (senab) {
+            var photoview;
+            (function (photoview) {
+                var IPhotoView;
+                (function (IPhotoView) {
+                    IPhotoView.DEFAULT_MAX_SCALE = 3.0;
+                    IPhotoView.DEFAULT_MID_SCALE = 1.75;
+                    IPhotoView.DEFAULT_MIN_SCALE = 1.0;
+                    IPhotoView.DEFAULT_ZOOM_DURATION = 200;
+                    function isImpl(obj) {
+                        if (!obj)
+                            return false;
+                        return obj['canZoom'] &&
+                            obj['getDisplayRect'] &&
+                            obj['setDisplayMatrix'] &&
+                            obj['getDisplayMatrix'] &&
+                            obj['getMinScale'] &&
+                            obj['getMinimumScale'] &&
+                            obj['getMidScale'] &&
+                            obj['getMediumScale'] &&
+                            obj['getMaxScale'] &&
+                            obj['getMaximumScale'] &&
+                            obj['getScale'] &&
+                            obj['getScaleType'] &&
+                            obj['setAllowParentInterceptOnEdge'] &&
+                            obj['setMinScale'] &&
+                            obj['setMinimumScale'] &&
+                            obj['setMidScale'] &&
+                            obj['setMediumScale'] &&
+                            obj['setMaxScale'] &&
+                            obj['setMaximumScale'] &&
+                            obj['setScaleLevels'] &&
+                            obj['setOnLongClickListener'] &&
+                            obj['setOnMatrixChangeListener'] &&
+                            obj['setOnPhotoTapListener'] &&
+                            obj['getOnPhotoTapListener'] &&
+                            obj['setOnViewTapListener'] &&
+                            obj['setRotationTo'] &&
+                            obj['setRotationBy'] &&
+                            obj['getOnViewTapListener'] &&
+                            obj['setScale'] &&
+                            obj['setScale'] &&
+                            obj['setScale'] &&
+                            obj['setScaleType'] &&
+                            obj['setZoomable'] &&
+                            obj['setPhotoViewRotation'] &&
+                            obj['getVisibleRectangleBitmap'] &&
+                            obj['setZoomTransitionDuration'] &&
+                            obj['getIPhotoViewImplementation'] &&
+                            obj['setOnDoubleTapListener'] &&
+                            obj['setOnScaleChangeListener'];
+                    }
+                    IPhotoView.isImpl = isImpl;
+                })(IPhotoView = photoview.IPhotoView || (photoview.IPhotoView = {}));
+            })(photoview = senab.photoview || (senab.photoview = {}));
+        })(senab = co.senab || (co.senab = {}));
+    })(co = uk.co || (uk.co = {}));
+})(uk || (uk = {}));
+/*******************************************************************************
+ * Copyright 2011, 2012 Chris Banes.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+///<reference path="../../../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../../../android/graphics/Matrix.ts"/>
+///<reference path="../../../../../android/graphics/RectF.ts"/>
+///<reference path="../../../../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../../../../android/util/Log.ts"/>
+///<reference path="../../../../../android/view/MotionEvent.ts"/>
+///<reference path="../../../../../android/view/View.ts"/>
+///<reference path="../../../../../android/view/ViewParent.ts"/>
+///<reference path="../../../../../android/view/ViewTreeObserver.ts"/>
+///<reference path="../../../../../android/view/animation/AccelerateDecelerateInterpolator.ts"/>
+///<reference path="../../../../../android/view/animation/Interpolator.ts"/>
+///<reference path="../../../../../android/widget/ImageView.ts"/>
+///<reference path="../../../../../android/widget/OverScroller.ts"/>
+///<reference path="../../../../../java/lang/ref/WeakReference.ts"/>
+///<reference path="../../../../../java/lang/Runnable.ts"/>
+///<reference path="../../../../../java/lang/System.ts"/>
+///<reference path="../../../../uk/co/senab/photoview/GestureDetector.ts"/>
+///<reference path="../../../../uk/co/senab/photoview/IPhotoView.ts"/>
+///<reference path="../../../../uk/co/senab/photoview/PhotoView.ts"/>
+var uk;
+(function (uk) {
+    var co;
+    (function (co) {
+        var senab;
+        (function (senab) {
+            var photoview;
+            (function (photoview) {
+                var Matrix = android.graphics.Matrix;
+                var ScaleToFit = android.graphics.Matrix.ScaleToFit;
+                var RectF = android.graphics.RectF;
+                var Log = android.util.Log;
+                var AccelerateDecelerateInterpolator = android.view.animation.AccelerateDecelerateInterpolator;
+                var ScaleType = android.widget.ImageView.ScaleType;
+                var OverScroller = android.widget.OverScroller;
+                var WeakReference = java.lang.ref.WeakReference;
+                var MotionEvent = android.view.MotionEvent;
+                const ACTION_CANCEL = MotionEvent.ACTION_CANCEL;
+                const ACTION_DOWN = MotionEvent.ACTION_DOWN;
+                const ACTION_UP = MotionEvent.ACTION_UP;
+                var System = java.lang.System;
+                var GestureDetector = uk.co.senab.photoview.GestureDetector;
+                var IPhotoView = uk.co.senab.photoview.IPhotoView;
+                class PhotoViewAttacher {
+                    constructor(imageView, zoomable = true) {
+                        this.ZOOM_DURATION = IPhotoView.DEFAULT_ZOOM_DURATION;
+                        this.mMinScale = IPhotoView.DEFAULT_MIN_SCALE;
+                        this.mMidScale = IPhotoView.DEFAULT_MID_SCALE;
+                        this.mMaxScale = IPhotoView.DEFAULT_MAX_SCALE;
+                        this.mAllowParentInterceptOnEdge = true;
+                        this.mBlockParentIntercept = false;
+                        this.mBaseMatrix = new Matrix();
+                        this.mDrawMatrix = new Matrix();
+                        this.mSuppMatrix = new Matrix();
+                        this.mDisplayRect = new RectF();
+                        this.mMatrixValues = new Array(9);
+                        this.mIvTop = 0;
+                        this.mIvRight = 0;
+                        this.mIvBottom = 0;
+                        this.mIvLeft = 0;
+                        this.mScrollEdge = PhotoViewAttacher.EDGE_BOTH;
+                        this.mScaleType = ScaleType.FIT_CENTER;
+                        this.mImageView = new WeakReference(imageView);
+                        imageView.setOnTouchListener(this);
+                        let observer = imageView.getViewTreeObserver();
+                        if (null != observer)
+                            observer.addOnGlobalLayoutListener(this);
+                        PhotoViewAttacher.setImageViewScaleTypeMatrix(imageView);
+                        this.mScaleDragDetector = new GestureDetector();
+                        this.mScaleDragDetector.setOnGestureListener(this);
+                        this.mGestureDetector = new android.view.GestureDetector((() => {
+                            const _this = this;
+                            class _Inner extends android.view.GestureDetector.SimpleOnGestureListener {
+                                onLongPress(e) {
+                                    if (null != _this.mLongClickListener) {
+                                        _this.mLongClickListener.onLongClick(_this.getImageView());
+                                    }
+                                }
+                            }
+                            return new _Inner();
+                        })());
+                        this.mGestureDetector.setOnDoubleTapListener(new PhotoViewAttacher.DefaultOnDoubleTapListener(this));
+                        this.setZoomable(zoomable);
+                    }
+                    static checkZoomLevels(minZoom, midZoom, maxZoom) {
+                        if (minZoom >= midZoom) {
+                            throw Error(`new IllegalArgumentException("MinZoom has to be less than MidZoom")`);
+                        }
+                        else if (midZoom >= maxZoom) {
+                            throw Error(`new IllegalArgumentException("MidZoom has to be less than MaxZoom")`);
+                        }
+                    }
+                    static hasDrawable(imageView) {
+                        return null != imageView && null != imageView.getDrawable();
+                    }
+                    static isSupportedScaleType(scaleType) {
+                        if (null == scaleType) {
+                            return false;
+                        }
+                        switch (scaleType) {
+                            case ScaleType.MATRIX:
+                                throw Error(`new IllegalArgumentException(ScaleType.MATRIX is not supported in PhotoView)`);
+                            default:
+                                return true;
+                        }
+                    }
+                    static setImageViewScaleTypeMatrix(imageView) {
+                        if (null != imageView && !(IPhotoView.isImpl(imageView))) {
+                            if (ScaleType.MATRIX != (imageView.getScaleType())) {
+                                imageView.setScaleType(ScaleType.MATRIX);
+                            }
+                        }
+                    }
+                    setOnDoubleTapListener(newOnDoubleTapListener) {
+                        if (newOnDoubleTapListener != null) {
+                            this.mGestureDetector.setOnDoubleTapListener(newOnDoubleTapListener);
+                        }
+                        else {
+                            this.mGestureDetector.setOnDoubleTapListener(new PhotoViewAttacher.DefaultOnDoubleTapListener(this));
+                        }
+                    }
+                    setOnScaleChangeListener(onScaleChangeListener) {
+                        this.mScaleChangeListener = onScaleChangeListener;
+                    }
+                    canZoom() {
+                        return this.mZoomEnabled;
+                    }
+                    cleanup() {
+                        if (null == this.mImageView) {
+                            return;
+                        }
+                        const imageView = this.mImageView.get();
+                        if (null != imageView) {
+                            let observer = imageView.getViewTreeObserver();
+                            if (null != observer && observer.isAlive()) {
+                                observer.removeGlobalOnLayoutListener(this);
+                            }
+                            imageView.setOnTouchListener(null);
+                            this.cancelFling();
+                        }
+                        if (null != this.mGestureDetector) {
+                            this.mGestureDetector.setOnDoubleTapListener(null);
+                        }
+                        this.mMatrixChangeListener = null;
+                        this.mPhotoTapListener = null;
+                        this.mViewTapListener = null;
+                        this.mImageView = null;
+                    }
+                    getDisplayRect() {
+                        this.checkMatrixBounds();
+                        return this._getDisplayRect(this.getDrawMatrix());
+                    }
+                    setDisplayMatrix(finalMatrix) {
+                        if (finalMatrix == null)
+                            throw Error(`new IllegalArgumentException("Matrix cannot be null")`);
+                        let imageView = this.getImageView();
+                        if (null == imageView)
+                            return false;
+                        if (null == imageView.getDrawable())
+                            return false;
+                        this.mSuppMatrix.set(finalMatrix);
+                        this.setImageViewMatrix(this.getDrawMatrix());
+                        this.checkMatrixBounds();
+                        return true;
+                    }
+                    setPhotoViewRotation(degrees) {
+                        this.mSuppMatrix.setRotate(degrees % 360);
+                        this.checkAndDisplayMatrix();
+                    }
+                    setRotationTo(degrees) {
+                        this.mSuppMatrix.setRotate(degrees % 360);
+                        this.checkAndDisplayMatrix();
+                    }
+                    setRotationBy(degrees) {
+                        this.mSuppMatrix.postRotate(degrees % 360);
+                        this.checkAndDisplayMatrix();
+                    }
+                    getImageView() {
+                        let imageView = null;
+                        if (null != this.mImageView) {
+                            imageView = this.mImageView.get();
+                        }
+                        if (null == imageView) {
+                            this.cleanup();
+                            if (PhotoViewAttacher.DEBUG)
+                                Log.i(PhotoViewAttacher.LOG_TAG, "ImageView no longer exists. You should not use this PhotoViewAttacher any more.");
+                        }
+                        return imageView;
+                    }
+                    getMinScale() {
+                        return this.getMinimumScale();
+                    }
+                    getMinimumScale() {
+                        return this.mMinScale;
+                    }
+                    getMidScale() {
+                        return this.getMediumScale();
+                    }
+                    getMediumScale() {
+                        return this.mMidScale;
+                    }
+                    getMaxScale() {
+                        return this.getMaximumScale();
+                    }
+                    getMaximumScale() {
+                        return this.mMaxScale;
+                    }
+                    getScale() {
+                        return Math.sqrt(Math.pow(this.getValue(this.mSuppMatrix, Matrix.MSCALE_X), 2) + Math.pow(this.getValue(this.mSuppMatrix, Matrix.MSKEW_Y), 2));
+                    }
+                    getScaleType() {
+                        return this.mScaleType;
+                    }
+                    onDrag(dx, dy) {
+                        if (this.mScaleDragDetector.isScaling()) {
+                            return;
+                        }
+                        if (PhotoViewAttacher.DEBUG) {
+                            Log.d(PhotoViewAttacher.LOG_TAG, `onDrag: dx: ${dx.toFixed(2)}. dy: ${dy.toFixed(2)}`);
+                        }
+                        let imageView = this.getImageView();
+                        this.mSuppMatrix.postTranslate(dx, dy);
+                        this.checkAndDisplayMatrix();
+                        let parent = imageView.getParent();
+                        if (this.mAllowParentInterceptOnEdge && !this.mScaleDragDetector.isScaling() && !this.mBlockParentIntercept) {
+                            if (this.mScrollEdge == PhotoViewAttacher.EDGE_BOTH || (this.mScrollEdge == PhotoViewAttacher.EDGE_LEFT && dx >= 1) || (this.mScrollEdge == PhotoViewAttacher.EDGE_RIGHT && dx <= -1)) {
+                                if (null != parent)
+                                    parent.requestDisallowInterceptTouchEvent(false);
+                            }
+                        }
+                        else {
+                            if (null != parent) {
+                                parent.requestDisallowInterceptTouchEvent(true);
+                            }
+                        }
+                    }
+                    onFling(startX, startY, velocityX, velocityY) {
+                        if (PhotoViewAttacher.DEBUG) {
+                            Log.d(PhotoViewAttacher.LOG_TAG, "onFling. sX: " + startX + " sY: " + startY + " Vx: " + velocityX + " Vy: " + velocityY);
+                        }
+                        let imageView = this.getImageView();
+                        this.mCurrentFlingRunnable = new PhotoViewAttacher.FlingRunnable(this);
+                        this.mCurrentFlingRunnable.fling(this.getImageViewWidth(imageView), this.getImageViewHeight(imageView), Math.floor(velocityX), Math.floor(velocityY));
+                        imageView.post(this.mCurrentFlingRunnable);
+                    }
+                    onGlobalLayout() {
+                        let imageView = this.getImageView();
+                        if (null != imageView) {
+                            if (this.mZoomEnabled) {
+                                const top = imageView.getTop();
+                                const right = imageView.getRight();
+                                const bottom = imageView.getBottom();
+                                const left = imageView.getLeft();
+                                if (top != this.mIvTop || bottom != this.mIvBottom || left != this.mIvLeft || right != this.mIvRight) {
+                                    this.updateBaseMatrix(imageView.getDrawable());
+                                    this.mIvTop = top;
+                                    this.mIvRight = right;
+                                    this.mIvBottom = bottom;
+                                    this.mIvLeft = left;
+                                }
+                            }
+                            else {
+                                this.updateBaseMatrix(imageView.getDrawable());
+                            }
+                        }
+                    }
+                    onScale(scaleFactor, focusX, focusY) {
+                        if (PhotoViewAttacher.DEBUG) {
+                            Log.d(PhotoViewAttacher.LOG_TAG, `onScale: scale: ${scaleFactor.toFixed(2)}. fX: ${focusX.toFixed(2)}. fY: ${focusY.toFixed(2)}f`);
+                        }
+                        if (this.getScale() < this.mMaxScale || scaleFactor < 1) {
+                            if (null != this.mScaleChangeListener) {
+                                this.mScaleChangeListener.onScaleChange(scaleFactor, focusX, focusY);
+                            }
+                            this.mSuppMatrix.postScale(scaleFactor, scaleFactor, focusX, focusY);
+                            this.checkAndDisplayMatrix();
+                        }
+                    }
+                    onTouch(v, ev) {
+                        let handled = false;
+                        if (this.mZoomEnabled && PhotoViewAttacher.hasDrawable(v)) {
+                            let parent = v.getParent();
+                            switch (ev.getAction()) {
+                                case ACTION_DOWN:
+                                    if (null != parent) {
+                                        parent.requestDisallowInterceptTouchEvent(true);
+                                    }
+                                    else {
+                                        Log.i(PhotoViewAttacher.LOG_TAG, "onTouch getParent() returned null");
+                                    }
+                                    this.cancelFling();
+                                    break;
+                                case ACTION_CANCEL:
+                                case ACTION_UP:
+                                    if (this.getScale() < this.mMinScale) {
+                                        let rect = this.getDisplayRect();
+                                        if (null != rect) {
+                                            v.post(new PhotoViewAttacher.AnimatedZoomRunnable(this, this.getScale(), this.mMinScale, rect.centerX(), rect.centerY()));
+                                            handled = true;
+                                        }
+                                    }
+                                    break;
+                            }
+                            if (null != this.mScaleDragDetector) {
+                                let wasScaling = this.mScaleDragDetector.isScaling();
+                                let wasDragging = this.mScaleDragDetector.isDragging();
+                                handled = this.mScaleDragDetector.onTouchEvent(ev);
+                                let didntScale = !wasScaling && !this.mScaleDragDetector.isScaling();
+                                let didntDrag = !wasDragging && !this.mScaleDragDetector.isDragging();
+                                this.mBlockParentIntercept = didntScale && didntDrag;
+                            }
+                            if (null != this.mGestureDetector && this.mGestureDetector.onTouchEvent(ev)) {
+                                handled = true;
+                            }
+                        }
+                        return handled;
+                    }
+                    setAllowParentInterceptOnEdge(allow) {
+                        this.mAllowParentInterceptOnEdge = allow;
+                    }
+                    setMinScale(minScale) {
+                        this.setMinimumScale(minScale);
+                    }
+                    setMinimumScale(minimumScale) {
+                        PhotoViewAttacher.checkZoomLevels(minimumScale, this.mMidScale, this.mMaxScale);
+                        this.mMinScale = minimumScale;
+                    }
+                    setMidScale(midScale) {
+                        this.setMediumScale(midScale);
+                    }
+                    setMediumScale(mediumScale) {
+                        PhotoViewAttacher.checkZoomLevels(this.mMinScale, mediumScale, this.mMaxScale);
+                        this.mMidScale = mediumScale;
+                    }
+                    setMaxScale(maxScale) {
+                        this.setMaximumScale(maxScale);
+                    }
+                    setMaximumScale(maximumScale) {
+                        PhotoViewAttacher.checkZoomLevels(this.mMinScale, this.mMidScale, maximumScale);
+                        this.mMaxScale = maximumScale;
+                    }
+                    setScaleLevels(minimumScale, mediumScale, maximumScale) {
+                        PhotoViewAttacher.checkZoomLevels(minimumScale, mediumScale, maximumScale);
+                        this.mMinScale = minimumScale;
+                        this.mMidScale = mediumScale;
+                        this.mMaxScale = maximumScale;
+                    }
+                    setOnLongClickListener(listener) {
+                        this.mLongClickListener = listener;
+                    }
+                    setOnMatrixChangeListener(listener) {
+                        this.mMatrixChangeListener = listener;
+                    }
+                    setOnPhotoTapListener(listener) {
+                        this.mPhotoTapListener = listener;
+                    }
+                    getOnPhotoTapListener() {
+                        return this.mPhotoTapListener;
+                    }
+                    setOnViewTapListener(listener) {
+                        this.mViewTapListener = listener;
+                    }
+                    getOnViewTapListener() {
+                        return this.mViewTapListener;
+                    }
+                    setScale(...args) {
+                        if (args.length >= 3) {
+                            this.setScale_4(...args);
+                        }
+                        else {
+                            this.setScale_2(...args);
+                        }
+                    }
+                    setScale_2(scale, animate = false) {
+                        let imageView = this.getImageView();
+                        if (null != imageView) {
+                            this.setScale(scale, (imageView.getRight()) / 2, (imageView.getBottom()) / 2, animate);
+                        }
+                    }
+                    setScale_4(scale, focalX, focalY, animate = false) {
+                        let imageView = this.getImageView();
+                        if (null != imageView) {
+                            if (scale < this.mMinScale || scale > this.mMaxScale) {
+                                Log.i(PhotoViewAttacher.LOG_TAG, "Scale must be within the range of minScale and maxScale");
+                                return;
+                            }
+                            if (animate) {
+                                imageView.post(new PhotoViewAttacher.AnimatedZoomRunnable(this, this.getScale(), scale, focalX, focalY));
+                            }
+                            else {
+                                this.mSuppMatrix.setScale(scale, scale, focalX, focalY);
+                                this.checkAndDisplayMatrix();
+                            }
+                        }
+                    }
+                    setScaleType(scaleType) {
+                        if (PhotoViewAttacher.isSupportedScaleType(scaleType) && scaleType != this.mScaleType) {
+                            this.mScaleType = scaleType;
+                            this.update();
+                        }
+                    }
+                    setZoomable(zoomable) {
+                        this.mZoomEnabled = zoomable;
+                        this.update();
+                    }
+                    update() {
+                        let imageView = this.getImageView();
+                        if (null != imageView) {
+                            if (this.mZoomEnabled) {
+                                PhotoViewAttacher.setImageViewScaleTypeMatrix(imageView);
+                                this.updateBaseMatrix(imageView.getDrawable());
+                            }
+                            else {
+                                this.resetMatrix();
+                            }
+                        }
+                    }
+                    getDisplayMatrix() {
+                        return new Matrix(this.getDrawMatrix());
+                    }
+                    getDrawMatrix() {
+                        this.mDrawMatrix.set(this.mBaseMatrix);
+                        this.mDrawMatrix.postConcat(this.mSuppMatrix);
+                        return this.mDrawMatrix;
+                    }
+                    cancelFling() {
+                        if (null != this.mCurrentFlingRunnable) {
+                            this.mCurrentFlingRunnable.cancelFling();
+                            this.mCurrentFlingRunnable = null;
+                        }
+                    }
+                    checkAndDisplayMatrix() {
+                        if (this.checkMatrixBounds()) {
+                            this.setImageViewMatrix(this.getDrawMatrix());
+                        }
+                    }
+                    checkImageViewScaleType() {
+                        let imageView = this.getImageView();
+                        if (null != imageView && !(IPhotoView.isImpl(imageView))) {
+                            if (ScaleType.MATRIX != (imageView.getScaleType())) {
+                                throw Error(`new IllegalStateException("The ImageView's ScaleType has been changed since attaching a PhotoViewAttacher")`);
+                            }
+                        }
+                    }
+                    checkMatrixBounds() {
+                        const imageView = this.getImageView();
+                        if (null == imageView) {
+                            return false;
+                        }
+                        const rect = this._getDisplayRect(this.getDrawMatrix());
+                        if (null == rect) {
+                            return false;
+                        }
+                        const height = rect.height(), width = rect.width();
+                        let deltaX = 0, deltaY = 0;
+                        const viewHeight = this.getImageViewHeight(imageView);
+                        if (height <= viewHeight) {
+                            switch (this.mScaleType) {
+                                case ScaleType.FIT_START:
+                                    deltaY = -rect.top;
+                                    break;
+                                case ScaleType.FIT_END:
+                                    deltaY = viewHeight - height - rect.top;
+                                    break;
+                                default:
+                                    deltaY = (viewHeight - height) / 2 - rect.top;
+                                    break;
+                            }
+                        }
+                        else if (rect.top > 0) {
+                            deltaY = -rect.top;
+                        }
+                        else if (rect.bottom < viewHeight) {
+                            deltaY = viewHeight - rect.bottom;
+                        }
+                        const viewWidth = this.getImageViewWidth(imageView);
+                        if (width <= viewWidth) {
+                            switch (this.mScaleType) {
+                                case ScaleType.FIT_START:
+                                    deltaX = -rect.left;
+                                    break;
+                                case ScaleType.FIT_END:
+                                    deltaX = viewWidth - width - rect.left;
+                                    break;
+                                default:
+                                    deltaX = (viewWidth - width) / 2 - rect.left;
+                                    break;
+                            }
+                            this.mScrollEdge = PhotoViewAttacher.EDGE_BOTH;
+                        }
+                        else if (rect.left > 0) {
+                            this.mScrollEdge = PhotoViewAttacher.EDGE_LEFT;
+                            deltaX = -rect.left;
+                        }
+                        else if (rect.right < viewWidth) {
+                            deltaX = viewWidth - rect.right;
+                            this.mScrollEdge = PhotoViewAttacher.EDGE_RIGHT;
+                        }
+                        else {
+                            this.mScrollEdge = PhotoViewAttacher.EDGE_NONE;
+                        }
+                        this.mSuppMatrix.postTranslate(deltaX, deltaY);
+                        return true;
+                    }
+                    _getDisplayRect(matrix) {
+                        let imageView = this.getImageView();
+                        if (null != imageView) {
+                            let d = imageView.getDrawable();
+                            if (null != d) {
+                                this.mDisplayRect.set(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+                                matrix.mapRect(this.mDisplayRect);
+                                return this.mDisplayRect;
+                            }
+                        }
+                        return null;
+                    }
+                    getVisibleRectangleBitmap() {
+                        let imageView = this.getImageView();
+                        return imageView == null ? null : imageView.getDrawingCache();
+                    }
+                    setZoomTransitionDuration(milliseconds) {
+                        if (milliseconds < 0)
+                            milliseconds = IPhotoView.DEFAULT_ZOOM_DURATION;
+                        this.ZOOM_DURATION = milliseconds;
+                    }
+                    getIPhotoViewImplementation() {
+                        return this;
+                    }
+                    getValue(matrix, whichValue) {
+                        matrix.getValues(this.mMatrixValues);
+                        return this.mMatrixValues[whichValue];
+                    }
+                    resetMatrix() {
+                        this.mSuppMatrix.reset();
+                        this.setImageViewMatrix(this.getDrawMatrix());
+                        this.checkMatrixBounds();
+                    }
+                    setImageViewMatrix(matrix) {
+                        let imageView = this.getImageView();
+                        if (null != imageView) {
+                            this.checkImageViewScaleType();
+                            imageView.setImageMatrix(matrix);
+                            if (null != this.mMatrixChangeListener) {
+                                let displayRect = this._getDisplayRect(matrix);
+                                if (null != displayRect) {
+                                    this.mMatrixChangeListener.onMatrixChanged(displayRect);
+                                }
+                            }
+                        }
+                    }
+                    updateBaseMatrix(d) {
+                        let imageView = this.getImageView();
+                        if (null == imageView || null == d) {
+                            return;
+                        }
+                        const viewWidth = this.getImageViewWidth(imageView);
+                        const viewHeight = this.getImageViewHeight(imageView);
+                        const drawableWidth = d.getIntrinsicWidth();
+                        const drawableHeight = d.getIntrinsicHeight();
+                        this.mBaseMatrix.reset();
+                        const widthScale = viewWidth / drawableWidth;
+                        const heightScale = viewHeight / drawableHeight;
+                        if (this.mScaleType == ScaleType.CENTER) {
+                            this.mBaseMatrix.postTranslate((viewWidth - drawableWidth) / 2, (viewHeight - drawableHeight) / 2);
+                        }
+                        else if (this.mScaleType == ScaleType.CENTER_CROP) {
+                            let scale = Math.max(widthScale, heightScale);
+                            this.mBaseMatrix.postScale(scale, scale);
+                            this.mBaseMatrix.postTranslate((viewWidth - drawableWidth * scale) / 2, (viewHeight - drawableHeight * scale) / 2);
+                        }
+                        else if (this.mScaleType == ScaleType.CENTER_INSIDE) {
+                            let scale = Math.min(1.0, Math.min(widthScale, heightScale));
+                            this.mBaseMatrix.postScale(scale, scale);
+                            this.mBaseMatrix.postTranslate((viewWidth - drawableWidth * scale) / 2, (viewHeight - drawableHeight * scale) / 2);
+                        }
+                        else {
+                            let mTempSrc = new RectF(0, 0, drawableWidth, drawableHeight);
+                            let mTempDst = new RectF(0, 0, viewWidth, viewHeight);
+                            switch (this.mScaleType) {
+                                case ScaleType.FIT_CENTER:
+                                    this.mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.CENTER);
+                                    break;
+                                case ScaleType.FIT_START:
+                                    this.mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.START);
+                                    break;
+                                case ScaleType.FIT_END:
+                                    this.mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.END);
+                                    break;
+                                case ScaleType.FIT_XY:
+                                    this.mBaseMatrix.setRectToRect(mTempSrc, mTempDst, ScaleToFit.FILL);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        this.resetMatrix();
+                    }
+                    getImageViewWidth(imageView) {
+                        if (null == imageView)
+                            return 0;
+                        return imageView.getWidth() - imageView.getPaddingLeft() - imageView.getPaddingRight();
+                    }
+                    getImageViewHeight(imageView) {
+                        if (null == imageView)
+                            return 0;
+                        return imageView.getHeight() - imageView.getPaddingTop() - imageView.getPaddingBottom();
+                    }
+                }
+                PhotoViewAttacher.LOG_TAG = "PhotoViewAttacher";
+                PhotoViewAttacher.DEBUG = Log.View_DBG;
+                PhotoViewAttacher.sInterpolator = new AccelerateDecelerateInterpolator();
+                PhotoViewAttacher.EDGE_NONE = -1;
+                PhotoViewAttacher.EDGE_LEFT = 0;
+                PhotoViewAttacher.EDGE_RIGHT = 1;
+                PhotoViewAttacher.EDGE_BOTH = 2;
+                photoview.PhotoViewAttacher = PhotoViewAttacher;
+                (function (PhotoViewAttacher) {
+                    class AnimatedZoomRunnable {
+                        constructor(arg, currentZoom, targetZoom, focalX, focalY) {
+                            this.mFocalX = 0;
+                            this.mFocalY = 0;
+                            this.mStartTime = 0;
+                            this.mZoomStart = 0;
+                            this.mZoomEnd = 0;
+                            this._PhotoViewAttacher_this = arg;
+                            this.mFocalX = focalX;
+                            this.mFocalY = focalY;
+                            this.mStartTime = System.currentTimeMillis();
+                            this.mZoomStart = currentZoom;
+                            this.mZoomEnd = targetZoom;
+                        }
+                        run() {
+                            let imageView = this._PhotoViewAttacher_this.getImageView();
+                            if (imageView == null) {
+                                return;
+                            }
+                            let t = this.interpolate();
+                            let scale = this.mZoomStart + t * (this.mZoomEnd - this.mZoomStart);
+                            let deltaScale = scale / this._PhotoViewAttacher_this.getScale();
+                            this._PhotoViewAttacher_this.onScale(deltaScale, this.mFocalX, this.mFocalY);
+                            if (t < 1) {
+                                imageView.postOnAnimation(this);
+                            }
+                        }
+                        interpolate() {
+                            let t = 1 * (System.currentTimeMillis() - this.mStartTime) / this._PhotoViewAttacher_this.ZOOM_DURATION;
+                            t = Math.min(1, t);
+                            t = PhotoViewAttacher.sInterpolator.getInterpolation(t);
+                            return t;
+                        }
+                    }
+                    PhotoViewAttacher.AnimatedZoomRunnable = AnimatedZoomRunnable;
+                    class FlingRunnable {
+                        constructor(arg) {
+                            this.mCurrentX = 0;
+                            this.mCurrentY = 0;
+                            this._PhotoViewAttacher_this = arg;
+                            this.mScroller = new OverScroller();
+                        }
+                        cancelFling() {
+                            if (PhotoViewAttacher.DEBUG) {
+                                Log.d(PhotoViewAttacher.LOG_TAG, "Cancel Fling");
+                            }
+                            this.mScroller.forceFinished(true);
+                        }
+                        fling(viewWidth, viewHeight, velocityX, velocityY) {
+                            const rect = this._PhotoViewAttacher_this.getDisplayRect();
+                            if (null == rect) {
+                                return;
+                            }
+                            const startX = Math.round(-rect.left);
+                            let minX, maxX, minY, maxY;
+                            if (viewWidth < rect.width()) {
+                                minX = 0;
+                                maxX = Math.round(rect.width() - viewWidth);
+                            }
+                            else {
+                                minX = maxX = startX;
+                            }
+                            const startY = Math.round(-rect.top);
+                            if (viewHeight < rect.height()) {
+                                minY = 0;
+                                maxY = Math.round(rect.height() - viewHeight);
+                            }
+                            else {
+                                minY = maxY = startY;
+                            }
+                            this.mCurrentX = startX;
+                            this.mCurrentY = startY;
+                            if (PhotoViewAttacher.DEBUG) {
+                                Log.d(PhotoViewAttacher.LOG_TAG, "fling. StartX:" + startX + " StartY:" + startY + " MaxX:" + maxX + " MaxY:" + maxY);
+                            }
+                            if (startX != maxX || startY != maxY) {
+                                this.mScroller.fling(startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, 0, 0);
+                            }
+                        }
+                        run() {
+                            if (this.mScroller.isFinished()) {
+                                return;
+                            }
+                            let imageView = this._PhotoViewAttacher_this.getImageView();
+                            if (null != imageView && this.mScroller.computeScrollOffset()) {
+                                const newX = this.mScroller.getCurrX();
+                                const newY = this.mScroller.getCurrY();
+                                if (PhotoViewAttacher.DEBUG) {
+                                    Log.d(PhotoViewAttacher.LOG_TAG, "fling run(). CurrentX:" + this.mCurrentX + " CurrentY:" + this.mCurrentY + " NewX:" + newX + " NewY:" + newY);
+                                }
+                                this._PhotoViewAttacher_this.mSuppMatrix.postTranslate(this.mCurrentX - newX, this.mCurrentY - newY);
+                                this._PhotoViewAttacher_this.setImageViewMatrix(this._PhotoViewAttacher_this.getDrawMatrix());
+                                this.mCurrentX = newX;
+                                this.mCurrentY = newY;
+                                imageView.postOnAnimation(this);
+                            }
+                        }
+                    }
+                    PhotoViewAttacher.FlingRunnable = FlingRunnable;
+                    class DefaultOnDoubleTapListener {
+                        constructor(photoViewAttacher) {
+                            this.setPhotoViewAttacher(photoViewAttacher);
+                        }
+                        setPhotoViewAttacher(newPhotoViewAttacher) {
+                            this.photoViewAttacher = newPhotoViewAttacher;
+                        }
+                        onSingleTapConfirmed(e) {
+                            if (this.photoViewAttacher == null)
+                                return false;
+                            let imageView = this.photoViewAttacher.getImageView();
+                            if (null != this.photoViewAttacher.getOnPhotoTapListener()) {
+                                const displayRect = this.photoViewAttacher.getDisplayRect();
+                                if (null != displayRect) {
+                                    const x = e.getX(), y = e.getY();
+                                    if (displayRect.contains(x, y)) {
+                                        let xResult = (x - displayRect.left) / displayRect.width();
+                                        let yResult = (y - displayRect.top) / displayRect.height();
+                                        this.photoViewAttacher.getOnPhotoTapListener().onPhotoTap(imageView, xResult, yResult);
+                                        return true;
+                                    }
+                                }
+                            }
+                            if (null != this.photoViewAttacher.getOnViewTapListener()) {
+                                this.photoViewAttacher.getOnViewTapListener().onViewTap(imageView, e.getX(), e.getY());
+                            }
+                            return false;
+                        }
+                        onDoubleTap(ev) {
+                            if (this.photoViewAttacher == null)
+                                return false;
+                            try {
+                                let scale = this.photoViewAttacher.getScale();
+                                let x = ev.getX();
+                                let y = ev.getY();
+                                if (scale < this.photoViewAttacher.getMediumScale()) {
+                                    this.photoViewAttacher.setScale(this.photoViewAttacher.getMediumScale(), x, y, true);
+                                }
+                                else if (scale >= this.photoViewAttacher.getMediumScale() && scale < this.photoViewAttacher.getMaximumScale()) {
+                                    this.photoViewAttacher.setScale(this.photoViewAttacher.getMaximumScale(), x, y, true);
+                                }
+                                else {
+                                    this.photoViewAttacher.setScale(this.photoViewAttacher.getMinimumScale(), x, y, true);
+                                }
+                            }
+                            catch (e) {
+                            }
+                            return true;
+                        }
+                        onDoubleTapEvent(e) {
+                            return false;
+                        }
+                    }
+                    PhotoViewAttacher.DefaultOnDoubleTapListener = DefaultOnDoubleTapListener;
+                })(PhotoViewAttacher = photoview.PhotoViewAttacher || (photoview.PhotoViewAttacher = {}));
+            })(photoview = senab.photoview || (senab.photoview = {}));
+        })(senab = co.senab || (co.senab = {}));
+    })(co = uk.co || (uk.co = {}));
+})(uk || (uk = {}));
+/*******************************************************************************
+ * Copyright 2011, 2012 Chris Banes.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+///<reference path="../../../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../../../android/graphics/Matrix.ts"/>
+///<reference path="../../../../../android/graphics/RectF.ts"/>
+///<reference path="../../../../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../../../../android/view/GestureDetector.ts"/>
+///<reference path="../../../../../android/view/View.ts"/>
+///<reference path="../../../../../android/widget/ImageView.ts"/>
+///<reference path="../../../../uk/co/senab/photoview/PhotoViewAttacher.ts"/>
+///<reference path="../../../../uk/co/senab/photoview/IPhotoView.ts"/>
+var uk;
+(function (uk) {
+    var co;
+    (function (co) {
+        var senab;
+        (function (senab) {
+            var photoview;
+            (function (photoview) {
+                var ImageView = android.widget.ImageView;
+                var PhotoViewAttacher = uk.co.senab.photoview.PhotoViewAttacher;
+                var ScaleType = ImageView.ScaleType;
+                class PhotoView extends ImageView {
+                    constructor(bindElement, rootElement) {
+                        super(bindElement, rootElement);
+                        super.setScaleType(ScaleType.MATRIX);
+                        this.init();
+                    }
+                    init() {
+                        if (null == this.mAttacher || null == this.mAttacher.getImageView()) {
+                            this.mAttacher = new PhotoViewAttacher(this);
+                        }
+                        if (null != this.mPendingScaleType) {
+                            this.setScaleType(this.mPendingScaleType);
+                            this.mPendingScaleType = null;
+                        }
+                    }
+                    setPhotoViewRotation(rotationDegree) {
+                        this.mAttacher.setRotationTo(rotationDegree);
+                    }
+                    setRotationTo(rotationDegree) {
+                        this.mAttacher.setRotationTo(rotationDegree);
+                    }
+                    setRotationBy(rotationDegree) {
+                        this.mAttacher.setRotationBy(rotationDegree);
+                    }
+                    canZoom() {
+                        return this.mAttacher.canZoom();
+                    }
+                    getDisplayRect() {
+                        return this.mAttacher.getDisplayRect();
+                    }
+                    getDisplayMatrix() {
+                        return this.mAttacher.getDisplayMatrix();
+                    }
+                    setDisplayMatrix(finalRectangle) {
+                        return this.mAttacher.setDisplayMatrix(finalRectangle);
+                    }
+                    getMinScale() {
+                        return this.getMinimumScale();
+                    }
+                    getMinimumScale() {
+                        return this.mAttacher.getMinimumScale();
+                    }
+                    getMidScale() {
+                        return this.getMediumScale();
+                    }
+                    getMediumScale() {
+                        return this.mAttacher.getMediumScale();
+                    }
+                    getMaxScale() {
+                        return this.getMaximumScale();
+                    }
+                    getMaximumScale() {
+                        return this.mAttacher.getMaximumScale();
+                    }
+                    getScale() {
+                        return this.mAttacher.getScale();
+                    }
+                    getScaleType() {
+                        return this.mAttacher.getScaleType();
+                    }
+                    setAllowParentInterceptOnEdge(allow) {
+                        this.mAttacher.setAllowParentInterceptOnEdge(allow);
+                    }
+                    setMinScale(minScale) {
+                        this.setMinimumScale(minScale);
+                    }
+                    setMinimumScale(minimumScale) {
+                        this.mAttacher.setMinimumScale(minimumScale);
+                    }
+                    setMidScale(midScale) {
+                        this.setMediumScale(midScale);
+                    }
+                    setMediumScale(mediumScale) {
+                        this.mAttacher.setMediumScale(mediumScale);
+                    }
+                    setMaxScale(maxScale) {
+                        this.setMaximumScale(maxScale);
+                    }
+                    setMaximumScale(maximumScale) {
+                        this.mAttacher.setMaximumScale(maximumScale);
+                    }
+                    setScaleLevels(minimumScale, mediumScale, maximumScale) {
+                        this.mAttacher.setScaleLevels(minimumScale, mediumScale, maximumScale);
+                    }
+                    setImageDrawable(drawable) {
+                        super.setImageDrawable(drawable);
+                        if (null != this.mAttacher) {
+                            this.mAttacher.update();
+                        }
+                    }
+                    setImageURI(uri) {
+                        super.setImageURI(uri);
+                    }
+                    resizeFromDrawable() {
+                        let change = super.resizeFromDrawable();
+                        if (change && null != this.mAttacher) {
+                            this.mAttacher.update();
+                        }
+                        return change;
+                    }
+                    setOnMatrixChangeListener(listener) {
+                        this.mAttacher.setOnMatrixChangeListener(listener);
+                    }
+                    setOnLongClickListener(l) {
+                        this.mAttacher.setOnLongClickListener(l);
+                    }
+                    setOnPhotoTapListener(listener) {
+                        this.mAttacher.setOnPhotoTapListener(listener);
+                    }
+                    getOnPhotoTapListener() {
+                        return this.mAttacher.getOnPhotoTapListener();
+                    }
+                    setOnViewTapListener(listener) {
+                        this.mAttacher.setOnViewTapListener(listener);
+                    }
+                    getOnViewTapListener() {
+                        return this.mAttacher.getOnViewTapListener();
+                    }
+                    setScale(...args) {
+                        this.mAttacher.setScale(...args);
+                    }
+                    setScaleType(scaleType) {
+                        if (null != this.mAttacher) {
+                            this.mAttacher.setScaleType(scaleType);
+                        }
+                        else {
+                            this.mPendingScaleType = scaleType;
+                        }
+                    }
+                    setZoomable(zoomable) {
+                        this.mAttacher.setZoomable(zoomable);
+                    }
+                    getVisibleRectangleBitmap() {
+                        return this.mAttacher.getVisibleRectangleBitmap();
+                    }
+                    setZoomTransitionDuration(milliseconds) {
+                        this.mAttacher.setZoomTransitionDuration(milliseconds);
+                    }
+                    getIPhotoViewImplementation() {
+                        return this.mAttacher;
+                    }
+                    setOnDoubleTapListener(newOnDoubleTapListener) {
+                        this.mAttacher.setOnDoubleTapListener(newOnDoubleTapListener);
+                    }
+                    setOnScaleChangeListener(onScaleChangeListener) {
+                        this.mAttacher.setOnScaleChangeListener(onScaleChangeListener);
+                    }
+                    onDetachedFromWindow() {
+                        this.mAttacher.cleanup();
+                        super.onDetachedFromWindow();
+                    }
+                    onAttachedToWindow() {
+                        this.init();
+                        super.onAttachedToWindow();
+                    }
+                }
+                photoview.PhotoView = PhotoView;
+            })(photoview = senab.photoview || (senab.photoview = {}));
+        })(senab = co.senab || (co.senab = {}));
+    })(co = uk.co || (uk.co = {}));
+})(uk || (uk = {}));
+/**
  * Created by linfaxin on 15/10/23.
  */
 ///<reference path="../android/view/View.ts"/>
@@ -40657,9 +42250,10 @@ var androidui;
             this.element.appendChild(this._canvas);
             this.initFocus();
             this.initEvent();
-            this.initListenSizeChange();
+            this.initSizeVisibleChange();
             this._viewRootImpl.setView(this._rootLayout);
             this._viewRootImpl.initSurface(this._canvas);
+            this.initVisibleChange();
             let debugAttr = this.element.getAttribute('debug');
             if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
                 this.showDebugLayout();
@@ -40850,7 +42444,7 @@ var androidui;
         }
         initGenericEvent() {
         }
-        initListenSizeChange() {
+        initSizeVisibleChange() {
             const _this = this;
             window.addEventListener('resize', () => {
                 _this.notifySizeChange();
@@ -40868,6 +42462,21 @@ var androidui;
                     _this.notifySizeChange();
                 }
             }, 500);
+        }
+        initVisibleChange() {
+            var eventName = 'visibilitychange';
+            if (document['webkitHidden'] != undefined) {
+                eventName = 'webkitvisibilitychange';
+            }
+            document.addEventListener(eventName, () => {
+                if (document['hidden'] || document['webkitHidden']) {
+                    console.log('pagehidden');
+                }
+                else {
+                    console.log('pageshow');
+                    this._viewRootImpl.scheduleTraversals();
+                }
+            }, false);
         }
         notifySizeChange() {
             if (this.refreshWindowBound()) {
@@ -42715,6 +44324,7 @@ var androidui;
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
+///<reference path="lib/uk/co/senab/photoview/PhotoView.ts"/>
 ///<reference path="android/app/Activity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
 ///<reference path="androidui/image/NetDrawable.ts"/>

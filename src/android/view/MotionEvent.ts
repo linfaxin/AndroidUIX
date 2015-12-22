@@ -159,15 +159,17 @@ module android.view {
             }
 
 
-            //check if ACTION_POINTER_UP/ACTION_POINTER_DOWN
+            //check if ACTION_POINTER_UP/ACTION_POINTER_DOWN, and mask the action
             if (this.mTouchingPointers.length>1) {
                 //the event is not the first event on screen
                 switch (action) {
                     case MotionEvent.ACTION_DOWN:
                         action = MotionEvent.ACTION_POINTER_DOWN;
+                        action = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
                         break;
                     case MotionEvent.ACTION_UP:
                         action = MotionEvent.ACTION_POINTER_UP;
+                        action = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
                         break;
                 }
             }
@@ -175,7 +177,7 @@ module android.view {
 
             //let lastAction = this.mAction;
             // index & id to action
-            this.mAction = actionIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT | action;
+            this.mAction = action;
             //this.mActiveActionIndex = actionIndex;
             this.mActivePointerId = activePointerId;
 
@@ -216,6 +218,7 @@ module android.view {
                 edgeFlag |= MotionEvent.EDGE_BOTTOM;
             }
             this.mEdgeFlags = edgeFlag;
+
         }
 
         initWithMouseWheel(e:WheelEvent){
@@ -353,6 +356,13 @@ module android.view {
             }
             let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
             return moveHistory[pos].mEventTime;
+        }
+
+        getTouchMajor(pointerIndex?:number):number {
+            return Math.floor(Resources.getDisplayMetrics().density);//no touch major impl
+        }
+        getHistoricalTouchMajor(pointerIndex?:number, pos?:number):number {
+            return Math.floor(Resources.getDisplayMetrics().density);//no touch major impl
         }
 
         /**

@@ -76,10 +76,12 @@ module androidui {
             this.initFocus();
             this.initEvent();
 
-            this.initListenSizeChange();
+            this.initSizeVisibleChange();
 
             this._viewRootImpl.setView(this._rootLayout);
             this._viewRootImpl.initSurface(this._canvas);
+
+            this.initVisibleChange();
 
 
             let debugAttr = this.element.getAttribute('debug');
@@ -294,7 +296,7 @@ module androidui {
             // No generic Event current. Hover event should listen here
         }
 
-        private initListenSizeChange(){
+        private initSizeVisibleChange(){
             const _this = this;
             window.addEventListener('resize', ()=>{
                 _this.notifySizeChange();
@@ -312,7 +314,22 @@ module androidui {
                     lastHeight = height;
                     _this.notifySizeChange();
                 }
+
             }, 500);
+        }
+
+        private initVisibleChange(){
+            var eventName = 'visibilitychange';
+            if (document['webkitHidden'] != undefined) {
+                eventName = 'webkitvisibilitychange';
+            }
+            document.addEventListener(eventName, ()=>{
+                if(document['hidden'] || document['webkitHidden']){
+                    //hidden
+                }else{
+                    this._viewRootImpl.scheduleTraversals();
+                }
+            }, false);
         }
 
         notifySizeChange(){
