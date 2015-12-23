@@ -35,5 +35,8 @@ module java.lang{
         getName():string {
             return this.name;
         }
+        getSimpleName():string {
+            return this.name;
+        }
     }
 }

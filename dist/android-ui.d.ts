@@ -513,7 +513,16 @@ declare module android.graphics {
         protected drawImageImpl(image: NetImage, dstRect?: Rect): void;
         drawRect(rect: Rect, paint: Paint): any;
         drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
-        protected drawRectImpl(left: number, top: number, width: number, height: number): void;
+        protected drawRectImpl(left: number, top: number, width: number, height: number, paint: Paint): void;
+        private applyFillOrStrokeToContent(style);
+        drawOval(oval: RectF, paint: Paint): void;
+        protected drawOvalImpl(oval: RectF, paint: Paint): void;
+        drawCircle(cx: number, cy: number, radius: number, paint: Paint): void;
+        protected drawCircleImpl(cx: number, cy: number, radius: number, paint: Paint): void;
+        drawArc(oval: RectF, startAngle: number, sweepAngle: number, useCenter: boolean, paint: Paint): void;
+        protected drawArcImpl(oval: RectF, startAngle: number, sweepAngle: number, useCenter: boolean, paint: Paint): void;
+        drawRoundRect(rect: RectF, rx: number, ry: number, paint: Paint): void;
+        protected drawRoundRectImpl(rect: RectF, rx: number, ry: number, paint: Paint): void;
         drawPath(path: Path, paint: Paint): void;
         drawText_count(text: string, index: number, count: number, x: number, y: number, paint: Paint): void;
         drawText_end(text: string, start: number, end: number, x: number, y: number, paint: Paint): void;
@@ -528,8 +537,8 @@ declare module android.graphics {
         private static _measureCacheMap;
         protected static measureTextImpl(text: string, textSize: number): number;
         protected static getMeasureTextFontFamily(): string;
-        setFillColor(color: number): void;
-        protected setFillColorImpl(color: number): void;
+        setColor(color: number, style?: Paint.Style): void;
+        protected setColorImpl(color: number, style?: Paint.Style): void;
         multiplyAlpha(alpha: number): void;
         protected multiplyAlphaImpl(alpha: number): void;
         setAlpha(alpha: number): void;
@@ -704,6 +713,7 @@ declare module java.lang {
         name: string;
         constructor(name: string);
         getName(): string;
+        getSimpleName(): string;
     }
 }
 declare module java.lang.util.concurrent {
@@ -2734,6 +2744,81 @@ declare module android.view {
         private static releasePointerList(pointer);
     }
 }
+declare module java.lang {
+    class Float {
+        static MIN_VALUE: number;
+        static MAX_VALUE: number;
+        static parseFloat(value: string): number;
+    }
+}
+declare module android.view {
+    import MotionEvent = android.view.MotionEvent;
+    class ScaleGestureDetector {
+        private static TAG;
+        private mListener;
+        private mFocusX;
+        private mFocusY;
+        private mQuickScaleEnabled;
+        private mCurrSpan;
+        private mPrevSpan;
+        private mInitialSpan;
+        private mCurrSpanX;
+        private mCurrSpanY;
+        private mPrevSpanX;
+        private mPrevSpanY;
+        private mCurrTime;
+        private mPrevTime;
+        private mInProgress;
+        private mSpanSlop;
+        private mMinSpan;
+        private mTouchUpper;
+        private mTouchLower;
+        private mTouchHistoryLastAccepted;
+        private mTouchHistoryDirection;
+        private mTouchHistoryLastAcceptedTime;
+        private mTouchMinMajor;
+        private mDoubleTapEvent;
+        private mDoubleTapMode;
+        private mHandler;
+        private static TOUCH_STABILIZE_TIME;
+        private static DOUBLE_TAP_MODE_NONE;
+        private static DOUBLE_TAP_MODE_IN_PROGRESS;
+        private static SCALE_FACTOR;
+        private mGestureDetector;
+        private mEventBeforeOrAboveStartingGestureEvent;
+        constructor(listener: ScaleGestureDetector.OnScaleGestureListener, handler?: any);
+        private addTouchHistory(ev);
+        private clearTouchHistory();
+        onTouchEvent(event: MotionEvent): boolean;
+        private inDoubleTapMode();
+        setQuickScaleEnabled(scales: boolean): void;
+        isQuickScaleEnabled(): boolean;
+        isInProgress(): boolean;
+        getFocusX(): number;
+        getFocusY(): number;
+        getCurrentSpan(): number;
+        getCurrentSpanX(): number;
+        getCurrentSpanY(): number;
+        getPreviousSpan(): number;
+        getPreviousSpanX(): number;
+        getPreviousSpanY(): number;
+        getScaleFactor(): number;
+        getTimeDelta(): number;
+        getEventTime(): number;
+    }
+    module ScaleGestureDetector {
+        interface OnScaleGestureListener {
+            onScale(detector: ScaleGestureDetector): boolean;
+            onScaleBegin(detector: ScaleGestureDetector): boolean;
+            onScaleEnd(detector: ScaleGestureDetector): void;
+        }
+        class SimpleOnScaleGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
+            onScale(detector: ScaleGestureDetector): boolean;
+            onScaleBegin(detector: ScaleGestureDetector): boolean;
+            onScaleEnd(detector: ScaleGestureDetector): void;
+        }
+    }
+}
 declare module android.view {
     import Handler = android.os.Handler;
     import Message = android.os.Message;
@@ -3429,13 +3514,6 @@ declare module java.util {
     class Arrays {
         static sort(a: number[], fromIndex: number, toIndex: number): void;
         private static rangeCheck(arrayLength, fromIndex, toIndex);
-    }
-}
-declare module java.lang {
-    class Float {
-        static MIN_VALUE: number;
-        static MAX_VALUE: number;
-        static parseFloat(value: string): number;
     }
 }
 declare module android.text {
@@ -6081,6 +6159,77 @@ declare module android.widget {
         }
     }
 }
+declare module com.pnikosis.materialishprogress {
+    import Canvas = android.graphics.Canvas;
+    import View = android.view.View;
+    class ProgressWheel extends View {
+        private barLength;
+        private barMaxLength;
+        private pauseGrowingTime;
+        private circleRadius;
+        private barWidth;
+        private rimWidth;
+        private fillRadius;
+        private timeStartGrowing;
+        private barSpinCycleTime;
+        private barExtraLength;
+        private barGrowingFromFront;
+        private pausedTimeWithoutGrowing;
+        private barColor;
+        private rimColor;
+        private barPaint;
+        private rimPaint;
+        private circleBounds;
+        private spinSpeed;
+        private lastTimeAnimated;
+        private linearProgress;
+        private mProgress;
+        private mTargetProgress;
+        private mIsSpinning;
+        private callback;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        private setupPaints();
+        private setupBounds(layout_width, layout_height);
+        setCallback(progressCallback: ProgressWheel.ProgressCallback): void;
+        protected onDraw(canvas: Canvas): void;
+        protected onVisibilityChanged(changedView: View, visibility: number): void;
+        private updateBarLength(deltaTimeInMilliSeconds);
+        isSpinning(): boolean;
+        resetCount(): void;
+        stopSpinning(): void;
+        spin(): void;
+        private runCallback(value?);
+        setInstantProgress(progress: number): void;
+        getProgress(): number;
+        setProgress(progress: number): void;
+        setLinearProgress(isLinear: boolean): void;
+        getCircleRadius(): number;
+        setCircleRadius(circleRadius: number): void;
+        getBarWidth(): number;
+        setBarWidth(barWidth: number): void;
+        getBarColor(): number;
+        setBarColor(barColor: number): void;
+        getRimColor(): number;
+        setRimColor(rimColor: number): void;
+        getSpinSpeed(): number;
+        setSpinSpeed(spinSpeed: number): void;
+        getRimWidth(): number;
+        setRimWidth(rimWidth: number): void;
+    }
+    module ProgressWheel {
+        interface ProgressCallback {
+            onProgressUpdate(progress: number): void;
+        }
+    }
+}
+declare module android.widget {
+    import ProgressWheel = com.pnikosis.materialishprogress.ProgressWheel;
+    class ProgressBar extends ProgressWheel {
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+    }
+}
 declare module android.support.v4.view {
     import DataSetObserver = android.database.DataSetObserver;
     import ViewGroup = android.view.ViewGroup;
@@ -6433,74 +6582,6 @@ declare module com.jakewharton.salvage {
 declare module android.view.animation {
     class AccelerateDecelerateInterpolator implements Interpolator {
         getInterpolation(input: number): number;
-    }
-}
-declare module android.view {
-    import MotionEvent = android.view.MotionEvent;
-    class ScaleGestureDetector {
-        private static TAG;
-        private mListener;
-        private mFocusX;
-        private mFocusY;
-        private mQuickScaleEnabled;
-        private mCurrSpan;
-        private mPrevSpan;
-        private mInitialSpan;
-        private mCurrSpanX;
-        private mCurrSpanY;
-        private mPrevSpanX;
-        private mPrevSpanY;
-        private mCurrTime;
-        private mPrevTime;
-        private mInProgress;
-        private mSpanSlop;
-        private mMinSpan;
-        private mTouchUpper;
-        private mTouchLower;
-        private mTouchHistoryLastAccepted;
-        private mTouchHistoryDirection;
-        private mTouchHistoryLastAcceptedTime;
-        private mTouchMinMajor;
-        private mDoubleTapEvent;
-        private mDoubleTapMode;
-        private mHandler;
-        private static TOUCH_STABILIZE_TIME;
-        private static DOUBLE_TAP_MODE_NONE;
-        private static DOUBLE_TAP_MODE_IN_PROGRESS;
-        private static SCALE_FACTOR;
-        private mGestureDetector;
-        private mEventBeforeOrAboveStartingGestureEvent;
-        constructor(listener: ScaleGestureDetector.OnScaleGestureListener, handler?: any);
-        private addTouchHistory(ev);
-        private clearTouchHistory();
-        onTouchEvent(event: MotionEvent): boolean;
-        private inDoubleTapMode();
-        setQuickScaleEnabled(scales: boolean): void;
-        isQuickScaleEnabled(): boolean;
-        isInProgress(): boolean;
-        getFocusX(): number;
-        getFocusY(): number;
-        getCurrentSpan(): number;
-        getCurrentSpanX(): number;
-        getCurrentSpanY(): number;
-        getPreviousSpan(): number;
-        getPreviousSpanX(): number;
-        getPreviousSpanY(): number;
-        getScaleFactor(): number;
-        getTimeDelta(): number;
-        getEventTime(): number;
-    }
-    module ScaleGestureDetector {
-        interface OnScaleGestureListener {
-            onScale(detector: ScaleGestureDetector): boolean;
-            onScaleBegin(detector: ScaleGestureDetector): boolean;
-            onScaleEnd(detector: ScaleGestureDetector): void;
-        }
-        class SimpleOnScaleGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
-            onScale(detector: ScaleGestureDetector): boolean;
-            onScaleBegin(detector: ScaleGestureDetector): boolean;
-            onScaleEnd(detector: ScaleGestureDetector): void;
-        }
     }
 }
 declare module uk.co.senab.photoview {
@@ -7075,9 +7156,13 @@ declare module androidui.native {
         protected clipRectImpl(left: number, top: number, width: number, height: number): void;
         protected drawCanvasImpl(canvas: android.graphics.Canvas, offsetX: number, offsetY: number): void;
         protected drawImageImpl(image: androidui.image.NetImage, dstRect: android.graphics.Rect): void;
-        protected drawRectImpl(left: number, top: number, width: number, height: number): void;
+        protected drawRectImpl(left: number, top: number, width: number, height: number, paint: android.graphics.Paint): void;
+        protected drawOvalImpl(oval: android.graphics.RectF, paint: android.graphics.Paint): void;
+        protected drawCircleImpl(cx: number, cy: number, radius: number, paint: android.graphics.Paint): void;
+        protected drawArcImpl(oval: android.graphics.RectF, startAngle: number, sweepAngle: number, useCenter: boolean, paint: android.graphics.Paint): void;
+        protected drawRoundRectImpl(rect: android.graphics.RectF, rx: number, ry: number, paint: android.graphics.Paint): void;
         protected drawTextImpl(text: string, x: number, y: number, style: android.graphics.Paint.Style): void;
-        protected setFillColorImpl(color: number): void;
+        protected setColorImpl(color: number, style?: android.graphics.Paint.Style): void;
         protected multiplyAlphaImpl(alpha: number): void;
         protected setAlphaImpl(alpha: number): void;
         protected setTextAlignImpl(align: string): void;

@@ -1005,7 +1005,7 @@ var android;
             }
             applyToCanvas(canvas) {
                 if (this.mColor != null) {
-                    canvas.setFillColor(this.mColor);
+                    canvas.setColor(this.mColor, this.getStyle());
                 }
                 if (this.mAlpha != null) {
                     canvas.multiplyAlpha(this.mAlpha);
@@ -1944,6 +1944,7 @@ var android;
                 this.mCanvasElement.width = this.mWidth;
                 this.mCanvasElement.height = this.mHeight;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
+                this._mCanvasContent['imageSmoothingEnabled'] = this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
                 this._saveCount = this.save();
             }
             recycle() {
@@ -2011,8 +2012,10 @@ var android;
                 this.drawARGB(Color.alpha(color), Color.red(color), Color.green(color), Color.blue(color));
             }
             drawARGBImpl(a, r, g, b) {
+                let preStyle = this._mCanvasContent.fillStyle;
                 this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a / 255})`;
                 this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+                this._mCanvasContent.fillStyle = preStyle;
             }
             clearColor() {
                 this.clearRectImpl(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
@@ -2123,12 +2126,143 @@ var android;
                     let [left, top, right, bottom, paint] = args;
                     this.saveImpl();
                     paint.applyToCanvas(this);
-                    this.drawRectImpl(left, top, right - left, bottom - top);
+                    this.drawRectImpl(left, top, right - left, bottom - top, paint);
                     this.restoreImpl();
                 }
             }
-            drawRectImpl(left, top, width, height) {
-                this._mCanvasContent.fillRect(left, top, width, height);
+            drawRectImpl(left, top, width, height, paint) {
+                switch (paint.getStyle()) {
+                    case graphics.Paint.Style.STROKE:
+                        this._mCanvasContent.strokeRect(left, top, width, height);
+                        break;
+                    case graphics.Paint.Style.FILL_AND_STROKE:
+                        this._mCanvasContent.fillRect(left, top, width, height);
+                        this._mCanvasContent.strokeRect(left, top, width, height);
+                        break;
+                    case graphics.Paint.Style.FILL:
+                    default:
+                        this._mCanvasContent.fillRect(left, top, width, height);
+                        break;
+                }
+            }
+            applyFillOrStrokeToContent(style) {
+                switch (style) {
+                    case graphics.Paint.Style.STROKE:
+                        this._mCanvasContent.stroke();
+                        break;
+                    case graphics.Paint.Style.FILL_AND_STROKE:
+                        this._mCanvasContent.fill();
+                        this._mCanvasContent.stroke();
+                        break;
+                    case graphics.Paint.Style.FILL:
+                    default:
+                        this._mCanvasContent.fill();
+                        break;
+                }
+            }
+            drawOval(oval, paint) {
+                if (oval == null) {
+                    throw Error(`new NullPointerException()`);
+                }
+                this.drawOvalImpl(oval, paint);
+            }
+            drawOvalImpl(oval, paint) {
+                this.saveImpl();
+                paint.applyToCanvas(this);
+                let ctx = this._mCanvasContent;
+                ctx.beginPath();
+                let cx = oval.centerX();
+                let cy = oval.centerY();
+                let rx = oval.width() / 2;
+                let ry = oval.height() / 2;
+                ctx.save();
+                ctx.translate(cx - rx, cy - ry);
+                ctx.scale(rx, ry);
+                ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
+                ctx.restore();
+                this.applyFillOrStrokeToContent(paint.getStyle());
+                this.restoreImpl();
+            }
+            drawCircle(cx, cy, radius, paint) {
+                this.drawCircleImpl(cx, cy, radius, paint);
+            }
+            drawCircleImpl(cx, cy, radius, paint) {
+                this.saveImpl();
+                paint.applyToCanvas(this);
+                let ctx = this._mCanvasContent;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
+                this.applyFillOrStrokeToContent(paint.getStyle());
+                this.restoreImpl();
+            }
+            drawArc(oval, startAngle, sweepAngle, useCenter, paint) {
+                if (oval == null) {
+                    throw Error(`new NullPointerException()`);
+                }
+                this.drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint);
+            }
+            drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint) {
+                this.saveImpl();
+                paint.applyToCanvas(this);
+                let ctx = this._mCanvasContent;
+                ctx.beginPath();
+                let cx = oval.centerX();
+                let cy = oval.centerY();
+                let rx = oval.width() / 2;
+                let ry = oval.height() / 2;
+                ctx.save();
+                ctx.translate(cx - rx, cy - ry);
+                ctx.scale(rx, ry);
+                ctx.arc(1, 1, 1, startAngle / 180 * Math.PI, (sweepAngle + startAngle) / 180 * Math.PI, false);
+                if (useCenter) {
+                    ctx.lineTo(1, 1);
+                    ctx.closePath();
+                }
+                ctx.restore();
+                this.applyFillOrStrokeToContent(paint.getStyle());
+                this.restoreImpl();
+            }
+            drawRoundRect(rect, rx, ry, paint) {
+                if (rect == null) {
+                    throw Error(`new NullPointerException()`);
+                }
+                this.drawRoundRectImpl(rect, rx, ry, paint);
+            }
+            drawRoundRectImpl(rect, rx, ry, paint) {
+                this.saveImpl();
+                paint.applyToCanvas(this);
+                let ctx = this._mCanvasContent;
+                let x = rect.left;
+                let y = rect.top;
+                let h = rect.height();
+                let w = rect.width();
+                if (w < 2 * rx)
+                    rx = w / 2;
+                if (h < 2 * ry)
+                    ry = h / 2;
+                ctx.beginPath();
+                if (rx == ry) {
+                    let r = rx;
+                    ctx.moveTo(x + r, y);
+                    ctx.arcTo(x + w, y, x + w, y + h, r);
+                    ctx.arcTo(x + w, y + h, x, y + h, r);
+                    ctx.arcTo(x, y + h, x, y, r);
+                    ctx.arcTo(x, y, x + w, y, r);
+                }
+                else {
+                    ctx.moveTo(x, y + ry);
+                    ctx.lineTo(x, y + h - ry);
+                    ctx.quadraticCurveTo(x, y + h, x + rx, y + h);
+                    ctx.lineTo(x + w - rx, y + h);
+                    ctx.quadraticCurveTo(x + w, y + h, x + w, y + h - ry);
+                    ctx.lineTo(x + w, y + ry);
+                    ctx.quadraticCurveTo(x + w, y, x + w - rx, y);
+                    ctx.lineTo(x + rx, y);
+                    ctx.quadraticCurveTo(x, y, x, y + ry);
+                }
+                ctx.closePath();
+                this.applyFillOrStrokeToContent(paint.getStyle());
+                this.restoreImpl();
             }
             drawPath(path, paint) {
             }
@@ -2200,13 +2334,26 @@ var android;
                 let fontParts = Canvas._measureTextContext.font.split(' ');
                 return fontParts[fontParts.length - 1];
             }
-            setFillColor(color) {
+            setColor(color, style) {
                 if (typeof color === 'number') {
-                    this.setFillColorImpl(color);
+                    this.setColorImpl(color, style);
                 }
             }
-            setFillColorImpl(color) {
-                this._mCanvasContent.fillStyle = Color.toRGBAFunc(color);
+            setColorImpl(color, style) {
+                let colorS = Color.toRGBAFunc(color);
+                switch (style) {
+                    case graphics.Paint.Style.STROKE:
+                        this._mCanvasContent.strokeStyle = colorS;
+                        break;
+                    case graphics.Paint.Style.FILL:
+                        this._mCanvasContent.fillStyle = colorS;
+                        break;
+                    default:
+                    case graphics.Paint.Style.FILL_AND_STROKE:
+                        this._mCanvasContent.fillStyle = colorS;
+                        this._mCanvasContent.strokeStyle = colorS;
+                        break;
+                }
             }
             multiplyAlpha(alpha) {
                 if (typeof alpha === 'number') {
@@ -2937,6 +3084,9 @@ var java;
                 this.name = name;
             }
             getName() {
+                return this.name;
+            }
+            getSimpleName() {
                 return this.name;
             }
         }
@@ -4555,7 +4705,7 @@ var android;
                         return 0;
                     valueWithUnit = baseValue;
                 }
-                let value = Number.parseInt(valueWithUnit);
+                let value = Number.parseFloat(valueWithUnit);
                 if (Number.isNaN(value))
                     throw Error('complexToDimensionPixelSize error: ' + valueWithUnit);
                 return value * scale;
@@ -10416,6 +10566,7 @@ var android;
                 super(width, height);
                 this.mCanvasElement = canvasElement;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
+                this._mCanvasContent['imageSmoothingEnabled'] = this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
             }
             initImpl() {
             }
@@ -14104,6 +14255,340 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        class Float {
+            static parseFloat(value) {
+                return Number.parseFloat(value);
+            }
+        }
+        Float.MIN_VALUE = Number.MIN_VALUE;
+        Float.MAX_VALUE = Number.MAX_VALUE;
+        lang.Float = Float;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="../../android/os/Handler.ts"/>
+///<reference path="../../android/os/SystemClock.ts"/>
+///<reference path="../../java/lang/Float.ts"/>
+///<reference path="../../android/view/GestureDetector.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../android/util/TypedValue.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var SystemClock = android.os.SystemClock;
+        var GestureDetector = android.view.GestureDetector;
+        var MotionEvent = android.view.MotionEvent;
+        var ViewConfiguration = android.view.ViewConfiguration;
+        var TypedValue = android.util.TypedValue;
+        class ScaleGestureDetector {
+            constructor(listener, handler) {
+                this.mFocusX = 0;
+                this.mFocusY = 0;
+                this.mCurrSpan = 0;
+                this.mPrevSpan = 0;
+                this.mInitialSpan = 0;
+                this.mCurrSpanX = 0;
+                this.mCurrSpanY = 0;
+                this.mPrevSpanX = 0;
+                this.mPrevSpanY = 0;
+                this.mCurrTime = 0;
+                this.mPrevTime = 0;
+                this.mSpanSlop = 0;
+                this.mMinSpan = 0;
+                this.mTouchUpper = 0;
+                this.mTouchLower = 0;
+                this.mTouchHistoryLastAccepted = 0;
+                this.mTouchHistoryDirection = 0;
+                this.mTouchHistoryLastAcceptedTime = 0;
+                this.mTouchMinMajor = 0;
+                this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
+                this.mListener = listener;
+                this.mSpanSlop = ViewConfiguration.get().getScaledTouchSlop() * 2;
+                this.mTouchMinMajor = TypedValue.complexToDimensionPixelSize('48dp');
+                this.mMinSpan = TypedValue.complexToDimensionPixelSize('27mm');
+                this.mHandler = handler;
+                this.setQuickScaleEnabled(true);
+            }
+            addTouchHistory(ev) {
+                const currentTime = SystemClock.uptimeMillis();
+                const count = ev.getPointerCount();
+                let accept = currentTime - this.mTouchHistoryLastAcceptedTime >= ScaleGestureDetector.TOUCH_STABILIZE_TIME;
+                let total = 0;
+                let sampleCount = 0;
+                for (let i = 0; i < count; i++) {
+                    const hasLastAccepted = !Number.isNaN(this.mTouchHistoryLastAccepted);
+                    const historySize = ev.getHistorySize();
+                    const pointerSampleCount = historySize + 1;
+                    for (let h = 0; h < pointerSampleCount; h++) {
+                        let major;
+                        if (h < historySize) {
+                            major = ev.getHistoricalTouchMajor(i, h);
+                        }
+                        else {
+                            major = ev.getTouchMajor(i);
+                        }
+                        if (major < this.mTouchMinMajor)
+                            major = this.mTouchMinMajor;
+                        total += major;
+                        if (Number.isNaN(this.mTouchUpper) || major > this.mTouchUpper) {
+                            this.mTouchUpper = major;
+                        }
+                        if (Number.isNaN(this.mTouchLower) || major < this.mTouchLower) {
+                            this.mTouchLower = major;
+                        }
+                        if (hasLastAccepted) {
+                            function Math_signum(value) {
+                                if (value === 0 || Number.isNaN(value))
+                                    return value;
+                                return Math.abs(value) === value ? 1 : -1;
+                            }
+                            const directionSig = Math.floor(Math_signum(major - this.mTouchHistoryLastAccepted));
+                            if (directionSig != this.mTouchHistoryDirection || (directionSig == 0 && this.mTouchHistoryDirection == 0)) {
+                                this.mTouchHistoryDirection = directionSig;
+                                const time = h < historySize ? ev.getHistoricalEventTime(h) : ev.getEventTime();
+                                this.mTouchHistoryLastAcceptedTime = time;
+                                accept = false;
+                            }
+                        }
+                    }
+                    sampleCount += pointerSampleCount;
+                }
+                const avg = total / sampleCount;
+                if (accept) {
+                    let newAccepted = (this.mTouchUpper + this.mTouchLower + avg) / 3;
+                    this.mTouchUpper = (this.mTouchUpper + newAccepted) / 2;
+                    this.mTouchLower = (this.mTouchLower + newAccepted) / 2;
+                    this.mTouchHistoryLastAccepted = newAccepted;
+                    this.mTouchHistoryDirection = 0;
+                    this.mTouchHistoryLastAcceptedTime = ev.getEventTime();
+                }
+            }
+            clearTouchHistory() {
+                this.mTouchUpper = Number.NaN;
+                this.mTouchLower = Number.NaN;
+                this.mTouchHistoryLastAccepted = Number.NaN;
+                this.mTouchHistoryDirection = 0;
+                this.mTouchHistoryLastAcceptedTime = 0;
+            }
+            onTouchEvent(event) {
+                this.mCurrTime = event.getEventTime();
+                const action = event.getActionMasked();
+                if (this.mQuickScaleEnabled) {
+                    this.mGestureDetector.onTouchEvent(event);
+                }
+                const streamComplete = action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL;
+                if (action == MotionEvent.ACTION_DOWN || streamComplete) {
+                    if (this.mInProgress) {
+                        this.mListener.onScaleEnd(this);
+                        this.mInProgress = false;
+                        this.mInitialSpan = 0;
+                        this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
+                    }
+                    else if (this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS && streamComplete) {
+                        this.mInProgress = false;
+                        this.mInitialSpan = 0;
+                        this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
+                    }
+                    if (streamComplete) {
+                        this.clearTouchHistory();
+                        return true;
+                    }
+                }
+                const configChanged = action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_POINTER_DOWN;
+                const pointerUp = action == MotionEvent.ACTION_POINTER_UP;
+                const skipIndex = pointerUp ? event.getActionIndex() : -1;
+                let sumX = 0, sumY = 0;
+                const count = event.getPointerCount();
+                const div = pointerUp ? count - 1 : count;
+                let focusX;
+                let focusY;
+                if (this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS) {
+                    focusX = this.mDoubleTapEvent.getX();
+                    focusY = this.mDoubleTapEvent.getY();
+                    if (event.getY() < focusY) {
+                        this.mEventBeforeOrAboveStartingGestureEvent = true;
+                    }
+                    else {
+                        this.mEventBeforeOrAboveStartingGestureEvent = false;
+                    }
+                }
+                else {
+                    for (let i = 0; i < count; i++) {
+                        if (skipIndex == i)
+                            continue;
+                        sumX += event.getX(i);
+                        sumY += event.getY(i);
+                    }
+                    focusX = sumX / div;
+                    focusY = sumY / div;
+                }
+                this.addTouchHistory(event);
+                let devSumX = 0, devSumY = 0;
+                for (let i = 0; i < count; i++) {
+                    if (skipIndex == i)
+                        continue;
+                    const touchSize = this.mTouchHistoryLastAccepted / 2;
+                    devSumX += Math.abs(event.getX(i) - focusX) + touchSize;
+                    devSumY += Math.abs(event.getY(i) - focusY) + touchSize;
+                }
+                const devX = devSumX / div;
+                const devY = devSumY / div;
+                const spanX = devX * 2;
+                const spanY = devY * 2;
+                let span;
+                if (this.inDoubleTapMode()) {
+                    span = spanY;
+                }
+                else {
+                    span = Math.sqrt(spanX * spanX + spanY * spanY);
+                }
+                const wasInProgress = this.mInProgress;
+                this.mFocusX = focusX;
+                this.mFocusY = focusY;
+                if (!this.inDoubleTapMode() && this.mInProgress && (span < this.mMinSpan || configChanged)) {
+                    this.mListener.onScaleEnd(this);
+                    this.mInProgress = false;
+                    this.mInitialSpan = span;
+                    this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
+                }
+                if (configChanged) {
+                    this.mPrevSpanX = this.mCurrSpanX = spanX;
+                    this.mPrevSpanY = this.mCurrSpanY = spanY;
+                    this.mInitialSpan = this.mPrevSpan = this.mCurrSpan = span;
+                }
+                const minSpan = this.inDoubleTapMode() ? this.mSpanSlop : this.mMinSpan;
+                if (!this.mInProgress && span >= minSpan && (wasInProgress || Math.abs(span - this.mInitialSpan) > this.mSpanSlop)) {
+                    this.mPrevSpanX = this.mCurrSpanX = spanX;
+                    this.mPrevSpanY = this.mCurrSpanY = spanY;
+                    this.mPrevSpan = this.mCurrSpan = span;
+                    this.mPrevTime = this.mCurrTime;
+                    this.mInProgress = this.mListener.onScaleBegin(this);
+                }
+                if (action == MotionEvent.ACTION_MOVE) {
+                    this.mCurrSpanX = spanX;
+                    this.mCurrSpanY = spanY;
+                    this.mCurrSpan = span;
+                    let updatePrev = true;
+                    if (this.mInProgress) {
+                        updatePrev = this.mListener.onScale(this);
+                    }
+                    if (updatePrev) {
+                        this.mPrevSpanX = this.mCurrSpanX;
+                        this.mPrevSpanY = this.mCurrSpanY;
+                        this.mPrevSpan = this.mCurrSpan;
+                        this.mPrevTime = this.mCurrTime;
+                    }
+                }
+                return true;
+            }
+            inDoubleTapMode() {
+                return this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
+            }
+            setQuickScaleEnabled(scales) {
+                this.mQuickScaleEnabled = scales;
+                if (this.mQuickScaleEnabled && this.mGestureDetector == null) {
+                    let gestureListener = (() => {
+                        const _this = this;
+                        class _Inner extends GestureDetector.SimpleOnGestureListener {
+                            onDoubleTap(e) {
+                                _this.mDoubleTapEvent = e;
+                                _this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
+                                return true;
+                            }
+                        }
+                        return new _Inner();
+                    })();
+                    this.mGestureDetector = new GestureDetector(gestureListener, this.mHandler);
+                }
+            }
+            isQuickScaleEnabled() {
+                return this.mQuickScaleEnabled;
+            }
+            isInProgress() {
+                return this.mInProgress;
+            }
+            getFocusX() {
+                return this.mFocusX;
+            }
+            getFocusY() {
+                return this.mFocusY;
+            }
+            getCurrentSpan() {
+                return this.mCurrSpan;
+            }
+            getCurrentSpanX() {
+                return this.mCurrSpanX;
+            }
+            getCurrentSpanY() {
+                return this.mCurrSpanY;
+            }
+            getPreviousSpan() {
+                return this.mPrevSpan;
+            }
+            getPreviousSpanX() {
+                return this.mPrevSpanX;
+            }
+            getPreviousSpanY() {
+                return this.mPrevSpanY;
+            }
+            getScaleFactor() {
+                if (this.inDoubleTapMode()) {
+                    const scaleUp = (this.mEventBeforeOrAboveStartingGestureEvent && (this.mCurrSpan < this.mPrevSpan)) || (!this.mEventBeforeOrAboveStartingGestureEvent && (this.mCurrSpan > this.mPrevSpan));
+                    const spanDiff = (Math.abs(1 - (this.mCurrSpan / this.mPrevSpan)) * ScaleGestureDetector.SCALE_FACTOR);
+                    return this.mPrevSpan <= 0 ? 1 : scaleUp ? (1 + spanDiff) : (1 - spanDiff);
+                }
+                return this.mPrevSpan > 0 ? this.mCurrSpan / this.mPrevSpan : 1;
+            }
+            getTimeDelta() {
+                return this.mCurrTime - this.mPrevTime;
+            }
+            getEventTime() {
+                return this.mCurrTime;
+            }
+        }
+        ScaleGestureDetector.TAG = "ScaleGestureDetector";
+        ScaleGestureDetector.TOUCH_STABILIZE_TIME = 128;
+        ScaleGestureDetector.DOUBLE_TAP_MODE_NONE = 0;
+        ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS = 1;
+        ScaleGestureDetector.SCALE_FACTOR = .5;
+        view.ScaleGestureDetector = ScaleGestureDetector;
+        (function (ScaleGestureDetector) {
+            class SimpleOnScaleGestureListener {
+                onScale(detector) {
+                    return false;
+                }
+                onScaleBegin(detector) {
+                    return true;
+                }
+                onScaleEnd(detector) {
+                }
+            }
+            ScaleGestureDetector.SimpleOnScaleGestureListener = SimpleOnScaleGestureListener;
+        })(ScaleGestureDetector = view.ScaleGestureDetector || (view.ScaleGestureDetector = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -14125,6 +14610,7 @@ var android;
 ///<reference path="../../android/view/VelocityTracker.ts"/>
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="ScaleGestureDetector.ts"/>
 var android;
 (function (android) {
     var view;
@@ -18137,20 +18623,6 @@ var java;
         }
         util.Arrays = Arrays;
     })(util = java.util || (java.util = {}));
-})(java || (java = {}));
-var java;
-(function (java) {
-    var lang;
-    (function (lang) {
-        class Float {
-            static parseFloat(value) {
-                return Number.parseFloat(value);
-            }
-        }
-        Float.MIN_VALUE = Number.MIN_VALUE;
-        Float.MAX_VALUE = Number.MAX_VALUE;
-        lang.Float = Float;
-    })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
 /*
  * Copyright (C) 2012 The Android Open Source Project
@@ -37708,6 +38180,390 @@ var android;
         })(NumberPicker = widget.NumberPicker || (widget.NumberPicker = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
+///<reference path="../../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../../android/graphics/Paint.ts"/>
+///<reference path="../../../../android/graphics/RectF.ts"/>
+///<reference path="../../../../android/graphics/Color.ts"/>
+///<reference path="../../../../android/os/SystemClock.ts"/>
+///<reference path="../../../../android/util/DisplayMetrics.ts"/>
+///<reference path="../../../../android/util/TypedValue.ts"/>
+///<reference path="../../../../android/view/View.ts"/>
+///<reference path="../../../../java/lang/System.ts"/>
+var com;
+(function (com) {
+    var pnikosis;
+    (function (pnikosis) {
+        var materialishprogress;
+        (function (materialishprogress) {
+            var Paint = android.graphics.Paint;
+            var Style = android.graphics.Paint.Style;
+            var RectF = android.graphics.RectF;
+            var Color = android.graphics.Color;
+            var SystemClock = android.os.SystemClock;
+            var TypedValue = android.util.TypedValue;
+            var View = android.view.View;
+            class ProgressWheel extends View {
+                constructor(bindElement, rootElement) {
+                    super(bindElement, rootElement);
+                    this.barLength = 16;
+                    this.barMaxLength = 270;
+                    this.pauseGrowingTime = 200;
+                    this.circleRadius = 36;
+                    this.barWidth = 4;
+                    this.rimWidth = 4;
+                    this.fillRadius = false;
+                    this.timeStartGrowing = 0;
+                    this.barSpinCycleTime = 460;
+                    this.barExtraLength = 0;
+                    this.barGrowingFromFront = true;
+                    this.pausedTimeWithoutGrowing = 0;
+                    this.barColor = 0xAA000000;
+                    this.rimColor = 0x00FFFFFF;
+                    this.barPaint = new Paint();
+                    this.rimPaint = new Paint();
+                    this.circleBounds = new RectF();
+                    this.spinSpeed = 230.0;
+                    this.lastTimeAnimated = 0;
+                    this.mProgress = 0.0;
+                    this.mTargetProgress = 0.0;
+                    this.mIsSpinning = false;
+                    let metrics = this.getResources().getDisplayMetrics();
+                    this.barWidth = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.barWidth, metrics));
+                    this.rimWidth = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.rimWidth, metrics));
+                    this.circleRadius = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.circleRadius, metrics));
+                    this._attrBinder.addAttr('circleRadius', (value) => {
+                        this.setCircleRadius(Math.floor(this._attrBinder.parseNumber(value, this.circleRadius)));
+                    });
+                    this._attrBinder.addAttr('fillRadius', (value) => {
+                        this.fillRadius = this._attrBinder.parseBoolean(value, this.fillRadius);
+                        this.invalidate();
+                    });
+                    this._attrBinder.addAttr('barWidth', (value) => {
+                        this.setBarWidth(Math.floor(this._attrBinder.parseNumber(value, this.barWidth)));
+                    });
+                    this._attrBinder.addAttr('rimWidth', (value) => {
+                        this.setRimWidth(Math.floor(this._attrBinder.parseNumber(value, this.rimWidth)));
+                    });
+                    this._attrBinder.addAttr('spinSpeed', (value) => {
+                        this.setSpinSpeed(this._attrBinder.parseNumber(value, this.spinSpeed / 360.0));
+                    });
+                    this._attrBinder.addAttr('barSpinCycleTime', (value) => {
+                        this.barSpinCycleTime = Math.floor(this._attrBinder.parseNumber(value, this.barSpinCycleTime));
+                    });
+                    this._attrBinder.addAttr('barColor', (value) => {
+                        this.setBarColor(this._attrBinder.parseColor(value, this.barColor));
+                    });
+                    this._attrBinder.addAttr('rimColor', (value) => {
+                        this.setRimColor(this._attrBinder.parseColor(value, this.rimColor));
+                    });
+                    this._attrBinder.addAttr('linearProgress', (value) => {
+                        this.setLinearProgress(this._attrBinder.parseBoolean(value, this.linearProgress));
+                    });
+                    this._attrBinder.addAttr('progress', (value) => {
+                        this.setProgress(this._attrBinder.parseNumber(value, this.getProgress()));
+                    });
+                    this._attrBinder.addAttr('progressIndeterminate', (value) => {
+                        if (this._attrBinder.parseBoolean(value, false)) {
+                            this.spin();
+                        }
+                    });
+                    this.applyDefaultAttributes({
+                        progressIndeterminate: true
+                    });
+                }
+                onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                    let viewWidth = this.circleRadius + this.getPaddingLeft() + this.getPaddingRight();
+                    let viewHeight = this.circleRadius + this.getPaddingTop() + this.getPaddingBottom();
+                    let widthMode = ProgressWheel.MeasureSpec.getMode(widthMeasureSpec);
+                    let widthSize = ProgressWheel.MeasureSpec.getSize(widthMeasureSpec);
+                    let heightMode = ProgressWheel.MeasureSpec.getMode(heightMeasureSpec);
+                    let heightSize = ProgressWheel.MeasureSpec.getSize(heightMeasureSpec);
+                    let width;
+                    let height;
+                    if (widthMode == ProgressWheel.MeasureSpec.EXACTLY) {
+                        width = widthSize;
+                    }
+                    else if (widthMode == ProgressWheel.MeasureSpec.AT_MOST) {
+                        width = Math.min(viewWidth, widthSize);
+                    }
+                    else {
+                        width = viewWidth;
+                    }
+                    if (heightMode == ProgressWheel.MeasureSpec.EXACTLY || widthMode == ProgressWheel.MeasureSpec.EXACTLY) {
+                        height = heightSize;
+                    }
+                    else if (heightMode == ProgressWheel.MeasureSpec.AT_MOST) {
+                        height = Math.min(viewHeight, heightSize);
+                    }
+                    else {
+                        height = viewHeight;
+                    }
+                    this.setMeasuredDimension(width, height);
+                }
+                onSizeChanged(w, h, oldw, oldh) {
+                    super.onSizeChanged(w, h, oldw, oldh);
+                    this.setupBounds(w, h);
+                    this.setupPaints();
+                    this.invalidate();
+                }
+                setupPaints() {
+                    this.barPaint.setColor(this.barColor);
+                    this.barPaint.setAntiAlias(true);
+                    this.barPaint.setStyle(Style.STROKE);
+                    this.barPaint.setStrokeWidth(this.barWidth);
+                    this.rimPaint.setColor(this.rimColor);
+                    this.rimPaint.setAntiAlias(true);
+                    this.rimPaint.setStyle(Style.STROKE);
+                    this.rimPaint.setStrokeWidth(this.rimWidth);
+                }
+                setupBounds(layout_width, layout_height) {
+                    let paddingTop = this.getPaddingTop();
+                    let paddingBottom = this.getPaddingBottom();
+                    let paddingLeft = this.getPaddingLeft();
+                    let paddingRight = this.getPaddingRight();
+                    if (!this.fillRadius) {
+                        let minValue = Math.min(layout_width - paddingLeft - paddingRight, layout_height - paddingBottom - paddingTop);
+                        let circleDiameter = Math.min(minValue, this.circleRadius * 2 - this.barWidth * 2);
+                        let xOffset = (layout_width - paddingLeft - paddingRight - circleDiameter) / 2 + paddingLeft;
+                        let yOffset = (layout_height - paddingTop - paddingBottom - circleDiameter) / 2 + paddingTop;
+                        this.circleBounds = new RectF(xOffset + this.barWidth, yOffset + this.barWidth, xOffset + circleDiameter - this.barWidth, yOffset + circleDiameter - this.barWidth);
+                    }
+                    else {
+                        this.circleBounds = new RectF(paddingLeft + this.barWidth, paddingTop + this.barWidth, layout_width - paddingRight - this.barWidth, layout_height - paddingBottom - this.barWidth);
+                    }
+                }
+                setCallback(progressCallback) {
+                    this.callback = progressCallback;
+                    if (!this.mIsSpinning) {
+                        this.runCallback();
+                    }
+                }
+                onDraw(canvas) {
+                    super.onDraw(canvas);
+                    if (Color.alpha(this.rimPaint.getColor()) > 0)
+                        canvas.drawArc(this.circleBounds, 360, 360, false, this.rimPaint);
+                    let mustInvalidate = false;
+                    if (this.mIsSpinning) {
+                        mustInvalidate = true;
+                        let deltaTime = (SystemClock.uptimeMillis() - this.lastTimeAnimated);
+                        let deltaNormalized = deltaTime * this.spinSpeed / 1000.0;
+                        this.updateBarLength(deltaTime);
+                        this.mProgress += deltaNormalized;
+                        if (this.mProgress > 360) {
+                            this.mProgress -= 360;
+                            this.runCallback(-1.0);
+                        }
+                        this.lastTimeAnimated = SystemClock.uptimeMillis();
+                        let from = this.mProgress - 90;
+                        let length = this.barLength + this.barExtraLength;
+                        canvas.drawArc(this.circleBounds, from, length, false, this.barPaint);
+                    }
+                    else {
+                        let oldProgress = this.mProgress;
+                        if (this.mProgress != this.mTargetProgress) {
+                            mustInvalidate = true;
+                            let deltaTime = (SystemClock.uptimeMillis() - this.lastTimeAnimated) / 1000;
+                            let deltaNormalized = deltaTime * this.spinSpeed;
+                            this.mProgress = Math.min(this.mProgress + deltaNormalized, this.mTargetProgress);
+                            this.lastTimeAnimated = SystemClock.uptimeMillis();
+                        }
+                        if (oldProgress != this.mProgress) {
+                            this.runCallback();
+                        }
+                        let offset = 0.0;
+                        let progress = this.mProgress;
+                        if (!this.linearProgress) {
+                            let factor = 2.0;
+                            offset = (1.0 - Math.pow(1.0 - this.mProgress / 360.0, 2.0 * factor)) * 360.0;
+                            progress = (1.0 - Math.pow(1.0 - this.mProgress / 360.0, factor)) * 360.0;
+                        }
+                        canvas.drawArc(this.circleBounds, offset - 90, progress, false, this.barPaint);
+                    }
+                    if (mustInvalidate) {
+                        this.invalidate();
+                    }
+                }
+                onVisibilityChanged(changedView, visibility) {
+                    super.onVisibilityChanged(changedView, visibility);
+                    if (visibility == ProgressWheel.VISIBLE) {
+                        this.lastTimeAnimated = SystemClock.uptimeMillis();
+                    }
+                }
+                updateBarLength(deltaTimeInMilliSeconds) {
+                    if (this.pausedTimeWithoutGrowing >= this.pauseGrowingTime) {
+                        this.timeStartGrowing += deltaTimeInMilliSeconds;
+                        if (this.timeStartGrowing > this.barSpinCycleTime) {
+                            this.timeStartGrowing -= this.barSpinCycleTime;
+                            this.pausedTimeWithoutGrowing = 0;
+                            this.barGrowingFromFront = !this.barGrowingFromFront;
+                        }
+                        let distance = Math.cos((this.timeStartGrowing / this.barSpinCycleTime + 1) * Math.PI) / 2 + 0.5;
+                        let destLength = (this.barMaxLength - this.barLength);
+                        if (this.barGrowingFromFront) {
+                            this.barExtraLength = distance * destLength;
+                        }
+                        else {
+                            let newLength = destLength * (1 - distance);
+                            this.mProgress += (this.barExtraLength - newLength);
+                            this.barExtraLength = newLength;
+                        }
+                    }
+                    else {
+                        this.pausedTimeWithoutGrowing += deltaTimeInMilliSeconds;
+                    }
+                }
+                isSpinning() {
+                    return this.mIsSpinning;
+                }
+                resetCount() {
+                    this.mProgress = 0.0;
+                    this.mTargetProgress = 0.0;
+                    this.invalidate();
+                }
+                stopSpinning() {
+                    this.mIsSpinning = false;
+                    this.mProgress = 0.0;
+                    this.mTargetProgress = 0.0;
+                    this.invalidate();
+                }
+                spin() {
+                    this.lastTimeAnimated = SystemClock.uptimeMillis();
+                    this.mIsSpinning = true;
+                    this.invalidate();
+                }
+                runCallback(value) {
+                    if (this.callback != null) {
+                        if (value == null)
+                            value = Math.round(this.mProgress * 100 / 360.0) / 100;
+                        this.callback.onProgressUpdate(value);
+                    }
+                }
+                setInstantProgress(progress) {
+                    if (this.mIsSpinning) {
+                        this.mProgress = 0.0;
+                        this.mIsSpinning = false;
+                    }
+                    if (progress > 1.0) {
+                        progress -= 1.0;
+                    }
+                    else if (progress < 0) {
+                        progress = 0;
+                    }
+                    if (progress == this.mTargetProgress) {
+                        return;
+                    }
+                    this.mTargetProgress = Math.min(progress * 360.0, 360.0);
+                    this.mProgress = this.mTargetProgress;
+                    this.lastTimeAnimated = SystemClock.uptimeMillis();
+                    this.invalidate();
+                }
+                getProgress() {
+                    return this.mIsSpinning ? -1 : this.mProgress / 360.0;
+                }
+                setProgress(progress) {
+                    if (this.mIsSpinning) {
+                        this.mProgress = 0.0;
+                        this.mIsSpinning = false;
+                        this.runCallback();
+                    }
+                    if (progress > 1.0) {
+                        progress -= 1.0;
+                    }
+                    else if (progress < 0) {
+                        progress = 0;
+                    }
+                    if (progress == this.mTargetProgress) {
+                        return;
+                    }
+                    if (this.mProgress == this.mTargetProgress) {
+                        this.lastTimeAnimated = SystemClock.uptimeMillis();
+                    }
+                    this.mTargetProgress = Math.min(progress * 360.0, 360.0);
+                    this.invalidate();
+                }
+                setLinearProgress(isLinear) {
+                    this.linearProgress = isLinear;
+                    if (!this.mIsSpinning) {
+                        this.invalidate();
+                    }
+                }
+                getCircleRadius() {
+                    return this.circleRadius;
+                }
+                setCircleRadius(circleRadius) {
+                    this.circleRadius = circleRadius;
+                    if (!this.mIsSpinning) {
+                        this.invalidate();
+                    }
+                }
+                getBarWidth() {
+                    return this.barWidth;
+                }
+                setBarWidth(barWidth) {
+                    this.barWidth = barWidth;
+                    if (!this.mIsSpinning) {
+                        this.invalidate();
+                    }
+                }
+                getBarColor() {
+                    return this.barColor;
+                }
+                setBarColor(barColor) {
+                    this.barColor = barColor;
+                    this.setupPaints();
+                    if (!this.mIsSpinning) {
+                        this.invalidate();
+                    }
+                }
+                getRimColor() {
+                    return this.rimColor;
+                }
+                setRimColor(rimColor) {
+                    this.rimColor = rimColor;
+                    this.setupPaints();
+                    if (!this.mIsSpinning) {
+                        this.invalidate();
+                    }
+                }
+                getSpinSpeed() {
+                    return this.spinSpeed / 360.0;
+                }
+                setSpinSpeed(spinSpeed) {
+                    this.spinSpeed = spinSpeed * 360.0;
+                }
+                getRimWidth() {
+                    return this.rimWidth;
+                }
+                setRimWidth(rimWidth) {
+                    this.rimWidth = rimWidth;
+                    if (!this.mIsSpinning) {
+                        this.invalidate();
+                    }
+                }
+            }
+            materialishprogress.ProgressWheel = ProgressWheel;
+        })(materialishprogress = pnikosis.materialishprogress || (pnikosis.materialishprogress = {}));
+    })(pnikosis = com.pnikosis || (com.pnikosis = {}));
+})(com || (com = {}));
+/**
+ * Created by linfaxin on 15/12/23.
+ */
+///<reference path="../view/View.ts"/>
+///<reference path="../../lib/com/pnikosis/materialishprogress/ProgressWheel.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var ProgressWheel = com.pnikosis.materialishprogress.ProgressWheel;
+        class ProgressBar extends ProgressWheel {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+            }
+        }
+        widget.ProgressBar = ProgressBar;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/5.
  */
@@ -40633,326 +41489,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/os/Handler.ts"/>
-///<reference path="../../android/os/SystemClock.ts"/>
-///<reference path="../../java/lang/Float.ts"/>
-///<reference path="../../android/view/GestureDetector.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/util/TypedValue.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var SystemClock = android.os.SystemClock;
-        var GestureDetector = android.view.GestureDetector;
-        var MotionEvent = android.view.MotionEvent;
-        var ViewConfiguration = android.view.ViewConfiguration;
-        var TypedValue = android.util.TypedValue;
-        class ScaleGestureDetector {
-            constructor(listener, handler) {
-                this.mFocusX = 0;
-                this.mFocusY = 0;
-                this.mCurrSpan = 0;
-                this.mPrevSpan = 0;
-                this.mInitialSpan = 0;
-                this.mCurrSpanX = 0;
-                this.mCurrSpanY = 0;
-                this.mPrevSpanX = 0;
-                this.mPrevSpanY = 0;
-                this.mCurrTime = 0;
-                this.mPrevTime = 0;
-                this.mSpanSlop = 0;
-                this.mMinSpan = 0;
-                this.mTouchUpper = 0;
-                this.mTouchLower = 0;
-                this.mTouchHistoryLastAccepted = 0;
-                this.mTouchHistoryDirection = 0;
-                this.mTouchHistoryLastAcceptedTime = 0;
-                this.mTouchMinMajor = 0;
-                this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
-                this.mListener = listener;
-                this.mSpanSlop = ViewConfiguration.get().getScaledTouchSlop() * 2;
-                this.mTouchMinMajor = TypedValue.complexToDimensionPixelSize('48dp');
-                this.mMinSpan = TypedValue.complexToDimensionPixelSize('27mm');
-                this.mHandler = handler;
-                this.setQuickScaleEnabled(true);
-            }
-            addTouchHistory(ev) {
-                const currentTime = SystemClock.uptimeMillis();
-                const count = ev.getPointerCount();
-                let accept = currentTime - this.mTouchHistoryLastAcceptedTime >= ScaleGestureDetector.TOUCH_STABILIZE_TIME;
-                let total = 0;
-                let sampleCount = 0;
-                for (let i = 0; i < count; i++) {
-                    const hasLastAccepted = !Number.isNaN(this.mTouchHistoryLastAccepted);
-                    const historySize = ev.getHistorySize();
-                    const pointerSampleCount = historySize + 1;
-                    for (let h = 0; h < pointerSampleCount; h++) {
-                        let major;
-                        if (h < historySize) {
-                            major = ev.getHistoricalTouchMajor(i, h);
-                        }
-                        else {
-                            major = ev.getTouchMajor(i);
-                        }
-                        if (major < this.mTouchMinMajor)
-                            major = this.mTouchMinMajor;
-                        total += major;
-                        if (Number.isNaN(this.mTouchUpper) || major > this.mTouchUpper) {
-                            this.mTouchUpper = major;
-                        }
-                        if (Number.isNaN(this.mTouchLower) || major < this.mTouchLower) {
-                            this.mTouchLower = major;
-                        }
-                        if (hasLastAccepted) {
-                            function Math_signum(value) {
-                                if (value === 0 || Number.isNaN(value))
-                                    return value;
-                                return Math.abs(value) === value ? 1 : -1;
-                            }
-                            const directionSig = Math.floor(Math_signum(major - this.mTouchHistoryLastAccepted));
-                            if (directionSig != this.mTouchHistoryDirection || (directionSig == 0 && this.mTouchHistoryDirection == 0)) {
-                                this.mTouchHistoryDirection = directionSig;
-                                const time = h < historySize ? ev.getHistoricalEventTime(h) : ev.getEventTime();
-                                this.mTouchHistoryLastAcceptedTime = time;
-                                accept = false;
-                            }
-                        }
-                    }
-                    sampleCount += pointerSampleCount;
-                }
-                const avg = total / sampleCount;
-                if (accept) {
-                    let newAccepted = (this.mTouchUpper + this.mTouchLower + avg) / 3;
-                    this.mTouchUpper = (this.mTouchUpper + newAccepted) / 2;
-                    this.mTouchLower = (this.mTouchLower + newAccepted) / 2;
-                    this.mTouchHistoryLastAccepted = newAccepted;
-                    this.mTouchHistoryDirection = 0;
-                    this.mTouchHistoryLastAcceptedTime = ev.getEventTime();
-                }
-            }
-            clearTouchHistory() {
-                this.mTouchUpper = Number.NaN;
-                this.mTouchLower = Number.NaN;
-                this.mTouchHistoryLastAccepted = Number.NaN;
-                this.mTouchHistoryDirection = 0;
-                this.mTouchHistoryLastAcceptedTime = 0;
-            }
-            onTouchEvent(event) {
-                this.mCurrTime = event.getEventTime();
-                const action = event.getActionMasked();
-                if (this.mQuickScaleEnabled) {
-                    this.mGestureDetector.onTouchEvent(event);
-                }
-                const streamComplete = action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL;
-                if (action == MotionEvent.ACTION_DOWN || streamComplete) {
-                    if (this.mInProgress) {
-                        this.mListener.onScaleEnd(this);
-                        this.mInProgress = false;
-                        this.mInitialSpan = 0;
-                        this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
-                    }
-                    else if (this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS && streamComplete) {
-                        this.mInProgress = false;
-                        this.mInitialSpan = 0;
-                        this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
-                    }
-                    if (streamComplete) {
-                        this.clearTouchHistory();
-                        return true;
-                    }
-                }
-                const configChanged = action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_POINTER_DOWN;
-                const pointerUp = action == MotionEvent.ACTION_POINTER_UP;
-                const skipIndex = pointerUp ? event.getActionIndex() : -1;
-                let sumX = 0, sumY = 0;
-                const count = event.getPointerCount();
-                const div = pointerUp ? count - 1 : count;
-                let focusX;
-                let focusY;
-                if (this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS) {
-                    focusX = this.mDoubleTapEvent.getX();
-                    focusY = this.mDoubleTapEvent.getY();
-                    if (event.getY() < focusY) {
-                        this.mEventBeforeOrAboveStartingGestureEvent = true;
-                    }
-                    else {
-                        this.mEventBeforeOrAboveStartingGestureEvent = false;
-                    }
-                }
-                else {
-                    for (let i = 0; i < count; i++) {
-                        if (skipIndex == i)
-                            continue;
-                        sumX += event.getX(i);
-                        sumY += event.getY(i);
-                    }
-                    focusX = sumX / div;
-                    focusY = sumY / div;
-                }
-                this.addTouchHistory(event);
-                let devSumX = 0, devSumY = 0;
-                for (let i = 0; i < count; i++) {
-                    if (skipIndex == i)
-                        continue;
-                    const touchSize = this.mTouchHistoryLastAccepted / 2;
-                    devSumX += Math.abs(event.getX(i) - focusX) + touchSize;
-                    devSumY += Math.abs(event.getY(i) - focusY) + touchSize;
-                }
-                const devX = devSumX / div;
-                const devY = devSumY / div;
-                const spanX = devX * 2;
-                const spanY = devY * 2;
-                let span;
-                if (this.inDoubleTapMode()) {
-                    span = spanY;
-                }
-                else {
-                    span = Math.sqrt(spanX * spanX + spanY * spanY);
-                }
-                const wasInProgress = this.mInProgress;
-                this.mFocusX = focusX;
-                this.mFocusY = focusY;
-                if (!this.inDoubleTapMode() && this.mInProgress && (span < this.mMinSpan || configChanged)) {
-                    this.mListener.onScaleEnd(this);
-                    this.mInProgress = false;
-                    this.mInitialSpan = span;
-                    this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_NONE;
-                }
-                if (configChanged) {
-                    this.mPrevSpanX = this.mCurrSpanX = spanX;
-                    this.mPrevSpanY = this.mCurrSpanY = spanY;
-                    this.mInitialSpan = this.mPrevSpan = this.mCurrSpan = span;
-                }
-                const minSpan = this.inDoubleTapMode() ? this.mSpanSlop : this.mMinSpan;
-                if (!this.mInProgress && span >= minSpan && (wasInProgress || Math.abs(span - this.mInitialSpan) > this.mSpanSlop)) {
-                    this.mPrevSpanX = this.mCurrSpanX = spanX;
-                    this.mPrevSpanY = this.mCurrSpanY = spanY;
-                    this.mPrevSpan = this.mCurrSpan = span;
-                    this.mPrevTime = this.mCurrTime;
-                    this.mInProgress = this.mListener.onScaleBegin(this);
-                }
-                if (action == MotionEvent.ACTION_MOVE) {
-                    this.mCurrSpanX = spanX;
-                    this.mCurrSpanY = spanY;
-                    this.mCurrSpan = span;
-                    let updatePrev = true;
-                    if (this.mInProgress) {
-                        updatePrev = this.mListener.onScale(this);
-                    }
-                    if (updatePrev) {
-                        this.mPrevSpanX = this.mCurrSpanX;
-                        this.mPrevSpanY = this.mCurrSpanY;
-                        this.mPrevSpan = this.mCurrSpan;
-                        this.mPrevTime = this.mCurrTime;
-                    }
-                }
-                return true;
-            }
-            inDoubleTapMode() {
-                return this.mDoubleTapMode == ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
-            }
-            setQuickScaleEnabled(scales) {
-                this.mQuickScaleEnabled = scales;
-                if (this.mQuickScaleEnabled && this.mGestureDetector == null) {
-                    let gestureListener = (() => {
-                        const _this = this;
-                        class _Inner extends GestureDetector.SimpleOnGestureListener {
-                            onDoubleTap(e) {
-                                _this.mDoubleTapEvent = e;
-                                _this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
-                                return true;
-                            }
-                        }
-                        return new _Inner();
-                    })();
-                    this.mGestureDetector = new GestureDetector(gestureListener, this.mHandler);
-                }
-            }
-            isQuickScaleEnabled() {
-                return this.mQuickScaleEnabled;
-            }
-            isInProgress() {
-                return this.mInProgress;
-            }
-            getFocusX() {
-                return this.mFocusX;
-            }
-            getFocusY() {
-                return this.mFocusY;
-            }
-            getCurrentSpan() {
-                return this.mCurrSpan;
-            }
-            getCurrentSpanX() {
-                return this.mCurrSpanX;
-            }
-            getCurrentSpanY() {
-                return this.mCurrSpanY;
-            }
-            getPreviousSpan() {
-                return this.mPrevSpan;
-            }
-            getPreviousSpanX() {
-                return this.mPrevSpanX;
-            }
-            getPreviousSpanY() {
-                return this.mPrevSpanY;
-            }
-            getScaleFactor() {
-                if (this.inDoubleTapMode()) {
-                    const scaleUp = (this.mEventBeforeOrAboveStartingGestureEvent && (this.mCurrSpan < this.mPrevSpan)) || (!this.mEventBeforeOrAboveStartingGestureEvent && (this.mCurrSpan > this.mPrevSpan));
-                    const spanDiff = (Math.abs(1 - (this.mCurrSpan / this.mPrevSpan)) * ScaleGestureDetector.SCALE_FACTOR);
-                    return this.mPrevSpan <= 0 ? 1 : scaleUp ? (1 + spanDiff) : (1 - spanDiff);
-                }
-                return this.mPrevSpan > 0 ? this.mCurrSpan / this.mPrevSpan : 1;
-            }
-            getTimeDelta() {
-                return this.mCurrTime - this.mPrevTime;
-            }
-            getEventTime() {
-                return this.mCurrTime;
-            }
-        }
-        ScaleGestureDetector.TAG = "ScaleGestureDetector";
-        ScaleGestureDetector.TOUCH_STABILIZE_TIME = 128;
-        ScaleGestureDetector.DOUBLE_TAP_MODE_NONE = 0;
-        ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS = 1;
-        ScaleGestureDetector.SCALE_FACTOR = .5;
-        view.ScaleGestureDetector = ScaleGestureDetector;
-        (function (ScaleGestureDetector) {
-            class SimpleOnScaleGestureListener {
-                onScale(detector) {
-                    return false;
-                }
-                onScaleBegin(detector) {
-                    return true;
-                }
-                onScaleEnd(detector) {
-                }
-            }
-            ScaleGestureDetector.SimpleOnScaleGestureListener = SimpleOnScaleGestureListener;
-        })(ScaleGestureDetector = view.ScaleGestureDetector || (view.ScaleGestureDetector = {}));
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
 /*******************************************************************************
  * Copyright 2011, 2012 Chris Banes.
  *
@@ -42470,10 +43006,8 @@ var androidui;
             }
             document.addEventListener(eventName, () => {
                 if (document['hidden'] || document['webkitHidden']) {
-                    console.log('pagehidden');
                 }
                 else {
-                    console.log('pageshow');
                     this._viewRootImpl.scheduleTraversals();
                 }
             }, false);
@@ -44006,13 +44540,21 @@ var androidui;
                     throw Error('image should be NativeImage');
                 }
             }
-            drawRectImpl(left, top, width, height) {
+            drawRectImpl(left, top, width, height, paint) {
                 native.NativeApi.canvas.drawRect(this.canvasId, left, top, width, height);
+            }
+            drawOvalImpl(oval, paint) {
+            }
+            drawCircleImpl(cx, cy, radius, paint) {
+            }
+            drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint) {
+            }
+            drawRoundRectImpl(rect, rx, ry, paint) {
             }
             drawTextImpl(text, x, y, style) {
                 native.NativeApi.canvas.drawText(this.canvasId, text, x, y, style);
             }
-            setFillColorImpl(color) {
+            setColorImpl(color, style) {
                 native.NativeApi.canvas.setFillColor(this.canvasId, color);
             }
             multiplyAlphaImpl(alpha) {
@@ -44321,6 +44863,7 @@ var androidui;
 ///<reference path="android/widget/GridView.ts"/>
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/widget/NumberPicker.ts"/>
+///<reference path="android/widget/ProgressBar.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>

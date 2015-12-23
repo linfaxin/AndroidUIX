@@ -81,16 +81,32 @@ module androidui.native {
             }
         }
 
-        protected drawRectImpl(left:number, top:number, width:number, height:number){
-            NativeApi.canvas.drawRect(this.canvasId, left, top, width, height);
+        protected drawRectImpl(left:number, top:number, width:number, height:number, paint:android.graphics.Paint){
+            NativeApi.canvas.drawRect(this.canvasId, left, top, width, height);//TODO pass style
+        }
+
+        protected drawOvalImpl(oval:android.graphics.RectF, paint:android.graphics.Paint):void {
+            //TODO
+        }
+
+        protected drawCircleImpl(cx:number, cy:number, radius:number, paint:android.graphics.Paint):void {
+            //TODO
+        }
+
+        protected drawArcImpl(oval:android.graphics.RectF, startAngle:number, sweepAngle:number, useCenter:boolean, paint:android.graphics.Paint):void {
+            //TODO
+        }
+
+        protected drawRoundRectImpl(rect:android.graphics.RectF, rx:number, ry:number, paint:android.graphics.Paint):void {
+            //TODO
         }
 
         protected drawTextImpl(text:string, x:number, y:number, style:android.graphics.Paint.Style):void {
             NativeApi.canvas.drawText(this.canvasId, text, x, y, style);
         }
 
-        protected setFillColorImpl(color:number):void {
-            NativeApi.canvas.setFillColor(this.canvasId, color);
+        protected setColorImpl(color:number, style?:android.graphics.Paint.Style):void {
+            NativeApi.canvas.setFillColor(this.canvasId, color);//TODO pass style
         }
 
         protected multiplyAlphaImpl(alpha:number):void {

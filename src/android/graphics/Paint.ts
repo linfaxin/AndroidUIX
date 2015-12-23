@@ -753,7 +753,7 @@ module android.graphics{
         applyToCanvas(canvas:Canvas){
 
             if(this.mColor!=null) {
-                canvas.setFillColor(this.mColor);
+                canvas.setColor(this.mColor, this.getStyle());
             }
 
             if(this.mAlpha!=null){

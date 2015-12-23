@@ -147,8 +147,10 @@ module android.graphics {
         }
 
         protected drawARGBImpl(a:number, r:number, g:number, b:number):void {
+            let preStyle = this._mCanvasContent.fillStyle;
             this._mCanvasContent.fillStyle = `rgba(${r},${g},${b},${a/255})`;
             this._mCanvasContent.fillRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+            this._mCanvasContent.fillStyle = preStyle;
         }
 
         clearColor():void {
@@ -280,15 +282,203 @@ module android.graphics {
                 let [left, top, right, bottom, paint] = args;
                 this.saveImpl();
                 paint.applyToCanvas(this);
-                this.drawRectImpl(left, top, right-left, bottom-top);
+                this.drawRectImpl(left, top, right-left, bottom-top, paint);//TODO stroke
                 this.restoreImpl();
             }
         }
 
-        protected drawRectImpl(left:number, top:number, width:number, height:number){
-            this._mCanvasContent.fillRect(left, top, width, height);
+        protected drawRectImpl(left:number, top:number, width:number, height:number, paint:Paint){
+            switch (paint.getStyle()){
+                case Paint.Style.STROKE:
+                    this._mCanvasContent.strokeRect(left, top, width, height);
+                    break;
+                case Paint.Style.FILL_AND_STROKE:
+                    this._mCanvasContent.fillRect(left, top, width, height);
+                    this._mCanvasContent.strokeRect(left, top, width, height);
+                    break;
+                case Paint.Style.FILL:
+                default :
+                    this._mCanvasContent.fillRect(left, top, width, height);
+                    break;
+            }
         }
 
+        private applyFillOrStrokeToContent(style:Paint.Style){
+            switch (style){
+                case Paint.Style.STROKE:
+                    this._mCanvasContent.stroke();
+                    break;
+                case Paint.Style.FILL_AND_STROKE:
+                    this._mCanvasContent.fill();
+                    this._mCanvasContent.stroke();
+                    break;
+                case Paint.Style.FILL:
+                default :
+                    this._mCanvasContent.fill();
+                    break;
+            }
+        }
+
+        /**
+         * Draw the specified oval using the specified paint. The oval will be
+         * filled or framed based on the Style in the paint.
+         *
+         * @param oval The rectangle bounds of the oval to be drawn
+         */
+        drawOval(oval:RectF, paint:Paint):void {
+            if (oval == null) {
+                throw Error(`new NullPointerException()`);
+            }
+            this.drawOvalImpl(oval, paint);
+        }
+
+        protected drawOvalImpl(oval:RectF, paint:Paint):void {
+            this.saveImpl();
+            paint.applyToCanvas(this);
+            let ctx = this._mCanvasContent;
+            ctx.beginPath();
+            let cx = oval.centerX();
+            let cy = oval.centerY();
+            let rx = oval.width()/2;
+            let ry = oval.height()/2;
+            ctx.save();
+            ctx.translate(cx-rx, cy-ry);
+            ctx.scale(rx, ry);
+            ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
+            ctx.restore();
+            this.applyFillOrStrokeToContent(paint.getStyle());
+            this.restoreImpl();
+        }
+
+
+        /**
+         * Draw the specified circle using the specified paint. If radius is <= 0,
+         * then nothing will be drawn. The circle will be filled or framed based
+         * on the Style in the paint.
+         *
+         * @param cx     The x-coordinate of the center of the cirle to be drawn
+         * @param cy     The y-coordinate of the center of the cirle to be drawn
+         * @param radius The radius of the cirle to be drawn
+         * @param paint  The paint used to draw the circle
+         */
+        drawCircle(cx:number, cy:number, radius:number, paint:Paint):void  {
+            this.drawCircleImpl(cx, cy, radius, paint);
+        }
+
+        protected drawCircleImpl(cx:number, cy:number, radius:number, paint:Paint):void  {
+            this.saveImpl();
+            paint.applyToCanvas(this);
+            let ctx = this._mCanvasContent;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
+            this.applyFillOrStrokeToContent(paint.getStyle());
+            this.restoreImpl();
+        }
+
+        /**
+         * <p>Draw the specified arc, which will be scaled to fit inside the
+         * specified oval.</p>
+         *
+         * <p>If the start angle is negative or >= 360, the start angle is treated
+         * as start angle modulo 360.</p>
+         *
+         * <p>If the sweep angle is >= 360, then the oval is drawn
+         * completely. Note that this differs slightly from SkPath::arcTo, which
+         * treats the sweep angle modulo 360. If the sweep angle is negative,
+         * the sweep angle is treated as sweep angle modulo 360</p>
+         *
+         * <p>The arc is drawn clockwise. An angle of 0 degrees correspond to the
+         * geometric angle of 0 degrees (3 o'clock on a watch.)</p>
+         *
+         * @param oval       The bounds of oval used to define the shape and size
+         *                   of the arc
+         * @param startAngle Starting angle (in degrees) where the arc begins
+         * @param sweepAngle Sweep angle (in degrees) measured clockwise
+         * @param useCenter If true, include the center of the oval in the arc, and
+         close it if it is being stroked. This will draw a wedge
+         * @param paint      The paint used to draw the arc
+         */
+        drawArc(oval:RectF, startAngle:number, sweepAngle:number, useCenter:boolean, paint:Paint):void  {
+            if (oval == null) {
+                throw Error(`new NullPointerException()`);
+            }
+            this.drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint);
+        }
+
+        protected drawArcImpl(oval:RectF, startAngle:number, sweepAngle:number, useCenter:boolean, paint:Paint):void  {
+            this.saveImpl();
+            paint.applyToCanvas(this);
+            let ctx = this._mCanvasContent;
+            ctx.beginPath();
+            let cx = oval.centerX();
+            let cy = oval.centerY();
+            let rx = oval.width()/2;
+            let ry = oval.height()/2;
+            ctx.save();
+            ctx.translate(cx-rx, cy-ry);
+            ctx.scale(rx, ry);
+            ctx.arc(1, 1, 1, startAngle / 180 * Math.PI, (sweepAngle+startAngle) / 180 * Math.PI, false);
+            if(useCenter){
+                ctx.lineTo(1, 1);
+                ctx.closePath();
+            }
+            ctx.restore();
+            this.applyFillOrStrokeToContent(paint.getStyle());
+            this.restoreImpl();
+        }
+
+        /**
+         * Draw the specified round-rect using the specified paint. The roundrect
+         * will be filled or framed based on the Style in the paint.
+         *
+         * @param rect  The rectangular bounds of the roundRect to be drawn
+         * @param rx    The x-radius of the oval used to round the corners
+         * @param ry    The y-radius of the oval used to round the corners
+         * @param paint The paint used to draw the roundRect
+         */
+        drawRoundRect(rect:RectF, rx:number, ry:number, paint:Paint):void  {
+            if (rect == null) {
+                throw Error(`new NullPointerException()`);
+            }
+            this.drawRoundRectImpl(rect, rx, ry, paint);
+        }
+
+        protected drawRoundRectImpl(rect:RectF, rx:number, ry:number, paint:Paint):void  {
+            this.saveImpl();
+            paint.applyToCanvas(this);
+            let ctx = this._mCanvasContent;
+            let x = rect.left;
+            let y = rect.top;
+            let h = rect.height();
+            let w = rect.width();
+
+            if (w < 2 * rx) rx = w / 2;
+            if (h < 2 * ry) ry = h / 2;
+
+            ctx.beginPath();
+            if(rx == ry){//may a circle
+                let r = rx;
+                ctx.moveTo(x+r, y);
+                ctx.arcTo(x+w, y,   x+w, y+h, r);
+                ctx.arcTo(x+w, y+h, x,   y+h, r);
+                ctx.arcTo(x,   y+h, x,   y,   r);
+                ctx.arcTo(x,   y,   x+w, y,   r);
+            }else{
+                ctx.moveTo(x,y+ry);
+                ctx.lineTo(x,y+h-ry);
+                ctx.quadraticCurveTo(x,y+h,x+rx,y+h);
+                ctx.lineTo(x+w-rx,y+h);
+                ctx.quadraticCurveTo(x+w,y+h,x+w,y+h-ry);
+                ctx.lineTo(x+w,y+ry);
+                ctx.quadraticCurveTo(x+w,y,x+w-rx,y);
+                ctx.lineTo(x+rx,y);
+                ctx.quadraticCurveTo(x,y,x,y+ry);
+            }
+            ctx.closePath();
+            this.applyFillOrStrokeToContent(paint.getStyle());
+
+            this.restoreImpl();
+        }
 
 
         /**
@@ -486,13 +676,27 @@ module android.graphics {
         }
 
 
-        setFillColor(color:number):void {
+        setColor(color:number, style?:Paint.Style):void {
             if(typeof color === 'number'){
-                this.setFillColorImpl(color);
+                this.setColorImpl(color, style);
             }
         }
-        protected setFillColorImpl(color:number):void {
-            this._mCanvasContent.fillStyle = Color.toRGBAFunc(color);
+
+        protected setColorImpl(color:number, style?:Paint.Style):void {
+            let colorS = Color.toRGBAFunc(color);
+            switch (style){
+                case Paint.Style.STROKE:
+                    this._mCanvasContent.strokeStyle = colorS;
+                    break;
+                case Paint.Style.FILL:
+                    this._mCanvasContent.fillStyle = colorS;
+                    break;
+                default :
+                case Paint.Style.FILL_AND_STROKE:
+                    this._mCanvasContent.fillStyle = colorS;
+                    this._mCanvasContent.strokeStyle = colorS;
+                    break;
+            }
         }
 
         multiplyAlpha(alpha:number):void {

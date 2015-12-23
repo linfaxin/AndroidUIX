@@ -20,6 +20,8 @@
 ///<reference path="../../android/view/VelocityTracker.ts"/>
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="ScaleGestureDetector.ts"/>
+
 
 module android.view {
 import Handler = android.os.Handler;
