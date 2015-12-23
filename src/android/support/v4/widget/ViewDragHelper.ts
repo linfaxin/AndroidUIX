@@ -999,7 +999,7 @@ export class ViewDragHelper {
     checkTouchSlop(...args):boolean {
         if(args.length===1) return this._checkTouchSlop_1(args[0]);
         if(args.length===2) return this._checkTouchSlop_2(args[0], args[1]);
-        if(args.length===3) return this._checkTouchSlop_3(args[0], args[2], args[3]);
+        if(args.length===3) return this._checkTouchSlop_3(args[0], args[1], args[2]);
         return false;
     }
     /**

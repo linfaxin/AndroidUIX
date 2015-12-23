@@ -1342,6 +1342,7 @@ declare module android.view {
         static KEYCODE_PAGE_DOWN: number;
         static KEYCODE_MOVE_HOME: number;
         static KEYCODE_MOVE_END: number;
+        static KEYCODE_BACK: number;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
         static META_ALT_ON: number;
@@ -2097,6 +2098,7 @@ declare module android.view {
         dispatchDetachedFromWindow(): void;
         protected onDetachedFromWindow(): void;
         cleanupDraw(): void;
+        isInEditMode(): boolean;
         debug(depth?: number): void;
         toString(): String;
         getRootView(): View;
@@ -2577,6 +2579,8 @@ declare module android.view {
         private static canViewReceivePointerEvents(child);
         isTransformedTouchPointInView(x: number, y: number, child: View, outLocalPoint: Point): boolean;
         private dispatchTransformedTouchEvent(event, cancel, child, desiredPointerIdBits);
+        setMotionEventSplittingEnabled(split: boolean): void;
+        isMotionEventSplittingEnabled(): boolean;
         isAlwaysDrawnWithCacheEnabled(): boolean;
         setAlwaysDrawnWithCacheEnabled(always: boolean): void;
         isChildrenDrawnWithCacheEnabled(): boolean;
@@ -2615,7 +2619,7 @@ declare module android.view {
         protected abstract onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
         dispatchDraw(canvas: Canvas): void;
-        drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
+        protected drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
         protected drawableStateChanged(): void;
         jumpDrawablesToCurrentState(): void;
         protected onCreateDrawableState(extraSpace: number): Array<number>;
@@ -5519,7 +5523,7 @@ declare module android.widget {
         drawOverscrollHeader(canvas: Canvas, drawable: Drawable, bounds: Rect): void;
         drawOverscrollFooter(canvas: Canvas, drawable: Drawable, bounds: Rect): void;
         dispatchDraw(canvas: Canvas): void;
-        drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
+        protected drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
         drawDivider(canvas: Canvas, bounds: Rect, childIndex: number): void;
         getDivider(): Drawable;
         setDivider(divider: Drawable): void;
@@ -6558,6 +6562,156 @@ declare module android.support.v4.widget {
             abstract tryCaptureView(child: View, pointerId: number): boolean;
             clampViewPositionHorizontal(child: View, left: number, dx: number): number;
             clampViewPositionVertical(child: View, top: number, dy: number): number;
+        }
+    }
+}
+declare module android.support.v4.widget {
+    import Canvas = android.graphics.Canvas;
+    import Drawable = android.graphics.drawable.Drawable;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import ViewDragHelper = android.support.v4.widget.ViewDragHelper;
+    class DrawerLayout extends ViewGroup {
+        private static TAG;
+        static STATE_IDLE: number;
+        static STATE_DRAGGING: number;
+        static STATE_SETTLING: number;
+        static LOCK_MODE_UNLOCKED: number;
+        static LOCK_MODE_LOCKED_CLOSED: number;
+        static LOCK_MODE_LOCKED_OPEN: number;
+        private static MIN_DRAWER_MARGIN;
+        private static DEFAULT_SCRIM_COLOR;
+        private static PEEK_DELAY;
+        private static MIN_FLING_VELOCITY;
+        private static ALLOW_EDGE_LOCK;
+        private static CHILDREN_DISALLOW_INTERCEPT;
+        private static TOUCH_SLOP_SENSITIVITY;
+        private mMinDrawerMargin;
+        private mScrimColor;
+        private mScrimOpacity;
+        private mScrimPaint;
+        private mLeftDragger;
+        private mRightDragger;
+        private mLeftCallback;
+        private mRightCallback;
+        private mDrawerState;
+        private mInLayout;
+        private mFirstLayout;
+        private mLockModeLeft;
+        private mLockModeRight;
+        private mDisallowInterceptRequested;
+        private mChildrenCanceledTouch;
+        private mListener;
+        private mInitialMotionX;
+        private mInitialMotionY;
+        private mShadowLeft;
+        private mShadowRight;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        setDrawerShadow(shadowDrawable: Drawable, gravity: number): void;
+        setScrimColor(color: number): void;
+        setDrawerListener(listener: DrawerLayout.DrawerListener): void;
+        setDrawerLockMode(lockMode: number, edgeGravityOrView?: number | View): void;
+        getDrawerLockMode(edgeGravityOrView: number | View): number;
+        updateDrawerState(forGravity: number, activeState: number, activeDrawer: View): void;
+        dispatchOnDrawerClosed(drawerView: View): void;
+        dispatchOnDrawerOpened(drawerView: View): void;
+        dispatchOnDrawerSlide(drawerView: View, slideOffset: number): void;
+        setDrawerViewOffset(drawerView: View, slideOffset: number): void;
+        getDrawerViewOffset(drawerView: View): number;
+        getDrawerViewAbsoluteGravity(drawerView: View): number;
+        checkDrawerViewAbsoluteGravity(drawerView: View, checkFor: number): boolean;
+        findOpenDrawer(): View;
+        moveDrawerToOffset(drawerView: View, slideOffset: number): void;
+        findDrawerWithGravity(gravity: number): View;
+        static gravityToString(gravity: number): string;
+        protected onDetachedFromWindow(): void;
+        protected onAttachedToWindow(): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        requestLayout(): void;
+        computeScroll(): void;
+        private static hasOpaqueBackground(v);
+        protected drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
+        isContentView(child: View): boolean;
+        isDrawerView(child: View): boolean;
+        onInterceptTouchEvent(ev: MotionEvent): boolean;
+        onTouchEvent(ev: MotionEvent): boolean;
+        requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
+        closeDrawers(peekingOnly?: boolean): void;
+        openDrawer(drawerView: View): void;
+        openDrawer(gravity: number): void;
+        private _openDrawer_view(drawerView);
+        private _openDrawer_gravity(gravity);
+        closeDrawer(drawerView: View): void;
+        closeDrawer(gravity: number): void;
+        private _closeDrawer_view(drawerView);
+        private _closeDrawer_gravity(gravity);
+        isDrawerOpen(drawer: View): boolean;
+        isDrawerOpen(drawerGravity: number): boolean;
+        private _isDrawerOpen_view(drawer);
+        private _isDrawerOpen_gravity(drawerGravity);
+        isDrawerVisible(drawer: View): boolean;
+        isDrawerVisible(drawerGravity: number): boolean;
+        private _isDrawerVisible_view(drawer);
+        private _isDrawerVisible_gravity(drawerGravity);
+        private hasPeekingDrawer();
+        protected generateDefaultLayoutParams(): ViewGroup.LayoutParams;
+        protected generateLayoutParams(p: ViewGroup.LayoutParams): ViewGroup.LayoutParams;
+        protected checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
+        private hasVisibleDrawer();
+        private findVisibleDrawer();
+        cancelChildViewTouch(): void;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+    }
+    module DrawerLayout {
+        interface DrawerListener {
+            onDrawerSlide(drawerView: View, slideOffset: number): void;
+            onDrawerOpened(drawerView: View): void;
+            onDrawerClosed(drawerView: View): void;
+            onDrawerStateChanged(newState: number): void;
+        }
+        abstract class SimpleDrawerListener implements DrawerLayout.DrawerListener {
+            onDrawerSlide(drawerView: View, slideOffset: number): void;
+            onDrawerOpened(drawerView: View): void;
+            onDrawerClosed(drawerView: View): void;
+            onDrawerStateChanged(newState: number): void;
+        }
+        class ViewDragCallback extends ViewDragHelper.Callback {
+            _DrawerLayout_this: DrawerLayout;
+            constructor(arg: DrawerLayout, gravity: number);
+            private mAbsGravity;
+            private mDragger;
+            private mPeekRunnable;
+            setDragger(dragger: ViewDragHelper): void;
+            removeCallbacks(): void;
+            tryCaptureView(child: View, pointerId: number): boolean;
+            onViewDragStateChanged(state: number): void;
+            onViewPositionChanged(changedView: View, left: number, top: number, dx: number, dy: number): void;
+            onViewCaptured(capturedChild: View, activePointerId: number): void;
+            private closeOtherDrawer();
+            onViewReleased(releasedChild: View, xvel: number, yvel: number): void;
+            onEdgeTouched(edgeFlags: number, pointerId: number): void;
+            private peekDrawer();
+            onEdgeLock(edgeFlags: number): boolean;
+            onEdgeDragStarted(edgeFlags: number, pointerId: number): void;
+            getViewHorizontalDragRange(child: View): number;
+            clampViewPositionHorizontal(child: View, left: number, dx: number): number;
+            clampViewPositionVertical(child: View, top: number, dy: number): number;
+        }
+        class LayoutParams extends ViewGroup.MarginLayoutParams {
+            gravity: number;
+            onScreen: number;
+            isPeeking: boolean;
+            knownOpen: boolean;
+            constructor();
+            constructor(width: number, height: number);
+            constructor(width: number, height: number, gravity: number);
+            constructor(source: ViewGroup.LayoutParams);
+            constructor(source: ViewGroup.MarginLayoutParams);
+            constructor(source: LayoutParams);
         }
     }
 }

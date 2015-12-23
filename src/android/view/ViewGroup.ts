@@ -1325,6 +1325,37 @@ module android.view {
             return handled;
         }
 
+        /**
+         * Enable or disable the splitting of MotionEvents to multiple children during touch event
+         * dispatch. This behavior is enabled by default for applications that target an
+         * SDK version of {@link Build.VERSION_CODES#HONEYCOMB} or newer.
+         *
+         * <p>When this option is enabled MotionEvents may be split and dispatched to different child
+         * views depending on where each pointer initially went down. This allows for user interactions
+         * such as scrolling two panes of content independently, chording of buttons, and performing
+         * independent gestures on different pieces of content.
+         *
+         * @param split <code>true</code> to allow MotionEvents to be split and dispatched to multiple
+         *              child views. <code>false</code> to only allow one child view to be the target of
+         *              any MotionEvent received by this ViewGroup.
+         * @attr ref android.R.styleable#ViewGroup_splitMotionEvents
+         */
+        setMotionEventSplittingEnabled(split:boolean):void  {
+            // with gestures in progress when this is changed.
+            if (split) {
+                this.mGroupFlags |= ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
+            } else {
+                this.mGroupFlags &= ~ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
+            }
+        }
+
+        /**
+         * Returns true if MotionEvents dispatched to this ViewGroup can be split to multiple children.
+         * @return true if MotionEvents dispatched to this ViewGroup can be split to multiple children.
+         */
+        isMotionEventSplittingEnabled():boolean  {
+            return (this.mGroupFlags & ViewGroup.FLAG_SPLIT_MOTION_EVENTS) == ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
+        }
 
         /**
          * Indicates whether this ViewGroup will always try to draw its children using their
@@ -1911,7 +1942,7 @@ module android.view {
             }
         }
 
-        drawChild(canvas:Canvas, child:View , drawingTime:number):boolean {
+        protected drawChild(canvas:Canvas, child:View , drawingTime:number):boolean {
             return child.drawFromParent(canvas, this, drawingTime);
         }
         protected drawableStateChanged() {

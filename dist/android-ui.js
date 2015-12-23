@@ -5698,6 +5698,7 @@ var android;
         KeyEvent.KEYCODE_PAGE_DOWN = 34;
         KeyEvent.KEYCODE_MOVE_HOME = 36;
         KeyEvent.KEYCODE_MOVE_END = 35;
+        KeyEvent.KEYCODE_BACK = -1;
         KeyEvent.ACTION_DOWN = 0;
         KeyEvent.ACTION_UP = 1;
         KeyEvent.META_ALT_ON = 0x02;
@@ -9711,6 +9712,9 @@ var android;
                     this.mAttachInfo.mViewRootImpl.cancelInvalidate(this);
                 }
             }
+            isInEditMode() {
+                return false;
+            }
             debug(depth = 0) {
                 let originProto = Object.getPrototypeOf(this);
                 console.dir(Object.assign(Object.create(originProto), this));
@@ -13070,6 +13074,17 @@ var android;
                 }
                 transformedEvent.recycle();
                 return handled;
+            }
+            setMotionEventSplittingEnabled(split) {
+                if (split) {
+                    this.mGroupFlags |= ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
+                }
+                else {
+                    this.mGroupFlags &= ~ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
+                }
+            }
+            isMotionEventSplittingEnabled() {
+                return (this.mGroupFlags & ViewGroup.FLAG_SPLIT_MOTION_EVENTS) == ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
             }
             isAlwaysDrawnWithCacheEnabled() {
                 return (this.mGroupFlags & ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) == ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE;
@@ -41148,7 +41163,7 @@ var android;
                         if (args.length === 2)
                             return this._checkTouchSlop_2(args[0], args[1]);
                         if (args.length === 3)
-                            return this._checkTouchSlop_3(args[0], args[2], args[3]);
+                            return this._checkTouchSlop_3(args[0], args[1], args[2]);
                         return false;
                     }
                     _checkTouchSlop_3(child, dx, dy) {
@@ -41325,6 +41340,961 @@ var android;
                     }
                     ViewDragHelper.Callback = Callback;
                 })(ViewDragHelper = widget.ViewDragHelper || (widget.ViewDragHelper = {}));
+            })(widget = v4.widget || (v4.widget = {}));
+        })(v4 = support.v4 || (support.v4 = {}));
+    })(support = android.support || (android.support = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../../android/graphics/Paint.ts"/>
+///<reference path="../../../../android/graphics/PixelFormat.ts"/>
+///<reference path="../../../../android/graphics/Rect.ts"/>
+///<reference path="../../../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../../../android/os/SystemClock.ts"/>
+///<reference path="../../../../android/view/Gravity.ts"/>
+///<reference path="../../../../android/view/KeyEvent.ts"/>
+///<reference path="../../../../android/view/MotionEvent.ts"/>
+///<reference path="../../../../android/view/View.ts"/>
+///<reference path="../../../../android/view/ViewGroup.ts"/>
+///<reference path="../../../../android/view/ViewParent.ts"/>
+///<reference path="../../../../java/lang/Integer.ts"/>
+///<reference path="../../../../java/lang/Runnable.ts"/>
+///<reference path="../../../../android/support/v4/widget/ViewDragHelper.ts"/>
+var android;
+(function (android) {
+    var support;
+    (function (support) {
+        var v4;
+        (function (v4) {
+            var widget;
+            (function (widget) {
+                var Paint = android.graphics.Paint;
+                var PixelFormat = android.graphics.PixelFormat;
+                var SystemClock = android.os.SystemClock;
+                var Gravity = android.view.Gravity;
+                var KeyEvent = android.view.KeyEvent;
+                var MotionEvent = android.view.MotionEvent;
+                var View = android.view.View;
+                var ViewGroup = android.view.ViewGroup;
+                var ViewDragHelper = android.support.v4.widget.ViewDragHelper;
+                class DrawerLayout extends ViewGroup {
+                    constructor(bindElement, rootElement) {
+                        super(bindElement, rootElement);
+                        this.mMinDrawerMargin = 0;
+                        this.mScrimColor = DrawerLayout.DEFAULT_SCRIM_COLOR;
+                        this.mScrimOpacity = 0;
+                        this.mScrimPaint = new Paint();
+                        this.mDrawerState = 0;
+                        this.mFirstLayout = true;
+                        this.mLockModeLeft = 0;
+                        this.mLockModeRight = 0;
+                        this.mInitialMotionX = 0;
+                        this.mInitialMotionY = 0;
+                        const density = this.getResources().getDisplayMetrics().density;
+                        this.mMinDrawerMargin = Math.floor((DrawerLayout.MIN_DRAWER_MARGIN * density + 0.5));
+                        const minVel = DrawerLayout.MIN_FLING_VELOCITY * density;
+                        this.mLeftCallback = new DrawerLayout.ViewDragCallback(this, Gravity.LEFT);
+                        this.mRightCallback = new DrawerLayout.ViewDragCallback(this, Gravity.RIGHT);
+                        this.mLeftDragger = ViewDragHelper.create(this, DrawerLayout.TOUCH_SLOP_SENSITIVITY, this.mLeftCallback);
+                        this.mLeftDragger.setEdgeTrackingEnabled(ViewDragHelper.EDGE_LEFT);
+                        this.mLeftDragger.setMinVelocity(minVel);
+                        this.mLeftCallback.setDragger(this.mLeftDragger);
+                        this.mRightDragger = ViewDragHelper.create(this, DrawerLayout.TOUCH_SLOP_SENSITIVITY, this.mRightCallback);
+                        this.mRightDragger.setEdgeTrackingEnabled(ViewDragHelper.EDGE_RIGHT);
+                        this.mRightDragger.setMinVelocity(minVel);
+                        this.mRightCallback.setDragger(this.mRightDragger);
+                        this.setFocusableInTouchMode(true);
+                        this.setMotionEventSplittingEnabled(false);
+                    }
+                    setDrawerShadow(shadowDrawable, gravity) {
+                        const absGravity = Gravity.getAbsoluteGravity(gravity, this.getLayoutDirection());
+                        if ((absGravity & Gravity.LEFT) == Gravity.LEFT) {
+                            this.mShadowLeft = shadowDrawable;
+                            this.invalidate();
+                        }
+                        if ((absGravity & Gravity.RIGHT) == Gravity.RIGHT) {
+                            this.mShadowRight = shadowDrawable;
+                            this.invalidate();
+                        }
+                    }
+                    setScrimColor(color) {
+                        this.mScrimColor = color;
+                        this.invalidate();
+                    }
+                    setDrawerListener(listener) {
+                        this.mListener = listener;
+                    }
+                    setDrawerLockMode(lockMode, edgeGravityOrView) {
+                        if (edgeGravityOrView == null) {
+                            this.setDrawerLockMode(lockMode, Gravity.LEFT);
+                            this.setDrawerLockMode(lockMode, Gravity.RIGHT);
+                            return;
+                        }
+                        if (edgeGravityOrView instanceof View) {
+                            if (!this.isDrawerView(edgeGravityOrView)) {
+                                throw Error(`new IllegalArgumentException("View " + drawerView + " is not a " + "drawer with appropriate layout_gravity")`);
+                            }
+                            const gravity = edgeGravityOrView.getLayoutParams().gravity;
+                            this.setDrawerLockMode(lockMode, gravity);
+                            return;
+                        }
+                        let edgeGravity = edgeGravityOrView;
+                        const absGravity = Gravity.getAbsoluteGravity(edgeGravity, this.getLayoutDirection());
+                        if (absGravity == Gravity.LEFT) {
+                            this.mLockModeLeft = lockMode;
+                        }
+                        else if (absGravity == Gravity.RIGHT) {
+                            this.mLockModeRight = lockMode;
+                        }
+                        if (lockMode != DrawerLayout.LOCK_MODE_UNLOCKED) {
+                            const helper = absGravity == Gravity.LEFT ? this.mLeftDragger : this.mRightDragger;
+                            helper.cancel();
+                        }
+                        switch (lockMode) {
+                            case DrawerLayout.LOCK_MODE_LOCKED_OPEN:
+                                const toOpen = this.findDrawerWithGravity(absGravity);
+                                if (toOpen != null) {
+                                    this.openDrawer(toOpen);
+                                }
+                                break;
+                            case DrawerLayout.LOCK_MODE_LOCKED_CLOSED:
+                                const toClose = this.findDrawerWithGravity(absGravity);
+                                if (toClose != null) {
+                                    this.closeDrawer(toClose);
+                                }
+                                break;
+                        }
+                    }
+                    getDrawerLockMode(edgeGravityOrView) {
+                        if (edgeGravityOrView instanceof View) {
+                            let drawerView = edgeGravityOrView;
+                            const absGravity = this.getDrawerViewAbsoluteGravity(drawerView);
+                            if (absGravity == Gravity.LEFT) {
+                                return this.mLockModeLeft;
+                            }
+                            else if (absGravity == Gravity.RIGHT) {
+                                return this.mLockModeRight;
+                            }
+                            return DrawerLayout.LOCK_MODE_UNLOCKED;
+                        }
+                        else {
+                            let edgeGravity = edgeGravityOrView;
+                            const absGravity = Gravity.getAbsoluteGravity(edgeGravity, this.getLayoutDirection());
+                            if (absGravity == Gravity.LEFT) {
+                                return this.mLockModeLeft;
+                            }
+                            else if (absGravity == Gravity.RIGHT) {
+                                return this.mLockModeRight;
+                            }
+                            return DrawerLayout.LOCK_MODE_UNLOCKED;
+                        }
+                    }
+                    updateDrawerState(forGravity, activeState, activeDrawer) {
+                        const leftState = this.mLeftDragger.getViewDragState();
+                        const rightState = this.mRightDragger.getViewDragState();
+                        let state;
+                        if (leftState == DrawerLayout.STATE_DRAGGING || rightState == DrawerLayout.STATE_DRAGGING) {
+                            state = DrawerLayout.STATE_DRAGGING;
+                        }
+                        else if (leftState == DrawerLayout.STATE_SETTLING || rightState == DrawerLayout.STATE_SETTLING) {
+                            state = DrawerLayout.STATE_SETTLING;
+                        }
+                        else {
+                            state = DrawerLayout.STATE_IDLE;
+                        }
+                        if (activeDrawer != null && activeState == DrawerLayout.STATE_IDLE) {
+                            const lp = activeDrawer.getLayoutParams();
+                            if (lp.onScreen == 0) {
+                                this.dispatchOnDrawerClosed(activeDrawer);
+                            }
+                            else if (lp.onScreen == 1) {
+                                this.dispatchOnDrawerOpened(activeDrawer);
+                            }
+                        }
+                        if (state != this.mDrawerState) {
+                            this.mDrawerState = state;
+                            if (this.mListener != null) {
+                                this.mListener.onDrawerStateChanged(state);
+                            }
+                        }
+                    }
+                    dispatchOnDrawerClosed(drawerView) {
+                        const lp = drawerView.getLayoutParams();
+                        if (lp.knownOpen) {
+                            lp.knownOpen = false;
+                            if (this.mListener != null) {
+                                this.mListener.onDrawerClosed(drawerView);
+                            }
+                        }
+                    }
+                    dispatchOnDrawerOpened(drawerView) {
+                        const lp = drawerView.getLayoutParams();
+                        if (!lp.knownOpen) {
+                            lp.knownOpen = true;
+                            if (this.mListener != null) {
+                                this.mListener.onDrawerOpened(drawerView);
+                            }
+                        }
+                    }
+                    dispatchOnDrawerSlide(drawerView, slideOffset) {
+                        if (this.mListener != null) {
+                            this.mListener.onDrawerSlide(drawerView, slideOffset);
+                        }
+                    }
+                    setDrawerViewOffset(drawerView, slideOffset) {
+                        const lp = drawerView.getLayoutParams();
+                        if (slideOffset == lp.onScreen) {
+                            return;
+                        }
+                        lp.onScreen = slideOffset;
+                        this.dispatchOnDrawerSlide(drawerView, slideOffset);
+                    }
+                    getDrawerViewOffset(drawerView) {
+                        return drawerView.getLayoutParams().onScreen;
+                    }
+                    getDrawerViewAbsoluteGravity(drawerView) {
+                        const gravity = drawerView.getLayoutParams().gravity;
+                        return Gravity.getAbsoluteGravity(gravity, this.getLayoutDirection());
+                    }
+                    checkDrawerViewAbsoluteGravity(drawerView, checkFor) {
+                        const absGravity = this.getDrawerViewAbsoluteGravity(drawerView);
+                        return (absGravity & checkFor) == checkFor;
+                    }
+                    findOpenDrawer() {
+                        const childCount = this.getChildCount();
+                        for (let i = 0; i < childCount; i++) {
+                            const child = this.getChildAt(i);
+                            if (child.getLayoutParams().knownOpen) {
+                                return child;
+                            }
+                        }
+                        return null;
+                    }
+                    moveDrawerToOffset(drawerView, slideOffset) {
+                        const oldOffset = this.getDrawerViewOffset(drawerView);
+                        const width = drawerView.getWidth();
+                        const oldPos = Math.floor((width * oldOffset));
+                        const newPos = Math.floor((width * slideOffset));
+                        const dx = newPos - oldPos;
+                        drawerView.offsetLeftAndRight(this.checkDrawerViewAbsoluteGravity(drawerView, Gravity.LEFT) ? dx : -dx);
+                        this.setDrawerViewOffset(drawerView, slideOffset);
+                    }
+                    findDrawerWithGravity(gravity) {
+                        const absHorizGravity = Gravity.getAbsoluteGravity(gravity, this.getLayoutDirection()) & Gravity.HORIZONTAL_GRAVITY_MASK;
+                        const childCount = this.getChildCount();
+                        for (let i = 0; i < childCount; i++) {
+                            const child = this.getChildAt(i);
+                            const childAbsGravity = this.getDrawerViewAbsoluteGravity(child);
+                            if ((childAbsGravity & Gravity.HORIZONTAL_GRAVITY_MASK) == absHorizGravity) {
+                                return child;
+                            }
+                        }
+                        return null;
+                    }
+                    static gravityToString(gravity) {
+                        if ((gravity & Gravity.LEFT) == Gravity.LEFT) {
+                            return "LEFT";
+                        }
+                        if ((gravity & Gravity.RIGHT) == Gravity.RIGHT) {
+                            return "RIGHT";
+                        }
+                        return '' + gravity;
+                    }
+                    onDetachedFromWindow() {
+                        super.onDetachedFromWindow();
+                        this.mFirstLayout = true;
+                    }
+                    onAttachedToWindow() {
+                        super.onAttachedToWindow();
+                        this.mFirstLayout = true;
+                    }
+                    onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                        let widthMode = DrawerLayout.MeasureSpec.getMode(widthMeasureSpec);
+                        let heightMode = DrawerLayout.MeasureSpec.getMode(heightMeasureSpec);
+                        let widthSize = DrawerLayout.MeasureSpec.getSize(widthMeasureSpec);
+                        let heightSize = DrawerLayout.MeasureSpec.getSize(heightMeasureSpec);
+                        if (widthMode != DrawerLayout.MeasureSpec.EXACTLY || heightMode != DrawerLayout.MeasureSpec.EXACTLY) {
+                            if (this.isInEditMode()) {
+                                if (widthMode == DrawerLayout.MeasureSpec.AT_MOST) {
+                                    widthMode = DrawerLayout.MeasureSpec.EXACTLY;
+                                }
+                                else if (widthMode == DrawerLayout.MeasureSpec.UNSPECIFIED) {
+                                    widthMode = DrawerLayout.MeasureSpec.EXACTLY;
+                                    widthSize = 300;
+                                }
+                                if (heightMode == DrawerLayout.MeasureSpec.AT_MOST) {
+                                    heightMode = DrawerLayout.MeasureSpec.EXACTLY;
+                                }
+                                else if (heightMode == DrawerLayout.MeasureSpec.UNSPECIFIED) {
+                                    heightMode = DrawerLayout.MeasureSpec.EXACTLY;
+                                    heightSize = 300;
+                                }
+                            }
+                            else {
+                                throw Error(`new IllegalArgumentException("DrawerLayout must be measured with MeasureSpec.EXACTLY.")`);
+                            }
+                        }
+                        this.setMeasuredDimension(widthSize, heightSize);
+                        let foundDrawers = 0;
+                        const childCount = this.getChildCount();
+                        for (let i = 0; i < childCount; i++) {
+                            const child = this.getChildAt(i);
+                            if (child.getVisibility() == DrawerLayout.GONE) {
+                                continue;
+                            }
+                            const lp = child.getLayoutParams();
+                            if (this.isContentView(child)) {
+                                const contentWidthSpec = DrawerLayout.MeasureSpec.makeMeasureSpec(widthSize - lp.leftMargin - lp.rightMargin, DrawerLayout.MeasureSpec.EXACTLY);
+                                const contentHeightSpec = DrawerLayout.MeasureSpec.makeMeasureSpec(heightSize - lp.topMargin - lp.bottomMargin, DrawerLayout.MeasureSpec.EXACTLY);
+                                child.measure(contentWidthSpec, contentHeightSpec);
+                            }
+                            else if (this.isDrawerView(child)) {
+                                const childGravity = this.getDrawerViewAbsoluteGravity(child) & Gravity.HORIZONTAL_GRAVITY_MASK;
+                                if ((foundDrawers & childGravity) != 0) {
+                                    throw Error(`new IllegalStateException("Child drawer has absolute gravity " + DrawerLayout.gravityToString(childGravity) + " but this " + DrawerLayout.TAG + " already has a " + "drawer view along that edge")`);
+                                }
+                                const drawerWidthSpec = DrawerLayout.getChildMeasureSpec(widthMeasureSpec, this.mMinDrawerMargin + lp.leftMargin + lp.rightMargin, lp.width);
+                                const drawerHeightSpec = DrawerLayout.getChildMeasureSpec(heightMeasureSpec, lp.topMargin + lp.bottomMargin, lp.height);
+                                child.measure(drawerWidthSpec, drawerHeightSpec);
+                            }
+                            else {
+                                throw Error(`new IllegalStateException("Child " + child + " at index " + i + " does not have a valid layout_gravity - must be Gravity.LEFT, " + "Gravity.RIGHT or Gravity.NO_GRAVITY")`);
+                            }
+                        }
+                    }
+                    onLayout(changed, l, t, r, b) {
+                        this.mInLayout = true;
+                        const width = r - l;
+                        const childCount = this.getChildCount();
+                        for (let i = 0; i < childCount; i++) {
+                            const child = this.getChildAt(i);
+                            if (child.getVisibility() == DrawerLayout.GONE) {
+                                continue;
+                            }
+                            const lp = child.getLayoutParams();
+                            if (this.isContentView(child)) {
+                                child.layout(lp.leftMargin, lp.topMargin, lp.leftMargin + child.getMeasuredWidth(), lp.topMargin + child.getMeasuredHeight());
+                            }
+                            else {
+                                const childWidth = child.getMeasuredWidth();
+                                const childHeight = child.getMeasuredHeight();
+                                let childLeft;
+                                let newOffset;
+                                if (this.checkDrawerViewAbsoluteGravity(child, Gravity.LEFT)) {
+                                    childLeft = -childWidth + Math.floor((childWidth * lp.onScreen));
+                                    newOffset = (childWidth + childLeft) / childWidth;
+                                }
+                                else {
+                                    childLeft = width - Math.floor((childWidth * lp.onScreen));
+                                    newOffset = (width - childLeft) / childWidth;
+                                }
+                                const changeOffset = newOffset != lp.onScreen;
+                                const vgrav = lp.gravity & Gravity.VERTICAL_GRAVITY_MASK;
+                                switch (vgrav) {
+                                    default:
+                                    case Gravity.TOP:
+                                        {
+                                            child.layout(childLeft, lp.topMargin, childLeft + childWidth, lp.topMargin + childHeight);
+                                            break;
+                                        }
+                                    case Gravity.BOTTOM:
+                                        {
+                                            const height = b - t;
+                                            child.layout(childLeft, height - lp.bottomMargin - child.getMeasuredHeight(), childLeft + childWidth, height - lp.bottomMargin);
+                                            break;
+                                        }
+                                    case Gravity.CENTER_VERTICAL:
+                                        {
+                                            const height = b - t;
+                                            let childTop = (height - childHeight) / 2;
+                                            if (childTop < lp.topMargin) {
+                                                childTop = lp.topMargin;
+                                            }
+                                            else if (childTop + childHeight > height - lp.bottomMargin) {
+                                                childTop = height - lp.bottomMargin - childHeight;
+                                            }
+                                            child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight);
+                                            break;
+                                        }
+                                }
+                                if (changeOffset) {
+                                    this.setDrawerViewOffset(child, newOffset);
+                                }
+                                const newVisibility = lp.onScreen > 0 ? DrawerLayout.VISIBLE : DrawerLayout.INVISIBLE;
+                                if (child.getVisibility() != newVisibility) {
+                                    child.setVisibility(newVisibility);
+                                }
+                            }
+                        }
+                        this.mInLayout = false;
+                        this.mFirstLayout = false;
+                    }
+                    requestLayout() {
+                        if (!this.mInLayout) {
+                            super.requestLayout();
+                        }
+                    }
+                    computeScroll() {
+                        const childCount = this.getChildCount();
+                        let scrimOpacity = 0;
+                        for (let i = 0; i < childCount; i++) {
+                            const onscreen = this.getChildAt(i).getLayoutParams().onScreen;
+                            scrimOpacity = Math.max(scrimOpacity, onscreen);
+                        }
+                        this.mScrimOpacity = scrimOpacity;
+                        let leftContinue = this.mLeftDragger.continueSettling(true);
+                        let rightContinue = this.mRightDragger.continueSettling(true);
+                        if (leftContinue || rightContinue) {
+                            this.postInvalidateOnAnimation();
+                        }
+                    }
+                    static hasOpaqueBackground(v) {
+                        const bg = v.getBackground();
+                        if (bg != null) {
+                            return bg.getOpacity() == PixelFormat.OPAQUE;
+                        }
+                        return false;
+                    }
+                    drawChild(canvas, child, drawingTime) {
+                        const height = this.getHeight();
+                        const drawingContent = this.isContentView(child);
+                        let clipLeft = 0, clipRight = this.getWidth();
+                        const restoreCount = canvas.save();
+                        if (drawingContent) {
+                            const childCount = this.getChildCount();
+                            for (let i = 0; i < childCount; i++) {
+                                const v = this.getChildAt(i);
+                                if (v == child || v.getVisibility() != DrawerLayout.VISIBLE || !DrawerLayout.hasOpaqueBackground(v) || !this.isDrawerView(v) || v.getHeight() < height) {
+                                    continue;
+                                }
+                                if (this.checkDrawerViewAbsoluteGravity(v, Gravity.LEFT)) {
+                                    const vright = v.getRight();
+                                    if (vright > clipLeft)
+                                        clipLeft = vright;
+                                }
+                                else {
+                                    const vleft = v.getLeft();
+                                    if (vleft < clipRight)
+                                        clipRight = vleft;
+                                }
+                            }
+                            canvas.clipRect(clipLeft, 0, clipRight, this.getHeight());
+                        }
+                        const result = super.drawChild(canvas, child, drawingTime);
+                        canvas.restoreToCount(restoreCount);
+                        if (this.mScrimOpacity > 0 && drawingContent) {
+                            const baseAlpha = (this.mScrimColor & 0xff000000) >>> 24;
+                            const imag = Math.floor((baseAlpha * this.mScrimOpacity));
+                            const color = imag << 24 | (this.mScrimColor & 0xffffff);
+                            this.mScrimPaint.setColor(color);
+                            canvas.drawRect(clipLeft, 0, clipRight, this.getHeight(), this.mScrimPaint);
+                        }
+                        else if (this.mShadowLeft != null && this.checkDrawerViewAbsoluteGravity(child, Gravity.LEFT)) {
+                            const shadowWidth = this.mShadowLeft.getIntrinsicWidth();
+                            const childRight = child.getRight();
+                            const drawerPeekDistance = this.mLeftDragger.getEdgeSize();
+                            const alpha = Math.max(0, Math.min(childRight / drawerPeekDistance, 1.));
+                            this.mShadowLeft.setBounds(childRight, child.getTop(), childRight + shadowWidth, child.getBottom());
+                            this.mShadowLeft.setAlpha(Math.floor((0xff * alpha)));
+                            this.mShadowLeft.draw(canvas);
+                        }
+                        else if (this.mShadowRight != null && this.checkDrawerViewAbsoluteGravity(child, Gravity.RIGHT)) {
+                            const shadowWidth = this.mShadowRight.getIntrinsicWidth();
+                            const childLeft = child.getLeft();
+                            const showing = this.getWidth() - childLeft;
+                            const drawerPeekDistance = this.mRightDragger.getEdgeSize();
+                            const alpha = Math.max(0, Math.min(showing / drawerPeekDistance, 1.));
+                            this.mShadowRight.setBounds(childLeft - shadowWidth, child.getTop(), childLeft, child.getBottom());
+                            this.mShadowRight.setAlpha(Math.floor((0xff * alpha)));
+                            this.mShadowRight.draw(canvas);
+                        }
+                        return result;
+                    }
+                    isContentView(child) {
+                        return child.getLayoutParams().gravity == Gravity.NO_GRAVITY;
+                    }
+                    isDrawerView(child) {
+                        const gravity = child.getLayoutParams().gravity;
+                        const absGravity = Gravity.getAbsoluteGravity(gravity, child.getLayoutDirection());
+                        return (absGravity & (Gravity.LEFT | Gravity.RIGHT)) != 0;
+                    }
+                    onInterceptTouchEvent(ev) {
+                        const action = ev.getActionMasked();
+                        const leftIntercept = this.mLeftDragger.shouldInterceptTouchEvent(ev);
+                        const rightIntercept = this.mRightDragger.shouldInterceptTouchEvent(ev);
+                        const interceptForDrag = leftIntercept || rightIntercept;
+                        let interceptForTap = false;
+                        switch (action) {
+                            case MotionEvent.ACTION_DOWN:
+                                {
+                                    const x = ev.getX();
+                                    const y = ev.getY();
+                                    this.mInitialMotionX = x;
+                                    this.mInitialMotionY = y;
+                                    if (this.mScrimOpacity > 0 && this.isContentView(this.mLeftDragger.findTopChildUnder(Math.floor(x), Math.floor(y)))) {
+                                        interceptForTap = true;
+                                    }
+                                    this.mDisallowInterceptRequested = false;
+                                    this.mChildrenCanceledTouch = false;
+                                    break;
+                                }
+                            case MotionEvent.ACTION_MOVE:
+                                {
+                                    if (this.mLeftDragger.checkTouchSlop(ViewDragHelper.DIRECTION_ALL)) {
+                                        this.mLeftCallback.removeCallbacks();
+                                        this.mRightCallback.removeCallbacks();
+                                    }
+                                    break;
+                                }
+                            case MotionEvent.ACTION_CANCEL:
+                            case MotionEvent.ACTION_UP:
+                                {
+                                    this.closeDrawers(true);
+                                    this.mDisallowInterceptRequested = false;
+                                    this.mChildrenCanceledTouch = false;
+                                }
+                        }
+                        return interceptForDrag || interceptForTap || this.hasPeekingDrawer() || this.mChildrenCanceledTouch;
+                    }
+                    onTouchEvent(ev) {
+                        this.mLeftDragger.processTouchEvent(ev);
+                        this.mRightDragger.processTouchEvent(ev);
+                        const action = ev.getAction();
+                        let wantTouchEvents = true;
+                        switch (action & MotionEvent.ACTION_MASK) {
+                            case MotionEvent.ACTION_DOWN:
+                                {
+                                    const x = ev.getX();
+                                    const y = ev.getY();
+                                    this.mInitialMotionX = x;
+                                    this.mInitialMotionY = y;
+                                    this.mDisallowInterceptRequested = false;
+                                    this.mChildrenCanceledTouch = false;
+                                    break;
+                                }
+                            case MotionEvent.ACTION_UP:
+                                {
+                                    const x = ev.getX();
+                                    const y = ev.getY();
+                                    let peekingOnly = true;
+                                    const touchedView = this.mLeftDragger.findTopChildUnder(Math.floor(x), Math.floor(y));
+                                    if (touchedView != null && this.isContentView(touchedView)) {
+                                        const dx = x - this.mInitialMotionX;
+                                        const dy = y - this.mInitialMotionY;
+                                        const slop = this.mLeftDragger.getTouchSlop();
+                                        if (dx * dx + dy * dy < slop * slop) {
+                                            const openDrawer = this.findOpenDrawer();
+                                            if (openDrawer != null) {
+                                                peekingOnly = this.getDrawerLockMode(openDrawer) == DrawerLayout.LOCK_MODE_LOCKED_OPEN;
+                                            }
+                                        }
+                                    }
+                                    this.closeDrawers(peekingOnly);
+                                    this.mDisallowInterceptRequested = false;
+                                    break;
+                                }
+                            case MotionEvent.ACTION_CANCEL:
+                                {
+                                    this.closeDrawers(true);
+                                    this.mDisallowInterceptRequested = false;
+                                    this.mChildrenCanceledTouch = false;
+                                    break;
+                                }
+                        }
+                        return wantTouchEvents;
+                    }
+                    requestDisallowInterceptTouchEvent(disallowIntercept) {
+                        if (DrawerLayout.CHILDREN_DISALLOW_INTERCEPT || (!this.mLeftDragger.isEdgeTouched(ViewDragHelper.EDGE_LEFT) && !this.mRightDragger.isEdgeTouched(ViewDragHelper.EDGE_RIGHT))) {
+                            super.requestDisallowInterceptTouchEvent(disallowIntercept);
+                        }
+                        this.mDisallowInterceptRequested = disallowIntercept;
+                        if (disallowIntercept) {
+                            this.closeDrawers(true);
+                        }
+                    }
+                    closeDrawers(peekingOnly = false) {
+                        let needsInvalidate = false;
+                        const childCount = this.getChildCount();
+                        for (let i = 0; i < childCount; i++) {
+                            const child = this.getChildAt(i);
+                            const lp = child.getLayoutParams();
+                            if (!this.isDrawerView(child) || (peekingOnly && !lp.isPeeking)) {
+                                continue;
+                            }
+                            const childWidth = child.getWidth();
+                            if (this.checkDrawerViewAbsoluteGravity(child, Gravity.LEFT)) {
+                                needsInvalidate = this.mLeftDragger.smoothSlideViewTo(child, -childWidth, child.getTop()) || needsInvalidate;
+                            }
+                            else {
+                                needsInvalidate = this.mRightDragger.smoothSlideViewTo(child, this.getWidth(), child.getTop()) || needsInvalidate;
+                            }
+                            lp.isPeeking = false;
+                        }
+                        this.mLeftCallback.removeCallbacks();
+                        this.mRightCallback.removeCallbacks();
+                        if (needsInvalidate) {
+                            this.invalidate();
+                        }
+                    }
+                    openDrawer(arg) {
+                        if (arg instanceof View) {
+                            this._openDrawer_view(arg);
+                        }
+                        else {
+                            this._openDrawer_gravity(arg);
+                        }
+                    }
+                    _openDrawer_view(drawerView) {
+                        if (!this.isDrawerView(drawerView)) {
+                            throw Error(`new IllegalArgumentException("View " + drawerView + " is not a sliding drawer")`);
+                        }
+                        if (this.mFirstLayout) {
+                            const lp = drawerView.getLayoutParams();
+                            lp.onScreen = 1.;
+                            lp.knownOpen = true;
+                        }
+                        else {
+                            if (this.checkDrawerViewAbsoluteGravity(drawerView, Gravity.LEFT)) {
+                                this.mLeftDragger.smoothSlideViewTo(drawerView, 0, drawerView.getTop());
+                            }
+                            else {
+                                this.mRightDragger.smoothSlideViewTo(drawerView, this.getWidth() - drawerView.getWidth(), drawerView.getTop());
+                            }
+                        }
+                        this.invalidate();
+                    }
+                    _openDrawer_gravity(gravity) {
+                        const drawerView = this.findDrawerWithGravity(gravity);
+                        if (drawerView == null) {
+                            throw Error(`new IllegalArgumentException("No drawer view found with gravity " + DrawerLayout.gravityToString(gravity))`);
+                        }
+                        this.openDrawer(drawerView);
+                    }
+                    closeDrawer(arg) {
+                        if (arg instanceof View) {
+                            this._closeDrawer_view(arg);
+                        }
+                        else {
+                            this._closeDrawer_gravity(arg);
+                        }
+                    }
+                    _closeDrawer_view(drawerView) {
+                        if (!this.isDrawerView(drawerView)) {
+                            throw Error(`new IllegalArgumentException("View " + drawerView + " is not a sliding drawer")`);
+                        }
+                        if (this.mFirstLayout) {
+                            const lp = drawerView.getLayoutParams();
+                            lp.onScreen = 0.;
+                            lp.knownOpen = false;
+                        }
+                        else {
+                            if (this.checkDrawerViewAbsoluteGravity(drawerView, Gravity.LEFT)) {
+                                this.mLeftDragger.smoothSlideViewTo(drawerView, -drawerView.getWidth(), drawerView.getTop());
+                            }
+                            else {
+                                this.mRightDragger.smoothSlideViewTo(drawerView, this.getWidth(), drawerView.getTop());
+                            }
+                        }
+                        this.invalidate();
+                    }
+                    _closeDrawer_gravity(gravity) {
+                        const drawerView = this.findDrawerWithGravity(gravity);
+                        if (drawerView == null) {
+                            throw Error(`new IllegalArgumentException("No drawer view found with gravity " + DrawerLayout.gravityToString(gravity))`);
+                        }
+                        this.closeDrawer(drawerView);
+                    }
+                    isDrawerOpen(arg) {
+                        if (arg instanceof View) {
+                            return this._isDrawerOpen_view(arg);
+                        }
+                        else {
+                            return this._isDrawerOpen_gravity(arg);
+                        }
+                    }
+                    _isDrawerOpen_view(drawer) {
+                        if (!this.isDrawerView(drawer)) {
+                            throw Error(`new IllegalArgumentException("View " + drawer + " is not a drawer")`);
+                        }
+                        return drawer.getLayoutParams().knownOpen;
+                    }
+                    _isDrawerOpen_gravity(drawerGravity) {
+                        const drawerView = this.findDrawerWithGravity(drawerGravity);
+                        if (drawerView != null) {
+                            return this.isDrawerOpen(drawerView);
+                        }
+                        return false;
+                    }
+                    isDrawerVisible(arg) {
+                        if (arg instanceof View) {
+                            return this._isDrawerVisible_view(arg);
+                        }
+                        else {
+                            return this._isDrawerVisible_gravity(arg);
+                        }
+                    }
+                    _isDrawerVisible_view(drawer) {
+                        if (!this.isDrawerView(drawer)) {
+                            throw Error(`new IllegalArgumentException("View " + drawer + " is not a drawer")`);
+                        }
+                        return drawer.getLayoutParams().onScreen > 0;
+                    }
+                    _isDrawerVisible_gravity(drawerGravity) {
+                        const drawerView = this.findDrawerWithGravity(drawerGravity);
+                        if (drawerView != null) {
+                            return this.isDrawerVisible(drawerView);
+                        }
+                        return false;
+                    }
+                    hasPeekingDrawer() {
+                        const childCount = this.getChildCount();
+                        for (let i = 0; i < childCount; i++) {
+                            const lp = this.getChildAt(i).getLayoutParams();
+                            if (lp.isPeeking) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    generateDefaultLayoutParams() {
+                        return new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.FILL_PARENT, DrawerLayout.LayoutParams.FILL_PARENT);
+                    }
+                    generateLayoutParams(p) {
+                        return p instanceof DrawerLayout.LayoutParams ? new DrawerLayout.LayoutParams(p)
+                            : p instanceof ViewGroup.MarginLayoutParams ? new DrawerLayout.LayoutParams(p)
+                                : new DrawerLayout.LayoutParams(p);
+                    }
+                    checkLayoutParams(p) {
+                        return p instanceof DrawerLayout.LayoutParams && super.checkLayoutParams(p);
+                    }
+                    hasVisibleDrawer() {
+                        return this.findVisibleDrawer() != null;
+                    }
+                    findVisibleDrawer() {
+                        const childCount = this.getChildCount();
+                        for (let i = 0; i < childCount; i++) {
+                            const child = this.getChildAt(i);
+                            if (this.isDrawerView(child) && this.isDrawerVisible(child)) {
+                                return child;
+                            }
+                        }
+                        return null;
+                    }
+                    cancelChildViewTouch() {
+                        if (!this.mChildrenCanceledTouch) {
+                            const now = SystemClock.uptimeMillis();
+                            const cancelEvent = MotionEvent.obtainWithAction(now, now, MotionEvent.ACTION_CANCEL, 0.0, 0.0, 0);
+                            const childCount = this.getChildCount();
+                            for (let i = 0; i < childCount; i++) {
+                                this.getChildAt(i).dispatchTouchEvent(cancelEvent);
+                            }
+                            cancelEvent.recycle();
+                            this.mChildrenCanceledTouch = true;
+                        }
+                    }
+                    onKeyDown(keyCode, event) {
+                        if (keyCode == KeyEvent.KEYCODE_BACK && this.hasVisibleDrawer()) {
+                            event.startTracking();
+                            return true;
+                        }
+                        return super.onKeyDown(keyCode, event);
+                    }
+                    onKeyUp(keyCode, event) {
+                        if (keyCode == KeyEvent.KEYCODE_BACK) {
+                            const visibleDrawer = this.findVisibleDrawer();
+                            if (visibleDrawer != null && this.getDrawerLockMode(visibleDrawer) == DrawerLayout.LOCK_MODE_UNLOCKED) {
+                                this.closeDrawers();
+                            }
+                            return visibleDrawer != null;
+                        }
+                        return super.onKeyUp(keyCode, event);
+                    }
+                }
+                DrawerLayout.TAG = "DrawerLayout";
+                DrawerLayout.STATE_IDLE = ViewDragHelper.STATE_IDLE;
+                DrawerLayout.STATE_DRAGGING = ViewDragHelper.STATE_DRAGGING;
+                DrawerLayout.STATE_SETTLING = ViewDragHelper.STATE_SETTLING;
+                DrawerLayout.LOCK_MODE_UNLOCKED = 0;
+                DrawerLayout.LOCK_MODE_LOCKED_CLOSED = 1;
+                DrawerLayout.LOCK_MODE_LOCKED_OPEN = 2;
+                DrawerLayout.MIN_DRAWER_MARGIN = 64;
+                DrawerLayout.DEFAULT_SCRIM_COLOR = 0x99000000;
+                DrawerLayout.PEEK_DELAY = 160;
+                DrawerLayout.MIN_FLING_VELOCITY = 400;
+                DrawerLayout.ALLOW_EDGE_LOCK = false;
+                DrawerLayout.CHILDREN_DISALLOW_INTERCEPT = true;
+                DrawerLayout.TOUCH_SLOP_SENSITIVITY = 1.;
+                widget.DrawerLayout = DrawerLayout;
+                (function (DrawerLayout) {
+                    class SimpleDrawerListener {
+                        onDrawerSlide(drawerView, slideOffset) {
+                        }
+                        onDrawerOpened(drawerView) {
+                        }
+                        onDrawerClosed(drawerView) {
+                        }
+                        onDrawerStateChanged(newState) {
+                        }
+                    }
+                    DrawerLayout.SimpleDrawerListener = SimpleDrawerListener;
+                    class ViewDragCallback extends ViewDragHelper.Callback {
+                        constructor(arg, gravity) {
+                            super();
+                            this.mAbsGravity = 0;
+                            this.mPeekRunnable = (() => {
+                                const _this = this;
+                                class _Inner {
+                                    run() {
+                                        _this.peekDrawer();
+                                    }
+                                }
+                                return new _Inner();
+                            })();
+                            this._DrawerLayout_this = arg;
+                            this.mAbsGravity = gravity;
+                        }
+                        setDragger(dragger) {
+                            this.mDragger = dragger;
+                        }
+                        removeCallbacks() {
+                            this._DrawerLayout_this.removeCallbacks(this.mPeekRunnable);
+                        }
+                        tryCaptureView(child, pointerId) {
+                            return this._DrawerLayout_this.isDrawerView(child) && this._DrawerLayout_this.checkDrawerViewAbsoluteGravity(child, this.mAbsGravity) && this._DrawerLayout_this.getDrawerLockMode(child) == DrawerLayout.LOCK_MODE_UNLOCKED;
+                        }
+                        onViewDragStateChanged(state) {
+                            this._DrawerLayout_this.updateDrawerState(this.mAbsGravity, state, this.mDragger.getCapturedView());
+                        }
+                        onViewPositionChanged(changedView, left, top, dx, dy) {
+                            let offset;
+                            const childWidth = changedView.getWidth();
+                            if (this._DrawerLayout_this.checkDrawerViewAbsoluteGravity(changedView, Gravity.LEFT)) {
+                                offset = (childWidth + left) / childWidth;
+                            }
+                            else {
+                                const width = this._DrawerLayout_this.getWidth();
+                                offset = (width - left) / childWidth;
+                            }
+                            this._DrawerLayout_this.setDrawerViewOffset(changedView, offset);
+                            changedView.setVisibility(offset == 0 ? DrawerLayout.INVISIBLE : DrawerLayout.VISIBLE);
+                            this._DrawerLayout_this.invalidate();
+                        }
+                        onViewCaptured(capturedChild, activePointerId) {
+                            const lp = capturedChild.getLayoutParams();
+                            lp.isPeeking = false;
+                            this.closeOtherDrawer();
+                        }
+                        closeOtherDrawer() {
+                            const otherGrav = this.mAbsGravity == Gravity.LEFT ? Gravity.RIGHT : Gravity.LEFT;
+                            const toClose = this._DrawerLayout_this.findDrawerWithGravity(otherGrav);
+                            if (toClose != null) {
+                                this._DrawerLayout_this.closeDrawer(toClose);
+                            }
+                        }
+                        onViewReleased(releasedChild, xvel, yvel) {
+                            const offset = this._DrawerLayout_this.getDrawerViewOffset(releasedChild);
+                            const childWidth = releasedChild.getWidth();
+                            let left;
+                            if (this._DrawerLayout_this.checkDrawerViewAbsoluteGravity(releasedChild, Gravity.LEFT)) {
+                                left = xvel > 0 || xvel == 0 && offset > 0.5 ? 0 : -childWidth;
+                            }
+                            else {
+                                const width = this._DrawerLayout_this.getWidth();
+                                left = xvel < 0 || xvel == 0 && offset > 0.5 ? width - childWidth : width;
+                            }
+                            this.mDragger.settleCapturedViewAt(left, releasedChild.getTop());
+                            this._DrawerLayout_this.invalidate();
+                        }
+                        onEdgeTouched(edgeFlags, pointerId) {
+                            this._DrawerLayout_this.postDelayed(this.mPeekRunnable, DrawerLayout.PEEK_DELAY);
+                        }
+                        peekDrawer() {
+                            let toCapture;
+                            let childLeft;
+                            const peekDistance = this.mDragger.getEdgeSize();
+                            const leftEdge = this.mAbsGravity == Gravity.LEFT;
+                            if (leftEdge) {
+                                toCapture = this._DrawerLayout_this.findDrawerWithGravity(Gravity.LEFT);
+                                childLeft = (toCapture != null ? -toCapture.getWidth() : 0) + peekDistance;
+                            }
+                            else {
+                                toCapture = this._DrawerLayout_this.findDrawerWithGravity(Gravity.RIGHT);
+                                childLeft = this._DrawerLayout_this.getWidth() - peekDistance;
+                            }
+                            if (toCapture != null && ((leftEdge && toCapture.getLeft() < childLeft) || (!leftEdge && toCapture.getLeft() > childLeft)) && this._DrawerLayout_this.getDrawerLockMode(toCapture) == DrawerLayout.LOCK_MODE_UNLOCKED) {
+                                const lp = toCapture.getLayoutParams();
+                                this.mDragger.smoothSlideViewTo(toCapture, childLeft, toCapture.getTop());
+                                lp.isPeeking = true;
+                                this._DrawerLayout_this.invalidate();
+                                this.closeOtherDrawer();
+                                this._DrawerLayout_this.cancelChildViewTouch();
+                            }
+                        }
+                        onEdgeLock(edgeFlags) {
+                            if (DrawerLayout.ALLOW_EDGE_LOCK) {
+                                const drawer = this._DrawerLayout_this.findDrawerWithGravity(this.mAbsGravity);
+                                if (drawer != null && !this._DrawerLayout_this.isDrawerOpen(drawer)) {
+                                    this._DrawerLayout_this.closeDrawer(drawer);
+                                }
+                                return true;
+                            }
+                            return false;
+                        }
+                        onEdgeDragStarted(edgeFlags, pointerId) {
+                            let toCapture;
+                            if ((edgeFlags & ViewDragHelper.EDGE_LEFT) == ViewDragHelper.EDGE_LEFT) {
+                                toCapture = this._DrawerLayout_this.findDrawerWithGravity(Gravity.LEFT);
+                            }
+                            else {
+                                toCapture = this._DrawerLayout_this.findDrawerWithGravity(Gravity.RIGHT);
+                            }
+                            if (toCapture != null && this._DrawerLayout_this.getDrawerLockMode(toCapture) == DrawerLayout.LOCK_MODE_UNLOCKED) {
+                                this.mDragger.captureChildView(toCapture, pointerId);
+                            }
+                        }
+                        getViewHorizontalDragRange(child) {
+                            return child.getWidth();
+                        }
+                        clampViewPositionHorizontal(child, left, dx) {
+                            if (this._DrawerLayout_this.checkDrawerViewAbsoluteGravity(child, Gravity.LEFT)) {
+                                return Math.max(-child.getWidth(), Math.min(left, 0));
+                            }
+                            else {
+                                const width = this._DrawerLayout_this.getWidth();
+                                return Math.max(width - child.getWidth(), Math.min(left, width));
+                            }
+                        }
+                        clampViewPositionVertical(child, top, dy) {
+                            return child.getTop();
+                        }
+                    }
+                    DrawerLayout.ViewDragCallback = ViewDragCallback;
+                    class LayoutParams extends ViewGroup.MarginLayoutParams {
+                        constructor(...args) {
+                            super(...(args.length == 3 ? [args[0], args[1]] : args));
+                            this.gravity = Gravity.NO_GRAVITY;
+                            this.onScreen = 0;
+                            this._attrBinder.addAttr('gravity', (value) => {
+                                this.gravity = this._attrBinder.parseGravity(value, this.gravity);
+                            });
+                        }
+                    }
+                    DrawerLayout.LayoutParams = LayoutParams;
+                })(DrawerLayout = widget.DrawerLayout || (widget.DrawerLayout = {}));
             })(widget = v4.widget || (v4.widget = {}));
         })(v4 = support.v4 || (support.v4 = {}));
     })(support = android.support || (android.support = {}));
@@ -44912,6 +45882,7 @@ var androidui;
 ///<reference path="android/widget/ProgressBar.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
+///<reference path="android/support/v4/widget/DrawerLayout.ts"/>
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="lib/uk/co/senab/photoview/PhotoView.ts"/>
 ///<reference path="android/app/Activity.ts"/>

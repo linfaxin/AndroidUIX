@@ -24,6 +24,7 @@
 
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
+///<reference path="android/support/v4/widget/DrawerLayout.ts"/>
 
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="lib/uk/co/senab/photoview/PhotoView.ts"/>

@@ -2842,7 +2842,7 @@ export class ListView extends AbsListView {
         super.dispatchDraw(canvas);
     }
 
-    drawChild(canvas:Canvas, child:View, drawingTime:number):boolean  {
+    protected drawChild(canvas:Canvas, child:View, drawingTime:number):boolean  {
         let more:boolean = super.drawChild(canvas, child, drawingTime);
         if (this.mCachingActive && child.mCachingFailed) {
             this.mCachingActive = false;

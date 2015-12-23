@@ -4449,7 +4449,9 @@ module android.view {
                 this.mAttachInfo.mViewRootImpl.cancelInvalidate(this);
             }
         }
-
+        isInEditMode():boolean {
+            return false;//always false
+        }
         debug(depth=0){
             //custom impl:
             let originProto = Object.getPrototypeOf(this);

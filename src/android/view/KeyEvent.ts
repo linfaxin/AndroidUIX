@@ -45,6 +45,9 @@ module android.view{
         static KEYCODE_MOVE_HOME          = 36;
         static KEYCODE_MOVE_END          = 35;
 
+        //can't listen back on browser
+        static KEYCODE_BACK          = -1;
+
 
 
 
