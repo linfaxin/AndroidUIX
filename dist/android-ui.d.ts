@@ -955,6 +955,11 @@ declare module android.view {
         static getScrollFriction(): number;
     }
 }
+declare module android.os {
+    class SystemClock {
+        static uptimeMillis(): number;
+    }
+}
 declare module android.view {
     import Rect = android.graphics.Rect;
     class MotionEvent {
@@ -989,7 +994,6 @@ declare module android.view {
         mXOffset: number;
         mYOffset: number;
         _activeTouch: any;
-        _event: any;
         private _axisValues;
         static obtainWithTouchEvent(e: any, action: number): MotionEvent;
         static obtain(event: MotionEvent): MotionEvent;
@@ -1040,11 +1044,6 @@ declare module android.view {
         private mSlop;
         constructor(bounds: Rect, delegateView: View);
         onTouchEvent(event: MotionEvent): boolean;
-    }
-}
-declare module android.os {
-    class SystemClock {
-        static uptimeMillis(): number;
     }
 }
 declare module android.os {

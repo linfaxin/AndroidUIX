@@ -3762,12 +3762,25 @@ var android;
         view.ViewConfiguration = ViewConfiguration;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
+var android;
+(function (android) {
+    var os;
+    (function (os) {
+        class SystemClock {
+            static uptimeMillis() {
+                return new Date().getTime();
+            }
+        }
+        os.SystemClock = SystemClock;
+    })(os = android.os || (android.os = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/6.
  */
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../view/ViewConfiguration.ts"/>
+///<reference path="../os/SystemClock.ts"/>
 var android;
 (function (android) {
     var view;
@@ -3815,8 +3828,8 @@ var android;
                 return newEv;
             }
             initWithTouch(event, baseAction, windowBound = new Rect()) {
-                this._event = event;
                 let e = event;
+                let now = android.os.SystemClock.uptimeMillis();
                 let action = baseAction;
                 let actionIndex = -1;
                 let activeTouch = e.changedTouches[0];
@@ -3842,7 +3855,7 @@ var android;
                     case MotionEvent.ACTION_MOVE:
                         let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
                         if (moveHistory) {
-                            activeTouch.mEventTime = e.timeStamp;
+                            activeTouch.mEventTime = now;
                             moveHistory.push(activeTouch);
                             if (moveHistory.length > MotionEvent.HistoryMaxSize)
                                 moveHistory.shift();
@@ -3867,10 +3880,10 @@ var android;
                 }
                 this.mAction = action;
                 this.mActivePointerId = activePointerId;
-                if (activePointerId === 0 && action == MotionEvent.ACTION_DOWN) {
-                    this.mDownTime = e.timeStamp;
+                if (action == MotionEvent.ACTION_DOWN) {
+                    this.mDownTime = now;
                 }
-                this.mEventTime = e.timeStamp;
+                this.mEventTime = now;
                 this.mXOffset = this.mYOffset = 0;
                 let edgeFlag = 0;
                 let unScaledX = activeTouch.clientX;
@@ -3913,8 +3926,7 @@ var android;
                     pageY: e.pageY
                 };
                 this.mTouchingPointers = [touch];
-                this.mDownTime = e.timeStamp;
-                this.mEventTime = e.timeStamp;
+                this.mDownTime = this.mEventTime = android.os.SystemClock.uptimeMillis();
                 this.mXOffset = this.mYOffset = 0;
                 this._axisValues.clear();
                 this._axisValues.set(MotionEvent.AXIS_VSCROLL, -e.deltaY);
@@ -4181,18 +4193,6 @@ var android;
         view.TouchDelegate = TouchDelegate;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-var android;
-(function (android) {
-    var os;
-    (function (os) {
-        class SystemClock {
-            static uptimeMillis() {
-                return new Date().getTime();
-            }
-        }
-        os.SystemClock = SystemClock;
-    })(os = android.os || (android.os = {}));
-})(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/5.
  */
@@ -4350,7 +4350,9 @@ var android;
             static removeMessages(h, args, object) {
                 let p = MessageQueue.getMessages(h, args, object);
                 if (p && p.length > 0) {
-                    p.forEach((item) => MessageQueue.recycleMessage(h, item));
+                    for (let item of p) {
+                        MessageQueue.recycleMessage(h, item);
+                    }
                 }
             }
             static removeCallbacksAndMessages(h, object) {
@@ -43109,6 +43111,7 @@ var android;
             createdCallback() {
                 requestAnimationFrame(() => {
                     this.AndroidUI = new AndroidUI(this);
+                    this.AndroidUI.notifySizeChange();
                     this.onCreate();
                     let onCreateFunc = this.getAttribute('oncreate');
                     if (onCreateFunc && typeof window[onCreateFunc] === "function") {
@@ -43119,11 +43122,6 @@ var android;
             attachedCallback() {
                 if (this.AndroidUI) {
                     this.AndroidUI.notifySizeChange();
-                }
-                else {
-                    setTimeout(() => {
-                        this.AndroidUI.notifySizeChange();
-                    }, 50);
                 }
             }
             detachedCallback() {

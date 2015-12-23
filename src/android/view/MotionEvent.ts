@@ -4,6 +4,7 @@
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../view/ViewConfiguration.ts"/>
+///<reference path="../os/SystemClock.ts"/>
 
 
 module android.view {
@@ -77,7 +78,7 @@ module android.view {
         mYOffset = 0;
 
         _activeTouch:any;
-        _event:any;
+        //_event:any;
         private _axisValues = new Map<number, number>();
 
         static obtainWithTouchEvent(e, action:number):MotionEvent {
@@ -113,8 +114,9 @@ module android.view {
         private static IdIndexCache = new Map<number, number>();
 
         initWithTouch(event, baseAction:number, windowBound = new Rect() ) {
-            this._event = event;
+            //this._event = event;
             let e = <TouchEvent>event;
+            let now = android.os.SystemClock.uptimeMillis();
             //get actionIndex
             let action = baseAction;
             let actionIndex = -1;
@@ -145,7 +147,7 @@ module android.view {
                 case MotionEvent.ACTION_MOVE:
                     let moveHistory = MotionEvent.TouchMoveRecord.get(activePointerId);
                     if (moveHistory){
-                        activeTouch.mEventTime = e.timeStamp;
+                        activeTouch.mEventTime = now;
                         moveHistory.push(activeTouch);
                         if(moveHistory.length>MotionEvent.HistoryMaxSize) moveHistory.shift();
                     }
@@ -181,10 +183,10 @@ module android.view {
             //this.mActiveActionIndex = actionIndex;
             this.mActivePointerId = activePointerId;
 
-            if (activePointerId === 0 && action == MotionEvent.ACTION_DOWN) {
-                this.mDownTime = e.timeStamp;
+            if (action == MotionEvent.ACTION_DOWN) {
+                this.mDownTime = now;
             }
-            this.mEventTime = e.timeStamp;
+            this.mEventTime = now;
             this.mXOffset = this.mYOffset = 0;
 
             //set edge flag
@@ -235,8 +237,7 @@ module android.view {
                 pageY: e.pageY
             };
             this.mTouchingPointers = [touch];
-            this.mDownTime = e.timeStamp;
-            this.mEventTime = e.timeStamp;
+            this.mDownTime = this.mEventTime = android.os.SystemClock.uptimeMillis();
             this.mXOffset = this.mYOffset = 0;
             this._axisValues.clear();
             this._axisValues.set(MotionEvent.AXIS_VSCROLL, -e.deltaY);

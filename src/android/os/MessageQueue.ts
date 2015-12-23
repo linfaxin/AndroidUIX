@@ -80,7 +80,9 @@ module android.os {
         static removeMessages(h:Handler, args, object:any) {
             let p = MessageQueue.getMessages(h, args, object);
             if (p && p.length > 0) {
-                p.forEach((item) => MessageQueue.recycleMessage(h, item));
+                for(let item of p){
+                    MessageQueue.recycleMessage(h, item);
+                }
             }
         }
 

@@ -31,6 +31,8 @@ module android.app{
             //delay call onCreate, insure browser load lib complete
             requestAnimationFrame(()=>{
                 this.AndroidUI = new AndroidUI(this);
+                this.AndroidUI.notifySizeChange();
+
                 this.onCreate();
                 //activity could have a attribute defined callback when created
                 let onCreateFunc = this.getAttribute('oncreate');
@@ -42,11 +44,6 @@ module android.app{
         attachedCallback():void {
             if(this.AndroidUI){
                 this.AndroidUI.notifySizeChange();
-            }else{
-                //delay call onCreate, insure browser load lib complete
-                setTimeout(()=>{
-                    this.AndroidUI.notifySizeChange();
-                }, 50);
             }
         }
         detachedCallback():void {
