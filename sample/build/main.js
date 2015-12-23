@@ -142,8 +142,71 @@ var sample;
         }
     })(activity = sample.activity || (sample.activity = {}));
 })(sample || (sample = {}));
+/**
+ * Created by linfaxin on 15/10/26.
+ */
+///<reference path="../../dist/android-ui.d.ts"/>
+var sample;
+(function (sample) {
+    var activity;
+    (function (activity) {
+        var Activity = android.app.Activity;
+        var View = android.view.View;
+        var BaseAdapter = android.widget.BaseAdapter;
+        var PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
+        class SamplePullRefreshLoadActivity extends Activity {
+            onCreate() {
+                let listView = this.findViewById('listView');
+                let adapter = new MyListAdapter();
+                listView.setAdapter(adapter);
+                let prll = this.findViewById('prll');
+                prll.setRefreshLoadListener({
+                    onRefresh(prll) {
+                        setTimeout(() => {
+                            adapter.data = ['Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item'];
+                            adapter.notifyDataSetChanged();
+                            prll.setHeaderState(PullRefreshLoadLayout.State_Header_Normal);
+                        }, 1000);
+                    },
+                    onLoadMore(prll) {
+                        setTimeout(() => {
+                            adapter.data.push('Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item');
+                            adapter.notifyDataSetChanged();
+                            prll.setFooterState(PullRefreshLoadLayout.State_Footer_Normal);
+                        }, 1000);
+                    }
+                });
+            }
+        }
+        activity.SamplePullRefreshLoadActivity = SamplePullRefreshLoadActivity;
+        SamplePullRefreshLoadActivity.registerCustomElement();
+        class MyListAdapter extends BaseAdapter {
+            constructor(...args) {
+                super(...args);
+                this.data = [];
+            }
+            getView(position, convertView, parent) {
+                if (convertView == null) {
+                    convertView = View.inflate('@layout/item', parent.rootElement);
+                }
+                convertView.findViewById('item_text').setText(this.getItem(position));
+                return convertView;
+            }
+            getCount() {
+                return this.data.length;
+            }
+            getItem(position) {
+                return (1 + position) + '. ' + this.data[position];
+            }
+            getItemId(position) {
+                return -1;
+            }
+        }
+    })(activity = sample.activity || (sample.activity = {}));
+})(sample || (sample = {}));
 ///<reference path="../dist/android-ui.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
 ///<reference path="activity/SampleViewPagerActivity.ts"/>
 ///<reference path="activity/SampleListViewActivity.ts"/>
 ///<reference path="activity/SampleGridViewActivity.ts"/>
+///<reference path="activity/SamplePullRefreshLoadActivity.ts"/>

@@ -29,7 +29,6 @@ import Resources = android.content.res.Resources;
 import Handler = android.os.Handler;
 import SystemClock = android.os.SystemClock;
 import Float = java.lang.Float;
-import GestureDetector = android.view.GestureDetector;
 import MotionEvent = android.view.MotionEvent;
 import View = android.view.View;
 import ViewConfiguration = android.view.ViewConfiguration;
@@ -53,10 +52,6 @@ import TypedValue = android.util.TypedValue;
 export class ScaleGestureDetector {
 
     private static TAG:string = "ScaleGestureDetector";
-
-
-
-
 
     //private mContext:Context;
 

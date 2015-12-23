@@ -91,7 +91,8 @@ module android.view{
             super(width, height);
             this.mCanvasElement = canvasElement;
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
-            this._mCanvasContent['imageSmoothingEnabled'] = this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
+            if(this._mCanvasContent['imageSmoothingEnabled']!=null) this._mCanvasContent['imageSmoothingEnabled'] = false;
+            else if(this._mCanvasContent['webkitImageSmoothingEnabled']!=null) this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
         }
 
         protected initImpl():void {

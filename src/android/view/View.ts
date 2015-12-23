@@ -2541,6 +2541,10 @@ module android.view {
             this.requestLayout();
         }
 
+        isInLayout():boolean  {
+            let viewRoot:ViewRootImpl = this.getViewRootImpl();
+            return (viewRoot != null && viewRoot.isInLayout());
+        }
         requestLayout() {
             if (this.mMeasureCache != null) this.mMeasureCache.clear();
 
@@ -2561,6 +2565,9 @@ module android.view {
 
             if (this.mParent != null && !this.mParent.isLayoutRequested()) {
                 this.mParent.requestLayout();
+            }
+            if (this.mAttachInfo != null && this.mAttachInfo.mViewRequestingLayout == this) {
+                this.mAttachInfo.mViewRequestingLayout = null;
             }
         }
 

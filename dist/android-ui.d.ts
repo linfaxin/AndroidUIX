@@ -878,7 +878,6 @@ declare module android.content.res {
     import DisplayMetrics = android.util.DisplayMetrics;
     class Resources {
         static instance: Resources;
-        static globalDensity: number;
         private displayMetrics;
         static from(any: any): Resources;
         static getDisplayMetrics(): DisplayMetrics;
@@ -1947,6 +1946,7 @@ declare module android.view {
         isLayoutRequested(): boolean;
         getLayoutParams(): ViewGroup.LayoutParams;
         setLayoutParams(params: ViewGroup.LayoutParams): void;
+        isInLayout(): boolean;
         requestLayout(): void;
         forceLayout(): void;
         isLaidOut(): boolean;
@@ -7064,6 +7064,7 @@ declare module androidui.widget {
     import View = android.view.View;
     import FrameLayout = android.widget.FrameLayout;
     import TextView = android.widget.TextView;
+    import ProgressBar = android.widget.ProgressBar;
     class PullRefreshLoadLayout extends FrameLayout {
         static State_Disable: number;
         static State_Header_Normal: number;
@@ -7128,11 +7129,13 @@ declare module androidui.widget {
         }
         class DefaultHeaderView extends HeaderView {
             textView: TextView;
+            progressBar: ProgressBar;
             constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
             onStateChange(newState: number, oldState: number): void;
         }
         class DefaultFooterView extends FooterView {
             textView: TextView;
+            progressBar: ProgressBar;
             constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
             onStateChange(newState: number, oldState: number): void;
         }

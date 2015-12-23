@@ -268,10 +268,109 @@ var sample;
         })(BaseAdapter);
     })(activity = sample.activity || (sample.activity = {}));
 })(sample || (sample = {}));
+/**
+ * Created by linfaxin on 15/10/26.
+ */
+///<reference path="../../dist/android-ui.d.ts"/>
+var sample;
+(function (sample) {
+    var activity;
+    (function (activity) {
+        var Activity = android.app.Activity;
+        var View = android.view.View;
+        var BaseAdapter = android.widget.BaseAdapter;
+        var PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
+
+        var SamplePullRefreshLoadActivity = (function (_Activity5) {
+            _inherits(SamplePullRefreshLoadActivity, _Activity5);
+
+            function SamplePullRefreshLoadActivity() {
+                _classCallCheck(this, SamplePullRefreshLoadActivity);
+
+                _get(Object.getPrototypeOf(SamplePullRefreshLoadActivity.prototype), 'constructor', this).apply(this, arguments);
+            }
+
+            _createClass(SamplePullRefreshLoadActivity, [{
+                key: 'onCreate',
+                value: function onCreate() {
+                    var listView = this.findViewById('listView');
+                    var adapter = new MyListAdapter();
+                    listView.setAdapter(adapter);
+                    var prll = this.findViewById('prll');
+                    prll.setRefreshLoadListener({
+                        onRefresh: function onRefresh(prll) {
+                            setTimeout(function () {
+                                adapter.data = ['Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item'];
+                                adapter.notifyDataSetChanged();
+                                prll.setHeaderState(PullRefreshLoadLayout.State_Header_Normal);
+                            }, 1000);
+                        },
+                        onLoadMore: function onLoadMore(prll) {
+                            setTimeout(function () {
+                                adapter.data.push('Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item', 'Item');
+                                adapter.notifyDataSetChanged();
+                                prll.setFooterState(PullRefreshLoadLayout.State_Footer_Normal);
+                            }, 1000);
+                        }
+                    });
+                }
+            }]);
+
+            return SamplePullRefreshLoadActivity;
+        })(Activity);
+
+        activity.SamplePullRefreshLoadActivity = SamplePullRefreshLoadActivity;
+        SamplePullRefreshLoadActivity.registerCustomElement();
+
+        var MyListAdapter = (function (_BaseAdapter3) {
+            _inherits(MyListAdapter, _BaseAdapter3);
+
+            function MyListAdapter() {
+                _classCallCheck(this, MyListAdapter);
+
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
+                }
+
+                _get(Object.getPrototypeOf(MyListAdapter.prototype), 'constructor', this).apply(this, args);
+                this.data = [];
+            }
+
+            _createClass(MyListAdapter, [{
+                key: 'getView',
+                value: function getView(position, convertView, parent) {
+                    if (convertView == null) {
+                        convertView = View.inflate('@layout/item', parent.rootElement);
+                    }
+                    convertView.findViewById('item_text').setText(this.getItem(position));
+                    return convertView;
+                }
+            }, {
+                key: 'getCount',
+                value: function getCount() {
+                    return this.data.length;
+                }
+            }, {
+                key: 'getItem',
+                value: function getItem(position) {
+                    return 1 + position + '. ' + this.data[position];
+                }
+            }, {
+                key: 'getItemId',
+                value: function getItemId(position) {
+                    return -1;
+                }
+            }]);
+
+            return MyListAdapter;
+        })(BaseAdapter);
+    })(activity = sample.activity || (sample.activity = {}));
+})(sample || (sample = {}));
 ///<reference path="../dist/android-ui.d.ts"/>
 ///<reference path="activity/SampleButtonActivity.ts"/>
 ///<reference path="activity/SampleViewPagerActivity.ts"/>
 ///<reference path="activity/SampleListViewActivity.ts"/>
 ///<reference path="activity/SampleGridViewActivity.ts"/>
+///<reference path="activity/SamplePullRefreshLoadActivity.ts"/>
 
 //# sourceMappingURL=main.es5.js.map

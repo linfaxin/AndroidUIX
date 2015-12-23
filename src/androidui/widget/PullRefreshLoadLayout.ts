@@ -9,6 +9,8 @@
 ///<reference path="../../android/widget/ScrollView.ts"/>
 ///<reference path="../../android/widget/OverScroller.ts"/>
 ///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/ProgressBar.ts"/>
 ///<reference path="../../android/R/string.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
 ///<reference path="OverScrollLocker.ts"/>
@@ -22,6 +24,8 @@ module androidui.widget{
     import ScrollView = android.widget.ScrollView;
     import OverScroller = android.widget.OverScroller;
     import TextView = android.widget.TextView;
+    import LinearLayout = android.widget.LinearLayout;
+    import ProgressBar = android.widget.ProgressBar;
     import Integer = java.lang.Integer;
     import R = android.R;
 
@@ -83,6 +87,9 @@ module androidui.widget{
                 if(child!=this.footerView) this.setFooterView(child);
             } else {
                 if(child!=this.contentView) this.setContentView(child);
+            }
+            if(this.footerView!=null){//foot should be click
+                this.bringChildToFront(this.footerView);
             }
         }
 
@@ -285,6 +292,14 @@ module androidui.widget{
             super.onLayout(changed, left, top, right, bottom);
             this.checkHeaderFooterPosition();
             this.checkLockOverScroll();
+
+            if(!this.isLaidOut()){//first layout after attach window
+                //check if start Load when init
+                if(this.autoLoadScrollAtBottom && this.footerView!=null
+                    && this.footerView.getGlobalVisibleRect(new android.graphics.Rect())){
+                    this.setFooterState(PullRefreshLoadLayout.State_Footer_Loading);
+                }
+            }
         }
 
         setAutoLoadMoreWhenScrollBottom(autoLoad:boolean):void {
@@ -384,40 +399,64 @@ module androidui.widget{
         }
         export class DefaultHeaderView extends HeaderView{
             textView:TextView;
+            progressBar:ProgressBar;
             constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
                 super(bindElement, rootElement);
+                this.progressBar = new ProgressBar();
+                this.progressBar.setVisibility(View.GONE);
                 this.textView = new TextView();
-                const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
-                this.textView.setPadding(pad, pad, pad, pad);
+                let density = android.content.res.Resources.getDisplayMetrics().density;
+                const pad = 16 * density;
+                this.textView.setPadding(pad/2, pad, pad/2, pad);
                 this.textView.setGravity(Gravity.CENTER);
-                this.addView(this.textView, -1, -2);
+
+                let linear = new LinearLayout();
+                linear.addView(this.progressBar, 32 * density, 32 * density);
+                linear.addView(this.textView);
+                linear.setGravity(Gravity.CENTER);
+
+                this.addView(linear, -1, -2);
                 this.onStateChange(PullRefreshLoadLayout.State_Header_Normal, PullRefreshLoadLayout.State_Disable);
             }
             onStateChange(newState:number, oldState:number):void{
                 switch (newState){
                     case PullRefreshLoadLayout.State_Header_Refreshing:
                         this.textView.setText(R.string_.prll_header_state_loading);
+                        this.progressBar.setVisibility(View.VISIBLE);
                         break;
                     case PullRefreshLoadLayout.State_Header_ReadyToRefresh:
                         this.textView.setText(R.string_.prll_header_state_ready);
+                        this.progressBar.setVisibility(View.GONE);
                         break;
                     case PullRefreshLoadLayout.State_Header_RefreshFail:
                         this.textView.setText(R.string_.prll_header_state_fail);
+                        this.progressBar.setVisibility(View.GONE);
                         break;
                     default:
                         this.textView.setText(R.string_.prll_header_state_normal);
+                        this.progressBar.setVisibility(View.GONE);
                 }
             }
         }
         export class DefaultFooterView extends FooterView{
             textView:TextView;
+            progressBar:ProgressBar;
             constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
                 super(bindElement, rootElement);
+                this.progressBar = new ProgressBar();
+                this.progressBar.setVisibility(View.GONE);
                 this.textView = new TextView();
-                const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
-                this.textView.setPadding(pad, pad, pad, pad);
+                let density = android.content.res.Resources.getDisplayMetrics().density;
+                const pad = 16 * density;
+                this.textView.setPadding(pad/2, pad, pad/2, pad);
                 this.textView.setGravity(Gravity.CENTER);
-                this.addView(this.textView, -1, -2);
+
+                let linear = new LinearLayout();
+                linear.addView(this.progressBar);
+                linear.addView(this.textView);
+                linear.setGravity(Gravity.CENTER);
+
+                this.addView(linear, -1, -2);
                 this.onStateChange(PullRefreshLoadLayout.State_Footer_Normal, PullRefreshLoadLayout.State_Disable);
 
                 this.setOnClickListener({
@@ -433,18 +472,23 @@ module androidui.widget{
                 switch (newState){
                     case PullRefreshLoadLayout.State_Footer_Loading:
                         this.textView.setText(R.string_.prll_footer_state_loading);
+                        this.progressBar.setVisibility(View.VISIBLE);
                         break;
                     case PullRefreshLoadLayout.State_Footer_ReadyToLoad:
                         this.textView.setText(R.string_.prll_footer_state_ready);
+                        this.progressBar.setVisibility(View.GONE);
                         break;
                     case PullRefreshLoadLayout.State_Footer_LoadFail:
                         this.textView.setText(R.string_.prll_footer_state_fail);
+                        this.progressBar.setVisibility(View.GONE);
                         break;
                     case PullRefreshLoadLayout.State_Footer_NoMoreToLoad:
                         this.textView.setText(R.string_.prll_footer_state_no_more);
+                        this.progressBar.setVisibility(View.GONE);
                         break;
                     default:
                         this.textView.setText(R.string_.prll_footer_state_normal);
+                        this.progressBar.setVisibility(View.GONE);
                 }
             }
         }

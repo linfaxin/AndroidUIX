@@ -7,8 +7,6 @@ module android.content.res{
 
     export class Resources{
         static instance = new Resources();
-        static globalDensity = 1;
-
         private displayMetrics:DisplayMetrics;
 
         static from(any){
@@ -24,11 +22,11 @@ module android.content.res{
             if(this.displayMetrics) return this.displayMetrics;
             this.displayMetrics = new DisplayMetrics();
             let displayMetrics = this.displayMetrics;
-            let density = Resources.globalDensity;
+            let density = window.devicePixelRatio;
 
             displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT ;
             displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
-            displayMetrics.density = window.devicePixelRatio;
+            displayMetrics.density = density;
             displayMetrics.densityDpi = density * DisplayMetrics.DENSITY_DEFAULT;
             displayMetrics.scaledDensity = density;
 

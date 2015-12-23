@@ -1944,7 +1944,10 @@ var android;
                 this.mCanvasElement.width = this.mWidth;
                 this.mCanvasElement.height = this.mHeight;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                this._mCanvasContent['imageSmoothingEnabled'] = this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
+                if (this._mCanvasContent['imageSmoothingEnabled'] != null)
+                    this._mCanvasContent['imageSmoothingEnabled'] = false;
+                else if (this._mCanvasContent['webkitImageSmoothingEnabled'] != null)
+                    this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
                 this._saveCount = this.save();
             }
             recycle() {
@@ -3609,10 +3612,10 @@ var android;
                         return this.displayMetrics;
                     this.displayMetrics = new DisplayMetrics();
                     let displayMetrics = this.displayMetrics;
-                    let density = Resources.globalDensity;
+                    let density = window.devicePixelRatio;
                     displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
-                    displayMetrics.density = window.devicePixelRatio;
+                    displayMetrics.density = density;
                     displayMetrics.densityDpi = density * DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.scaledDensity = density;
                     displayMetrics.widthPixels = window.innerWidth * density;
@@ -3621,7 +3624,6 @@ var android;
                 }
             }
             Resources.instance = new Resources();
-            Resources.globalDensity = 1;
             res.Resources = Resources;
         })(res = content.res || (content.res = {}));
     })(content = android.content || (android.content = {}));
@@ -8336,6 +8338,10 @@ var android;
                 }
                 this.requestLayout();
             }
+            isInLayout() {
+                let viewRoot = this.getViewRootImpl();
+                return (viewRoot != null && viewRoot.isInLayout());
+            }
             requestLayout() {
                 if (this.mMeasureCache != null)
                     this.mMeasureCache.clear();
@@ -8352,6 +8358,9 @@ var android;
                 this.mPrivateFlags |= View.PFLAG_INVALIDATED;
                 if (this.mParent != null && !this.mParent.isLayoutRequested()) {
                     this.mParent.requestLayout();
+                }
+                if (this.mAttachInfo != null && this.mAttachInfo.mViewRequestingLayout == this) {
+                    this.mAttachInfo.mViewRequestingLayout = null;
                 }
             }
             forceLayout() {
@@ -10566,7 +10575,10 @@ var android;
                 super(width, height);
                 this.mCanvasElement = canvasElement;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                this._mCanvasContent['imageSmoothingEnabled'] = this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
+                if (this._mCanvasContent['imageSmoothingEnabled'] != null)
+                    this._mCanvasContent['imageSmoothingEnabled'] = false;
+                else if (this._mCanvasContent['webkitImageSmoothingEnabled'] != null)
+                    this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
             }
             initImpl() {
             }
@@ -14298,7 +14310,6 @@ var android;
     var view;
     (function (view) {
         var SystemClock = android.os.SystemClock;
-        var GestureDetector = android.view.GestureDetector;
         var MotionEvent = android.view.MotionEvent;
         var ViewConfiguration = android.view.ViewConfiguration;
         var TypedValue = android.util.TypedValue;
@@ -14511,7 +14522,7 @@ var android;
                 if (this.mQuickScaleEnabled && this.mGestureDetector == null) {
                     let gestureListener = (() => {
                         const _this = this;
-                        class _Inner extends GestureDetector.SimpleOnGestureListener {
+                        class _Inner extends view.GestureDetector.SimpleOnGestureListener {
                             onDoubleTap(e) {
                                 _this.mDoubleTapEvent = e;
                                 _this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
@@ -14520,7 +14531,7 @@ var android;
                         }
                         return new _Inner();
                     })();
-                    this.mGestureDetector = new GestureDetector(gestureListener, this.mHandler);
+                    this.mGestureDetector = new view.GestureDetector(gestureListener, this.mHandler);
                 }
             }
             isQuickScaleEnabled() {
@@ -44051,6 +44062,8 @@ var androidui;
 ///<reference path="../../android/widget/ScrollView.ts"/>
 ///<reference path="../../android/widget/OverScroller.ts"/>
 ///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/ProgressBar.ts"/>
 ///<reference path="../../android/R/string.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
 ///<reference path="OverScrollLocker.ts"/>
@@ -44058,10 +44071,13 @@ var androidui;
 (function (androidui) {
     var widget;
     (function (widget) {
+        var View = android.view.View;
         var Gravity = android.view.Gravity;
         var ViewGroup = android.view.ViewGroup;
         var FrameLayout = android.widget.FrameLayout;
         var TextView = android.widget.TextView;
+        var LinearLayout = android.widget.LinearLayout;
+        var ProgressBar = android.widget.ProgressBar;
         var R = android.R;
         class PullRefreshLoadLayout extends FrameLayout {
             constructor(bindElement, rootElement) {
@@ -44091,6 +44107,9 @@ var androidui;
                 else {
                     if (child != this.contentView)
                         this.setContentView(child);
+                }
+                if (this.footerView != null) {
+                    this.bringChildToFront(this.footerView);
                 }
             }
             configHeaderView() {
@@ -44293,6 +44312,12 @@ var androidui;
                 super.onLayout(changed, left, top, right, bottom);
                 this.checkHeaderFooterPosition();
                 this.checkLockOverScroll();
+                if (!this.isLaidOut()) {
+                    if (this.autoLoadScrollAtBottom && this.footerView != null
+                        && this.footerView.getGlobalVisibleRect(new android.graphics.Rect())) {
+                        this.setFooterState(PullRefreshLoadLayout.State_Footer_Loading);
+                    }
+                }
             }
             setAutoLoadMoreWhenScrollBottom(autoLoad) {
                 this.autoLoadScrollAtBottom = autoLoad;
@@ -44407,26 +44432,37 @@ var androidui;
             class DefaultHeaderView extends HeaderView {
                 constructor(bindElement, rootElement) {
                     super(bindElement, rootElement);
+                    this.progressBar = new ProgressBar();
+                    this.progressBar.setVisibility(View.GONE);
                     this.textView = new TextView();
-                    const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
-                    this.textView.setPadding(pad, pad, pad, pad);
+                    let density = android.content.res.Resources.getDisplayMetrics().density;
+                    const pad = 16 * density;
+                    this.textView.setPadding(pad / 2, pad, pad / 2, pad);
                     this.textView.setGravity(Gravity.CENTER);
-                    this.addView(this.textView, -1, -2);
+                    let linear = new LinearLayout();
+                    linear.addView(this.progressBar, 32 * density, 32 * density);
+                    linear.addView(this.textView);
+                    linear.setGravity(Gravity.CENTER);
+                    this.addView(linear, -1, -2);
                     this.onStateChange(PullRefreshLoadLayout.State_Header_Normal, PullRefreshLoadLayout.State_Disable);
                 }
                 onStateChange(newState, oldState) {
                     switch (newState) {
                         case PullRefreshLoadLayout.State_Header_Refreshing:
                             this.textView.setText(R.string_.prll_header_state_loading);
+                            this.progressBar.setVisibility(View.VISIBLE);
                             break;
                         case PullRefreshLoadLayout.State_Header_ReadyToRefresh:
                             this.textView.setText(R.string_.prll_header_state_ready);
+                            this.progressBar.setVisibility(View.GONE);
                             break;
                         case PullRefreshLoadLayout.State_Header_RefreshFail:
                             this.textView.setText(R.string_.prll_header_state_fail);
+                            this.progressBar.setVisibility(View.GONE);
                             break;
                         default:
                             this.textView.setText(R.string_.prll_header_state_normal);
+                            this.progressBar.setVisibility(View.GONE);
                     }
                 }
             }
@@ -44434,11 +44470,18 @@ var androidui;
             class DefaultFooterView extends FooterView {
                 constructor(bindElement, rootElement) {
                     super(bindElement, rootElement);
+                    this.progressBar = new ProgressBar();
+                    this.progressBar.setVisibility(View.GONE);
                     this.textView = new TextView();
-                    const pad = 16 * android.content.res.Resources.getDisplayMetrics().density;
-                    this.textView.setPadding(pad, pad, pad, pad);
+                    let density = android.content.res.Resources.getDisplayMetrics().density;
+                    const pad = 16 * density;
+                    this.textView.setPadding(pad / 2, pad, pad / 2, pad);
                     this.textView.setGravity(Gravity.CENTER);
-                    this.addView(this.textView, -1, -2);
+                    let linear = new LinearLayout();
+                    linear.addView(this.progressBar);
+                    linear.addView(this.textView);
+                    linear.setGravity(Gravity.CENTER);
+                    this.addView(linear, -1, -2);
                     this.onStateChange(PullRefreshLoadLayout.State_Footer_Normal, PullRefreshLoadLayout.State_Disable);
                     this.setOnClickListener({
                         onClick(v) {
@@ -44453,18 +44496,23 @@ var androidui;
                     switch (newState) {
                         case PullRefreshLoadLayout.State_Footer_Loading:
                             this.textView.setText(R.string_.prll_footer_state_loading);
+                            this.progressBar.setVisibility(View.VISIBLE);
                             break;
                         case PullRefreshLoadLayout.State_Footer_ReadyToLoad:
                             this.textView.setText(R.string_.prll_footer_state_ready);
+                            this.progressBar.setVisibility(View.GONE);
                             break;
                         case PullRefreshLoadLayout.State_Footer_LoadFail:
                             this.textView.setText(R.string_.prll_footer_state_fail);
+                            this.progressBar.setVisibility(View.GONE);
                             break;
                         case PullRefreshLoadLayout.State_Footer_NoMoreToLoad:
                             this.textView.setText(R.string_.prll_footer_state_no_more);
+                            this.progressBar.setVisibility(View.GONE);
                             break;
                         default:
                             this.textView.setText(R.string_.prll_footer_state_normal);
+                            this.progressBar.setVisibility(View.GONE);
                     }
                 }
             }

@@ -39,8 +39,58 @@
                 >
         </android-style>
     </resources>
-    <ListView>
+    <ListView android:paddingBottom="60dp">
         <androidui.widget.HtmlDataListAdapter>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item1">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item2">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item3">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item4">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item5">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item6">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item7">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item8">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item9">
+                </TextView>
+            </FrameLayout>
+            <FrameLayout android:style="@style/item_layout">
+                <TextView android:style="@style/item_text"
+                          android:text="Item10">
+                </TextView>
+            </FrameLayout>
             <FrameLayout android:style="@style/item_layout">
                 <TextView android:style="@style/item_text"
                           android:text="Item1">
@@ -96,11 +146,12 @@
     <TextView
             android:padding="12dp"
             android:layout_gravity="bottom"
+            android:gravity="center_vertical"
             android:layout_height="wrap_content"
             android:textColor="white"
             android:background="rgba(0, 0, 0, 0.7)"
             >
-        ListView的数据也可以直接定义在Html中,因此可以与VM框架结合(如Vue.js)
+        ListView的数据也可以直接定义在Html中, 但是会影响滚动性能
     </TextView>
 </android-Activity>
 
