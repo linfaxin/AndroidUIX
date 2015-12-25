@@ -280,6 +280,7 @@ declare module android.graphics {
         getTextRunAdvances_end(text: string, start: number, end: number, contextStart: number, contextEnd: number, flags: number, advances: number[], advancesIndex: number): number;
         getTextRunCursor_len(text: string, contextStart: number, contextLength: number, flags: number, offset: number, cursorOpt: number): number;
         getTextRunCursor_end(text: string, contextStart: number, contextEnd: number, flags: number, offset: number, cursorOpt: number): number;
+        isEmpty(): boolean;
         applyToCanvas(canvas: Canvas): void;
     }
     module Paint {
@@ -440,21 +441,21 @@ declare module androidui.image {
         private mSrc;
         private mImageWidth;
         private mImageHeight;
-        private mOnLoad;
-        private mOnError;
-        constructor(src: string, onload?: () => void, onerror?: () => void);
+        private mOnLoads;
+        private mOnErrors;
+        private mOverrideImageRatio;
+        constructor(src: string, onload?: () => void, onerror?: () => void, overrideImageRatio?: number);
         protected init(src: string, onload?: () => void, onerror?: () => void): void;
         protected createImage(): void;
         protected loadImage(): void;
-        getImage(): any;
         src: string;
-        onload: () => void;
-        onerror: () => void;
         width: number;
         height: number;
-        private getImageRatio();
+        getImageRatio(): number;
         private fireOnLoad();
         private fireOnError();
+        addLoadListener(onload: () => void, onerror?: () => void): void;
+        removeLoadListener(onload?: () => void, onerror?: () => void): void;
         recycle(): void;
     }
 }
@@ -509,8 +510,8 @@ declare module android.graphics {
         quickReject(left: number, top: number, right: number, bottom: number): boolean;
         drawCanvas(canvas: Canvas, offsetX: number, offsetY: number): void;
         protected drawCanvasImpl(canvas: Canvas, offsetX: number, offsetY: number): void;
-        drawImage(image: NetImage, dstRect?: Rect, paint?: Paint): void;
-        protected drawImageImpl(image: NetImage, dstRect?: Rect): void;
+        drawImage(image: NetImage, srcRect?: Rect, dstRect?: Rect, paint?: Paint): void;
+        protected drawImageImpl(image: NetImage, srcRect?: Rect, dstRect?: Rect): void;
         drawRect(rect: Rect, paint: Paint): any;
         drawRect(left: number, top: number, right: number, bottom: number, paint: Paint): any;
         protected drawRectImpl(left: number, top: number, width: number, height: number, paint: Paint): void;
@@ -580,6 +581,7 @@ declare module android.graphics.drawable {
         setDither(dither: boolean): void;
         setCallback(cb: Drawable.Callback): void;
         getCallback(): Drawable.Callback;
+        notifySizeChangeSelf(): void;
         invalidateSelf(): void;
         scheduleSelf(what: any, when: any): void;
         unscheduleSelf(what: any): void;
@@ -612,6 +614,7 @@ declare module android.graphics.drawable {
     module Drawable {
         interface Callback {
             invalidateDrawable(who: Drawable): void;
+            drawableSizeChange?(who: Drawable): void;
             scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
             unscheduleDrawable(who: Drawable, what: Runnable): void;
         }
@@ -681,6 +684,7 @@ declare module android.graphics.drawable {
         private mTmpRect;
         private mMutated;
         constructor(drawable: Drawable, insetLeft: number, insetTop?: number, insetRight?: number, insetBottom?: number);
+        drawableSizeChange(who: android.graphics.drawable.Drawable): any;
         invalidateDrawable(who: android.graphics.drawable.Drawable): void;
         scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
         unscheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable): void;
@@ -1318,7 +1322,6 @@ declare module androidui.image {
         getImage(): NetImage;
         setLoadListener(loadListener: NetDrawable.LoadListener): void;
         getConstantState(): Drawable.ConstantState;
-        recycle(): void;
     }
     module NetDrawable {
         interface LoadListener {
@@ -1434,6 +1437,7 @@ declare module android.graphics.drawable {
         getIntrinsicHeight(): number;
         getMinimumWidth(): number;
         getMinimumHeight(): number;
+        drawableSizeChange(who: android.graphics.drawable.Drawable): void;
         invalidateDrawable(who: android.graphics.drawable.Drawable): void;
         scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
         unscheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable): void;
@@ -1519,8 +1523,54 @@ declare module android.R {
     import Drawable = android.graphics.drawable.Drawable;
     class drawable {
         static button_background: Drawable;
+        static btn_check: Drawable;
+        static btn_radio: Drawable;
         static list_selector_background: Drawable;
         static list_divider: Drawable;
+    }
+}
+declare module androidui.image {
+    import Paint = android.graphics.Paint;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Canvas = android.graphics.Canvas;
+    class RegionImageDrawable extends Drawable {
+        private mState;
+        constructor(image: NetImage, bound: any, paint?: Paint);
+        draw(canvas: Canvas): void;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getImage(): NetImage;
+        getConstantState(): Drawable.ConstantState;
+    }
+}
+declare module android.R.image_base64 {
+    var x3: string;
+}
+declare module android.R {
+    import RegionImageDrawable = androidui.image.RegionImageDrawable;
+    class image {
+        static btn_check_off_disabled_focused_holo_light: RegionImageDrawable;
+        static btn_check_off_focused_holo_light: RegionImageDrawable;
+        static btn_check_off_holo_light: RegionImageDrawable;
+        static btn_check_off_pressed_holo_light: RegionImageDrawable;
+        static btn_check_on_disabled_focused_holo_light: RegionImageDrawable;
+        static btn_check_on_disabled_holo_light: RegionImageDrawable;
+        static btn_check_on_focused_holo_light: RegionImageDrawable;
+        static btn_check_on_holo_light: RegionImageDrawable;
+        static btn_check_on_pressed_holo_light: RegionImageDrawable;
+        static btn_check_off_disabled_holo_light: RegionImageDrawable;
+        static btn_radio_off_disabled_focused_holo_light: RegionImageDrawable;
+        static btn_radio_off_disabled_holo_light: RegionImageDrawable;
+        static btn_radio_off_focused_holo_light: RegionImageDrawable;
+        static btn_radio_off_holo_light: RegionImageDrawable;
+        static btn_radio_off_pressed_holo_light: RegionImageDrawable;
+        static btn_radio_on_disabled_focused_holo_light: RegionImageDrawable;
+        static btn_radio_on_disabled_holo_light: RegionImageDrawable;
+        static btn_radio_on_focused_holo_light: RegionImageDrawable;
+        static btn_radio_on_holo_light: RegionImageDrawable;
+        static btn_radio_on_pressed_holo_light: RegionImageDrawable;
     }
 }
 declare module android.R {
@@ -1552,6 +1602,14 @@ declare module android.R {
             focusable: boolean;
             clickable: boolean;
             gravity: number;
+        };
+        static checkboxStyle: {
+            background: ColorDrawable;
+            button: Drawable;
+        };
+        static radiobuttonStyle: {
+            background: ColorDrawable;
+            button: Drawable;
         };
         static gridViewStyle: {
             numColumns: number;
@@ -1703,6 +1761,8 @@ declare module android.view {
         static VIEW_STATE_PRESSED: number;
         static VIEW_STATE_ACTIVATED: number;
         static VIEW_STATE_HOVERED: number;
+        static VIEW_STATE_CHECKED: number;
+        static VIEW_STATE_MULTILINE: number;
         static VIEW_STATE_IDS: number[];
         private static _static;
         static CLICKABLE: number;
@@ -2016,6 +2076,7 @@ declare module android.view {
         willNotDraw(): boolean;
         setWillNotCacheDrawing(willNotCacheDrawing: boolean): void;
         willNotCacheDrawing(): boolean;
+        drawableSizeChange(who: Drawable): void;
         invalidateDrawable(drawable: Drawable): void;
         scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
         unscheduleDrawable(who: Drawable, what?: Runnable): void;
@@ -2031,7 +2092,6 @@ declare module android.view {
         setBackground(background: Drawable): void;
         getBackground(): Drawable;
         setBackgroundDrawable(background: Drawable): void;
-        private resizeFromBackground();
         getAnimation(): any;
         protected computeHorizontalScrollRange(): number;
         protected computeHorizontalScrollOffset(): number;
@@ -2083,7 +2143,7 @@ declare module android.view {
         setScrollBarSize(scrollBarSize: number): void;
         hasOpaqueScrollbars(): boolean;
         assignParent(parent: ViewParent): void;
-        onFinishInflate(): void;
+        protected onFinishInflate(): void;
         dispatchStartTemporaryDetach(): void;
         onStartTemporaryDetach(): void;
         dispatchFinishTemporaryDetach(): void;
@@ -4656,6 +4716,7 @@ declare module android.widget {
         protected getRightPaddingOffset(): number;
         protected verifyDrawable(who: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
+        drawableSizeChange(drawable: android.graphics.drawable.Drawable): void;
         invalidateDrawable(drawable: Drawable): void;
         isTextSelectable(): boolean;
         setTextIsSelectable(selectable: boolean): void;
@@ -4791,10 +4852,6 @@ declare module android.widget {
             mDrawableEnd: Drawable;
             mDrawableError: Drawable;
             mDrawableTemp: Drawable;
-            mDrawableTopLoading: boolean;
-            mDrawableBottomLoading: boolean;
-            mDrawableLeftLoading: boolean;
-            mDrawableRightLoading: boolean;
             mDrawableLeftInitial: Drawable;
             mDrawableRightInitial: Drawable;
             mIsRtlCompatibilityMode: boolean;
@@ -5538,7 +5595,7 @@ declare module android.widget {
         setOverscrollFooter(footer: Drawable): void;
         getOverscrollFooter(): Drawable;
         onFocusChanged(gainFocus: boolean, direction: number, previouslyFocusedRect: Rect): void;
-        onFinishInflate(): void;
+        protected onFinishInflate(): void;
         findViewTraversal(id: string): View;
         findViewInHeadersOrFooters(where: ArrayList<ListView.FixedViewInfo>, id: string): View;
         findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
@@ -5811,6 +5868,7 @@ declare module android.widget {
         protected verifyDrawable(dr: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
         invalidateDrawable(dr: Drawable): void;
+        drawableSizeChange(who: Drawable): void;
         hasOverlappingRendering(): boolean;
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;
@@ -6231,6 +6289,100 @@ declare module android.widget {
     import ProgressWheel = com.pnikosis.materialishprogress.ProgressWheel;
     class ProgressBar extends ProgressWheel {
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Button = android.widget.Button;
+    import Checkable = android.widget.Checkable;
+    abstract class CompoundButton extends Button implements Checkable {
+        private mChecked;
+        private mButtonResource;
+        private mBroadcasting;
+        private mButtonDrawable;
+        private mOnCheckedChangeListener;
+        private mOnCheckedChangeWidgetListener;
+        private static CHECKED_STATE_SET;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        toggle(): void;
+        performClick(): boolean;
+        isChecked(): boolean;
+        setChecked(checked: boolean): void;
+        setOnCheckedChangeListener(listener: CompoundButton.OnCheckedChangeListener): void;
+        setOnCheckedChangeWidgetListener(listener: CompoundButton.OnCheckedChangeListener): void;
+        setButtonDrawable(d: Drawable): void;
+        getCompoundPaddingLeft(): number;
+        getCompoundPaddingRight(): number;
+        getHorizontalOffsetForDrawables(): number;
+        protected onDraw(canvas: Canvas): void;
+        protected onCreateDrawableState(extraSpace: number): number[];
+        protected drawableStateChanged(): void;
+        protected verifyDrawable(who: Drawable): boolean;
+        jumpDrawablesToCurrentState(): void;
+    }
+    module CompoundButton {
+        interface OnCheckedChangeListener {
+            onCheckedChanged(buttonView: CompoundButton, isChecked: boolean): void;
+        }
+    }
+}
+declare module android.widget {
+    import CompoundButton = android.widget.CompoundButton;
+    class CheckBox extends CompoundButton {
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+    }
+}
+declare module android.widget {
+    import CompoundButton = android.widget.CompoundButton;
+    class RadioButton extends CompoundButton {
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        toggle(): void;
+    }
+}
+declare module android.widget {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import CompoundButton = android.widget.CompoundButton;
+    import LinearLayout = android.widget.LinearLayout;
+    class RadioGroup extends LinearLayout {
+        private mCheckedId;
+        private mChildOnCheckedChangeListener;
+        private mProtectFromCheckedChange;
+        private mOnCheckedChangeListener;
+        private mPassThroughListener;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        private init();
+        setOnHierarchyChangeListener(listener: ViewGroup.OnHierarchyChangeListener): void;
+        protected onFinishInflate(): void;
+        addView(...args: any[]): void;
+        check(id: string): void;
+        private setCheckedId(id);
+        private setCheckedStateForView(viewId, checked);
+        getCheckedRadioButtonId(): string;
+        clearCheck(): void;
+        setOnCheckedChangeListener(listener: RadioGroup.OnCheckedChangeListener): void;
+        protected checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
+        protected generateDefaultLayoutParams(): LinearLayout.LayoutParams;
+    }
+    module RadioGroup {
+        class LayoutParams extends LinearLayout.LayoutParams {
+        }
+        interface OnCheckedChangeListener {
+            onCheckedChanged(group: RadioGroup, checkedId: string): void;
+        }
+        class CheckedStateTracker implements CompoundButton.OnCheckedChangeListener {
+            _RadioGroup_this: RadioGroup;
+            constructor(arg: RadioGroup);
+            onCheckedChanged(buttonView: CompoundButton, isChecked: boolean): void;
+        }
+        class PassThroughHierarchyChangeListener implements ViewGroup.OnHierarchyChangeListener {
+            _RadioGroup_this: RadioGroup;
+            constructor(arg: RadioGroup);
+            private mOnHierarchyChangeListener;
+            onChildViewAdded(parent: View, child: View): void;
+            onChildViewRemoved(parent: View, child: View): void;
+        }
     }
 }
 declare module android.support.v4.view {

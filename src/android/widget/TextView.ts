@@ -264,7 +264,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     private static CHANGE_WATCHER_PRIORITY:number = 100;
 
     // New state used to change background based on whether this TextView is multiline.
-    private static MULTILINE_STATE_SET:number[] = [ 1 << 10 ];
+    private static MULTILINE_STATE_SET:number[] = [ View.VIEW_STATE_MULTILINE ];
 
     // System wide time for last cut or copy action.
     static LAST_CUT_OR_COPY_TIME:number = 0;
@@ -1295,30 +1295,18 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
                     // out all of the fields in the existing structure.
                     if (dr.mDrawableLeft != null){
                         dr.mDrawableLeft.setCallback(null);
-                        if(dr.mDrawableLeft instanceof NetDrawable){
-                            (<NetDrawable>dr.mDrawableLeft).recycle();
-                        }
                     }
                     dr.mDrawableLeft = null;
                     if (dr.mDrawableTop != null){
                         dr.mDrawableTop.setCallback(null);
-                        if(dr.mDrawableTop instanceof NetDrawable){
-                            (<NetDrawable>dr.mDrawableTop).recycle();
-                        }
                     }
                     dr.mDrawableTop = null;
                     if (dr.mDrawableRight != null){
                         dr.mDrawableRight.setCallback(null);
-                        if(dr.mDrawableRight instanceof NetDrawable){
-                            (<NetDrawable>dr.mDrawableRight).recycle();
-                        }
                     }
                     dr.mDrawableRight = null;
                     if (dr.mDrawableBottom != null){
                         dr.mDrawableBottom.setCallback(null);
-                        if(dr.mDrawableBottom instanceof NetDrawable){
-                            (<NetDrawable>dr.mDrawableBottom).recycle();
-                        }
                     }
                     dr.mDrawableBottom = null;
                     dr.mDrawableSizeLeft = dr.mDrawableHeightLeft = 0;
@@ -1334,30 +1322,18 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             this.mDrawables.mOverride = false;
             if (dr.mDrawableLeft != left && dr.mDrawableLeft != null) {
                 dr.mDrawableLeft.setCallback(null);
-                if(dr.mDrawableLeft instanceof NetDrawable){
-                    (<NetDrawable>dr.mDrawableLeft).recycle();
-                }
             }
             dr.mDrawableLeft = left;
             if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
                 dr.mDrawableTop.setCallback(null);
-                if(dr.mDrawableTop instanceof NetDrawable){
-                    (<NetDrawable>dr.mDrawableTop).recycle();
-                }
             }
             dr.mDrawableTop = top;
             if (dr.mDrawableRight != right && dr.mDrawableRight != null) {
                 dr.mDrawableRight.setCallback(null);
-                if(dr.mDrawableRight instanceof NetDrawable){
-                    (<NetDrawable>dr.mDrawableRight).recycle();
-                }
             }
             dr.mDrawableRight = right;
             if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
                 dr.mDrawableBottom.setCallback(null);
-                if(dr.mDrawableBottom instanceof NetDrawable){
-                    (<NetDrawable>dr.mDrawableBottom).recycle();
-                }
             }
             dr.mDrawableBottom = bottom;
             const compoundRect:Rect = dr.mCompoundRect;
@@ -1436,10 +1412,6 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             bottom.setBounds(0, 0, bottom.getIntrinsicWidth(), bottom.getIntrinsicHeight());
         }
         this.setCompoundDrawables(left, top, right, bottom);
-        if(left instanceof NetDrawable) this.mDrawables.mDrawableLeftLoading = true;
-        if(top instanceof NetDrawable) this.mDrawables.mDrawableTopLoading = true;
-        if(right instanceof NetDrawable) this.mDrawables.mDrawableRightLoading = true;
-        if(bottom instanceof NetDrawable) this.mDrawables.mDrawableBottomLoading = true;
     }
 
     /**
@@ -1465,30 +1437,18 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
                     // out all of the fields in the existing structure.
                     if (dr.mDrawableStart != null){
                         dr.mDrawableStart.setCallback(null);
-                        if(dr.mDrawableStart instanceof NetDrawable){
-                            (<NetDrawable>dr.mDrawableStart).recycle();
-                        }
                     }
                     dr.mDrawableStart = null;
                     if (dr.mDrawableTop != null){
                         dr.mDrawableTop.setCallback(null);
-                        if(dr.mDrawableTop instanceof NetDrawable){
-                            (<NetDrawable>dr.mDrawableTop).recycle();
-                        }
                     }
                     dr.mDrawableTop = null;
                     if (dr.mDrawableEnd != null){
                         dr.mDrawableEnd.setCallback(null);
-                        if(dr.mDrawableEnd instanceof NetDrawable){
-                            (<NetDrawable>dr.mDrawableEnd).recycle();
-                        }
                     }
                     dr.mDrawableEnd = null;
                     if (dr.mDrawableBottom != null){
                         dr.mDrawableBottom.setCallback(null);
-                        if(dr.mDrawableBottom instanceof NetDrawable){
-                            (<NetDrawable>dr.mDrawableBottom).recycle();
-                        }
                     }
                     dr.mDrawableBottom = null;
                     dr.mDrawableSizeStart = dr.mDrawableHeightStart = 0;
@@ -1504,30 +1464,18 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             this.mDrawables.mOverride = true;
             if (dr.mDrawableStart != start && dr.mDrawableStart != null) {
                 dr.mDrawableStart.setCallback(null);
-                if(dr.mDrawableStart instanceof NetDrawable){
-                    (<NetDrawable>dr.mDrawableStart).recycle();
-                }
             }
             dr.mDrawableStart = start;
             if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
                 dr.mDrawableTop.setCallback(null);
-                if(dr.mDrawableTop instanceof NetDrawable){
-                    (<NetDrawable>dr.mDrawableTop).recycle();
-                }
             }
             dr.mDrawableTop = top;
             if (dr.mDrawableEnd != end && dr.mDrawableEnd != null) {
                 dr.mDrawableEnd.setCallback(null);
-                if(dr.mDrawableEnd instanceof NetDrawable){
-                    (<NetDrawable>dr.mDrawableEnd).recycle();
-                }
             }
             dr.mDrawableEnd = end;
             if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
                 dr.mDrawableBottom.setCallback(null);
-                if(dr.mDrawableBottom instanceof NetDrawable){
-                    (<NetDrawable>dr.mDrawableBottom).recycle();
-                }
             }
             dr.mDrawableBottom = bottom;
             const compoundRect:Rect = dr.mCompoundRect;
@@ -3783,6 +3731,17 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         }
     }
 
+
+    drawableSizeChange(drawable:android.graphics.drawable.Drawable):void {
+        const drawables:TextView.Drawables = this.mDrawables;
+        if(drawables!=null && this.verifyDrawable(drawable)){
+            drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+            this.setCompoundDrawables(drawables.mDrawableLeft, drawables.mDrawableTop, drawables.mDrawableRight, drawables.mDrawableBottom);
+        }else{
+            super.drawableSizeChange(drawable);
+        }
+    }
+
     invalidateDrawable(drawable:Drawable):void  {
         if (this.verifyDrawable(drawable)) {
             const dirty:Rect = drawable.getBounds();
@@ -3792,7 +3751,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             // for each compound drawable in onDraw(). Make sure to update each section
             // accordingly.
             const drawables:TextView.Drawables = this.mDrawables;
-            let resetDrawables = false;
+
             if (drawables != null) {
                 if (drawable == drawables.mDrawableLeft) {
                     const compoundPaddingTop:number = this.getCompoundPaddingTop();
@@ -3800,52 +3759,28 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
                     const vspace:number = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
                     scrollX += this.mPaddingLeft;
                     scrollY += compoundPaddingTop + (vspace - drawables.mDrawableHeightLeft) / 2;
-                    if(drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableLeftLoading){
-                        drawables.mDrawableLeftLoading = false;
-                        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                        resetDrawables = true;
-                    }
                 } else if (drawable == drawables.mDrawableRight) {
                     const compoundPaddingTop:number = this.getCompoundPaddingTop();
                     const compoundPaddingBottom:number = this.getCompoundPaddingBottom();
                     const vspace:number = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
                     scrollX += (this.mRight - this.mLeft - this.mPaddingRight - drawables.mDrawableSizeRight);
                     scrollY += compoundPaddingTop + (vspace - drawables.mDrawableHeightRight) / 2;
-                    if(drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableRightLoading){
-                        drawables.mDrawableRightLoading = false;
-                        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                        resetDrawables = true;
-                    }
                 } else if (drawable == drawables.mDrawableTop) {
                     const compoundPaddingLeft:number = this.getCompoundPaddingLeft();
                     const compoundPaddingRight:number = this.getCompoundPaddingRight();
                     const hspace:number = this.mRight - this.mLeft - compoundPaddingRight - compoundPaddingLeft;
                     scrollX += compoundPaddingLeft + (hspace - drawables.mDrawableWidthTop) / 2;
                     scrollY += this.mPaddingTop;
-                    if(drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableTopLoading){
-                        drawables.mDrawableTopLoading = false;
-                        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                        resetDrawables = true;
-                    }
                 } else if (drawable == drawables.mDrawableBottom) {
                     const compoundPaddingLeft:number = this.getCompoundPaddingLeft();
                     const compoundPaddingRight:number = this.getCompoundPaddingRight();
                     const hspace:number = this.mRight - this.mLeft - compoundPaddingRight - compoundPaddingLeft;
                     scrollX += compoundPaddingLeft + (hspace - drawables.mDrawableWidthBottom) / 2;
                     scrollY += (this.mBottom - this.mTop - this.mPaddingBottom - drawables.mDrawableSizeBottom);
-                    if(drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableBottomLoading){
-                        drawables.mDrawableBottomLoading = false;
-                        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                        resetDrawables = true;
-                    }
                 }
             }
 
-            if(resetDrawables){
-                this.setCompoundDrawables(drawables.mDrawableLeft, drawables.mDrawableTop, drawables.mDrawableRight, drawables.mDrawableBottom);
-            }else{
-                this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
-            }
+            this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
         }
     }
 
@@ -7376,11 +7311,6 @@ export class Drawables {
     mDrawableError:Drawable;
     mDrawableTemp:Drawable;
 
-    mDrawableTopLoading:boolean;
-    mDrawableBottomLoading:boolean;
-    mDrawableLeftLoading:boolean;
-    mDrawableRightLoading:boolean;
-
     mDrawableLeftInitial:Drawable;
     mDrawableRightInitial:Drawable;
 
@@ -7481,9 +7411,6 @@ export class Drawables {
     setErrorDrawable(dr:Drawable, tv:TextView):void  {
         if (this.mDrawableError != dr && this.mDrawableError != null) {
             this.mDrawableError.setCallback(null);
-            if(this.mDrawableError instanceof NetDrawable){
-                (<NetDrawable>this.mDrawableError).recycle();
-            }
         }
         this.mDrawableError = dr;
         const compoundRect:Rect = this.mCompoundRect;

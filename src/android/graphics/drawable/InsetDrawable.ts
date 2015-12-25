@@ -27,6 +27,13 @@ module android.graphics.drawable{
             }
         }
 
+        drawableSizeChange(who:android.graphics.drawable.Drawable):any {
+            const callback = this.getCallback();
+            if (callback != null && callback.drawableSizeChange) {
+                callback.drawableSizeChange(this);
+            }
+        }
+
         invalidateDrawable(who:android.graphics.drawable.Drawable):void {
             const callback = this.getCallback();
             if (callback != null) {

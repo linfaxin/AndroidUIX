@@ -66,8 +66,6 @@ module android.graphics {
             this.mCanvasElement.width = this.mWidth;
             this.mCanvasElement.height = this.mHeight;
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
-            if(this._mCanvasContent['imageSmoothingEnabled']!=null) this._mCanvasContent['imageSmoothingEnabled'] = false;
-            else if(this._mCanvasContent['webkitImageSmoothingEnabled']!=null) this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
             this._saveCount = this.save();//is need?
         }
 
@@ -254,22 +252,39 @@ module android.graphics {
             this._mCanvasContent.drawImage(canvas.mCanvasElement, offsetX, offsetY);
         }
 
-        drawImage(image:NetImage, dstRect?:Rect, paint?:Paint):void {
-            if(paint){
+        drawImage(image:NetImage, srcRect?:Rect, dstRect?:Rect, paint?:Paint):void {
+            let paintEmpty = !paint || paint.isEmpty();
+            if(!paintEmpty){
                 this.saveImpl();
                 paint.applyToCanvas(this);
             }
 
-            this.drawImageImpl(image, dstRect);
+            this.drawImageImpl(image, srcRect, dstRect);
 
-            if(paint) this.restoreImpl();
+            if(!paintEmpty) this.restoreImpl();
         }
 
-        protected drawImageImpl(image:NetImage, dstRect?:Rect):void {
+        protected drawImageImpl(image:NetImage, srcRect?:Rect, dstRect?:Rect):void {
             if(!dstRect){
-                this._mCanvasContent.drawImage(image.getImage(), 0, 0);
+                if(!srcRect){
+                    this._mCanvasContent.drawImage(image.platformImage, 0, 0);
+                }else{
+                    this._mCanvasContent.drawImage(image.platformImage,
+                        srcRect.left, srcRect.top, srcRect.width(), srcRect.height(),
+                        0, 0, image.platformImage.width, image.platformImage.height
+                    );
+                }
+
             }else{
-                this._mCanvasContent.drawImage(image.getImage(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                if(dstRect.isEmpty()) return;
+                if(!srcRect){
+                    this._mCanvasContent.drawImage(image.platformImage, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                }else{
+                    this._mCanvasContent.drawImage(image.platformImage,
+                        srcRect.left, srcRect.top, srcRect.width(), srcRect.height(),
+                        dstRect.left, dstRect.top, dstRect.width(), dstRect.height()
+                    );
+                }
             }
         }
 
@@ -281,10 +296,13 @@ module android.graphics {
                 this.drawRect(rect.left, rect.top, rect.right, rect.bottom, args[1]);
             } else {
                 let [left, top, right, bottom, paint] = args;
-                this.saveImpl();
-                paint.applyToCanvas(this);
-                this.drawRectImpl(left, top, right-left, bottom-top, paint);//TODO stroke
-                this.restoreImpl();
+                let paintEmpty = !paint || paint.isEmpty();
+                if(!paintEmpty){
+                    this.saveImpl();
+                    paint.applyToCanvas(this);
+                }
+                this.drawRectImpl(left, top, right-left, bottom-top, paint);
+                if(!paintEmpty) this.restoreImpl();
             }
         }
 
@@ -334,8 +352,12 @@ module android.graphics {
         }
 
         protected drawOvalImpl(oval:RectF, paint:Paint):void {
-            this.saveImpl();
-            paint.applyToCanvas(this);
+            let paintEmpty = !paint || paint.isEmpty();
+            if(!paintEmpty){
+                this.saveImpl();
+                paint.applyToCanvas(this);
+            }
+
             let ctx = this._mCanvasContent;
             ctx.beginPath();
             let cx = oval.centerX();
@@ -348,7 +370,8 @@ module android.graphics {
             ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
             ctx.restore();
             this.applyFillOrStrokeToContent(paint.getStyle());
-            this.restoreImpl();
+
+            if(!paintEmpty) this.restoreImpl();
         }
 
 
@@ -367,13 +390,18 @@ module android.graphics {
         }
 
         protected drawCircleImpl(cx:number, cy:number, radius:number, paint:Paint):void  {
-            this.saveImpl();
-            paint.applyToCanvas(this);
+            let paintEmpty = !paint || paint.isEmpty();
+            if(!paintEmpty){
+                this.saveImpl();
+                paint.applyToCanvas(this);
+            }
+
             let ctx = this._mCanvasContent;
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
             this.applyFillOrStrokeToContent(paint.getStyle());
-            this.restoreImpl();
+
+            if(!paintEmpty) this.restoreImpl();
         }
 
         /**
@@ -407,15 +435,19 @@ module android.graphics {
         }
 
         protected drawArcImpl(oval:RectF, startAngle:number, sweepAngle:number, useCenter:boolean, paint:Paint):void  {
-            this.saveImpl();
-            paint.applyToCanvas(this);
+            let paintEmpty = !paint || paint.isEmpty();
+            if(!paintEmpty){
+                this.saveImpl();
+                paint.applyToCanvas(this);
+            }
             let ctx = this._mCanvasContent;
+            ctx.save();
             ctx.beginPath();
             let cx = oval.centerX();
             let cy = oval.centerY();
             let rx = oval.width()/2;
             let ry = oval.height()/2;
-            ctx.save();
+
             ctx.translate(cx-rx, cy-ry);
             ctx.scale(rx, ry);
             ctx.arc(1, 1, 1, startAngle / 180 * Math.PI, (sweepAngle+startAngle) / 180 * Math.PI, false);
@@ -425,7 +457,7 @@ module android.graphics {
             }
             ctx.restore();
             this.applyFillOrStrokeToContent(paint.getStyle());
-            this.restoreImpl();
+            if(!paintEmpty) this.restoreImpl();
         }
 
         /**
@@ -445,8 +477,12 @@ module android.graphics {
         }
 
         protected drawRoundRectImpl(rect:RectF, rx:number, ry:number, paint:Paint):void  {
-            this.saveImpl();
-            paint.applyToCanvas(this);
+            let paintEmpty = !paint || paint.isEmpty();
+            if(!paintEmpty){
+                this.saveImpl();
+                paint.applyToCanvas(this);
+            }
+
             let ctx = this._mCanvasContent;
             let x = rect.left;
             let y = rect.top;
@@ -478,7 +514,7 @@ module android.graphics {
             ctx.closePath();
             this.applyFillOrStrokeToContent(paint.getStyle());
 
-            this.restoreImpl();
+            if(!paintEmpty) this.restoreImpl();
         }
 
 
@@ -538,15 +574,15 @@ module android.graphics {
          * @param paint The paint used for the text (e.g. color, size, style)
          */
         drawText(text:string, x:number, y:number, paint:Paint):void {
-            let style = null;
-            if(paint){
+            let paintEmpty = !paint || paint.isEmpty();
+            if(!paintEmpty){
                 this.saveImpl();
                 paint.applyToCanvas(this);
-                style = paint.getStyle();
             }
-            if(style == null) style = Paint.Style.FILL;
-            this.drawTextImpl(text, x, y, style);
-            if(paint) this.restoreImpl();
+
+            this.drawTextImpl(text, x, y, paint ? paint.getStyle() : null);
+
+            if(!paintEmpty) this.restoreImpl();
         }
 
 

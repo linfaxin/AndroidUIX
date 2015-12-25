@@ -133,12 +133,23 @@ module androidui.attr {
             if(s.startsWith('@')){
                 let refObj = this.getRefObject(s);
                 if(refObj) return refObj;
-                //TODO parse ref like @drawable/xxx
+
+                //support like @android.R.drawable.xxx
+                try {
+                    return (<any>window).eval(s.substring(1));
+                } catch (e) {
+                    console.log(e);
+                }
 
             }else{
-                let color = this.parseColor(s);
-                return new ColorDrawable(color);
+                try {
+                    let color = this.parseColor(s);
+                    return new ColorDrawable(color);
+                } catch (e) {
+                    console.log(e);
+                }
             }
+            return null;
         }
         parseColor(value:string, defaultValue?:number):number{
             let color = Number.parseInt(value);
@@ -173,11 +184,21 @@ module androidui.attr {
             if(value.startsWith('@')){
                 let refObj = this.getRefObject(value);
                 if(refObj) return refObj;
-                //TODO parse ref
+
+                //support like @android.R.color.xxx
+                try {
+                    return (<any>window).eval(value.substring(1));
+                } catch (e) {
+                    console.log(e);
+                }
 
             }else {
-                let color = this.parseColor(value);
-                return ColorStateList.valueOf(color);
+                try {
+                    let color = this.parseColor(value);
+                    return ColorStateList.valueOf(color);
+                } catch (e) {
+                    console.log(e);
+                }
             }
             return null;
         }

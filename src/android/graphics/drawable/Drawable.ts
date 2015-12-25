@@ -87,6 +87,13 @@ module android.graphics.drawable {
             return null;
         }
 
+        notifySizeChangeSelf() {
+            let callback = this.getCallback();
+            if (callback != null && callback.drawableSizeChange) {
+                callback.drawableSizeChange(this);
+            }
+        }
+
         invalidateSelf() {
             let callback = this.getCallback();
             if (callback != null) {
@@ -238,6 +245,7 @@ module android.graphics.drawable {
     export module Drawable{
         export interface Callback{
             invalidateDrawable(who : Drawable):void;
+            drawableSizeChange?(who : Drawable):void;//for androidui
             scheduleDrawable(who : Drawable, what:Runnable, when:number):void;
             unscheduleDrawable(who: Drawable, what:Runnable):void;
         }

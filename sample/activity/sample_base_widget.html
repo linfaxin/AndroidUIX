@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" style="width: 100%;height: 100%;" xmlns:android="">
+<head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta charset="UTF-8">
+    <title>基本控件</title>
+    <script>
+    </script>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+
+        }
+    </style>
+
+</head>
+<body>
+<android-Activity style="width: 100%; height:100%;display: none;">
+    <ScrollView>
+        <LinearLayout
+                android:orientation="vertical"
+                android:gravity="center">
+            <TextView android:layout_width="wrap_content">
+                文本
+            </TextView>
+            <Button android:layout_width="wrap_content">
+                按钮
+            </Button>
+            <ImageView android:src="images/logo_google_3.png">
+            </ImageView>
+            <CheckBox android:layout_width="wrap_content"
+                      android:layout_marginBottom="12dp">
+                复选框
+            </CheckBox>
+            <RadioGroup
+                    android:gravity="center"
+                    android:orientation="HORIZONTAL"
+                    android:layout_marginBottom="12dp">
+                <RadioButton android:layout_width="wrap_content">
+                    单选框1
+                </RadioButton>
+                <RadioButton android:layout_width="wrap_content">
+                    单选框2
+                </RadioButton>
+                <RadioButton android:layout_width="wrap_content">
+                    单选框3
+                </RadioButton>
+            </RadioGroup>
+
+            <ProgressBar android:layout_height="wrap_content"
+                         android:layout_width="wrap_content"
+                         android:layout_marginBottom="12dp"></ProgressBar>
+        </LinearLayout>
+    </ScrollView>
+</android-Activity>
+
+<script src="../lib/browser-polyfill.min.js"></script>
+<script src="../lib/CustomElements.min.js"></script>
+<script src="../../dist/android-ui.es5.js"></script>
+<script src="../build/main.es5.js"></script>
+
+</body>
+</html>

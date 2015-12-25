@@ -2,6 +2,7 @@
  * Created by linfaxin on 15/11/26.
  */
 ///<reference path="drawable.ts"/>
+///<reference path="image.ts"/>
 ///<reference path="color.ts"/>
 ///<reference path="../view/Gravity.ts"/>
 ///<reference path="../view/View.ts"/>
@@ -23,6 +24,7 @@ module android.R {
 
 
     export class attr {
+
         static _viewStyle:any = {};
         static get viewStyle(){
             return attr._viewStyle;
@@ -52,6 +54,20 @@ module android.R {
                 clickable: true,
                 gravity: Gravity.CENTER
             };
+        }
+
+        static get checkboxStyle() {
+            return {
+                background: <ColorDrawable>new OverridePaddingColorDrawable(Color.TRANSPARENT),
+                button: drawable.btn_check
+            }
+        }
+
+        static get radiobuttonStyle() {
+            return {
+                background: <ColorDrawable>new OverridePaddingColorDrawable(Color.TRANSPARENT),
+                button: drawable.btn_radio
+            }
         }
 
         static get gridViewStyle() {
@@ -86,5 +102,13 @@ module android.R {
             }
         }
 
+    }
+
+    class OverridePaddingColorDrawable extends ColorDrawable {
+
+        getPadding(padding:android.graphics.Rect):boolean {
+            super.getPadding(padding);
+            return true;//will set to view padding
+        }
     }
 }

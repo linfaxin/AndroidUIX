@@ -750,7 +750,19 @@ module android.graphics{
             return this.getTextRunCursor_len(text, 0, contextLen, flags, offset - contextStart, cursorOpt);
         }
 
-        applyToCanvas(canvas:Canvas){
+        isEmpty():boolean {
+            return this.mColor==null
+                && this.mAlpha==null
+                && this.align==null
+                && this.mStrokeWidth==null
+                && this.mStrokeCap==null
+                && this.mStrokeJoin==null
+                && !this.hasShadow
+                && this.textSize==null
+            ;
+        }
+
+        applyToCanvas(canvas:Canvas):void {
 
             if(this.mColor!=null) {
                 canvas.setColor(this.mColor, this.getStyle());

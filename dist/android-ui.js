@@ -1003,6 +1003,16 @@ var android;
                 let contextLen = contextEnd - contextStart;
                 return this.getTextRunCursor_len(text, 0, contextLen, flags, offset - contextStart, cursorOpt);
             }
+            isEmpty() {
+                return this.mColor == null
+                    && this.mAlpha == null
+                    && this.align == null
+                    && this.mStrokeWidth == null
+                    && this.mStrokeCap == null
+                    && this.mStrokeJoin == null
+                    && !this.hasShadow
+                    && this.textSize == null;
+            }
             applyToCanvas(canvas) {
                 if (this.mColor != null) {
                     canvas.setColor(this.mColor, this.getStyle());
@@ -1801,15 +1811,20 @@ var androidui;
     var image;
     (function (image) {
         class NetImage {
-            constructor(src, onload, onerror) {
+            constructor(src, onload, onerror, overrideImageRatio) {
                 this.mImageWidth = 0;
                 this.mImageHeight = 0;
+                this.mOnLoads = new Set();
+                this.mOnErrors = new Set();
                 this.init(src, onload, onerror);
+                this.mOverrideImageRatio = overrideImageRatio;
             }
             init(src, onload, onerror) {
                 this.createImage();
-                this.onload = onload;
-                this.onerror = onerror;
+                if (onload)
+                    this.mOnLoads.add(onload);
+                if (onerror)
+                    this.mOnErrors.add(onerror);
                 this.src = src;
             }
             createImage() {
@@ -1827,9 +1842,6 @@ var androidui;
                     this.fireOnError();
                 };
             }
-            getImage() {
-                return this.platformImage;
-            }
             get src() {
                 return this.mSrc;
             }
@@ -1840,27 +1852,19 @@ var androidui;
                     this.loadImage();
                 }
             }
-            get onload() {
-                return this.mOnLoad;
-            }
-            set onload(value) {
-                this.mOnLoad = value;
-            }
-            get onerror() {
-                return this.mOnError;
-            }
-            set onerror(value) {
-                this.mOnError = value;
-            }
             get width() {
-                return Math.floor(this.mImageWidth / this.getImageRatio());
+                return this.mImageWidth;
             }
             get height() {
-                return Math.floor(this.mImageHeight / this.getImageRatio());
+                return this.mImageHeight;
             }
             getImageRatio() {
+                if (this.mOverrideImageRatio != null)
+                    return this.mOverrideImageRatio;
                 let url = this.src;
                 if (!url)
+                    return 1;
+                if (url.startsWith('data:'))
                     return 1;
                 let idx = url.lastIndexOf('.');
                 if (idx > 0) {
@@ -1874,17 +1878,33 @@ var androidui;
                     return 4;
                 if (url.endsWith('@5x'))
                     return 5;
-                if (url.endsWith('@6x'))
-                    return 6;
                 return 1;
             }
             fireOnLoad() {
-                if (this.mOnLoad)
-                    this.mOnLoad();
+                for (let load of this.mOnLoads) {
+                    load();
+                }
             }
             fireOnError() {
-                if (this.mOnError)
-                    this.mOnError();
+                for (let error of this.mOnErrors) {
+                    error();
+                }
+            }
+            addLoadListener(onload, onerror) {
+                if (onload) {
+                    this.mOnLoads.add(onload);
+                }
+                if (onerror) {
+                    this.mOnErrors.add(onerror);
+                }
+            }
+            removeLoadListener(onload, onerror) {
+                if (onload) {
+                    this.mOnLoads.delete(onload);
+                }
+                if (onerror) {
+                    this.mOnErrors.delete(onerror);
+                }
             }
             recycle() {
             }
@@ -1944,10 +1964,6 @@ var android;
                 this.mCanvasElement.width = this.mWidth;
                 this.mCanvasElement.height = this.mHeight;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                if (this._mCanvasContent['imageSmoothingEnabled'] != null)
-                    this._mCanvasContent['imageSmoothingEnabled'] = false;
-                else if (this._mCanvasContent['webkitImageSmoothingEnabled'] != null)
-                    this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
                 this._saveCount = this.save();
             }
             recycle() {
@@ -2103,21 +2119,34 @@ var android;
             drawCanvasImpl(canvas, offsetX, offsetY) {
                 this._mCanvasContent.drawImage(canvas.mCanvasElement, offsetX, offsetY);
             }
-            drawImage(image, dstRect, paint) {
-                if (paint) {
+            drawImage(image, srcRect, dstRect, paint) {
+                let paintEmpty = !paint || paint.isEmpty();
+                if (!paintEmpty) {
                     this.saveImpl();
                     paint.applyToCanvas(this);
                 }
-                this.drawImageImpl(image, dstRect);
-                if (paint)
+                this.drawImageImpl(image, srcRect, dstRect);
+                if (!paintEmpty)
                     this.restoreImpl();
             }
-            drawImageImpl(image, dstRect) {
+            drawImageImpl(image, srcRect, dstRect) {
                 if (!dstRect) {
-                    this._mCanvasContent.drawImage(image.getImage(), 0, 0);
+                    if (!srcRect) {
+                        this._mCanvasContent.drawImage(image.platformImage, 0, 0);
+                    }
+                    else {
+                        this._mCanvasContent.drawImage(image.platformImage, srcRect.left, srcRect.top, srcRect.width(), srcRect.height(), 0, 0, image.platformImage.width, image.platformImage.height);
+                    }
                 }
                 else {
-                    this._mCanvasContent.drawImage(image.getImage(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                    if (dstRect.isEmpty())
+                        return;
+                    if (!srcRect) {
+                        this._mCanvasContent.drawImage(image.platformImage, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                    }
+                    else {
+                        this._mCanvasContent.drawImage(image.platformImage, srcRect.left, srcRect.top, srcRect.width(), srcRect.height(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                    }
                 }
             }
             drawRect(...args) {
@@ -2127,10 +2156,14 @@ var android;
                 }
                 else {
                     let [left, top, right, bottom, paint] = args;
-                    this.saveImpl();
-                    paint.applyToCanvas(this);
+                    let paintEmpty = !paint || paint.isEmpty();
+                    if (!paintEmpty) {
+                        this.saveImpl();
+                        paint.applyToCanvas(this);
+                    }
                     this.drawRectImpl(left, top, right - left, bottom - top, paint);
-                    this.restoreImpl();
+                    if (!paintEmpty)
+                        this.restoreImpl();
                 }
             }
             drawRectImpl(left, top, width, height, paint) {
@@ -2170,8 +2203,11 @@ var android;
                 this.drawOvalImpl(oval, paint);
             }
             drawOvalImpl(oval, paint) {
-                this.saveImpl();
-                paint.applyToCanvas(this);
+                let paintEmpty = !paint || paint.isEmpty();
+                if (!paintEmpty) {
+                    this.saveImpl();
+                    paint.applyToCanvas(this);
+                }
                 let ctx = this._mCanvasContent;
                 ctx.beginPath();
                 let cx = oval.centerX();
@@ -2184,19 +2220,24 @@ var android;
                 ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
                 ctx.restore();
                 this.applyFillOrStrokeToContent(paint.getStyle());
-                this.restoreImpl();
+                if (!paintEmpty)
+                    this.restoreImpl();
             }
             drawCircle(cx, cy, radius, paint) {
                 this.drawCircleImpl(cx, cy, radius, paint);
             }
             drawCircleImpl(cx, cy, radius, paint) {
-                this.saveImpl();
-                paint.applyToCanvas(this);
+                let paintEmpty = !paint || paint.isEmpty();
+                if (!paintEmpty) {
+                    this.saveImpl();
+                    paint.applyToCanvas(this);
+                }
                 let ctx = this._mCanvasContent;
                 ctx.beginPath();
                 ctx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
                 this.applyFillOrStrokeToContent(paint.getStyle());
-                this.restoreImpl();
+                if (!paintEmpty)
+                    this.restoreImpl();
             }
             drawArc(oval, startAngle, sweepAngle, useCenter, paint) {
                 if (oval == null) {
@@ -2205,15 +2246,18 @@ var android;
                 this.drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint);
             }
             drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint) {
-                this.saveImpl();
-                paint.applyToCanvas(this);
+                let paintEmpty = !paint || paint.isEmpty();
+                if (!paintEmpty) {
+                    this.saveImpl();
+                    paint.applyToCanvas(this);
+                }
                 let ctx = this._mCanvasContent;
+                ctx.save();
                 ctx.beginPath();
                 let cx = oval.centerX();
                 let cy = oval.centerY();
                 let rx = oval.width() / 2;
                 let ry = oval.height() / 2;
-                ctx.save();
                 ctx.translate(cx - rx, cy - ry);
                 ctx.scale(rx, ry);
                 ctx.arc(1, 1, 1, startAngle / 180 * Math.PI, (sweepAngle + startAngle) / 180 * Math.PI, false);
@@ -2223,7 +2267,8 @@ var android;
                 }
                 ctx.restore();
                 this.applyFillOrStrokeToContent(paint.getStyle());
-                this.restoreImpl();
+                if (!paintEmpty)
+                    this.restoreImpl();
             }
             drawRoundRect(rect, rx, ry, paint) {
                 if (rect == null) {
@@ -2232,8 +2277,11 @@ var android;
                 this.drawRoundRectImpl(rect, rx, ry, paint);
             }
             drawRoundRectImpl(rect, rx, ry, paint) {
-                this.saveImpl();
-                paint.applyToCanvas(this);
+                let paintEmpty = !paint || paint.isEmpty();
+                if (!paintEmpty) {
+                    this.saveImpl();
+                    paint.applyToCanvas(this);
+                }
                 let ctx = this._mCanvasContent;
                 let x = rect.left;
                 let y = rect.top;
@@ -2265,7 +2313,8 @@ var android;
                 }
                 ctx.closePath();
                 this.applyFillOrStrokeToContent(paint.getStyle());
-                this.restoreImpl();
+                if (!paintEmpty)
+                    this.restoreImpl();
             }
             drawPath(path, paint) {
             }
@@ -2282,16 +2331,13 @@ var android;
                 this.drawText(text.substring(start, end), x, y, paint);
             }
             drawText(text, x, y, paint) {
-                let style = null;
-                if (paint) {
+                let paintEmpty = !paint || paint.isEmpty();
+                if (!paintEmpty) {
                     this.saveImpl();
                     paint.applyToCanvas(this);
-                    style = paint.getStyle();
                 }
-                if (style == null)
-                    style = graphics.Paint.Style.FILL;
-                this.drawTextImpl(text, x, y, style);
-                if (paint)
+                this.drawTextImpl(text, x, y, paint ? paint.getStyle() : null);
+                if (!paintEmpty)
                     this.restoreImpl();
             }
             drawTextImpl(text, x, y, style) {
@@ -2525,6 +2571,12 @@ var android;
                         return this.mCallback.get();
                     }
                     return null;
+                }
+                notifySizeChangeSelf() {
+                    let callback = this.getCallback();
+                    if (callback != null && callback.drawableSizeChange) {
+                        callback.drawableSizeChange(this);
+                    }
                 }
                 invalidateSelf() {
                     let callback = this.getCallback();
@@ -2935,6 +2987,12 @@ var android;
                     this.mInsetState.mInsetBottom = insetBottom;
                     if (drawable != null) {
                         drawable.setCallback(this);
+                    }
+                }
+                drawableSizeChange(who) {
+                    const callback = this.getCallback();
+                    if (callback != null && callback.drawableSizeChange) {
+                        callback.drawableSizeChange(this);
                     }
                 }
                 invalidateDrawable(who) {
@@ -5235,11 +5293,23 @@ var androidui;
                     let refObj = this.getRefObject(s);
                     if (refObj)
                         return refObj;
+                    try {
+                        return window.eval(s.substring(1));
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
                 }
                 else {
-                    let color = this.parseColor(s);
-                    return new ColorDrawable(color);
+                    try {
+                        let color = this.parseColor(s);
+                        return new ColorDrawable(color);
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
                 }
+                return null;
             }
             parseColor(value, defaultValue) {
                 let color = Number.parseInt(value);
@@ -5278,10 +5348,21 @@ var androidui;
                     let refObj = this.getRefObject(value);
                     if (refObj)
                         return refObj;
+                    try {
+                        return window.eval(value.substring(1));
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
                 }
                 else {
-                    let color = this.parseColor(value);
-                    return ColorStateList.valueOf(color);
+                    try {
+                        let color = this.parseColor(value);
+                        return ColorStateList.valueOf(color);
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
                 }
                 return null;
             }
@@ -5461,7 +5542,7 @@ var androidui;
             }
             draw(canvas) {
                 if (this.isLoadFinish()) {
-                    canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+                    canvas.drawImage(this.mImage, null, this.getBounds(), this.mState.paint);
                 }
             }
             setAlpha(alpha) {
@@ -5477,17 +5558,20 @@ var androidui;
                 return this.mImageHeight;
             }
             onLoad() {
-                this.mImageWidth = this.mImage.width * this.mState.res.getDisplayMetrics().density;
-                this.mImageHeight = this.mImage.height * this.mState.res.getDisplayMetrics().density;
+                let imageRatio = this.mImage.getImageRatio();
+                this.mImageWidth = Math.floor(this.mImage.width / imageRatio * this.mState.res.getDisplayMetrics().density);
+                this.mImageHeight = Math.floor(this.mImage.height / imageRatio * this.mState.res.getDisplayMetrics().density);
                 if (this.mLoadListener)
                     this.mLoadListener.onLoad(this);
                 this.invalidateSelf();
+                this.notifySizeChangeSelf();
             }
             onError() {
                 this.mImageWidth = this.mImageHeight = 0;
                 if (this.mLoadListener)
                     this.mLoadListener.onError(this);
                 this.invalidateSelf();
+                this.notifySizeChangeSelf();
             }
             isLoadFinish() {
                 return this.mImageWidth >= 0 && this.mImageHeight >= 0;
@@ -5500,10 +5584,6 @@ var androidui;
             }
             getConstantState() {
                 return this.mState;
-            }
-            recycle() {
-                if (this.mImage)
-                    this.mImage.recycle();
             }
         }
         image.NetDrawable = NetDrawable;
@@ -5953,6 +6033,12 @@ var android;
                         return this.mDrawableContainerState.getConstantMinimumHeight();
                     }
                     return this.mCurrDrawable != null ? this.mCurrDrawable.getMinimumHeight() : 0;
+                }
+                drawableSizeChange(who) {
+                    let callback = this.getCallback();
+                    if (who == this.mCurrDrawable && callback != null && callback.drawableSizeChange) {
+                        callback.drawableSizeChange(this);
+                    }
                 }
                 invalidateDrawable(who) {
                     if (who == this.mCurrDrawable && this.getCallback() != null) {
@@ -6538,11 +6624,15 @@ var android;
 (function (android) {
     var R;
     (function (R) {
+        var View = android.view.View;
         var Resources = android.content.res.Resources;
         var Color = android.graphics.Color;
         var InsetDrawable = android.graphics.drawable.InsetDrawable;
         var ColorDrawable = android.graphics.drawable.ColorDrawable;
         var StateListDrawable = android.graphics.drawable.StateListDrawable;
+        window.addEventListener('AndroidUILoadFinish', () => {
+            eval('View = android.view.View;');
+        });
         const density = Resources.getDisplayMetrics().density;
         class drawable {
             static get button_background() {
@@ -6552,10 +6642,10 @@ var android;
                     }
                     static createStateList() {
                         let stateList = new StateListDrawable();
-                        stateList.addState([android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
-                        stateList.addState([android.view.View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
-                        stateList.addState([android.view.View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
-                        stateList.addState([-android.view.View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
+                        stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
+                        stateList.addState([View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
+                        stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+                        stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
                         stateList.addState([], new ColorDrawable(Color.LTGRAY));
                         return stateList;
                     }
@@ -6576,12 +6666,48 @@ var android;
                 }
                 return new DefaultButtonBackgroundDrawable();
             }
+            static get btn_check() {
+                let stateList = new StateListDrawable();
+                stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_off_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_PRESSED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_pressed_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_PRESSED, View.VIEW_STATE_ENABLED], R.image.btn_check_off_pressed_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_focused_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_off_focused_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_ENABLED], R.image.btn_check_off_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_check_on_disabled_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_check_off_disabled_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED], R.image.btn_check_on_disabled_focused_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED], R.image.btn_check_off_disabled_focused_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED], R.image.btn_check_off_disabled_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED], R.image.btn_check_on_disabled_holo_light);
+                return stateList;
+            }
+            static get btn_radio() {
+                let stateList = new StateListDrawable();
+                stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_on_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_off_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_PRESSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_on_pressed_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_PRESSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_off_pressed_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_on_focused_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_off_focused_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_ENABLED], R.image.btn_radio_on_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_ENABLED], R.image.btn_radio_off_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_radio_on_disabled_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_radio_off_disabled_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED], R.image.btn_radio_on_disabled_focused_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED], R.image.btn_radio_off_disabled_focused_holo_light);
+                stateList.addState([-View.VIEW_STATE_CHECKED], R.image.btn_radio_off_disabled_holo_light);
+                stateList.addState([View.VIEW_STATE_CHECKED], R.image.btn_radio_on_disabled_holo_light);
+                return stateList;
+            }
             static get list_selector_background() {
                 let stateList = new StateListDrawable();
-                stateList.addState([android.view.View.VIEW_STATE_FOCUSED, -android.view.View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
-                stateList.addState([android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
-                stateList.addState([-android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
-                stateList.addState([android.view.View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+                stateList.addState([View.VIEW_STATE_FOCUSED, -View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
+                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
+                stateList.addState([-View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
+                stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
                 stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
                 return stateList;
             }
@@ -6591,6 +6717,110 @@ var android;
             }
         }
         R.drawable = drawable;
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/12/24.
+ */
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="NetImage.ts"/>
+var androidui;
+(function (androidui) {
+    var image;
+    (function (image_1) {
+        var Paint = android.graphics.Paint;
+        var Drawable = android.graphics.drawable.Drawable;
+        var Resources = android.content.res.Resources;
+        class RegionImageDrawable extends Drawable {
+            constructor(image, bound, paint = new Paint()) {
+                super();
+                this.mState = new State(image, bound, paint);
+                image.addLoadListener(() => {
+                    this.invalidateSelf();
+                });
+            }
+            draw(canvas) {
+                canvas.drawImage(this.mState.mImage, this.mState.mBound, this.getBounds(), this.mState.mPaint);
+            }
+            setAlpha(alpha) {
+                this.mState.mPaint.setAlpha(alpha);
+            }
+            getAlpha() {
+                return this.mState.mPaint.getAlpha();
+            }
+            getIntrinsicWidth() {
+                return Math.floor(this.mState.mBound.width() * Resources.getDisplayMetrics().density / this.mState.mImage.getImageRatio());
+            }
+            getIntrinsicHeight() {
+                return Math.floor(this.mState.mBound.height() * Resources.getDisplayMetrics().density / this.mState.mImage.getImageRatio());
+            }
+            getImage() {
+                return this.mState.mImage;
+            }
+            getConstantState() {
+                return this.mState;
+            }
+        }
+        image_1.RegionImageDrawable = RegionImageDrawable;
+        class State {
+            constructor(image, bound, paint) {
+                this.mImage = image;
+                this.mBound = bound;
+                this.mPaint = paint;
+            }
+            newDrawable() {
+                return new RegionImageDrawable(this.mImage, this.mBound, this.mPaint);
+            }
+        }
+    })(image = androidui.image || (androidui.image = {}));
+})(androidui || (androidui = {}));
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        var image_base64;
+        (function (image_base64) {
+            image_base64.x3 = 'data:image/png;base64,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';
+        })(image_base64 = R.image_base64 || (R.image_base64 = {}));
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
+///<reference path="../../androidui/image/NetImage.ts"/>
+///<reference path="../../androidui/image/RegionImageDrawable.ts"/>
+///<reference path="image_base64.ts"/>
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        var NetImage = androidui.image.NetImage;
+        var RegionImageDrawable = androidui.image.RegionImageDrawable;
+        var Rect = android.graphics.Rect;
+        const netImage = new NetImage(R.image_base64.x3, null, null, 3);
+        class image {
+        }
+        image.btn_check_off_disabled_focused_holo_light = new RegionImageDrawable(netImage, new Rect(96, 0, 96 + 96, 0 + 96));
+        image.btn_check_off_focused_holo_light = new RegionImageDrawable(netImage, new Rect(0, 96, 0 + 96, 96 + 96));
+        image.btn_check_off_holo_light = new RegionImageDrawable(netImage, new Rect(96, 96, 96 + 96, 96 + 96));
+        image.btn_check_off_pressed_holo_light = new RegionImageDrawable(netImage, new Rect(192, 0, 192 + 96, 0 + 96));
+        image.btn_check_on_disabled_focused_holo_light = new RegionImageDrawable(netImage, new Rect(192, 96, 192 + 96, 96 + 96));
+        image.btn_check_on_disabled_holo_light = new RegionImageDrawable(netImage, new Rect(0, 192, 0 + 96, 192 + 96));
+        image.btn_check_on_focused_holo_light = new RegionImageDrawable(netImage, new Rect(96, 192, 96 + 96, 192 + 96));
+        image.btn_check_on_holo_light = new RegionImageDrawable(netImage, new Rect(192, 192, 192 + 96, 192 + 96));
+        image.btn_check_on_pressed_holo_light = new RegionImageDrawable(netImage, new Rect(288, 0, 288 + 96, 0 + 96));
+        image.btn_check_off_disabled_holo_light = new RegionImageDrawable(netImage, new Rect(288, 96, 288 + 96, 96 + 96));
+        image.btn_radio_off_disabled_focused_holo_light = new RegionImageDrawable(netImage, new Rect(0, 0, 0 + 96, 0 + 96));
+        image.btn_radio_off_disabled_holo_light = new RegionImageDrawable(netImage, new Rect(288, 192, 288 + 96, 192 + 96));
+        image.btn_radio_off_focused_holo_light = new RegionImageDrawable(netImage, new Rect(0, 288, 0 + 96, 288 + 96));
+        image.btn_radio_off_holo_light = new RegionImageDrawable(netImage, new Rect(96, 288, 96 + 96, 288 + 96));
+        image.btn_radio_off_pressed_holo_light = new RegionImageDrawable(netImage, new Rect(192, 288, 192 + 96, 288 + 96));
+        image.btn_radio_on_disabled_focused_holo_light = new RegionImageDrawable(netImage, new Rect(288, 288, 288 + 96, 288 + 96));
+        image.btn_radio_on_disabled_holo_light = new RegionImageDrawable(netImage, new Rect(384, 0, 384 + 96, 0 + 96));
+        image.btn_radio_on_focused_holo_light = new RegionImageDrawable(netImage, new Rect(384, 96, 384 + 96, 96 + 96));
+        image.btn_radio_on_holo_light = new RegionImageDrawable(netImage, new Rect(384, 192, 384 + 96, 192 + 96));
+        image.btn_radio_on_pressed_holo_light = new RegionImageDrawable(netImage, new Rect(384, 288, 384 + 96, 288 + 96));
+        R.image = image;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 ///<reference path="../view/View.ts"/>
@@ -6625,6 +6855,7 @@ var android;
  * Created by linfaxin on 15/11/26.
  */
 ///<reference path="drawable.ts"/>
+///<reference path="image.ts"/>
 ///<reference path="color.ts"/>
 ///<reference path="../view/Gravity.ts"/>
 ///<reference path="../view/View.ts"/>
@@ -6669,6 +6900,18 @@ var android;
                     gravity: Gravity.CENTER
                 };
             }
+            static get checkboxStyle() {
+                return {
+                    background: new OverridePaddingColorDrawable(Color.TRANSPARENT),
+                    button: R.drawable.btn_check
+                };
+            }
+            static get radiobuttonStyle() {
+                return {
+                    background: new OverridePaddingColorDrawable(Color.TRANSPARENT),
+                    button: R.drawable.btn_radio
+                };
+            }
             static get gridViewStyle() {
                 return {
                     numColumns: 1
@@ -6701,6 +6944,12 @@ var android;
         }
         attr._viewStyle = {};
         R.attr = attr;
+        class OverridePaddingColorDrawable extends ColorDrawable {
+            getPadding(padding) {
+                super.getPadding(padding);
+                return true;
+            }
+        }
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 /**
@@ -9084,15 +9333,27 @@ var android;
             willNotCacheDrawing() {
                 return (this.mViewFlags & View.WILL_NOT_CACHE_DRAWING) == View.WILL_NOT_CACHE_DRAWING;
             }
+            drawableSizeChange(who) {
+                if (who === this.mBackground) {
+                    let w = who.getIntrinsicWidth();
+                    if (w < 0)
+                        w = this.mBackgroundWidth;
+                    let h = who.getIntrinsicHeight();
+                    if (h < 0)
+                        h = this.mBackgroundHeight;
+                    if (w != this.mBackgroundWidth || h != this.mBackgroundHeight) {
+                        this.mBackgroundWidth = w;
+                        this.mBackgroundHeight = h;
+                        this.requestLayout();
+                    }
+                }
+            }
             invalidateDrawable(drawable) {
                 if (this.verifyDrawable(drawable)) {
                     const dirty = drawable.getBounds();
                     const scrollX = this.mScrollX;
                     const scrollY = this.mScrollY;
                     this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
-                    if (drawable == this.mBackground) {
-                        this.resizeFromBackground();
-                    }
                 }
             }
             scheduleDrawable(who, what, when) {
@@ -9170,6 +9431,8 @@ var android;
                     viewStateIndex |= View.VIEW_STATE_FOCUSED;
                 if ((privateFlags & View.PFLAG_SELECTED) != 0)
                     viewStateIndex |= View.VIEW_STATE_SELECTED;
+                if (this.hasWindowFocus())
+                    viewStateIndex |= View.VIEW_STATE_WINDOW_FOCUSED;
                 if ((privateFlags & View.PFLAG_ACTIVATED) != 0)
                     viewStateIndex |= View.VIEW_STATE_ACTIVATED;
                 const privateFlags2 = this.mPrivateFlags2;
@@ -9190,7 +9453,7 @@ var android;
             static mergeDrawableStates(baseState, additionalState) {
                 const N = baseState.length;
                 let i = N - 1;
-                while (i >= 0 && baseState[i] == 0) {
+                while (i >= 0 && !baseState[i]) {
                     i--;
                 }
                 System.arraycopy(additionalState, 0, baseState, i + 1, additionalState.length);
@@ -9225,9 +9488,6 @@ var android;
                 if (this.mBackground != null) {
                     this.mBackground.setCallback(null);
                     this.unscheduleDrawable(this.mBackground);
-                    if (this.mBackground instanceof NetDrawable) {
-                        this.mBackground.recycle();
-                    }
                 }
                 if (background != null) {
                     let padding = new Rect();
@@ -9267,24 +9527,6 @@ var android;
                 }
                 this.mBackgroundSizeChanged = true;
                 this.invalidate(true);
-            }
-            resizeFromBackground() {
-                let d = this.mBackground;
-                if (d != null) {
-                    let w = d.getIntrinsicWidth();
-                    if (w < 0)
-                        w = this.mBackgroundWidth;
-                    let h = d.getIntrinsicHeight();
-                    if (h < 0)
-                        h = this.mBackgroundHeight;
-                    if (w != this.mBackgroundWidth || h != this.mBackgroundHeight) {
-                        this.mBackgroundWidth = w;
-                        this.mBackgroundHeight = h;
-                        this.requestLayout();
-                        return true;
-                    }
-                }
-                return false;
             }
             getAnimation() {
                 return null;
@@ -10255,6 +10497,8 @@ var android;
         View.VIEW_STATE_PRESSED = 1 << 4;
         View.VIEW_STATE_ACTIVATED = 1 << 5;
         View.VIEW_STATE_HOVERED = 1 << 7;
+        View.VIEW_STATE_CHECKED = 1 << 10;
+        View.VIEW_STATE_MULTILINE = 1 << 11;
         View.VIEW_STATE_IDS = [
             View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED,
             View.VIEW_STATE_SELECTED, View.VIEW_STATE_SELECTED,
@@ -10581,10 +10825,6 @@ var android;
                 super(width, height);
                 this.mCanvasElement = canvasElement;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                if (this._mCanvasContent['imageSmoothingEnabled'] != null)
-                    this._mCanvasContent['imageSmoothingEnabled'] = false;
-                else if (this._mCanvasContent['webkitImageSmoothingEnabled'] != null)
-                    this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
             }
             initImpl() {
             }
@@ -24222,30 +24462,18 @@ var android;
                         else {
                             if (dr.mDrawableLeft != null) {
                                 dr.mDrawableLeft.setCallback(null);
-                                if (dr.mDrawableLeft instanceof NetDrawable) {
-                                    dr.mDrawableLeft.recycle();
-                                }
                             }
                             dr.mDrawableLeft = null;
                             if (dr.mDrawableTop != null) {
                                 dr.mDrawableTop.setCallback(null);
-                                if (dr.mDrawableTop instanceof NetDrawable) {
-                                    dr.mDrawableTop.recycle();
-                                }
                             }
                             dr.mDrawableTop = null;
                             if (dr.mDrawableRight != null) {
                                 dr.mDrawableRight.setCallback(null);
-                                if (dr.mDrawableRight instanceof NetDrawable) {
-                                    dr.mDrawableRight.recycle();
-                                }
                             }
                             dr.mDrawableRight = null;
                             if (dr.mDrawableBottom != null) {
                                 dr.mDrawableBottom.setCallback(null);
-                                if (dr.mDrawableBottom instanceof NetDrawable) {
-                                    dr.mDrawableBottom.recycle();
-                                }
                             }
                             dr.mDrawableBottom = null;
                             dr.mDrawableSizeLeft = dr.mDrawableHeightLeft = 0;
@@ -24262,30 +24490,18 @@ var android;
                     this.mDrawables.mOverride = false;
                     if (dr.mDrawableLeft != left && dr.mDrawableLeft != null) {
                         dr.mDrawableLeft.setCallback(null);
-                        if (dr.mDrawableLeft instanceof NetDrawable) {
-                            dr.mDrawableLeft.recycle();
-                        }
                     }
                     dr.mDrawableLeft = left;
                     if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
                         dr.mDrawableTop.setCallback(null);
-                        if (dr.mDrawableTop instanceof NetDrawable) {
-                            dr.mDrawableTop.recycle();
-                        }
                     }
                     dr.mDrawableTop = top;
                     if (dr.mDrawableRight != right && dr.mDrawableRight != null) {
                         dr.mDrawableRight.setCallback(null);
-                        if (dr.mDrawableRight instanceof NetDrawable) {
-                            dr.mDrawableRight.recycle();
-                        }
                     }
                     dr.mDrawableRight = right;
                     if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
                         dr.mDrawableBottom.setCallback(null);
-                        if (dr.mDrawableBottom instanceof NetDrawable) {
-                            dr.mDrawableBottom.recycle();
-                        }
                     }
                     dr.mDrawableBottom = bottom;
                     const compoundRect = dr.mCompoundRect;
@@ -24355,14 +24571,6 @@ var android;
                     bottom.setBounds(0, 0, bottom.getIntrinsicWidth(), bottom.getIntrinsicHeight());
                 }
                 this.setCompoundDrawables(left, top, right, bottom);
-                if (left instanceof NetDrawable)
-                    this.mDrawables.mDrawableLeftLoading = true;
-                if (top instanceof NetDrawable)
-                    this.mDrawables.mDrawableTopLoading = true;
-                if (right instanceof NetDrawable)
-                    this.mDrawables.mDrawableRightLoading = true;
-                if (bottom instanceof NetDrawable)
-                    this.mDrawables.mDrawableBottomLoading = true;
             }
             setCompoundDrawablesRelative(start, top, end, bottom) {
                 let dr = this.mDrawables;
@@ -24375,30 +24583,18 @@ var android;
                         else {
                             if (dr.mDrawableStart != null) {
                                 dr.mDrawableStart.setCallback(null);
-                                if (dr.mDrawableStart instanceof NetDrawable) {
-                                    dr.mDrawableStart.recycle();
-                                }
                             }
                             dr.mDrawableStart = null;
                             if (dr.mDrawableTop != null) {
                                 dr.mDrawableTop.setCallback(null);
-                                if (dr.mDrawableTop instanceof NetDrawable) {
-                                    dr.mDrawableTop.recycle();
-                                }
                             }
                             dr.mDrawableTop = null;
                             if (dr.mDrawableEnd != null) {
                                 dr.mDrawableEnd.setCallback(null);
-                                if (dr.mDrawableEnd instanceof NetDrawable) {
-                                    dr.mDrawableEnd.recycle();
-                                }
                             }
                             dr.mDrawableEnd = null;
                             if (dr.mDrawableBottom != null) {
                                 dr.mDrawableBottom.setCallback(null);
-                                if (dr.mDrawableBottom instanceof NetDrawable) {
-                                    dr.mDrawableBottom.recycle();
-                                }
                             }
                             dr.mDrawableBottom = null;
                             dr.mDrawableSizeStart = dr.mDrawableHeightStart = 0;
@@ -24415,30 +24611,18 @@ var android;
                     this.mDrawables.mOverride = true;
                     if (dr.mDrawableStart != start && dr.mDrawableStart != null) {
                         dr.mDrawableStart.setCallback(null);
-                        if (dr.mDrawableStart instanceof NetDrawable) {
-                            dr.mDrawableStart.recycle();
-                        }
                     }
                     dr.mDrawableStart = start;
                     if (dr.mDrawableTop != top && dr.mDrawableTop != null) {
                         dr.mDrawableTop.setCallback(null);
-                        if (dr.mDrawableTop instanceof NetDrawable) {
-                            dr.mDrawableTop.recycle();
-                        }
                     }
                     dr.mDrawableTop = top;
                     if (dr.mDrawableEnd != end && dr.mDrawableEnd != null) {
                         dr.mDrawableEnd.setCallback(null);
-                        if (dr.mDrawableEnd instanceof NetDrawable) {
-                            dr.mDrawableEnd.recycle();
-                        }
                     }
                     dr.mDrawableEnd = end;
                     if (dr.mDrawableBottom != bottom && dr.mDrawableBottom != null) {
                         dr.mDrawableBottom.setCallback(null);
-                        if (dr.mDrawableBottom instanceof NetDrawable) {
-                            dr.mDrawableBottom.recycle();
-                        }
                     }
                     dr.mDrawableBottom = bottom;
                     const compoundRect = dr.mCompoundRect;
@@ -25163,13 +25347,22 @@ var android;
                     }
                 }
             }
+            drawableSizeChange(drawable) {
+                const drawables = this.mDrawables;
+                if (drawables != null && this.verifyDrawable(drawable)) {
+                    drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+                    this.setCompoundDrawables(drawables.mDrawableLeft, drawables.mDrawableTop, drawables.mDrawableRight, drawables.mDrawableBottom);
+                }
+                else {
+                    super.drawableSizeChange(drawable);
+                }
+            }
             invalidateDrawable(drawable) {
                 if (this.verifyDrawable(drawable)) {
                     const dirty = drawable.getBounds();
                     let scrollX = this.mScrollX;
                     let scrollY = this.mScrollY;
                     const drawables = this.mDrawables;
-                    let resetDrawables = false;
                     if (drawables != null) {
                         if (drawable == drawables.mDrawableLeft) {
                             const compoundPaddingTop = this.getCompoundPaddingTop();
@@ -25177,11 +25370,6 @@ var android;
                             const vspace = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
                             scrollX += this.mPaddingLeft;
                             scrollY += compoundPaddingTop + (vspace - drawables.mDrawableHeightLeft) / 2;
-                            if (drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableLeftLoading) {
-                                drawables.mDrawableLeftLoading = false;
-                                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                                resetDrawables = true;
-                            }
                         }
                         else if (drawable == drawables.mDrawableRight) {
                             const compoundPaddingTop = this.getCompoundPaddingTop();
@@ -25189,11 +25377,6 @@ var android;
                             const vspace = this.mBottom - this.mTop - compoundPaddingBottom - compoundPaddingTop;
                             scrollX += (this.mRight - this.mLeft - this.mPaddingRight - drawables.mDrawableSizeRight);
                             scrollY += compoundPaddingTop + (vspace - drawables.mDrawableHeightRight) / 2;
-                            if (drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableRightLoading) {
-                                drawables.mDrawableRightLoading = false;
-                                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                                resetDrawables = true;
-                            }
                         }
                         else if (drawable == drawables.mDrawableTop) {
                             const compoundPaddingLeft = this.getCompoundPaddingLeft();
@@ -25201,11 +25384,6 @@ var android;
                             const hspace = this.mRight - this.mLeft - compoundPaddingRight - compoundPaddingLeft;
                             scrollX += compoundPaddingLeft + (hspace - drawables.mDrawableWidthTop) / 2;
                             scrollY += this.mPaddingTop;
-                            if (drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableTopLoading) {
-                                drawables.mDrawableTopLoading = false;
-                                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                                resetDrawables = true;
-                            }
                         }
                         else if (drawable == drawables.mDrawableBottom) {
                             const compoundPaddingLeft = this.getCompoundPaddingLeft();
@@ -25213,19 +25391,9 @@ var android;
                             const hspace = this.mRight - this.mLeft - compoundPaddingRight - compoundPaddingLeft;
                             scrollX += compoundPaddingLeft + (hspace - drawables.mDrawableWidthBottom) / 2;
                             scrollY += (this.mBottom - this.mTop - this.mPaddingBottom - drawables.mDrawableSizeBottom);
-                            if (drawable instanceof NetDrawable && drawable.isLoadFinish() && drawables.mDrawableBottomLoading) {
-                                drawables.mDrawableBottomLoading = false;
-                                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                                resetDrawables = true;
-                            }
                         }
                     }
-                    if (resetDrawables) {
-                        this.setCompoundDrawables(drawables.mDrawableLeft, drawables.mDrawableTop, drawables.mDrawableRight, drawables.mDrawableBottom);
-                    }
-                    else {
-                        this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
-                    }
+                    this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
                 }
             }
             isTextSelectable() {
@@ -26655,7 +26823,7 @@ var android;
         TextView.ANIMATED_SCROLL_GAP = 250;
         TextView.NO_FILTERS = new Array(0);
         TextView.CHANGE_WATCHER_PRIORITY = 100;
-        TextView.MULTILINE_STATE_SET = [1 << 10];
+        TextView.MULTILINE_STATE_SET = [View.VIEW_STATE_MULTILINE];
         TextView.LAST_CUT_OR_COPY_TIME = 0;
         TextView.UNKNOWN_BORING = new BoringLayout.Metrics();
         widget.TextView = TextView;
@@ -26703,9 +26871,6 @@ var android;
                 setErrorDrawable(dr, tv) {
                     if (this.mDrawableError != dr && this.mDrawableError != null) {
                         this.mDrawableError.setCallback(null);
-                        if (this.mDrawableError instanceof NetDrawable) {
-                            this.mDrawableError.recycle();
-                        }
                     }
                     this.mDrawableError = dr;
                     const compoundRect = this.mCompoundRect;
@@ -35132,10 +35297,17 @@ var android;
             invalidateDrawable(dr) {
                 if (dr == this.mDrawable) {
                     this.invalidate();
-                    this.resizeFromDrawable();
                 }
                 else {
                     super.invalidateDrawable(dr);
+                }
+            }
+            drawableSizeChange(who) {
+                if (who == this.mDrawable) {
+                    this.resizeFromDrawable();
+                }
+                else {
+                    super.drawableSizeChange(who);
                 }
             }
             hasOverlappingRendering() {
@@ -35277,9 +35449,6 @@ var android;
                 if (this.mDrawable != null) {
                     this.mDrawable.setCallback(null);
                     this.unscheduleDrawable(this.mDrawable);
-                    if (this.mDrawable instanceof androidui.image.NetDrawable) {
-                        this.mDrawable.recycle();
-                    }
                 }
                 this.mDrawable = d;
                 if (d != null) {
@@ -38590,6 +38759,408 @@ var android;
             }
         }
         widget.ProgressBar = ProgressBar;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../android/widget/Button.ts"/>
+///<reference path="../../android/widget/Checkable.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Gravity = android.view.Gravity;
+        var View = android.view.View;
+        var Button = android.widget.Button;
+        class CompoundButton extends Button {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.mButtonResource = 0;
+                this._attrBinder.addAttr('button', (value) => {
+                    this.setButtonDrawable(this._attrBinder.parseDrawable(value));
+                }, () => {
+                    return this.mButtonDrawable;
+                });
+                this._attrBinder.addAttr('checked', (value) => {
+                    this.setChecked(this._attrBinder.parseBoolean(value, this.isChecked()));
+                }, () => {
+                    return this.isChecked();
+                });
+            }
+            toggle() {
+                this.setChecked(!this.mChecked);
+            }
+            performClick() {
+                this.toggle();
+                return super.performClick();
+            }
+            isChecked() {
+                return this.mChecked;
+            }
+            setChecked(checked) {
+                if (this.mChecked != checked) {
+                    this.mChecked = checked;
+                    this.refreshDrawableState();
+                    if (this.mBroadcasting) {
+                        return;
+                    }
+                    this.mBroadcasting = true;
+                    if (this.mOnCheckedChangeListener != null) {
+                        this.mOnCheckedChangeListener.onCheckedChanged(this, this.mChecked);
+                    }
+                    if (this.mOnCheckedChangeWidgetListener != null) {
+                        this.mOnCheckedChangeWidgetListener.onCheckedChanged(this, this.mChecked);
+                    }
+                    this.mBroadcasting = false;
+                }
+            }
+            setOnCheckedChangeListener(listener) {
+                this.mOnCheckedChangeListener = listener;
+            }
+            setOnCheckedChangeWidgetListener(listener) {
+                this.mOnCheckedChangeWidgetListener = listener;
+            }
+            setButtonDrawable(d) {
+                if (d != null) {
+                    if (this.mButtonDrawable != null) {
+                        this.mButtonDrawable.setCallback(null);
+                        this.unscheduleDrawable(this.mButtonDrawable);
+                    }
+                    d.setCallback(this);
+                    d.setVisible(this.getVisibility() == CompoundButton.VISIBLE, false);
+                    this.mButtonDrawable = d;
+                    this.setMinHeight(this.mButtonDrawable.getIntrinsicHeight());
+                }
+                this.refreshDrawableState();
+            }
+            getCompoundPaddingLeft() {
+                let padding = super.getCompoundPaddingLeft();
+                if (!this.isLayoutRtl()) {
+                    const buttonDrawable = this.mButtonDrawable;
+                    if (buttonDrawable != null) {
+                        padding += buttonDrawable.getIntrinsicWidth();
+                    }
+                }
+                return padding;
+            }
+            getCompoundPaddingRight() {
+                let padding = super.getCompoundPaddingRight();
+                if (this.isLayoutRtl()) {
+                    const buttonDrawable = this.mButtonDrawable;
+                    if (buttonDrawable != null) {
+                        padding += buttonDrawable.getIntrinsicWidth();
+                    }
+                }
+                return padding;
+            }
+            getHorizontalOffsetForDrawables() {
+                const buttonDrawable = this.mButtonDrawable;
+                return (buttonDrawable != null) ? buttonDrawable.getIntrinsicWidth() : 0;
+            }
+            onDraw(canvas) {
+                super.onDraw(canvas);
+                const buttonDrawable = this.mButtonDrawable;
+                if (buttonDrawable != null) {
+                    const verticalGravity = this.getGravity() & Gravity.VERTICAL_GRAVITY_MASK;
+                    const drawableHeight = buttonDrawable.getIntrinsicHeight();
+                    const drawableWidth = buttonDrawable.getIntrinsicWidth();
+                    let top = 0;
+                    switch (verticalGravity) {
+                        case Gravity.BOTTOM:
+                            top = this.getHeight() - drawableHeight;
+                            break;
+                        case Gravity.CENTER_VERTICAL:
+                            top = (this.getHeight() - drawableHeight) / 2;
+                            break;
+                    }
+                    let bottom = top + drawableHeight;
+                    let left = this.isLayoutRtl() ? this.getWidth() - drawableWidth : 0;
+                    let right = this.isLayoutRtl() ? this.getWidth() : drawableWidth;
+                    buttonDrawable.setBounds(left, top, right, bottom);
+                    buttonDrawable.draw(canvas);
+                }
+            }
+            onCreateDrawableState(extraSpace) {
+                const drawableState = super.onCreateDrawableState(extraSpace + 1);
+                if (this.isChecked()) {
+                    CompoundButton.mergeDrawableStates(drawableState, CompoundButton.CHECKED_STATE_SET);
+                }
+                return drawableState;
+            }
+            drawableStateChanged() {
+                super.drawableStateChanged();
+                if (this.mButtonDrawable != null) {
+                    let myDrawableState = this.getDrawableState();
+                    this.mButtonDrawable.setState(myDrawableState);
+                    this.invalidate();
+                }
+            }
+            verifyDrawable(who) {
+                return super.verifyDrawable(who) || who == this.mButtonDrawable;
+            }
+            jumpDrawablesToCurrentState() {
+                super.jumpDrawablesToCurrentState();
+                if (this.mButtonDrawable != null)
+                    this.mButtonDrawable.jumpToCurrentState();
+            }
+        }
+        CompoundButton.CHECKED_STATE_SET = [View.VIEW_STATE_CHECKED];
+        widget.CompoundButton = CompoundButton;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/widget/Button.ts"/>
+///<reference path="../../android/widget/CompoundButton.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/R/attr.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var CompoundButton = android.widget.CompoundButton;
+        class CheckBox extends CompoundButton {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.applyDefaultAttributes(android.R.attr.checkboxStyle);
+            }
+        }
+        widget.CheckBox = CheckBox;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/widget/Button.ts"/>
+///<reference path="../../android/widget/CheckBox.ts"/>
+///<reference path="../../android/widget/CompoundButton.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var CompoundButton = android.widget.CompoundButton;
+        class RadioButton extends CompoundButton {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.applyDefaultAttributes(android.R.attr.radiobuttonStyle);
+            }
+            toggle() {
+                if (!this.isChecked()) {
+                    super.toggle();
+                }
+            }
+        }
+        widget.RadioButton = RadioButton;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/widget/Button.ts"/>
+///<reference path="../../android/widget/CompoundButton.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/RadioButton.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var View = android.view.View;
+        var LinearLayout = android.widget.LinearLayout;
+        var RadioButton = android.widget.RadioButton;
+        class RadioGroup extends LinearLayout {
+            constructor(bindElement, rootElement) {
+                super(bindElement, rootElement);
+                this.mCheckedId = View.NO_ID;
+                this.mProtectFromCheckedChange = false;
+                this.setOrientation(RadioGroup.VERTICAL);
+                this.init();
+                this._attrBinder.addAttr('checkedButton', (value) => {
+                    this.setCheckedId(value);
+                });
+            }
+            init() {
+                this.mChildOnCheckedChangeListener = new RadioGroup.CheckedStateTracker(this);
+                this.mPassThroughListener = new RadioGroup.PassThroughHierarchyChangeListener(this);
+                super.setOnHierarchyChangeListener(this.mPassThroughListener);
+            }
+            setOnHierarchyChangeListener(listener) {
+                this.mPassThroughListener.mOnHierarchyChangeListener = listener;
+            }
+            onFinishInflate() {
+                super.onFinishInflate();
+                if (this.mCheckedId != null) {
+                    this.mProtectFromCheckedChange = true;
+                    this.setCheckedStateForView(this.mCheckedId, true);
+                    this.mProtectFromCheckedChange = false;
+                    this.setCheckedId(this.mCheckedId);
+                }
+            }
+            addView(...args) {
+                let child = args[0];
+                if (child instanceof RadioButton) {
+                    const button = child;
+                    if (button.isChecked()) {
+                        this.mProtectFromCheckedChange = true;
+                        if (this.mCheckedId != null) {
+                            this.setCheckedStateForView(this.mCheckedId, false);
+                        }
+                        this.mProtectFromCheckedChange = false;
+                        this.setCheckedId(button.getId());
+                    }
+                }
+                super.addView(...args);
+            }
+            check(id) {
+                if (id != null && (id == this.mCheckedId)) {
+                    return;
+                }
+                if (this.mCheckedId != null) {
+                    this.setCheckedStateForView(this.mCheckedId, false);
+                }
+                if (id != null) {
+                    this.setCheckedStateForView(id, true);
+                }
+                this.setCheckedId(id);
+            }
+            setCheckedId(id) {
+                this.mCheckedId = id;
+                if (this.mOnCheckedChangeListener != null) {
+                    this.mOnCheckedChangeListener.onCheckedChanged(this, this.mCheckedId);
+                }
+            }
+            setCheckedStateForView(viewId, checked) {
+                let checkedView = this.findViewById(viewId);
+                if (checkedView != null && checkedView instanceof RadioButton) {
+                    checkedView.setChecked(checked);
+                }
+            }
+            getCheckedRadioButtonId() {
+                return this.mCheckedId;
+            }
+            clearCheck() {
+                this.check(null);
+            }
+            setOnCheckedChangeListener(listener) {
+                this.mOnCheckedChangeListener = listener;
+            }
+            checkLayoutParams(p) {
+                return p instanceof RadioGroup.LayoutParams;
+            }
+            generateDefaultLayoutParams() {
+                return new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+            }
+        }
+        widget.RadioGroup = RadioGroup;
+        (function (RadioGroup) {
+            class LayoutParams extends LinearLayout.LayoutParams {
+            }
+            RadioGroup.LayoutParams = LayoutParams;
+            class CheckedStateTracker {
+                constructor(arg) {
+                    this._RadioGroup_this = arg;
+                }
+                onCheckedChanged(buttonView, isChecked) {
+                    if (this._RadioGroup_this.mProtectFromCheckedChange) {
+                        return;
+                    }
+                    this._RadioGroup_this.mProtectFromCheckedChange = true;
+                    if (this._RadioGroup_this.mCheckedId != null) {
+                        this._RadioGroup_this.setCheckedStateForView(this._RadioGroup_this.mCheckedId, false);
+                    }
+                    this._RadioGroup_this.mProtectFromCheckedChange = false;
+                    let id = buttonView.getId();
+                    this._RadioGroup_this.setCheckedId(id);
+                }
+            }
+            RadioGroup.CheckedStateTracker = CheckedStateTracker;
+            class PassThroughHierarchyChangeListener {
+                constructor(arg) {
+                    this._RadioGroup_this = arg;
+                }
+                onChildViewAdded(parent, child) {
+                    if (parent == this._RadioGroup_this && child instanceof RadioButton) {
+                        let id = child.getId();
+                        if (id == View.NO_ID) {
+                            id = 'hash' + child.hashCode();
+                            child.setId(id);
+                        }
+                        child.setOnCheckedChangeWidgetListener(this._RadioGroup_this.mChildOnCheckedChangeListener);
+                    }
+                    if (this.mOnHierarchyChangeListener != null) {
+                        this.mOnHierarchyChangeListener.onChildViewAdded(parent, child);
+                    }
+                }
+                onChildViewRemoved(parent, child) {
+                    if (parent == this._RadioGroup_this && child instanceof RadioButton) {
+                        child.setOnCheckedChangeWidgetListener(null);
+                    }
+                    if (this.mOnHierarchyChangeListener != null) {
+                        this.mOnHierarchyChangeListener.onChildViewRemoved(parent, child);
+                    }
+                }
+            }
+            RadioGroup.PassThroughHierarchyChangeListener = PassThroughHierarchyChangeListener;
+        })(RadioGroup = widget.RadioGroup || (widget.RadioGroup = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
@@ -45880,6 +46451,9 @@ var androidui;
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/widget/NumberPicker.ts"/>
 ///<reference path="android/widget/ProgressBar.ts"/>
+///<reference path="android/widget/CheckBox.ts"/>
+///<reference path="android/widget/RadioButton.ts"/>
+///<reference path="android/widget/RadioGroup.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="android/support/v4/widget/DrawerLayout.ts"/>

@@ -216,9 +216,16 @@ export class ImageView extends View {
              * is probably not worth the effort.
              */
             this.invalidate();
-            this.resizeFromDrawable();//androidui: most case, drawable was NetDrawable, size will change when load finish.
         } else {
             super.invalidateDrawable(dr);
+        }
+    }
+
+    drawableSizeChange(who : Drawable):void{
+        if (who == this.mDrawable) {
+            this.resizeFromDrawable();
+        }else {
+            super.drawableSizeChange(who);
         }
     }
 
@@ -584,9 +591,6 @@ export class ImageView extends View {
         if (this.mDrawable != null) {
             this.mDrawable.setCallback(null);
             this.unscheduleDrawable(this.mDrawable);
-            if(this.mDrawable instanceof androidui.image.NetDrawable){
-                (<androidui.image.NetDrawable>this.mDrawable).recycle();
-            }
         }
         this.mDrawable = d;
         if (d != null) {

@@ -26,10 +26,9 @@ module androidui.image{
             this.mImage = new NetImage(src, ()=>this.onLoad(), ()=>this.onError());
         }
 
-
         draw(canvas:Canvas):void {
             if(this.isLoadFinish()){
-                canvas.drawImage(this.mImage, this.getBounds(), this.mState.paint);
+                canvas.drawImage(this.mImage, null, this.getBounds(), this.mState.paint);
             }
         }
 
@@ -41,7 +40,6 @@ module androidui.image{
             return this.mState.paint.getAlpha();
         }
 
-
         getIntrinsicWidth():number {
             return this.mImageWidth;
         }
@@ -51,16 +49,19 @@ module androidui.image{
         }
 
         protected onLoad(){
-            this.mImageWidth = this.mImage.width * this.mState.res.getDisplayMetrics().density;
-            this.mImageHeight = this.mImage.height * this.mState.res.getDisplayMetrics().density;
+            let imageRatio = this.mImage.getImageRatio();
+            this.mImageWidth = Math.floor(this.mImage.width / imageRatio * this.mState.res.getDisplayMetrics().density);
+            this.mImageHeight = Math.floor(this.mImage.height / imageRatio * this.mState.res.getDisplayMetrics().density);
             if(this.mLoadListener) this.mLoadListener.onLoad(this);
             this.invalidateSelf();
+            this.notifySizeChangeSelf();
         }
 
         protected onError(){
             this.mImageWidth = this.mImageHeight = 0;
             if(this.mLoadListener) this.mLoadListener.onError(this);
             this.invalidateSelf();
+            this.notifySizeChangeSelf();
         }
 
         isLoadFinish():boolean {
@@ -77,10 +78,6 @@ module androidui.image{
 
         getConstantState():Drawable.ConstantState {
             return this.mState;
-        }
-
-        recycle():void {
-            if(this.mImage) this.mImage.recycle();
         }
 
     }

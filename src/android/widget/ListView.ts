@@ -3044,7 +3044,7 @@ export class ListView extends AbsListView {
      * Children specified in XML are assumed to be header views. After we have
      * parsed them move them out of the children list and into mHeaderViews.
      */
-    onFinishInflate():void  {
+    protected onFinishInflate():void  {
         super.onFinishInflate();
         let count:number = this.getChildCount();
         if (count > 0) {

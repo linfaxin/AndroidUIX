@@ -9,17 +9,19 @@ module androidui.image{
         private mSrc:string;
         private mImageWidth=0;
         private mImageHeight=0;
-        private mOnLoad:()=>void;
-        private mOnError:()=>void;
+        private mOnLoads = new Set<()=>void>();
+        private mOnErrors = new Set<()=>void>();
+        private mOverrideImageRatio:number;
 
-        constructor(src:string, onload?:()=>void, onerror?:()=>void) {
+        constructor(src:string, onload?:()=>void, onerror?:()=>void, overrideImageRatio?:number) {
             this.init(src, onload, onerror);
+            this.mOverrideImageRatio = overrideImageRatio;
         }
 
         protected init(src:string, onload?:()=>void, onerror?:()=>void){
             this.createImage();
-            this.onload = onload;
-            this.onerror = onerror;
+            if(onload) this.mOnLoads.add(onload);
+            if(onerror) this.mOnErrors.add(onerror);
             this.src = src;
         }
 
@@ -40,10 +42,6 @@ module androidui.image{
             };
         }
 
-        getImage() {
-            return this.platformImage;
-        }
-
         public get src():string {
             return this.mSrc;
         }
@@ -56,34 +54,20 @@ module androidui.image{
             }
         }
 
-        public get onload():()=>void {
-            return this.mOnLoad;
-        }
-
-        public set onload(value:()=>void) {
-            this.mOnLoad = value;
-        }
-
-        public get onerror():()=>void {
-            return this.mOnError;
-        }
-
-        public set onerror(value:()=>void) {
-            this.mOnError = value;
-        }
-
         public get width():number {
-            return Math.floor(this.mImageWidth / this.getImageRatio());
+            return this.mImageWidth;
         }
 
         public get height():number {
-            return Math.floor(this.mImageHeight / this.getImageRatio());
+            return this.mImageHeight;
         }
 
-        private getImageRatio(){
+        getImageRatio(){
+            if(this.mOverrideImageRatio!=null) return this.mOverrideImageRatio;
             let url = this.src;
             if(!url) return 1;
-            let idx = url.lastIndexOf('.');
+            if(url.startsWith('data:')) return 1;//may base64 encode
+            let idx = url.lastIndexOf('.'); // xxx@3x.png
             if(idx>0){
                 url = url.substring(0, idx);
             }
@@ -91,14 +75,35 @@ module androidui.image{
             if(url.endsWith('@3x')) return 3;
             if(url.endsWith('@4x')) return 4;
             if(url.endsWith('@5x')) return 5;
-            if(url.endsWith('@6x')) return 6;
             return 1;
         }
+
         private fireOnLoad(){
-            if(this.mOnLoad) this.mOnLoad();
+            for(let load of this.mOnLoads){
+                load();
+            }
         }
         private fireOnError(){
-            if(this.mOnError) this.mOnError();
+            for(let error of this.mOnErrors){
+                error();
+            }
+        }
+
+        addLoadListener(onload:()=>void, onerror?:()=>void){
+            if(onload){
+                this.mOnLoads.add(onload);
+            }
+            if(onerror){
+                this.mOnErrors.add(onerror);
+            }
+        }
+        removeLoadListener(onload?:()=>void, onerror?:()=>void){
+            if(onload){
+                this.mOnLoads.delete(onload);
+            }
+            if(onerror){
+                this.mOnErrors.delete(onerror);
+            }
         }
 
         recycle():void {

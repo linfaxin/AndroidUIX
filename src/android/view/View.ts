@@ -491,6 +491,12 @@ module android.view {
         static VIEW_STATE_HOVERED = 1 << 7;
         //static VIEW_STATE_DRAG_CAN_ACCEPT = 1 << 8;
         //static VIEW_STATE_DRAG_HOVERED = 1 << 9;
+
+        //for CompoundButton
+        static VIEW_STATE_CHECKED = 1 << 10;
+        //for TextView
+        static VIEW_STATE_MULTILINE = 1 << 11;
+
         //android default use attr id, there use state value as id
         static VIEW_STATE_IDS = [
             View.VIEW_STATE_WINDOW_FOCUSED,    View.VIEW_STATE_WINDOW_FOCUSED,
@@ -3613,6 +3619,20 @@ module android.view {
         }
 
 
+        drawableSizeChange(who : Drawable):void{
+            if(who === this.mBackground) {
+                let w:number = who.getIntrinsicWidth();
+                if (w < 0) w = this.mBackgroundWidth;
+                let h:number = who.getIntrinsicHeight();
+                if (h < 0) h = this.mBackgroundHeight;
+                if (w != this.mBackgroundWidth || h != this.mBackgroundHeight) {
+                    this.mBackgroundWidth = w;
+                    this.mBackgroundHeight = h;
+                    this.requestLayout();
+                }
+            }
+        }
+
         invalidateDrawable(drawable:Drawable):void{
             if (this.verifyDrawable(drawable)) {
                 const dirty = drawable.getBounds();
@@ -3621,10 +3641,6 @@ module android.view {
 
                 this.invalidate(dirty.left + scrollX, dirty.top + scrollY,
                     dirty.right + scrollX, dirty.bottom + scrollY);
-
-                if(drawable==this.mBackground){
-                    this.resizeFromBackground()
-                }
             }
         }
         scheduleDrawable(who:Drawable, what:Runnable, when:number):void{
@@ -3702,7 +3718,7 @@ module android.view {
             if ((this.mViewFlags & View.ENABLED_MASK) == View.ENABLED) viewStateIndex |= View.VIEW_STATE_ENABLED;
             if (this.isFocused()) viewStateIndex |= View.VIEW_STATE_FOCUSED;
             if ((privateFlags & View.PFLAG_SELECTED) != 0) viewStateIndex |= View.VIEW_STATE_SELECTED;
-            //if (this.hasWindowFocus()) viewStateIndex |= View.VIEW_STATE_WINDOW_FOCUSED;//TODO impl when focus ok
+            if (this.hasWindowFocus()) viewStateIndex |= View.VIEW_STATE_WINDOW_FOCUSED;//TODO impl when focus ok
             if ((privateFlags & View.PFLAG_ACTIVATED) != 0) viewStateIndex |= View.VIEW_STATE_ACTIVATED;
 //        if (mAttachInfo != null && mAttachInfo.mHardwareAccelerationRequested &&
 //                HardwareRenderer.isAvailable()) {
@@ -3748,7 +3764,7 @@ module android.view {
         static mergeDrawableStates(baseState:Array<number>, additionalState:Array<number>) {
             const N = baseState.length;
             let i = N - 1;
-            while (i >= 0 && baseState[i] == 0) {
+            while (i >= 0 && !baseState[i]) {// 0 or null
                 i--;
             }
             System.arraycopy(additionalState, 0, baseState, i + 1, additionalState.length);
@@ -3793,9 +3809,6 @@ module android.view {
             if (this.mBackground != null) {
                 this.mBackground.setCallback(null);
                 this.unscheduleDrawable(this.mBackground);
-                if(this.mBackground instanceof NetDrawable){
-                    (<NetDrawable>this.mBackground).recycle();
-                }
             }
 
             if (background != null) {
@@ -3864,23 +3877,6 @@ module android.view {
 
             this.mBackgroundSizeChanged = true;
             this.invalidate(true);
-        }
-
-        private resizeFromBackground():boolean  {
-            let d:Drawable = this.mBackground;
-            if (d != null) {
-                let w:number = d.getIntrinsicWidth();
-                if (w < 0) w = this.mBackgroundWidth;
-                let h:number = d.getIntrinsicHeight();
-                if (h < 0) h = this.mBackgroundHeight;
-                if (w != this.mBackgroundWidth || h != this.mBackgroundHeight) {
-                    this.mBackgroundWidth = w;
-                    this.mBackgroundHeight = h;
-                    this.requestLayout();
-                    return true;
-                }
-            }
-            return false;
         }
 
         getAnimation() {
@@ -4238,7 +4234,7 @@ module android.view {
             }
         }
 
-        onFinishInflate():void {
+        protected onFinishInflate():void {
         }
 
 

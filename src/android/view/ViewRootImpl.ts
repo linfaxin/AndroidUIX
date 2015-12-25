@@ -237,7 +237,7 @@ module android.view {
                 desiredWindowWidth = packageMetrics.widthPixels;//FIXME
                 desiredWindowHeight = packageMetrics.heightPixels;
 
-                attachInfo.mHasWindowFocus = true;//false. fix when window impl
+                attachInfo.mHasWindowFocus = true;//FIXME fix when window impl
                 attachInfo.mWindowVisibility = viewVisibility;
                 viewVisibilityChanged = false;
                 //mLastConfiguration.setTo(host.getResources().getConfiguration());

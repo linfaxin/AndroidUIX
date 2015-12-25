@@ -200,6 +200,13 @@ module android.graphics.drawable{
             return this.mCurrDrawable != null ? this.mCurrDrawable.getMinimumHeight() : 0;
         }
 
+        drawableSizeChange(who:android.graphics.drawable.Drawable):void {
+            let callback = this.getCallback();
+            if (who == this.mCurrDrawable && callback != null && callback.drawableSizeChange) {
+                callback.drawableSizeChange(this);
+            }
+        }
+
         invalidateDrawable(who:android.graphics.drawable.Drawable):void {
             if (who == this.mCurrDrawable && this.getCallback() != null) {
                 this.getCallback().invalidateDrawable(this);
@@ -217,6 +224,7 @@ module android.graphics.drawable{
                 this.getCallback().unscheduleDrawable(this, what);
             }
         }
+
         setVisible(visible:boolean, restart:boolean):boolean {
             let changed = super.setVisible(visible, restart);
             if (this.mLastDrawable != null) {

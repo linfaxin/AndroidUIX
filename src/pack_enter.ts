@@ -20,6 +20,9 @@
 ///<reference path="android/widget/HorizontalScrollView.ts"/>
 ///<reference path="android/widget/NumberPicker.ts"/>
 ///<reference path="android/widget/ProgressBar.ts"/>
+///<reference path="android/widget/CheckBox.ts"/>
+///<reference path="android/widget/RadioButton.ts"/>
+///<reference path="android/widget/RadioGroup.ts"/>
 
 
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
