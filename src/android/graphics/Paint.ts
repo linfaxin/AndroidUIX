@@ -331,6 +331,10 @@ module android.graphics{
             if(this.mAlpha==null) return 255;
             return this.mAlpha;
         }
+
+        /**
+         * @param alpha set the alpha component [0..255].
+         */
         setAlpha(alpha:number){
             this.mAlpha = alpha;
         }
@@ -769,7 +773,7 @@ module android.graphics{
             }
 
             if(this.mAlpha!=null){
-                canvas.multiplyAlpha(this.mAlpha);
+                canvas.multiplyAlpha(this.mAlpha / 255);
             }
 
             if(this.align!=null){

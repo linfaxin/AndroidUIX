@@ -198,9 +198,9 @@ var android;
                     this.bottom = rect.bottom;
                 }
                 else if (args.length === 4 || args.length === 0) {
-                    let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                    let [left = 0, t = 0, right = 0, bottom = 0] = args;
                     this.left = left;
-                    this.top = top;
+                    this.top = t;
                     this.right = right;
                     this.bottom = bottom;
                 }
@@ -284,9 +284,9 @@ var android;
                     [this.left, this.top, this.right, this.bottom] = [rect.left, rect.top, rect.right, rect.bottom];
                 }
                 else {
-                    let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                    let [left = 0, t = 0, right = 0, bottom = 0] = args;
                     this.left = left;
-                    this.top = top;
+                    this.top = t;
                     this.right = right;
                     this.bottom = bottom;
                 }
@@ -321,9 +321,9 @@ var android;
                         && x >= this.left && x < this.right && y >= this.top && y < this.bottom;
                 }
                 else {
-                    let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                    let [left = 0, t = 0, right = 0, bottom = 0] = args;
                     return this.left < this.right && this.top < this.bottom
-                        && this.left <= left && this.top <= top
+                        && this.left <= left && this.top <= t
                         && this.right >= right && this.bottom >= bottom;
                 }
             }
@@ -379,7 +379,10 @@ var android;
                     }
                 }
                 else {
-                    let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                    let left = args[0];
+                    let top = args[1];
+                    let right = args[2];
+                    let bottom = args[3];
                     if ((left < right) && (top < bottom)) {
                         if ((this.left < this.right) && (this.top < this.bottom)) {
                             if (this.left > left)
@@ -1018,7 +1021,7 @@ var android;
                     canvas.setColor(this.mColor, this.getStyle());
                 }
                 if (this.mAlpha != null) {
-                    canvas.multiplyAlpha(this.mAlpha);
+                    canvas.multiplyAlpha(this.mAlpha / 255);
                 }
                 if (this.align != null) {
                     canvas.setTextAlign(Paint.Align[this.align].toLowerCase());
@@ -2019,7 +2022,7 @@ var android;
                 this.concatImpl(v[graphics.Matrix.MSCALE_X], v[graphics.Matrix.MSKEW_X], v[graphics.Matrix.MTRANS_X], v[graphics.Matrix.MSKEW_Y], v[graphics.Matrix.MSCALE_Y], v[graphics.Matrix.MTRANS_Y], v[graphics.Matrix.MPERSP_0], v[graphics.Matrix.MPERSP_1], v[graphics.Matrix.MPERSP_2]);
             }
             concatImpl(MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y, MPERSP_0, MPERSP_1, MPERSP_2) {
-                this._mCanvasContent.transform(MSCALE_X, MSKEW_X, MSKEW_Y, MSCALE_Y, MTRANS_X, MTRANS_Y);
+                this._mCanvasContent.transform(MSCALE_X, -MSKEW_X, -MSKEW_Y, MSCALE_Y, MTRANS_X, MTRANS_Y);
             }
             drawRGB(r, g, b) {
                 this.drawARGB(255, r, g, b);
@@ -6957,6 +6960,1041 @@ var android;
         R.attr = attr;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
+// Copyright 2009 The Closure Library Authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS-IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+var goog;
+(function (goog) {
+    var math;
+    (function (math) {
+        class Long {
+            constructor(low, high) {
+                this.low_ = low | 0;
+                this.high_ = high | 0;
+            }
+            toInt() {
+                return this.low_;
+            }
+            toNumber() {
+                return this.high_ * Long.TWO_PWR_32_DBL_ + this.getLowBitsUnsigned();
+            }
+            toString(opt_radix) {
+                var radix = opt_radix || 10;
+                if (radix < 2 || 36 < radix) {
+                    throw Error('radix out of range: ' + radix);
+                }
+                if (this.isZero()) {
+                    return '0';
+                }
+                if (this.isNegative()) {
+                    if (this.equals(Long.MIN_VALUE)) {
+                        var radixLong = Long.fromNumber(radix);
+                        var div = this.div(radixLong);
+                        let rem = div.multiply(radixLong).subtract(this);
+                        return div.toString(radix) + rem.toInt().toString(radix);
+                    }
+                    else {
+                        return '-' + this.negate().toString(radix);
+                    }
+                }
+                var radixToPower = Long.fromNumber(Math.pow(radix, 6));
+                let rem = this;
+                var result = '';
+                while (true) {
+                    var remDiv = rem.div(radixToPower);
+                    var intval = rem.subtract(remDiv.multiply(radixToPower)).toInt();
+                    var digits = intval.toString(radix);
+                    rem = remDiv;
+                    if (rem.isZero()) {
+                        return digits + result;
+                    }
+                    else {
+                        while (digits.length < 6) {
+                            digits = '0' + digits;
+                        }
+                        result = '' + digits + result;
+                    }
+                }
+            }
+            getHighBits() {
+                return this.high_;
+            }
+            getLowBits() {
+                return this.low_;
+            }
+            getLowBitsUnsigned() {
+                return (this.low_ >= 0) ? this.low_ : Long.TWO_PWR_32_DBL_ + this.low_;
+            }
+            getNumBitsAbs() {
+                if (this.isNegative()) {
+                    if (this.equals(Long.MIN_VALUE)) {
+                        return 64;
+                    }
+                    else {
+                        return this.negate().getNumBitsAbs();
+                    }
+                }
+                else {
+                    var val = this.high_ != 0 ? this.high_ : this.low_;
+                    for (var bit = 31; bit > 0; bit--) {
+                        if ((val & (1 << bit)) != 0) {
+                            break;
+                        }
+                    }
+                    return this.high_ != 0 ? bit + 33 : bit + 1;
+                }
+            }
+            isZero() {
+                return this.high_ == 0 && this.low_ == 0;
+            }
+            isNegative() {
+                return this.high_ < 0;
+            }
+            isOdd() {
+                return (this.low_ & 1) == 1;
+            }
+            equals(other) {
+                return (this.high_ == other.high_) && (this.low_ == other.low_);
+            }
+            notEquals(other) {
+                return (this.high_ != other.high_) || (this.low_ != other.low_);
+            }
+            lessThan(other) {
+                return this.compare(other) < 0;
+            }
+            lessThanOrEqual(other) {
+                return this.compare(other) <= 0;
+            }
+            greaterThan(other) {
+                return this.compare(other) > 0;
+            }
+            greaterThanOrEqual(other) {
+                return this.compare(other) >= 0;
+            }
+            compare(other) {
+                if (this.equals(other)) {
+                    return 0;
+                }
+                var thisNeg = this.isNegative();
+                var otherNeg = other.isNegative();
+                if (thisNeg && !otherNeg) {
+                    return -1;
+                }
+                if (!thisNeg && otherNeg) {
+                    return 1;
+                }
+                if (this.subtract(other).isNegative()) {
+                    return -1;
+                }
+                else {
+                    return 1;
+                }
+            }
+            negate() {
+                if (this.equals(Long.MIN_VALUE)) {
+                    return Long.MIN_VALUE;
+                }
+                else {
+                    return this.not().add(Long.ONE);
+                }
+            }
+            add(other) {
+                // Divide each number into 4 chunks of 16 bits, and then sum the chunks.
+                var a48 = this.high_ >>> 16;
+                var a32 = this.high_ & 0xFFFF;
+                var a16 = this.low_ >>> 16;
+                var a00 = this.low_ & 0xFFFF;
+                var b48 = other.high_ >>> 16;
+                var b32 = other.high_ & 0xFFFF;
+                var b16 = other.low_ >>> 16;
+                var b00 = other.low_ & 0xFFFF;
+                var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
+                c00 += a00 + b00;
+                c16 += c00 >>> 16;
+                c00 &= 0xFFFF;
+                c16 += a16 + b16;
+                c32 += c16 >>> 16;
+                c16 &= 0xFFFF;
+                c32 += a32 + b32;
+                c48 += c32 >>> 16;
+                c32 &= 0xFFFF;
+                c48 += a48 + b48;
+                c48 &= 0xFFFF;
+                return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32);
+            }
+            subtract(other) {
+                return this.add(other.negate());
+            }
+            multiply(other) {
+                if (this.isZero()) {
+                    return Long.ZERO;
+                }
+                else if (other.isZero()) {
+                    return Long.ZERO;
+                }
+                if (this.equals(Long.MIN_VALUE)) {
+                    return other.isOdd() ? Long.MIN_VALUE : Long.ZERO;
+                }
+                else if (other.equals(Long.MIN_VALUE)) {
+                    return this.isOdd() ? Long.MIN_VALUE : Long.ZERO;
+                }
+                if (this.isNegative()) {
+                    if (other.isNegative()) {
+                        return this.negate().multiply(other.negate());
+                    }
+                    else {
+                        return this.negate().multiply(other).negate();
+                    }
+                }
+                else if (other.isNegative()) {
+                    return this.multiply(other.negate()).negate();
+                }
+                if (this.lessThan(Long.TWO_PWR_24_) &&
+                    other.lessThan(Long.TWO_PWR_24_)) {
+                    return Long.fromNumber(this.toNumber() * other.toNumber());
+                }
+                var a48 = this.high_ >>> 16;
+                var a32 = this.high_ & 0xFFFF;
+                var a16 = this.low_ >>> 16;
+                var a00 = this.low_ & 0xFFFF;
+                var b48 = other.high_ >>> 16;
+                var b32 = other.high_ & 0xFFFF;
+                var b16 = other.low_ >>> 16;
+                var b00 = other.low_ & 0xFFFF;
+                var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
+                c00 += a00 * b00;
+                c16 += c00 >>> 16;
+                c00 &= 0xFFFF;
+                c16 += a16 * b00;
+                c32 += c16 >>> 16;
+                c16 &= 0xFFFF;
+                c16 += a00 * b16;
+                c32 += c16 >>> 16;
+                c16 &= 0xFFFF;
+                c32 += a32 * b00;
+                c48 += c32 >>> 16;
+                c32 &= 0xFFFF;
+                c32 += a16 * b16;
+                c48 += c32 >>> 16;
+                c32 &= 0xFFFF;
+                c32 += a00 * b32;
+                c48 += c32 >>> 16;
+                c32 &= 0xFFFF;
+                c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
+                c48 &= 0xFFFF;
+                return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32);
+            }
+            div(other) {
+                if (other.isZero()) {
+                    throw Error('division by zero');
+                }
+                else if (this.isZero()) {
+                    return Long.ZERO;
+                }
+                if (this.equals(Long.MIN_VALUE)) {
+                    if (other.equals(Long.ONE) ||
+                        other.equals(Long.NEG_ONE)) {
+                        return Long.MIN_VALUE;
+                    }
+                    else if (other.equals(Long.MIN_VALUE)) {
+                        return Long.ONE;
+                    }
+                    else {
+                        var halfThis = this.shiftRight(1);
+                        let approx = halfThis.div(other).shiftLeft(1);
+                        if (approx.equals(Long.ZERO)) {
+                            return other.isNegative() ? Long.ONE : Long.NEG_ONE;
+                        }
+                        else {
+                            var rem = this.subtract(other.multiply(approx));
+                            var result = approx.add(rem.div(other));
+                            return result;
+                        }
+                    }
+                }
+                else if (other.equals(Long.MIN_VALUE)) {
+                    return Long.ZERO;
+                }
+                if (this.isNegative()) {
+                    if (other.isNegative()) {
+                        return this.negate().div(other.negate());
+                    }
+                    else {
+                        return this.negate().div(other).negate();
+                    }
+                }
+                else if (other.isNegative()) {
+                    return this.div(other.negate()).negate();
+                }
+                var res = Long.ZERO;
+                var rem = this;
+                while (rem.greaterThanOrEqual(other)) {
+                    let approx = Math.max(1, Math.floor(rem.toNumber() / other.toNumber()));
+                    var log2 = Math.ceil(Math.log(approx) / Math.LN2);
+                    var delta = (log2 <= 48) ? 1 : Math.pow(2, log2 - 48);
+                    var approxRes = Long.fromNumber(approx);
+                    var approxRem = approxRes.multiply(other);
+                    while (approxRem.isNegative() || approxRem.greaterThan(rem)) {
+                        approx -= delta;
+                        approxRes = Long.fromNumber(approx);
+                        approxRem = approxRes.multiply(other);
+                    }
+                    if (approxRes.isZero()) {
+                        approxRes = Long.ONE;
+                    }
+                    res = res.add(approxRes);
+                    rem = rem.subtract(approxRem);
+                }
+                return res;
+            }
+            modulo(other) {
+                return this.subtract(this.div(other).multiply(other));
+            }
+            not() {
+                return Long.fromBits(~this.low_, ~this.high_);
+            }
+            and(other) {
+                return Long.fromBits(this.low_ & other.low_, this.high_ & other.high_);
+            }
+            or(other) {
+                return Long.fromBits(this.low_ | other.low_, this.high_ | other.high_);
+            }
+            xor(other) {
+                return Long.fromBits(this.low_ ^ other.low_, this.high_ ^ other.high_);
+            }
+            shiftLeft(numBits) {
+                numBits &= 63;
+                if (numBits == 0) {
+                    return this;
+                }
+                else {
+                    var low = this.low_;
+                    if (numBits < 32) {
+                        var high = this.high_;
+                        return Long.fromBits(low << numBits, (high << numBits) | (low >>> (32 - numBits)));
+                    }
+                    else {
+                        return Long.fromBits(0, low << (numBits - 32));
+                    }
+                }
+            }
+            shiftRight(numBits) {
+                numBits &= 63;
+                if (numBits == 0) {
+                    return this;
+                }
+                else {
+                    var high = this.high_;
+                    if (numBits < 32) {
+                        var low = this.low_;
+                        return Long.fromBits((low >>> numBits) | (high << (32 - numBits)), high >> numBits);
+                    }
+                    else {
+                        return Long.fromBits(high >> (numBits - 32), high >= 0 ? 0 : -1);
+                    }
+                }
+            }
+            shiftRightUnsigned(numBits) {
+                numBits &= 63;
+                if (numBits == 0) {
+                    return this;
+                }
+                else {
+                    var high = this.high_;
+                    if (numBits < 32) {
+                        var low = this.low_;
+                        return Long.fromBits((low >>> numBits) | (high << (32 - numBits)), high >>> numBits);
+                    }
+                    else if (numBits == 32) {
+                        return Long.fromBits(high, 0);
+                    }
+                    else {
+                        return Long.fromBits(high >>> (numBits - 32), 0);
+                    }
+                }
+            }
+            static fromInt(value) {
+                if (-128 <= value && value < 128) {
+                    var cachedObj = Long.IntCache_[value];
+                    if (cachedObj) {
+                        return cachedObj;
+                    }
+                }
+                var obj = new Long(value | 0, value < 0 ? -1 : 0);
+                if (-128 <= value && value < 128) {
+                    Long.IntCache_[value] = obj;
+                }
+                return obj;
+            }
+            static fromNumber(value) {
+                if (isNaN(value) || !isFinite(value)) {
+                    return Long.ZERO;
+                }
+                else if (value <= -Long.TWO_PWR_63_DBL_) {
+                    return Long.MIN_VALUE;
+                }
+                else if (value + 1 >= Long.TWO_PWR_63_DBL_) {
+                    return Long.MAX_VALUE;
+                }
+                else if (value < 0) {
+                    return Long.fromNumber(-value).negate();
+                }
+                else {
+                    return new Long((value % Long.TWO_PWR_32_DBL_) | 0, (value / Long.TWO_PWR_32_DBL_) | 0);
+                }
+            }
+            static fromBits(lowBits, highBits) {
+                return new Long(lowBits, highBits);
+            }
+            static fromString(str, opt_radix) {
+                if (str.length == 0) {
+                    throw Error('number format error: empty string');
+                }
+                var radix = opt_radix || 10;
+                if (radix < 2 || 36 < radix) {
+                    throw Error('radix out of range: ' + radix);
+                }
+                if (str.charAt(0) == '-') {
+                    return Long.fromString(str.substring(1), radix).negate();
+                }
+                else if (str.indexOf('-') >= 0) {
+                    throw Error('number format error: interior "-" character: ' + str);
+                }
+                var radixToPower = Long.fromNumber(Math.pow(radix, 8));
+                var result = Long.ZERO;
+                for (var i = 0; i < str.length; i += 8) {
+                    var size = Math.min(8, str.length - i);
+                    var value = parseInt(str.substring(i, i + size), radix);
+                    if (size < 8) {
+                        var power = Long.fromNumber(Math.pow(radix, size));
+                        result = result.multiply(power).add(Long.fromNumber(value));
+                    }
+                    else {
+                        result = result.multiply(radixToPower);
+                        result = result.add(Long.fromNumber(value));
+                    }
+                }
+                return result;
+            }
+        }
+        Long.IntCache_ = {};
+        Long.TWO_PWR_16_DBL_ = 1 << 16;
+        Long.TWO_PWR_24_DBL_ = 1 << 24;
+        Long.TWO_PWR_32_DBL_ = Long.TWO_PWR_16_DBL_ * Long.TWO_PWR_16_DBL_;
+        Long.TWO_PWR_31_DBL_ = Long.TWO_PWR_32_DBL_ / 2;
+        Long.TWO_PWR_48_DBL_ = Long.TWO_PWR_32_DBL_ * Long.TWO_PWR_16_DBL_;
+        Long.TWO_PWR_64_DBL_ = Long.TWO_PWR_32_DBL_ * Long.TWO_PWR_32_DBL_;
+        Long.TWO_PWR_63_DBL_ = Long.TWO_PWR_64_DBL_ / 2;
+        Long.TWO_PWR_24_ = Long.fromInt(1 << 24);
+        Long.ZERO = Long.fromInt(0);
+        Long.ONE = Long.fromInt(1);
+        Long.NEG_ONE = Long.fromInt(-1);
+        Long.MAX_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0x7FFFFFFF | 0);
+        Long.MIN_VALUE = Long.fromBits(0, 0x80000000 | 0);
+        math.Long = Long;
+    })(math = goog.math || (goog.math = {}));
+})(goog || (goog = {}));
+/**
+ * Created by linfaxin on 15/11/13.
+ */
+///<reference path="../../androidui/util/Long.ts"/>
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        class Long {
+        }
+        Long.MIN_VALUE = goog.math.Long.MIN_VALUE.toNumber();
+        Long.MAX_VALUE = goog.math.Long.MAX_VALUE.toNumber();
+        lang.Long = Long;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class AccelerateDecelerateInterpolator {
+                getInterpolation(input) {
+                    return (Math.cos((input + 1) * Math.PI) / 2) + 0.5;
+                }
+            }
+            animation.AccelerateDecelerateInterpolator = AccelerateDecelerateInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class DecelerateInterpolator {
+                constructor(factor = 1) {
+                    this.mFactor = factor;
+                }
+                getInterpolation(input) {
+                    let result;
+                    if (this.mFactor == 1.0) {
+                        result = (1.0 - (1.0 - input) * (1.0 - input));
+                    }
+                    else {
+                        result = (1.0 - Math.pow((1.0 - input), 2 * this.mFactor));
+                    }
+                    return result;
+                }
+            }
+            animation.DecelerateInterpolator = DecelerateInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Matrix.ts"/>
+///<reference path="../../../java/lang/StringBuilder.ts"/>
+///<reference path="../../../android/view/animation/Animation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Matrix = android.graphics.Matrix;
+            var StringBuilder = java.lang.StringBuilder;
+            class Transformation {
+                constructor() {
+                    this.mAlpha = 0;
+                    this.mTransformationType = 0;
+                    this.clear();
+                }
+                clear() {
+                    if (this.mMatrix == null) {
+                        this.mMatrix = new Matrix();
+                    }
+                    else {
+                        this.mMatrix.reset();
+                    }
+                    this.mAlpha = 1.0;
+                    this.mTransformationType = Transformation.TYPE_BOTH;
+                }
+                getTransformationType() {
+                    return this.mTransformationType;
+                }
+                setTransformationType(transformationType) {
+                    this.mTransformationType = transformationType;
+                }
+                set(t) {
+                    this.mAlpha = t.getAlpha();
+                    this.mMatrix.set(t.getMatrix());
+                    this.mTransformationType = t.getTransformationType();
+                }
+                compose(t) {
+                    this.mAlpha *= t.getAlpha();
+                    this.mMatrix.preConcat(t.getMatrix());
+                }
+                postCompose(t) {
+                    this.mAlpha *= t.getAlpha();
+                    this.mMatrix.postConcat(t.getMatrix());
+                }
+                getMatrix() {
+                    return this.mMatrix;
+                }
+                setAlpha(alpha) {
+                    this.mAlpha = alpha;
+                }
+                getAlpha() {
+                    return this.mAlpha;
+                }
+                toString() {
+                    let sb = new StringBuilder(64);
+                    sb.append("Transformation");
+                    this.toShortString(sb);
+                    return sb.toString();
+                }
+                toShortString(sb) {
+                    sb = sb || new StringBuilder(64);
+                    sb.append("{alpha=");
+                    sb.append(this.mAlpha);
+                    sb.append(" matrix=");
+                    this.mMatrix.toShortString(sb);
+                    sb.append('}');
+                }
+            }
+            Transformation.TYPE_IDENTITY = 0x0;
+            Transformation.TYPE_ALPHA = 0x1;
+            Transformation.TYPE_MATRIX = 0x2;
+            Transformation.TYPE_BOTH = Transformation.TYPE_ALPHA | Transformation.TYPE_MATRIX;
+            animation.Transformation = Transformation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/RectF.ts"/>
+///<reference path="../../../android/os/Handler.ts"/>
+///<reference path="../../../android/util/TypedValue.ts"/>
+///<reference path="../../../java/lang/Long.ts"/>
+///<reference path="../../../java/lang/Runnable.ts"/>
+///<reference path="../../../android/view/animation/AccelerateDecelerateInterpolator.ts"/>
+///<reference path="../../../android/view/animation/AnimationUtils.ts"/>
+///<reference path="../../../android/view/animation/DecelerateInterpolator.ts"/>
+///<reference path="../../../android/view/animation/Interpolator.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation_1) {
+            var RectF = android.graphics.RectF;
+            var TypedValue = android.util.TypedValue;
+            var Long = java.lang.Long;
+            var AccelerateDecelerateInterpolator = android.view.animation.AccelerateDecelerateInterpolator;
+            var AnimationUtils = android.view.animation.AnimationUtils;
+            var Transformation = android.view.animation.Transformation;
+            class Animation {
+                constructor() {
+                    this.mEnded = false;
+                    this.mStarted = false;
+                    this.mCycleFlip = false;
+                    this.mInitialized = false;
+                    this.mFillBefore = true;
+                    this.mFillAfter = false;
+                    this.mFillEnabled = false;
+                    this.mStartTime = -1;
+                    this.mStartOffset = 0;
+                    this.mDuration = 0;
+                    this.mRepeatCount = 0;
+                    this.mRepeated = 0;
+                    this.mRepeatMode = Animation.RESTART;
+                    this.mZAdjustment = 0;
+                    this.mBackgroundColor = 0;
+                    this.mScaleFactor = 1;
+                    this.mDetachWallpaper = false;
+                    this.mMore = true;
+                    this.mOneMoreTime = true;
+                    this.mPreviousRegion = new RectF();
+                    this.mRegion = new RectF();
+                    this.mTransformation = new Transformation();
+                    this.mPreviousTransformation = new Transformation();
+                    this.ensureInterpolator();
+                }
+                reset() {
+                    this.mPreviousRegion.setEmpty();
+                    this.mPreviousTransformation.clear();
+                    this.mInitialized = false;
+                    this.mCycleFlip = false;
+                    this.mRepeated = 0;
+                    this.mMore = true;
+                    this.mOneMoreTime = true;
+                    this.mListenerHandler = null;
+                }
+                cancel() {
+                    if (this.mStarted && !this.mEnded) {
+                        this.fireAnimationEnd();
+                        this.mEnded = true;
+                    }
+                    this.mStartTime = Long.MIN_VALUE;
+                    this.mMore = this.mOneMoreTime = false;
+                }
+                detach() {
+                    if (this.mStarted && !this.mEnded) {
+                        this.mEnded = true;
+                        this.fireAnimationEnd();
+                    }
+                }
+                isInitialized() {
+                    return this.mInitialized;
+                }
+                initialize(width, height, parentWidth, parentHeight) {
+                    this.reset();
+                    this.mInitialized = true;
+                }
+                setListenerHandler(handler) {
+                    if (this.mListenerHandler == null) {
+                        const _this = this;
+                        this.mOnStart = {
+                            run() {
+                                if (_this.mListener != null) {
+                                    _this.mListener.onAnimationStart(_this);
+                                }
+                            }
+                        };
+                        this.mOnRepeat = {
+                            run() {
+                                if (_this.mListener != null) {
+                                    _this.mListener.onAnimationRepeat(_this);
+                                }
+                            }
+                        };
+                        this.mOnEnd = {
+                            run() {
+                                if (_this.mListener != null) {
+                                    _this.mListener.onAnimationEnd(_this);
+                                }
+                            }
+                        };
+                    }
+                    this.mListenerHandler = handler;
+                }
+                setInterpolator(i) {
+                    this.mInterpolator = i;
+                }
+                setStartOffset(startOffset) {
+                    this.mStartOffset = startOffset;
+                }
+                setDuration(durationMillis) {
+                    if (durationMillis < 0) {
+                        throw Error(`new IllegalArgumentException("Animation duration cannot be negative")`);
+                    }
+                    this.mDuration = durationMillis;
+                }
+                restrictDuration(durationMillis) {
+                    if (this.mStartOffset > durationMillis) {
+                        this.mStartOffset = durationMillis;
+                        this.mDuration = 0;
+                        this.mRepeatCount = 0;
+                        return;
+                    }
+                    let dur = this.mDuration + this.mStartOffset;
+                    if (dur > durationMillis) {
+                        this.mDuration = durationMillis - this.mStartOffset;
+                        dur = durationMillis;
+                    }
+                    if (this.mDuration <= 0) {
+                        this.mDuration = 0;
+                        this.mRepeatCount = 0;
+                        return;
+                    }
+                    if (this.mRepeatCount < 0 || this.mRepeatCount > durationMillis || (dur * this.mRepeatCount) > durationMillis) {
+                        this.mRepeatCount = Math.floor((durationMillis / dur)) - 1;
+                        if (this.mRepeatCount < 0) {
+                            this.mRepeatCount = 0;
+                        }
+                    }
+                }
+                scaleCurrentDuration(scale) {
+                    this.mDuration = Math.floor((this.mDuration * scale));
+                    this.mStartOffset = Math.floor((this.mStartOffset * scale));
+                }
+                setStartTime(startTimeMillis) {
+                    this.mStartTime = startTimeMillis;
+                    this.mStarted = this.mEnded = false;
+                    this.mCycleFlip = false;
+                    this.mRepeated = 0;
+                    this.mMore = true;
+                }
+                start() {
+                    this.setStartTime(-1);
+                }
+                startNow() {
+                    this.setStartTime(AnimationUtils.currentAnimationTimeMillis());
+                }
+                setRepeatMode(repeatMode) {
+                    this.mRepeatMode = repeatMode;
+                }
+                setRepeatCount(repeatCount) {
+                    if (repeatCount < 0) {
+                        repeatCount = Animation.INFINITE;
+                    }
+                    this.mRepeatCount = repeatCount;
+                }
+                isFillEnabled() {
+                    return this.mFillEnabled;
+                }
+                setFillEnabled(fillEnabled) {
+                    this.mFillEnabled = fillEnabled;
+                }
+                setFillBefore(fillBefore) {
+                    this.mFillBefore = fillBefore;
+                }
+                setFillAfter(fillAfter) {
+                    this.mFillAfter = fillAfter;
+                }
+                setZAdjustment(zAdjustment) {
+                    this.mZAdjustment = zAdjustment;
+                }
+                setBackgroundColor(bg) {
+                    this.mBackgroundColor = bg;
+                }
+                getScaleFactor() {
+                    return this.mScaleFactor;
+                }
+                setDetachWallpaper(detachWallpaper) {
+                    this.mDetachWallpaper = detachWallpaper;
+                }
+                getInterpolator() {
+                    return this.mInterpolator;
+                }
+                getStartTime() {
+                    return this.mStartTime;
+                }
+                getDuration() {
+                    return this.mDuration;
+                }
+                getStartOffset() {
+                    return this.mStartOffset;
+                }
+                getRepeatMode() {
+                    return this.mRepeatMode;
+                }
+                getRepeatCount() {
+                    return this.mRepeatCount;
+                }
+                getFillBefore() {
+                    return this.mFillBefore;
+                }
+                getFillAfter() {
+                    return this.mFillAfter;
+                }
+                getZAdjustment() {
+                    return this.mZAdjustment;
+                }
+                getBackgroundColor() {
+                    return this.mBackgroundColor;
+                }
+                getDetachWallpaper() {
+                    return this.mDetachWallpaper;
+                }
+                willChangeTransformationMatrix() {
+                    return true;
+                }
+                willChangeBounds() {
+                    return true;
+                }
+                setAnimationListener(listener) {
+                    this.mListener = listener;
+                }
+                ensureInterpolator() {
+                    if (this.mInterpolator == null) {
+                        this.mInterpolator = new AccelerateDecelerateInterpolator();
+                    }
+                }
+                computeDurationHint() {
+                    return (this.getStartOffset() + this.getDuration()) * (this.getRepeatCount() + 1);
+                }
+                getTransformation(currentTime, outTransformation, scale) {
+                    if (scale != null)
+                        this.mScaleFactor = scale;
+                    if (this.mStartTime == -1) {
+                        this.mStartTime = currentTime;
+                    }
+                    const startOffset = this.getStartOffset();
+                    const duration = this.mDuration;
+                    let normalizedTime;
+                    if (duration != 0) {
+                        normalizedTime = (currentTime - (this.mStartTime + startOffset)) / duration;
+                    }
+                    else {
+                        normalizedTime = currentTime < this.mStartTime ? 0.0 : 1.0;
+                    }
+                    const expired = normalizedTime >= 1.0;
+                    this.mMore = !expired;
+                    if (!this.mFillEnabled)
+                        normalizedTime = Math.max(Math.min(normalizedTime, 1.0), 0.0);
+                    if ((normalizedTime >= 0.0 || this.mFillBefore) && (normalizedTime <= 1.0 || this.mFillAfter)) {
+                        if (!this.mStarted) {
+                            this.fireAnimationStart();
+                            this.mStarted = true;
+                        }
+                        if (this.mFillEnabled)
+                            normalizedTime = Math.max(Math.min(normalizedTime, 1.0), 0.0);
+                        if (this.mCycleFlip) {
+                            normalizedTime = 1.0 - normalizedTime;
+                        }
+                        const interpolatedTime = this.mInterpolator.getInterpolation(normalizedTime);
+                        this.applyTransformation(interpolatedTime, outTransformation);
+                    }
+                    if (expired) {
+                        if (this.mRepeatCount == this.mRepeated) {
+                            if (!this.mEnded) {
+                                this.mEnded = true;
+                                this.fireAnimationEnd();
+                            }
+                        }
+                        else {
+                            if (this.mRepeatCount > 0) {
+                                this.mRepeated++;
+                            }
+                            if (this.mRepeatMode == Animation.REVERSE) {
+                                this.mCycleFlip = !this.mCycleFlip;
+                            }
+                            this.mStartTime = -1;
+                            this.mMore = true;
+                            this.fireAnimationRepeat();
+                        }
+                    }
+                    if (!this.mMore && this.mOneMoreTime) {
+                        this.mOneMoreTime = false;
+                        return true;
+                    }
+                    return this.mMore;
+                }
+                fireAnimationStart() {
+                    if (this.mListener != null) {
+                        if (this.mListenerHandler == null)
+                            this.mListener.onAnimationStart(this);
+                        else
+                            this.mListenerHandler.postAtFrontOfQueue(this.mOnStart);
+                    }
+                }
+                fireAnimationRepeat() {
+                    if (this.mListener != null) {
+                        if (this.mListenerHandler == null)
+                            this.mListener.onAnimationRepeat(this);
+                        else
+                            this.mListenerHandler.postAtFrontOfQueue(this.mOnRepeat);
+                    }
+                }
+                fireAnimationEnd() {
+                    if (this.mListener != null) {
+                        if (this.mListenerHandler == null)
+                            this.mListener.onAnimationEnd(this);
+                        else
+                            this.mListenerHandler.postAtFrontOfQueue(this.mOnEnd);
+                    }
+                }
+                hasStarted() {
+                    return this.mStarted;
+                }
+                hasEnded() {
+                    return this.mEnded;
+                }
+                applyTransformation(interpolatedTime, t) {
+                }
+                resolveSize(type, value, size, parentSize) {
+                    switch (type) {
+                        case Animation.ABSOLUTE:
+                            return value;
+                        case Animation.RELATIVE_TO_SELF:
+                            return size * value;
+                        case Animation.RELATIVE_TO_PARENT:
+                            return parentSize * value;
+                        default:
+                            return value;
+                    }
+                }
+                getInvalidateRegion(left, top, right, bottom, invalidate, transformation) {
+                    const tempRegion = this.mRegion;
+                    const previousRegion = this.mPreviousRegion;
+                    invalidate.set(left, top, right, bottom);
+                    transformation.getMatrix().mapRect(invalidate);
+                    invalidate.inset(-1.0, -1.0);
+                    tempRegion.set(invalidate);
+                    invalidate.union(previousRegion);
+                    previousRegion.set(tempRegion);
+                    const tempTransformation = this.mTransformation;
+                    const previousTransformation = this.mPreviousTransformation;
+                    tempTransformation.set(transformation);
+                    transformation.set(previousTransformation);
+                    previousTransformation.set(tempTransformation);
+                }
+                initializeInvalidateRegion(left, top, right, bottom) {
+                    const region = this.mPreviousRegion;
+                    region.set(left, top, right, bottom);
+                    region.inset(-1.0, -1.0);
+                    if (this.mFillBefore) {
+                        const previousTransformation = this.mPreviousTransformation;
+                        this.applyTransformation(this.mInterpolator.getInterpolation(0.0), previousTransformation);
+                    }
+                }
+                hasAlpha() {
+                    return false;
+                }
+            }
+            Animation.INFINITE = -1;
+            Animation.RESTART = 1;
+            Animation.REVERSE = 2;
+            Animation.START_ON_FIRST_FRAME = -1;
+            Animation.ABSOLUTE = 0;
+            Animation.RELATIVE_TO_SELF = 1;
+            Animation.RELATIVE_TO_PARENT = 2;
+            Animation.ZORDER_NORMAL = 0;
+            Animation.ZORDER_TOP = 1;
+            Animation.ZORDER_BOTTOM = -1;
+            Animation.USE_CLOSEGUARD = false;
+            animation_1.Animation = Animation;
+            (function (Animation) {
+                class Description {
+                    constructor() {
+                        this.type = 0;
+                        this.value = 0;
+                    }
+                    static parseValue(value) {
+                        let d = new Description();
+                        if (value == null) {
+                            d.type = Animation.ABSOLUTE;
+                            d.value = 0;
+                        }
+                        else {
+                            if (value.endsWith('%p')) {
+                                d.type = Animation.RELATIVE_TO_PARENT;
+                                d.value = Number.parseFloat(value.substring(0, value.length - 2));
+                            }
+                            else if (value.endsWith('%')) {
+                                d.type = Animation.RELATIVE_TO_SELF;
+                                d.value = Number.parseFloat(value.substring(0, value.length - 1));
+                            }
+                            else {
+                                d.type = Animation.ABSOLUTE;
+                                d.value = TypedValue.complexToDimensionPixelSize(value);
+                            }
+                        }
+                        d.type = Animation.ABSOLUTE;
+                        d.value = 0.0;
+                        return d;
+                    }
+                }
+                Animation.Description = Description;
+            })(Animation = animation_1.Animation || (animation_1.Animation = {}));
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/9/27.
  */
@@ -6987,6 +8025,7 @@ var android;
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
+///<reference path="../graphics/RectF.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
@@ -7004,6 +8043,8 @@ var android;
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
 ///<reference path="KeyEvent.ts"/>
 ///<reference path="../R/attr.ts"/>
+///<reference path="animation/Animation.ts"/>
+///<reference path="animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -7021,6 +8062,7 @@ var android;
         var SystemClock = android.os.SystemClock;
         var Log = android.util.Log;
         var Rect = android.graphics.Rect;
+        var RectF = android.graphics.RectF;
         var Canvas = android.graphics.Canvas;
         var CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
         var ArrayList = java.util.ArrayList;
@@ -7034,12 +8076,15 @@ var android;
         var ClassFinder = androidui.util.ClassFinder;
         var NetDrawable = androidui.image.NetDrawable;
         var KeyEvent = android.view.KeyEvent;
+        var Animation = view_1.animation.Animation;
+        var Transformation = view_1.animation.Transformation;
         class View extends JavaObject {
             constructor(bindElement, rootElement, defStyle) {
                 super();
                 this.mPrivateFlags = 0;
                 this.mPrivateFlags2 = 0;
                 this.mPrivateFlags3 = 0;
+                this.mCurrentAnimation = null;
                 this.mOldWidthMeasureSpec = Number.MIN_SAFE_INTEGER;
                 this.mOldHeightMeasureSpec = Number.MIN_SAFE_INTEGER;
                 this.mMeasuredWidth = 0;
@@ -7318,100 +8363,6 @@ var android;
             getHeight() {
                 return this.mBottom - this.mTop;
             }
-            getTop() {
-                return this.mTop;
-            }
-            setTop(top) {
-                if (top != this.mTop) {
-                    if (this.mAttachInfo != null) {
-                        let minTop;
-                        let yLoc;
-                        if (top < this.mTop) {
-                            minTop = top;
-                            yLoc = top - this.mTop;
-                        }
-                        else {
-                            minTop = this.mTop;
-                            yLoc = 0;
-                        }
-                        this.invalidate(0, yLoc, this.mRight - this.mLeft, this.mBottom - minTop);
-                    }
-                    let width = this.mRight - this.mLeft;
-                    let oldHeight = this.mBottom - this.mTop;
-                    this.mTop = top;
-                    this.sizeChange(width, this.mBottom - this.mTop, width, oldHeight);
-                    this.mBackgroundSizeChanged = true;
-                }
-            }
-            getBottom() {
-                return this.mBottom;
-            }
-            setBottom(bottom) {
-                if (bottom != this.mBottom) {
-                    if (this.mAttachInfo != null) {
-                        let maxBottom;
-                        if (bottom < this.mBottom) {
-                            maxBottom = this.mBottom;
-                        }
-                        else {
-                            maxBottom = bottom;
-                        }
-                        this.invalidate(0, 0, this.mRight - this.mLeft, maxBottom - this.mTop);
-                    }
-                    let width = this.mRight - this.mLeft;
-                    let oldHeight = this.mBottom - this.mTop;
-                    this.mBottom = bottom;
-                    this.sizeChange(width, this.mBottom - this.mTop, width, oldHeight);
-                    this.mBackgroundSizeChanged = true;
-                }
-            }
-            getLeft() {
-                return this.mLeft;
-            }
-            setLeft(left) {
-                if (left != this.mLeft) {
-                    if (this.mAttachInfo != null) {
-                        let minLeft;
-                        let xLoc;
-                        if (left < this.mLeft) {
-                            minLeft = left;
-                            xLoc = left - this.mLeft;
-                        }
-                        else {
-                            minLeft = this.mLeft;
-                            xLoc = 0;
-                        }
-                        this.invalidate(xLoc, 0, this.mRight - minLeft, this.mBottom - this.mTop);
-                    }
-                    let oldWidth = this.mRight - this.mLeft;
-                    let height = this.mBottom - this.mTop;
-                    this.mLeft = left;
-                    this.sizeChange(this.mRight - this.mLeft, height, oldWidth, height);
-                    this.mBackgroundSizeChanged = true;
-                }
-            }
-            getRight() {
-                return this.mRight;
-            }
-            setRight(right) {
-                if (right != this.mRight) {
-                    if (this.mAttachInfo != null) {
-                        let maxRight;
-                        if (right < this.mRight) {
-                            maxRight = this.mRight;
-                        }
-                        else {
-                            maxRight = right;
-                        }
-                        this.invalidate(0, 0, maxRight - this.mLeft, this.mBottom - this.mTop);
-                    }
-                    let oldWidth = this.mRight - this.mLeft;
-                    let height = this.mBottom - this.mTop;
-                    this.mRight = right;
-                    this.sizeChange(this.mRight - this.mLeft, height, oldWidth, height);
-                    this.mBackgroundSizeChanged = true;
-                }
-            }
             getPaddingLeft() {
                 return this.mPaddingLeft;
             }
@@ -7508,9 +8459,6 @@ var android;
             getScrollY() {
                 return this.mScrollY;
             }
-            getFinalAlpha() {
-                return 1;
-            }
             offsetTopAndBottom(offset) {
                 if (offset != 0) {
                     this.updateMatrix();
@@ -7580,17 +8528,397 @@ var android;
                     this.invalidateParentIfNeeded();
                 }
             }
-            setAlpha(alpha) {
-                alpha &= 0xFF;
-                this.bindElement.style.opacity = alpha / 255 + '';
-            }
-            updateMatrix() {
-            }
             getMatrix() {
+                if (this.mTransformationInfo != null) {
+                    this.updateMatrix();
+                    return this.mTransformationInfo.mMatrix;
+                }
                 return Matrix.IDENTITY_MATRIX;
             }
             hasIdentityMatrix() {
+                if (this.mTransformationInfo != null) {
+                    this.updateMatrix();
+                    return this.mTransformationInfo.mMatrixIsIdentity;
+                }
                 return true;
+            }
+            ensureTransformationInfo() {
+                if (this.mTransformationInfo == null) {
+                    this.mTransformationInfo = new View.TransformationInfo();
+                }
+            }
+            updateMatrix() {
+                const info = this.mTransformationInfo;
+                if (info == null) {
+                    return;
+                }
+                if (info.mMatrixDirty) {
+                    if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                        if ((this.mRight - this.mLeft) != info.mPrevWidth || (this.mBottom - this.mTop) != info.mPrevHeight) {
+                            info.mPrevWidth = this.mRight - this.mLeft;
+                            info.mPrevHeight = this.mBottom - this.mTop;
+                            info.mPivotX = info.mPrevWidth / 2;
+                            info.mPivotY = info.mPrevHeight / 2;
+                        }
+                    }
+                    info.mMatrix.reset();
+                    info.mMatrix.setTranslate(info.mTranslationX, info.mTranslationY);
+                    info.mMatrix.preRotate(info.mRotation, info.mPivotX, info.mPivotY);
+                    info.mMatrix.preScale(info.mScaleX, info.mScaleY, info.mPivotX, info.mPivotY);
+                    info.mMatrixDirty = false;
+                    info.mMatrixIsIdentity = info.mMatrix.isIdentity();
+                    info.mInverseMatrixDirty = true;
+                }
+            }
+            getRotation() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mRotation : 0;
+            }
+            setRotation(rotation) {
+                this.ensureTransformationInfo();
+                const info = this.mTransformationInfo;
+                if (info.mRotation != rotation) {
+                    this.invalidateViewProperty(true, false);
+                    info.mRotation = rotation;
+                    info.mMatrixDirty = true;
+                    this.invalidateViewProperty(false, true);
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getScaleX() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mScaleX : 1;
+            }
+            setScaleX(scaleX) {
+                this.ensureTransformationInfo();
+                const info = this.mTransformationInfo;
+                if (info.mScaleX != scaleX) {
+                    this.invalidateViewProperty(true, false);
+                    info.mScaleX = scaleX;
+                    info.mMatrixDirty = true;
+                    this.invalidateViewProperty(false, true);
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getScaleY() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mScaleY : 1;
+            }
+            setScaleY(scaleY) {
+                this.ensureTransformationInfo();
+                const info = this.mTransformationInfo;
+                if (info.mScaleY != scaleY) {
+                    this.invalidateViewProperty(true, false);
+                    info.mScaleY = scaleY;
+                    info.mMatrixDirty = true;
+                    this.invalidateViewProperty(false, true);
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getPivotX() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mPivotX : 0;
+            }
+            setPivotX(pivotX) {
+                this.ensureTransformationInfo();
+                const info = this.mTransformationInfo;
+                let pivotSet = (this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == View.PFLAG_PIVOT_EXPLICITLY_SET;
+                if (info.mPivotX != pivotX || !pivotSet) {
+                    this.mPrivateFlags |= View.PFLAG_PIVOT_EXPLICITLY_SET;
+                    this.invalidateViewProperty(true, false);
+                    info.mPivotX = pivotX;
+                    info.mMatrixDirty = true;
+                    this.invalidateViewProperty(false, true);
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getPivotY() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mPivotY : 0;
+            }
+            setPivotY(pivotY) {
+                this.ensureTransformationInfo();
+                const info = this.mTransformationInfo;
+                let pivotSet = (this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == View.PFLAG_PIVOT_EXPLICITLY_SET;
+                if (info.mPivotY != pivotY || !pivotSet) {
+                    this.mPrivateFlags |= View.PFLAG_PIVOT_EXPLICITLY_SET;
+                    this.invalidateViewProperty(true, false);
+                    info.mPivotY = pivotY;
+                    info.mMatrixDirty = true;
+                    this.invalidateViewProperty(false, true);
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getAlpha() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mAlpha : 1;
+            }
+            hasOverlappingRendering() {
+                return true;
+            }
+            setAlpha(alpha) {
+                this.ensureTransformationInfo();
+                if (this.mTransformationInfo.mAlpha != alpha) {
+                    this.mTransformationInfo.mAlpha = alpha;
+                    if (this.onSetAlpha(Math.floor((alpha * 255)))) {
+                        this.mPrivateFlags |= View.PFLAG_ALPHA_SET;
+                        this.invalidateParentCaches();
+                        this.invalidate(true);
+                    }
+                    else {
+                        this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
+                        this.invalidateViewProperty(true, false);
+                    }
+                }
+            }
+            setAlphaNoInvalidation(alpha) {
+                this.ensureTransformationInfo();
+                if (this.mTransformationInfo.mAlpha != alpha) {
+                    this.mTransformationInfo.mAlpha = alpha;
+                    let subclassHandlesAlpha = this.onSetAlpha(Math.floor((alpha * 255)));
+                    if (subclassHandlesAlpha) {
+                        this.mPrivateFlags |= View.PFLAG_ALPHA_SET;
+                        return true;
+                    }
+                    else {
+                        this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
+                    }
+                }
+                return false;
+            }
+            setTransitionAlpha(alpha) {
+                this.ensureTransformationInfo();
+                if (this.mTransformationInfo.mTransitionAlpha != alpha) {
+                    this.mTransformationInfo.mTransitionAlpha = alpha;
+                    this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
+                    this.invalidateViewProperty(true, false);
+                }
+            }
+            getFinalAlpha() {
+                if (this.mTransformationInfo != null) {
+                    return this.mTransformationInfo.mAlpha * this.mTransformationInfo.mTransitionAlpha;
+                }
+                return 1;
+            }
+            getTransitionAlpha() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mTransitionAlpha : 1;
+            }
+            getTop() {
+                return this.mTop;
+            }
+            setTop(top) {
+                if (top != this.mTop) {
+                    this.updateMatrix();
+                    const matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                    if (matrixIsIdentity) {
+                        if (this.mAttachInfo != null) {
+                            let minTop;
+                            let yLoc;
+                            if (top < this.mTop) {
+                                minTop = top;
+                                yLoc = top - this.mTop;
+                            }
+                            else {
+                                minTop = this.mTop;
+                                yLoc = 0;
+                            }
+                            this.invalidate(0, yLoc, this.mRight - this.mLeft, this.mBottom - minTop);
+                        }
+                    }
+                    else {
+                        this.invalidate(true);
+                    }
+                    let width = this.mRight - this.mLeft;
+                    let oldHeight = this.mBottom - this.mTop;
+                    this.mTop = top;
+                    this.sizeChange(width, this.mBottom - this.mTop, width, oldHeight);
+                    if (!matrixIsIdentity) {
+                        if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                            this.mTransformationInfo.mMatrixDirty = true;
+                        }
+                        this.mPrivateFlags |= View.PFLAG_DRAWN;
+                        this.invalidate(true);
+                    }
+                    this.mBackgroundSizeChanged = true;
+                    this.invalidateParentIfNeeded();
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getBottom() {
+                return this.mBottom;
+            }
+            isDirty() {
+                return (this.mPrivateFlags & View.PFLAG_DIRTY_MASK) != 0;
+            }
+            setBottom(bottom) {
+                if (bottom != this.mBottom) {
+                    this.updateMatrix();
+                    const matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                    if (matrixIsIdentity) {
+                        if (this.mAttachInfo != null) {
+                            let maxBottom;
+                            if (bottom < this.mBottom) {
+                                maxBottom = this.mBottom;
+                            }
+                            else {
+                                maxBottom = bottom;
+                            }
+                            this.invalidate(0, 0, this.mRight - this.mLeft, maxBottom - this.mTop);
+                        }
+                    }
+                    else {
+                        this.invalidate(true);
+                    }
+                    let width = this.mRight - this.mLeft;
+                    let oldHeight = this.mBottom - this.mTop;
+                    this.mBottom = bottom;
+                    this.sizeChange(width, this.mBottom - this.mTop, width, oldHeight);
+                    if (!matrixIsIdentity) {
+                        if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                            this.mTransformationInfo.mMatrixDirty = true;
+                        }
+                        this.mPrivateFlags |= View.PFLAG_DRAWN;
+                        this.invalidate(true);
+                    }
+                    this.mBackgroundSizeChanged = true;
+                    this.invalidateParentIfNeeded();
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getLeft() {
+                return this.mLeft;
+            }
+            setLeft(left) {
+                if (left != this.mLeft) {
+                    this.updateMatrix();
+                    const matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                    if (matrixIsIdentity) {
+                        if (this.mAttachInfo != null) {
+                            let minLeft;
+                            let xLoc;
+                            if (left < this.mLeft) {
+                                minLeft = left;
+                                xLoc = left - this.mLeft;
+                            }
+                            else {
+                                minLeft = this.mLeft;
+                                xLoc = 0;
+                            }
+                            this.invalidate(xLoc, 0, this.mRight - minLeft, this.mBottom - this.mTop);
+                        }
+                    }
+                    else {
+                        this.invalidate(true);
+                    }
+                    let oldWidth = this.mRight - this.mLeft;
+                    let height = this.mBottom - this.mTop;
+                    this.mLeft = left;
+                    this.sizeChange(this.mRight - this.mLeft, height, oldWidth, height);
+                    if (!matrixIsIdentity) {
+                        if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                            this.mTransformationInfo.mMatrixDirty = true;
+                        }
+                        this.mPrivateFlags |= View.PFLAG_DRAWN;
+                        this.invalidate(true);
+                    }
+                    this.mBackgroundSizeChanged = true;
+                    this.invalidateParentIfNeeded();
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getRight() {
+                return this.mRight;
+            }
+            setRight(right) {
+                if (right != this.mRight) {
+                    this.updateMatrix();
+                    const matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                    if (matrixIsIdentity) {
+                        if (this.mAttachInfo != null) {
+                            let maxRight;
+                            if (right < this.mRight) {
+                                maxRight = this.mRight;
+                            }
+                            else {
+                                maxRight = right;
+                            }
+                            this.invalidate(0, 0, maxRight - this.mLeft, this.mBottom - this.mTop);
+                        }
+                    }
+                    else {
+                        this.invalidate(true);
+                    }
+                    let oldWidth = this.mRight - this.mLeft;
+                    let height = this.mBottom - this.mTop;
+                    this.mRight = right;
+                    this.sizeChange(this.mRight - this.mLeft, height, oldWidth, height);
+                    if (!matrixIsIdentity) {
+                        if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                            this.mTransformationInfo.mMatrixDirty = true;
+                        }
+                        this.mPrivateFlags |= View.PFLAG_DRAWN;
+                        this.invalidate(true);
+                    }
+                    this.mBackgroundSizeChanged = true;
+                    this.invalidateParentIfNeeded();
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getX() {
+                return this.mLeft + (this.mTransformationInfo != null ? this.mTransformationInfo.mTranslationX : 0);
+            }
+            setX(x) {
+                this.setTranslationX(x - this.mLeft);
+            }
+            getY() {
+                return this.mTop + (this.mTransformationInfo != null ? this.mTransformationInfo.mTranslationY : 0);
+            }
+            setY(y) {
+                this.setTranslationY(y - this.mTop);
+            }
+            getTranslationX() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mTranslationX : 0;
+            }
+            setTranslationX(translationX) {
+                this.ensureTransformationInfo();
+                const info = this.mTransformationInfo;
+                if (info.mTranslationX != translationX) {
+                    this.invalidateViewProperty(true, false);
+                    info.mTranslationX = translationX;
+                    info.mMatrixDirty = true;
+                    this.invalidateViewProperty(false, true);
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
+            }
+            getTranslationY() {
+                return this.mTransformationInfo != null ? this.mTransformationInfo.mTranslationY : 0;
+            }
+            setTranslationY(translationY) {
+                this.ensureTransformationInfo();
+                const info = this.mTransformationInfo;
+                if (info.mTranslationY != translationY) {
+                    this.invalidateViewProperty(true, false);
+                    info.mTranslationY = translationY;
+                    info.mMatrixDirty = true;
+                    this.invalidateViewProperty(false, true);
+                    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                        this.invalidateParentIfNeeded();
+                    }
+                }
             }
             transformRect(rect) {
                 if (!this.getMatrix().isIdentity()) {
@@ -8844,6 +10172,37 @@ var android;
                 this.mMinWidth = minWidth;
                 this.requestLayout();
             }
+            getAnimation() {
+                return this.mCurrentAnimation;
+            }
+            startAnimation(animation) {
+                animation.setStartTime(Animation.START_ON_FIRST_FRAME);
+                this.setAnimation(animation);
+                this.invalidateParentCaches();
+                this.invalidate(true);
+            }
+            clearAnimation() {
+                if (this.mCurrentAnimation != null) {
+                    this.mCurrentAnimation.detach();
+                }
+                this.mCurrentAnimation = null;
+                this.invalidateParentIfNeeded();
+            }
+            setAnimation(animation) {
+                this.mCurrentAnimation = animation;
+                if (animation != null) {
+                    animation.reset();
+                }
+            }
+            onAnimationStart() {
+                this.mPrivateFlags |= View.PFLAG_ANIMATION_STARTED;
+            }
+            onAnimationEnd() {
+                this.mPrivateFlags &= ~View.PFLAG_ANIMATION_STARTED;
+            }
+            onSetAlpha(alpha) {
+                return false;
+            }
             _invalidateRect(l, t, r, b) {
                 if (this.skipInvalidate()) {
                     return;
@@ -8970,7 +10329,8 @@ var android;
                 }
             }
             skipInvalidate() {
-                return (this.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE;
+                return (this.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE
+                    && this.mCurrentAnimation == null;
             }
             isOpaque() {
                 return (this.mPrivateFlags & View.PFLAG_OPAQUE_MASK) == View.PFLAG_OPAQUE_MASK &&
@@ -9047,10 +10407,15 @@ var android;
             drawFromParent(canvas, parent, drawingTime) {
                 let useDisplayListProperties = false;
                 let more = false;
-                let childHasIdentityMatrix = true;
+                let childHasIdentityMatrix = this.hasIdentityMatrix();
                 let flags = parent.mGroupFlags;
-                let scalingRequired = false;
+                if ((flags & view_1.ViewGroup.FLAG_CLEAR_TRANSFORMATION) == view_1.ViewGroup.FLAG_CLEAR_TRANSFORMATION) {
+                    parent.getChildTransformation().clear();
+                    parent.mGroupFlags &= ~view_1.ViewGroup.FLAG_CLEAR_TRANSFORMATION;
+                }
+                let transformToApply = null;
                 let concatMatrix = false;
+                let scalingRequired = false;
                 let caching = false;
                 let layerType = this.getLayerType();
                 if ((flags & view_1.ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) != 0 ||
@@ -9060,7 +10425,27 @@ var android;
                 else {
                     caching = (layerType != View.LAYER_TYPE_NONE);
                 }
-                concatMatrix == concatMatrix || !childHasIdentityMatrix;
+                const a = this.getAnimation();
+                if (a != null) {
+                    more = this.drawAnimation(parent, drawingTime, a, scalingRequired);
+                    concatMatrix = a.willChangeTransformationMatrix();
+                    if (concatMatrix) {
+                        this.mPrivateFlags3 |= View.PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
+                    }
+                    transformToApply = parent.getChildTransformation();
+                }
+                else {
+                    if (!useDisplayListProperties && (flags & view_1.ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+                        const t = parent.getChildTransformation();
+                        const hasTransform = parent.getChildStaticTransformation(this, t);
+                        if (hasTransform) {
+                            const transformType = t.getTransformationType();
+                            transformToApply = transformType != Transformation.TYPE_IDENTITY ? t : null;
+                            concatMatrix = (transformType & Transformation.TYPE_MATRIX) != 0;
+                        }
+                    }
+                }
+                concatMatrix = !childHasIdentityMatrix || concatMatrix;
                 this.mPrivateFlags |= View.PFLAG_DRAWN;
                 if (!concatMatrix &&
                     (flags & (view_1.ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
@@ -9092,7 +10477,57 @@ var android;
                 else {
                     canvas.translate(this.mLeft, this.mTop);
                 }
-                let alpha = 1;
+                let alpha = this.getAlpha() * this.getTransitionAlpha();
+                if (transformToApply != null || alpha < 1 || !this.hasIdentityMatrix() || (this.mPrivateFlags3 & View.PFLAG3_VIEW_IS_ANIMATING_ALPHA) == View.PFLAG3_VIEW_IS_ANIMATING_ALPHA) {
+                    if (transformToApply != null || !childHasIdentityMatrix) {
+                        let transX = 0;
+                        let transY = 0;
+                        if (offsetForScroll) {
+                            transX = -sx;
+                            transY = -sy;
+                        }
+                        if (transformToApply != null) {
+                            if (concatMatrix) {
+                                canvas.translate(-transX, -transY);
+                                canvas.concat(transformToApply.getMatrix());
+                                canvas.translate(transX, transY);
+                                parent.mGroupFlags |= view_1.ViewGroup.FLAG_CLEAR_TRANSFORMATION;
+                            }
+                            let transformAlpha = transformToApply.getAlpha();
+                            if (transformAlpha < 1) {
+                                alpha *= transformAlpha;
+                                parent.mGroupFlags |= view_1.ViewGroup.FLAG_CLEAR_TRANSFORMATION;
+                            }
+                        }
+                        if (!childHasIdentityMatrix && !useDisplayListProperties) {
+                            canvas.translate(-transX, -transY);
+                            canvas.concat(this.getMatrix());
+                            canvas.translate(transX, transY);
+                        }
+                    }
+                    if (alpha < 1 || (this.mPrivateFlags3 & View.PFLAG3_VIEW_IS_ANIMATING_ALPHA) == View.PFLAG3_VIEW_IS_ANIMATING_ALPHA) {
+                        if (alpha < 1) {
+                            this.mPrivateFlags3 |= View.PFLAG3_VIEW_IS_ANIMATING_ALPHA;
+                        }
+                        else {
+                            this.mPrivateFlags3 &= ~View.PFLAG3_VIEW_IS_ANIMATING_ALPHA;
+                        }
+                        parent.mGroupFlags |= view_1.ViewGroup.FLAG_CLEAR_TRANSFORMATION;
+                        if (hasNoCache) {
+                            const multipliedAlpha = Math.floor((255 * alpha));
+                            if (!this.onSetAlpha(multipliedAlpha)) {
+                                canvas.multiplyAlpha(alpha);
+                            }
+                            else {
+                                this.mPrivateFlags |= View.PFLAG_ALPHA_SET;
+                            }
+                        }
+                    }
+                }
+                else if ((this.mPrivateFlags & View.PFLAG_ALPHA_SET) == View.PFLAG_ALPHA_SET) {
+                    this.onSetAlpha(255);
+                    this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
+                }
                 if ((flags & view_1.ViewGroup.FLAG_CLIP_CHILDREN) == view_1.ViewGroup.FLAG_CLIP_CHILDREN &&
                     !useDisplayListProperties && cache == null) {
                     if (offsetForScroll) {
@@ -9118,11 +10553,14 @@ var android;
                 }
                 else if (cache != null) {
                     this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
-                    if (alpha < 1) {
-                        parent.mGroupFlags |= view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
-                    }
-                    else if ((flags & view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE) != 0) {
-                        parent.mGroupFlags &= ~view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                    canvas.multiplyAlpha(alpha);
+                    if (layerType == View.LAYER_TYPE_NONE) {
+                        if (alpha < 1) {
+                            parent.mGroupFlags |= view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                        }
+                        else if ((flags & view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE) != 0) {
+                            parent.mGroupFlags &= ~view_1.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                        }
                     }
                     canvas.drawCanvas(cache, 0, 0);
                 }
@@ -9169,6 +10607,44 @@ var android;
             onDraw(canvas) {
             }
             dispatchDraw(canvas) {
+            }
+            drawAnimation(parent, drawingTime, a, scalingRequired) {
+                let invalidationTransform;
+                const flags = parent.mGroupFlags;
+                const initialized = a.isInitialized();
+                if (!initialized) {
+                    a.initialize(this.mRight - this.mLeft, this.mBottom - this.mTop, parent.getWidth(), parent.getHeight());
+                    a.initializeInvalidateRegion(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                    if (this.mAttachInfo != null)
+                        a.setListenerHandler(this.mAttachInfo.mHandler);
+                    this.onAnimationStart();
+                }
+                const t = parent.getChildTransformation();
+                let more = a.getTransformation(drawingTime, t, 1);
+                invalidationTransform = t;
+                if (more) {
+                    if (!a.willChangeBounds()) {
+                        if ((flags & (view_1.ViewGroup.FLAG_OPTIMIZE_INVALIDATE | view_1.ViewGroup.FLAG_ANIMATION_DONE)) == view_1.ViewGroup.FLAG_OPTIMIZE_INVALIDATE) {
+                            parent.mGroupFlags |= view_1.ViewGroup.FLAG_INVALIDATE_REQUIRED;
+                        }
+                        else if ((flags & view_1.ViewGroup.FLAG_INVALIDATE_REQUIRED) == 0) {
+                            parent.mPrivateFlags |= View.PFLAG_DRAW_ANIMATION;
+                            parent.invalidate(this.mLeft, this.mTop, this.mRight, this.mBottom);
+                        }
+                    }
+                    else {
+                        if (parent.mInvalidateRegion == null) {
+                            parent.mInvalidateRegion = new RectF();
+                        }
+                        const region = parent.mInvalidateRegion;
+                        a.getInvalidateRegion(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop, region, invalidationTransform);
+                        parent.mPrivateFlags |= View.PFLAG_DRAW_ANIMATION;
+                        const left = this.mLeft + Math.floor(region.left);
+                        const top = this.mTop + Math.floor(region.top);
+                        parent.invalidate(left, top, left + Math.floor((region.width() + .5)), top + Math.floor((region.height() + .5)));
+                    }
+                }
+                return more;
             }
             onDrawScrollBars(canvas) {
                 const cache = this.mScrollCache;
@@ -9535,9 +11011,6 @@ var android;
                 }
                 this.mBackgroundSizeChanged = true;
                 this.invalidate(true);
-            }
-            getAnimation() {
-                return null;
             }
             computeHorizontalScrollRange() {
                 return this.getWidth();
@@ -9956,6 +11429,7 @@ var android;
                 this.removePerformClickCallback();
                 this.destroyDrawingCache();
                 this.cleanupDraw();
+                this.mCurrentAnimation = null;
             }
             cleanupDraw() {
                 if (this.mAttachInfo != null) {
@@ -10588,6 +12062,26 @@ var android;
         View.AndroidViewProperty = 'AndroidView';
         view_1.View = View;
         (function (View) {
+            class TransformationInfo {
+                constructor() {
+                    this.mMatrix = new Matrix();
+                    this.mMatrixDirty = false;
+                    this.mInverseMatrixDirty = true;
+                    this.mMatrixIsIdentity = true;
+                    this.mPrevWidth = -1;
+                    this.mPrevHeight = -1;
+                    this.mRotation = 0;
+                    this.mTranslationX = 0;
+                    this.mTranslationY = 0;
+                    this.mScaleX = 1;
+                    this.mScaleY = 1;
+                    this.mPivotX = 0;
+                    this.mPivotY = 0;
+                    this.mAlpha = 1;
+                    this.mTransitionAlpha = 1;
+                }
+            }
+            View.TransformationInfo = TransformationInfo;
             class MeasureSpec {
                 static makeMeasureSpec(size, mode) {
                     return (size & ~MeasureSpec.MODE_MASK) | (mode & MeasureSpec.MODE_MASK);
@@ -12382,10 +13876,12 @@ var java;
 ///<reference path="../graphics/Point.ts"/>
 ///<reference path="../graphics/Matrix.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
+///<reference path="../graphics/RectF.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
 ///<reference path="FocusFinder.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -12396,6 +13892,7 @@ var android;
         var System = java.lang.System;
         var AttrBinder = androidui.attr.AttrBinder;
         var Integer = java.lang.Integer;
+        var Transformation = view_4.animation.Transformation;
         class ViewGroup extends view_4.View {
             constructor(bindElement, rootElement) {
                 super(bindElement, rootElement);
@@ -13874,6 +15371,15 @@ var android;
                     }
                 }
                 return null;
+            }
+            getChildStaticTransformation(child, t) {
+                return false;
+            }
+            getChildTransformation() {
+                if (this.mChildTransformation == null) {
+                    this.mChildTransformation = new Transformation();
+                }
+                return this.mChildTransformation;
             }
             findViewByPredicateTraversal(predicate, childToSkip) {
                 if (predicate.apply(this)) {
@@ -21339,465 +22845,6 @@ var android;
         database.DataSetObserver = DataSetObserver;
     })(database = android.database || (android.database = {}));
 })(android || (android = {}));
-// Copyright 2009 The Closure Library Authors. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS-IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-var goog;
-(function (goog) {
-    var math;
-    (function (math) {
-        class Long {
-            constructor(low, high) {
-                this.low_ = low | 0;
-                this.high_ = high | 0;
-            }
-            toInt() {
-                return this.low_;
-            }
-            toNumber() {
-                return this.high_ * Long.TWO_PWR_32_DBL_ + this.getLowBitsUnsigned();
-            }
-            toString(opt_radix) {
-                var radix = opt_radix || 10;
-                if (radix < 2 || 36 < radix) {
-                    throw Error('radix out of range: ' + radix);
-                }
-                if (this.isZero()) {
-                    return '0';
-                }
-                if (this.isNegative()) {
-                    if (this.equals(Long.MIN_VALUE)) {
-                        var radixLong = Long.fromNumber(radix);
-                        var div = this.div(radixLong);
-                        let rem = div.multiply(radixLong).subtract(this);
-                        return div.toString(radix) + rem.toInt().toString(radix);
-                    }
-                    else {
-                        return '-' + this.negate().toString(radix);
-                    }
-                }
-                var radixToPower = Long.fromNumber(Math.pow(radix, 6));
-                let rem = this;
-                var result = '';
-                while (true) {
-                    var remDiv = rem.div(radixToPower);
-                    var intval = rem.subtract(remDiv.multiply(radixToPower)).toInt();
-                    var digits = intval.toString(radix);
-                    rem = remDiv;
-                    if (rem.isZero()) {
-                        return digits + result;
-                    }
-                    else {
-                        while (digits.length < 6) {
-                            digits = '0' + digits;
-                        }
-                        result = '' + digits + result;
-                    }
-                }
-            }
-            getHighBits() {
-                return this.high_;
-            }
-            getLowBits() {
-                return this.low_;
-            }
-            getLowBitsUnsigned() {
-                return (this.low_ >= 0) ? this.low_ : Long.TWO_PWR_32_DBL_ + this.low_;
-            }
-            getNumBitsAbs() {
-                if (this.isNegative()) {
-                    if (this.equals(Long.MIN_VALUE)) {
-                        return 64;
-                    }
-                    else {
-                        return this.negate().getNumBitsAbs();
-                    }
-                }
-                else {
-                    var val = this.high_ != 0 ? this.high_ : this.low_;
-                    for (var bit = 31; bit > 0; bit--) {
-                        if ((val & (1 << bit)) != 0) {
-                            break;
-                        }
-                    }
-                    return this.high_ != 0 ? bit + 33 : bit + 1;
-                }
-            }
-            isZero() {
-                return this.high_ == 0 && this.low_ == 0;
-            }
-            isNegative() {
-                return this.high_ < 0;
-            }
-            isOdd() {
-                return (this.low_ & 1) == 1;
-            }
-            equals(other) {
-                return (this.high_ == other.high_) && (this.low_ == other.low_);
-            }
-            notEquals(other) {
-                return (this.high_ != other.high_) || (this.low_ != other.low_);
-            }
-            lessThan(other) {
-                return this.compare(other) < 0;
-            }
-            lessThanOrEqual(other) {
-                return this.compare(other) <= 0;
-            }
-            greaterThan(other) {
-                return this.compare(other) > 0;
-            }
-            greaterThanOrEqual(other) {
-                return this.compare(other) >= 0;
-            }
-            compare(other) {
-                if (this.equals(other)) {
-                    return 0;
-                }
-                var thisNeg = this.isNegative();
-                var otherNeg = other.isNegative();
-                if (thisNeg && !otherNeg) {
-                    return -1;
-                }
-                if (!thisNeg && otherNeg) {
-                    return 1;
-                }
-                if (this.subtract(other).isNegative()) {
-                    return -1;
-                }
-                else {
-                    return 1;
-                }
-            }
-            negate() {
-                if (this.equals(Long.MIN_VALUE)) {
-                    return Long.MIN_VALUE;
-                }
-                else {
-                    return this.not().add(Long.ONE);
-                }
-            }
-            add(other) {
-                // Divide each number into 4 chunks of 16 bits, and then sum the chunks.
-                var a48 = this.high_ >>> 16;
-                var a32 = this.high_ & 0xFFFF;
-                var a16 = this.low_ >>> 16;
-                var a00 = this.low_ & 0xFFFF;
-                var b48 = other.high_ >>> 16;
-                var b32 = other.high_ & 0xFFFF;
-                var b16 = other.low_ >>> 16;
-                var b00 = other.low_ & 0xFFFF;
-                var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
-                c00 += a00 + b00;
-                c16 += c00 >>> 16;
-                c00 &= 0xFFFF;
-                c16 += a16 + b16;
-                c32 += c16 >>> 16;
-                c16 &= 0xFFFF;
-                c32 += a32 + b32;
-                c48 += c32 >>> 16;
-                c32 &= 0xFFFF;
-                c48 += a48 + b48;
-                c48 &= 0xFFFF;
-                return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32);
-            }
-            subtract(other) {
-                return this.add(other.negate());
-            }
-            multiply(other) {
-                if (this.isZero()) {
-                    return Long.ZERO;
-                }
-                else if (other.isZero()) {
-                    return Long.ZERO;
-                }
-                if (this.equals(Long.MIN_VALUE)) {
-                    return other.isOdd() ? Long.MIN_VALUE : Long.ZERO;
-                }
-                else if (other.equals(Long.MIN_VALUE)) {
-                    return this.isOdd() ? Long.MIN_VALUE : Long.ZERO;
-                }
-                if (this.isNegative()) {
-                    if (other.isNegative()) {
-                        return this.negate().multiply(other.negate());
-                    }
-                    else {
-                        return this.negate().multiply(other).negate();
-                    }
-                }
-                else if (other.isNegative()) {
-                    return this.multiply(other.negate()).negate();
-                }
-                if (this.lessThan(Long.TWO_PWR_24_) &&
-                    other.lessThan(Long.TWO_PWR_24_)) {
-                    return Long.fromNumber(this.toNumber() * other.toNumber());
-                }
-                var a48 = this.high_ >>> 16;
-                var a32 = this.high_ & 0xFFFF;
-                var a16 = this.low_ >>> 16;
-                var a00 = this.low_ & 0xFFFF;
-                var b48 = other.high_ >>> 16;
-                var b32 = other.high_ & 0xFFFF;
-                var b16 = other.low_ >>> 16;
-                var b00 = other.low_ & 0xFFFF;
-                var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
-                c00 += a00 * b00;
-                c16 += c00 >>> 16;
-                c00 &= 0xFFFF;
-                c16 += a16 * b00;
-                c32 += c16 >>> 16;
-                c16 &= 0xFFFF;
-                c16 += a00 * b16;
-                c32 += c16 >>> 16;
-                c16 &= 0xFFFF;
-                c32 += a32 * b00;
-                c48 += c32 >>> 16;
-                c32 &= 0xFFFF;
-                c32 += a16 * b16;
-                c48 += c32 >>> 16;
-                c32 &= 0xFFFF;
-                c32 += a00 * b32;
-                c48 += c32 >>> 16;
-                c32 &= 0xFFFF;
-                c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
-                c48 &= 0xFFFF;
-                return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32);
-            }
-            div(other) {
-                if (other.isZero()) {
-                    throw Error('division by zero');
-                }
-                else if (this.isZero()) {
-                    return Long.ZERO;
-                }
-                if (this.equals(Long.MIN_VALUE)) {
-                    if (other.equals(Long.ONE) ||
-                        other.equals(Long.NEG_ONE)) {
-                        return Long.MIN_VALUE;
-                    }
-                    else if (other.equals(Long.MIN_VALUE)) {
-                        return Long.ONE;
-                    }
-                    else {
-                        var halfThis = this.shiftRight(1);
-                        let approx = halfThis.div(other).shiftLeft(1);
-                        if (approx.equals(Long.ZERO)) {
-                            return other.isNegative() ? Long.ONE : Long.NEG_ONE;
-                        }
-                        else {
-                            var rem = this.subtract(other.multiply(approx));
-                            var result = approx.add(rem.div(other));
-                            return result;
-                        }
-                    }
-                }
-                else if (other.equals(Long.MIN_VALUE)) {
-                    return Long.ZERO;
-                }
-                if (this.isNegative()) {
-                    if (other.isNegative()) {
-                        return this.negate().div(other.negate());
-                    }
-                    else {
-                        return this.negate().div(other).negate();
-                    }
-                }
-                else if (other.isNegative()) {
-                    return this.div(other.negate()).negate();
-                }
-                var res = Long.ZERO;
-                var rem = this;
-                while (rem.greaterThanOrEqual(other)) {
-                    let approx = Math.max(1, Math.floor(rem.toNumber() / other.toNumber()));
-                    var log2 = Math.ceil(Math.log(approx) / Math.LN2);
-                    var delta = (log2 <= 48) ? 1 : Math.pow(2, log2 - 48);
-                    var approxRes = Long.fromNumber(approx);
-                    var approxRem = approxRes.multiply(other);
-                    while (approxRem.isNegative() || approxRem.greaterThan(rem)) {
-                        approx -= delta;
-                        approxRes = Long.fromNumber(approx);
-                        approxRem = approxRes.multiply(other);
-                    }
-                    if (approxRes.isZero()) {
-                        approxRes = Long.ONE;
-                    }
-                    res = res.add(approxRes);
-                    rem = rem.subtract(approxRem);
-                }
-                return res;
-            }
-            modulo(other) {
-                return this.subtract(this.div(other).multiply(other));
-            }
-            not() {
-                return Long.fromBits(~this.low_, ~this.high_);
-            }
-            and(other) {
-                return Long.fromBits(this.low_ & other.low_, this.high_ & other.high_);
-            }
-            or(other) {
-                return Long.fromBits(this.low_ | other.low_, this.high_ | other.high_);
-            }
-            xor(other) {
-                return Long.fromBits(this.low_ ^ other.low_, this.high_ ^ other.high_);
-            }
-            shiftLeft(numBits) {
-                numBits &= 63;
-                if (numBits == 0) {
-                    return this;
-                }
-                else {
-                    var low = this.low_;
-                    if (numBits < 32) {
-                        var high = this.high_;
-                        return Long.fromBits(low << numBits, (high << numBits) | (low >>> (32 - numBits)));
-                    }
-                    else {
-                        return Long.fromBits(0, low << (numBits - 32));
-                    }
-                }
-            }
-            shiftRight(numBits) {
-                numBits &= 63;
-                if (numBits == 0) {
-                    return this;
-                }
-                else {
-                    var high = this.high_;
-                    if (numBits < 32) {
-                        var low = this.low_;
-                        return Long.fromBits((low >>> numBits) | (high << (32 - numBits)), high >> numBits);
-                    }
-                    else {
-                        return Long.fromBits(high >> (numBits - 32), high >= 0 ? 0 : -1);
-                    }
-                }
-            }
-            shiftRightUnsigned(numBits) {
-                numBits &= 63;
-                if (numBits == 0) {
-                    return this;
-                }
-                else {
-                    var high = this.high_;
-                    if (numBits < 32) {
-                        var low = this.low_;
-                        return Long.fromBits((low >>> numBits) | (high << (32 - numBits)), high >>> numBits);
-                    }
-                    else if (numBits == 32) {
-                        return Long.fromBits(high, 0);
-                    }
-                    else {
-                        return Long.fromBits(high >>> (numBits - 32), 0);
-                    }
-                }
-            }
-            static fromInt(value) {
-                if (-128 <= value && value < 128) {
-                    var cachedObj = Long.IntCache_[value];
-                    if (cachedObj) {
-                        return cachedObj;
-                    }
-                }
-                var obj = new Long(value | 0, value < 0 ? -1 : 0);
-                if (-128 <= value && value < 128) {
-                    Long.IntCache_[value] = obj;
-                }
-                return obj;
-            }
-            static fromNumber(value) {
-                if (isNaN(value) || !isFinite(value)) {
-                    return Long.ZERO;
-                }
-                else if (value <= -Long.TWO_PWR_63_DBL_) {
-                    return Long.MIN_VALUE;
-                }
-                else if (value + 1 >= Long.TWO_PWR_63_DBL_) {
-                    return Long.MAX_VALUE;
-                }
-                else if (value < 0) {
-                    return Long.fromNumber(-value).negate();
-                }
-                else {
-                    return new Long((value % Long.TWO_PWR_32_DBL_) | 0, (value / Long.TWO_PWR_32_DBL_) | 0);
-                }
-            }
-            static fromBits(lowBits, highBits) {
-                return new Long(lowBits, highBits);
-            }
-            static fromString(str, opt_radix) {
-                if (str.length == 0) {
-                    throw Error('number format error: empty string');
-                }
-                var radix = opt_radix || 10;
-                if (radix < 2 || 36 < radix) {
-                    throw Error('radix out of range: ' + radix);
-                }
-                if (str.charAt(0) == '-') {
-                    return Long.fromString(str.substring(1), radix).negate();
-                }
-                else if (str.indexOf('-') >= 0) {
-                    throw Error('number format error: interior "-" character: ' + str);
-                }
-                var radixToPower = Long.fromNumber(Math.pow(radix, 8));
-                var result = Long.ZERO;
-                for (var i = 0; i < str.length; i += 8) {
-                    var size = Math.min(8, str.length - i);
-                    var value = parseInt(str.substring(i, i + size), radix);
-                    if (size < 8) {
-                        var power = Long.fromNumber(Math.pow(radix, size));
-                        result = result.multiply(power).add(Long.fromNumber(value));
-                    }
-                    else {
-                        result = result.multiply(radixToPower);
-                        result = result.add(Long.fromNumber(value));
-                    }
-                }
-                return result;
-            }
-        }
-        Long.IntCache_ = {};
-        Long.TWO_PWR_16_DBL_ = 1 << 16;
-        Long.TWO_PWR_24_DBL_ = 1 << 24;
-        Long.TWO_PWR_32_DBL_ = Long.TWO_PWR_16_DBL_ * Long.TWO_PWR_16_DBL_;
-        Long.TWO_PWR_31_DBL_ = Long.TWO_PWR_32_DBL_ / 2;
-        Long.TWO_PWR_48_DBL_ = Long.TWO_PWR_32_DBL_ * Long.TWO_PWR_16_DBL_;
-        Long.TWO_PWR_64_DBL_ = Long.TWO_PWR_32_DBL_ * Long.TWO_PWR_32_DBL_;
-        Long.TWO_PWR_63_DBL_ = Long.TWO_PWR_64_DBL_ / 2;
-        Long.TWO_PWR_24_ = Long.fromInt(1 << 24);
-        Long.ZERO = Long.fromInt(0);
-        Long.ONE = Long.fromInt(1);
-        Long.NEG_ONE = Long.fromInt(-1);
-        Long.MAX_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0x7FFFFFFF | 0);
-        Long.MIN_VALUE = Long.fromBits(0, 0x80000000 | 0);
-        math.Long = Long;
-    })(math = goog.math || (goog.math = {}));
-})(goog || (goog = {}));
-/**
- * Created by linfaxin on 15/11/13.
- */
-///<reference path="../../androidui/util/Long.ts"/>
-var java;
-(function (java) {
-    var lang;
-    (function (lang) {
-        class Long {
-        }
-        Long.MIN_VALUE = goog.math.Long.MIN_VALUE.toNumber();
-        Long.MAX_VALUE = goog.math.Long.MAX_VALUE.toNumber();
-        lang.Long = Long;
-    })(lang = java.lang || (java.lang = {}));
-})(java || (java = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
  *
@@ -37680,35 +38727,6 @@ var android;
         widget.GridView = GridView;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var animation;
-        (function (animation) {
-            class DecelerateInterpolator {
-                constructor(factor = 1) {
-                    this.mFactor = factor;
-                }
-                getInterpolation(input) {
-                    let result;
-                    if (this.mFactor == 1.0) {
-                        result = (1.0 - (1.0 - input) * (1.0 - input));
-                    }
-                    else {
-                        result = (1.0 - Math.pow((1.0 - input), 2 * this.mFactor));
-                    }
-                    return result;
-                }
-            }
-            animation.DecelerateInterpolator = DecelerateInterpolator;
-        })(animation = view.animation || (view.animation = {}));
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
 var java;
 (function (java) {
     var lang;
@@ -40963,6 +41981,611 @@ var android;
         }
         widget.BaseExpandableListAdapter = BaseExpandableListAdapter;
     })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Animation = android.view.animation.Animation;
+            class AlphaAnimation extends Animation {
+                constructor(fromAlpha, toAlpha) {
+                    super();
+                    this.mFromAlpha = 0;
+                    this.mToAlpha = 0;
+                    this.mFromAlpha = fromAlpha;
+                    this.mToAlpha = toAlpha;
+                }
+                applyTransformation(interpolatedTime, t) {
+                    const alpha = this.mFromAlpha;
+                    t.setAlpha(alpha + ((this.mToAlpha - alpha) * interpolatedTime));
+                }
+                willChangeTransformationMatrix() {
+                    return false;
+                }
+                willChangeBounds() {
+                    return false;
+                }
+                hasAlpha() {
+                    return true;
+                }
+            }
+            animation.AlphaAnimation = AlphaAnimation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/content/res/Resources.ts"/>
+///<reference path="../../../android/util/TypedValue.ts"/>
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Animation = android.view.animation.Animation;
+            class ScaleAnimation extends Animation {
+                constructor(fromX, toX, fromY, toY, pivotXType = ScaleAnimation.ABSOLUTE, pivotXValue = 0, pivotYType = ScaleAnimation.ABSOLUTE, pivotYValue = 0) {
+                    super();
+                    this.mFromX = 0;
+                    this.mToX = 0;
+                    this.mFromY = 0;
+                    this.mToY = 0;
+                    this.mFromXData = 0;
+                    this.mToXData = 0;
+                    this.mFromYData = 0;
+                    this.mToYData = 0;
+                    this.mPivotXType = ScaleAnimation.ABSOLUTE;
+                    this.mPivotYType = ScaleAnimation.ABSOLUTE;
+                    this.mPivotXValue = 0.0;
+                    this.mPivotYValue = 0.0;
+                    this.mPivotX = 0;
+                    this.mPivotY = 0;
+                    this.mResources = null;
+                    this.mFromX = fromX;
+                    this.mToX = toX;
+                    this.mFromY = fromY;
+                    this.mToY = toY;
+                    this.mPivotXValue = pivotXValue;
+                    this.mPivotXType = pivotXType;
+                    this.mPivotYValue = pivotYValue;
+                    this.mPivotYType = pivotYType;
+                    this.initializePivotPoint();
+                }
+                initializePivotPoint() {
+                    if (this.mPivotXType == ScaleAnimation.ABSOLUTE) {
+                        this.mPivotX = this.mPivotXValue;
+                    }
+                    if (this.mPivotYType == ScaleAnimation.ABSOLUTE) {
+                        this.mPivotY = this.mPivotYValue;
+                    }
+                }
+                applyTransformation(interpolatedTime, t) {
+                    let sx = 1.0;
+                    let sy = 1.0;
+                    let scale = this.getScaleFactor();
+                    if (this.mFromX != 1.0 || this.mToX != 1.0) {
+                        sx = this.mFromX + ((this.mToX - this.mFromX) * interpolatedTime);
+                    }
+                    if (this.mFromY != 1.0 || this.mToY != 1.0) {
+                        sy = this.mFromY + ((this.mToY - this.mFromY) * interpolatedTime);
+                    }
+                    if (this.mPivotX == 0 && this.mPivotY == 0) {
+                        t.getMatrix().setScale(sx, sy);
+                    }
+                    else {
+                        t.getMatrix().setScale(sx, sy, scale * this.mPivotX, scale * this.mPivotY);
+                    }
+                }
+                initialize(width, height, parentWidth, parentHeight) {
+                    super.initialize(width, height, parentWidth, parentHeight);
+                    this.mPivotX = this.resolveSize(this.mPivotXType, this.mPivotXValue, width, parentWidth);
+                    this.mPivotY = this.resolveSize(this.mPivotYType, this.mPivotYValue, height, parentHeight);
+                }
+            }
+            animation.ScaleAnimation = ScaleAnimation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Animation = android.view.animation.Animation;
+            class RotateAnimation extends Animation {
+                constructor(fromDegrees, toDegrees, pivotXType = RotateAnimation.ABSOLUTE, pivotXValue = 0, pivotYType = RotateAnimation.ABSOLUTE, pivotYValue = 0) {
+                    super();
+                    this.mFromDegrees = 0;
+                    this.mToDegrees = 0;
+                    this.mPivotXType = RotateAnimation.ABSOLUTE;
+                    this.mPivotYType = RotateAnimation.ABSOLUTE;
+                    this.mPivotXValue = 0.0;
+                    this.mPivotYValue = 0.0;
+                    this.mPivotX = 0;
+                    this.mPivotY = 0;
+                    this.mFromDegrees = fromDegrees;
+                    this.mToDegrees = toDegrees;
+                    this.mPivotXValue = pivotXValue;
+                    this.mPivotXType = pivotXType;
+                    this.mPivotYValue = pivotYValue;
+                    this.mPivotYType = pivotYType;
+                    this.initializePivotPoint();
+                }
+                initializePivotPoint() {
+                    if (this.mPivotXType == RotateAnimation.ABSOLUTE) {
+                        this.mPivotX = this.mPivotXValue;
+                    }
+                    if (this.mPivotYType == RotateAnimation.ABSOLUTE) {
+                        this.mPivotY = this.mPivotYValue;
+                    }
+                }
+                applyTransformation(interpolatedTime, t) {
+                    let degrees = this.mFromDegrees + ((this.mToDegrees - this.mFromDegrees) * interpolatedTime);
+                    let scale = this.getScaleFactor();
+                    if (this.mPivotX == 0.0 && this.mPivotY == 0.0) {
+                        t.getMatrix().setRotate(degrees);
+                    }
+                    else {
+                        t.getMatrix().setRotate(degrees, this.mPivotX * scale, this.mPivotY * scale);
+                    }
+                }
+                initialize(width, height, parentWidth, parentHeight) {
+                    super.initialize(width, height, parentWidth, parentHeight);
+                    this.mPivotX = this.resolveSize(this.mPivotXType, this.mPivotXValue, width, parentWidth);
+                    this.mPivotY = this.resolveSize(this.mPivotYType, this.mPivotYValue, height, parentHeight);
+                }
+            }
+            animation.RotateAnimation = RotateAnimation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Animation = android.view.animation.Animation;
+            class TranslateAnimation extends Animation {
+                constructor(...args) {
+                    super();
+                    this.mFromXType = TranslateAnimation.ABSOLUTE;
+                    this.mToXType = TranslateAnimation.ABSOLUTE;
+                    this.mFromYType = TranslateAnimation.ABSOLUTE;
+                    this.mToYType = TranslateAnimation.ABSOLUTE;
+                    this.mFromXValue = 0.0;
+                    this.mToXValue = 0.0;
+                    this.mFromYValue = 0.0;
+                    this.mToYValue = 0.0;
+                    this.mFromXDelta = 0;
+                    this.mToXDelta = 0;
+                    this.mFromYDelta = 0;
+                    this.mToYDelta = 0;
+                    if (args.length === 4) {
+                        this.mFromXValue = args[0];
+                        this.mToXValue = args[1];
+                        this.mFromYValue = args[2];
+                        this.mToYValue = args[3];
+                        this.mFromXType = TranslateAnimation.ABSOLUTE;
+                        this.mToXType = TranslateAnimation.ABSOLUTE;
+                        this.mFromYType = TranslateAnimation.ABSOLUTE;
+                        this.mToYType = TranslateAnimation.ABSOLUTE;
+                    }
+                    else {
+                        this.mFromXType = args[0];
+                        this.mFromXValue = args[1];
+                        this.mToXType = args[2];
+                        this.mToXValue = args[3];
+                        this.mFromYType = args[4];
+                        this.mFromYValue = args[5];
+                        this.mToYType = args[6];
+                        this.mToYValue = args[7];
+                    }
+                }
+                applyTransformation(interpolatedTime, t) {
+                    let dx = this.mFromXDelta;
+                    let dy = this.mFromYDelta;
+                    if (this.mFromXDelta != this.mToXDelta) {
+                        dx = this.mFromXDelta + ((this.mToXDelta - this.mFromXDelta) * interpolatedTime);
+                    }
+                    if (this.mFromYDelta != this.mToYDelta) {
+                        dy = this.mFromYDelta + ((this.mToYDelta - this.mFromYDelta) * interpolatedTime);
+                    }
+                    t.getMatrix().setTranslate(dx, dy);
+                }
+                initialize(width, height, parentWidth, parentHeight) {
+                    super.initialize(width, height, parentWidth, parentHeight);
+                    this.mFromXDelta = this.resolveSize(this.mFromXType, this.mFromXValue, width, parentWidth);
+                    this.mToXDelta = this.resolveSize(this.mToXType, this.mToXValue, width, parentWidth);
+                    this.mFromYDelta = this.resolveSize(this.mFromYType, this.mFromYValue, height, parentHeight);
+                    this.mToYDelta = this.resolveSize(this.mToYType, this.mToYValue, height, parentHeight);
+                }
+            }
+            animation.TranslateAnimation = TranslateAnimation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/RectF.ts"/>
+///<reference path="../../../java/util/ArrayList.ts"/>
+///<reference path="../../../java/util/List.ts"/>
+///<reference path="../../../java/lang/Long.ts"/>
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Interpolator.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var ArrayList = java.util.ArrayList;
+            var Long = java.lang.Long;
+            var Animation = android.view.animation.Animation;
+            var Transformation = android.view.animation.Transformation;
+            class AnimationSet extends Animation {
+                constructor(shareInterpolator) {
+                    super();
+                    this.mFlags = 0;
+                    this.mAnimations = new ArrayList();
+                    this.mTempTransformation = new Transformation();
+                    this.mLastEnd = 0;
+                    this.setFlag(AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK, shareInterpolator);
+                    this.init();
+                }
+                setFlag(mask, value) {
+                    if (value) {
+                        this.mFlags |= mask;
+                    }
+                    else {
+                        this.mFlags &= ~mask;
+                    }
+                }
+                init() {
+                    this.mStartTime = 0;
+                }
+                setFillAfter(fillAfter) {
+                    this.mFlags |= AnimationSet.PROPERTY_FILL_AFTER_MASK;
+                    super.setFillAfter(fillAfter);
+                }
+                setFillBefore(fillBefore) {
+                    this.mFlags |= AnimationSet.PROPERTY_FILL_BEFORE_MASK;
+                    super.setFillBefore(fillBefore);
+                }
+                setRepeatMode(repeatMode) {
+                    this.mFlags |= AnimationSet.PROPERTY_REPEAT_MODE_MASK;
+                    super.setRepeatMode(repeatMode);
+                }
+                setStartOffset(startOffset) {
+                    this.mFlags |= AnimationSet.PROPERTY_START_OFFSET_MASK;
+                    super.setStartOffset(startOffset);
+                }
+                hasAlpha() {
+                    if (this.mDirty) {
+                        this.mDirty = this.mHasAlpha = false;
+                        const count = this.mAnimations.size();
+                        const animations = this.mAnimations;
+                        for (let i = 0; i < count; i++) {
+                            if (animations.get(i).hasAlpha()) {
+                                this.mHasAlpha = true;
+                                break;
+                            }
+                        }
+                    }
+                    return this.mHasAlpha;
+                }
+                setDuration(durationMillis) {
+                    this.mFlags |= AnimationSet.PROPERTY_DURATION_MASK;
+                    super.setDuration(durationMillis);
+                    this.mLastEnd = this.mStartOffset + this.mDuration;
+                }
+                addAnimation(a) {
+                    this.mAnimations.add(a);
+                    let noMatrix = (this.mFlags & AnimationSet.PROPERTY_MORPH_MATRIX_MASK) == 0;
+                    if (noMatrix && a.willChangeTransformationMatrix()) {
+                        this.mFlags |= AnimationSet.PROPERTY_MORPH_MATRIX_MASK;
+                    }
+                    let changeBounds = (this.mFlags & AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK) == 0;
+                    if (changeBounds && a.willChangeBounds()) {
+                        this.mFlags |= AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK;
+                    }
+                    if ((this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK) {
+                        this.mLastEnd = this.mStartOffset + this.mDuration;
+                    }
+                    else {
+                        if (this.mAnimations.size() == 1) {
+                            this.mDuration = a.getStartOffset() + a.getDuration();
+                            this.mLastEnd = this.mStartOffset + this.mDuration;
+                        }
+                        else {
+                            this.mLastEnd = Math.max(this.mLastEnd, a.getStartOffset() + a.getDuration());
+                            this.mDuration = this.mLastEnd - this.mStartOffset;
+                        }
+                    }
+                    this.mDirty = true;
+                }
+                setStartTime(startTimeMillis) {
+                    super.setStartTime(startTimeMillis);
+                    const count = this.mAnimations.size();
+                    const animations = this.mAnimations;
+                    for (let i = 0; i < count; i++) {
+                        let a = animations.get(i);
+                        a.setStartTime(startTimeMillis);
+                    }
+                }
+                getStartTime() {
+                    let startTime = Long.MAX_VALUE;
+                    const count = this.mAnimations.size();
+                    const animations = this.mAnimations;
+                    for (let i = 0; i < count; i++) {
+                        let a = animations.get(i);
+                        startTime = Math.min(startTime, a.getStartTime());
+                    }
+                    return startTime;
+                }
+                restrictDuration(durationMillis) {
+                    super.restrictDuration(durationMillis);
+                    const animations = this.mAnimations;
+                    let count = animations.size();
+                    for (let i = 0; i < count; i++) {
+                        animations.get(i).restrictDuration(durationMillis);
+                    }
+                }
+                getDuration() {
+                    const animations = this.mAnimations;
+                    const count = animations.size();
+                    let duration = 0;
+                    let durationSet = (this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK;
+                    if (durationSet) {
+                        duration = this.mDuration;
+                    }
+                    else {
+                        for (let i = 0; i < count; i++) {
+                            duration = Math.max(duration, animations.get(i).getDuration());
+                        }
+                    }
+                    return duration;
+                }
+                computeDurationHint() {
+                    let duration = 0;
+                    const count = this.mAnimations.size();
+                    const animations = this.mAnimations;
+                    for (let i = count - 1; i >= 0; --i) {
+                        const d = animations.get(i).computeDurationHint();
+                        if (d > duration)
+                            duration = d;
+                    }
+                    return duration;
+                }
+                initializeInvalidateRegion(left, top, right, bottom) {
+                    const region = this.mPreviousRegion;
+                    region.set(left, top, right, bottom);
+                    region.inset(-1.0, -1.0);
+                    if (this.mFillBefore) {
+                        const count = this.mAnimations.size();
+                        const animations = this.mAnimations;
+                        const temp = this.mTempTransformation;
+                        const previousTransformation = this.mPreviousTransformation;
+                        for (let i = count - 1; i >= 0; --i) {
+                            const a = animations.get(i);
+                            if (!a.isFillEnabled() || a.getFillBefore() || a.getStartOffset() == 0) {
+                                temp.clear();
+                                const interpolator = a.mInterpolator;
+                                a.applyTransformation(interpolator != null ? interpolator.getInterpolation(0.0) : 0.0, temp);
+                                previousTransformation.compose(temp);
+                            }
+                        }
+                    }
+                }
+                getTransformation(currentTime, t) {
+                    const count = this.mAnimations.size();
+                    const animations = this.mAnimations;
+                    const temp = this.mTempTransformation;
+                    let more = false;
+                    let started = false;
+                    let ended = true;
+                    t.clear();
+                    for (let i = count - 1; i >= 0; --i) {
+                        const a = animations.get(i);
+                        temp.clear();
+                        more = a.getTransformation(currentTime, temp, this.getScaleFactor()) || more;
+                        t.compose(temp);
+                        started = started || a.hasStarted();
+                        ended = a.hasEnded() && ended;
+                    }
+                    if (started && !this.mStarted) {
+                        if (this.mListener != null) {
+                            this.mListener.onAnimationStart(this);
+                        }
+                        this.mStarted = true;
+                    }
+                    if (ended != this.mEnded) {
+                        if (this.mListener != null) {
+                            this.mListener.onAnimationEnd(this);
+                        }
+                        this.mEnded = ended;
+                    }
+                    return more;
+                }
+                scaleCurrentDuration(scale) {
+                    const animations = this.mAnimations;
+                    let count = animations.size();
+                    for (let i = 0; i < count; i++) {
+                        animations.get(i).scaleCurrentDuration(scale);
+                    }
+                }
+                initialize(width, height, parentWidth, parentHeight) {
+                    super.initialize(width, height, parentWidth, parentHeight);
+                    let durationSet = (this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK;
+                    let fillAfterSet = (this.mFlags & AnimationSet.PROPERTY_FILL_AFTER_MASK) == AnimationSet.PROPERTY_FILL_AFTER_MASK;
+                    let fillBeforeSet = (this.mFlags & AnimationSet.PROPERTY_FILL_BEFORE_MASK) == AnimationSet.PROPERTY_FILL_BEFORE_MASK;
+                    let repeatModeSet = (this.mFlags & AnimationSet.PROPERTY_REPEAT_MODE_MASK) == AnimationSet.PROPERTY_REPEAT_MODE_MASK;
+                    let shareInterpolator = (this.mFlags & AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK) == AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK;
+                    let startOffsetSet = (this.mFlags & AnimationSet.PROPERTY_START_OFFSET_MASK) == AnimationSet.PROPERTY_START_OFFSET_MASK;
+                    if (shareInterpolator) {
+                        this.ensureInterpolator();
+                    }
+                    const children = this.mAnimations;
+                    const count = children.size();
+                    const duration = this.mDuration;
+                    const fillAfter = this.mFillAfter;
+                    const fillBefore = this.mFillBefore;
+                    const repeatMode = this.mRepeatMode;
+                    const interpolator = this.mInterpolator;
+                    const startOffset = this.mStartOffset;
+                    let storedOffsets = this.mStoredOffsets;
+                    if (startOffsetSet) {
+                        if (storedOffsets == null || storedOffsets.length != count) {
+                            storedOffsets = this.mStoredOffsets = new Array(count);
+                        }
+                    }
+                    else if (storedOffsets != null) {
+                        storedOffsets = this.mStoredOffsets = null;
+                    }
+                    for (let i = 0; i < count; i++) {
+                        let a = children.get(i);
+                        if (durationSet) {
+                            a.setDuration(duration);
+                        }
+                        if (fillAfterSet) {
+                            a.setFillAfter(fillAfter);
+                        }
+                        if (fillBeforeSet) {
+                            a.setFillBefore(fillBefore);
+                        }
+                        if (repeatModeSet) {
+                            a.setRepeatMode(repeatMode);
+                        }
+                        if (shareInterpolator) {
+                            a.setInterpolator(interpolator);
+                        }
+                        if (startOffsetSet) {
+                            let offset = a.getStartOffset();
+                            a.setStartOffset(offset + startOffset);
+                            storedOffsets[i] = offset;
+                        }
+                        a.initialize(width, height, parentWidth, parentHeight);
+                    }
+                }
+                reset() {
+                    super.reset();
+                    this.restoreChildrenStartOffset();
+                }
+                restoreChildrenStartOffset() {
+                    const offsets = this.mStoredOffsets;
+                    if (offsets == null)
+                        return;
+                    const children = this.mAnimations;
+                    const count = children.size();
+                    for (let i = 0; i < count; i++) {
+                        children.get(i).setStartOffset(offsets[i]);
+                    }
+                }
+                getAnimations() {
+                    return this.mAnimations;
+                }
+                willChangeTransformationMatrix() {
+                    return (this.mFlags & AnimationSet.PROPERTY_MORPH_MATRIX_MASK) == AnimationSet.PROPERTY_MORPH_MATRIX_MASK;
+                }
+                willChangeBounds() {
+                    return (this.mFlags & AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK) == AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK;
+                }
+            }
+            AnimationSet.PROPERTY_FILL_AFTER_MASK = 0x1;
+            AnimationSet.PROPERTY_FILL_BEFORE_MASK = 0x2;
+            AnimationSet.PROPERTY_REPEAT_MODE_MASK = 0x4;
+            AnimationSet.PROPERTY_START_OFFSET_MASK = 0x8;
+            AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK = 0x10;
+            AnimationSet.PROPERTY_DURATION_MASK = 0x20;
+            AnimationSet.PROPERTY_MORPH_MATRIX_MASK = 0x40;
+            AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK = 0x80;
+            animation.AnimationSet = AnimationSet;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/5.
@@ -44825,25 +46448,6 @@ var com;
         })(salvage = jakewharton.salvage || (jakewharton.salvage = {}));
     })(jakewharton = com.jakewharton || (com.jakewharton = {}));
 })(com || (com = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var animation;
-        (function (animation) {
-            class AccelerateDecelerateInterpolator {
-                getInterpolation(input) {
-                    return (Math.cos((input + 1) * Math.PI) / 2) + 0.5;
-                }
-            }
-            animation.AccelerateDecelerateInterpolator = AccelerateDecelerateInterpolator;
-        })(animation = view.animation || (view.animation = {}));
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
 /*******************************************************************************
  * Copyright 2011, 2012 Chris Banes.
  *
@@ -48257,6 +49861,11 @@ var androidui;
 ///<reference path="android/widget/RadioGroup.ts"/>
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
+///<reference path="android/view/animation/AlphaAnimation.ts"/>
+///<reference path="android/view/animation/ScaleAnimation.ts"/>
+///<reference path="android/view/animation/RotateAnimation.ts"/>
+///<reference path="android/view/animation/TranslateAnimation.ts"/>
+///<reference path="android/view/animation/AnimationSet.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="android/support/v4/widget/DrawerLayout.ts"/>

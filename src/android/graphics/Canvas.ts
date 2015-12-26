@@ -130,7 +130,7 @@ module android.graphics {
         }
         protected concatImpl(MSCALE_X:number, MSKEW_X:number, MTRANS_X:number, MSKEW_Y:number, MSCALE_Y:number,
                              MTRANS_Y:number, MPERSP_0:number, MPERSP_1:number, MPERSP_2:number){
-            this._mCanvasContent.transform(MSCALE_X, MSKEW_X, MSKEW_Y, MSCALE_Y, MTRANS_X, MTRANS_Y);
+            this._mCanvasContent.transform(MSCALE_X, -MSKEW_X, -MSKEW_Y, MSCALE_Y, MTRANS_X, MTRANS_Y);
         }
 
         drawRGB(r:number, g:number, b:number):void {
@@ -736,6 +736,9 @@ module android.graphics {
             }
         }
 
+        /**
+         * @param alpha [0, 1]
+         */
         multiplyAlpha(alpha:number):void {
             if(typeof alpha === 'number'){
                 this.multiplyAlphaImpl(alpha);
@@ -746,6 +749,9 @@ module android.graphics {
             this._mCanvasContent.globalAlpha *= alpha;
         }
 
+        /**
+         * @param alpha [0, 1]
+         */
         setAlpha(alpha:number):void {
             if(typeof alpha === 'number'){
                 this.setAlphaImpl(alpha);

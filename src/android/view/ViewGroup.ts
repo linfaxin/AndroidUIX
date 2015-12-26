@@ -9,10 +9,13 @@
 ///<reference path="../graphics/Point.ts"/>
 ///<reference path="../graphics/Matrix.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
+///<reference path="../graphics/RectF.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
 ///<reference path="FocusFinder.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="animation/Transformation.ts"/>
+
 
 
 
@@ -20,6 +23,7 @@ module android.view {
     import Canvas = android.graphics.Canvas;
     import Point = android.graphics.Point;
     import Rect = android.graphics.Rect;
+    import RectF = android.graphics.RectF;
     import Matrix = android.graphics.Matrix;
     import SystemClock = android.os.SystemClock;
     import TypedValue = android.util.TypedValue;
@@ -27,6 +31,7 @@ module android.view {
     import ArrayList = java.util.ArrayList;
     import AttrBinder = androidui.attr.AttrBinder;
     import Integer = java.lang.Integer;
+    import Transformation = animation.Transformation;
 
     export abstract
     class ViewGroup extends View implements ViewParent {
@@ -92,6 +97,16 @@ module android.view {
         mOnHierarchyChangeListener:ViewGroup.OnHierarchyChangeListener;
         private mFocused:View;
         private mFirstTouchTarget:TouchTarget;
+        /**
+         * A Transformation used when drawing children, to
+         * apply on the child being drawn.
+         */
+        private mChildTransformation:Transformation;
+        /**
+         * Used to track the current invalidation region.
+         */
+        protected mInvalidateRegion:RectF;
+
         // For debugging only.  You can see these in hierarchyviewer.
         private mLastTouchDownTime = 0;
         private mLastTouchDownIndex = -1;
@@ -2244,6 +2259,29 @@ module android.view {
             }
 
             return null;
+        }
+
+        /**
+         * Sets  <code>t</code> to be the static transformation of the child, if set, returning a
+         * boolean to indicate whether a static transform was set. The default implementation
+         * simply returns <code>false</code>; subclasses may override this method for different
+         * behavior. {@link #setStaticTransformationsEnabled(boolean)} must be set to true
+         * for this method to be called.
+         *
+         * @param child The child view whose static transform is being requested
+         * @param t The Transformation which will hold the result
+         * @return true if the transformation was set, false otherwise
+         * @see #setStaticTransformationsEnabled(boolean)
+         */
+        protected getChildStaticTransformation(child:View, t:Transformation):boolean  {
+            return false;
+        }
+
+        getChildTransformation():Transformation  {
+            if (this.mChildTransformation == null) {
+                this.mChildTransformation = new Transformation();
+            }
+            return this.mChildTransformation;
         }
 
         findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View {

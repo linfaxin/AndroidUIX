@@ -26,6 +26,12 @@
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
 
+///<reference path="android/view/animation/AlphaAnimation.ts"/>
+///<reference path="android/view/animation/ScaleAnimation.ts"/>
+///<reference path="android/view/animation/RotateAnimation.ts"/>
+///<reference path="android/view/animation/TranslateAnimation.ts"/>
+///<reference path="android/view/animation/AnimationSet.ts"/>
+
 
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>

@@ -28,6 +28,7 @@
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
+///<reference path="../graphics/RectF.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
@@ -45,6 +46,8 @@
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
 ///<reference path="KeyEvent.ts"/>
 ///<reference path="../R/attr.ts"/>
+///<reference path="animation/Animation.ts"/>
+///<reference path="animation/Transformation.ts"/>
 
 
 module android.view {
@@ -68,6 +71,7 @@ module android.view {
     import Handler = android.os.Handler;
     import Log = android.util.Log;
     import Rect = android.graphics.Rect;
+    import RectF = android.graphics.RectF;
     import Point = android.graphics.Point;
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
@@ -87,6 +91,8 @@ module android.view {
     import PerformanceAdjuster = androidui.util.PerformanceAdjuster;
     import NetDrawable = androidui.image.NetDrawable;
     import KeyEvent = android.view.KeyEvent;
+    import Animation = animation.Animation;
+    import Transformation = animation.Transformation;
 
 
     export class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback{
@@ -619,6 +625,9 @@ module android.view {
         mPrivateFlags = 0;
         private mPrivateFlags2 = 0;
         private mPrivateFlags3 = 0;
+
+        protected mCurrentAnimation:Animation = null;
+
         private mOldWidthMeasureSpec = Number.MIN_SAFE_INTEGER;
         private mOldHeightMeasureSpec = Number.MIN_SAFE_INTEGER;
         private mMeasuredWidth = 0;
@@ -658,6 +667,7 @@ module android.view {
         private mMeasureCache:Map<string, number[]>;
         mAttachInfo:View.AttachInfo;
         mLayoutParams:ViewGroup.LayoutParams;
+        mTransformationInfo:View.TransformationInfo;
         mViewFlags=0;
 
         mLayerType = View.LAYER_TYPE_NONE;
@@ -917,112 +927,6 @@ module android.view {
         getHeight():number {
             return this.mBottom - this.mTop;
         }
-        getTop():number {
-            return this.mTop;
-        }
-        setTop(top:number){
-            if (top != this.mTop) {
-                if (this.mAttachInfo != null) {
-                    let minTop;
-                    let yLoc;
-                    if (top < this.mTop) {
-                        minTop = top;
-                        yLoc = top - this.mTop;
-                    } else {
-                        minTop = this.mTop;
-                        yLoc = 0;
-                    }
-                    this.invalidate(0, yLoc, this.mRight - this.mLeft, this.mBottom - minTop);
-                }
-
-                let width = this.mRight - this.mLeft;
-                let oldHeight = this.mBottom - this.mTop;
-
-                this.mTop = top;
-
-                this.sizeChange(width, this.mBottom - this.mTop, width, oldHeight);
-
-                this.mBackgroundSizeChanged = true;
-            }
-        }
-        getBottom():number {
-            return this.mBottom;
-        }
-        setBottom(bottom:number){
-            if (bottom != this.mBottom) {
-                if (this.mAttachInfo != null) {
-                    let maxBottom;
-                    if (bottom < this.mBottom) {
-                        maxBottom = this.mBottom;
-                    } else {
-                        maxBottom = bottom;
-                    }
-                    this.invalidate(0, 0, this.mRight - this.mLeft, maxBottom - this.mTop);
-                }
-
-                let width = this.mRight - this.mLeft;
-                let oldHeight = this.mBottom - this.mTop;
-
-                this.mBottom = bottom;
-
-                this.sizeChange(width, this.mBottom - this.mTop, width, oldHeight);
-
-                this.mBackgroundSizeChanged = true;
-            }
-        }
-        getLeft():number {
-            return this.mLeft;
-        }
-        setLeft(left:number){
-            if (left != this.mLeft) {
-                if (this.mAttachInfo != null) {
-                    let minLeft;
-                    let xLoc;
-                    if (left < this.mLeft) {
-                        minLeft = left;
-                        xLoc = left - this.mLeft;
-                    } else {
-                        minLeft = this.mLeft;
-                        xLoc = 0;
-                    }
-                    this.invalidate(xLoc, 0, this.mRight - minLeft, this.mBottom - this.mTop);
-                }
-
-                let oldWidth = this.mRight - this.mLeft;
-                let height = this.mBottom - this.mTop;
-
-                this.mLeft = left;
-
-                this.sizeChange(this.mRight - this.mLeft, height, oldWidth, height);
-
-                this.mBackgroundSizeChanged = true;
-            }
-        }
-        getRight():number {
-            return this.mRight;
-        }
-        setRight(right:number){
-            if (right != this.mRight) {
-                if (this.mAttachInfo != null) {
-                    let maxRight;
-                    if (right < this.mRight) {
-                        maxRight = this.mRight;
-                    } else {
-                        maxRight = right;
-                    }
-                    this.invalidate(0, 0, maxRight - this.mLeft, this.mBottom - this.mTop);
-                }
-
-                let oldWidth = this.mRight - this.mLeft;
-                let height = this.mBottom - this.mTop;
-
-                this.mRight = right;
-
-                this.sizeChange(this.mRight - this.mLeft, height, oldWidth, height);
-
-                this.mBackgroundSizeChanged = true;
-            }
-        }
         getPaddingLeft():number{
             return this.mPaddingLeft;
         }
@@ -1123,9 +1027,6 @@ module android.view {
         }
         getScrollY():number {
             return this.mScrollY;
-        }
-        getFinalAlpha():number {
-            return 1;//TODO alpha
         }
 
         /**
@@ -1232,32 +1133,1058 @@ module android.view {
             }
         }
 
-
-        setAlpha(alpha:number) {
-            alpha &= 0xFF;          // keep it legal
-            //TODO set to Transformation
-            this.bindElement.style.opacity = alpha / 255 + '';
-        }
-
-
-        private updateMatrix() {
-            //TODO transform
-        }
-        getMatrix():Matrix {
-            //if (mTransformationInfo != null) {
-            //    updateMatrix();
-            //    return mTransformationInfo.mMatrix;
-            //}
+        /**
+         * The transform matrix of this view, which is calculated based on the current
+         * roation, scale, and pivot properties.
+         *
+         * @see #getRotation()
+         * @see #getScaleX()
+         * @see #getScaleY()
+         * @see #getPivotX()
+         * @see #getPivotY()
+         * @return The current transform matrix for the view
+         */
+        getMatrix():Matrix  {
+            if (this.mTransformationInfo != null) {
+                this.updateMatrix();
+                return this.mTransformationInfo.mMatrix;
+            }
             return Matrix.IDENTITY_MATRIX;
         }
-        hasIdentityMatrix(){
-            //TODO transform
-            //if (mTransformationInfo != null) {
-            //    updateMatrix();
-            //    return mTransformationInfo.mMatrixIsIdentity;
-            //}
+
+        ///**
+        // * Utility function to determine if the value is far enough away from zero to be
+        // * considered non-zero.
+        // * @param value A floating point value to check for zero-ness
+        // * @return whether the passed-in value is far enough away from zero to be considered non-zero
+        // */
+        //private static nonzero(value:number):boolean  {
+        //    return (value < -View.NONZERO_EPSILON || value > View.NONZERO_EPSILON);
+        //}
+
+        /**
+         * Returns true if the transform matrix is the identity matrix.
+         * Recomputes the matrix if necessary.
+         *
+         * @return True if the transform matrix is the identity matrix, false otherwise.
+         */
+        hasIdentityMatrix():boolean  {
+            if (this.mTransformationInfo != null) {
+                this.updateMatrix();
+                return this.mTransformationInfo.mMatrixIsIdentity;
+            }
             return true;
         }
+
+        ensureTransformationInfo():void  {
+            if (this.mTransformationInfo == null) {
+                this.mTransformationInfo = new View.TransformationInfo();
+            }
+        }
+
+        /**
+         * Recomputes the transform matrix if necessary.
+         */
+        private updateMatrix():void  {
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            if (info == null) {
+                return;
+            }
+            if (info.mMatrixDirty) {
+                // Figure out if we need to update the pivot point
+                if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                    if ((this.mRight - this.mLeft) != info.mPrevWidth || (this.mBottom - this.mTop) != info.mPrevHeight) {
+                        info.mPrevWidth = this.mRight - this.mLeft;
+                        info.mPrevHeight = this.mBottom - this.mTop;
+                        info.mPivotX = info.mPrevWidth / 2;
+                        info.mPivotY = info.mPrevHeight / 2;
+                    }
+                }
+                info.mMatrix.reset();
+                //if (!View.nonzero(info.mRotationX) && !View.nonzero(info.mRotationY)) {
+                    info.mMatrix.setTranslate(info.mTranslationX, info.mTranslationY);
+                    info.mMatrix.preRotate(info.mRotation, info.mPivotX, info.mPivotY);
+                    info.mMatrix.preScale(info.mScaleX, info.mScaleY, info.mPivotX, info.mPivotY);
+                //} else {
+                //    if (info.mCamera == null) {
+                //        info.mCamera = new Camera();
+                //        info.matrix3D = new Matrix();
+                //    }
+                //    info.mCamera.save();
+                //    info.mMatrix.preScale(info.mScaleX, info.mScaleY, info.mPivotX, info.mPivotY);
+                //    info.mCamera.rotate(info.mRotationX, info.mRotationY, -info.mRotation);
+                //    info.mCamera.getMatrix(info.matrix3D);
+                //    info.matrix3D.preTranslate(-info.mPivotX, -info.mPivotY);
+                //    info.matrix3D.postTranslate(info.mPivotX + info.mTranslationX, info.mPivotY + info.mTranslationY);
+                //    info.mMatrix.postConcat(info.matrix3D);
+                //    info.mCamera.restore();
+                //}
+                info.mMatrixDirty = false;
+                info.mMatrixIsIdentity = info.mMatrix.isIdentity();
+                info.mInverseMatrixDirty = true;
+            }
+        }
+
+        ///**
+        // * Utility method to retrieve the inverse of the current mMatrix property.
+        // * We cache the matrix to avoid recalculating it when transform properties
+        // * have not changed.
+        // *
+        // * @return The inverse of the current matrix of this view.
+        // */
+        //getInverseMatrix():Matrix  {
+        //    const info:View.TransformationInfo = this.mTransformationInfo;
+        //    if (info != null) {
+        //        this.updateMatrix();
+        //        if (info.mInverseMatrixDirty) {
+        //            if (info.mInverseMatrix == null) {
+        //                info.mInverseMatrix = new Matrix();
+        //            }
+        //            info.mMatrix.invert(info.mInverseMatrix);
+        //            info.mInverseMatrixDirty = false;
+        //        }
+        //        return info.mInverseMatrix;
+        //    }
+        //    return Matrix.IDENTITY_MATRIX;
+        //}
+
+        ///**
+        // * Gets the distance along the Z axis from the camera to this view.
+        // *
+        // * @see #setCameraDistance(float)
+        // *
+        // * @return The distance along the Z axis.
+        // */
+        //getCameraDistance():number  {
+        //    this.ensureTransformationInfo();
+        //    const dpi:number = this.mResources.getDisplayMetrics().densityDpi;
+        //    const info:View.TransformationInfo = this.mTransformationInfo;
+        //    if (info.mCamera == null) {
+        //        info.mCamera = new Camera();
+        //        info.matrix3D = new Matrix();
+        //    }
+        //    return -(info.mCamera.getLocationZ() * dpi);
+        //}
+        //
+        ///**
+        // * <p>Sets the distance along the Z axis (orthogonal to the X/Y plane on which
+        // * views are drawn) from the camera to this view. The camera's distance
+        // * affects 3D transformations, for instance rotations around the X and Y
+        // * axis. If the rotationX or rotationY properties are changed and this view is
+        // * large (more than half the size of the screen), it is recommended to always
+        // * use a camera distance that's greater than the height (X axis rotation) or
+        // * the width (Y axis rotation) of this view.</p>
+        // *
+        // * <p>The distance of the camera from the view plane can have an affect on the
+        // * perspective distortion of the view when it is rotated around the x or y axis.
+        // * For example, a large distance will result in a large viewing angle, and there
+        // * will not be much perspective distortion of the view as it rotates. A short
+        // * distance may cause much more perspective distortion upon rotation, and can
+        // * also result in some drawing artifacts if the rotated view ends up partially
+        // * behind the camera (which is why the recommendation is to use a distance at
+        // * least as far as the size of the view, if the view is to be rotated.)</p>
+        // *
+        // * <p>The distance is expressed in "depth pixels." The default distance depends
+        // * on the screen density. For instance, on a medium density display, the
+        // * default distance is 1280. On a high density display, the default distance
+        // * is 1920.</p>
+        // *
+        // * <p>If you want to specify a distance that leads to visually consistent
+        // * results across various densities, use the following formula:</p>
+        // * <pre>
+        // * float scale = context.getResources().getDisplayMetrics().density;
+        // * view.setCameraDistance(distance * scale);
+        // * </pre>
+        // *
+        // * <p>The density scale factor of a high density display is 1.5,
+        // * and 1920 = 1280 * 1.5.</p>
+        // *
+        // * @param distance The distance in "depth pixels", if negative the opposite
+        // *        value is used
+        // *
+        // * @see #setRotationX(float)
+        // * @see #setRotationY(float)
+        // */
+        //setCameraDistance(distance:number):void  {
+        //    this.invalidateViewProperty(true, false);
+        //    this.ensureTransformationInfo();
+        //    const dpi:number = this.mResources.getDisplayMetrics().densityDpi;
+        //    const info:View.TransformationInfo = this.mTransformationInfo;
+        //    if (info.mCamera == null) {
+        //        info.mCamera = new Camera();
+        //        info.matrix3D = new Matrix();
+        //    }
+        //    info.mCamera.setLocation(0.0, 0.0, -Math.abs(distance) / dpi);
+        //    info.mMatrixDirty = true;
+        //    this.invalidateViewProperty(false, false);
+        //    if (this.mDisplayList != null) {
+        //        this.mDisplayList.setCameraDistance(-Math.abs(distance) / dpi);
+        //    }
+        //    if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+        //        // View was rejected last time it was drawn by its parent; this may have changed
+        //        this.invalidateParentIfNeeded();
+        //    }
+        //}
+
+        /**
+         * The degrees that the view is rotated around the pivot point.
+         *
+         * @see #setRotation(float)
+         * @see #getPivotX()
+         * @see #getPivotY()
+         *
+         * @return The degrees of rotation.
+         */
+        getRotation():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mRotation : 0;
+        }
+
+        /**
+         * Sets the degrees that the view is rotated around the pivot point. Increasing values
+         * result in clockwise rotation.
+         *
+         * @param rotation The degrees of rotation.
+         *
+         * @see #getRotation()
+         * @see #getPivotX()
+         * @see #getPivotY()
+         * @see #setRotationX(float)
+         * @see #setRotationY(float)
+         *
+         * @attr ref android.R.styleable#View_rotation
+         */
+        setRotation(rotation:number):void  {
+            this.ensureTransformationInfo();
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            if (info.mRotation != rotation) {
+                // Double-invalidation is necessary to capture view's old and new areas
+                this.invalidateViewProperty(true, false);
+                info.mRotation = rotation;
+                info.mMatrixDirty = true;
+                this.invalidateViewProperty(false, true);
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setRotation(rotation);
+                //}
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        ///**
+        // * The degrees that the view is rotated around the vertical axis through the pivot point.
+        // *
+        // * @see #getPivotX()
+        // * @see #getPivotY()
+        // * @see #setRotationY(float)
+        // *
+        // * @return The degrees of Y rotation.
+        // */
+        //getRotationY():number  {
+        //    return this.mTransformationInfo != null ? this.mTransformationInfo.mRotationY : 0;
+        //}
+        //
+        ///**
+        // * Sets the degrees that the view is rotated around the vertical axis through the pivot point.
+        // * Increasing values result in counter-clockwise rotation from the viewpoint of looking
+        // * down the y axis.
+        // *
+        // * When rotating large views, it is recommended to adjust the camera distance
+        // * accordingly. Refer to {@link #setCameraDistance(float)} for more information.
+        // *
+        // * @param rotationY The degrees of Y rotation.
+        // *
+        // * @see #getRotationY()
+        // * @see #getPivotX()
+        // * @see #getPivotY()
+        // * @see #setRotation(float)
+        // * @see #setRotationX(float)
+        // * @see #setCameraDistance(float)
+        // *
+        // * @attr ref android.R.styleable#View_rotationY
+        // */
+        //setRotationY(rotationY:number):void  {
+        //    this.ensureTransformationInfo();
+        //    const info:View.TransformationInfo = this.mTransformationInfo;
+        //    if (info.mRotationY != rotationY) {
+        //        this.invalidateViewProperty(true, false);
+        //        info.mRotationY = rotationY;
+        //        info.mMatrixDirty = true;
+        //        this.invalidateViewProperty(false, true);
+        //        if (this.mDisplayList != null) {
+        //            this.mDisplayList.setRotationY(rotationY);
+        //        }
+        //        if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+        //            // View was rejected last time it was drawn by its parent; this may have changed
+        //            this.invalidateParentIfNeeded();
+        //        }
+        //    }
+        //}
+        //
+        ///**
+        // * The degrees that the view is rotated around the horizontal axis through the pivot point.
+        // *
+        // * @see #getPivotX()
+        // * @see #getPivotY()
+        // * @see #setRotationX(float)
+        // *
+        // * @return The degrees of X rotation.
+        // */
+        //getRotationX():number  {
+        //    return this.mTransformationInfo != null ? this.mTransformationInfo.mRotationX : 0;
+        //}
+        //
+        ///**
+        // * Sets the degrees that the view is rotated around the horizontal axis through the pivot point.
+        // * Increasing values result in clockwise rotation from the viewpoint of looking down the
+        // * x axis.
+        // *
+        // * When rotating large views, it is recommended to adjust the camera distance
+        // * accordingly. Refer to {@link #setCameraDistance(float)} for more information.
+        // *
+        // * @param rotationX The degrees of X rotation.
+        // *
+        // * @see #getRotationX()
+        // * @see #getPivotX()
+        // * @see #getPivotY()
+        // * @see #setRotation(float)
+        // * @see #setRotationY(float)
+        // * @see #setCameraDistance(float)
+        // *
+        // * @attr ref android.R.styleable#View_rotationX
+        // */
+        //setRotationX(rotationX:number):void  {
+        //    this.ensureTransformationInfo();
+        //    const info:View.TransformationInfo = this.mTransformationInfo;
+        //    if (info.mRotationX != rotationX) {
+        //        this.invalidateViewProperty(true, false);
+        //        info.mRotationX = rotationX;
+        //        info.mMatrixDirty = true;
+        //        this.invalidateViewProperty(false, true);
+        //        if (this.mDisplayList != null) {
+        //            this.mDisplayList.setRotationX(rotationX);
+        //        }
+        //        if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+        //            // View was rejected last time it was drawn by its parent; this may have changed
+        //            this.invalidateParentIfNeeded();
+        //        }
+        //    }
+        //}
+
+        /**
+         * The amount that the view is scaled in x around the pivot point, as a proportion of
+         * the view's unscaled width. A value of 1, the default, means that no scaling is applied.
+         *
+         * <p>By default, this is 1.0f.
+         *
+         * @see #getPivotX()
+         * @see #getPivotY()
+         * @return The scaling factor.
+         */
+        getScaleX():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mScaleX : 1;
+        }
+
+        /**
+         * Sets the amount that the view is scaled in x around the pivot point, as a proportion of
+         * the view's unscaled width. A value of 1 means that no scaling is applied.
+         *
+         * @param scaleX The scaling factor.
+         * @see #getPivotX()
+         * @see #getPivotY()
+         *
+         * @attr ref android.R.styleable#View_scaleX
+         */
+        setScaleX(scaleX:number):void  {
+            this.ensureTransformationInfo();
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            if (info.mScaleX != scaleX) {
+                this.invalidateViewProperty(true, false);
+                info.mScaleX = scaleX;
+                info.mMatrixDirty = true;
+                this.invalidateViewProperty(false, true);
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setScaleX(scaleX);
+                //}
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * The amount that the view is scaled in y around the pivot point, as a proportion of
+         * the view's unscaled height. A value of 1, the default, means that no scaling is applied.
+         *
+         * <p>By default, this is 1.0f.
+         *
+         * @see #getPivotX()
+         * @see #getPivotY()
+         * @return The scaling factor.
+         */
+        getScaleY():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mScaleY : 1;
+        }
+
+        /**
+         * Sets the amount that the view is scaled in Y around the pivot point, as a proportion of
+         * the view's unscaled width. A value of 1 means that no scaling is applied.
+         *
+         * @param scaleY The scaling factor.
+         * @see #getPivotX()
+         * @see #getPivotY()
+         *
+         * @attr ref android.R.styleable#View_scaleY
+         */
+        setScaleY(scaleY:number):void  {
+            this.ensureTransformationInfo();
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            if (info.mScaleY != scaleY) {
+                this.invalidateViewProperty(true, false);
+                info.mScaleY = scaleY;
+                info.mMatrixDirty = true;
+                this.invalidateViewProperty(false, true);
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setScaleY(scaleY);
+                //}
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * The x location of the point around which the view is {@link #setRotation(float) rotated}
+         * and {@link #setScaleX(float) scaled}.
+         *
+         * @see #getRotation()
+         * @see #getScaleX()
+         * @see #getScaleY()
+         * @see #getPivotY()
+         * @return The x location of the pivot point.
+         *
+         * @attr ref android.R.styleable#View_transformPivotX
+         */
+        getPivotX():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mPivotX : 0;
+        }
+
+        /**
+         * Sets the x location of the point around which the view is
+         * {@link #setRotation(float) rotated} and {@link #setScaleX(float) scaled}.
+         * By default, the pivot point is centered on the object.
+         * Setting this property disables this behavior and causes the view to use only the
+         * explicitly set pivotX and pivotY values.
+         *
+         * @param pivotX The x location of the pivot point.
+         * @see #getRotation()
+         * @see #getScaleX()
+         * @see #getScaleY()
+         * @see #getPivotY()
+         *
+         * @attr ref android.R.styleable#View_transformPivotX
+         */
+        setPivotX(pivotX:number):void  {
+            this.ensureTransformationInfo();
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            let pivotSet:boolean = (this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == View.PFLAG_PIVOT_EXPLICITLY_SET;
+            if (info.mPivotX != pivotX || !pivotSet) {
+                this.mPrivateFlags |= View.PFLAG_PIVOT_EXPLICITLY_SET;
+                this.invalidateViewProperty(true, false);
+                info.mPivotX = pivotX;
+                info.mMatrixDirty = true;
+                this.invalidateViewProperty(false, true);
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setPivotX(pivotX);
+                //}
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * The y location of the point around which the view is {@link #setRotation(float) rotated}
+         * and {@link #setScaleY(float) scaled}.
+         *
+         * @see #getRotation()
+         * @see #getScaleX()
+         * @see #getScaleY()
+         * @see #getPivotY()
+         * @return The y location of the pivot point.
+         *
+         * @attr ref android.R.styleable#View_transformPivotY
+         */
+        getPivotY():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mPivotY : 0;
+        }
+
+        /**
+         * Sets the y location of the point around which the view is {@link #setRotation(float) rotated}
+         * and {@link #setScaleY(float) scaled}. By default, the pivot point is centered on the object.
+         * Setting this property disables this behavior and causes the view to use only the
+         * explicitly set pivotX and pivotY values.
+         *
+         * @param pivotY The y location of the pivot point.
+         * @see #getRotation()
+         * @see #getScaleX()
+         * @see #getScaleY()
+         * @see #getPivotY()
+         *
+         * @attr ref android.R.styleable#View_transformPivotY
+         */
+        setPivotY(pivotY:number):void  {
+            this.ensureTransformationInfo();
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            let pivotSet:boolean = (this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == View.PFLAG_PIVOT_EXPLICITLY_SET;
+            if (info.mPivotY != pivotY || !pivotSet) {
+                this.mPrivateFlags |= View.PFLAG_PIVOT_EXPLICITLY_SET;
+                this.invalidateViewProperty(true, false);
+                info.mPivotY = pivotY;
+                info.mMatrixDirty = true;
+                this.invalidateViewProperty(false, true);
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setPivotY(pivotY);
+                //}
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * The opacity of the view. This is a value from 0 to 1, where 0 means the view is
+         * completely transparent and 1 means the view is completely opaque.
+         *
+         * <p>By default this is 1.0f.
+         * @return The opacity of the view.
+         */
+        getAlpha():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mAlpha : 1;
+        }
+
+        /**
+         * Returns whether this View has content which overlaps.
+         *
+         * <p>This function, intended to be overridden by specific View types, is an optimization when
+         * alpha is set on a view. If rendering overlaps in a view with alpha < 1, that view is drawn to
+         * an offscreen buffer and then composited into place, which can be expensive. If the view has
+         * no overlapping rendering, the view can draw each primitive with the appropriate alpha value
+         * directly. An example of overlapping rendering is a TextView with a background image, such as
+         * a Button. An example of non-overlapping rendering is a TextView with no background, or an
+         * ImageView with only the foreground image. The default implementation returns true; subclasses
+         * should override if they have cases which can be optimized.</p>
+         *
+         * <p>The current implementation of the saveLayer and saveLayerAlpha methods in {@link Canvas}
+         * necessitates that a View return true if it uses the methods internally without passing the
+         * {@link Canvas#CLIP_TO_LAYER_SAVE_FLAG}.</p>
+         *
+         * @return true if the content in this view might overlap, false otherwise.
+         */
+        hasOverlappingRendering():boolean  {
+            return true;
+        }
+
+        /**
+         * <p>Sets the opacity of the view. This is a value from 0 to 1, where 0 means the view is
+         * completely transparent and 1 means the view is completely opaque.</p>
+         *
+         * <p> Note that setting alpha to a translucent value (0 < alpha < 1) can have significant
+         * performance implications, especially for large views. It is best to use the alpha property
+         * sparingly and transiently, as in the case of fading animations.</p>
+         *
+         * <p>For a view with a frequently changing alpha, such as during a fading animation, it is
+         * strongly recommended for performance reasons to either override
+         * {@link #hasOverlappingRendering()} to return false if appropriate, or setting a
+         * {@link #setLayerType(int, android.graphics.Paint) layer type} on the view.</p>
+         *
+         * <p>If this view overrides {@link #onSetAlpha(int)} to return true, then this view is
+         * responsible for applying the opacity itself.</p>
+         *
+         * <p>Note that if the view is backed by a
+         * {@link #setLayerType(int, android.graphics.Paint) layer} and is associated with a
+         * {@link #setLayerPaint(android.graphics.Paint) layer paint}, setting an alpha value less than
+         * 1.0 will supercede the alpha of the layer paint.</p>
+         *
+         * @param alpha The opacity of the view.
+         *
+         * @see #hasOverlappingRendering()
+         * @see #setLayerType(int, android.graphics.Paint)
+         *
+         * @attr ref android.R.styleable#View_alpha
+         */
+        setAlpha(alpha:number):void  {
+            this.ensureTransformationInfo();
+            if (this.mTransformationInfo.mAlpha != alpha) {
+                this.mTransformationInfo.mAlpha = alpha;
+                if (this.onSetAlpha(Math.floor((alpha * 255)))) {
+                    this.mPrivateFlags |= View.PFLAG_ALPHA_SET;
+                    // subclass is handling alpha - don't optimize rendering cache invalidation
+                    this.invalidateParentCaches();
+                    this.invalidate(true);
+                } else {
+                    this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
+                    this.invalidateViewProperty(true, false);
+                    //if (this.mDisplayList != null) {
+                    //    this.mDisplayList.setAlpha(this.getFinalAlpha());
+                    //}
+                }
+            }
+        }
+
+        /**
+         * Faster version of setAlpha() which performs the same steps except there are
+         * no calls to invalidate(). The caller of this function should perform proper invalidation
+         * on the parent and this object. The return value indicates whether the subclass handles
+         * alpha (the return value for onSetAlpha()).
+         *
+         * @param alpha The new value for the alpha property
+         * @return true if the View subclass handles alpha (the return value for onSetAlpha()) and
+         *         the new value for the alpha property is different from the old value
+         */
+        setAlphaNoInvalidation(alpha:number):boolean  {
+            this.ensureTransformationInfo();
+            if (this.mTransformationInfo.mAlpha != alpha) {
+                this.mTransformationInfo.mAlpha = alpha;
+                let subclassHandlesAlpha:boolean = this.onSetAlpha(Math.floor((alpha * 255)));
+                if (subclassHandlesAlpha) {
+                    this.mPrivateFlags |= View.PFLAG_ALPHA_SET;
+                    return true;
+                } else {
+                    this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
+                    //if (this.mDisplayList != null) {
+                    //    this.mDisplayList.setAlpha(this.getFinalAlpha());
+                    //}
+                }
+            }
+            return false;
+        }
+
+        /**
+         * This property is hidden and intended only for use by the Fade transition, which
+         * animates it to produce a visual translucency that does not side-effect (or get
+         * affected by) the real alpha property. This value is composited with the other
+         * alpha value (and the AlphaAnimation value, when that is present) to produce
+         * a final visual translucency result, which is what is passed into the DisplayList.
+         *
+         * @hide
+         */
+        setTransitionAlpha(alpha:number):void  {
+            this.ensureTransformationInfo();
+            if (this.mTransformationInfo.mTransitionAlpha != alpha) {
+                this.mTransformationInfo.mTransitionAlpha = alpha;
+                this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
+                this.invalidateViewProperty(true, false);
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setAlpha(this.getFinalAlpha());
+                //}
+            }
+        }
+
+        /**
+         * Calculates the visual alpha of this view, which is a combination of the actual
+         * alpha value and the transitionAlpha value (if set).
+         */
+        private getFinalAlpha():number  {
+            if (this.mTransformationInfo != null) {
+                return this.mTransformationInfo.mAlpha * this.mTransformationInfo.mTransitionAlpha;
+            }
+            return 1;
+        }
+
+        /**
+         * This property is hidden and intended only for use by the Fade transition, which
+         * animates it to produce a visual translucency that does not side-effect (or get
+         * affected by) the real alpha property. This value is composited with the other
+         * alpha value (and the AlphaAnimation value, when that is present) to produce
+         * a final visual translucency result, which is what is passed into the DisplayList.
+         *
+         * @hide
+         */
+        getTransitionAlpha():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mTransitionAlpha : 1;
+        }
+
+        /**
+         * Top position of this view relative to its parent.
+         *
+         * @return The top of this view, in pixels.
+         */
+        getTop():number  {
+            return this.mTop;
+        }
+
+        /**
+         * Sets the top position of this view relative to its parent. This method is meant to be called
+         * by the layout system and should not generally be called otherwise, because the property
+         * may be changed at any time by the layout.
+         *
+         * @param top The top of this view, in pixels.
+         */
+        setTop(top:number):void  {
+            if (top != this.mTop) {
+                this.updateMatrix();
+                const matrixIsIdentity:boolean = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                if (matrixIsIdentity) {
+                    if (this.mAttachInfo != null) {
+                        let minTop:number;
+                        let yLoc:number;
+                        if (top < this.mTop) {
+                            minTop = top;
+                            yLoc = top - this.mTop;
+                        } else {
+                            minTop = this.mTop;
+                            yLoc = 0;
+                        }
+                        this.invalidate(0, yLoc, this.mRight - this.mLeft, this.mBottom - minTop);
+                    }
+                } else {
+                    // Double-invalidation is necessary to capture view's old and new areas
+                    this.invalidate(true);
+                }
+                let width:number = this.mRight - this.mLeft;
+                let oldHeight:number = this.mBottom - this.mTop;
+                this.mTop = top;
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setTop(this.mTop);
+                //}
+                this.sizeChange(width, this.mBottom - this.mTop, width, oldHeight);
+                if (!matrixIsIdentity) {
+                    if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                        // A change in dimension means an auto-centered pivot point changes, too
+                        this.mTransformationInfo.mMatrixDirty = true;
+                    }
+                    // force another invalidation with the new orientation
+                    this.mPrivateFlags |= View.PFLAG_DRAWN;
+                    this.invalidate(true);
+                }
+                this.mBackgroundSizeChanged = true;
+                this.invalidateParentIfNeeded();
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * Bottom position of this view relative to its parent.
+         *
+         * @return The bottom of this view, in pixels.
+         */
+        getBottom():number  {
+            return this.mBottom;
+        }
+
+        /**
+         * True if this view has changed since the last time being drawn.
+         *
+         * @return The dirty state of this view.
+         */
+        isDirty():boolean  {
+            return (this.mPrivateFlags & View.PFLAG_DIRTY_MASK) != 0;
+        }
+
+        /**
+         * Sets the bottom position of this view relative to its parent. This method is meant to be
+         * called by the layout system and should not generally be called otherwise, because the
+         * property may be changed at any time by the layout.
+         *
+         * @param bottom The bottom of this view, in pixels.
+         */
+        setBottom(bottom:number):void  {
+            if (bottom != this.mBottom) {
+                this.updateMatrix();
+                const matrixIsIdentity:boolean = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                if (matrixIsIdentity) {
+                    if (this.mAttachInfo != null) {
+                        let maxBottom:number;
+                        if (bottom < this.mBottom) {
+                            maxBottom = this.mBottom;
+                        } else {
+                            maxBottom = bottom;
+                        }
+                        this.invalidate(0, 0, this.mRight - this.mLeft, maxBottom - this.mTop);
+                    }
+                } else {
+                    // Double-invalidation is necessary to capture view's old and new areas
+                    this.invalidate(true);
+                }
+                let width:number = this.mRight - this.mLeft;
+                let oldHeight:number = this.mBottom - this.mTop;
+                this.mBottom = bottom;
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setBottom(this.mBottom);
+                //}
+                this.sizeChange(width, this.mBottom - this.mTop, width, oldHeight);
+                if (!matrixIsIdentity) {
+                    if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                        // A change in dimension means an auto-centered pivot point changes, too
+                        this.mTransformationInfo.mMatrixDirty = true;
+                    }
+                    // force another invalidation with the new orientation
+                    this.mPrivateFlags |= View.PFLAG_DRAWN;
+                    this.invalidate(true);
+                }
+                this.mBackgroundSizeChanged = true;
+                this.invalidateParentIfNeeded();
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * Left position of this view relative to its parent.
+         *
+         * @return The left edge of this view, in pixels.
+         */
+        getLeft():number  {
+            return this.mLeft;
+        }
+
+        /**
+         * Sets the left position of this view relative to its parent. This method is meant to be called
+         * by the layout system and should not generally be called otherwise, because the property
+         * may be changed at any time by the layout.
+         *
+         * @param left The bottom of this view, in pixels.
+         */
+        setLeft(left:number):void  {
+            if (left != this.mLeft) {
+                this.updateMatrix();
+                const matrixIsIdentity:boolean = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                if (matrixIsIdentity) {
+                    if (this.mAttachInfo != null) {
+                        let minLeft:number;
+                        let xLoc:number;
+                        if (left < this.mLeft) {
+                            minLeft = left;
+                            xLoc = left - this.mLeft;
+                        } else {
+                            minLeft = this.mLeft;
+                            xLoc = 0;
+                        }
+                        this.invalidate(xLoc, 0, this.mRight - minLeft, this.mBottom - this.mTop);
+                    }
+                } else {
+                    // Double-invalidation is necessary to capture view's old and new areas
+                    this.invalidate(true);
+                }
+                let oldWidth:number = this.mRight - this.mLeft;
+                let height:number = this.mBottom - this.mTop;
+                this.mLeft = left;
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setLeft(left);
+                //}
+                this.sizeChange(this.mRight - this.mLeft, height, oldWidth, height);
+                if (!matrixIsIdentity) {
+                    if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                        // A change in dimension means an auto-centered pivot point changes, too
+                        this.mTransformationInfo.mMatrixDirty = true;
+                    }
+                    // force another invalidation with the new orientation
+                    this.mPrivateFlags |= View.PFLAG_DRAWN;
+                    this.invalidate(true);
+                }
+                this.mBackgroundSizeChanged = true;
+                this.invalidateParentIfNeeded();
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * Right position of this view relative to its parent.
+         *
+         * @return The right edge of this view, in pixels.
+         */
+        getRight():number  {
+            return this.mRight;
+        }
+
+        /**
+         * Sets the right position of this view relative to its parent. This method is meant to be called
+         * by the layout system and should not generally be called otherwise, because the property
+         * may be changed at any time by the layout.
+         *
+         * @param right The bottom of this view, in pixels.
+         */
+        setRight(right:number):void  {
+            if (right != this.mRight) {
+                this.updateMatrix();
+                const matrixIsIdentity:boolean = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                if (matrixIsIdentity) {
+                    if (this.mAttachInfo != null) {
+                        let maxRight:number;
+                        if (right < this.mRight) {
+                            maxRight = this.mRight;
+                        } else {
+                            maxRight = right;
+                        }
+                        this.invalidate(0, 0, maxRight - this.mLeft, this.mBottom - this.mTop);
+                    }
+                } else {
+                    // Double-invalidation is necessary to capture view's old and new areas
+                    this.invalidate(true);
+                }
+                let oldWidth:number = this.mRight - this.mLeft;
+                let height:number = this.mBottom - this.mTop;
+                this.mRight = right;
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setRight(this.mRight);
+                //}
+                this.sizeChange(this.mRight - this.mLeft, height, oldWidth, height);
+                if (!matrixIsIdentity) {
+                    if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                        // A change in dimension means an auto-centered pivot point changes, too
+                        this.mTransformationInfo.mMatrixDirty = true;
+                    }
+                    // force another invalidation with the new orientation
+                    this.mPrivateFlags |= View.PFLAG_DRAWN;
+                    this.invalidate(true);
+                }
+                this.mBackgroundSizeChanged = true;
+                this.invalidateParentIfNeeded();
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * The visual x position of this view, in pixels. This is equivalent to the
+         * {@link #setTranslationX(float) translationX} property plus the current
+         * {@link #getLeft() left} property.
+         *
+         * @return The visual x position of this view, in pixels.
+         */
+        getX():number  {
+            return this.mLeft + (this.mTransformationInfo != null ? this.mTransformationInfo.mTranslationX : 0);
+        }
+
+        /**
+         * Sets the visual x position of this view, in pixels. This is equivalent to setting the
+         * {@link #setTranslationX(float) translationX} property to be the difference between
+         * the x value passed in and the current {@link #getLeft() left} property.
+         *
+         * @param x The visual x position of this view, in pixels.
+         */
+        setX(x:number):void  {
+            this.setTranslationX(x - this.mLeft);
+        }
+
+        /**
+         * The visual y position of this view, in pixels. This is equivalent to the
+         * {@link #setTranslationY(float) translationY} property plus the current
+         * {@link #getTop() top} property.
+         *
+         * @return The visual y position of this view, in pixels.
+         */
+        getY():number  {
+            return this.mTop + (this.mTransformationInfo != null ? this.mTransformationInfo.mTranslationY : 0);
+        }
+
+        /**
+         * Sets the visual y position of this view, in pixels. This is equivalent to setting the
+         * {@link #setTranslationY(float) translationY} property to be the difference between
+         * the y value passed in and the current {@link #getTop() top} property.
+         *
+         * @param y The visual y position of this view, in pixels.
+         */
+        setY(y:number):void  {
+            this.setTranslationY(y - this.mTop);
+        }
+
+        /**
+         * The horizontal location of this view relative to its {@link #getLeft() left} position.
+         * This position is post-layout, in addition to wherever the object's
+         * layout placed it.
+         *
+         * @return The horizontal position of this view relative to its left position, in pixels.
+         */
+        getTranslationX():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mTranslationX : 0;
+        }
+
+        /**
+         * Sets the horizontal location of this view relative to its {@link #getLeft() left} position.
+         * This effectively positions the object post-layout, in addition to wherever the object's
+         * layout placed it.
+         *
+         * @param translationX The horizontal position of this view relative to its left position,
+         * in pixels.
+         *
+         * @attr ref android.R.styleable#View_translationX
+         */
+        setTranslationX(translationX:number):void  {
+            this.ensureTransformationInfo();
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            if (info.mTranslationX != translationX) {
+                // Double-invalidation is necessary to capture view's old and new areas
+                this.invalidateViewProperty(true, false);
+                info.mTranslationX = translationX;
+                info.mMatrixDirty = true;
+                this.invalidateViewProperty(false, true);
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setTranslationX(translationX);
+                //}
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
+        /**
+         * The horizontal location of this view relative to its {@link #getTop() top} position.
+         * This position is post-layout, in addition to wherever the object's
+         * layout placed it.
+         *
+         * @return The vertical position of this view relative to its top position,
+         * in pixels.
+         */
+        getTranslationY():number  {
+            return this.mTransformationInfo != null ? this.mTransformationInfo.mTranslationY : 0;
+        }
+
+        /**
+         * Sets the vertical location of this view relative to its {@link #getTop() top} position.
+         * This effectively positions the object post-layout, in addition to wherever the object's
+         * layout placed it.
+         *
+         * @param translationY The vertical position of this view relative to its top position,
+         * in pixels.
+         *
+         * @attr ref android.R.styleable#View_translationY
+         */
+        setTranslationY(translationY:number):void  {
+            this.ensureTransformationInfo();
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            if (info.mTranslationY != translationY) {
+                this.invalidateViewProperty(true, false);
+                info.mTranslationY = translationY;
+                info.mMatrixDirty = true;
+                this.invalidateViewProperty(false, true);
+                //if (this.mDisplayList != null) {
+                //    this.mDisplayList.setTranslationY(translationY);
+                //}
+                if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+                    // View was rejected last time it was drawn by its parent; this may have changed
+                    this.invalidateParentIfNeeded();
+                }
+            }
+        }
+
         transformRect(rect:Rect){
             if (!this.getMatrix().isIdentity()) {
                 let boundingRect = this.mAttachInfo.mTmpTransformRect;
@@ -2904,6 +3831,104 @@ module android.view {
             this.requestLayout();
         }
 
+        /**
+         * Get the animation currently associated with this view.
+         *
+         * @return The animation that is currently playing or
+         *         scheduled to play for this view.
+         */
+        getAnimation():Animation  {
+            return this.mCurrentAnimation;
+        }
+
+        /**
+         * Start the specified animation now.
+         *
+         * @param animation the animation to start now
+         */
+        startAnimation(animation:Animation):void  {
+            animation.setStartTime(Animation.START_ON_FIRST_FRAME);
+            this.setAnimation(animation);
+            this.invalidateParentCaches();
+            this.invalidate(true);
+        }
+
+        /**
+         * Cancels any animations for this view.
+         */
+        clearAnimation():void  {
+            if (this.mCurrentAnimation != null) {
+                this.mCurrentAnimation.detach();
+            }
+            this.mCurrentAnimation = null;
+            this.invalidateParentIfNeeded();
+        }
+
+        /**
+         * Sets the next animation to play for this view.
+         * If you want the animation to play immediately, use
+         * {@link #startAnimation(android.view.animation.Animation)} instead.
+         * This method provides allows fine-grained
+         * control over the start time and invalidation, but you
+         * must make sure that 1) the animation has a start time set, and
+         * 2) the view's parent (which controls animations on its children)
+         * will be invalidated when the animation is supposed to
+         * start.
+         *
+         * @param animation The next animation, or null.
+         */
+        setAnimation(animation:Animation):void  {
+            this.mCurrentAnimation = animation;
+            if (animation != null) {
+                // would cause the animation to start when the screen turns back on
+                //if (this.mAttachInfo != null
+                //    && !this.mAttachInfo.mScreenOn
+                //    && animation.getStartTime() == Animation.START_ON_FIRST_FRAME) {
+                //    animation.setStartTime(AnimationUtils.currentAnimationTimeMillis());
+                //}
+                animation.reset();
+            }
+        }
+
+        /**
+         * Invoked by a parent ViewGroup to notify the start of the animation
+         * currently associated with this view. If you override this method,
+         * always call super.onAnimationStart();
+         *
+         * @see #setAnimation(android.view.animation.Animation)
+         * @see #getAnimation()
+         */
+        protected onAnimationStart():void  {
+            this.mPrivateFlags |= View.PFLAG_ANIMATION_STARTED;
+        }
+
+        /**
+         * Invoked by a parent ViewGroup to notify the end of the animation
+         * currently associated with this view. If you override this method,
+         * always call super.onAnimationEnd();
+         *
+         * @see #setAnimation(android.view.animation.Animation)
+         * @see #getAnimation()
+         */
+        protected onAnimationEnd():void  {
+            this.mPrivateFlags &= ~View.PFLAG_ANIMATION_STARTED;
+        }
+
+        /**
+         * Invoked if there is a Transform that involves alpha. Subclass that can
+         * draw themselves with the specified alpha should return true, and then
+         * respect that alpha when their onDraw() is called. If this returns false
+         * then the view may be redirected to draw into an offscreen buffer to
+         * fulfill the request, which will look fine, but may be slower than if the
+         * subclass handles it internally. The default implementation returns false.
+         *
+         * @param alpha The alpha (0..255) to apply to the view's drawing
+         * @return true if the view can draw with the specified alpha.
+         */
+        protected onSetAlpha(alpha:number):boolean  {
+            return false;
+        }
+
         private _invalidateRect(l:number, t:number, r:number, b:number){
             if (this.skipInvalidate()) {
                 return;
@@ -3053,8 +4078,7 @@ module android.view {
         }
         private skipInvalidate() {
             return (this.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE
-                //TODO when animation ok
-                //&&mCurrentAnimation == null
+                && this.mCurrentAnimation == null
                 //TODO when transition ok
                 //&&(!(mParent instanceof ViewGroup) ||
                 //!mParent.isViewTransitioning(this))
@@ -3153,10 +4177,15 @@ module android.view {
         drawFromParent(canvas:Canvas, parent:ViewGroup, drawingTime:number):boolean {
             let useDisplayListProperties = false;
             let more = false;
-            let childHasIdentityMatrix = true;//TODO when transform ok
+            let childHasIdentityMatrix = this.hasIdentityMatrix();
             let flags = parent.mGroupFlags;
-            let scalingRequired = false;
+            if ((flags & ViewGroup.FLAG_CLEAR_TRANSFORMATION) == ViewGroup.FLAG_CLEAR_TRANSFORMATION) {
+                parent.getChildTransformation().clear();
+                parent.mGroupFlags &= ~ViewGroup.FLAG_CLEAR_TRANSFORMATION;
+            }
+            let transformToApply:Transformation = null;
             let concatMatrix = false;
+            let scalingRequired = false;
             let caching = false;
             let layerType = this.getLayerType();
 
@@ -3168,28 +4197,34 @@ module android.view {
                 caching = (layerType != View.LAYER_TYPE_NONE);
             }
 
-            //let a = this.getAnimation();//TODO animation & Transformation
-            //if (a != null) {
-            //    more = drawAnimation(parent, drawingTime, a, scalingRequired);
-            //    concatMatrix = a.willChangeTransformationMatrix();
-            //    if (concatMatrix) {
-            //        mPrivateFlags3 |= PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
-            //    }
-            //    transformToApply = parent.getChildTransformation();
-            //} else {
-            //    if (!useDisplayListProperties &&
-            //        (flags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
-            //        let t = parent.getChildTransformation();
-            //        const hasTransform = parent.getChildStaticTransformation(this, t);
-            //        if (hasTransform) {
-            //            final int transformType = t.getTransformationType();
-            //            transformToApply = transformType != Transformation.TYPE_IDENTITY ? t : null;
-            //            concatMatrix = (transformType & Transformation.TYPE_MATRIX) != 0;
-            //        }
-            //    }
-            //}
+            const a:Animation = this.getAnimation();
+            if (a != null) {
+                more = this.drawAnimation(parent, drawingTime, a, scalingRequired);
+                concatMatrix = a.willChangeTransformationMatrix();
+                if (concatMatrix) {
+                    this.mPrivateFlags3 |= View.PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
+                }
+                transformToApply = parent.getChildTransformation();
+            } else {
+                //if ((this.mPrivateFlags3 & View.PFLAG3_VIEW_IS_ANIMATING_TRANSFORM) == View.PFLAG3_VIEW_IS_ANIMATING_TRANSFORM && this.mDisplayList != null) {
+                //    // No longer animating: clear out old animation matrix
+                //    this.mDisplayList.setAnimationMatrix(null);
+                //    this.mPrivateFlags3 &= ~View.PFLAG3_VIEW_IS_ANIMATING_TRANSFORM;
+                //}
+                if (!useDisplayListProperties && (flags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+                    const t:Transformation = parent.getChildTransformation();
+                    const hasTransform:boolean = parent.getChildStaticTransformation(this, t);
+                    if (hasTransform) {
+                        const transformType:number = t.getTransformationType();
+                        transformToApply = transformType != Transformation.TYPE_IDENTITY ? t : null;
+                        concatMatrix = (transformType & Transformation.TYPE_MATRIX) != 0;
+                    }
+                }
+            }
+            concatMatrix = !childHasIdentityMatrix || concatMatrix;
 
-            concatMatrix ==  concatMatrix || !childHasIdentityMatrix;
+            // Sets the flag as early as possible to allow draw() implementations
+            // to call invalidate() successfully when doing animations
             this.mPrivateFlags |= View.PFLAG_DRAWN;
 
             if (!concatMatrix &&
@@ -3201,6 +4236,12 @@ module android.view {
                 return more;
             }
             this.mPrivateFlags2 &= ~View.PFLAG2_VIEW_QUICK_REJECTED;
+            //if (hardwareAccelerated) {
+            //    // Clear INVALIDATED flag to allow invalidation to occur during rendering, but
+            //    // retain the flag's value temporarily in the mRecreateDisplayList flag
+            //    this.mRecreateDisplayList = (this.mPrivateFlags & View.PFLAG_INVALIDATED) == View.PFLAG_INVALIDATED;
+            //    this.mPrivateFlags &= ~View.PFLAG_INVALIDATED;
+            //}
 
             let cache:Canvas = null;
             if (caching) {
@@ -3219,15 +4260,81 @@ module android.view {
 
             let hasNoCache = cache == null;
             let offsetForScroll = cache == null;
-            let restoreTo = canvas.save();
+            let restoreTo:number = canvas.save();
             if (offsetForScroll) {
                 canvas.translate(this.mLeft - sx, this.mTop - sy);
             }else{
                 canvas.translate(this.mLeft, this.mTop);
             }
 
-            //TODO deal alpha
-            let alpha = 1;
+            let alpha = this.getAlpha() * this.getTransitionAlpha();
+            if (transformToApply != null || alpha < 1 || !this.hasIdentityMatrix() || (this.mPrivateFlags3 & View.PFLAG3_VIEW_IS_ANIMATING_ALPHA) == View.PFLAG3_VIEW_IS_ANIMATING_ALPHA) {
+                if (transformToApply != null || !childHasIdentityMatrix) {
+                    let transX:number = 0;
+                    let transY:number = 0;
+                    if (offsetForScroll) {
+                        transX = -sx;
+                        transY = -sy;
+                    }
+                    if (transformToApply != null) {
+                        if (concatMatrix) {
+                            //if (useDisplayListProperties) {
+                            //    displayList.setAnimationMatrix(transformToApply.getMatrix());
+                            //} else {
+                                // Undo the scroll translation, apply the transformation matrix,
+                                // then redo the scroll translate to get the correct result.
+                                canvas.translate(-transX, -transY);
+                                canvas.concat(transformToApply.getMatrix());
+                                canvas.translate(transX, transY);
+                            //}
+                            parent.mGroupFlags |= ViewGroup.FLAG_CLEAR_TRANSFORMATION;
+                        }
+                        let transformAlpha:number = transformToApply.getAlpha();
+                        if (transformAlpha < 1) {
+                            alpha *= transformAlpha;
+                            parent.mGroupFlags |= ViewGroup.FLAG_CLEAR_TRANSFORMATION;
+                        }
+                    }
+                    if (!childHasIdentityMatrix && !useDisplayListProperties) {
+                        canvas.translate(-transX, -transY);
+                        canvas.concat(this.getMatrix());
+                        canvas.translate(transX, transY);
+                    }
+                }
+                // Deal with alpha if it is or used to be <1
+                if (alpha < 1 || (this.mPrivateFlags3 & View.PFLAG3_VIEW_IS_ANIMATING_ALPHA) == View.PFLAG3_VIEW_IS_ANIMATING_ALPHA) {
+                    if (alpha < 1) {
+                        this.mPrivateFlags3 |= View.PFLAG3_VIEW_IS_ANIMATING_ALPHA;
+                    } else {
+                        this.mPrivateFlags3 &= ~View.PFLAG3_VIEW_IS_ANIMATING_ALPHA;
+                    }
+                    parent.mGroupFlags |= ViewGroup.FLAG_CLEAR_TRANSFORMATION;
+                    if (hasNoCache) {
+                        const multipliedAlpha:number = Math.floor((255 * alpha));
+                        if (!this.onSetAlpha(multipliedAlpha)) {
+                            canvas.multiplyAlpha(alpha);
+                            //let layerFlags:number = Canvas.HAS_ALPHA_LAYER_SAVE_FLAG;
+                            //if ((flags & ViewGroup.FLAG_CLIP_CHILDREN) != 0 || layerType != View.LAYER_TYPE_NONE) {
+                            //    layerFlags |= Canvas.CLIP_TO_LAYER_SAVE_FLAG;
+                            //}
+                            //if (useDisplayListProperties) {
+                            //    displayList.setAlpha(alpha * this.getAlpha() * this.getTransitionAlpha());
+                            //} else
+                            //if (layerType == View.LAYER_TYPE_NONE) {
+                            //    const scrollX:number = hasDisplayList ? 0 : sx;
+                            //    const scrollY:number = hasDisplayList ? 0 : sy;
+                            //    canvas.saveLayerAlpha(scrollX, scrollY, scrollX + this.mRight - this.mLeft, scrollY + this.mBottom - this.mTop, multipliedAlpha, layerFlags);
+                            //}
+                        } else {
+                            // Alpha is handled by the child directly, clobber the layer's alpha
+                            this.mPrivateFlags |= View.PFLAG_ALPHA_SET;
+                        }
+                    }
+                }
+            } else if ((this.mPrivateFlags & View.PFLAG_ALPHA_SET) == View.PFLAG_ALPHA_SET) {
+                this.onSetAlpha(255);
+                this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
+            }
 
             if ((flags & ViewGroup.FLAG_CLIP_CHILDREN) == ViewGroup.FLAG_CLIP_CHILDREN &&
                 !useDisplayListProperties && cache == null) {
@@ -3252,15 +4359,34 @@ module android.view {
                 }
             } else if (cache != null) {
                 this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
-                if (alpha < 1) {
-                    //cachePaint.setAlpha((int) (alpha * 255));
-                    parent.mGroupFlags |= ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
-
-                } else if  ((flags & ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE) != 0) {
-                    //cachePaint.setAlpha(255);
-                    parent.mGroupFlags &= ~ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                canvas.multiplyAlpha(alpha);
+                if (layerType == View.LAYER_TYPE_NONE) {
+                    if (alpha < 1) {
+                        parent.mGroupFlags |= ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                    } else if ((flags & ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE) != 0) {
+                        parent.mGroupFlags &= ~ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                    }
                 }
-                canvas.drawCanvas(cache, 0, 0);//TODO draw with alpha
+                //let cachePaint:Paint;
+                //if (layerType == View.LAYER_TYPE_NONE) {
+                //    cachePaint = parent.mCachePaint;
+                //    if (cachePaint == null) {
+                //        cachePaint = new Paint();
+                //        cachePaint.setDither(false);
+                //        parent.mCachePaint = cachePaint;
+                //    }
+                //    if (alpha < 1) {
+                //        cachePaint.setAlpha(Math.floor((alpha * 255)));
+                //        parent.mGroupFlags |= ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                //    } else if ((flags & ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE) != 0) {
+                //        cachePaint.setAlpha(255);
+                //        parent.mGroupFlags &= ~ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
+                //    }
+                //} else {
+                //    cachePaint = this.mLayerPaint;
+                //    cachePaint.setAlpha(Math.floor((alpha * 255)));
+                //}
+                canvas.drawCanvas(cache, 0, 0);
             }
 
 
@@ -3318,6 +4444,55 @@ module android.view {
         protected onDraw(canvas:Canvas):void {
         }
         protected dispatchDraw(canvas:Canvas):void {
+        }
+
+        private drawAnimation(parent:ViewGroup, drawingTime:number, a:Animation, scalingRequired:boolean):boolean  {
+            let invalidationTransform:Transformation;
+            const flags:number = parent.mGroupFlags;
+            const initialized:boolean = a.isInitialized();
+            if (!initialized) {
+                a.initialize(this.mRight - this.mLeft, this.mBottom - this.mTop, parent.getWidth(), parent.getHeight());
+                a.initializeInvalidateRegion(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                if (this.mAttachInfo != null)
+                    a.setListenerHandler(this.mAttachInfo.mHandler);
+                this.onAnimationStart();
+            }
+            const t:Transformation = parent.getChildTransformation();
+            let more:boolean = a.getTransformation(drawingTime, t, 1);
+            //if (scalingRequired && this.mAttachInfo.mApplicationScale != 1) {
+            //    if (parent.mInvalidationTransformation == null) {
+            //        parent.mInvalidationTransformation = new Transformation();
+            //    }
+            //    invalidationTransform = parent.mInvalidationTransformation;
+            //    a.getTransformation(drawingTime, invalidationTransform, 1);
+            //} else {
+                invalidationTransform = t;
+            //}
+            if (more) {
+                if (!a.willChangeBounds()) {
+                    if ((flags & (ViewGroup.FLAG_OPTIMIZE_INVALIDATE | ViewGroup.FLAG_ANIMATION_DONE)) == ViewGroup.FLAG_OPTIMIZE_INVALIDATE) {
+                        parent.mGroupFlags |= ViewGroup.FLAG_INVALIDATE_REQUIRED;
+                    } else if ((flags & ViewGroup.FLAG_INVALIDATE_REQUIRED) == 0) {
+                        // The child need to draw an animation, potentially offscreen, so
+                        // make sure we do not cancel invalidate requests
+                        parent.mPrivateFlags |= View.PFLAG_DRAW_ANIMATION;
+                        parent.invalidate(this.mLeft, this.mTop, this.mRight, this.mBottom);
+                    }
+                } else {
+                    if (parent.mInvalidateRegion == null) {
+                        parent.mInvalidateRegion = new RectF();
+                    }
+                    const region:RectF = parent.mInvalidateRegion;
+                    a.getInvalidateRegion(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop, region, invalidationTransform);
+                    // The child need to draw an animation, potentially offscreen, so
+                    // make sure we do not cancel invalidate requests
+                    parent.mPrivateFlags |= View.PFLAG_DRAW_ANIMATION;
+                    const left:number = this.mLeft + Math.floor(region.left);
+                    const top:number = this.mTop + Math.floor(region.top);
+                    parent.invalidate(left, top, left + Math.floor((region.width() + .5)), top + Math.floor((region.height() + .5)));
+                }
+            }
+            return more;
         }
         onDrawScrollBars(canvas:Canvas) {
             // scrollbars are drawn only when the animation is running
@@ -3885,11 +5060,6 @@ module android.view {
             this.invalidate(true);
         }
 
-        getAnimation() {
-            //TODO animation
-            return null;
-        }
-
         protected computeHorizontalScrollRange():number {
             return this.getWidth();
         }
@@ -4441,10 +5611,10 @@ module android.view {
 
             this.destroyDrawingCache();
             //this.destroyLayer(false);
-            //
+
             this.cleanupDraw();
-            //
-            //this.mCurrentAnimation = null;
+
+            this.mCurrentAnimation = null;
         }
         cleanupDraw() {
             if (this.mAttachInfo != null) {
@@ -4957,6 +6127,130 @@ module android.view {
     }
 
     export module View{
+
+        export class TransformationInfo {
+
+            /**
+             * The transform matrix for the View. This transform is calculated internally
+             * based on the rotation, scaleX, and scaleY properties. The identity matrix
+             * is used by default. Do *not* use this variable directly; instead call
+             * getMatrix(), which will automatically recalculate the matrix if necessary
+             * to get the correct matrix based on the latest rotation and scale properties.
+             */
+            private mMatrix:Matrix = new Matrix();
+
+            /**
+             * The transform matrix for the View. This transform is calculated internally
+             * based on the rotation, scaleX, and scaleY properties. The identity matrix
+             * is used by default. Do *not* use this variable directly; instead call
+             * getInverseMatrix(), which will automatically recalculate the matrix if necessary
+             * to get the correct matrix based on the latest rotation and scale properties.
+             */
+            private mInverseMatrix:Matrix;
+
+            /**
+             * An internal variable that tracks whether we need to recalculate the
+             * transform matrix, based on whether the rotation or scaleX/Y properties
+             * have changed since the matrix was last calculated.
+             */
+            mMatrixDirty:boolean = false;
+
+            /**
+             * An internal variable that tracks whether we need to recalculate the
+             * transform matrix, based on whether the rotation or scaleX/Y properties
+             * have changed since the matrix was last calculated.
+             */
+            private mInverseMatrixDirty:boolean = true;
+
+            /**
+             * A variable that tracks whether we need to recalculate the
+             * transform matrix, based on whether the rotation or scaleX/Y properties
+             * have changed since the matrix was last calculated. This variable
+             * is only valid after a call to updateMatrix() or to a function that
+             * calls it such as getMatrix(), hasIdentityMatrix() and getInverseMatrix().
+             */
+            private mMatrixIsIdentity:boolean = true;
+
+            ///**
+            // * The Camera object is used to compute a 3D matrix when rotationX or rotationY are set.
+            // */
+            //private mCamera:Camera = null;
+            //
+            ///**
+            // * This matrix is used when computing the matrix for 3D rotations.
+            // */
+            //private matrix3D:Matrix = null;
+
+            /**
+             * These prev values are used to recalculate a centered pivot point when necessary. The
+             * pivot point is only used in matrix operations (when rotation, scale, or translation are
+             * set), so thes values are only used then as well.
+             */
+            private mPrevWidth:number = -1;
+
+            private mPrevHeight:number = -1;
+
+            ///**
+            // * The degrees rotation around the vertical axis through the pivot point.
+            // */
+            //mRotationY:number = 0;
+            //
+            ///**
+            // * The degrees rotation around the horizontal axis through the pivot point.
+            // */
+            //mRotationX:number = 0;
+
+            /**
+             * The degrees rotation around the pivot point.
+             */
+            mRotation:number = 0;
+
+            /**
+             * The amount of translation of the object away from its left property (post-layout).
+             */
+            mTranslationX:number = 0;
+
+            /**
+             * The amount of translation of the object away from its top property (post-layout).
+             */
+            mTranslationY:number = 0;
+
+            /**
+             * The amount of scale in the x direction around the pivot point. A
+             * value of 1 means no scaling is applied.
+             */
+            mScaleX:number = 1;
+
+            /**
+             * The amount of scale in the y direction around the pivot point. A
+             * value of 1 means no scaling is applied.
+             */
+            mScaleY:number = 1;
+
+            /**
+             * The x location of the point around which the view is rotated and scaled.
+             */
+            mPivotX:number = 0;
+
+            /**
+             * The y location of the point around which the view is rotated and scaled.
+             */
+            mPivotY:number = 0;
+
+            /**
+             * The opacity of the View. This is a value from 0 to 1, where 0 means
+             * completely transparent and 1 means completely opaque.
+             */
+            mAlpha:number = 1;
+
+            /**
+             * The opacity of the view as manipulated by the Fade transition. This is a hidden
+             * property only used by transitions, which is composited with the other alpha
+             * values to calculate the final visual alpha value.
+             */
+            mTransitionAlpha:number = 1;
+        }
+
         export class MeasureSpec {
             static MODE_SHIFT = 30;
             static MODE_MASK = 0x3 << MeasureSpec.MODE_SHIFT;

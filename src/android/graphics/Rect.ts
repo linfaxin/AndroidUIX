@@ -21,9 +21,9 @@ module android.graphics{
                 this.right = rect.right;
                 this.bottom = rect.bottom;
             }else if(args.length === 4 || args.length === 0){
-                let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                let [left = 0, t = 0, right = 0, bottom = 0] = args;
                 this.left = left;
-                this.top = top;
+                this.top = t;
                 this.right = right;
                 this.bottom = bottom;
             }
@@ -105,9 +105,9 @@ module android.graphics{
                 let rect : Rect = args[0];
                 [this.left, this.top, this.right, this.bottom] = [rect.left, rect.top, rect.right, rect.bottom];
             }else {
-                let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                let [left = 0, t = 0, right = 0, bottom = 0] = args;
                 this.left = left;
-                this.top = top;
+                this.top = t;
                 this.right = right;
                 this.bottom = bottom;
             }
@@ -147,11 +147,11 @@ module android.graphics{
                     && x >= this.left && x < this.right && y >= this.top && y < this.bottom;
 
             }else{
-                let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                let [left = 0, t = 0, right = 0, bottom = 0] = args;
                 // check for empty first
                 return this.left < this.right && this.top < this.bottom
                         // now check for containment
-                    && this.left <= left && this.top <= top
+                    && this.left <= left && this.top <= t
                     && this.right >= right && this.bottom >= bottom;
             }
         }
@@ -207,7 +207,10 @@ module android.graphics{
                     this.bottom = y;
                 }
             }else{
-                let [left = 0, top = 0, right = 0, bottom = 0] = args;
+                let left = args[0];
+                let top = args[1];
+                let right = args[2];
+                let bottom = args[3];
 
                 if ((left < right) && (top < bottom)) {
                     if ((this.left < this.right) && (this.top < this.bottom)) {

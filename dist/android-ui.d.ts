@@ -1627,6 +1627,216 @@ declare module android.R {
         };
     }
 }
+declare module goog.math {
+    class Long {
+        private static IntCache_;
+        private static TWO_PWR_16_DBL_;
+        private static TWO_PWR_24_DBL_;
+        private static TWO_PWR_32_DBL_;
+        private static TWO_PWR_31_DBL_;
+        private static TWO_PWR_48_DBL_;
+        private static TWO_PWR_64_DBL_;
+        private static TWO_PWR_63_DBL_;
+        private static TWO_PWR_24_;
+        static ZERO: Long;
+        static ONE: Long;
+        static NEG_ONE: Long;
+        static MAX_VALUE: Long;
+        static MIN_VALUE: Long;
+        private low_;
+        private high_;
+        constructor(low: number, high: number);
+        toInt(): number;
+        toNumber(): number;
+        toString(opt_radix: number): string;
+        getHighBits(): number;
+        getLowBits(): number;
+        getLowBitsUnsigned(): number;
+        getNumBitsAbs(): number;
+        isZero(): boolean;
+        isNegative(): boolean;
+        isOdd(): boolean;
+        equals(other: Long): boolean;
+        notEquals(other: Long): boolean;
+        lessThan(other: Long): boolean;
+        lessThanOrEqual(other: Long): boolean;
+        greaterThan(other: Long): boolean;
+        greaterThanOrEqual(other: Long): boolean;
+        compare(other: Long): number;
+        negate(): Long;
+        add(other: Long): Long;
+        subtract(other: Long): Long;
+        multiply(other: Long): Long;
+        div(other: Long): Long;
+        modulo(other: Long): Long;
+        not(): Long;
+        and(other: Long): Long;
+        or(other: Long): Long;
+        xor(other: Long): Long;
+        shiftLeft(numBits: number): Long;
+        shiftRight(numBits: number): Long;
+        shiftRightUnsigned(numBits: number): Long;
+        static fromInt(value: number): Long;
+        static fromNumber(value: number): Long;
+        static fromBits(lowBits: number, highBits: number): Long;
+        static fromString(str: string, opt_radix: number): Long;
+    }
+}
+declare module java.lang {
+    class Long {
+        static MIN_VALUE: number;
+        static MAX_VALUE: number;
+    }
+}
+declare module android.view.animation {
+    class AccelerateDecelerateInterpolator implements Interpolator {
+        getInterpolation(input: number): number;
+    }
+}
+declare module android.view.animation {
+    class DecelerateInterpolator implements Interpolator {
+        private mFactor;
+        constructor(factor?: number);
+        getInterpolation(input: number): number;
+    }
+}
+declare module android.view.animation {
+    import Matrix = android.graphics.Matrix;
+    import StringBuilder = java.lang.StringBuilder;
+    class Transformation {
+        static TYPE_IDENTITY: number;
+        static TYPE_ALPHA: number;
+        static TYPE_MATRIX: number;
+        static TYPE_BOTH: number;
+        protected mMatrix: Matrix;
+        protected mAlpha: number;
+        protected mTransformationType: number;
+        constructor();
+        clear(): void;
+        getTransformationType(): number;
+        setTransformationType(transformationType: number): void;
+        set(t: Transformation): void;
+        compose(t: Transformation): void;
+        postCompose(t: Transformation): void;
+        getMatrix(): Matrix;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        toString(): string;
+        toShortString(sb?: StringBuilder): void;
+    }
+}
+declare module android.view.animation {
+    import RectF = android.graphics.RectF;
+    import Handler = android.os.Handler;
+    import Interpolator = android.view.animation.Interpolator;
+    import Transformation = android.view.animation.Transformation;
+    abstract class Animation {
+        static INFINITE: number;
+        static RESTART: number;
+        static REVERSE: number;
+        static START_ON_FIRST_FRAME: number;
+        static ABSOLUTE: number;
+        static RELATIVE_TO_SELF: number;
+        static RELATIVE_TO_PARENT: number;
+        static ZORDER_NORMAL: number;
+        static ZORDER_TOP: number;
+        static ZORDER_BOTTOM: number;
+        private static USE_CLOSEGUARD;
+        mEnded: boolean;
+        mStarted: boolean;
+        mCycleFlip: boolean;
+        mInitialized: boolean;
+        mFillBefore: boolean;
+        mFillAfter: boolean;
+        mFillEnabled: boolean;
+        mStartTime: number;
+        mStartOffset: number;
+        mDuration: number;
+        mRepeatCount: number;
+        mRepeated: number;
+        mRepeatMode: number;
+        mInterpolator: Interpolator;
+        mListener: Animation.AnimationListener;
+        private mZAdjustment;
+        private mBackgroundColor;
+        private mScaleFactor;
+        private mDetachWallpaper;
+        private mMore;
+        private mOneMoreTime;
+        mPreviousRegion: RectF;
+        mRegion: RectF;
+        mTransformation: Transformation;
+        mPreviousTransformation: Transformation;
+        private mListenerHandler;
+        private mOnStart;
+        private mOnRepeat;
+        private mOnEnd;
+        constructor();
+        reset(): void;
+        cancel(): void;
+        detach(): void;
+        isInitialized(): boolean;
+        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+        setListenerHandler(handler: Handler): void;
+        setInterpolator(i: Interpolator): void;
+        setStartOffset(startOffset: number): void;
+        setDuration(durationMillis: number): void;
+        restrictDuration(durationMillis: number): void;
+        scaleCurrentDuration(scale: number): void;
+        setStartTime(startTimeMillis: number): void;
+        start(): void;
+        startNow(): void;
+        setRepeatMode(repeatMode: number): void;
+        setRepeatCount(repeatCount: number): void;
+        isFillEnabled(): boolean;
+        setFillEnabled(fillEnabled: boolean): void;
+        setFillBefore(fillBefore: boolean): void;
+        setFillAfter(fillAfter: boolean): void;
+        setZAdjustment(zAdjustment: number): void;
+        setBackgroundColor(bg: number): void;
+        protected getScaleFactor(): number;
+        setDetachWallpaper(detachWallpaper: boolean): void;
+        getInterpolator(): Interpolator;
+        getStartTime(): number;
+        getDuration(): number;
+        getStartOffset(): number;
+        getRepeatMode(): number;
+        getRepeatCount(): number;
+        getFillBefore(): boolean;
+        getFillAfter(): boolean;
+        getZAdjustment(): number;
+        getBackgroundColor(): number;
+        getDetachWallpaper(): boolean;
+        willChangeTransformationMatrix(): boolean;
+        willChangeBounds(): boolean;
+        setAnimationListener(listener: Animation.AnimationListener): void;
+        protected ensureInterpolator(): void;
+        computeDurationHint(): number;
+        getTransformation(currentTime: number, outTransformation: Transformation, scale?: number): boolean;
+        private fireAnimationStart();
+        private fireAnimationRepeat();
+        private fireAnimationEnd();
+        hasStarted(): boolean;
+        hasEnded(): boolean;
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        protected resolveSize(type: number, value: number, size: number, parentSize: number): number;
+        getInvalidateRegion(left: number, top: number, right: number, bottom: number, invalidate: RectF, transformation: Transformation): void;
+        initializeInvalidateRegion(left: number, top: number, right: number, bottom: number): void;
+        hasAlpha(): boolean;
+    }
+    module Animation {
+        class Description {
+            type: number;
+            value: number;
+            static parseValue(value: string): Description;
+        }
+        interface AnimationListener {
+            onAnimationStart(animation: Animation): void;
+            onAnimationEnd(animation: Animation): void;
+            onAnimationRepeat(animation: Animation): void;
+        }
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
@@ -1642,6 +1852,7 @@ declare module android.view {
     import Resources = android.content.res.Resources;
     import AttrBinder = androidui.attr.AttrBinder;
     import KeyEvent = android.view.KeyEvent;
+    import Animation = animation.Animation;
     class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback {
         static DBG: boolean;
         static VIEW_LOG_TAG: string;
@@ -1781,6 +1992,7 @@ declare module android.view {
         mPrivateFlags: number;
         private mPrivateFlags2;
         private mPrivateFlags3;
+        protected mCurrentAnimation: Animation;
         private mOldWidthMeasureSpec;
         private mOldHeightMeasureSpec;
         private mMeasuredWidth;
@@ -1814,6 +2026,7 @@ declare module android.view {
         private mMeasureCache;
         mAttachInfo: View.AttachInfo;
         mLayoutParams: ViewGroup.LayoutParams;
+        mTransformationInfo: View.TransformationInfo;
         mViewFlags: number;
         mLayerType: number;
         mCachingFailed: boolean;
@@ -1843,14 +2056,6 @@ declare module android.view {
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
         getWidth(): number;
         getHeight(): number;
-        getTop(): number;
-        setTop(top: number): void;
-        getBottom(): number;
-        setBottom(bottom: number): void;
-        getLeft(): number;
-        setLeft(left: number): void;
-        getRight(): number;
-        setRight(right: number): void;
         getPaddingLeft(): number;
         getPaddingTop(): number;
         getPaddingRight(): number;
@@ -1865,13 +2070,46 @@ declare module android.view {
         setScrollY(value: number): void;
         getScrollX(): number;
         getScrollY(): number;
-        getFinalAlpha(): number;
         offsetTopAndBottom(offset: number): void;
         offsetLeftAndRight(offset: number): void;
-        setAlpha(alpha: number): void;
-        private updateMatrix();
         getMatrix(): Matrix;
         hasIdentityMatrix(): boolean;
+        ensureTransformationInfo(): void;
+        private updateMatrix();
+        getRotation(): number;
+        setRotation(rotation: number): void;
+        getScaleX(): number;
+        setScaleX(scaleX: number): void;
+        getScaleY(): number;
+        setScaleY(scaleY: number): void;
+        getPivotX(): number;
+        setPivotX(pivotX: number): void;
+        getPivotY(): number;
+        setPivotY(pivotY: number): void;
+        getAlpha(): number;
+        hasOverlappingRendering(): boolean;
+        setAlpha(alpha: number): void;
+        setAlphaNoInvalidation(alpha: number): boolean;
+        setTransitionAlpha(alpha: number): void;
+        private getFinalAlpha();
+        getTransitionAlpha(): number;
+        getTop(): number;
+        setTop(top: number): void;
+        getBottom(): number;
+        isDirty(): boolean;
+        setBottom(bottom: number): void;
+        getLeft(): number;
+        setLeft(left: number): void;
+        getRight(): number;
+        setRight(right: number): void;
+        getX(): number;
+        setX(x: number): void;
+        getY(): number;
+        setY(y: number): void;
+        getTranslationX(): number;
+        setTranslationX(translationX: number): void;
+        getTranslationY(): number;
+        setTranslationY(translationY: number): void;
         transformRect(rect: Rect): void;
         pointInView(localX: number, localY: number, slop?: number): boolean;
         getHandler(): Handler;
@@ -2036,6 +2274,13 @@ declare module android.view {
         setMinimumHeight(minHeight: any): void;
         getMinimumWidth(): number;
         setMinimumWidth(minWidth: any): void;
+        getAnimation(): Animation;
+        startAnimation(animation: Animation): void;
+        clearAnimation(): void;
+        setAnimation(animation: Animation): void;
+        protected onAnimationStart(): void;
+        protected onAnimationEnd(): void;
+        protected onSetAlpha(alpha: number): boolean;
         private _invalidateRect(l, t, r, b);
         private _invalidateCache(invalidateCache?);
         invalidate(): any;
@@ -2060,6 +2305,7 @@ declare module android.view {
         draw(canvas: Canvas): void;
         protected onDraw(canvas: Canvas): void;
         protected dispatchDraw(canvas: Canvas): void;
+        private drawAnimation(parent, drawingTime, a, scalingRequired);
         onDrawScrollBars(canvas: Canvas): void;
         isVerticalScrollBarHidden(): boolean;
         onDrawHorizontalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
@@ -2092,7 +2338,6 @@ declare module android.view {
         setBackground(background: Drawable): void;
         getBackground(): Drawable;
         setBackgroundDrawable(background: Drawable): void;
-        getAnimation(): any;
         protected computeHorizontalScrollRange(): number;
         protected computeHorizontalScrollOffset(): number;
         protected computeHorizontalScrollExtent(): number;
@@ -2211,6 +2456,24 @@ declare module android.view {
         tagName(): string;
     }
     module View {
+        class TransformationInfo {
+            private mMatrix;
+            private mInverseMatrix;
+            mMatrixDirty: boolean;
+            private mInverseMatrixDirty;
+            private mMatrixIsIdentity;
+            private mPrevWidth;
+            private mPrevHeight;
+            mRotation: number;
+            mTranslationX: number;
+            mTranslationY: number;
+            mScaleX: number;
+            mScaleY: number;
+            mPivotX: number;
+            mPivotY: number;
+            mAlpha: number;
+            mTransitionAlpha: number;
+        }
         class MeasureSpec {
             static MODE_SHIFT: number;
             static MODE_MASK: number;
@@ -2509,8 +2772,10 @@ declare module android.view {
     import Canvas = android.graphics.Canvas;
     import Point = android.graphics.Point;
     import Rect = android.graphics.Rect;
+    import RectF = android.graphics.RectF;
     import ArrayList = java.util.ArrayList;
     import AttrBinder = androidui.attr.AttrBinder;
+    import Transformation = animation.Transformation;
     abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN: number;
         static FLAG_CLIP_TO_PADDING: number;
@@ -2549,6 +2814,8 @@ declare module android.view {
         mOnHierarchyChangeListener: ViewGroup.OnHierarchyChangeListener;
         private mFocused;
         private mFirstTouchTarget;
+        private mChildTransformation;
+        protected mInvalidateRegion: RectF;
         private mLastTouchDownTime;
         private mLastTouchDownIndex;
         private mLastTouchDownX;
@@ -2694,6 +2961,8 @@ declare module android.view {
         invalidateChildInParent(location: Array<number>, dirty: Rect): ViewParent;
         invalidateChildFast(child: View, dirty: Rect): void;
         invalidateChildInParentFast(left: number, top: number, dirty: Rect): ViewParent;
+        protected getChildStaticTransformation(child: View, t: Transformation): boolean;
+        getChildTransformation(): Transformation;
         findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
         requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
         shouldDelayChildPressedState(): boolean;
@@ -3961,67 +4230,6 @@ declare module android.database {
     class DataSetObserver {
         onChanged(): void;
         onInvalidated(): void;
-    }
-}
-declare module goog.math {
-    class Long {
-        private static IntCache_;
-        private static TWO_PWR_16_DBL_;
-        private static TWO_PWR_24_DBL_;
-        private static TWO_PWR_32_DBL_;
-        private static TWO_PWR_31_DBL_;
-        private static TWO_PWR_48_DBL_;
-        private static TWO_PWR_64_DBL_;
-        private static TWO_PWR_63_DBL_;
-        private static TWO_PWR_24_;
-        static ZERO: Long;
-        static ONE: Long;
-        static NEG_ONE: Long;
-        static MAX_VALUE: Long;
-        static MIN_VALUE: Long;
-        private low_;
-        private high_;
-        constructor(low: number, high: number);
-        toInt(): number;
-        toNumber(): number;
-        toString(opt_radix: number): string;
-        getHighBits(): number;
-        getLowBits(): number;
-        getLowBitsUnsigned(): number;
-        getNumBitsAbs(): number;
-        isZero(): boolean;
-        isNegative(): boolean;
-        isOdd(): boolean;
-        equals(other: Long): boolean;
-        notEquals(other: Long): boolean;
-        lessThan(other: Long): boolean;
-        lessThanOrEqual(other: Long): boolean;
-        greaterThan(other: Long): boolean;
-        greaterThanOrEqual(other: Long): boolean;
-        compare(other: Long): number;
-        negate(): Long;
-        add(other: Long): Long;
-        subtract(other: Long): Long;
-        multiply(other: Long): Long;
-        div(other: Long): Long;
-        modulo(other: Long): Long;
-        not(): Long;
-        and(other: Long): Long;
-        or(other: Long): Long;
-        xor(other: Long): Long;
-        shiftLeft(numBits: number): Long;
-        shiftRight(numBits: number): Long;
-        shiftRightUnsigned(numBits: number): Long;
-        static fromInt(value: number): Long;
-        static fromNumber(value: number): Long;
-        static fromBits(lowBits: number, highBits: number): Long;
-        static fromString(str: string, opt_radix: number): Long;
-    }
-}
-declare module java.lang {
-    class Long {
-        static MIN_VALUE: number;
-        static MAX_VALUE: number;
     }
 }
 declare module android.widget {
@@ -6070,13 +6278,6 @@ declare module android.widget {
         protected computeVerticalScrollRange(): number;
     }
 }
-declare module android.view.animation {
-    class DecelerateInterpolator implements Interpolator {
-        private mFactor;
-        constructor(factor?: number);
-        getInterpolation(input: number): number;
-    }
-}
 declare module java.util {
     interface Comparator<T> {
         compare(o1: T, o2: T): number;
@@ -6722,6 +6923,130 @@ declare module android.widget {
         abstract isChildSelectable(groupPosition: number, childPosition: number): boolean;
     }
 }
+declare module android.view.animation {
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class AlphaAnimation extends Animation {
+        private mFromAlpha;
+        private mToAlpha;
+        constructor(fromAlpha: number, toAlpha: number);
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        willChangeTransformationMatrix(): boolean;
+        willChangeBounds(): boolean;
+        hasAlpha(): boolean;
+    }
+}
+declare module android.view.animation {
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class ScaleAnimation extends Animation {
+        private mResources;
+        private mFromX;
+        private mToX;
+        private mFromY;
+        private mToY;
+        private mFromXData;
+        private mToXData;
+        private mFromYData;
+        private mToYData;
+        private mPivotXType;
+        private mPivotYType;
+        private mPivotXValue;
+        private mPivotYValue;
+        private mPivotX;
+        private mPivotY;
+        constructor(fromX: number, toX: number, fromY: number, toY: number, pivotXType?: number, pivotXValue?: number, pivotYType?: number, pivotYValue?: number);
+        private initializePivotPoint();
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+    }
+}
+declare module android.view.animation {
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class RotateAnimation extends Animation {
+        private mFromDegrees;
+        private mToDegrees;
+        private mPivotXType;
+        private mPivotYType;
+        private mPivotXValue;
+        private mPivotYValue;
+        private mPivotX;
+        private mPivotY;
+        constructor(fromDegrees: number, toDegrees: number, pivotXType?: number, pivotXValue?: number, pivotYType?: number, pivotYValue?: number);
+        private initializePivotPoint();
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+    }
+}
+declare module android.view.animation {
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class TranslateAnimation extends Animation {
+        private mFromXType;
+        private mToXType;
+        private mFromYType;
+        private mToYType;
+        private mFromXValue;
+        private mToXValue;
+        private mFromYValue;
+        private mToYValue;
+        private mFromXDelta;
+        private mToXDelta;
+        private mFromYDelta;
+        private mToYDelta;
+        constructor(fromXDelta: number, toXDelta: number, fromYDelta: number, toYDelta: number);
+        constructor(fromXType: number, fromXValue: number, toXType: number, toXValue: number, fromYType: number, fromYValue: number, toYType: number, toYValue: number);
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+    }
+}
+declare module android.view.animation {
+    import List = java.util.List;
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class AnimationSet extends Animation {
+        private static PROPERTY_FILL_AFTER_MASK;
+        private static PROPERTY_FILL_BEFORE_MASK;
+        private static PROPERTY_REPEAT_MODE_MASK;
+        private static PROPERTY_START_OFFSET_MASK;
+        private static PROPERTY_SHARE_INTERPOLATOR_MASK;
+        private static PROPERTY_DURATION_MASK;
+        private static PROPERTY_MORPH_MATRIX_MASK;
+        private static PROPERTY_CHANGE_BOUNDS_MASK;
+        private mFlags;
+        private mDirty;
+        private mHasAlpha;
+        private mAnimations;
+        private mTempTransformation;
+        private mLastEnd;
+        private mStoredOffsets;
+        constructor(shareInterpolator: boolean);
+        private setFlag(mask, value);
+        private init();
+        setFillAfter(fillAfter: boolean): void;
+        setFillBefore(fillBefore: boolean): void;
+        setRepeatMode(repeatMode: number): void;
+        setStartOffset(startOffset: number): void;
+        hasAlpha(): boolean;
+        setDuration(durationMillis: number): void;
+        addAnimation(a: Animation): void;
+        setStartTime(startTimeMillis: number): void;
+        getStartTime(): number;
+        restrictDuration(durationMillis: number): void;
+        getDuration(): number;
+        computeDurationHint(): number;
+        initializeInvalidateRegion(left: number, top: number, right: number, bottom: number): void;
+        getTransformation(currentTime: number, t: Transformation): boolean;
+        scaleCurrentDuration(scale: number): void;
+        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+        reset(): void;
+        restoreChildrenStartOffset(): void;
+        getAnimations(): List<Animation>;
+        willChangeTransformationMatrix(): boolean;
+        willChangeBounds(): boolean;
+    }
+}
 declare module android.support.v4.view {
     import DataSetObserver = android.database.DataSetObserver;
     import ViewGroup = android.view.ViewGroup;
@@ -7219,11 +7544,6 @@ declare module com.jakewharton.salvage {
         getViewTypeCount(): number;
         getItemViewType(position: number): number;
         abstract getView(position: number, convertView: View, parent: ViewGroup): View;
-    }
-}
-declare module android.view.animation {
-    class AccelerateDecelerateInterpolator implements Interpolator {
-        getInterpolation(input: number): number;
     }
 }
 declare module uk.co.senab.photoview {
