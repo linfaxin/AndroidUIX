@@ -37,7 +37,7 @@ module sample.activity {
         }
 
         getCount():number {
-            return 200;
+            return 1000;
         }
 
         getItem(position:number):string {

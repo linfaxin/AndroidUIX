@@ -4,8 +4,5 @@
     "target":"ES6",
     "outFile": "build/main.js",
     "sourceMap": false
-  },
-  "files": [
-    "main"
-  ]
+  }
 }

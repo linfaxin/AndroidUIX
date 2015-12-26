@@ -2779,7 +2779,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     //    this.setTextKeepState(text, this.mBufferType);
     //}
 
-    private setText(text:String, type=this.mBufferType, notifyBefore=true, oldlen=0):void  {
+    setText(text:String, type=this.mBufferType, notifyBefore=true, oldlen=0):void  {
         if (text == null) {
             text = "";
         }

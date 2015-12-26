@@ -1873,7 +1873,7 @@ module android.view {
 
 
 
-        dispatchDraw(canvas:Canvas) {
+        protected dispatchDraw(canvas:Canvas) {
             let count = this.mChildrenCount;
             let children = this.mChildren;
             let flags = this.mGroupFlags;

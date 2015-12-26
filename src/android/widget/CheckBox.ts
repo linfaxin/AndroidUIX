@@ -58,9 +58,11 @@ module android.widget {
      */
     export class CheckBox extends CompoundButton {
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-            super(bindElement, rootElement);
-            this.applyDefaultAttributes(android.R.attr.checkboxStyle);
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle?) {
+            super(bindElement, rootElement, null);
+
+            if(defStyle === undefined) defStyle = android.R.attr.checkboxStyle;
+            if(defStyle) this.applyDefaultAttributes(defStyle);
         }
     }
 }

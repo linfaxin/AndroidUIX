@@ -3245,9 +3245,11 @@ var java;
                 return this.array;
             }
             get(index) {
+                index = Math.floor(index);
                 return this.array[index];
             }
             set(index, element) {
+                index = Math.floor(index);
                 let old = this.array[index];
                 this.array[index] = element;
                 return old;
@@ -3257,7 +3259,7 @@ var java;
                 if (args.length === 1)
                     t = args[0];
                 else if (args.length === 2) {
-                    index = args[0];
+                    index = Math.floor(args[0]);
                     t = args[1];
                 }
                 if (index === undefined)
@@ -3286,7 +3288,7 @@ var java;
                     list = args[0];
                 }
                 else if (args.length === 2) {
-                    index = args[0];
+                    index = Math.floor(args[0]);
                     list = args[1];
                 }
                 if (index === undefined) {
@@ -3309,6 +3311,8 @@ var java;
             }
             subList(fromIndex, toIndex) {
                 let list = new ArrayList();
+                fromIndex = Math.floor(fromIndex);
+                toIndex = Math.floor(toIndex);
                 for (var i = fromIndex; i < toIndex; i++) {
                     list.array.push(this.array[i]);
                 }
@@ -6901,27 +6905,34 @@ var android;
                 };
             }
             static get checkboxStyle() {
-                return {
-                    background: new OverridePaddingColorDrawable(Color.TRANSPARENT),
+                return Object.assign(this.buttonStyle, {
+                    background: null,
                     button: R.drawable.btn_check
-                };
+                });
             }
             static get radiobuttonStyle() {
-                return {
-                    background: new OverridePaddingColorDrawable(Color.TRANSPARENT),
+                return Object.assign(this.buttonStyle, {
+                    background: null,
                     button: R.drawable.btn_radio
-                };
+                });
             }
             static get gridViewStyle() {
                 return {
+                    listSelector: android.R.drawable.list_selector_background,
                     numColumns: 1
                 };
             }
             static get listViewStyle() {
                 return {
                     divider: android.R.drawable.list_divider,
+                    listSelector: android.R.drawable.list_selector_background,
                     dividerHeight: 1
                 };
+            }
+            static get expandableListViewStyle() {
+                return Object.assign(this.listViewStyle, {
+                    childDivider: android.R.drawable.list_divider,
+                });
             }
             static get numberPickerStyle() {
                 return {
@@ -6944,12 +6955,6 @@ var android;
         }
         attr._viewStyle = {};
         R.attr = attr;
-        class OverridePaddingColorDrawable extends ColorDrawable {
-            getPadding(padding) {
-                super.getPadding(padding);
-                return true;
-            }
-        }
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 /**
@@ -7030,7 +7035,7 @@ var android;
         var NetDrawable = androidui.image.NetDrawable;
         var KeyEvent = android.view.KeyEvent;
         class View extends JavaObject {
-            constructor(bindElement, rootElement) {
+            constructor(bindElement, rootElement, defStyle) {
                 super();
                 this.mPrivateFlags = 0;
                 this.mPrivateFlags2 = 0;
@@ -7265,7 +7270,10 @@ var android;
                         return d.getImage().src;
                 });
                 this.initBindElement(bindElement, rootElement);
-                this.applyDefaultAttributes(android.R.attr.viewStyle);
+                if (defStyle === undefined)
+                    defStyle = android.R.attr.viewStyle;
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
             }
             get mID() {
                 if (this.bindElement) {
@@ -10104,13 +10112,11 @@ var android;
                 if (!(rootView instanceof View))
                     return rootView;
                 let params;
-                if (viewParent)
+                if (viewParent) {
                     params = viewParent.generateDefaultLayoutParams();
-                else {
-                    params = new view_1.ViewGroup.LayoutParams(view_1.ViewGroup.LayoutParams.WRAP_CONTENT, view_1.ViewGroup.LayoutParams.WRAP_CONTENT);
+                    params.parseAttributeFrom(domtree, rootElement);
+                    rootView.setLayoutParams(params);
                 }
-                params.parseAttributeFrom(domtree, rootElement);
-                rootView.setLayoutParams(params);
                 rootView._fireInitedAttributeChange();
                 if (rootView instanceof view_1.ViewGroup) {
                     let parent = rootView;
@@ -10219,7 +10225,7 @@ var android;
                 if (rootView._syncToElementLock)
                     return;
                 rootView._syncToElementLock = true;
-                rootView.postDelayed(rootView._syncToElementRun, 300);
+                rootView.postDelayed(rootView._syncToElementRun, 1000);
             }
             _syncBoundAndScrollToElement() {
                 this._syncBoundToElement();
@@ -10381,8 +10387,8 @@ var android;
                     let params = this.getLayoutParams();
                     if (params) {
                         params._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
+                        this.requestLayout();
                     }
-                    this.requestLayout();
                     return;
                 }
                 this._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
@@ -10499,6 +10505,9 @@ var android;
         View.VIEW_STATE_HOVERED = 1 << 7;
         View.VIEW_STATE_CHECKED = 1 << 10;
         View.VIEW_STATE_MULTILINE = 1 << 11;
+        View.VIEW_STATE_EXPANDED = 1 << 12;
+        View.VIEW_STATE_EMPTY = 1 << 13;
+        View.VIEW_STATE_LAST = 1 << 14;
         View.VIEW_STATE_IDS = [
             View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED,
             View.VIEW_STATE_SELECTED, View.VIEW_STATE_SELECTED,
@@ -21330,14 +21339,462 @@ var android;
         database.DataSetObserver = DataSetObserver;
     })(database = android.database || (android.database = {}));
 })(android || (android = {}));
+// Copyright 2009 The Closure Library Authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS-IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+var goog;
+(function (goog) {
+    var math;
+    (function (math) {
+        class Long {
+            constructor(low, high) {
+                this.low_ = low | 0;
+                this.high_ = high | 0;
+            }
+            toInt() {
+                return this.low_;
+            }
+            toNumber() {
+                return this.high_ * Long.TWO_PWR_32_DBL_ + this.getLowBitsUnsigned();
+            }
+            toString(opt_radix) {
+                var radix = opt_radix || 10;
+                if (radix < 2 || 36 < radix) {
+                    throw Error('radix out of range: ' + radix);
+                }
+                if (this.isZero()) {
+                    return '0';
+                }
+                if (this.isNegative()) {
+                    if (this.equals(Long.MIN_VALUE)) {
+                        var radixLong = Long.fromNumber(radix);
+                        var div = this.div(radixLong);
+                        let rem = div.multiply(radixLong).subtract(this);
+                        return div.toString(radix) + rem.toInt().toString(radix);
+                    }
+                    else {
+                        return '-' + this.negate().toString(radix);
+                    }
+                }
+                var radixToPower = Long.fromNumber(Math.pow(radix, 6));
+                let rem = this;
+                var result = '';
+                while (true) {
+                    var remDiv = rem.div(radixToPower);
+                    var intval = rem.subtract(remDiv.multiply(radixToPower)).toInt();
+                    var digits = intval.toString(radix);
+                    rem = remDiv;
+                    if (rem.isZero()) {
+                        return digits + result;
+                    }
+                    else {
+                        while (digits.length < 6) {
+                            digits = '0' + digits;
+                        }
+                        result = '' + digits + result;
+                    }
+                }
+            }
+            getHighBits() {
+                return this.high_;
+            }
+            getLowBits() {
+                return this.low_;
+            }
+            getLowBitsUnsigned() {
+                return (this.low_ >= 0) ? this.low_ : Long.TWO_PWR_32_DBL_ + this.low_;
+            }
+            getNumBitsAbs() {
+                if (this.isNegative()) {
+                    if (this.equals(Long.MIN_VALUE)) {
+                        return 64;
+                    }
+                    else {
+                        return this.negate().getNumBitsAbs();
+                    }
+                }
+                else {
+                    var val = this.high_ != 0 ? this.high_ : this.low_;
+                    for (var bit = 31; bit > 0; bit--) {
+                        if ((val & (1 << bit)) != 0) {
+                            break;
+                        }
+                    }
+                    return this.high_ != 0 ? bit + 33 : bit + 1;
+                }
+            }
+            isZero() {
+                return this.high_ == 0 && this.low_ == 0;
+            }
+            isNegative() {
+                return this.high_ < 0;
+            }
+            isOdd() {
+                return (this.low_ & 1) == 1;
+            }
+            equals(other) {
+                return (this.high_ == other.high_) && (this.low_ == other.low_);
+            }
+            notEquals(other) {
+                return (this.high_ != other.high_) || (this.low_ != other.low_);
+            }
+            lessThan(other) {
+                return this.compare(other) < 0;
+            }
+            lessThanOrEqual(other) {
+                return this.compare(other) <= 0;
+            }
+            greaterThan(other) {
+                return this.compare(other) > 0;
+            }
+            greaterThanOrEqual(other) {
+                return this.compare(other) >= 0;
+            }
+            compare(other) {
+                if (this.equals(other)) {
+                    return 0;
+                }
+                var thisNeg = this.isNegative();
+                var otherNeg = other.isNegative();
+                if (thisNeg && !otherNeg) {
+                    return -1;
+                }
+                if (!thisNeg && otherNeg) {
+                    return 1;
+                }
+                if (this.subtract(other).isNegative()) {
+                    return -1;
+                }
+                else {
+                    return 1;
+                }
+            }
+            negate() {
+                if (this.equals(Long.MIN_VALUE)) {
+                    return Long.MIN_VALUE;
+                }
+                else {
+                    return this.not().add(Long.ONE);
+                }
+            }
+            add(other) {
+                // Divide each number into 4 chunks of 16 bits, and then sum the chunks.
+                var a48 = this.high_ >>> 16;
+                var a32 = this.high_ & 0xFFFF;
+                var a16 = this.low_ >>> 16;
+                var a00 = this.low_ & 0xFFFF;
+                var b48 = other.high_ >>> 16;
+                var b32 = other.high_ & 0xFFFF;
+                var b16 = other.low_ >>> 16;
+                var b00 = other.low_ & 0xFFFF;
+                var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
+                c00 += a00 + b00;
+                c16 += c00 >>> 16;
+                c00 &= 0xFFFF;
+                c16 += a16 + b16;
+                c32 += c16 >>> 16;
+                c16 &= 0xFFFF;
+                c32 += a32 + b32;
+                c48 += c32 >>> 16;
+                c32 &= 0xFFFF;
+                c48 += a48 + b48;
+                c48 &= 0xFFFF;
+                return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32);
+            }
+            subtract(other) {
+                return this.add(other.negate());
+            }
+            multiply(other) {
+                if (this.isZero()) {
+                    return Long.ZERO;
+                }
+                else if (other.isZero()) {
+                    return Long.ZERO;
+                }
+                if (this.equals(Long.MIN_VALUE)) {
+                    return other.isOdd() ? Long.MIN_VALUE : Long.ZERO;
+                }
+                else if (other.equals(Long.MIN_VALUE)) {
+                    return this.isOdd() ? Long.MIN_VALUE : Long.ZERO;
+                }
+                if (this.isNegative()) {
+                    if (other.isNegative()) {
+                        return this.negate().multiply(other.negate());
+                    }
+                    else {
+                        return this.negate().multiply(other).negate();
+                    }
+                }
+                else if (other.isNegative()) {
+                    return this.multiply(other.negate()).negate();
+                }
+                if (this.lessThan(Long.TWO_PWR_24_) &&
+                    other.lessThan(Long.TWO_PWR_24_)) {
+                    return Long.fromNumber(this.toNumber() * other.toNumber());
+                }
+                var a48 = this.high_ >>> 16;
+                var a32 = this.high_ & 0xFFFF;
+                var a16 = this.low_ >>> 16;
+                var a00 = this.low_ & 0xFFFF;
+                var b48 = other.high_ >>> 16;
+                var b32 = other.high_ & 0xFFFF;
+                var b16 = other.low_ >>> 16;
+                var b00 = other.low_ & 0xFFFF;
+                var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
+                c00 += a00 * b00;
+                c16 += c00 >>> 16;
+                c00 &= 0xFFFF;
+                c16 += a16 * b00;
+                c32 += c16 >>> 16;
+                c16 &= 0xFFFF;
+                c16 += a00 * b16;
+                c32 += c16 >>> 16;
+                c16 &= 0xFFFF;
+                c32 += a32 * b00;
+                c48 += c32 >>> 16;
+                c32 &= 0xFFFF;
+                c32 += a16 * b16;
+                c48 += c32 >>> 16;
+                c32 &= 0xFFFF;
+                c32 += a00 * b32;
+                c48 += c32 >>> 16;
+                c32 &= 0xFFFF;
+                c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
+                c48 &= 0xFFFF;
+                return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32);
+            }
+            div(other) {
+                if (other.isZero()) {
+                    throw Error('division by zero');
+                }
+                else if (this.isZero()) {
+                    return Long.ZERO;
+                }
+                if (this.equals(Long.MIN_VALUE)) {
+                    if (other.equals(Long.ONE) ||
+                        other.equals(Long.NEG_ONE)) {
+                        return Long.MIN_VALUE;
+                    }
+                    else if (other.equals(Long.MIN_VALUE)) {
+                        return Long.ONE;
+                    }
+                    else {
+                        var halfThis = this.shiftRight(1);
+                        let approx = halfThis.div(other).shiftLeft(1);
+                        if (approx.equals(Long.ZERO)) {
+                            return other.isNegative() ? Long.ONE : Long.NEG_ONE;
+                        }
+                        else {
+                            var rem = this.subtract(other.multiply(approx));
+                            var result = approx.add(rem.div(other));
+                            return result;
+                        }
+                    }
+                }
+                else if (other.equals(Long.MIN_VALUE)) {
+                    return Long.ZERO;
+                }
+                if (this.isNegative()) {
+                    if (other.isNegative()) {
+                        return this.negate().div(other.negate());
+                    }
+                    else {
+                        return this.negate().div(other).negate();
+                    }
+                }
+                else if (other.isNegative()) {
+                    return this.div(other.negate()).negate();
+                }
+                var res = Long.ZERO;
+                var rem = this;
+                while (rem.greaterThanOrEqual(other)) {
+                    let approx = Math.max(1, Math.floor(rem.toNumber() / other.toNumber()));
+                    var log2 = Math.ceil(Math.log(approx) / Math.LN2);
+                    var delta = (log2 <= 48) ? 1 : Math.pow(2, log2 - 48);
+                    var approxRes = Long.fromNumber(approx);
+                    var approxRem = approxRes.multiply(other);
+                    while (approxRem.isNegative() || approxRem.greaterThan(rem)) {
+                        approx -= delta;
+                        approxRes = Long.fromNumber(approx);
+                        approxRem = approxRes.multiply(other);
+                    }
+                    if (approxRes.isZero()) {
+                        approxRes = Long.ONE;
+                    }
+                    res = res.add(approxRes);
+                    rem = rem.subtract(approxRem);
+                }
+                return res;
+            }
+            modulo(other) {
+                return this.subtract(this.div(other).multiply(other));
+            }
+            not() {
+                return Long.fromBits(~this.low_, ~this.high_);
+            }
+            and(other) {
+                return Long.fromBits(this.low_ & other.low_, this.high_ & other.high_);
+            }
+            or(other) {
+                return Long.fromBits(this.low_ | other.low_, this.high_ | other.high_);
+            }
+            xor(other) {
+                return Long.fromBits(this.low_ ^ other.low_, this.high_ ^ other.high_);
+            }
+            shiftLeft(numBits) {
+                numBits &= 63;
+                if (numBits == 0) {
+                    return this;
+                }
+                else {
+                    var low = this.low_;
+                    if (numBits < 32) {
+                        var high = this.high_;
+                        return Long.fromBits(low << numBits, (high << numBits) | (low >>> (32 - numBits)));
+                    }
+                    else {
+                        return Long.fromBits(0, low << (numBits - 32));
+                    }
+                }
+            }
+            shiftRight(numBits) {
+                numBits &= 63;
+                if (numBits == 0) {
+                    return this;
+                }
+                else {
+                    var high = this.high_;
+                    if (numBits < 32) {
+                        var low = this.low_;
+                        return Long.fromBits((low >>> numBits) | (high << (32 - numBits)), high >> numBits);
+                    }
+                    else {
+                        return Long.fromBits(high >> (numBits - 32), high >= 0 ? 0 : -1);
+                    }
+                }
+            }
+            shiftRightUnsigned(numBits) {
+                numBits &= 63;
+                if (numBits == 0) {
+                    return this;
+                }
+                else {
+                    var high = this.high_;
+                    if (numBits < 32) {
+                        var low = this.low_;
+                        return Long.fromBits((low >>> numBits) | (high << (32 - numBits)), high >>> numBits);
+                    }
+                    else if (numBits == 32) {
+                        return Long.fromBits(high, 0);
+                    }
+                    else {
+                        return Long.fromBits(high >>> (numBits - 32), 0);
+                    }
+                }
+            }
+            static fromInt(value) {
+                if (-128 <= value && value < 128) {
+                    var cachedObj = Long.IntCache_[value];
+                    if (cachedObj) {
+                        return cachedObj;
+                    }
+                }
+                var obj = new Long(value | 0, value < 0 ? -1 : 0);
+                if (-128 <= value && value < 128) {
+                    Long.IntCache_[value] = obj;
+                }
+                return obj;
+            }
+            static fromNumber(value) {
+                if (isNaN(value) || !isFinite(value)) {
+                    return Long.ZERO;
+                }
+                else if (value <= -Long.TWO_PWR_63_DBL_) {
+                    return Long.MIN_VALUE;
+                }
+                else if (value + 1 >= Long.TWO_PWR_63_DBL_) {
+                    return Long.MAX_VALUE;
+                }
+                else if (value < 0) {
+                    return Long.fromNumber(-value).negate();
+                }
+                else {
+                    return new Long((value % Long.TWO_PWR_32_DBL_) | 0, (value / Long.TWO_PWR_32_DBL_) | 0);
+                }
+            }
+            static fromBits(lowBits, highBits) {
+                return new Long(lowBits, highBits);
+            }
+            static fromString(str, opt_radix) {
+                if (str.length == 0) {
+                    throw Error('number format error: empty string');
+                }
+                var radix = opt_radix || 10;
+                if (radix < 2 || 36 < radix) {
+                    throw Error('radix out of range: ' + radix);
+                }
+                if (str.charAt(0) == '-') {
+                    return Long.fromString(str.substring(1), radix).negate();
+                }
+                else if (str.indexOf('-') >= 0) {
+                    throw Error('number format error: interior "-" character: ' + str);
+                }
+                var radixToPower = Long.fromNumber(Math.pow(radix, 8));
+                var result = Long.ZERO;
+                for (var i = 0; i < str.length; i += 8) {
+                    var size = Math.min(8, str.length - i);
+                    var value = parseInt(str.substring(i, i + size), radix);
+                    if (size < 8) {
+                        var power = Long.fromNumber(Math.pow(radix, size));
+                        result = result.multiply(power).add(Long.fromNumber(value));
+                    }
+                    else {
+                        result = result.multiply(radixToPower);
+                        result = result.add(Long.fromNumber(value));
+                    }
+                }
+                return result;
+            }
+        }
+        Long.IntCache_ = {};
+        Long.TWO_PWR_16_DBL_ = 1 << 16;
+        Long.TWO_PWR_24_DBL_ = 1 << 24;
+        Long.TWO_PWR_32_DBL_ = Long.TWO_PWR_16_DBL_ * Long.TWO_PWR_16_DBL_;
+        Long.TWO_PWR_31_DBL_ = Long.TWO_PWR_32_DBL_ / 2;
+        Long.TWO_PWR_48_DBL_ = Long.TWO_PWR_32_DBL_ * Long.TWO_PWR_16_DBL_;
+        Long.TWO_PWR_64_DBL_ = Long.TWO_PWR_32_DBL_ * Long.TWO_PWR_32_DBL_;
+        Long.TWO_PWR_63_DBL_ = Long.TWO_PWR_64_DBL_ / 2;
+        Long.TWO_PWR_24_ = Long.fromInt(1 << 24);
+        Long.ZERO = Long.fromInt(0);
+        Long.ONE = Long.fromInt(1);
+        Long.NEG_ONE = Long.fromInt(-1);
+        Long.MAX_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0x7FFFFFFF | 0);
+        Long.MIN_VALUE = Long.fromBits(0, 0x80000000 | 0);
+        math.Long = Long;
+    })(math = goog.math || (goog.math = {}));
+})(goog || (goog = {}));
+/**
+ * Created by linfaxin on 15/11/13.
+ */
+///<reference path="../../androidui/util/Long.ts"/>
 var java;
 (function (java) {
     var lang;
     (function (lang) {
         class Long {
         }
-        Long.MIN_VALUE = Number.MIN_SAFE_INTEGER;
-        Long.MAX_VALUE = Number.MAX_SAFE_INTEGER;
+        Long.MIN_VALUE = goog.math.Long.MIN_VALUE.toNumber();
+        Long.MAX_VALUE = goog.math.Long.MAX_VALUE.toNumber();
         lang.Long = Long;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
@@ -27092,9 +27549,12 @@ var android;
     var widget;
     (function (widget) {
         class Button extends widget.TextView {
-            constructor(bindElement, rootElement) {
+            constructor(bindElement, rootElement, defStyle) {
                 super(bindElement, rootElement);
-                this.applyDefaultAttributes(android.R.attr.buttonStyle);
+                if (defStyle === undefined)
+                    defStyle = android.R.attr.buttonStyle;
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
             }
         }
         widget.Button = Button;
@@ -29901,11 +30361,11 @@ var android;
                     this._AbsListView_this = arg;
                     this.mExtraScroll = ViewConfiguration.get().getScaledFadingEdgeLength();
                 }
-                start(...args) {
-                    if (args.length === 1)
-                        this._start_1(args[0]);
-                    else if (args.length === 2)
-                        this._start_2(args[0], args[1]);
+                start(position, boundPosition) {
+                    if (boundPosition == null)
+                        this._start_1(position);
+                    else
+                        this._start_2(position, boundPosition);
                 }
                 _start_1(position) {
                     this.stop();
@@ -31469,8 +31929,8 @@ var android;
                 }
                 return topSelectionPixel;
             }
-            smoothScrollToPosition(position) {
-                super.smoothScrollToPosition(position);
+            smoothScrollToPosition(position, boundPosition) {
+                super.smoothScrollToPosition(position, boundPosition);
             }
             smoothScrollByOffset(offset) {
                 super.smoothScrollByOffset(offset);
@@ -31968,6 +32428,9 @@ var android;
                 let p = child.getLayoutParams();
                 if (p == null) {
                     p = this.generateDefaultLayoutParams();
+                }
+                if (!(p instanceof AbsListView.LayoutParams)) {
+                    throw Error('ClassCaseException(' + p.constructor.name + ' can\'t case to AbsListView.LayoutParams)');
                 }
                 p.viewType = this.mAdapter.getItemViewType(position);
                 if ((recycled && !p.forceAdd) || (p.recycledHeaderFooter && p.viewType == AdapterView.ITEM_VIEW_TYPE_HEADER_OR_FOOTER)) {
@@ -37246,18 +37709,49 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        var Comparable;
+        (function (Comparable) {
+            function isImpl(obj) {
+                return obj && obj['compareTo'];
+            }
+            Comparable.isImpl = isImpl;
+        })(Comparable = lang.Comparable || (lang.Comparable = {}));
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
 /**
  * Created by linfaxin on 15/11/28.
  */
 ///<reference path="List.ts"/>
 ///<reference path="ArrayList.ts"/>
+///<reference path="Comparator.ts"/>
+///<reference path="../lang/Comparable.ts"/>
 var java;
 (function (java) {
     var util;
     (function (util) {
+        var Comparable = java.lang.Comparable;
         class Collections {
             static emptyList() {
                 return Collections.EMPTY_LIST;
+            }
+            static sort(list, c) {
+                if (c) {
+                    list.sort((t1, t2) => {
+                        return c.compare(t1, t2);
+                    });
+                }
+                else {
+                    list.sort((t1, t2) => {
+                        if (Comparable.isImpl(t1) && Comparable.isImpl(t2)) {
+                            return t1.compareTo(t2);
+                        }
+                        return 0;
+                    });
+                }
             }
         }
         Collections.EMPTY_LIST = new util.ArrayList();
@@ -38793,8 +39287,8 @@ var android;
         var View = android.view.View;
         var Button = android.widget.Button;
         class CompoundButton extends Button {
-            constructor(bindElement, rootElement) {
-                super(bindElement, rootElement);
+            constructor(bindElement, rootElement, defStyle) {
+                super(bindElement, rootElement, defStyle);
                 this.mButtonResource = 0;
                 this._attrBinder.addAttr('button', (value) => {
                     this.setButtonDrawable(this._attrBinder.parseDrawable(value));
@@ -38953,9 +39447,12 @@ var android;
     (function (widget) {
         var CompoundButton = android.widget.CompoundButton;
         class CheckBox extends CompoundButton {
-            constructor(bindElement, rootElement) {
-                super(bindElement, rootElement);
-                this.applyDefaultAttributes(android.R.attr.checkboxStyle);
+            constructor(bindElement, rootElement, defStyle) {
+                super(bindElement, rootElement, null);
+                if (defStyle === undefined)
+                    defStyle = android.R.attr.checkboxStyle;
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
             }
         }
         widget.CheckBox = CheckBox;
@@ -38986,9 +39483,12 @@ var android;
     (function (widget) {
         var CompoundButton = android.widget.CompoundButton;
         class RadioButton extends CompoundButton {
-            constructor(bindElement, rootElement) {
-                super(bindElement, rootElement);
-                this.applyDefaultAttributes(android.R.attr.radiobuttonStyle);
+            constructor(bindElement, rootElement, defStyle) {
+                super(bindElement, rootElement, null);
+                if (defStyle === undefined)
+                    defStyle = android.R.attr.radiobuttonStyle;
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
             }
             toggle() {
                 if (!this.isChecked()) {
@@ -39161,6 +39661,1307 @@ var android;
             }
             RadioGroup.PassThroughHierarchyChangeListener = PassThroughHierarchyChangeListener;
         })(RadioGroup = widget.RadioGroup || (widget.RadioGroup = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/ExpandableListView.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../java/util/ArrayList.ts"/>
+///<reference path="../../android/widget/ExpandableListView.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var ArrayList = java.util.ArrayList;
+        var ExpandableListView = android.widget.ExpandableListView;
+        class ExpandableListPosition {
+            constructor() {
+                this.groupPos = 0;
+                this.childPos = 0;
+                this.flatListPos = 0;
+                this.type = 0;
+            }
+            resetState() {
+                this.groupPos = 0;
+                this.childPos = 0;
+                this.flatListPos = 0;
+                this.type = 0;
+            }
+            getPackedPosition() {
+                if (this.type == ExpandableListPosition.CHILD)
+                    return ExpandableListView.getPackedPositionForChild(this.groupPos, this.childPos);
+                else
+                    return ExpandableListView.getPackedPositionForGroup(this.groupPos);
+            }
+            static obtainGroupPosition(groupPosition) {
+                return ExpandableListPosition.obtain(ExpandableListPosition.GROUP, groupPosition, 0, 0);
+            }
+            static obtainChildPosition(groupPosition, childPosition) {
+                return ExpandableListPosition.obtain(ExpandableListPosition.CHILD, groupPosition, childPosition, 0);
+            }
+            static obtainPosition(packedPosition) {
+                if (packedPosition == ExpandableListView.PACKED_POSITION_VALUE_NULL) {
+                    return null;
+                }
+                let elp = ExpandableListPosition.getRecycledOrCreate();
+                elp.groupPos = ExpandableListView.getPackedPositionGroup(packedPosition);
+                if (ExpandableListView.getPackedPositionType(packedPosition) == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+                    elp.type = ExpandableListPosition.CHILD;
+                    elp.childPos = ExpandableListView.getPackedPositionChild(packedPosition);
+                }
+                else {
+                    elp.type = ExpandableListPosition.GROUP;
+                }
+                return elp;
+            }
+            static obtain(type, groupPos, childPos, flatListPos) {
+                let elp = ExpandableListPosition.getRecycledOrCreate();
+                elp.type = type;
+                elp.groupPos = groupPos;
+                elp.childPos = childPos;
+                elp.flatListPos = flatListPos;
+                return elp;
+            }
+            static getRecycledOrCreate() {
+                let elp;
+                {
+                    if (ExpandableListPosition.sPool.size() > 0) {
+                        elp = ExpandableListPosition.sPool.remove(0);
+                    }
+                    else {
+                        return new ExpandableListPosition();
+                    }
+                }
+                elp.resetState();
+                return elp;
+            }
+            recycle() {
+                {
+                    if (ExpandableListPosition.sPool.size() < ExpandableListPosition.MAX_POOL_SIZE) {
+                        ExpandableListPosition.sPool.add(this);
+                    }
+                }
+            }
+        }
+        ExpandableListPosition.MAX_POOL_SIZE = 5;
+        ExpandableListPosition.sPool = new ArrayList(ExpandableListPosition.MAX_POOL_SIZE);
+        ExpandableListPosition.CHILD = 1;
+        ExpandableListPosition.GROUP = 2;
+        widget.ExpandableListPosition = ExpandableListPosition;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
+///<reference path="../../android/widget/ExpandableListAdapter.ts"/>
+///<reference path="../../android/widget/ExpandableListView.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var HeterogeneousExpandableList;
+        (function (HeterogeneousExpandableList) {
+            function isImpl(obj) {
+                return obj && obj['getGroupType'] && obj['getChildType'] && obj['getGroupTypeCount'] && obj['getChildTypeCount'];
+            }
+            HeterogeneousExpandableList.isImpl = isImpl;
+        })(HeterogeneousExpandableList = widget.HeterogeneousExpandableList || (widget.HeterogeneousExpandableList = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/os/SystemClock.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
+///<reference path="../../java/util/Collections.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/Comparable.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
+///<reference path="../../android/widget/BaseAdapter.ts"/>
+///<reference path="../../android/widget/ExpandableListAdapter.ts"/>
+///<reference path="../../android/widget/ExpandableListPosition.ts"/>
+///<reference path="../../android/widget/HeterogeneousExpandableList.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var DataSetObserver = android.database.DataSetObserver;
+        var SystemClock = android.os.SystemClock;
+        var ArrayList = java.util.ArrayList;
+        var Collections = java.util.Collections;
+        var Integer = java.lang.Integer;
+        var AdapterView = android.widget.AdapterView;
+        var BaseAdapter = android.widget.BaseAdapter;
+        var ExpandableListPosition = android.widget.ExpandableListPosition;
+        var HeterogeneousExpandableList = android.widget.HeterogeneousExpandableList;
+        class ExpandableListConnector extends BaseAdapter {
+            constructor(expandableListAdapter) {
+                super();
+                this.mTotalExpChildrenCount = 0;
+                this.mMaxExpGroupCount = Integer.MAX_VALUE;
+                this.mDataSetObserver = new ExpandableListConnector.MyDataSetObserver(this);
+                this.mExpGroupMetadataList = new ArrayList();
+                this.setExpandableListAdapter(expandableListAdapter);
+            }
+            setExpandableListAdapter(expandableListAdapter) {
+                if (this.mExpandableListAdapter != null) {
+                    this.mExpandableListAdapter.unregisterDataSetObserver(this.mDataSetObserver);
+                }
+                this.mExpandableListAdapter = expandableListAdapter;
+                expandableListAdapter.registerDataSetObserver(this.mDataSetObserver);
+            }
+            getUnflattenedPos(flPos) {
+                const egml = this.mExpGroupMetadataList;
+                const numExpGroups = egml.size();
+                let leftExpGroupIndex = 0;
+                let rightExpGroupIndex = numExpGroups - 1;
+                let midExpGroupIndex = 0;
+                let midExpGm;
+                if (numExpGroups == 0) {
+                    return ExpandableListConnector.PositionMetadata.obtain(flPos, ExpandableListPosition.GROUP, flPos, -1, null, 0);
+                }
+                while (leftExpGroupIndex <= rightExpGroupIndex) {
+                    midExpGroupIndex = Math.floor((rightExpGroupIndex - leftExpGroupIndex) / 2 + leftExpGroupIndex);
+                    midExpGm = egml.get(midExpGroupIndex);
+                    if (flPos > midExpGm.lastChildFlPos) {
+                        leftExpGroupIndex = midExpGroupIndex + 1;
+                    }
+                    else if (flPos < midExpGm.flPos) {
+                        rightExpGroupIndex = midExpGroupIndex - 1;
+                    }
+                    else if (flPos == midExpGm.flPos) {
+                        return ExpandableListConnector.PositionMetadata.obtain(flPos, ExpandableListPosition.GROUP, midExpGm.gPos, -1, midExpGm, midExpGroupIndex);
+                    }
+                    else if (flPos <= midExpGm.lastChildFlPos) {
+                        const childPos = flPos - (midExpGm.flPos + 1);
+                        return ExpandableListConnector.PositionMetadata.obtain(flPos, ExpandableListPosition.CHILD, midExpGm.gPos, childPos, midExpGm, midExpGroupIndex);
+                    }
+                }
+                let insertPosition = 0;
+                let groupPos = 0;
+                if (leftExpGroupIndex > midExpGroupIndex) {
+                    const leftExpGm = egml.get(leftExpGroupIndex - 1);
+                    insertPosition = leftExpGroupIndex;
+                    groupPos = (flPos - leftExpGm.lastChildFlPos) + leftExpGm.gPos;
+                }
+                else if (rightExpGroupIndex < midExpGroupIndex) {
+                    const rightExpGm = egml.get(++rightExpGroupIndex);
+                    insertPosition = rightExpGroupIndex;
+                    groupPos = rightExpGm.gPos - (rightExpGm.flPos - flPos);
+                }
+                else {
+                    throw Error(`new RuntimeException("Unknown state")`);
+                }
+                return ExpandableListConnector.PositionMetadata.obtain(flPos, ExpandableListPosition.GROUP, groupPos, -1, null, insertPosition);
+            }
+            getFlattenedPos(pos) {
+                const egml = this.mExpGroupMetadataList;
+                const numExpGroups = egml.size();
+                let leftExpGroupIndex = 0;
+                let rightExpGroupIndex = numExpGroups - 1;
+                let midExpGroupIndex = 0;
+                let midExpGm;
+                if (numExpGroups == 0) {
+                    return ExpandableListConnector.PositionMetadata.obtain(pos.groupPos, pos.type, pos.groupPos, pos.childPos, null, 0);
+                }
+                while (leftExpGroupIndex <= rightExpGroupIndex) {
+                    midExpGroupIndex = Math.floor((rightExpGroupIndex - leftExpGroupIndex) / 2 + leftExpGroupIndex);
+                    midExpGm = egml.get(midExpGroupIndex);
+                    if (pos.groupPos > midExpGm.gPos) {
+                        leftExpGroupIndex = midExpGroupIndex + 1;
+                    }
+                    else if (pos.groupPos < midExpGm.gPos) {
+                        rightExpGroupIndex = midExpGroupIndex - 1;
+                    }
+                    else if (pos.groupPos == midExpGm.gPos) {
+                        if (pos.type == ExpandableListPosition.GROUP) {
+                            return ExpandableListConnector.PositionMetadata.obtain(midExpGm.flPos, pos.type, pos.groupPos, pos.childPos, midExpGm, midExpGroupIndex);
+                        }
+                        else if (pos.type == ExpandableListPosition.CHILD) {
+                            return ExpandableListConnector.PositionMetadata.obtain(midExpGm.flPos + pos.childPos + 1, pos.type, pos.groupPos, pos.childPos, midExpGm, midExpGroupIndex);
+                        }
+                        else {
+                            return null;
+                        }
+                    }
+                }
+                if (pos.type != ExpandableListPosition.GROUP) {
+                    return null;
+                }
+                if (leftExpGroupIndex > midExpGroupIndex) {
+                    const leftExpGm = egml.get(leftExpGroupIndex - 1);
+                    const flPos = leftExpGm.lastChildFlPos + (pos.groupPos - leftExpGm.gPos);
+                    return ExpandableListConnector.PositionMetadata.obtain(flPos, pos.type, pos.groupPos, pos.childPos, null, leftExpGroupIndex);
+                }
+                else if (rightExpGroupIndex < midExpGroupIndex) {
+                    const rightExpGm = egml.get(++rightExpGroupIndex);
+                    const flPos = rightExpGm.flPos - (rightExpGm.gPos - pos.groupPos);
+                    return ExpandableListConnector.PositionMetadata.obtain(flPos, pos.type, pos.groupPos, pos.childPos, null, rightExpGroupIndex);
+                }
+                else {
+                    return null;
+                }
+            }
+            areAllItemsEnabled() {
+                return this.mExpandableListAdapter.areAllItemsEnabled();
+            }
+            isEnabled(flatListPos) {
+                const metadata = this.getUnflattenedPos(flatListPos);
+                const pos = metadata.position;
+                let retValue;
+                if (pos.type == ExpandableListPosition.CHILD) {
+                    retValue = this.mExpandableListAdapter.isChildSelectable(pos.groupPos, pos.childPos);
+                }
+                else {
+                    retValue = true;
+                }
+                metadata.recycle();
+                return retValue;
+            }
+            getCount() {
+                return this.mExpandableListAdapter.getGroupCount() + this.mTotalExpChildrenCount;
+            }
+            getItem(flatListPos) {
+                const posMetadata = this.getUnflattenedPos(flatListPos);
+                let retValue;
+                if (posMetadata.position.type == ExpandableListPosition.GROUP) {
+                    retValue = this.mExpandableListAdapter.getGroup(posMetadata.position.groupPos);
+                }
+                else if (posMetadata.position.type == ExpandableListPosition.CHILD) {
+                    retValue = this.mExpandableListAdapter.getChild(posMetadata.position.groupPos, posMetadata.position.childPos);
+                }
+                else {
+                    throw Error(`new RuntimeException("Flat list position is of unknown type")`);
+                }
+                posMetadata.recycle();
+                return retValue;
+            }
+            getItemId(flatListPos) {
+                const posMetadata = this.getUnflattenedPos(flatListPos);
+                const groupId = this.mExpandableListAdapter.getGroupId(posMetadata.position.groupPos);
+                let retValue;
+                if (posMetadata.position.type == ExpandableListPosition.GROUP) {
+                    retValue = this.mExpandableListAdapter.getCombinedGroupId(groupId);
+                }
+                else if (posMetadata.position.type == ExpandableListPosition.CHILD) {
+                    const childId = this.mExpandableListAdapter.getChildId(posMetadata.position.groupPos, posMetadata.position.childPos);
+                    retValue = this.mExpandableListAdapter.getCombinedChildId(groupId, childId);
+                }
+                else {
+                    throw Error(`new RuntimeException("Flat list position is of unknown type")`);
+                }
+                posMetadata.recycle();
+                return retValue;
+            }
+            getView(flatListPos, convertView, parent) {
+                const posMetadata = this.getUnflattenedPos(flatListPos);
+                let retValue;
+                if (posMetadata.position.type == ExpandableListPosition.GROUP) {
+                    retValue = this.mExpandableListAdapter.getGroupView(posMetadata.position.groupPos, posMetadata.isExpanded(), convertView, parent);
+                }
+                else if (posMetadata.position.type == ExpandableListPosition.CHILD) {
+                    const isLastChild = posMetadata.groupMetadata.lastChildFlPos == flatListPos;
+                    retValue = this.mExpandableListAdapter.getChildView(posMetadata.position.groupPos, posMetadata.position.childPos, isLastChild, convertView, parent);
+                }
+                else {
+                    throw Error(`new RuntimeException("Flat list position is of unknown type")`);
+                }
+                posMetadata.recycle();
+                return retValue;
+            }
+            getItemViewType(flatListPos) {
+                const metadata = this.getUnflattenedPos(flatListPos);
+                const pos = metadata.position;
+                let retValue;
+                if (HeterogeneousExpandableList.isImpl(this.mExpandableListAdapter)) {
+                    let adapter = this.mExpandableListAdapter;
+                    if (pos.type == ExpandableListPosition.GROUP) {
+                        retValue = adapter.getGroupType(pos.groupPos);
+                    }
+                    else {
+                        const childType = adapter.getChildType(pos.groupPos, pos.childPos);
+                        retValue = adapter.getGroupTypeCount() + childType;
+                    }
+                }
+                else {
+                    if (pos.type == ExpandableListPosition.GROUP) {
+                        retValue = 0;
+                    }
+                    else {
+                        retValue = 1;
+                    }
+                }
+                metadata.recycle();
+                return retValue;
+            }
+            getViewTypeCount() {
+                if (HeterogeneousExpandableList.isImpl(this.mExpandableListAdapter)) {
+                    let adapter = this.mExpandableListAdapter;
+                    return adapter.getGroupTypeCount() + adapter.getChildTypeCount();
+                }
+                else {
+                    return 2;
+                }
+            }
+            hasStableIds() {
+                return this.mExpandableListAdapter.hasStableIds();
+            }
+            refreshExpGroupMetadataList(forceChildrenCountRefresh, syncGroupPositions) {
+                const egml = this.mExpGroupMetadataList;
+                let egmlSize = egml.size();
+                let curFlPos = 0;
+                this.mTotalExpChildrenCount = 0;
+                if (syncGroupPositions) {
+                    let positionsChanged = false;
+                    for (let i = egmlSize - 1; i >= 0; i--) {
+                        let curGm = egml.get(i);
+                        let newGPos = this.findGroupPosition(curGm.gId, curGm.gPos);
+                        if (newGPos != curGm.gPos) {
+                            if (newGPos == AdapterView.INVALID_POSITION) {
+                                egml.remove(i);
+                                egmlSize--;
+                            }
+                            curGm.gPos = newGPos;
+                            if (!positionsChanged)
+                                positionsChanged = true;
+                        }
+                    }
+                    if (positionsChanged) {
+                        Collections.sort(egml);
+                    }
+                }
+                let gChildrenCount;
+                let lastGPos = 0;
+                for (let i = 0; i < egmlSize; i++) {
+                    let curGm = egml.get(i);
+                    if ((curGm.lastChildFlPos == ExpandableListConnector.GroupMetadata.REFRESH) || forceChildrenCountRefresh) {
+                        gChildrenCount = this.mExpandableListAdapter.getChildrenCount(curGm.gPos);
+                    }
+                    else {
+                        gChildrenCount = curGm.lastChildFlPos - curGm.flPos;
+                    }
+                    this.mTotalExpChildrenCount += gChildrenCount;
+                    curFlPos += (curGm.gPos - lastGPos);
+                    lastGPos = curGm.gPos;
+                    curGm.flPos = curFlPos;
+                    curFlPos += gChildrenCount;
+                    curGm.lastChildFlPos = curFlPos;
+                }
+            }
+            collapseGroup(groupPos) {
+                let elGroupPos = ExpandableListPosition.obtain(ExpandableListPosition.GROUP, groupPos, -1, -1);
+                let pm = this.getFlattenedPos(elGroupPos);
+                elGroupPos.recycle();
+                if (pm == null)
+                    return false;
+                let retValue = this.collapseGroupWithMeta(pm);
+                pm.recycle();
+                return retValue;
+            }
+            collapseGroupWithMeta(posMetadata) {
+                if (posMetadata.groupMetadata == null)
+                    return false;
+                this.mExpGroupMetadataList.remove(posMetadata.groupMetadata);
+                this.refreshExpGroupMetadataList(false, false);
+                this.notifyDataSetChanged();
+                this.mExpandableListAdapter.onGroupCollapsed(posMetadata.groupMetadata.gPos);
+                return true;
+            }
+            expandGroup(groupPos) {
+                let elGroupPos = ExpandableListPosition.obtain(ExpandableListPosition.GROUP, groupPos, -1, -1);
+                let pm = this.getFlattenedPos(elGroupPos);
+                elGroupPos.recycle();
+                let retValue = this.expandGroupWithMeta(pm);
+                pm.recycle();
+                return retValue;
+            }
+            expandGroupWithMeta(posMetadata) {
+                if (posMetadata.position.groupPos < 0) {
+                    throw Error(`new RuntimeException("Need group")`);
+                }
+                if (this.mMaxExpGroupCount == 0)
+                    return false;
+                if (posMetadata.groupMetadata != null)
+                    return false;
+                if (this.mExpGroupMetadataList.size() >= this.mMaxExpGroupCount) {
+                    let collapsedGm = this.mExpGroupMetadataList.get(0);
+                    let collapsedIndex = this.mExpGroupMetadataList.indexOf(collapsedGm);
+                    this.collapseGroup(collapsedGm.gPos);
+                    if (posMetadata.groupInsertIndex > collapsedIndex) {
+                        posMetadata.groupInsertIndex--;
+                    }
+                }
+                let expandedGm = ExpandableListConnector.GroupMetadata.obtain(ExpandableListConnector.GroupMetadata.REFRESH, ExpandableListConnector.GroupMetadata.REFRESH, posMetadata.position.groupPos, this.mExpandableListAdapter.getGroupId(posMetadata.position.groupPos));
+                this.mExpGroupMetadataList.add(posMetadata.groupInsertIndex, expandedGm);
+                this.refreshExpGroupMetadataList(false, false);
+                this.notifyDataSetChanged();
+                this.mExpandableListAdapter.onGroupExpanded(expandedGm.gPos);
+                return true;
+            }
+            isGroupExpanded(groupPosition) {
+                let groupMetadata;
+                for (let i = this.mExpGroupMetadataList.size() - 1; i >= 0; i--) {
+                    groupMetadata = this.mExpGroupMetadataList.get(i);
+                    if (groupMetadata.gPos == groupPosition) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            setMaxExpGroupCount(maxExpGroupCount) {
+                this.mMaxExpGroupCount = maxExpGroupCount;
+            }
+            getAdapter() {
+                return this.mExpandableListAdapter;
+            }
+            getExpandedGroupMetadataList() {
+                return this.mExpGroupMetadataList;
+            }
+            setExpandedGroupMetadataList(expandedGroupMetadataList) {
+                if ((expandedGroupMetadataList == null) || (this.mExpandableListAdapter == null)) {
+                    return;
+                }
+                let numGroups = this.mExpandableListAdapter.getGroupCount();
+                for (let i = expandedGroupMetadataList.size() - 1; i >= 0; i--) {
+                    if (expandedGroupMetadataList.get(i).gPos >= numGroups) {
+                        return;
+                    }
+                }
+                this.mExpGroupMetadataList = expandedGroupMetadataList;
+                this.refreshExpGroupMetadataList(true, false);
+            }
+            isEmpty() {
+                let adapter = this.getAdapter();
+                return adapter != null ? adapter.isEmpty() : true;
+            }
+            findGroupPosition(groupIdToMatch, seedGroupPosition) {
+                let count = this.mExpandableListAdapter.getGroupCount();
+                if (count == 0) {
+                    return AdapterView.INVALID_POSITION;
+                }
+                if (groupIdToMatch == AdapterView.INVALID_ROW_ID) {
+                    return AdapterView.INVALID_POSITION;
+                }
+                seedGroupPosition = Math.max(0, seedGroupPosition);
+                seedGroupPosition = Math.min(count - 1, seedGroupPosition);
+                let endTime = SystemClock.uptimeMillis() + AdapterView.SYNC_MAX_DURATION_MILLIS;
+                let rowId;
+                let first = seedGroupPosition;
+                let last = seedGroupPosition;
+                let next = false;
+                let hitFirst;
+                let hitLast;
+                let adapter = this.getAdapter();
+                if (adapter == null) {
+                    return AdapterView.INVALID_POSITION;
+                }
+                while (SystemClock.uptimeMillis() <= endTime) {
+                    rowId = adapter.getGroupId(seedGroupPosition);
+                    if (rowId == groupIdToMatch) {
+                        return seedGroupPosition;
+                    }
+                    hitLast = last == count - 1;
+                    hitFirst = first == 0;
+                    if (hitLast && hitFirst) {
+                        break;
+                    }
+                    if (hitFirst || (next && !hitLast)) {
+                        last++;
+                        seedGroupPosition = last;
+                        next = false;
+                    }
+                    else if (hitLast || (!next && !hitFirst)) {
+                        first--;
+                        seedGroupPosition = first;
+                        next = true;
+                    }
+                }
+                return AdapterView.INVALID_POSITION;
+            }
+        }
+        widget.ExpandableListConnector = ExpandableListConnector;
+        (function (ExpandableListConnector) {
+            class MyDataSetObserver extends DataSetObserver {
+                constructor(arg) {
+                    super();
+                    this._ExpandableListConnector_this = arg;
+                }
+                onChanged() {
+                    this._ExpandableListConnector_this.refreshExpGroupMetadataList(true, true);
+                    this._ExpandableListConnector_this.notifyDataSetChanged();
+                }
+                onInvalidated() {
+                    this._ExpandableListConnector_this.refreshExpGroupMetadataList(true, true);
+                    this._ExpandableListConnector_this.notifyDataSetInvalidated();
+                }
+            }
+            ExpandableListConnector.MyDataSetObserver = MyDataSetObserver;
+            class GroupMetadata {
+                constructor() {
+                    this.flPos = 0;
+                    this.lastChildFlPos = 0;
+                    this.gPos = 0;
+                    this.gId = 0;
+                }
+                static obtain(flPos, lastChildFlPos, gPos, gId) {
+                    let gm = new GroupMetadata();
+                    gm.flPos = flPos;
+                    gm.lastChildFlPos = lastChildFlPos;
+                    gm.gPos = gPos;
+                    gm.gId = gId;
+                    return gm;
+                }
+                compareTo(another) {
+                    if (another == null) {
+                        throw Error(`new IllegalArgumentException()`);
+                    }
+                    return this.gPos - another.gPos;
+                }
+            }
+            GroupMetadata.REFRESH = -1;
+            ExpandableListConnector.GroupMetadata = GroupMetadata;
+            class PositionMetadata {
+                constructor() {
+                    this.groupInsertIndex = 0;
+                }
+                resetState() {
+                    if (this.position != null) {
+                        this.position.recycle();
+                        this.position = null;
+                    }
+                    this.groupMetadata = null;
+                    this.groupInsertIndex = 0;
+                }
+                static obtain(flatListPos, type, groupPos, childPos, groupMetadata, groupInsertIndex) {
+                    let pm = PositionMetadata.getRecycledOrCreate();
+                    pm.position = ExpandableListPosition.obtain(type, groupPos, childPos, flatListPos);
+                    pm.groupMetadata = groupMetadata;
+                    pm.groupInsertIndex = groupInsertIndex;
+                    return pm;
+                }
+                static getRecycledOrCreate() {
+                    let pm;
+                    {
+                        if (PositionMetadata.sPool.size() > 0) {
+                            pm = PositionMetadata.sPool.remove(0);
+                        }
+                        else {
+                            return new PositionMetadata();
+                        }
+                    }
+                    pm.resetState();
+                    return pm;
+                }
+                recycle() {
+                    this.resetState();
+                    {
+                        if (PositionMetadata.sPool.size() < PositionMetadata.MAX_POOL_SIZE) {
+                            PositionMetadata.sPool.add(this);
+                        }
+                    }
+                }
+                isExpanded() {
+                    return this.groupMetadata != null;
+                }
+            }
+            PositionMetadata.MAX_POOL_SIZE = 5;
+            PositionMetadata.sPool = new ArrayList(PositionMetadata.MAX_POOL_SIZE);
+            ExpandableListConnector.PositionMetadata = PositionMetadata;
+        })(ExpandableListConnector = widget.ExpandableListConnector || (widget.ExpandableListConnector = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/view/SoundEffectConstants.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
+///<reference path="../../android/widget/ExpandableListAdapter.ts"/>
+///<reference path="../../android/widget/ExpandableListConnector.ts"/>
+///<reference path="../../android/widget/ExpandableListPosition.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/widget/ScrollView.ts"/>
+///<reference path="../../android/R/attr.ts"/>
+///<reference path="../../androidui/util/Long.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Rect = android.graphics.Rect;
+        var SoundEffectConstants = android.view.SoundEffectConstants;
+        var View = android.view.View;
+        var ExpandableListConnector = android.widget.ExpandableListConnector;
+        var ExpandableListPosition = android.widget.ExpandableListPosition;
+        var ListView = android.widget.ListView;
+        var Long = goog.math.Long;
+        class ExpandableListView extends ListView {
+            constructor(bindElement, rootElement, defStyle) {
+                super(bindElement, rootElement);
+                this.mIndicatorLeft = 0;
+                this.mIndicatorRight = 0;
+                this.mIndicatorStart = 0;
+                this.mIndicatorEnd = 0;
+                this.mChildIndicatorLeft = 0;
+                this.mChildIndicatorRight = 0;
+                this.mChildIndicatorStart = 0;
+                this.mChildIndicatorEnd = 0;
+                this.mIndicatorRect = new Rect();
+                this._attrBinder.addAttr('groupIndicator', (value) => {
+                    this.setGroupIndicator(this._attrBinder.parseDrawable(value));
+                }, () => {
+                    return this.mGroupIndicator;
+                });
+                this._attrBinder.addAttr('childIndicator', (value) => {
+                    this.setChildIndicator(this._attrBinder.parseDrawable(value));
+                }, () => {
+                    return this.mChildIndicator;
+                });
+                this._attrBinder.addAttr('indicatorLeft', (value) => {
+                    this.setIndicatorBounds(this._attrBinder.parseNumber(value, 0), this.mIndicatorRight);
+                }, () => {
+                    return this.mIndicatorLeft;
+                });
+                this._attrBinder.addAttr('indicatorRight', (value) => {
+                    let num = this._attrBinder.parseNumber(value, 0);
+                    if (num == 0 && this.mGroupIndicator != null) {
+                        num = this.mIndicatorLeft + this.mGroupIndicator.getIntrinsicWidth();
+                    }
+                    this.setIndicatorBounds(this.mIndicatorLeft, num);
+                }, () => {
+                    return this.mIndicatorRight;
+                });
+                this._attrBinder.addAttr('childIndicatorLeft', (value) => {
+                    this.setChildIndicatorBounds(this._attrBinder.parseNumber(value, ExpandableListView.CHILD_INDICATOR_INHERIT), this.mChildIndicatorRight);
+                }, () => {
+                    return this.mChildIndicatorLeft;
+                });
+                this._attrBinder.addAttr('childIndicatorRight', (value) => {
+                    let num = this._attrBinder.parseNumber(value, ExpandableListView.CHILD_INDICATOR_INHERIT);
+                    if (num == 0 && this.mChildIndicator != null) {
+                        num = this.mChildIndicatorLeft + this.mChildIndicator.getIntrinsicWidth();
+                    }
+                    this.setIndicatorBounds(this.mChildIndicatorLeft, num);
+                }, () => {
+                    return this.mChildIndicatorRight;
+                });
+                this._attrBinder.addAttr('childDivider', (value) => {
+                    this.setChildDivider(this._attrBinder.parseDrawable(value));
+                });
+                if (defStyle === undefined)
+                    defStyle = android.R.attr.expandableListViewStyle;
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
+            }
+            isRtlCompatibilityMode() {
+                return !this.hasRtlSupport();
+            }
+            hasRtlSupport() {
+                return false;
+            }
+            onRtlPropertiesChanged(layoutDirection) {
+                this.resolveIndicator();
+                this.resolveChildIndicator();
+            }
+            resolveIndicator() {
+                const isLayoutRtl = this.isLayoutRtl();
+                if (isLayoutRtl) {
+                    if (this.mIndicatorStart >= 0) {
+                        this.mIndicatorRight = this.mIndicatorStart;
+                    }
+                    if (this.mIndicatorEnd >= 0) {
+                        this.mIndicatorLeft = this.mIndicatorEnd;
+                    }
+                }
+                else {
+                    if (this.mIndicatorStart >= 0) {
+                        this.mIndicatorLeft = this.mIndicatorStart;
+                    }
+                    if (this.mIndicatorEnd >= 0) {
+                        this.mIndicatorRight = this.mIndicatorEnd;
+                    }
+                }
+                if (this.mIndicatorRight == 0 && this.mGroupIndicator != null) {
+                    this.mIndicatorRight = this.mIndicatorLeft + this.mGroupIndicator.getIntrinsicWidth();
+                }
+            }
+            resolveChildIndicator() {
+                const isLayoutRtl = this.isLayoutRtl();
+                if (isLayoutRtl) {
+                    if (this.mChildIndicatorStart >= ExpandableListView.CHILD_INDICATOR_INHERIT) {
+                        this.mChildIndicatorRight = this.mChildIndicatorStart;
+                    }
+                    if (this.mChildIndicatorEnd >= ExpandableListView.CHILD_INDICATOR_INHERIT) {
+                        this.mChildIndicatorLeft = this.mChildIndicatorEnd;
+                    }
+                }
+                else {
+                    if (this.mChildIndicatorStart >= ExpandableListView.CHILD_INDICATOR_INHERIT) {
+                        this.mChildIndicatorLeft = this.mChildIndicatorStart;
+                    }
+                    if (this.mChildIndicatorEnd >= ExpandableListView.CHILD_INDICATOR_INHERIT) {
+                        this.mChildIndicatorRight = this.mChildIndicatorEnd;
+                    }
+                }
+            }
+            dispatchDraw(canvas) {
+                super.dispatchDraw(canvas);
+                if ((this.mChildIndicator == null) && (this.mGroupIndicator == null)) {
+                    return;
+                }
+                let saveCount = 0;
+                const clipToPadding = (this.mGroupFlags & ExpandableListView.CLIP_TO_PADDING_MASK) == ExpandableListView.CLIP_TO_PADDING_MASK;
+                if (clipToPadding) {
+                    saveCount = canvas.save();
+                    const scrollX = this.mScrollX;
+                    const scrollY = this.mScrollY;
+                    canvas.clipRect(scrollX + this.mPaddingLeft, scrollY + this.mPaddingTop, scrollX + this.mRight - this.mLeft - this.mPaddingRight, scrollY + this.mBottom - this.mTop - this.mPaddingBottom);
+                }
+                const headerViewsCount = this.getHeaderViewsCount();
+                const lastChildFlPos = this.mItemCount - this.getFooterViewsCount() - headerViewsCount - 1;
+                const myB = this.mBottom;
+                let pos;
+                let item;
+                let indicator;
+                let t, b;
+                let lastItemType = ~(ExpandableListPosition.CHILD | ExpandableListPosition.GROUP);
+                const indicatorRect = this.mIndicatorRect;
+                const childCount = this.getChildCount();
+                for (let i = 0, childFlPos = this.mFirstPosition - headerViewsCount; i < childCount; i++, childFlPos++) {
+                    if (childFlPos < 0) {
+                        continue;
+                    }
+                    else if (childFlPos > lastChildFlPos) {
+                        break;
+                    }
+                    item = this.getChildAt(i);
+                    t = item.getTop();
+                    b = item.getBottom();
+                    if ((b < 0) || (t > myB))
+                        continue;
+                    pos = this.mConnector.getUnflattenedPos(childFlPos);
+                    const isLayoutRtl = this.isLayoutRtl();
+                    const width = this.getWidth();
+                    if (pos.position.type != lastItemType) {
+                        if (pos.position.type == ExpandableListPosition.CHILD) {
+                            indicatorRect.left = (this.mChildIndicatorLeft == ExpandableListView.CHILD_INDICATOR_INHERIT) ? this.mIndicatorLeft : this.mChildIndicatorLeft;
+                            indicatorRect.right = (this.mChildIndicatorRight == ExpandableListView.CHILD_INDICATOR_INHERIT) ? this.mIndicatorRight : this.mChildIndicatorRight;
+                        }
+                        else {
+                            indicatorRect.left = this.mIndicatorLeft;
+                            indicatorRect.right = this.mIndicatorRight;
+                        }
+                        if (isLayoutRtl) {
+                            const temp = indicatorRect.left;
+                            indicatorRect.left = width - indicatorRect.right;
+                            indicatorRect.right = width - temp;
+                            indicatorRect.left -= this.mPaddingRight;
+                            indicatorRect.right -= this.mPaddingRight;
+                        }
+                        else {
+                            indicatorRect.left += this.mPaddingLeft;
+                            indicatorRect.right += this.mPaddingLeft;
+                        }
+                        lastItemType = pos.position.type;
+                    }
+                    if (indicatorRect.left != indicatorRect.right) {
+                        if (this.mStackFromBottom) {
+                            indicatorRect.top = t;
+                            indicatorRect.bottom = b;
+                        }
+                        else {
+                            indicatorRect.top = t;
+                            indicatorRect.bottom = b;
+                        }
+                        indicator = this.getIndicator(pos);
+                        if (indicator != null) {
+                            indicator.setBounds(indicatorRect);
+                            indicator.draw(canvas);
+                        }
+                    }
+                    pos.recycle();
+                }
+                if (clipToPadding) {
+                    canvas.restoreToCount(saveCount);
+                }
+            }
+            getIndicator(pos) {
+                let indicator;
+                if (pos.position.type == ExpandableListPosition.GROUP) {
+                    indicator = this.mGroupIndicator;
+                    if (indicator != null && indicator.isStateful()) {
+                        let isEmpty = (pos.groupMetadata == null) || (pos.groupMetadata.lastChildFlPos == pos.groupMetadata.flPos);
+                        const stateSetIndex = (pos.isExpanded() ? 1 : 0) |
+                            (isEmpty ? 2 : 0);
+                        indicator.setState(ExpandableListView.GROUP_STATE_SETS[stateSetIndex]);
+                    }
+                }
+                else {
+                    indicator = this.mChildIndicator;
+                    if (indicator != null && indicator.isStateful()) {
+                        const stateSet = pos.position.flatListPos == pos.groupMetadata.lastChildFlPos ? ExpandableListView.CHILD_LAST_STATE_SET : ExpandableListView.EMPTY_STATE_SET;
+                        indicator.setState(stateSet);
+                    }
+                }
+                return indicator;
+            }
+            setChildDivider(childDivider) {
+                this.mChildDivider = childDivider;
+            }
+            drawDivider(canvas, bounds, childIndex) {
+                let flatListPosition = childIndex + this.mFirstPosition;
+                if (flatListPosition >= 0) {
+                    const adjustedPosition = this.getFlatPositionForConnector(flatListPosition);
+                    let pos = this.mConnector.getUnflattenedPos(adjustedPosition);
+                    if ((pos.position.type == ExpandableListPosition.CHILD) || (pos.isExpanded() && pos.groupMetadata.lastChildFlPos != pos.groupMetadata.flPos)) {
+                        const divider = this.mChildDivider;
+                        divider.setBounds(bounds);
+                        divider.draw(canvas);
+                        pos.recycle();
+                        return;
+                    }
+                    pos.recycle();
+                }
+                super.drawDivider(canvas, bounds, flatListPosition);
+            }
+            setAdapter(adapter) {
+                throw Error(`new RuntimeException("For ExpandableListView, use setAdapter(ExpandableListAdapter) instead of " + "setAdapter(ListAdapter)")`);
+            }
+            getAdapter() {
+                return super.getAdapter();
+            }
+            setOnItemClickListener(l) {
+                super.setOnItemClickListener(l);
+            }
+            setExpandableAdapter(adapter) {
+                this.mExpandAdapter = adapter;
+                if (adapter != null) {
+                    this.mConnector = new ExpandableListConnector(adapter);
+                }
+                else {
+                    this.mConnector = null;
+                }
+                super.setAdapter(this.mConnector);
+            }
+            getExpandableListAdapter() {
+                return this.mExpandAdapter;
+            }
+            isHeaderOrFooterPosition(position) {
+                const footerViewsStart = this.mItemCount - this.getFooterViewsCount();
+                return (position < this.getHeaderViewsCount() || position >= footerViewsStart);
+            }
+            getFlatPositionForConnector(flatListPosition) {
+                return flatListPosition - this.getHeaderViewsCount();
+            }
+            getAbsoluteFlatPosition(flatListPosition) {
+                return flatListPosition + this.getHeaderViewsCount();
+            }
+            performItemClick(v, position, id) {
+                if (this.isHeaderOrFooterPosition(position)) {
+                    return super.performItemClick(v, position, id);
+                }
+                const adjustedPosition = this.getFlatPositionForConnector(position);
+                return this.handleItemClick(v, adjustedPosition, id);
+            }
+            handleItemClick(v, position, id) {
+                const posMetadata = this.mConnector.getUnflattenedPos(position);
+                id = this.getChildOrGroupId(posMetadata.position);
+                let returnValue;
+                if (posMetadata.position.type == ExpandableListPosition.GROUP) {
+                    if (this.mOnGroupClickListener != null) {
+                        if (this.mOnGroupClickListener.onGroupClick(this, v, posMetadata.position.groupPos, id)) {
+                            posMetadata.recycle();
+                            return true;
+                        }
+                    }
+                    if (posMetadata.isExpanded()) {
+                        this.mConnector.collapseGroupWithMeta(posMetadata);
+                        this.playSoundEffect(SoundEffectConstants.CLICK);
+                        if (this.mOnGroupCollapseListener != null) {
+                            this.mOnGroupCollapseListener.onGroupCollapse(posMetadata.position.groupPos);
+                        }
+                    }
+                    else {
+                        this.mConnector.expandGroupWithMeta(posMetadata);
+                        this.playSoundEffect(SoundEffectConstants.CLICK);
+                        if (this.mOnGroupExpandListener != null) {
+                            this.mOnGroupExpandListener.onGroupExpand(posMetadata.position.groupPos);
+                        }
+                        const groupPos = posMetadata.position.groupPos;
+                        const groupFlatPos = posMetadata.position.flatListPos;
+                        const shiftedGroupPosition = groupFlatPos + this.getHeaderViewsCount();
+                        this.smoothScrollToPosition(shiftedGroupPosition + this.mExpandAdapter.getChildrenCount(groupPos), shiftedGroupPosition);
+                    }
+                    returnValue = true;
+                }
+                else {
+                    if (this.mOnChildClickListener != null) {
+                        this.playSoundEffect(SoundEffectConstants.CLICK);
+                        return this.mOnChildClickListener.onChildClick(this, v, posMetadata.position.groupPos, posMetadata.position.childPos, id);
+                    }
+                    returnValue = false;
+                }
+                posMetadata.recycle();
+                return returnValue;
+            }
+            expandGroup(groupPos, animate = false) {
+                let elGroupPos = ExpandableListPosition.obtain(ExpandableListPosition.GROUP, groupPos, -1, -1);
+                let pm = this.mConnector.getFlattenedPos(elGroupPos);
+                elGroupPos.recycle();
+                let retValue = this.mConnector.expandGroupWithMeta(pm);
+                if (this.mOnGroupExpandListener != null) {
+                    this.mOnGroupExpandListener.onGroupExpand(groupPos);
+                }
+                if (animate) {
+                    const groupFlatPos = pm.position.flatListPos;
+                    const shiftedGroupPosition = groupFlatPos + this.getHeaderViewsCount();
+                    this.smoothScrollToPosition(shiftedGroupPosition + this.mExpandAdapter.getChildrenCount(groupPos), shiftedGroupPosition);
+                }
+                pm.recycle();
+                return retValue;
+            }
+            collapseGroup(groupPos) {
+                let retValue = this.mConnector.collapseGroup(groupPos);
+                if (this.mOnGroupCollapseListener != null) {
+                    this.mOnGroupCollapseListener.onGroupCollapse(groupPos);
+                }
+                return retValue;
+            }
+            setOnGroupCollapseListener(onGroupCollapseListener) {
+                this.mOnGroupCollapseListener = onGroupCollapseListener;
+            }
+            setOnGroupExpandListener(onGroupExpandListener) {
+                this.mOnGroupExpandListener = onGroupExpandListener;
+            }
+            setOnGroupClickListener(onGroupClickListener) {
+                this.mOnGroupClickListener = onGroupClickListener;
+            }
+            setOnChildClickListener(onChildClickListener) {
+                this.mOnChildClickListener = onChildClickListener;
+            }
+            getExpandableListPosition(flatListPosition) {
+                if (this.isHeaderOrFooterPosition(flatListPosition)) {
+                    return ExpandableListView.PACKED_POSITION_VALUE_NULL;
+                }
+                const adjustedPosition = this.getFlatPositionForConnector(flatListPosition);
+                let pm = this.mConnector.getUnflattenedPos(adjustedPosition);
+                let packedPos = pm.position.getPackedPosition();
+                pm.recycle();
+                return packedPos;
+            }
+            getFlatListPosition(packedPosition) {
+                let elPackedPos = ExpandableListPosition.obtainPosition(packedPosition);
+                let pm = this.mConnector.getFlattenedPos(elPackedPos);
+                elPackedPos.recycle();
+                const flatListPosition = pm.position.flatListPos;
+                pm.recycle();
+                return this.getAbsoluteFlatPosition(flatListPosition);
+            }
+            getSelectedPosition() {
+                const selectedPos = this.getSelectedItemPosition();
+                return this.getExpandableListPosition(selectedPos);
+            }
+            getSelectedId() {
+                let packedPos = this.getSelectedPosition();
+                if (packedPos == ExpandableListView.PACKED_POSITION_VALUE_NULL)
+                    return -1;
+                let groupPos = ExpandableListView.getPackedPositionGroup(packedPos);
+                if (ExpandableListView.getPackedPositionType(packedPos) == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+                    return this.mExpandAdapter.getGroupId(groupPos);
+                }
+                else {
+                    return this.mExpandAdapter.getChildId(groupPos, ExpandableListView.getPackedPositionChild(packedPos));
+                }
+            }
+            setSelectedGroup(groupPosition) {
+                let elGroupPos = ExpandableListPosition.obtainGroupPosition(groupPosition);
+                let pm = this.mConnector.getFlattenedPos(elGroupPos);
+                elGroupPos.recycle();
+                const absoluteFlatPosition = this.getAbsoluteFlatPosition(pm.position.flatListPos);
+                super.setSelection(absoluteFlatPosition);
+                pm.recycle();
+            }
+            setSelectedChild(groupPosition, childPosition, shouldExpandGroup) {
+                let elChildPos = ExpandableListPosition.obtainChildPosition(groupPosition, childPosition);
+                let flatChildPos = this.mConnector.getFlattenedPos(elChildPos);
+                if (flatChildPos == null) {
+                    if (!shouldExpandGroup)
+                        return false;
+                    this.expandGroup(groupPosition);
+                    flatChildPos = this.mConnector.getFlattenedPos(elChildPos);
+                    if (flatChildPos == null) {
+                        throw Error(`new IllegalStateException("Could not find child")`);
+                    }
+                }
+                let absoluteFlatPosition = this.getAbsoluteFlatPosition(flatChildPos.position.flatListPos);
+                super.setSelection(absoluteFlatPosition);
+                elChildPos.recycle();
+                flatChildPos.recycle();
+                return true;
+            }
+            isGroupExpanded(groupPosition) {
+                return this.mConnector.isGroupExpanded(groupPosition);
+            }
+            static getPackedPositionType(packedPosition) {
+                if (packedPosition == ExpandableListView.PACKED_POSITION_VALUE_NULL) {
+                    return ExpandableListView.PACKED_POSITION_TYPE_NULL;
+                }
+                return (Long.fromNumber(packedPosition).and(ExpandableListView.PACKED_POSITION_MASK_TYPE)).equals(ExpandableListView.PACKED_POSITION_MASK_TYPE)
+                    ? ExpandableListView.PACKED_POSITION_TYPE_CHILD : ExpandableListView.PACKED_POSITION_TYPE_GROUP;
+            }
+            static getPackedPositionGroup(packedPosition) {
+                if (packedPosition == ExpandableListView.PACKED_POSITION_VALUE_NULL)
+                    return -1;
+                return (Long.fromNumber(packedPosition).and(ExpandableListView.PACKED_POSITION_MASK_GROUP))
+                    .shiftRight(ExpandableListView.PACKED_POSITION_SHIFT_GROUP).toNumber();
+            }
+            static getPackedPositionChild(packedPosition) {
+                if (packedPosition == ExpandableListView.PACKED_POSITION_VALUE_NULL)
+                    return -1;
+                if ((Long.fromNumber(packedPosition).and(ExpandableListView.PACKED_POSITION_MASK_TYPE)).notEquals(ExpandableListView.PACKED_POSITION_MASK_TYPE))
+                    return -1;
+                return Long.fromNumber(packedPosition).and(ExpandableListView.PACKED_POSITION_MASK_CHILD).toNumber();
+            }
+            static getPackedPositionForChild(groupPosition, childPosition) {
+                return Long.fromInt(ExpandableListView.PACKED_POSITION_TYPE_CHILD).shiftLeft(ExpandableListView.PACKED_POSITION_SHIFT_TYPE)
+                    .or(Long.fromNumber(groupPosition).and(ExpandableListView.PACKED_POSITION_INT_MASK_GROUP).shiftLeft(ExpandableListView.PACKED_POSITION_SHIFT_GROUP))
+                    .or(Long.fromNumber(childPosition).and(ExpandableListView.PACKED_POSITION_INT_MASK_CHILD)).toNumber();
+            }
+            static getPackedPositionForGroup(groupPosition) {
+                return Long.fromInt(groupPosition).and(ExpandableListView.PACKED_POSITION_INT_MASK_GROUP)
+                    .shiftLeft(ExpandableListView.PACKED_POSITION_SHIFT_GROUP).toNumber();
+            }
+            getChildOrGroupId(position) {
+                if (position.type == ExpandableListPosition.CHILD) {
+                    return this.mExpandAdapter.getChildId(position.groupPos, position.childPos);
+                }
+                else {
+                    return this.mExpandAdapter.getGroupId(position.groupPos);
+                }
+            }
+            setChildIndicator(childIndicator) {
+                this.mChildIndicator = childIndicator;
+            }
+            setChildIndicatorBounds(left, right) {
+                this.mChildIndicatorLeft = left;
+                this.mChildIndicatorRight = right;
+                this.resolveChildIndicator();
+            }
+            setChildIndicatorBoundsRelative(start, end) {
+                this.mChildIndicatorStart = start;
+                this.mChildIndicatorEnd = end;
+                this.resolveChildIndicator();
+            }
+            setGroupIndicator(groupIndicator) {
+                this.mGroupIndicator = groupIndicator;
+                if (this.mIndicatorRight == 0 && this.mGroupIndicator != null) {
+                    this.mIndicatorRight = this.mIndicatorLeft + this.mGroupIndicator.getIntrinsicWidth();
+                }
+            }
+            setIndicatorBounds(left, right) {
+                this.mIndicatorLeft = left;
+                this.mIndicatorRight = right;
+                this.resolveIndicator();
+            }
+            setIndicatorBoundsRelative(start, end) {
+                this.mIndicatorStart = start;
+                this.mIndicatorEnd = end;
+                this.resolveIndicator();
+            }
+        }
+        ExpandableListView.PACKED_POSITION_TYPE_GROUP = 0;
+        ExpandableListView.PACKED_POSITION_TYPE_CHILD = 1;
+        ExpandableListView.PACKED_POSITION_TYPE_NULL = 2;
+        ExpandableListView.PACKED_POSITION_VALUE_NULL = 0x00000000FFFFFFFF;
+        ExpandableListView.PACKED_POSITION_MASK_CHILD = Long.fromNumber(0x00000000FFFFFFFF);
+        ExpandableListView.PACKED_POSITION_MASK_GROUP = Long.fromNumber(0x7FFFFFFF00000000);
+        ExpandableListView.PACKED_POSITION_MASK_TYPE = Long.fromNumber(0x8000000000000000);
+        ExpandableListView.PACKED_POSITION_SHIFT_GROUP = 32;
+        ExpandableListView.PACKED_POSITION_SHIFT_TYPE = 63;
+        ExpandableListView.PACKED_POSITION_INT_MASK_CHILD = Long.fromNumber(0xFFFFFFFF);
+        ExpandableListView.PACKED_POSITION_INT_MASK_GROUP = Long.fromNumber(0x7FFFFFFF);
+        ExpandableListView.CHILD_INDICATOR_INHERIT = -1;
+        ExpandableListView.INDICATOR_UNDEFINED = -2;
+        ExpandableListView.GROUP_EXPANDED_STATE_SET = [View.VIEW_STATE_EXPANDED];
+        ExpandableListView.GROUP_EMPTY_STATE_SET = [View.VIEW_STATE_EMPTY];
+        ExpandableListView.GROUP_EXPANDED_EMPTY_STATE_SET = [View.VIEW_STATE_EXPANDED, View.VIEW_STATE_EMPTY];
+        ExpandableListView.GROUP_STATE_SETS = [
+            ExpandableListView.EMPTY_STATE_SET,
+            ExpandableListView.GROUP_EXPANDED_STATE_SET,
+            ExpandableListView.GROUP_EMPTY_STATE_SET,
+            ExpandableListView.GROUP_EXPANDED_EMPTY_STATE_SET];
+        ExpandableListView.CHILD_LAST_STATE_SET = [View.VIEW_STATE_LAST];
+        widget.ExpandableListView = ExpandableListView;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/database/DataSetObservable.ts"/>
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/ExpandableListAdapter.ts"/>
+///<reference path="../../android/widget/HeterogeneousExpandableList.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../androidui/util/Long.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var DataSetObservable = android.database.DataSetObservable;
+        var Long = goog.math.Long;
+        const _0x8000000000000000 = Long.fromNumber(0x8000000000000000);
+        const _0x7FFFFFFF = Long.fromNumber(0x7FFFFFFF);
+        const _0xFFFFFFFF = Long.fromNumber(0xFFFFFFFF);
+        class BaseExpandableListAdapter {
+            constructor() {
+                this.mDataSetObservable = new DataSetObservable();
+            }
+            registerDataSetObserver(observer) {
+                this.mDataSetObservable.registerObserver(observer);
+            }
+            unregisterDataSetObserver(observer) {
+                this.mDataSetObservable.unregisterObserver(observer);
+            }
+            notifyDataSetInvalidated() {
+                this.mDataSetObservable.notifyInvalidated();
+            }
+            notifyDataSetChanged() {
+                this.mDataSetObservable.notifyChanged();
+            }
+            areAllItemsEnabled() {
+                return true;
+            }
+            onGroupCollapsed(groupPosition) {
+            }
+            onGroupExpanded(groupPosition) {
+            }
+            getCombinedChildId(groupId, childId) {
+                const _groupId = Long.fromNumber(groupId);
+                const _childId = Long.fromNumber(childId);
+                return _0x8000000000000000.or(_groupId.and(_0x7FFFFFFF).shiftLeft(32)).or(_childId.and(_0xFFFFFFFF)).toNumber();
+            }
+            getCombinedGroupId(groupId) {
+                const _groupId = Long.fromNumber(groupId);
+                return _groupId.add(_0x7FFFFFFF).shiftLeft(32).toNumber();
+            }
+            isEmpty() {
+                return this.getGroupCount() == 0;
+            }
+            getChildType(groupPosition, childPosition) {
+                return 0;
+            }
+            getChildTypeCount() {
+                return 1;
+            }
+            getGroupType(groupPosition) {
+                return 0;
+            }
+            getGroupTypeCount() {
+                return 1;
+            }
+        }
+        widget.BaseExpandableListAdapter = BaseExpandableListAdapter;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /**
@@ -46454,6 +48255,8 @@ var androidui;
 ///<reference path="android/widget/CheckBox.ts"/>
 ///<reference path="android/widget/RadioButton.ts"/>
 ///<reference path="android/widget/RadioGroup.ts"/>
+///<reference path="android/widget/ExpandableListView.ts"/>
+///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="android/support/v4/widget/DrawerLayout.ts"/>

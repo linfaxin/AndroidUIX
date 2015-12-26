@@ -496,6 +496,10 @@ module android.view {
         static VIEW_STATE_CHECKED = 1 << 10;
         //for TextView
         static VIEW_STATE_MULTILINE = 1 << 11;
+        //for ExpandableListView
+        static VIEW_STATE_EXPANDED = 1 << 12;
+        static VIEW_STATE_EMPTY = 1 << 13;
+        static VIEW_STATE_LAST = 1 << 14;
 
         //android default use attr id, there use state value as id
         static VIEW_STATE_IDS = [
@@ -715,7 +719,7 @@ module android.view {
         mPaddingTop = 0;
         mPaddingBottom = 0;
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle?) {
             super();
 
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
@@ -902,7 +906,9 @@ module android.view {
             });
 
             this.initBindElement(bindElement, rootElement);
-            this.applyDefaultAttributes(android.R.attr.viewStyle);
+
+            if(defStyle === undefined) defStyle = android.R.attr.viewStyle;
+            if(defStyle) this.applyDefaultAttributes(defStyle);
         }
 
         getWidth():number {
@@ -3311,7 +3317,7 @@ module android.view {
         }
         protected onDraw(canvas:Canvas):void {
         }
-        dispatchDraw(canvas:Canvas):void {
+        protected dispatchDraw(canvas:Canvas):void {
         }
         onDrawScrollBars(canvas:Canvas) {
             // scrollbars are drawn only when the animation is running
@@ -4596,13 +4602,11 @@ module android.view {
             if(!(rootView instanceof View)) return rootView;
 
             let params;
-            if(viewParent) params = viewParent.generateDefaultLayoutParams();
-            else {
-                //generate default param is no parent
-                params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            if(viewParent){
+                params = viewParent.generateDefaultLayoutParams();
+                params.parseAttributeFrom(domtree, rootElement);
+                rootView.setLayoutParams(params);
             }
-            params.parseAttributeFrom(domtree, rootElement);
-            rootView.setLayoutParams(params);
 
             //fire attr change after layout ok. So 'layout_xxx' attr will be parsed
             rootView._fireInitedAttributeChange();
@@ -4732,7 +4736,7 @@ module android.view {
             }
             if(rootView._syncToElementLock) return;
             rootView._syncToElementLock = true;
-            rootView.postDelayed(rootView._syncToElementRun, 300);
+            rootView.postDelayed(rootView._syncToElementRun, 1000);
         }
 
         protected _syncBoundAndScrollToElement():void {
@@ -4914,8 +4918,8 @@ module android.view {
                 let params = this.getLayoutParams();
                 if(params){
                     params._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
+                    this.requestLayout();
                 }
-                this.requestLayout();
                 return;
             }
 

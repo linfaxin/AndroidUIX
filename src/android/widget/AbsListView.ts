@@ -1970,7 +1970,7 @@ module android.widget {
             }
         }
 
-        dispatchDraw(canvas:Canvas):void {
+        protected dispatchDraw(canvas:Canvas):void {
             let saveCount:number = 0;
             const clipToPadding:boolean = (this.mGroupFlags & AbsListView.CLIP_TO_PADDING_MASK) == AbsListView.CLIP_TO_PADDING_MASK;
             if (clipToPadding) {
@@ -5079,11 +5079,9 @@ module android.widget {
 
             private mOffsetFromTop:number = 0;
 
-            start(position:number):void;
-            start(position:number, boundPosition:number):void;
-            start(...args):void{
-                if(args.length===1) this._start_1(args[0]);
-                else if(args.length===2) this._start_2(args[0], args[1]);
+            start(position:number, boundPosition?:number):void{
+                if(boundPosition==null) this._start_1(position);
+                else this._start_2(position, boundPosition);
             }
             private _start_1(position:number):void {
                 this.stop();

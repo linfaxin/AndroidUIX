@@ -1,9 +1,11 @@
 /**
  * Created by linfaxin on 15/11/13.
  */
+///<reference path="../../androidui/util/Long.ts"/>
+
 module java.lang{
     export class Long{
-        static MIN_VALUE = Number.MIN_SAFE_INTEGER;
-        static MAX_VALUE = Number.MAX_SAFE_INTEGER;
+        static MIN_VALUE = goog.math.Long.MIN_VALUE.toNumber();
+        static MAX_VALUE = goog.math.Long.MAX_VALUE.toNumber();
     }
 }

@@ -792,8 +792,8 @@ export class ListView extends AbsListView {
      * scroll such that the indicated position is displayed.
      * @param position Scroll to this adapter position.
      */
-    smoothScrollToPosition(position:number):void  {
-        super.smoothScrollToPosition(position);
+    smoothScrollToPosition(position:number, boundPosition?:number):void  {
+        super.smoothScrollToPosition(position, boundPosition);
     }
 
     /**
@@ -1536,6 +1536,9 @@ export class ListView extends AbsListView {
         let p:AbsListView.LayoutParams = <AbsListView.LayoutParams> child.getLayoutParams();
         if (p == null) {
             p = <AbsListView.LayoutParams> this.generateDefaultLayoutParams();
+        }
+        if(!(p instanceof AbsListView.LayoutParams)){
+            throw Error('ClassCaseException('+p.constructor.name+' can\'t case to AbsListView.LayoutParams)');
         }
         p.viewType = this.mAdapter.getItemViewType(position);
         if ((recycled && !p.forceAdd) || (p.recycledHeaderFooter && p.viewType == AdapterView.ITEM_VIEW_TYPE_HEADER_OR_FOOTER)) {
@@ -2702,7 +2705,7 @@ export class ListView extends AbsListView {
         canvas.restore();
     }
 
-    dispatchDraw(canvas:Canvas):void  {
+    protected dispatchDraw(canvas:Canvas):void  {
         if (this.mCachingStarted) {
             this.mCachingActive = true;
         }

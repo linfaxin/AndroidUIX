@@ -57,21 +57,22 @@ module android.R {
         }
 
         static get checkboxStyle() {
-            return {
-                background: <ColorDrawable>new OverridePaddingColorDrawable(Color.TRANSPARENT),
+            return Object.assign(this.buttonStyle, {
+                background: null,
                 button: drawable.btn_check
-            }
+            });
         }
 
         static get radiobuttonStyle() {
-            return {
-                background: <ColorDrawable>new OverridePaddingColorDrawable(Color.TRANSPARENT),
+            return Object.assign(this.buttonStyle, {
+                background: null,
                 button: drawable.btn_radio
-            }
+            });
         }
 
         static get gridViewStyle() {
             return {
+                listSelector: android.R.drawable.list_selector_background,
                 numColumns: 1
             };
         }
@@ -79,8 +80,15 @@ module android.R {
         static get listViewStyle() {
             return {
                 divider: android.R.drawable.list_divider,
+                listSelector: android.R.drawable.list_selector_background,
                 dividerHeight: 1
             };
+        }
+
+        static get expandableListViewStyle() {
+            return Object.assign(this.listViewStyle, {
+                childDivider: android.R.drawable.list_divider,
+            });
         }
 
         static get numberPickerStyle(){
@@ -102,13 +110,5 @@ module android.R {
             }
         }
 
-    }
-
-    class OverridePaddingColorDrawable extends ColorDrawable {
-
-        getPadding(padding:android.graphics.Rect):boolean {
-            super.getPadding(padding);
-            return true;//will set to view padding
-        }
     }
 }

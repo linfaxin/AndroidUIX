@@ -1603,21 +1603,18 @@ declare module android.R {
             clickable: boolean;
             gravity: number;
         };
-        static checkboxStyle: {
-            background: ColorDrawable;
-            button: Drawable;
-        };
-        static radiobuttonStyle: {
-            background: ColorDrawable;
-            button: Drawable;
-        };
+        static checkboxStyle: any;
+        static radiobuttonStyle: any;
         static gridViewStyle: {
+            listSelector: Drawable;
             numColumns: number;
         };
         static listViewStyle: {
             divider: Drawable;
+            listSelector: Drawable;
             dividerHeight: number;
         };
+        static expandableListViewStyle: any;
         static numberPickerStyle: {
             orientation: string;
             solidColor: string;
@@ -1763,6 +1760,9 @@ declare module android.view {
         static VIEW_STATE_HOVERED: number;
         static VIEW_STATE_CHECKED: number;
         static VIEW_STATE_MULTILINE: number;
+        static VIEW_STATE_EXPANDED: number;
+        static VIEW_STATE_EMPTY: number;
+        static VIEW_STATE_LAST: number;
         static VIEW_STATE_IDS: number[];
         private static _static;
         static CLICKABLE: number;
@@ -1840,7 +1840,7 @@ declare module android.view {
         mPaddingRight: number;
         mPaddingTop: number;
         mPaddingBottom: number;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
         getWidth(): number;
         getHeight(): number;
         getTop(): number;
@@ -2059,7 +2059,7 @@ declare module android.view {
         drawFromParent(canvas: Canvas, parent: ViewGroup, drawingTime: number): boolean;
         draw(canvas: Canvas): void;
         protected onDraw(canvas: Canvas): void;
-        dispatchDraw(canvas: Canvas): void;
+        protected dispatchDraw(canvas: Canvas): void;
         onDrawScrollBars(canvas: Canvas): void;
         isVerticalScrollBarHidden(): boolean;
         onDrawHorizontalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
@@ -2678,7 +2678,7 @@ declare module android.view {
         canAnimate(): boolean;
         protected abstract onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         getChildVisibleRect(child: View, r: Rect, offset: Point): boolean;
-        dispatchDraw(canvas: Canvas): void;
+        protected dispatchDraw(canvas: Canvas): void;
         protected drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
         protected drawableStateChanged(): void;
         jumpDrawablesToCurrentState(): void;
@@ -3963,6 +3963,61 @@ declare module android.database {
         onInvalidated(): void;
     }
 }
+declare module goog.math {
+    class Long {
+        private static IntCache_;
+        private static TWO_PWR_16_DBL_;
+        private static TWO_PWR_24_DBL_;
+        private static TWO_PWR_32_DBL_;
+        private static TWO_PWR_31_DBL_;
+        private static TWO_PWR_48_DBL_;
+        private static TWO_PWR_64_DBL_;
+        private static TWO_PWR_63_DBL_;
+        private static TWO_PWR_24_;
+        static ZERO: Long;
+        static ONE: Long;
+        static NEG_ONE: Long;
+        static MAX_VALUE: Long;
+        static MIN_VALUE: Long;
+        private low_;
+        private high_;
+        constructor(low: number, high: number);
+        toInt(): number;
+        toNumber(): number;
+        toString(opt_radix: number): string;
+        getHighBits(): number;
+        getLowBits(): number;
+        getLowBitsUnsigned(): number;
+        getNumBitsAbs(): number;
+        isZero(): boolean;
+        isNegative(): boolean;
+        isOdd(): boolean;
+        equals(other: Long): boolean;
+        notEquals(other: Long): boolean;
+        lessThan(other: Long): boolean;
+        lessThanOrEqual(other: Long): boolean;
+        greaterThan(other: Long): boolean;
+        greaterThanOrEqual(other: Long): boolean;
+        compare(other: Long): number;
+        negate(): Long;
+        add(other: Long): Long;
+        subtract(other: Long): Long;
+        multiply(other: Long): Long;
+        div(other: Long): Long;
+        modulo(other: Long): Long;
+        not(): Long;
+        and(other: Long): Long;
+        or(other: Long): Long;
+        xor(other: Long): Long;
+        shiftLeft(numBits: number): Long;
+        shiftRight(numBits: number): Long;
+        shiftRightUnsigned(numBits: number): Long;
+        static fromInt(value: number): Long;
+        static fromNumber(value: number): Long;
+        static fromBits(lowBits: number, highBits: number): Long;
+        static fromString(str: string, opt_radix: number): Long;
+    }
+}
 declare module java.lang {
     class Long {
         static MIN_VALUE: number;
@@ -4678,7 +4733,7 @@ declare module android.widget {
         setFreezesText(freezesText: boolean): void;
         getFreezesText(): boolean;
         setSpannableFactory(factory: Spannable.Factory): void;
-        private setText(text, type?, notifyBefore?, oldlen?);
+        setText(text: String, type?: TextView.BufferType, notifyBefore?: boolean, oldlen?: number): void;
         setHint(hint: String): void;
         getHint(): String;
         isSingleLine(): boolean;
@@ -4939,7 +4994,7 @@ declare module android.widget {
 }
 declare module android.widget {
     class Button extends TextView {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
     }
 }
 declare module android.widget {
@@ -5147,7 +5202,7 @@ declare module android.widget {
         obtainView(position: number, isScrap: boolean[]): View;
         positionSelector(l: number, t: number, r: number, b: number): void;
         positionSelector(position: number, sel: View): void;
-        dispatchDraw(canvas: Canvas): void;
+        protected dispatchDraw(canvas: Canvas): void;
         isPaddingOffsetRequired(): boolean;
         getLeftPaddingOffset(): number;
         getTopPaddingOffset(): number;
@@ -5317,8 +5372,7 @@ declare module android.widget {
             private mScrollDuration;
             private mExtraScroll;
             private mOffsetFromTop;
-            start(position: number): void;
-            start(position: number, boundPosition: number): void;
+            start(position: number, boundPosition?: number): void;
             private _start_1(position);
             private _start_2(position, boundPosition);
             startWithOffset(position: number, offset: number, duration?: number): void;
@@ -5525,7 +5579,7 @@ declare module android.widget {
         private fillFromSelection(selectedTop, childrenTop, childrenBottom);
         private getBottomSelectionPixel(childrenBottom, fadingEdgeLength, selectedPosition);
         private getTopSelectionPixel(childrenTop, fadingEdgeLength, selectedPosition);
-        smoothScrollToPosition(position: number): void;
+        smoothScrollToPosition(position: number, boundPosition?: number): void;
         smoothScrollByOffset(offset: number): void;
         private moveSelection(oldSel, newSel, delta, childrenTop, childrenBottom);
         protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
@@ -5579,7 +5633,7 @@ declare module android.widget {
         setCacheColorHint(color: number): void;
         drawOverscrollHeader(canvas: Canvas, drawable: Drawable, bounds: Rect): void;
         drawOverscrollFooter(canvas: Canvas, drawable: Drawable, bounds: Rect): void;
-        dispatchDraw(canvas: Canvas): void;
+        protected dispatchDraw(canvas: Canvas): void;
         protected drawChild(canvas: Canvas, child: View, drawingTime: number): boolean;
         drawDivider(canvas: Canvas, bounds: Rect, childIndex: number): void;
         getDivider(): Drawable;
@@ -6024,9 +6078,23 @@ declare module android.view.animation {
     }
 }
 declare module java.util {
+    interface Comparator<T> {
+        compare(o1: T, o2: T): number;
+    }
+}
+declare module java.lang {
+    interface Comparable<T> {
+        compareTo(o: T): number;
+    }
+    module Comparable {
+        function isImpl(obj: any): any;
+    }
+}
+declare module java.util {
     class Collections {
         private static EMPTY_LIST;
         static emptyList(): List<any>;
+        static sort<T>(list: List<T>, c?: Comparator<T>): void;
     }
 }
 declare module android.R {
@@ -6304,7 +6372,7 @@ declare module android.widget {
         private mOnCheckedChangeListener;
         private mOnCheckedChangeWidgetListener;
         private static CHECKED_STATE_SET;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
         toggle(): void;
         performClick(): boolean;
         isChecked(): boolean;
@@ -6330,13 +6398,13 @@ declare module android.widget {
 declare module android.widget {
     import CompoundButton = android.widget.CompoundButton;
     class CheckBox extends CompoundButton {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
     }
 }
 declare module android.widget {
     import CompoundButton = android.widget.CompoundButton;
     class RadioButton extends CompoundButton {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
         toggle(): void;
     }
 }
@@ -6383,6 +6451,275 @@ declare module android.widget {
             onChildViewAdded(parent: View, child: View): void;
             onChildViewRemoved(parent: View, child: View): void;
         }
+    }
+}
+declare module android.widget {
+    import DataSetObserver = android.database.DataSetObserver;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    interface ExpandableListAdapter {
+        registerDataSetObserver(observer: DataSetObserver): void;
+        unregisterDataSetObserver(observer: DataSetObserver): void;
+        getGroupCount(): number;
+        getChildrenCount(groupPosition: number): number;
+        getGroup(groupPosition: number): any;
+        getChild(groupPosition: number, childPosition: number): any;
+        getGroupId(groupPosition: number): number;
+        getChildId(groupPosition: number, childPosition: number): number;
+        hasStableIds(): boolean;
+        getGroupView(groupPosition: number, isExpanded: boolean, convertView: View, parent: ViewGroup): View;
+        getChildView(groupPosition: number, childPosition: number, isLastChild: boolean, convertView: View, parent: ViewGroup): View;
+        isChildSelectable(groupPosition: number, childPosition: number): boolean;
+        areAllItemsEnabled(): boolean;
+        isEmpty(): boolean;
+        onGroupExpanded(groupPosition: number): void;
+        onGroupCollapsed(groupPosition: number): void;
+        getCombinedChildId(groupId: number, childId: number): number;
+        getCombinedGroupId(groupId: number): number;
+    }
+}
+declare module android.widget {
+    class ExpandableListPosition {
+        private static MAX_POOL_SIZE;
+        private static sPool;
+        static CHILD: number;
+        static GROUP: number;
+        groupPos: number;
+        childPos: number;
+        flatListPos: number;
+        type: number;
+        private resetState();
+        constructor();
+        getPackedPosition(): number;
+        static obtainGroupPosition(groupPosition: number): ExpandableListPosition;
+        static obtainChildPosition(groupPosition: number, childPosition: number): ExpandableListPosition;
+        static obtainPosition(packedPosition: number): ExpandableListPosition;
+        static obtain(type: number, groupPos: number, childPos: number, flatListPos: number): ExpandableListPosition;
+        private static getRecycledOrCreate();
+        recycle(): void;
+    }
+}
+declare module android.widget {
+    interface HeterogeneousExpandableList {
+        getGroupType(groupPosition: number): number;
+        getChildType(groupPosition: number, childPosition: number): number;
+        getGroupTypeCount(): number;
+        getChildTypeCount(): number;
+    }
+    module HeterogeneousExpandableList {
+        function isImpl(obj: any): boolean;
+    }
+}
+declare module android.widget {
+    import DataSetObserver = android.database.DataSetObserver;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import ArrayList = java.util.ArrayList;
+    import Comparable = java.lang.Comparable;
+    import BaseAdapter = android.widget.BaseAdapter;
+    import ExpandableListAdapter = android.widget.ExpandableListAdapter;
+    import ExpandableListPosition = android.widget.ExpandableListPosition;
+    class ExpandableListConnector extends BaseAdapter {
+        private mExpandableListAdapter;
+        private mExpGroupMetadataList;
+        private mTotalExpChildrenCount;
+        private mMaxExpGroupCount;
+        private mDataSetObserver;
+        constructor(expandableListAdapter: ExpandableListAdapter);
+        setExpandableListAdapter(expandableListAdapter: ExpandableListAdapter): void;
+        getUnflattenedPos(flPos: number): ExpandableListConnector.PositionMetadata;
+        getFlattenedPos(pos: ExpandableListPosition): ExpandableListConnector.PositionMetadata;
+        areAllItemsEnabled(): boolean;
+        isEnabled(flatListPos: number): boolean;
+        getCount(): number;
+        getItem(flatListPos: number): any;
+        getItemId(flatListPos: number): number;
+        getView(flatListPos: number, convertView: View, parent: ViewGroup): View;
+        getItemViewType(flatListPos: number): number;
+        getViewTypeCount(): number;
+        hasStableIds(): boolean;
+        private refreshExpGroupMetadataList(forceChildrenCountRefresh, syncGroupPositions);
+        collapseGroup(groupPos: number): boolean;
+        collapseGroupWithMeta(posMetadata: ExpandableListConnector.PositionMetadata): boolean;
+        expandGroup(groupPos: number): boolean;
+        expandGroupWithMeta(posMetadata: ExpandableListConnector.PositionMetadata): boolean;
+        isGroupExpanded(groupPosition: number): boolean;
+        setMaxExpGroupCount(maxExpGroupCount: number): void;
+        getAdapter(): ExpandableListAdapter;
+        getExpandedGroupMetadataList(): ArrayList<ExpandableListConnector.GroupMetadata>;
+        setExpandedGroupMetadataList(expandedGroupMetadataList: ArrayList<ExpandableListConnector.GroupMetadata>): void;
+        isEmpty(): boolean;
+        findGroupPosition(groupIdToMatch: number, seedGroupPosition: number): number;
+    }
+    module ExpandableListConnector {
+        class MyDataSetObserver extends DataSetObserver {
+            _ExpandableListConnector_this: ExpandableListConnector;
+            constructor(arg: ExpandableListConnector);
+            onChanged(): void;
+            onInvalidated(): void;
+        }
+        class GroupMetadata implements Comparable<GroupMetadata> {
+            static REFRESH: number;
+            flPos: number;
+            lastChildFlPos: number;
+            gPos: number;
+            gId: number;
+            constructor();
+            static obtain(flPos: number, lastChildFlPos: number, gPos: number, gId: number): GroupMetadata;
+            compareTo(another: GroupMetadata): number;
+        }
+        class PositionMetadata {
+            private static MAX_POOL_SIZE;
+            private static sPool;
+            position: ExpandableListPosition;
+            groupMetadata: ExpandableListConnector.GroupMetadata;
+            groupInsertIndex: number;
+            private resetState();
+            constructor();
+            static obtain(flatListPos: number, type: number, groupPos: number, childPos: number, groupMetadata: ExpandableListConnector.GroupMetadata, groupInsertIndex: number): PositionMetadata;
+            private static getRecycledOrCreate();
+            recycle(): void;
+            isExpanded(): boolean;
+        }
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import Drawable = android.graphics.drawable.Drawable;
+    import View = android.view.View;
+    import AdapterView = android.widget.AdapterView;
+    import ExpandableListAdapter = android.widget.ExpandableListAdapter;
+    import ListAdapter = android.widget.ListAdapter;
+    import ListView = android.widget.ListView;
+    class ExpandableListView extends ListView {
+        static PACKED_POSITION_TYPE_GROUP: number;
+        static PACKED_POSITION_TYPE_CHILD: number;
+        static PACKED_POSITION_TYPE_NULL: number;
+        static PACKED_POSITION_VALUE_NULL: number;
+        private static PACKED_POSITION_MASK_CHILD;
+        private static PACKED_POSITION_MASK_GROUP;
+        private static PACKED_POSITION_MASK_TYPE;
+        private static PACKED_POSITION_SHIFT_GROUP;
+        private static PACKED_POSITION_SHIFT_TYPE;
+        private static PACKED_POSITION_INT_MASK_CHILD;
+        private static PACKED_POSITION_INT_MASK_GROUP;
+        private mConnector;
+        private mExpandAdapter;
+        private mIndicatorLeft;
+        private mIndicatorRight;
+        private mIndicatorStart;
+        private mIndicatorEnd;
+        private mChildIndicatorLeft;
+        private mChildIndicatorRight;
+        private mChildIndicatorStart;
+        private mChildIndicatorEnd;
+        static CHILD_INDICATOR_INHERIT: number;
+        private static INDICATOR_UNDEFINED;
+        private mGroupIndicator;
+        private mChildIndicator;
+        private static GROUP_EXPANDED_STATE_SET;
+        private static GROUP_EMPTY_STATE_SET;
+        private static GROUP_EXPANDED_EMPTY_STATE_SET;
+        private static GROUP_STATE_SETS;
+        private static CHILD_LAST_STATE_SET;
+        private mChildDivider;
+        private mIndicatorRect;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        private isRtlCompatibilityMode();
+        private hasRtlSupport();
+        onRtlPropertiesChanged(layoutDirection: number): void;
+        private resolveIndicator();
+        private resolveChildIndicator();
+        protected dispatchDraw(canvas: Canvas): void;
+        private getIndicator(pos);
+        setChildDivider(childDivider: Drawable): void;
+        drawDivider(canvas: Canvas, bounds: Rect, childIndex: number): void;
+        setAdapter(adapter: ListAdapter): void;
+        getAdapter(): ListAdapter;
+        setOnItemClickListener(l: AdapterView.OnItemClickListener): void;
+        setExpandableAdapter(adapter: ExpandableListAdapter): void;
+        getExpandableListAdapter(): ExpandableListAdapter;
+        private isHeaderOrFooterPosition(position);
+        private getFlatPositionForConnector(flatListPosition);
+        private getAbsoluteFlatPosition(flatListPosition);
+        performItemClick(v: View, position: number, id: number): boolean;
+        handleItemClick(v: View, position: number, id: number): boolean;
+        expandGroup(groupPos: number, animate?: boolean): boolean;
+        collapseGroup(groupPos: number): boolean;
+        private mOnGroupCollapseListener;
+        setOnGroupCollapseListener(onGroupCollapseListener: ExpandableListView.OnGroupCollapseListener): void;
+        private mOnGroupExpandListener;
+        setOnGroupExpandListener(onGroupExpandListener: ExpandableListView.OnGroupExpandListener): void;
+        private mOnGroupClickListener;
+        setOnGroupClickListener(onGroupClickListener: ExpandableListView.OnGroupClickListener): void;
+        private mOnChildClickListener;
+        setOnChildClickListener(onChildClickListener: ExpandableListView.OnChildClickListener): void;
+        getExpandableListPosition(flatListPosition: number): number;
+        getFlatListPosition(packedPosition: number): number;
+        getSelectedPosition(): number;
+        getSelectedId(): number;
+        setSelectedGroup(groupPosition: number): void;
+        setSelectedChild(groupPosition: number, childPosition: number, shouldExpandGroup: boolean): boolean;
+        isGroupExpanded(groupPosition: number): boolean;
+        static getPackedPositionType(packedPosition: number): number;
+        static getPackedPositionGroup(packedPosition: number): number;
+        static getPackedPositionChild(packedPosition: number): number;
+        static getPackedPositionForChild(groupPosition: number, childPosition: number): number;
+        static getPackedPositionForGroup(groupPosition: number): number;
+        private getChildOrGroupId(position);
+        setChildIndicator(childIndicator: Drawable): void;
+        setChildIndicatorBounds(left: number, right: number): void;
+        setChildIndicatorBoundsRelative(start: number, end: number): void;
+        setGroupIndicator(groupIndicator: Drawable): void;
+        setIndicatorBounds(left: number, right: number): void;
+        setIndicatorBoundsRelative(start: number, end: number): void;
+    }
+    module ExpandableListView {
+        interface OnGroupCollapseListener {
+            onGroupCollapse(groupPosition: number): void;
+        }
+        interface OnGroupExpandListener {
+            onGroupExpand(groupPosition: number): void;
+        }
+        interface OnGroupClickListener {
+            onGroupClick(parent: ExpandableListView, v: View, groupPosition: number, id: number): boolean;
+        }
+        interface OnChildClickListener {
+            onChildClick(parent: ExpandableListView, v: View, groupPosition: number, childPosition: number, id: number): boolean;
+        }
+    }
+}
+declare module android.widget {
+    import DataSetObserver = android.database.DataSetObserver;
+    import ExpandableListAdapter = android.widget.ExpandableListAdapter;
+    import HeterogeneousExpandableList = android.widget.HeterogeneousExpandableList;
+    abstract class BaseExpandableListAdapter implements ExpandableListAdapter, HeterogeneousExpandableList {
+        private mDataSetObservable;
+        registerDataSetObserver(observer: DataSetObserver): void;
+        unregisterDataSetObserver(observer: DataSetObserver): void;
+        notifyDataSetInvalidated(): void;
+        notifyDataSetChanged(): void;
+        areAllItemsEnabled(): boolean;
+        onGroupCollapsed(groupPosition: number): void;
+        onGroupExpanded(groupPosition: number): void;
+        getCombinedChildId(groupId: number, childId: number): number;
+        getCombinedGroupId(groupId: number): number;
+        isEmpty(): boolean;
+        getChildType(groupPosition: number, childPosition: number): number;
+        getChildTypeCount(): number;
+        getGroupType(groupPosition: number): number;
+        getGroupTypeCount(): number;
+        abstract getGroupCount(): number;
+        abstract getChildrenCount(groupPosition: number): number;
+        abstract getGroup(groupPosition: number): any;
+        abstract getChild(groupPosition: number, childPosition: number): any;
+        abstract getGroupId(groupPosition: number): number;
+        abstract getChildId(groupPosition: number, childPosition: number): number;
+        abstract hasStableIds(): boolean;
+        abstract getGroupView(groupPosition: number, isExpanded: boolean, convertView: android.view.View, parent: android.view.ViewGroup): android.view.View;
+        abstract getChildView(groupPosition: number, childPosition: number, isLastChild: boolean, convertView: android.view.View, parent: android.view.ViewGroup): android.view.View;
+        abstract isChildSelectable(groupPosition: number, childPosition: number): boolean;
     }
 }
 declare module android.support.v4.view {

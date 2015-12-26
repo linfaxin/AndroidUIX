@@ -42,9 +42,11 @@ module java.util{
             return this.array;
         }
         get(index:number):T {
+            index = Math.floor(index);
             return this.array[index];
         }
         set(index:number, element:T):T {
+            index = Math.floor(index);
             let old = this.array[index];
             this.array[index] = element;
             return old;
@@ -56,7 +58,7 @@ module java.util{
             let index:number, t:T;
             if(args.length===1) t=args[0];
             else if(args.length===2){
-                index = args[0];
+                index = Math.floor(args[0]);
                 t = args[1];
             }
             if(index===undefined) this.array.push(t);
@@ -84,7 +86,7 @@ module java.util{
             if(args.length===1){
                 list = args[0];
             }else if(args.length===2){
-                index = args[0];
+                index = Math.floor(args[0]);
                 list = args[1];
             }
             if(index===undefined){
@@ -108,6 +110,8 @@ module java.util{
 
         subList(fromIndex:number, toIndex:number):ArrayList<T> {
             let list = new ArrayList<T>();
+            fromIndex = Math.floor(fromIndex);
+            toIndex = Math.floor(toIndex);
             for (var i = fromIndex; i < toIndex; i++) {
                 list.array.push(this.array[i]);
             }

@@ -10,9 +10,11 @@ module android.widget{
     import Gravity = android.view.Gravity;
 
     export class Button extends TextView{
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
+        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle?){
             super(bindElement, rootElement);
-            this.applyDefaultAttributes(android.R.attr.buttonStyle);
+
+            if(defStyle === undefined) defStyle = android.R.attr.buttonStyle;
+            if(defStyle) this.applyDefaultAttributes(defStyle);
         }
     }
 }

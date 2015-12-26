@@ -66,8 +66,8 @@ class CompoundButton extends Button implements Checkable {
 
     private static CHECKED_STATE_SET:number[] = [ View.VIEW_STATE_CHECKED ];
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-        super(bindElement, rootElement);
+    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle?:any) {
+        super(bindElement, rootElement, defStyle);
 
         this._attrBinder.addAttr('button', (value)=>{
             this.setButtonDrawable(this._attrBinder.parseDrawable(value));
