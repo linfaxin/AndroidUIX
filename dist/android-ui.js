@@ -12311,14 +12311,12 @@ var android;
                 this.mCanvasBound.set(clientRect.left * density, clientRect.top * density, clientRect.right * density, clientRect.bottom * density);
             }
             lockCanvas(dirty) {
-                let fullWidth = this.mCanvasBound.width();
-                let fullHeight = this.mCanvasBound.height();
                 let rect = this.mLockedRect;
+                rect.set(Math.floor(dirty.left), Math.floor(dirty.top), Math.ceil(dirty.right), Math.ceil(dirty.bottom));
                 if (dirty.isEmpty()) {
+                    let fullWidth = this.mCanvasBound.width();
+                    let fullHeight = this.mCanvasBound.height();
                     rect.set(0, 0, fullWidth, fullHeight);
-                }
-                else {
-                    rect.set(Math.floor(dirty.left), Math.floor(dirty.top), Math.ceil(dirty.right), Math.ceil(dirty.bottom));
                 }
                 return this.lockCanvasImpl(rect.left, rect.top, rect.width(), rect.height());
             }
@@ -12398,6 +12396,8 @@ var android;
                 this.mFpsStartTime = -1;
                 this.mFpsPrevTime = -1;
                 this.mFpsNumFrames = 0;
+                this._continuingTraversals = false;
+                this._lastContinueFakeTraversales = 0;
                 this.mInvalidateOnAnimationRunnable = new InvalidateOnAnimationRunnable(this.mHandler);
                 this.mAttachInfo = new View.AttachInfo(this, this.mHandler);
                 this.mTraversalRunnable = new TraversalRunnable(this);
@@ -12642,6 +12642,7 @@ var android;
                     }
                 }
                 this.mIsInTraversal = false;
+                this.checkContinueTraversalsNextFrame();
             }
             performLayout(lp, desiredWindowWidth, desiredWindowHeight) {
                 this.mLayoutRequested = false;
@@ -12843,6 +12844,24 @@ var android;
                 this.mSurface.unlockCanvasAndPost(canvas);
                 if (ViewRootImpl.LOCAL_LOGV) {
                     Log.v(ViewRootImpl.TAG, "Surface unlockCanvasAndPost");
+                }
+            }
+            checkContinueTraversalsNextFrame() {
+                //AndroidUI add:
+                //Because of some reason, sometime will skip a frame to traversals like scroll.
+                //Let's do a fake traversales to make 60fps.
+                const now = SystemClock.uptimeMillis();
+                const fakeDuration = ViewRootImpl.DEBUG_FPS ? 1000 : 100;
+                if (!this.mTraversalScheduled && now - this._lastContinueFakeTraversales < fakeDuration) {
+                    if (!this._continuingTraversals) {
+                        this._lastContinueFakeTraversales = now;
+                        this._continuingTraversals = true;
+                    }
+                    this.scheduleTraversals();
+                }
+                else {
+                    this._continuingTraversals = false;
+                    this._lastContinueFakeTraversales = now;
                 }
             }
             isLayoutRequested() {
@@ -47870,7 +47889,7 @@ var androidui;
             this.element.classList.add('id-' + this.AndroidID);
             this._viewRootImpl = new ViewRootImpl();
             this._viewRootImpl.rootElement = this.element;
-            this._rootLayout = new DebugLayout();
+            this._rootLayout = new RootLayout();
             this._canvas = document.createElement("canvas");
             this.initInflateView();
             this.element.innerHTML = '';
@@ -48167,7 +48186,10 @@ var androidui;
         }
         `;
     document.head.appendChild(styleElement);
-    class DebugLayout extends FrameLayout {
+    class RootLayout extends FrameLayout {
+        tagName() {
+            return 'debuglayout';
+        }
     }
 })(androidui || (androidui = {}));
 /**

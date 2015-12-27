@@ -441,6 +441,8 @@ module android.view {
             }
 
             this.mIsInTraversal = false;
+
+            this.checkContinueTraversalsNextFrame();
         }
 
         private performLayout(lp:ViewGroup.LayoutParams, desiredWindowWidth:number, desiredWindowHeight:number) {
@@ -661,6 +663,7 @@ module android.view {
             attachInfo.mTreeObserver.dispatchOnDraw();
 
             this.drawSoftware();
+
         }
 
         private drawSoftware(){
@@ -692,6 +695,27 @@ module android.view {
 
             if (ViewRootImpl.LOCAL_LOGV) {
                 Log.v(ViewRootImpl.TAG, "Surface unlockCanvasAndPost");
+            }
+        }
+
+        private _continuingTraversals = false;
+        private _lastContinueFakeTraversales = 0;
+        private checkContinueTraversalsNextFrame(){
+            //AndroidUI add:
+            //Because of some reason, sometime will skip a frame to traversals like scroll.
+            //Let's continuing traversales next frame.
+
+            const now = SystemClock.uptimeMillis();
+            const fakeDuration = ViewRootImpl.DEBUG_FPS ? 1000 : 100;
+            if (!this.mTraversalScheduled && now - this._lastContinueFakeTraversales < fakeDuration) {
+                if(!this._continuingTraversals){
+                    this._lastContinueFakeTraversales = now;
+                    this._continuingTraversals = true;
+                }
+                this.scheduleTraversals();
+            }else{
+                this._continuingTraversals = false;
+                this._lastContinueFakeTraversales = now;
             }
         }
 

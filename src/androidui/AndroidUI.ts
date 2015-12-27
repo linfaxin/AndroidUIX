@@ -29,7 +29,7 @@ module androidui {
 
         private _canvas:HTMLCanvasElement;
         private _viewRootImpl:ViewRootImpl;
-        private _rootLayout:DebugLayout;
+        private _rootLayout:RootLayout;
         private rootStyleElement:HTMLStyleElement;
         private rootResourceElement:Element;
 
@@ -61,7 +61,7 @@ module androidui {
 
             this._viewRootImpl = new ViewRootImpl();
             this._viewRootImpl.rootElement = this.element;
-            this._rootLayout = new DebugLayout();
+            this._rootLayout = new RootLayout();
             this._canvas = document.createElement("canvas");
 
             this.initInflateView();
@@ -395,6 +395,9 @@ module androidui {
     document.head.appendChild(styleElement);
 
     //debug layout show the layout in dom.
-    class DebugLayout extends FrameLayout{
+    class RootLayout extends FrameLayout{
+        tagName():string {
+            return 'debuglayout';
+        }
     }
 }

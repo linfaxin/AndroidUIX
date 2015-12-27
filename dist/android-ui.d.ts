@@ -2681,6 +2681,9 @@ declare module android.view {
         private performDraw();
         private draw(fullRedrawNeeded);
         private drawSoftware();
+        private _continuingTraversals;
+        private _lastContinueFakeTraversales;
+        private checkContinueTraversalsNextFrame();
         isLayoutRequested(): boolean;
         private mInvalidateOnAnimationRunnable;
         dispatchInvalidateDelayed(view: View, delayMilliseconds: number): void;

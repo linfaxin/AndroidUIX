@@ -50,13 +50,12 @@ module android.view{
          * create a off-screen canvas to draw
          */
         lockCanvas(dirty:Rect):Canvas{
-            let fullWidth = this.mCanvasBound.width();
-            let fullHeight = this.mCanvasBound.height();
             let rect:Rect = this.mLockedRect;
+            rect.set(Math.floor(dirty.left), Math.floor(dirty.top), Math.ceil(dirty.right), Math.ceil(dirty.bottom));
             if(dirty.isEmpty()){
+                let fullWidth = this.mCanvasBound.width();
+                let fullHeight = this.mCanvasBound.height();
                 rect.set(0, 0, fullWidth, fullHeight);
-            }else{
-                rect.set(Math.floor(dirty.left), Math.floor(dirty.top), Math.ceil(dirty.right), Math.ceil(dirty.bottom));
             }
 
             return this.lockCanvasImpl(rect.left, rect.top, rect.width(), rect.height());
