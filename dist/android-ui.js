@@ -48054,16 +48054,26 @@ var android;
         class Activity extends HTMLDivElement {
             onCreate() {
             }
+            performCreate() {
+                this.AndroidUI = new AndroidUI(this);
+                this.AndroidUI.notifySizeChange();
+                this.onCreate();
+                let onCreateFunc = this.getAttribute('oncreate');
+                if (onCreateFunc && typeof window[onCreateFunc] === "function") {
+                    window[onCreateFunc].call(this, this);
+                }
+            }
             createdCallback() {
-                requestAnimationFrame(() => {
-                    this.AndroidUI = new AndroidUI(this);
-                    this.AndroidUI.notifySizeChange();
-                    this.onCreate();
-                    let onCreateFunc = this.getAttribute('oncreate');
-                    if (onCreateFunc && typeof window[onCreateFunc] === "function") {
-                        window[onCreateFunc].call(this, this);
-                    }
-                });
+                if (/^loaded|^complete|^interactive/.test(document.readyState)) {
+                    setTimeout(() => {
+                        this.performCreate();
+                    }, 0);
+                }
+                else {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        this.performCreate();
+                    });
+                }
             }
             attachedCallback() {
                 if (this.AndroidUI) {

@@ -24,22 +24,33 @@ module android.app{
 
     export class Activity extends HTMLDivElement{
         private AndroidUI:AndroidUI;
+
         onCreate():void{
         }
 
-        createdCallback():void{
-            //delay call onCreate, insure browser load lib complete
-            requestAnimationFrame(()=>{
-                this.AndroidUI = new AndroidUI(this);
-                this.AndroidUI.notifySizeChange();
+        private performCreate(){
+            this.AndroidUI = new AndroidUI(this);
+            this.AndroidUI.notifySizeChange();
 
-                this.onCreate();
-                //activity could have a attribute defined callback when created
-                let onCreateFunc = this.getAttribute('oncreate');
-                if(onCreateFunc && typeof window[onCreateFunc] === "function"){
-                    window[onCreateFunc].call(this, this);
-                }
-            });
+            this.onCreate();
+            //activity could have a attribute defined callback when created
+            let onCreateFunc = this.getAttribute('oncreate');
+            if(onCreateFunc && typeof window[onCreateFunc] === "function"){
+                window[onCreateFunc].call(this, this);
+            }
+        }
+
+        createdCallback():void{
+            if(/^loaded|^complete|^interactive/.test(document.readyState)){//already loaded
+                //delay call onCreate, insure browser load lib complete
+                setTimeout(()=>{
+                    this.performCreate();
+                }, 0);
+            }else{
+                document.addEventListener('DOMContentLoaded', ()=>{
+                    this.performCreate();
+                });
+            }
         }
         attachedCallback():void {
             if(this.AndroidUI){

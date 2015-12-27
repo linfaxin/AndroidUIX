@@ -7902,6 +7902,7 @@ declare module android.app {
     class Activity extends HTMLDivElement {
         private AndroidUI;
         onCreate(): void;
+        private performCreate();
         createdCallback(): void;
         attachedCallback(): void;
         detachedCallback(): void;

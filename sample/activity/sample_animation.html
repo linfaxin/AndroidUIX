@@ -77,8 +77,10 @@
     <script src="../build/main.es5.js"></script>
     <script>android.view.ViewRootImpl.DEBUG_FPS = true;</script>
     <script>
-        var Animation = android.view.animation.Animation;
+
         function onCreate(activity){
+        var Animation = android.view.animation.Animation;
+
             var rotateView = activity.findViewById('rotate_repeat');
             var rotateAnimation = new android.view.animation.RotateAnimation(
                     0, 360, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
