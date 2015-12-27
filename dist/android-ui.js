@@ -12849,7 +12849,7 @@ var android;
             checkContinueTraversalsNextFrame() {
                 //AndroidUI add:
                 //Because of some reason, sometime will skip a frame to traversals like scroll.
-                //Let's do a fake traversales to make 60fps.
+                //Let's continuing traversales next frame.
                 const now = SystemClock.uptimeMillis();
                 const fakeDuration = ViewRootImpl.DEBUG_FPS ? 1000 : 100;
                 if (!this.mTraversalScheduled && now - this._lastContinueFakeTraversales < fakeDuration) {
@@ -17416,7 +17416,7 @@ var android;
                 let oldDistance = oldFinal - start;
                 let newDistance = newFinal - start;
                 let x = Math.abs(newDistance / oldDistance);
-                let index = Number.parseInt((SplineOverScroller.NB_SAMPLES * x));
+                let index = Math.floor(SplineOverScroller.NB_SAMPLES * x);
                 if (index < SplineOverScroller.NB_SAMPLES) {
                     let x_inf = index / SplineOverScroller.NB_SAMPLES;
                     let x_sup = (index + 1) / SplineOverScroller.NB_SAMPLES;
@@ -17472,7 +17472,8 @@ var android;
                 this.mDeceleration = SplineOverScroller.getDeceleration(delta);
                 this.mVelocity = -delta;
                 this.mOver = Math.abs(delta);
-                this.mDuration = (1000.0 * Math.sqrt(-2.0 * delta / this.mDeceleration));
+                const density = android.content.res.Resources.getDisplayMetrics().density;
+                this.mDuration = Math.floor(1000.0 * Math.sqrt(-2.0 * (delta / density) / this.mDeceleration));
             }
             fling(start, velocity, min, max, over) {
                 this.mOver = over;

@@ -345,7 +345,7 @@ module android.widget{
             let oldDistance = oldFinal - start;
             let newDistance = newFinal - start;
             let x = Math.abs(newDistance / oldDistance);
-            let index = Number.parseInt(<any>(SplineOverScroller.NB_SAMPLES * x));
+            let index = Math.floor(SplineOverScroller.NB_SAMPLES * x);
             if (index < SplineOverScroller.NB_SAMPLES) {
                 let x_inf = index / SplineOverScroller.NB_SAMPLES;
                 let x_sup = (index + 1) / SplineOverScroller.NB_SAMPLES;
@@ -415,7 +415,8 @@ module android.widget{
             // TODO take velocity into account
             this.mVelocity = -delta; // only sign is used
             this.mOver = Math.abs(delta);
-            this.mDuration = (1000.0 * Math.sqrt(-2.0 * delta / this.mDeceleration));
+            const density = android.content.res.Resources.getDisplayMetrics().density;
+            this.mDuration = Math.floor(1000.0 * Math.sqrt(-2.0 * (delta / density) / this.mDeceleration));
         }
 
         fling(start:number, velocity:number, min:number, max:number, over:number) {
