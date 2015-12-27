@@ -1853,6 +1853,7 @@ declare module android.view {
     import AttrBinder = androidui.attr.AttrBinder;
     import KeyEvent = android.view.KeyEvent;
     import Animation = animation.Animation;
+    import Transformation = animation.Transformation;
     class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback {
         static DBG: boolean;
         static VIEW_LOG_TAG: string;
@@ -2029,6 +2030,7 @@ declare module android.view {
         mTransformationInfo: View.TransformationInfo;
         mViewFlags: number;
         mLayerType: number;
+        mLocalDirtyRect: Rect;
         mCachingFailed: boolean;
         private mOverlay;
         private mWindowAttachCount;
@@ -2496,6 +2498,8 @@ declare module android.view {
             mHandler: Handler;
             mTmpInvalRect: Rect;
             mTmpTransformRect: Rect;
+            mTmpMatrix: Matrix;
+            mTmpTransformation: Transformation;
             mScrollContainers: Set<View>;
             mViewScrollChanged: boolean;
             mTreeObserver: ViewTreeObserver;
@@ -2597,6 +2601,7 @@ declare module android.view {
         private mLockSaveCount;
         constructor(canvasElement: HTMLCanvasElement, viewRoot: ViewRootImpl);
         protected initImpl(): void;
+        isValid(): boolean;
         notifyBoundChange(): void;
         protected initCanvasBound(): void;
         lockCanvas(dirty: Rect): Canvas;
@@ -2629,6 +2634,7 @@ declare module android.view {
         private mWidth;
         private mHeight;
         private mDirty;
+        private mIsAnimating;
         private mAttachInfo;
         private mTempRect;
         private mVisRect;
@@ -2775,6 +2781,7 @@ declare module android.view {
     import RectF = android.graphics.RectF;
     import ArrayList = java.util.ArrayList;
     import AttrBinder = androidui.attr.AttrBinder;
+    import Animation = animation.Animation;
     import Transformation = animation.Transformation;
     abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN: number;
@@ -2811,6 +2818,7 @@ declare module android.view {
         static LAYOUT_MODE_CLIP_BOUNDS: number;
         static LAYOUT_MODE_DEFAULT: number;
         static CLIP_TO_PADDING_MASK: number;
+        protected mDisappearingChildren: ArrayList<View>;
         mOnHierarchyChangeListener: ViewGroup.OnHierarchyChangeListener;
         private mFocused;
         private mFirstTouchTarget;
@@ -2913,6 +2921,8 @@ declare module android.view {
         isChildrenDrawnWithCacheEnabled(): boolean;
         setChildrenDrawnWithCacheEnabled(enabled: boolean): void;
         setChildrenDrawingCacheEnabled(enabled: boolean): void;
+        protected onAnimationStart(): void;
+        protected onAnimationEnd(): void;
         getPersistentDrawingCache(): number;
         setPersistentDrawingCache(drawingCacheToKeep: number): void;
         isChildrenDrawingOrderEnabled(): boolean;
@@ -2924,6 +2934,9 @@ declare module android.view {
         protected measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
         protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
         static getChildMeasureSpec(spec: number, padding: number, childDimension: number): number;
+        clearDisappearingChildren(): void;
+        private addDisappearingView(v);
+        finishAnimatingView(view: View, animation: Animation): void;
         dispatchAttachedToWindow(info: View.AttachInfo, visibility: number): void;
         protected onAttachedToWindow(): void;
         protected onDetachedFromWindow(): void;

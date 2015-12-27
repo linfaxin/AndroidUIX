@@ -671,6 +671,7 @@ module android.view {
         mViewFlags=0;
 
         mLayerType = View.LAYER_TYPE_NONE;
+        mLocalDirtyRect:Rect;
 
         mCachingFailed = false;
 
@@ -4135,7 +4136,7 @@ module android.view {
             this.mLayerType = layerType;
             const layerDisabled:boolean = this.mLayerType == View.LAYER_TYPE_NONE;
             //this.mLayerPaint = layerDisabled ? null : (paint == null ? new Paint() : paint);
-            //this.mLocalDirtyRect = layerDisabled ? null : new Rect();
+            this.mLocalDirtyRect = layerDisabled ? null : new Rect();
             this.invalidateParentCaches();
             this.invalidate(true);
         }
@@ -4188,8 +4189,8 @@ module android.view {
             let scalingRequired = false;
             let caching = false;
             let layerType = this.getLayerType();
+            const hardwareAccelerated = false;
 
-            //let hardwareAccelerated = false;
             if ((flags & ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) != 0 ||
                 (flags & ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) != 0) {
                 caching = true;
@@ -4392,6 +4393,13 @@ module android.view {
 
             if (restoreTo >= 0) {
                 canvas.restoreToCount(restoreTo);
+            }
+
+            if (a != null && !more) {
+                if (!hardwareAccelerated && !a.getFillAfter()) {
+                    this.onSetAlpha(255);
+                }
+                parent.finishAnimatingView(this, a);
             }
 
             return more;
@@ -6305,6 +6313,14 @@ module android.view {
             mHandler : Handler;
             mTmpInvalRect = new Rect();
             mTmpTransformRect = new Rect();
+            /**
+             * Temporary for use in transforming invalidation rect
+             */
+            mTmpMatrix:Matrix = new Matrix();
+            /**
+             * Temporary for use in transforming invalidation rect
+             */
+            mTmpTransformation:Transformation = new Transformation();
             mScrollContainers = new Set<View>();
             mViewScrollChanged = false;
             mTreeObserver = new ViewTreeObserver();

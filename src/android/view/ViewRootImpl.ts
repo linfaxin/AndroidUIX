@@ -50,6 +50,7 @@ module android.view {
         private mWidth:number = -1;
         private mHeight:number = -1;
         private mDirty = new Rect();
+        private mIsAnimating = false;
         private mAttachInfo:View.AttachInfo;
         private mTempRect:Rect = new Rect();
         private mVisRect:Rect = new Rect();
@@ -632,6 +633,10 @@ module android.view {
         }
 
         private draw(fullRedrawNeeded:boolean) {
+            let surface = this.mSurface;
+            if (!surface.isValid()) {
+                return;
+            }
 
             if (ViewRootImpl.DEBUG_FPS) {
                 this.trackFPS();
@@ -667,6 +672,7 @@ module android.view {
                 return;
             }
             this.mDirty.setEmpty();
+            this.mIsAnimating = false;
             let attachInfo = this.mAttachInfo;
 
             attachInfo.mDrawingTime = SystemClock.uptimeMillis();
@@ -755,7 +761,7 @@ module android.view {
             if (dirty == null) {
                 this.invalidate();
                 return null;
-            } else if (dirty.isEmpty()) {
+            } else if (dirty.isEmpty() && !this.mIsAnimating) {
                 return null;
             }
 
@@ -781,7 +787,7 @@ module android.view {
             if (!intersected) {
                 localDirty.setEmpty();
             }
-            if (!this.mWillDrawSoon && (intersected)) {
+            if (!this.mWillDrawSoon && (intersected || this.mIsAnimating)) {
                 this.scheduleTraversals();
             }
 

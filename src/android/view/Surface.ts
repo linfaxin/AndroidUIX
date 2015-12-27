@@ -32,6 +32,10 @@ module android.view{
 
         }
 
+        isValid():boolean {
+            return true;//web canvas always true
+        }
+
         notifyBoundChange(){
             this.initCanvasBound();
         }

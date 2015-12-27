@@ -10371,6 +10371,7 @@ var android;
                 }
                 this.mLayerType = layerType;
                 const layerDisabled = this.mLayerType == View.LAYER_TYPE_NONE;
+                this.mLocalDirtyRect = layerDisabled ? null : new Rect();
                 this.invalidateParentCaches();
                 this.invalidate(true);
             }
@@ -10418,6 +10419,7 @@ var android;
                 let scalingRequired = false;
                 let caching = false;
                 let layerType = this.getLayerType();
+                const hardwareAccelerated = false;
                 if ((flags & view_1.ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) != 0 ||
                     (flags & view_1.ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) != 0) {
                     caching = true;
@@ -10566,6 +10568,12 @@ var android;
                 }
                 if (restoreTo >= 0) {
                     canvas.restoreToCount(restoreTo);
+                }
+                if (a != null && !more) {
+                    if (!hardwareAccelerated && !a.getFillAfter()) {
+                        this.onSetAlpha(255);
+                    }
+                    parent.finishAnimatingView(this, a);
                 }
                 return more;
             }
@@ -12125,6 +12133,8 @@ var android;
                     this.mDrawingTime = 0;
                     this.mTmpInvalRect = new Rect();
                     this.mTmpTransformRect = new Rect();
+                    this.mTmpMatrix = new Matrix();
+                    this.mTmpTransformation = new Transformation();
                     this.mScrollContainers = new Set();
                     this.mViewScrollChanged = false;
                     this.mTreeObserver = new view_1.ViewTreeObserver();
@@ -12289,6 +12299,9 @@ var android;
             initImpl() {
                 this.initCanvasBound();
             }
+            isValid() {
+                return true;
+            }
             notifyBoundChange() {
                 this.initCanvasBound();
             }
@@ -12367,6 +12380,7 @@ var android;
                 this.mWidth = -1;
                 this.mHeight = -1;
                 this.mDirty = new Rect();
+                this.mIsAnimating = false;
                 this.mTempRect = new Rect();
                 this.mVisRect = new Rect();
                 this.mTraversalScheduled = false;
@@ -12786,6 +12800,10 @@ var android;
                 }
             }
             draw(fullRedrawNeeded) {
+                let surface = this.mSurface;
+                if (!surface.isValid()) {
+                    return;
+                }
                 if (ViewRootImpl.DEBUG_FPS) {
                     this.trackFPS();
                 }
@@ -12813,6 +12831,7 @@ var android;
                     return;
                 }
                 this.mDirty.setEmpty();
+                this.mIsAnimating = false;
                 let attachInfo = this.mAttachInfo;
                 attachInfo.mDrawingTime = SystemClock.uptimeMillis();
                 this.mView.mPrivateFlags |= View.PFLAG_DRAWN;
@@ -12880,7 +12899,7 @@ var android;
                     this.invalidate();
                     return null;
                 }
-                else if (dirty.isEmpty()) {
+                else if (dirty.isEmpty() && !this.mIsAnimating) {
                     return null;
                 }
                 const localDirty = this.mDirty;
@@ -12893,7 +12912,7 @@ var android;
                 if (!intersected) {
                     localDirty.setEmpty();
                 }
-                if (!this.mWillDrawSoon && (intersected)) {
+                if (!this.mWillDrawSoon && (intersected || this.mIsAnimating)) {
                     this.scheduleTraversals();
                 }
                 return null;
@@ -13881,6 +13900,7 @@ var java;
 ///<reference path="../util/TypedValue.ts"/>
 ///<reference path="FocusFinder.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="animation/Animation.ts"/>
 ///<reference path="animation/Transformation.ts"/>
 var android;
 (function (android) {
@@ -13890,6 +13910,7 @@ var android;
         var SystemClock = android.os.SystemClock;
         var TypedValue = android.util.TypedValue;
         var System = java.lang.System;
+        var ArrayList = java.util.ArrayList;
         var AttrBinder = androidui.attr.AttrBinder;
         var Integer = java.lang.Integer;
         var Transformation = view_4.animation.Transformation;
@@ -14358,7 +14379,10 @@ var android;
                         clearChildFocus = true;
                     }
                     this.cancelTouchTarget(view);
-                    if (detach) {
+                    if (view.getAnimation() != null) {
+                        this.addDisappearingView(view);
+                    }
+                    else if (detach) {
                         view.dispatchDetachedFromWindow();
                     }
                     this.onViewRemoved(view);
@@ -14394,6 +14418,7 @@ var android;
                 }
                 this.cancelTouchTarget(child);
                 if ((animate && child.getAnimation() != null)) {
+                    this.addDisappearingView(child);
                 }
                 else if (child.mAttachInfo != null) {
                     child.dispatchDetachedFromWindow();
@@ -14759,7 +14784,8 @@ var android;
                 }
             }
             static canViewReceivePointerEvents(child) {
-                return (child.mViewFlags & view_4.View.VISIBILITY_MASK) == view_4.View.VISIBLE;
+                return (child.mViewFlags & view_4.View.VISIBILITY_MASK) == view_4.View.VISIBLE
+                    || child.getAnimation() != null;
             }
             isTransformedTouchPointInView(x, y, child, outLocalPoint) {
                 let localX = x + this.mScrollX - child.mLeft;
@@ -14850,6 +14876,33 @@ var android;
                     const count = this.mChildrenCount;
                     for (let i = 0; i < count; i++) {
                         children[i].setDrawingCacheEnabled(enabled);
+                    }
+                }
+            }
+            onAnimationStart() {
+                super.onAnimationStart();
+                if ((this.mGroupFlags & ViewGroup.FLAG_ANIMATION_CACHE) == ViewGroup.FLAG_ANIMATION_CACHE) {
+                    const count = this.mChildrenCount;
+                    const children = this.mChildren;
+                    const buildCache = !this.isHardwareAccelerated();
+                    for (let i = 0; i < count; i++) {
+                        const child = children[i];
+                        if ((child.mViewFlags & ViewGroup.VISIBILITY_MASK) == ViewGroup.VISIBLE) {
+                            child.setDrawingCacheEnabled(true);
+                            if (buildCache) {
+                                child.buildDrawingCache(true);
+                            }
+                        }
+                    }
+                    this.mGroupFlags |= ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE;
+                }
+            }
+            onAnimationEnd() {
+                super.onAnimationEnd();
+                if ((this.mGroupFlags & ViewGroup.FLAG_ANIMATION_CACHE) == ViewGroup.FLAG_ANIMATION_CACHE) {
+                    this.mGroupFlags &= ~ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE;
+                    if ((this.mPersistentDrawingCache & ViewGroup.PERSISTENT_ANIMATION_CACHE) == 0) {
+                        this.setChildrenDrawingCacheEnabled(false);
                     }
                 }
             }
@@ -14959,6 +15012,40 @@ var android;
                         break;
                 }
                 return MeasureSpec.makeMeasureSpec(resultSize, resultMode);
+            }
+            clearDisappearingChildren() {
+                if (this.mDisappearingChildren != null) {
+                    this.mDisappearingChildren.clear();
+                    this.invalidate();
+                }
+            }
+            addDisappearingView(v) {
+                let disappearingChildren = this.mDisappearingChildren;
+                if (disappearingChildren == null) {
+                    disappearingChildren = this.mDisappearingChildren = new ArrayList();
+                }
+                disappearingChildren.add(v);
+            }
+            finishAnimatingView(view, animation) {
+                const disappearingChildren = this.mDisappearingChildren;
+                if (disappearingChildren != null) {
+                    if (disappearingChildren.contains(view)) {
+                        disappearingChildren.remove(view);
+                        if (view.mAttachInfo != null) {
+                            view.dispatchDetachedFromWindow();
+                        }
+                        view.clearAnimation();
+                        this.mGroupFlags |= ViewGroup.FLAG_INVALIDATE_REQUIRED;
+                    }
+                }
+                if (animation != null && !animation.getFillAfter()) {
+                    view.clearAnimation();
+                }
+                if ((view.mPrivateFlags & ViewGroup.PFLAG_ANIMATION_STARTED) == ViewGroup.PFLAG_ANIMATION_STARTED) {
+                    view.onAnimationEnd();
+                    view.mPrivateFlags &= ~ViewGroup.PFLAG_ANIMATION_STARTED;
+                    this.mGroupFlags |= ViewGroup.FLAG_INVALIDATE_REQUIRED;
+                }
             }
             dispatchAttachedToWindow(info, visibility) {
                 this.mGroupFlags |= ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;
@@ -15142,11 +15229,28 @@ var android;
                 this.mPrivateFlags &= ~ViewGroup.PFLAG_DRAW_ANIMATION;
                 this.mGroupFlags &= ~ViewGroup.FLAG_INVALIDATE_REQUIRED;
                 let more = false;
-                let drawingTime = this.getDrawingTime();
-                let customOrder = this.isChildrenDrawingOrderEnabled();
-                for (let i = 0; i < count; i++) {
-                    let child = children[customOrder ? this.getChildDrawingOrder(count, i) : i];
-                    if ((child.mViewFlags & view_4.View.VISIBILITY_MASK) == view_4.View.VISIBLE) {
+                const drawingTime = this.getDrawingTime();
+                if ((flags & ViewGroup.FLAG_USE_CHILD_DRAWING_ORDER) == 0) {
+                    for (let i = 0; i < count; i++) {
+                        const child = children[i];
+                        if ((child.mViewFlags & ViewGroup.VISIBILITY_MASK) == ViewGroup.VISIBLE || child.getAnimation() != null) {
+                            more = this.drawChild(canvas, child, drawingTime) || more;
+                        }
+                    }
+                }
+                else {
+                    for (let i = 0; i < count; i++) {
+                        const child = children[this.getChildDrawingOrder(count, i)];
+                        if ((child.mViewFlags & ViewGroup.VISIBILITY_MASK) == ViewGroup.VISIBLE || child.getAnimation() != null) {
+                            more = this.drawChild(canvas, child, drawingTime) || more;
+                        }
+                    }
+                }
+                if (this.mDisappearingChildren != null) {
+                    const disappearingChildren = this.mDisappearingChildren;
+                    const disappearingCount = disappearingChildren.size() - 1;
+                    for (let i = disappearingCount; i >= 0; i--) {
+                        const child = disappearingChildren.get(i);
                         more = this.drawChild(canvas, child, drawingTime) || more;
                     }
                 }
@@ -15246,20 +15350,53 @@ var android;
                     const drawAnimation = (child.mPrivateFlags & view_4.View.PFLAG_DRAW_ANIMATION)
                         == view_4.View.PFLAG_DRAW_ANIMATION;
                     let childMatrix = child.getMatrix();
-                    const isOpaque = child.isOpaque() && !drawAnimation &&
-                        child.getAnimation() == null && childMatrix.isIdentity();
+                    const isOpaque = child.isOpaque() && !drawAnimation && child.getAnimation() == null && childMatrix.isIdentity();
                     let opaqueFlag = isOpaque ? view_4.View.PFLAG_DIRTY_OPAQUE : view_4.View.PFLAG_DIRTY;
                     if (child.mLayerType != view_4.View.LAYER_TYPE_NONE) {
                         this.mPrivateFlags |= view_4.View.PFLAG_INVALIDATED;
                         this.mPrivateFlags &= ~view_4.View.PFLAG_DRAWING_CACHE_VALID;
+                        child.mLocalDirtyRect.union(dirty);
                     }
                     const location = attachInfo.mInvalidateChildLocation;
                     location[0] = child.mLeft;
                     location[1] = child.mTop;
+                    if (!childMatrix.isIdentity() ||
+                        (this.mGroupFlags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+                        let boundingRect = attachInfo.mTmpTransformRect;
+                        boundingRect.set(dirty);
+                        let transformMatrix;
+                        if ((this.mGroupFlags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+                            let t = attachInfo.mTmpTransformation;
+                            let transformed = this.getChildStaticTransformation(child, t);
+                            if (transformed) {
+                                transformMatrix = attachInfo.mTmpMatrix;
+                                transformMatrix.set(t.getMatrix());
+                                if (!childMatrix.isIdentity()) {
+                                    transformMatrix.preConcat(childMatrix);
+                                }
+                            }
+                            else {
+                                transformMatrix = childMatrix;
+                            }
+                        }
+                        else {
+                            transformMatrix = childMatrix;
+                        }
+                        transformMatrix.mapRect(boundingRect);
+                        dirty.set(boundingRect);
+                    }
                     do {
                         let view = null;
                         if (parent instanceof view_4.View) {
                             view = parent;
+                        }
+                        if (drawAnimation) {
+                            if (view != null) {
+                                view.mPrivateFlags |= ViewGroup.PFLAG_DRAW_ANIMATION;
+                            }
+                            else if (parent instanceof view_4.ViewRootImpl) {
+                                parent.mIsAnimating = true;
+                            }
                         }
                         if (view != null) {
                             opaqueFlag = view_4.View.PFLAG_DIRTY;

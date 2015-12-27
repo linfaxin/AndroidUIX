@@ -14,6 +14,7 @@
 ///<reference path="../util/TypedValue.ts"/>
 ///<reference path="FocusFinder.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="animation/Animation.ts"/>
 ///<reference path="animation/Transformation.ts"/>
 
 
@@ -31,6 +32,7 @@ module android.view {
     import ArrayList = java.util.ArrayList;
     import AttrBinder = androidui.attr.AttrBinder;
     import Integer = java.lang.Integer;
+    import Animation = animation.Animation;
     import Transformation = animation.Transformation;
 
     export abstract
@@ -94,6 +96,13 @@ module android.view {
         static LAYOUT_MODE_DEFAULT = ViewGroup.LAYOUT_MODE_CLIP_BOUNDS;
         static CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
 
+        /**
+         * Views which have been hidden or removed which need to be animated on
+         * their way out.
+         * This field should be made private, so it is hidden from the SDK.
+         * {@hide}
+         */
+        protected mDisappearingChildren:ArrayList<View>;
         mOnHierarchyChangeListener:ViewGroup.OnHierarchyChangeListener;
         private mFocused:View;
         private mFirstTouchTarget:TouchTarget;
@@ -670,11 +679,11 @@ module android.view {
                 this.cancelTouchTarget(view);
                 //this.cancelHoverTarget(view);//TODO when hover ok
 
-                //if (view.getAnimation() != null || //TODO when animation ok
-                //    (mTransitioningViews != null && mTransitioningViews.contains(view))) {
-                //    addDisappearingView(view);
-                //} else
-                if (detach) {
+                if (view.getAnimation() != null
+                //    ||(mTransitioningViews != null && mTransitioningViews.contains(view)) //TODO when Transition ok
+                ){
+                    this.addDisappearingView(view);
+                } else if (detach) {
                     view.dispatchDetachedFromWindow();
                 }
 
@@ -749,7 +758,7 @@ module android.view {
             if ((animate && child.getAnimation() != null)
                 //|| (this.mTransitioningViews != null && this.mTransitioningViews.contains(child))
             ) {
-                //this.addDisappearingView(child);
+                this.addDisappearingView(child);
             } else if (child.mAttachInfo != null) {
                 child.dispatchDetachedFromWindow();
             }
@@ -1243,7 +1252,7 @@ module android.view {
 
         private static canViewReceivePointerEvents(child:View):boolean {
             return (child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE
-                    //|| child.getAnimation() != null //TODO when animation impl
+                    || child.getAnimation() != null
                 ;
         }
 
@@ -1452,6 +1461,37 @@ module android.view {
             }
         }
 
+        protected onAnimationStart():void  {
+            super.onAnimationStart();
+            // When this ViewGroup's animation starts, build the cache for the children
+            if ((this.mGroupFlags & ViewGroup.FLAG_ANIMATION_CACHE) == ViewGroup.FLAG_ANIMATION_CACHE) {
+                const count:number = this.mChildrenCount;
+                const children:View[] = this.mChildren;
+                const buildCache:boolean = !this.isHardwareAccelerated();
+                for (let i:number = 0; i < count; i++) {
+                    const child:View = children[i];
+                    if ((child.mViewFlags & ViewGroup.VISIBILITY_MASK) == ViewGroup.VISIBLE) {
+                        child.setDrawingCacheEnabled(true);
+                        if (buildCache) {
+                            child.buildDrawingCache(true);
+                        }
+                    }
+                }
+                this.mGroupFlags |= ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE;
+            }
+        }
+
+        protected onAnimationEnd():void  {
+            super.onAnimationEnd();
+            // When this ViewGroup's animation ends, destroy the cache of the children
+            if ((this.mGroupFlags & ViewGroup.FLAG_ANIMATION_CACHE) == ViewGroup.FLAG_ANIMATION_CACHE) {
+                this.mGroupFlags &= ~ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE;
+                if ((this.mPersistentDrawingCache & ViewGroup.PERSISTENT_ANIMATION_CACHE) == 0) {
+                    this.setChildrenDrawingCacheEnabled(false);
+                }
+            }
+        }
+
         /**
          * Returns an integer indicating what types of drawing caches are kept in memory.
          *
@@ -1616,6 +1656,63 @@ module android.view {
                     break;
             }
             return MeasureSpec.makeMeasureSpec(resultSize, resultMode);
+        }
+
+
+        /**
+         * Removes any pending animations for views that have been removed. Call
+         * this if you don't want animations for exiting views to stack up.
+         */
+        clearDisappearingChildren():void  {
+            if (this.mDisappearingChildren != null) {
+                this.mDisappearingChildren.clear();
+                this.invalidate();
+            }
+        }
+
+        /**
+         * Add a view which is removed from mChildren but still needs animation
+         *
+         * @param v View to add
+         */
+        private addDisappearingView(v:View):void  {
+            let disappearingChildren:ArrayList<View> = this.mDisappearingChildren;
+            if (disappearingChildren == null) {
+                disappearingChildren = this.mDisappearingChildren = new ArrayList<View>();
+            }
+            disappearingChildren.add(v);
+        }
+
+        /**
+         * Cleanup a view when its animation is done. This may mean removing it from
+         * the list of disappearing views.
+         *
+         * @param view The view whose animation has finished
+         * @param animation The animation, cannot be null
+         */
+        finishAnimatingView(view:View, animation:Animation):void  {
+            const disappearingChildren:ArrayList<View> = this.mDisappearingChildren;
+            if (disappearingChildren != null) {
+                if (disappearingChildren.contains(view)) {
+                    disappearingChildren.remove(view);
+                    if (view.mAttachInfo != null) {
+                        view.dispatchDetachedFromWindow();
+                    }
+                    view.clearAnimation();
+                    this.mGroupFlags |= ViewGroup.FLAG_INVALIDATE_REQUIRED;
+                }
+            }
+            if (animation != null && !animation.getFillAfter()) {
+                view.clearAnimation();
+            }
+            if ((view.mPrivateFlags & ViewGroup.PFLAG_ANIMATION_STARTED) == ViewGroup.PFLAG_ANIMATION_STARTED) {
+                view.onAnimationEnd();
+                // Should be performed by onAnimationEnd() but this avoid an infinite loop,
+                // so we'd rather be safe than sorry
+                view.mPrivateFlags &= ~ViewGroup.PFLAG_ANIMATION_STARTED;
+                // Draw one more frame after the animation is done
+                this.mGroupFlags |= ViewGroup.FLAG_INVALIDATE_REQUIRED;
+            }
         }
 
 
@@ -1893,14 +1990,16 @@ module android.view {
             let children = this.mChildren;
             let flags = this.mGroupFlags;
 
-            //if ((flags & FLAG_RUN_ANIMATION) != 0) {//TODO when animation ok
-            //    let cache = (mGroupFlags & FLAG_ANIMATION_CACHE) == FLAG_ANIMATION_CACHE;
-            //
-            //    let buildCache = !isHardwareAccelerated();
-            //    for (let i = 0; i < count; i++) {
-            //        let child = children[i];
-            //        if ((child.mViewFlags & VISIBILITY_MASK) == VISIBLE) {
-            //            let params = child.getLayoutParams();
+            //TODO when layout animation impl
+            //if ((flags & ViewGroup.FLAG_RUN_ANIMATION) != 0 && this.canAnimate()) {
+            //    const cache:boolean = (this.mGroupFlags & ViewGroup.FLAG_ANIMATION_CACHE) == ViewGroup.FLAG_ANIMATION_CACHE;
+            //    const buildCache:boolean = !this.isHardwareAccelerated();
+            //    for (let i:number = 0; i < count; i++) {
+            //        const child:View = children[i];
+            //        if ((child.mViewFlags & ViewGroup.VISIBILITY_MASK) == ViewGroup.VISIBLE) {
+            //            const params:ViewGroup.LayoutParams = child.getLayoutParams();
+            //            this.attachLayoutAnimationParameters(child, params, i, count);
+            //            this.bindLayoutAnimation(child);
             //            if (cache) {
             //                child.setDrawingCacheEnabled(true);
             //                if (buildCache) {
@@ -1909,12 +2008,18 @@ module android.view {
             //            }
             //        }
             //    }
-            //
-            //    mGroupFlags &= ~FLAG_RUN_ANIMATION;
-            //    mGroupFlags &= ~FLAG_ANIMATION_DONE;
-            //
+            //    const controller:LayoutAnimationController = this.mLayoutAnimationController;
+            //    if (controller.willOverlap()) {
+            //        this.mGroupFlags |= ViewGroup.FLAG_OPTIMIZE_INVALIDATE;
+            //    }
+            //    controller.start();
+            //    this.mGroupFlags &= ~ViewGroup.FLAG_RUN_ANIMATION;
+            //    this.mGroupFlags &= ~ViewGroup.FLAG_ANIMATION_DONE;
             //    if (cache) {
-            //        mGroupFlags |= FLAG_CHILDREN_DRAWN_WITH_CACHE;
+            //        this.mGroupFlags |= ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE;
+            //    }
+            //    if (this.mAnimationListener != null) {
+            //        this.mAnimationListener.onAnimationStart(controller.getAnimation());
             //    }
             //}
 
@@ -1931,16 +2036,30 @@ module android.view {
             // We will draw our child's animation, let's reset the flag
             this.mPrivateFlags &= ~ViewGroup.PFLAG_DRAW_ANIMATION;
             this.mGroupFlags &= ~ViewGroup.FLAG_INVALIDATE_REQUIRED;
-
-            let more = false;
-            let drawingTime = this.getDrawingTime();
-
-            let customOrder = this.isChildrenDrawingOrderEnabled();
-            for (let i = 0; i < count; i++) {
-                let child = children[customOrder ? this.getChildDrawingOrder(count, i) : i];
-                if ((child.mViewFlags & View.VISIBILITY_MASK) == View.VISIBLE
-                    //|| child.getAnimation() != null
-                ) {
+            let more:boolean = false;
+            const drawingTime:number = this.getDrawingTime();
+            if ((flags & ViewGroup.FLAG_USE_CHILD_DRAWING_ORDER) == 0) {
+                for (let i:number = 0; i < count; i++) {
+                    const child:View = children[i];
+                    if ((child.mViewFlags & ViewGroup.VISIBILITY_MASK) == ViewGroup.VISIBLE || child.getAnimation() != null) {
+                        more = this.drawChild(canvas, child, drawingTime) || more;
+                    }
+                }
+            } else {
+                for (let i:number = 0; i < count; i++) {
+                    const child:View = children[this.getChildDrawingOrder(count, i)];
+                    if ((child.mViewFlags & ViewGroup.VISIBILITY_MASK) == ViewGroup.VISIBLE || child.getAnimation() != null) {
+                        more = this.drawChild(canvas, child, drawingTime) || more;
+                    }
+                }
+            }
+            // Draw any disappearing views that have animations
+            if (this.mDisappearingChildren != null) {
+                const disappearingChildren:ArrayList<View> = this.mDisappearingChildren;
+                const disappearingCount:number = disappearingChildren.size() - 1;
+                // Go backwards -- we may delete as animations finish
+                for (let i:number = disappearingCount; i >= 0; i--) {
+                    const child:View = disappearingChildren.get(i);
                     more = this.drawChild(canvas, child, drawingTime) || more;
                 }
             }
@@ -2065,8 +2184,8 @@ module android.view {
                 // Views being animated or transformed are not considered opaque because we may
                 // be invalidating their old position and need the parent to paint behind them.
                 let childMatrix = child.getMatrix();
-                const isOpaque = child.isOpaque() && !drawAnimation &&
-                    child.getAnimation() == null && childMatrix.isIdentity();
+                const isOpaque = child.isOpaque() && !drawAnimation && child.getAnimation() == null && childMatrix.isIdentity();
+
                 // Mark the child as dirty, using the appropriate flag
                 // Make sure we do not set both flags at the same time
                 let opaqueFlag = isOpaque ? View.PFLAG_DIRTY_OPAQUE : View.PFLAG_DIRTY;
@@ -2074,35 +2193,35 @@ module android.view {
                 if (child.mLayerType != View.LAYER_TYPE_NONE) {
                     this.mPrivateFlags |= View.PFLAG_INVALIDATED;
                     this.mPrivateFlags &= ~View.PFLAG_DRAWING_CACHE_VALID;
-                    //child.mLocalDirtyRect.union(dirty);
+                    child.mLocalDirtyRect.union(dirty);
                 }
 
                 const location = attachInfo.mInvalidateChildLocation;
                 location[0] = child.mLeft;
                 location[1] = child.mTop;
-                //if (!childMatrix.isIdentity() ||//TODO when Matrix & Transformation ok
-                //    (this.mGroupFlags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
-                //    let boundingRect = attachInfo.mTmpTransformRect;
-                //    boundingRect.set(dirty);
-                //    let transformMatrix:Matrix;
-                //    if ((this.mGroupFlags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
-                //        let t = attachInfo.mTmpTransformation;
-                //        let transformed = this.getChildStaticTransformation(child, t);
-                //        if (transformed) {
-                //            transformMatrix = attachInfo.mTmpMatrix;
-                //            transformMatrix.set(t.getMatrix());
-                //            if (!childMatrix.isIdentity()) {
-                //                transformMatrix.preConcat(childMatrix);
-                //            }
-                //        } else {
-                //            transformMatrix = childMatrix;
-                //        }
-                //    } else {
-                //        transformMatrix = childMatrix;
-                //    }
-                //    transformMatrix.mapRect(boundingRect);
-                //    dirty.set(boundingRect);
-                //}
+                if (!childMatrix.isIdentity() ||
+                    (this.mGroupFlags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+                    let boundingRect = attachInfo.mTmpTransformRect;
+                    boundingRect.set(dirty);
+                    let transformMatrix:Matrix;
+                    if ((this.mGroupFlags & ViewGroup.FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0) {
+                        let t = attachInfo.mTmpTransformation;
+                        let transformed = this.getChildStaticTransformation(child, t);
+                        if (transformed) {
+                            transformMatrix = attachInfo.mTmpMatrix;
+                            transformMatrix.set(t.getMatrix());
+                            if (!childMatrix.isIdentity()) {
+                                transformMatrix.preConcat(childMatrix);
+                            }
+                        } else {
+                            transformMatrix = childMatrix;
+                        }
+                    } else {
+                        transformMatrix = childMatrix;
+                    }
+                    transformMatrix.mapRect(boundingRect);
+                    dirty.set(boundingRect);
+                }
 
                 do {
                     let view:View = null;
@@ -2110,13 +2229,13 @@ module android.view {
                         view = <View> parent;
                     }
 
-                    //if (drawAnimation) {//TODO when animation ok
-                    //    if (view != null) {
-                    //        view.mPrivateFlags |= ViewGroup.PFLAG_DRAW_ANIMATION;
-                    //    } else if (parent instanceof ViewRootImpl) {
-                    //        (<ViewRootImpl> parent).mIsAnimating = true;
-                    //    }
-                    //}
+                    if (drawAnimation) {
+                        if (view != null) {
+                            view.mPrivateFlags |= ViewGroup.PFLAG_DRAW_ANIMATION;
+                        } else if (parent instanceof ViewRootImpl) {
+                            (<ViewRootImpl><any>parent).mIsAnimating = true;
+                        }
+                    }
 
                     // If the parent is dirty opaque or not dirty, mark it dirty with the opaque
                     // flag coming from the child that initiated the invalidate
