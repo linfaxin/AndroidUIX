@@ -698,24 +698,18 @@ module android.view {
             }
         }
 
-        private _continuingTraversals = false;
-        private _lastContinueFakeTraversales = 0;
+        private _continueTraversalesCount = 0;
         private checkContinueTraversalsNextFrame(){
             //AndroidUI add:
-            //Because of some reason, sometime will skip a frame to traversals like scroll.
+            //Because of some reason, sometime will skip a frame to traversals when scroll.
             //Let's continuing traversales next frame.
 
-            const now = SystemClock.uptimeMillis();
-            const fakeDuration = ViewRootImpl.DEBUG_FPS ? 1000 : 100;
-            if (!this.mTraversalScheduled && now - this._lastContinueFakeTraversales < fakeDuration) {
-                if(!this._continuingTraversals){
-                    this._lastContinueFakeTraversales = now;
-                    this._continuingTraversals = true;
-                }
+            const continueFrame = ViewRootImpl.DEBUG_FPS ? 60 : 5;
+            if (!this.mTraversalScheduled && this._continueTraversalesCount < continueFrame) {
+                this._continueTraversalesCount++;
                 this.scheduleTraversals();
             }else{
-                this._continuingTraversals = false;
-                this._lastContinueFakeTraversales = now;
+                this._continueTraversalesCount = 0;
             }
         }
 

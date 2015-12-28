@@ -118,7 +118,7 @@ module android.graphics {
         }
 
         protected rotateImpl(degrees:number):void {
-            this._mCanvasContent.rotate(degrees);
+            this._mCanvasContent.rotate(degrees*Math.PI/180);
         }
 
         concat(m:android.graphics.Matrix):void {

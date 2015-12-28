@@ -33,7 +33,7 @@ module android.graphics.drawable{
         isStateful():boolean {
             return true;
         }
-        onStateChange(stateSet:Array<number>):boolean {
+        protected onStateChange(stateSet:Array<number>):boolean {
             let idx = this.mStateListState.indexOfStateSet(stateSet);
             if (DEBUG) android.util.Log.i(TAG, "onStateChange " + this + " states "
                 + stateSet + " found " + idx);

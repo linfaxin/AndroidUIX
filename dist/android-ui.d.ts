@@ -600,9 +600,9 @@ declare module android.graphics.drawable {
         isAutoMirrored(): boolean;
         getOpacity(): number;
         static resolveOpacity(op1: number, op2: number): number;
-        onStateChange(state: Array<number>): boolean;
-        onLevelChange(level: number): boolean;
-        onBoundsChange(bounds: Rect): void;
+        protected onStateChange(state: Array<number>): boolean;
+        protected onLevelChange(level: number): boolean;
+        protected onBoundsChange(bounds: Rect): void;
         getIntrinsicWidth(): number;
         getIntrinsicHeight(): number;
         getMinimumWidth(): number;
@@ -663,7 +663,7 @@ declare module android.graphics.drawable {
         getAlwaysDrawHorizontalTrack(): boolean;
         setParameters(range: number, offset: number, extent: number, vertical: boolean): void;
         draw(canvas: any): void;
-        onBoundsChange(bounds: android.graphics.Rect): void;
+        protected onBoundsChange(bounds: android.graphics.Rect): void;
         drawTrack(canvas: Canvas, bounds: Rect, vertical: boolean): void;
         drawThumb(canvas: Canvas, bounds: Rect, offset: number, length: number, vertical: boolean): void;
         setVerticalThumbDrawable(thumb: Drawable): void;
@@ -695,8 +695,8 @@ declare module android.graphics.drawable {
         getAlpha(): number;
         getOpacity(): number;
         isStateful(): boolean;
-        onStateChange(state: Array<number>): boolean;
-        onBoundsChange(bounds: android.graphics.Rect): void;
+        protected onStateChange(state: Array<number>): boolean;
+        protected onBoundsChange(bounds: android.graphics.Rect): void;
         getIntrinsicWidth(): number;
         getIntrinsicHeight(): number;
         getConstantState(): Drawable.ConstantState;
@@ -1310,7 +1310,7 @@ declare module androidui.image {
         private mLoadListener;
         private mImageWidth;
         private mImageHeight;
-        constructor(src: string, res?: Resources, paint?: Paint);
+        constructor(src: string, res?: Resources, paint?: Paint, overrideImageRatio?: number);
         draw(canvas: Canvas): void;
         setAlpha(alpha: number): void;
         getAlpha(): number;
@@ -1405,6 +1405,195 @@ declare module android.view {
 declare module android.graphics.drawable {
     import Canvas = android.graphics.Canvas;
     import Rect = android.graphics.Rect;
+    import Runnable = java.lang.Runnable;
+    import Drawable = android.graphics.drawable.Drawable;
+    class LayerDrawable extends Drawable implements Drawable.Callback {
+        mLayerState: LayerDrawable.LayerState;
+        private mOpacityOverride;
+        private mPaddingL;
+        private mPaddingT;
+        private mPaddingR;
+        private mPaddingB;
+        private mTmpRect;
+        private mMutated;
+        constructor(layers: Drawable[], state?: LayerDrawable.LayerState);
+        createConstantState(state: LayerDrawable.LayerState): LayerDrawable.LayerState;
+        private addLayer(layer, id, left?, top?, right?, bottom?);
+        findDrawableByLayerId(id: string): Drawable;
+        setId(index: number, id: string): void;
+        getNumberOfLayers(): number;
+        getDrawable(index: number): Drawable;
+        getId(index: number): string;
+        setDrawableByLayerId(id: string, drawable: Drawable): boolean;
+        setLayerInset(index: number, l: number, t: number, r: number, b: number): void;
+        drawableSizeChange(who: android.graphics.drawable.Drawable): void;
+        invalidateDrawable(who: Drawable): void;
+        scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
+        unscheduleDrawable(who: Drawable, what: Runnable): void;
+        draw(canvas: Canvas): void;
+        getPadding(padding: Rect): boolean;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        setDither(dither: boolean): void;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        setOpacity(opacity: number): void;
+        getOpacity(): number;
+        setAutoMirrored(mirrored: boolean): void;
+        isAutoMirrored(): boolean;
+        isStateful(): boolean;
+        protected onStateChange(state: number[]): boolean;
+        protected onLevelChange(level: number): boolean;
+        protected onBoundsChange(bounds: Rect): void;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        private reapplyPadding(i, r);
+        private ensurePadding();
+        getConstantState(): Drawable.ConstantState;
+        mutate(): Drawable;
+    }
+    module LayerDrawable {
+        class ChildDrawable {
+            mDrawable: Drawable;
+            mInsetL: number;
+            mInsetT: number;
+            mInsetR: number;
+            mInsetB: number;
+            mId: string;
+        }
+        class LayerState implements Drawable.ConstantState {
+            mNum: number;
+            mChildren: LayerDrawable.ChildDrawable[];
+            mChangingConfigurations: number;
+            private mHaveOpacity;
+            private mOpacity;
+            private mHaveStateful;
+            private mStateful;
+            private mCheckedConstantState;
+            private mCanConstantState;
+            private mAutoMirrored;
+            constructor(orig: LayerState, owner: LayerDrawable);
+            newDrawable(): Drawable;
+            getChangingConfigurations(): number;
+            getOpacity(): number;
+            isStateful(): boolean;
+            canConstantState(): boolean;
+        }
+    }
+}
+declare module android.graphics.drawable {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Runnable = java.lang.Runnable;
+    class RotateDrawable extends Drawable implements Drawable.Callback {
+        private static MAX_LEVEL;
+        private mState;
+        private mMutated;
+        constructor(rotateState: RotateDrawable.RotateState);
+        draw(canvas: Canvas): void;
+        getDrawable(): Drawable;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getOpacity(): number;
+        drawableSizeChange(who: android.graphics.drawable.Drawable): void;
+        invalidateDrawable(who: Drawable): void;
+        scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
+        unscheduleDrawable(who: Drawable, what: Runnable): void;
+        getPadding(padding: Rect): boolean;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        isStateful(): boolean;
+        protected onStateChange(state: number[]): boolean;
+        protected onLevelChange(level: number): boolean;
+        protected onBoundsChange(bounds: Rect): void;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getConstantState(): Drawable.ConstantState;
+        mutate(): Drawable;
+    }
+    module RotateDrawable {
+        class RotateState implements Drawable.ConstantState {
+            mDrawable: Drawable;
+            mPivotXRel: boolean;
+            mPivotX: number;
+            mPivotYRel: boolean;
+            mPivotY: number;
+            mFromDegrees: number;
+            mToDegrees: number;
+            mCurrentDegrees: number;
+            private mCanConstantState;
+            private mCheckedConstantState;
+            constructor(source: RotateState, owner: RotateDrawable);
+            newDrawable(): Drawable;
+            canConstantState(): boolean;
+        }
+    }
+}
+declare module java.lang {
+    class Float {
+        static MIN_VALUE: number;
+        static MAX_VALUE: number;
+        static parseFloat(value: string): number;
+    }
+}
+declare module android.graphics.drawable {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import Runnable = java.lang.Runnable;
+    import Drawable = android.graphics.drawable.Drawable;
+    class ScaleDrawable extends Drawable implements Drawable.Callback {
+        private mScaleState;
+        private mMutated;
+        private mTmpRect;
+        constructor(drawable: Drawable, gravity: number, scaleWidth: number, scaleHeight: number);
+        constructor(state?: ScaleDrawable.ScaleState);
+        getDrawable(): Drawable;
+        drawableSizeChange(who: android.graphics.drawable.Drawable): void;
+        invalidateDrawable(who: Drawable): void;
+        scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
+        unscheduleDrawable(who: Drawable, what: Runnable): void;
+        draw(canvas: Canvas): void;
+        getPadding(padding: Rect): boolean;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getOpacity(): number;
+        isStateful(): boolean;
+        protected onStateChange(state: number[]): boolean;
+        protected onLevelChange(level: number): boolean;
+        protected onBoundsChange(bounds: Rect): void;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getConstantState(): Drawable.ConstantState;
+        mutate(): Drawable;
+    }
+    module ScaleDrawable {
+        class ScaleState implements Drawable.ConstantState {
+            mDrawable: Drawable;
+            mScaleWidth: number;
+            mScaleHeight: number;
+            mGravity: number;
+            mUseIntrinsicSizeAsMin: boolean;
+            private mCheckedConstantState;
+            private mCanConstantState;
+            constructor(orig: ScaleState, owner: ScaleDrawable);
+            newDrawable(): Drawable;
+            canConstantState(): boolean;
+        }
+    }
+}
+declare module android.graphics.drawable {
+    interface Animatable {
+        start(): void;
+        stop(): void;
+        isRunning(): boolean;
+    }
+    module Animatable {
+        function isImpl(obj: any): any;
+    }
+}
+declare module android.graphics.drawable {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
     class DrawableContainer extends Drawable implements Drawable.Callback {
         private static DEBUG;
         private static TAG;
@@ -1426,13 +1615,13 @@ declare module android.graphics.drawable {
         setDither(dither: boolean): void;
         setEnterFadeDuration(ms: number): void;
         setExitFadeDuration(ms: number): void;
-        onBoundsChange(bounds: android.graphics.Rect): void;
+        protected onBoundsChange(bounds: android.graphics.Rect): void;
         isStateful(): boolean;
         setAutoMirrored(mirrored: boolean): void;
         isAutoMirrored(): boolean;
         jumpToCurrentState(): void;
-        onStateChange(state: Array<number>): boolean;
-        onLevelChange(level: number): boolean;
+        protected onStateChange(state: Array<number>): boolean;
+        protected onLevelChange(level: number): boolean;
         getIntrinsicWidth(): number;
         getIntrinsicHeight(): number;
         getMinimumWidth(): number;
@@ -1505,13 +1694,48 @@ declare module android.graphics.drawable {
     }
 }
 declare module android.graphics.drawable {
+    import Runnable = java.lang.Runnable;
+    import Animatable = android.graphics.drawable.Animatable;
+    import Drawable = android.graphics.drawable.Drawable;
+    import DrawableContainer = android.graphics.drawable.DrawableContainer;
+    class AnimationDrawable extends DrawableContainer implements Runnable, Animatable {
+        private mAnimationState;
+        private mCurFrame;
+        constructor(state?: AnimationDrawable.AnimationState);
+        setVisible(visible: boolean, restart: boolean): boolean;
+        start(): void;
+        stop(): void;
+        isRunning(): boolean;
+        run(): void;
+        unscheduleSelf(what: Runnable): void;
+        getNumberOfFrames(): number;
+        getFrame(index: number): Drawable;
+        getDuration(i: number): number;
+        isOneShot(): boolean;
+        setOneShot(oneShot: boolean): void;
+        addFrame(frame: Drawable, duration: number): void;
+        private nextFrame(unschedule);
+        private setFrame(frame, unschedule, animate);
+        mutate(): Drawable;
+    }
+    module AnimationDrawable {
+        class AnimationState extends DrawableContainer.DrawableContainerState {
+            private mDurations;
+            private mOneShot;
+            constructor(orig: AnimationState, owner: AnimationDrawable);
+            newDrawable(): Drawable;
+            addFrame(dr: Drawable, dur: number): void;
+        }
+    }
+}
+declare module android.graphics.drawable {
     class StateListDrawable extends DrawableContainer {
         private mStateListState;
         constructor();
         private initWithState(state);
         addState(stateSet: Array<number>, drawable: Drawable): void;
         isStateful(): boolean;
-        onStateChange(stateSet: Array<number>): boolean;
+        protected onStateChange(stateSet: Array<number>): boolean;
         getStateCount(): number;
         getStateSet(index: number): Array<number>;
         getStateDrawable(index: number): Drawable;
@@ -1520,11 +1744,29 @@ declare module android.graphics.drawable {
     }
 }
 declare module android.R {
+    class id {
+        static background: string;
+        static secondaryProgress: string;
+        static progress: string;
+    }
+}
+declare module android.R {
     import Drawable = android.graphics.drawable.Drawable;
     class drawable {
         static button_background: Drawable;
         static btn_check: Drawable;
         static btn_radio: Drawable;
+        static progress_small_holo: Drawable;
+        static progress_medium_holo: Drawable;
+        static progress_large_holo: Drawable;
+        static progress_bg_holo_light: Drawable;
+        static progress_primary_holo_light: Drawable;
+        static progress_secondary_holo_light: Drawable;
+        static progress_horizontal_holo: Drawable;
+        static progress_indeterminate_horizontal_holo: Drawable;
+        static scrubber_primary_holo: Drawable;
+        static scrubber_secondary_holo: Drawable;
+        static scrubber_track_holo_light: Drawable;
         static list_selector_background: Drawable;
         static list_divider: Drawable;
     }
@@ -1545,32 +1787,120 @@ declare module androidui.image {
         getConstantState(): Drawable.ConstantState;
     }
 }
+declare module androidui.image {
+    import Drawable = android.graphics.drawable.Drawable;
+    import Canvas = android.graphics.Canvas;
+    class ChangeImageSizeDrawable extends Drawable implements Drawable.Callback {
+        private mState;
+        private mTmpRect;
+        private mMutated;
+        constructor(drawable: Drawable, overrideWidth: number, overrideHeight?: number);
+        drawableSizeChange(who: android.graphics.drawable.Drawable): any;
+        invalidateDrawable(who: android.graphics.drawable.Drawable): void;
+        scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
+        unscheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable): void;
+        draw(canvas: Canvas): void;
+        getPadding(padding: android.graphics.Rect): boolean;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getOpacity(): number;
+        isStateful(): boolean;
+        protected onStateChange(state: Array<number>): boolean;
+        protected onBoundsChange(r: android.graphics.Rect): void;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getConstantState(): Drawable.ConstantState;
+        mutate(): Drawable;
+        getDrawable(): Drawable;
+    }
+}
 declare module android.R.image_base64 {
-    var x3: string;
+    var x3: {
+        "btn_check_off_disabled_focused_holo_light": string;
+        "btn_check_off_disabled_holo_light": string;
+        "btn_check_off_focused_holo_light": string;
+        "btn_check_off_holo_light": string;
+        "btn_check_off_pressed_holo_light": string;
+        "btn_check_on_disabled_focused_holo_light": string;
+        "btn_check_on_disabled_holo_light": string;
+        "btn_check_on_focused_holo_light": string;
+        "btn_check_on_holo_light": string;
+        "btn_check_on_pressed_holo_light": string;
+        "btn_radio_off_disabled_focused_holo_light": string;
+        "btn_radio_off_disabled_holo_light": string;
+        "btn_radio_off_focused_holo_light": string;
+        "btn_radio_off_holo_light": string;
+        "btn_radio_off_pressed_holo_light": string;
+        "btn_radio_on_disabled_focused_holo_light": string;
+        "btn_radio_on_disabled_holo_light": string;
+        "btn_radio_on_focused_holo_light": string;
+        "btn_radio_on_holo_light": string;
+        "btn_radio_on_pressed_holo_light": string;
+        "progressbar_indeterminate_holo1": string;
+        "progressbar_indeterminate_holo2": string;
+        "progressbar_indeterminate_holo3": string;
+        "progressbar_indeterminate_holo4": string;
+        "progressbar_indeterminate_holo5": string;
+        "progressbar_indeterminate_holo6": string;
+        "progressbar_indeterminate_holo7": string;
+        "progressbar_indeterminate_holo8": string;
+        "rate_star_big_half_holo_light": string;
+        "rate_star_big_off_holo_light": string;
+        "rate_star_big_on_holo_light": string;
+        "scrubber_control_disabled_holo": string;
+        "scrubber_control_focused_holo": string;
+        "scrubber_control_normal_holo": string;
+        "scrubber_control_pressed_holo": string;
+        "spinner_76_inner_holo": string;
+        "spinner_76_outer_holo": string;
+    };
 }
 declare module android.R {
-    import RegionImageDrawable = androidui.image.RegionImageDrawable;
+    import NetDrawable = androidui.image.NetDrawable;
+    import OverrideSizeDrawable = androidui.image.ChangeImageSizeDrawable;
     class image {
-        static btn_check_off_disabled_focused_holo_light: RegionImageDrawable;
-        static btn_check_off_focused_holo_light: RegionImageDrawable;
-        static btn_check_off_holo_light: RegionImageDrawable;
-        static btn_check_off_pressed_holo_light: RegionImageDrawable;
-        static btn_check_on_disabled_focused_holo_light: RegionImageDrawable;
-        static btn_check_on_disabled_holo_light: RegionImageDrawable;
-        static btn_check_on_focused_holo_light: RegionImageDrawable;
-        static btn_check_on_holo_light: RegionImageDrawable;
-        static btn_check_on_pressed_holo_light: RegionImageDrawable;
-        static btn_check_off_disabled_holo_light: RegionImageDrawable;
-        static btn_radio_off_disabled_focused_holo_light: RegionImageDrawable;
-        static btn_radio_off_disabled_holo_light: RegionImageDrawable;
-        static btn_radio_off_focused_holo_light: RegionImageDrawable;
-        static btn_radio_off_holo_light: RegionImageDrawable;
-        static btn_radio_off_pressed_holo_light: RegionImageDrawable;
-        static btn_radio_on_disabled_focused_holo_light: RegionImageDrawable;
-        static btn_radio_on_disabled_holo_light: RegionImageDrawable;
-        static btn_radio_on_focused_holo_light: RegionImageDrawable;
-        static btn_radio_on_holo_light: RegionImageDrawable;
-        static btn_radio_on_pressed_holo_light: RegionImageDrawable;
+        static btn_check_off_disabled_focused_holo_light: NetDrawable;
+        static btn_check_off_disabled_holo_light: NetDrawable;
+        static btn_check_off_focused_holo_light: NetDrawable;
+        static btn_check_off_holo_light: NetDrawable;
+        static btn_check_off_pressed_holo_light: NetDrawable;
+        static btn_check_on_disabled_focused_holo_light: NetDrawable;
+        static btn_check_on_disabled_holo_light: NetDrawable;
+        static btn_check_on_focused_holo_light: NetDrawable;
+        static btn_check_on_holo_light: NetDrawable;
+        static btn_check_on_pressed_holo_light: NetDrawable;
+        static btn_radio_off_disabled_focused_holo_light: NetDrawable;
+        static btn_radio_off_disabled_holo_light: NetDrawable;
+        static btn_radio_off_focused_holo_light: NetDrawable;
+        static btn_radio_off_holo_light: NetDrawable;
+        static btn_radio_off_pressed_holo_light: NetDrawable;
+        static btn_radio_on_disabled_focused_holo_light: NetDrawable;
+        static btn_radio_on_disabled_holo_light: NetDrawable;
+        static btn_radio_on_focused_holo_light: NetDrawable;
+        static btn_radio_on_holo_light: NetDrawable;
+        static btn_radio_on_pressed_holo_light: NetDrawable;
+        static progressbar_indeterminate_holo1: NetDrawable;
+        static progressbar_indeterminate_holo2: NetDrawable;
+        static progressbar_indeterminate_holo3: NetDrawable;
+        static progressbar_indeterminate_holo4: NetDrawable;
+        static progressbar_indeterminate_holo5: NetDrawable;
+        static progressbar_indeterminate_holo6: NetDrawable;
+        static progressbar_indeterminate_holo7: NetDrawable;
+        static progressbar_indeterminate_holo8: NetDrawable;
+        static rate_star_big_half_holo_light: NetDrawable;
+        static rate_star_big_off_holo_light: NetDrawable;
+        static rate_star_big_on_holo_light: NetDrawable;
+        static scrubber_control_disabled_holo: NetDrawable;
+        static scrubber_control_focused_holo: NetDrawable;
+        static scrubber_control_normal_holo: NetDrawable;
+        static scrubber_control_pressed_holo: NetDrawable;
+        static spinner_76_inner_holo: NetDrawable;
+        static spinner_76_outer_holo: NetDrawable;
+        static spinner_48_outer_holo: OverrideSizeDrawable;
+        static spinner_48_inner_holo: OverrideSizeDrawable;
+        static spinner_16_outer_holo: OverrideSizeDrawable;
+        static spinner_16_inner_holo: OverrideSizeDrawable;
     }
 }
 declare module android.R {
@@ -1605,6 +1935,29 @@ declare module android.R {
         };
         static checkboxStyle: any;
         static radiobuttonStyle: any;
+        static progressBarStyle: {
+            indeterminateOnly: boolean;
+            indeterminateDrawable: Drawable;
+            indeterminateBehavior: string;
+            indeterminateDuration: number;
+            minWidth: string;
+            maxWidth: string;
+            minHeight: string;
+            maxHeight: string;
+            mirrorForRtl: boolean;
+        };
+        static progressBarStyleHorizontal: {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            indeterminateBehavior: string;
+            indeterminateDuration: number;
+            minHeight: string;
+            maxHeight: string;
+            mirrorForRtl: boolean;
+        };
+        static progressBarStyleSmall: any;
+        static progressBarStyleLarge: any;
         static gridViewStyle: {
             listSelector: Drawable;
             numColumns: number;
@@ -2681,8 +3034,7 @@ declare module android.view {
         private performDraw();
         private draw(fullRedrawNeeded);
         private drawSoftware();
-        private _continuingTraversals;
-        private _lastContinueFakeTraversales;
+        private _continueTraversalesCount;
         private checkContinueTraversalsNextFrame();
         isLayoutRequested(): boolean;
         private mInvalidateOnAnimationRunnable;
@@ -3090,13 +3442,6 @@ declare module android.view {
         private static obtainPointer();
         private static releasePointer(pointer);
         private static releasePointerList(pointer);
-    }
-}
-declare module java.lang {
-    class Float {
-        static MIN_VALUE: number;
-        static MAX_VALUE: number;
-        static parseFloat(value: string): number;
     }
 }
 declare module android.view {
@@ -4995,7 +5340,7 @@ declare module android.widget {
         protected getRightPaddingOffset(): number;
         protected verifyDrawable(who: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
-        drawableSizeChange(drawable: android.graphics.drawable.Drawable): void;
+        drawableSizeChange(d: android.graphics.drawable.Drawable): void;
         invalidateDrawable(drawable: Drawable): void;
         isTextSelectable(): boolean;
         setTextIsSelectable(selectable: boolean): void;
@@ -6505,75 +6850,103 @@ declare module android.widget {
         }
     }
 }
-declare module com.pnikosis.materialishprogress {
-    import Canvas = android.graphics.Canvas;
-    import View = android.view.View;
-    class ProgressWheel extends View {
-        private barLength;
-        private barMaxLength;
-        private pauseGrowingTime;
-        private circleRadius;
-        private barWidth;
-        private rimWidth;
-        private fillRadius;
-        private timeStartGrowing;
-        private barSpinCycleTime;
-        private barExtraLength;
-        private barGrowingFromFront;
-        private pausedTimeWithoutGrowing;
-        private barColor;
-        private rimColor;
-        private barPaint;
-        private rimPaint;
-        private circleBounds;
-        private spinSpeed;
-        private lastTimeAnimated;
-        private linearProgress;
-        private mProgress;
-        private mTargetProgress;
-        private mIsSpinning;
-        private callback;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
-        private setupPaints();
-        private setupBounds(layout_width, layout_height);
-        setCallback(progressCallback: ProgressWheel.ProgressCallback): void;
-        protected onDraw(canvas: Canvas): void;
-        protected onVisibilityChanged(changedView: View, visibility: number): void;
-        private updateBarLength(deltaTimeInMilliSeconds);
-        isSpinning(): boolean;
-        resetCount(): void;
-        stopSpinning(): void;
-        spin(): void;
-        private runCallback(value?);
-        setInstantProgress(progress: number): void;
-        getProgress(): number;
-        setProgress(progress: number): void;
-        setLinearProgress(isLinear: boolean): void;
-        getCircleRadius(): number;
-        setCircleRadius(circleRadius: number): void;
-        getBarWidth(): number;
-        setBarWidth(barWidth: number): void;
-        getBarColor(): number;
-        setBarColor(barColor: number): void;
-        getRimColor(): number;
-        setRimColor(rimColor: number): void;
-        getSpinSpeed(): number;
-        setSpinSpeed(spinSpeed: number): void;
-        getRimWidth(): number;
-        setRimWidth(rimWidth: number): void;
-    }
-    module ProgressWheel {
-        interface ProgressCallback {
-            onProgressUpdate(progress: number): void;
-        }
+declare module android.view.animation {
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class AlphaAnimation extends Animation {
+        private mFromAlpha;
+        private mToAlpha;
+        constructor(fromAlpha: number, toAlpha: number);
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        willChangeTransformationMatrix(): boolean;
+        willChangeBounds(): boolean;
+        hasAlpha(): boolean;
     }
 }
 declare module android.widget {
-    import ProgressWheel = com.pnikosis.materialishprogress.ProgressWheel;
-    class ProgressBar extends ProgressWheel {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+    import Canvas = android.graphics.Canvas;
+    import Drawable = android.graphics.drawable.Drawable;
+    import View = android.view.View;
+    import Interpolator = android.view.animation.Interpolator;
+    class ProgressBar extends View {
+        private static MAX_LEVEL;
+        private static TIMEOUT_SEND_ACCESSIBILITY_EVENT;
+        mMinWidth: number;
+        mMaxWidth: number;
+        mMinHeight: number;
+        mMaxHeight: number;
+        private mProgress;
+        private mSecondaryProgress;
+        private mMax;
+        private mBehavior;
+        private mDuration;
+        private mIndeterminate;
+        private mOnlyIndeterminate;
+        private mTransformation;
+        private mAnimation;
+        private mHasAnimation;
+        private mIndeterminateDrawable;
+        private mProgressDrawable;
+        private mCurrentDrawable;
+        private mNoInvalidate;
+        private mInterpolator;
+        private mShouldStartAnimationDrawable;
+        private mInDrawing;
+        private mAttached;
+        private mRefreshIsPosted;
+        mMirrorForRtl: boolean;
+        private mRefreshData;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        private tileify(drawable, clip);
+        private tileifyIndeterminate(drawable);
+        private initProgressBar();
+        isIndeterminate(): boolean;
+        setIndeterminate(indeterminate: boolean): void;
+        getIndeterminateDrawable(): Drawable;
+        setIndeterminateDrawable(d: Drawable): void;
+        getProgressDrawable(): Drawable;
+        setProgressDrawable(d: Drawable): void;
+        getCurrentDrawable(): Drawable;
+        protected verifyDrawable(who: Drawable): boolean;
+        jumpDrawablesToCurrentState(): void;
+        postInvalidate(): void;
+        private doRefreshProgress(id, progress, fromUser, callBackToApp);
+        onProgressRefresh(scale: number, fromUser: boolean): void;
+        private refreshProgress(id, progress, fromUser);
+        setProgress(progress: number, fromUser?: boolean): void;
+        setSecondaryProgress(secondaryProgress: number): void;
+        getProgress(): number;
+        getSecondaryProgress(): number;
+        getMax(): number;
+        setMax(max: number): void;
+        incrementProgressBy(diff: number): void;
+        incrementSecondaryProgressBy(diff: number): void;
+        startAnimation(): void;
+        stopAnimation(): void;
+        setInterpolator(interpolator: Interpolator): void;
+        getInterpolator(): Interpolator;
+        setVisibility(v: number): void;
+        protected onVisibilityChanged(changedView: View, visibility: number): void;
+        invalidateDrawable(dr: Drawable): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        private updateDrawableBounds(w, h);
+        protected onDraw(canvas: Canvas): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        protected drawableStateChanged(): void;
+        private updateDrawableState();
+        protected onAttachedToWindow(): void;
+        protected onDetachedFromWindow(): void;
+    }
+    module ProgressBar {
+        class RefreshData {
+            private static POOL_MAX;
+            private static sPool;
+            id: string;
+            progress: number;
+            fromUser: boolean;
+            static obtain(id: string, progress: number, fromUser: boolean): RefreshData;
+            recycle(): void;
+        }
     }
 }
 declare module android.widget {
@@ -6603,6 +6976,7 @@ declare module android.widget {
         protected onDraw(canvas: Canvas): void;
         protected onCreateDrawableState(extraSpace: number): number[];
         protected drawableStateChanged(): void;
+        drawableSizeChange(d: android.graphics.drawable.Drawable): void;
         protected verifyDrawable(who: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
     }
@@ -6937,19 +7311,6 @@ declare module android.widget {
         abstract getGroupView(groupPosition: number, isExpanded: boolean, convertView: android.view.View, parent: android.view.ViewGroup): android.view.View;
         abstract getChildView(groupPosition: number, childPosition: number, isLastChild: boolean, convertView: android.view.View, parent: android.view.ViewGroup): android.view.View;
         abstract isChildSelectable(groupPosition: number, childPosition: number): boolean;
-    }
-}
-declare module android.view.animation {
-    import Animation = android.view.animation.Animation;
-    import Transformation = android.view.animation.Transformation;
-    class AlphaAnimation extends Animation {
-        private mFromAlpha;
-        private mToAlpha;
-        constructor(fromAlpha: number, toAlpha: number);
-        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
-        willChangeTransformationMatrix(): boolean;
-        willChangeBounds(): boolean;
-        hasAlpha(): boolean;
     }
 }
 declare module android.view.animation {

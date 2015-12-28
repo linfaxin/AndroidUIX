@@ -121,23 +121,8 @@ module android.os {
                 MessageQueue.dispatchMessage(msg);
             }
             //then dispatch traversal messages
-            let dispatchTraversalMessages = false;
             for(let msg of traversalMessages){
                 MessageQueue.dispatchMessage(msg);
-                dispatchTraversalMessages = true;
-            }
-            if(!dispatchTraversalMessages){
-                //no traversal messages dispatch, but normal message may case traversal. do it here
-                for(let msg of MessageQueue.messages){
-                    if(msg.when<=now && msg.mType === Message.Type_Traversal){
-                        traversalMessages.push(msg);
-                    }
-
-                    for(let msg of traversalMessages){
-                        MessageQueue.dispatchMessage(msg);
-                        dispatchTraversalMessages = true;
-                    }
-                }
             }
 
             if(MessageQueue.messages.size>0) requestAnimationFrame(MessageQueue.loop);

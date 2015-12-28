@@ -2014,7 +2014,7 @@ var android;
                     this.translate(-px, -py);
             }
             rotateImpl(degrees) {
-                this._mCanvasContent.rotate(degrees);
+                this._mCanvasContent.rotate(degrees * Math.PI / 180);
             }
             concat(m) {
                 let v = Canvas.TempMatrixValue;
@@ -4451,21 +4451,8 @@ var android;
                 for (let msg of normalMessages) {
                     MessageQueue.dispatchMessage(msg);
                 }
-                let dispatchTraversalMessages = false;
                 for (let msg of traversalMessages) {
                     MessageQueue.dispatchMessage(msg);
-                    dispatchTraversalMessages = true;
-                }
-                if (!dispatchTraversalMessages) {
-                    for (let msg of MessageQueue.messages) {
-                        if (msg.when <= now && msg.mType === os.Message.Type_Traversal) {
-                            traversalMessages.push(msg);
-                        }
-                        for (let msg of traversalMessages) {
-                            MessageQueue.dispatchMessage(msg);
-                            dispatchTraversalMessages = true;
-                        }
-                    }
                 }
                 if (MessageQueue.messages.size > 0)
                     requestAnimationFrame(MessageQueue.loop);
@@ -5540,12 +5527,12 @@ var androidui;
         var Drawable = android.graphics.drawable.Drawable;
         var Resources = android.content.res.Resources;
         class NetDrawable extends Drawable {
-            constructor(src, res, paint) {
+            constructor(src, res, paint, overrideImageRatio) {
                 super();
                 this.mImageWidth = -1;
                 this.mImageHeight = -1;
                 this.mState = new State(src, res, paint);
-                this.mImage = new image.NetImage(src, () => this.onLoad(), () => this.onError());
+                this.mImage = new image.NetImage(src, () => this.onLoad(), () => this.onError(), overrideImageRatio);
             }
             draw(canvas) {
                 if (this.isLoadFinish()) {
@@ -5599,7 +5586,8 @@ var androidui;
                 this.res = res || Resources.instance;
                 this.src = src;
                 this.paint = new Paint();
-                this.paint.set(paint);
+                if (paint != null)
+                    this.paint.set(paint);
             }
             newDrawable() {
                 return new NetDrawable(this.src, this.res, this.paint);
@@ -5858,6 +5846,858 @@ var android;
             KeyEvent.DispatcherState = DispatcherState;
         })(KeyEvent = view.KeyEvent || (view.KeyEvent = {}));
     })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/content/res/Resources.ts"/>
+///<reference path="../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../android/graphics/PixelFormat.ts"/>
+///<reference path="../../../android/graphics/Rect.ts"/>
+///<reference path="../../../android/view/View.ts"/>
+///<reference path="../../../java/lang/System.ts"/>
+///<reference path="../../../java/lang/Runnable.ts"/>
+///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable_2) {
+            var PixelFormat = android.graphics.PixelFormat;
+            var Rect = android.graphics.Rect;
+            var System = java.lang.System;
+            var Drawable = android.graphics.drawable.Drawable;
+            class LayerDrawable extends Drawable {
+                constructor(layers, state = null) {
+                    super();
+                    this.mOpacityOverride = PixelFormat.UNKNOWN;
+                    this.mTmpRect = new Rect();
+                    let _as = this.createConstantState(state);
+                    this.mLayerState = _as;
+                    if (_as.mNum > 0) {
+                        this.ensurePadding();
+                    }
+                    if (layers != null) {
+                        let length = layers.length;
+                        let r = new Array(length);
+                        for (let i = 0; i < length; i++) {
+                            r[i] = new LayerDrawable.ChildDrawable();
+                            r[i].mDrawable = layers[i];
+                            layers[i].setCallback(this);
+                        }
+                        this.mLayerState.mNum = length;
+                        this.mLayerState.mChildren = r;
+                        this.ensurePadding();
+                    }
+                }
+                createConstantState(state) {
+                    return new LayerDrawable.LayerState(state, this);
+                }
+                addLayer(layer, id, left = 0, top = 0, right = 0, bottom = 0) {
+                    const st = this.mLayerState;
+                    let N = st.mChildren != null ? st.mChildren.length : 0;
+                    let i = st.mNum;
+                    if (i >= N) {
+                        let nu = new Array(N + 10);
+                        if (i > 0) {
+                            System.arraycopy(st.mChildren, 0, nu, 0, i);
+                        }
+                        st.mChildren = nu;
+                    }
+                    let childDrawable = new LayerDrawable.ChildDrawable();
+                    st.mChildren[i] = childDrawable;
+                    childDrawable.mId = id;
+                    childDrawable.mDrawable = layer;
+                    childDrawable.mDrawable.setAutoMirrored(this.isAutoMirrored());
+                    childDrawable.mInsetL = left;
+                    childDrawable.mInsetT = top;
+                    childDrawable.mInsetR = right;
+                    childDrawable.mInsetB = bottom;
+                    st.mNum++;
+                    layer.setCallback(this);
+                }
+                findDrawableByLayerId(id) {
+                    const layers = this.mLayerState.mChildren;
+                    for (let i = this.mLayerState.mNum - 1; i >= 0; i--) {
+                        if (layers[i].mId == id) {
+                            return layers[i].mDrawable;
+                        }
+                    }
+                    return null;
+                }
+                setId(index, id) {
+                    this.mLayerState.mChildren[index].mId = id;
+                }
+                getNumberOfLayers() {
+                    return this.mLayerState.mNum;
+                }
+                getDrawable(index) {
+                    return this.mLayerState.mChildren[index].mDrawable;
+                }
+                getId(index) {
+                    return this.mLayerState.mChildren[index].mId;
+                }
+                setDrawableByLayerId(id, drawable) {
+                    const layers = this.mLayerState.mChildren;
+                    for (let i = this.mLayerState.mNum - 1; i >= 0; i--) {
+                        if (layers[i].mId == id) {
+                            if (layers[i].mDrawable != null) {
+                                if (drawable != null) {
+                                    let bounds = layers[i].mDrawable.getBounds();
+                                    drawable.setBounds(bounds);
+                                }
+                                layers[i].mDrawable.setCallback(null);
+                            }
+                            if (drawable != null) {
+                                drawable.setCallback(this);
+                            }
+                            layers[i].mDrawable = drawable;
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                setLayerInset(index, l, t, r, b) {
+                    let childDrawable = this.mLayerState.mChildren[index];
+                    childDrawable.mInsetL = l;
+                    childDrawable.mInsetT = t;
+                    childDrawable.mInsetR = r;
+                    childDrawable.mInsetB = b;
+                }
+                drawableSizeChange(who) {
+                    let callback = this.getCallback();
+                    if (callback != null && callback.drawableSizeChange) {
+                        callback.drawableSizeChange(this);
+                    }
+                }
+                invalidateDrawable(who) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.invalidateDrawable(this);
+                    }
+                }
+                scheduleDrawable(who, what, when) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.scheduleDrawable(this, what, when);
+                    }
+                }
+                unscheduleDrawable(who, what) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.unscheduleDrawable(this, what);
+                    }
+                }
+                draw(canvas) {
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    for (let i = 0; i < N; i++) {
+                        array[i].mDrawable.draw(canvas);
+                    }
+                }
+                getPadding(padding) {
+                    padding.left = 0;
+                    padding.top = 0;
+                    padding.right = 0;
+                    padding.bottom = 0;
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    for (let i = 0; i < N; i++) {
+                        this.reapplyPadding(i, array[i]);
+                        padding.left += this.mPaddingL[i];
+                        padding.top += this.mPaddingT[i];
+                        padding.right += this.mPaddingR[i];
+                        padding.bottom += this.mPaddingB[i];
+                    }
+                    return true;
+                }
+                setVisible(visible, restart) {
+                    let changed = super.setVisible(visible, restart);
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    for (let i = 0; i < N; i++) {
+                        array[i].mDrawable.setVisible(visible, restart);
+                    }
+                    return changed;
+                }
+                setDither(dither) {
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    for (let i = 0; i < N; i++) {
+                        array[i].mDrawable.setDither(dither);
+                    }
+                }
+                setAlpha(alpha) {
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    for (let i = 0; i < N; i++) {
+                        array[i].mDrawable.setAlpha(alpha);
+                    }
+                }
+                getAlpha() {
+                    const array = this.mLayerState.mChildren;
+                    if (this.mLayerState.mNum > 0) {
+                        return array[0].mDrawable.getAlpha();
+                    }
+                    else {
+                        return super.getAlpha();
+                    }
+                }
+                setOpacity(opacity) {
+                    this.mOpacityOverride = opacity;
+                }
+                getOpacity() {
+                    if (this.mOpacityOverride != PixelFormat.UNKNOWN) {
+                        return this.mOpacityOverride;
+                    }
+                    return this.mLayerState.getOpacity();
+                }
+                setAutoMirrored(mirrored) {
+                    this.mLayerState.mAutoMirrored = mirrored;
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    for (let i = 0; i < N; i++) {
+                        array[i].mDrawable.setAutoMirrored(mirrored);
+                    }
+                }
+                isAutoMirrored() {
+                    return this.mLayerState.mAutoMirrored;
+                }
+                isStateful() {
+                    return this.mLayerState.isStateful();
+                }
+                onStateChange(state) {
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    let paddingChanged = false;
+                    let changed = false;
+                    for (let i = 0; i < N; i++) {
+                        const r = array[i];
+                        if (r.mDrawable.setState(state)) {
+                            changed = true;
+                        }
+                        if (this.reapplyPadding(i, r)) {
+                            paddingChanged = true;
+                        }
+                    }
+                    if (paddingChanged) {
+                        this.onBoundsChange(this.getBounds());
+                    }
+                    return changed;
+                }
+                onLevelChange(level) {
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    let paddingChanged = false;
+                    let changed = false;
+                    for (let i = 0; i < N; i++) {
+                        const r = array[i];
+                        if (r.mDrawable.setLevel(level)) {
+                            changed = true;
+                        }
+                        if (this.reapplyPadding(i, r)) {
+                            paddingChanged = true;
+                        }
+                    }
+                    if (paddingChanged) {
+                        this.onBoundsChange(this.getBounds());
+                    }
+                    return changed;
+                }
+                onBoundsChange(bounds) {
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    let padL = 0, padT = 0, padR = 0, padB = 0;
+                    for (let i = 0; i < N; i++) {
+                        const r = array[i];
+                        r.mDrawable.setBounds(bounds.left + r.mInsetL + padL, bounds.top + r.mInsetT + padT, bounds.right - r.mInsetR - padR, bounds.bottom - r.mInsetB - padB);
+                        padL += this.mPaddingL[i];
+                        padR += this.mPaddingR[i];
+                        padT += this.mPaddingT[i];
+                        padB += this.mPaddingB[i];
+                    }
+                }
+                getIntrinsicWidth() {
+                    let width = -1;
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    let padL = 0, padR = 0;
+                    for (let i = 0; i < N; i++) {
+                        const r = array[i];
+                        let w = r.mDrawable.getIntrinsicWidth() + r.mInsetL + r.mInsetR + padL + padR;
+                        if (w > width) {
+                            width = w;
+                        }
+                        padL += this.mPaddingL[i];
+                        padR += this.mPaddingR[i];
+                    }
+                    return width;
+                }
+                getIntrinsicHeight() {
+                    let height = -1;
+                    const array = this.mLayerState.mChildren;
+                    const N = this.mLayerState.mNum;
+                    let padT = 0, padB = 0;
+                    for (let i = 0; i < N; i++) {
+                        const r = array[i];
+                        let h = r.mDrawable.getIntrinsicHeight() + r.mInsetT + r.mInsetB + padT + padB;
+                        if (h > height) {
+                            height = h;
+                        }
+                        padT += this.mPaddingT[i];
+                        padB += this.mPaddingB[i];
+                    }
+                    return height;
+                }
+                reapplyPadding(i, r) {
+                    const rect = this.mTmpRect;
+                    r.mDrawable.getPadding(rect);
+                    if (rect.left != this.mPaddingL[i] || rect.top != this.mPaddingT[i] || rect.right != this.mPaddingR[i] || rect.bottom != this.mPaddingB[i]) {
+                        this.mPaddingL[i] = rect.left;
+                        this.mPaddingT[i] = rect.top;
+                        this.mPaddingR[i] = rect.right;
+                        this.mPaddingB[i] = rect.bottom;
+                        return true;
+                    }
+                    return false;
+                }
+                ensurePadding() {
+                    const N = this.mLayerState.mNum;
+                    if (this.mPaddingL != null && this.mPaddingL.length >= N) {
+                        return;
+                    }
+                    this.mPaddingL = new Array(N);
+                    this.mPaddingT = new Array(N);
+                    this.mPaddingR = new Array(N);
+                    this.mPaddingB = new Array(N);
+                }
+                getConstantState() {
+                    if (this.mLayerState.canConstantState()) {
+                        return this.mLayerState;
+                    }
+                    return null;
+                }
+                mutate() {
+                    if (!this.mMutated && super.mutate() == this) {
+                        this.mLayerState = this.createConstantState(this.mLayerState);
+                        const array = this.mLayerState.mChildren;
+                        const N = this.mLayerState.mNum;
+                        for (let i = 0; i < N; i++) {
+                            array[i].mDrawable.mutate();
+                        }
+                        this.mMutated = true;
+                    }
+                    return this;
+                }
+            }
+            drawable_2.LayerDrawable = LayerDrawable;
+            (function (LayerDrawable) {
+                class ChildDrawable {
+                    constructor() {
+                        this.mInsetL = 0;
+                        this.mInsetT = 0;
+                        this.mInsetR = 0;
+                        this.mInsetB = 0;
+                    }
+                }
+                LayerDrawable.ChildDrawable = ChildDrawable;
+                class LayerState {
+                    constructor(orig, owner) {
+                        this.mNum = 0;
+                        this.mChangingConfigurations = 0;
+                        this.mHaveOpacity = false;
+                        this.mOpacity = 0;
+                        this.mHaveStateful = false;
+                        if (orig != null) {
+                            const origChildDrawable = orig.mChildren;
+                            const N = orig.mNum;
+                            this.mNum = N;
+                            this.mChildren = new Array(N);
+                            this.mChangingConfigurations = orig.mChangingConfigurations;
+                            for (let i = 0; i < N; i++) {
+                                const r = this.mChildren[i] = new LayerDrawable.ChildDrawable();
+                                const or = origChildDrawable[i];
+                                r.mDrawable = or.mDrawable.getConstantState().newDrawable();
+                                r.mDrawable.setCallback(owner);
+                                r.mInsetL = or.mInsetL;
+                                r.mInsetT = or.mInsetT;
+                                r.mInsetR = or.mInsetR;
+                                r.mInsetB = or.mInsetB;
+                                r.mId = or.mId;
+                            }
+                            this.mHaveOpacity = orig.mHaveOpacity;
+                            this.mOpacity = orig.mOpacity;
+                            this.mHaveStateful = orig.mHaveStateful;
+                            this.mStateful = orig.mStateful;
+                            this.mCheckedConstantState = this.mCanConstantState = true;
+                            this.mAutoMirrored = orig.mAutoMirrored;
+                        }
+                        else {
+                            this.mNum = 0;
+                            this.mChildren = null;
+                        }
+                    }
+                    newDrawable() {
+                        return new LayerDrawable(null, this);
+                    }
+                    getChangingConfigurations() {
+                        return this.mChangingConfigurations;
+                    }
+                    getOpacity() {
+                        if (this.mHaveOpacity) {
+                            return this.mOpacity;
+                        }
+                        const N = this.mNum;
+                        let op = N > 0 ? this.mChildren[0].mDrawable.getOpacity() : PixelFormat.TRANSPARENT;
+                        for (let i = 1; i < N; i++) {
+                            op = Drawable.resolveOpacity(op, this.mChildren[i].mDrawable.getOpacity());
+                        }
+                        this.mOpacity = op;
+                        this.mHaveOpacity = true;
+                        return op;
+                    }
+                    isStateful() {
+                        if (this.mHaveStateful) {
+                            return this.mStateful;
+                        }
+                        let stateful = false;
+                        const N = this.mNum;
+                        for (let i = 0; i < N; i++) {
+                            if (this.mChildren[i].mDrawable.isStateful()) {
+                                stateful = true;
+                                break;
+                            }
+                        }
+                        this.mStateful = stateful;
+                        this.mHaveStateful = true;
+                        return stateful;
+                    }
+                    canConstantState() {
+                        if (!this.mCheckedConstantState && this.mChildren != null) {
+                            this.mCanConstantState = true;
+                            const N = this.mNum;
+                            for (let i = 0; i < N; i++) {
+                                if (this.mChildren[i].mDrawable.getConstantState() == null) {
+                                    this.mCanConstantState = false;
+                                    break;
+                                }
+                            }
+                            this.mCheckedConstantState = true;
+                        }
+                        return this.mCanConstantState;
+                    }
+                }
+                LayerDrawable.LayerState = LayerState;
+            })(LayerDrawable = drawable_2.LayerDrawable || (drawable_2.LayerDrawable = {}));
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../android/graphics/Rect.ts"/>
+///<reference path="../../../android/content/res/Resources.ts"/>
+///<reference path="../../../android/util/TypedValue.ts"/>
+///<reference path="../../../android/util/Log.ts"/>
+///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../../java/lang/Runnable.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable) {
+            var Drawable = android.graphics.drawable.Drawable;
+            class RotateDrawable extends Drawable {
+                constructor(rotateState) {
+                    super();
+                    this.mState = new RotateDrawable.RotateState(rotateState, this);
+                }
+                draw(canvas) {
+                    let saveCount = canvas.save();
+                    let bounds = this.mState.mDrawable.getBounds();
+                    let w = bounds.right - bounds.left;
+                    let h = bounds.bottom - bounds.top;
+                    const st = this.mState;
+                    let px = st.mPivotXRel ? (w * st.mPivotX) : st.mPivotX;
+                    let py = st.mPivotYRel ? (h * st.mPivotY) : st.mPivotY;
+                    canvas.rotate(st.mCurrentDegrees, px + bounds.left, py + bounds.top);
+                    st.mDrawable.draw(canvas);
+                    canvas.restoreToCount(saveCount);
+                }
+                getDrawable() {
+                    return this.mState.mDrawable;
+                }
+                setAlpha(alpha) {
+                    this.mState.mDrawable.setAlpha(alpha);
+                }
+                getAlpha() {
+                    return this.mState.mDrawable.getAlpha();
+                }
+                getOpacity() {
+                    return this.mState.mDrawable.getOpacity();
+                }
+                drawableSizeChange(who) {
+                    const callback = this.getCallback();
+                    if (callback != null && callback.drawableSizeChange) {
+                        callback.drawableSizeChange(this);
+                    }
+                }
+                invalidateDrawable(who) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.invalidateDrawable(this);
+                    }
+                }
+                scheduleDrawable(who, what, when) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.scheduleDrawable(this, what, when);
+                    }
+                }
+                unscheduleDrawable(who, what) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.unscheduleDrawable(this, what);
+                    }
+                }
+                getPadding(padding) {
+                    return this.mState.mDrawable.getPadding(padding);
+                }
+                setVisible(visible, restart) {
+                    this.mState.mDrawable.setVisible(visible, restart);
+                    return super.setVisible(visible, restart);
+                }
+                isStateful() {
+                    return this.mState.mDrawable.isStateful();
+                }
+                onStateChange(state) {
+                    let changed = this.mState.mDrawable.setState(state);
+                    this.onBoundsChange(this.getBounds());
+                    return changed;
+                }
+                onLevelChange(level) {
+                    this.mState.mDrawable.setLevel(level);
+                    this.onBoundsChange(this.getBounds());
+                    this.mState.mCurrentDegrees = this.mState.mFromDegrees + (this.mState.mToDegrees - this.mState.mFromDegrees) * (level / RotateDrawable.MAX_LEVEL);
+                    this.invalidateSelf();
+                    return true;
+                }
+                onBoundsChange(bounds) {
+                    this.mState.mDrawable.setBounds(bounds.left, bounds.top, bounds.right, bounds.bottom);
+                }
+                getIntrinsicWidth() {
+                    return this.mState.mDrawable.getIntrinsicWidth();
+                }
+                getIntrinsicHeight() {
+                    return this.mState.mDrawable.getIntrinsicHeight();
+                }
+                getConstantState() {
+                    if (this.mState.canConstantState()) {
+                        return this.mState;
+                    }
+                    return null;
+                }
+                mutate() {
+                    if (!this.mMutated && super.mutate() == this) {
+                        this.mState.mDrawable.mutate();
+                        this.mMutated = true;
+                    }
+                    return this;
+                }
+            }
+            RotateDrawable.MAX_LEVEL = 10000.0;
+            drawable.RotateDrawable = RotateDrawable;
+            (function (RotateDrawable) {
+                class RotateState {
+                    constructor(source, owner) {
+                        this.mPivotX = 0;
+                        this.mPivotY = 0;
+                        this.mFromDegrees = 0;
+                        this.mToDegrees = 0;
+                        this.mCurrentDegrees = 0;
+                        if (source != null) {
+                            this.mDrawable = source.mDrawable.getConstantState().newDrawable();
+                            this.mDrawable.setCallback(owner);
+                            this.mPivotXRel = source.mPivotXRel;
+                            this.mPivotX = source.mPivotX;
+                            this.mPivotYRel = source.mPivotYRel;
+                            this.mPivotY = source.mPivotY;
+                            this.mFromDegrees = this.mCurrentDegrees = source.mFromDegrees;
+                            this.mToDegrees = source.mToDegrees;
+                            this.mCanConstantState = this.mCheckedConstantState = true;
+                        }
+                    }
+                    newDrawable() {
+                        return new RotateDrawable(this);
+                    }
+                    canConstantState() {
+                        if (!this.mCheckedConstantState) {
+                            this.mCanConstantState = this.mDrawable.getConstantState() != null;
+                            this.mCheckedConstantState = true;
+                        }
+                        return this.mCanConstantState;
+                    }
+                }
+                RotateDrawable.RotateState = RotateState;
+            })(RotateDrawable = drawable.RotateDrawable || (drawable.RotateDrawable = {}));
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        class Float {
+            static parseFloat(value) {
+                return Number.parseFloat(value);
+            }
+        }
+        Float.MIN_VALUE = Number.MIN_VALUE;
+        Float.MAX_VALUE = Number.MAX_VALUE;
+        lang.Float = Float;
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../android/graphics/Rect.ts"/>
+///<reference path="../../../android/content/res/Resources.ts"/>
+///<reference path="../../../android/util/TypedValue.ts"/>
+///<reference path="../../../android/util/Log.ts"/>
+///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../../java/lang/Runnable.ts"/>
+///<reference path="../../../android/view/Gravity.ts"/>
+///<reference path="../../../java/lang/Float.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable_3) {
+            var Rect = android.graphics.Rect;
+            var Gravity = android.view.Gravity;
+            var Drawable = android.graphics.drawable.Drawable;
+            class ScaleDrawable extends Drawable {
+                constructor(...args) {
+                    super();
+                    this.mTmpRect = new Rect();
+                    if (args.length <= 1) {
+                        this.mScaleState = new ScaleDrawable.ScaleState(args[0], this);
+                        return;
+                    }
+                    let drawable = args[0];
+                    let gravity = args[1];
+                    let scaleWidth = args[2];
+                    let scaleHeight = args[3];
+                    this.mScaleState = new ScaleDrawable.ScaleState(null, this);
+                    this.mScaleState.mDrawable = drawable;
+                    this.mScaleState.mGravity = gravity;
+                    this.mScaleState.mScaleWidth = scaleWidth;
+                    this.mScaleState.mScaleHeight = scaleHeight;
+                    if (drawable != null) {
+                        drawable.setCallback(this);
+                    }
+                }
+                getDrawable() {
+                    return this.mScaleState.mDrawable;
+                }
+                drawableSizeChange(who) {
+                    const callback = this.getCallback();
+                    if (callback != null && callback.drawableSizeChange) {
+                        callback.drawableSizeChange(this);
+                    }
+                }
+                invalidateDrawable(who) {
+                    if (this.getCallback() != null) {
+                        this.getCallback().invalidateDrawable(this);
+                    }
+                }
+                scheduleDrawable(who, what, when) {
+                    if (this.getCallback() != null) {
+                        this.getCallback().scheduleDrawable(this, what, when);
+                    }
+                }
+                unscheduleDrawable(who, what) {
+                    if (this.getCallback() != null) {
+                        this.getCallback().unscheduleDrawable(this, what);
+                    }
+                }
+                draw(canvas) {
+                    if (this.mScaleState.mDrawable.getLevel() != 0)
+                        this.mScaleState.mDrawable.draw(canvas);
+                }
+                getPadding(padding) {
+                    return this.mScaleState.mDrawable.getPadding(padding);
+                }
+                setVisible(visible, restart) {
+                    this.mScaleState.mDrawable.setVisible(visible, restart);
+                    return super.setVisible(visible, restart);
+                }
+                setAlpha(alpha) {
+                    this.mScaleState.mDrawable.setAlpha(alpha);
+                }
+                getAlpha() {
+                    return this.mScaleState.mDrawable.getAlpha();
+                }
+                getOpacity() {
+                    return this.mScaleState.mDrawable.getOpacity();
+                }
+                isStateful() {
+                    return this.mScaleState.mDrawable.isStateful();
+                }
+                onStateChange(state) {
+                    let changed = this.mScaleState.mDrawable.setState(state);
+                    this.onBoundsChange(this.getBounds());
+                    return changed;
+                }
+                onLevelChange(level) {
+                    this.mScaleState.mDrawable.setLevel(level);
+                    this.onBoundsChange(this.getBounds());
+                    this.invalidateSelf();
+                    return true;
+                }
+                onBoundsChange(bounds) {
+                    const r = this.mTmpRect;
+                    const min = this.mScaleState.mUseIntrinsicSizeAsMin;
+                    let level = this.getLevel();
+                    let w = bounds.width();
+                    if (this.mScaleState.mScaleWidth > 0) {
+                        const iw = min ? this.mScaleState.mDrawable.getIntrinsicWidth() : 0;
+                        w -= Math.floor(((w - iw) * (10000 - level) * this.mScaleState.mScaleWidth / 10000));
+                    }
+                    let h = bounds.height();
+                    if (this.mScaleState.mScaleHeight > 0) {
+                        const ih = min ? this.mScaleState.mDrawable.getIntrinsicHeight() : 0;
+                        h -= Math.floor(((h - ih) * (10000 - level) * this.mScaleState.mScaleHeight / 10000));
+                    }
+                    Gravity.apply(this.mScaleState.mGravity, w, h, bounds, r);
+                    if (w > 0 && h > 0) {
+                        this.mScaleState.mDrawable.setBounds(r.left, r.top, r.right, r.bottom);
+                    }
+                }
+                getIntrinsicWidth() {
+                    return this.mScaleState.mDrawable.getIntrinsicWidth();
+                }
+                getIntrinsicHeight() {
+                    return this.mScaleState.mDrawable.getIntrinsicHeight();
+                }
+                getConstantState() {
+                    if (this.mScaleState.canConstantState()) {
+                        return this.mScaleState;
+                    }
+                    return null;
+                }
+                mutate() {
+                    if (!this.mMutated && super.mutate() == this) {
+                        this.mScaleState.mDrawable.mutate();
+                        this.mMutated = true;
+                    }
+                    return this;
+                }
+            }
+            drawable_3.ScaleDrawable = ScaleDrawable;
+            (function (ScaleDrawable) {
+                class ScaleState {
+                    constructor(orig, owner) {
+                        this.mScaleWidth = 0;
+                        this.mScaleHeight = 0;
+                        this.mGravity = 0;
+                        if (orig != null) {
+                            this.mDrawable = orig.mDrawable.getConstantState().newDrawable();
+                            this.mDrawable.setCallback(owner);
+                            this.mScaleWidth = orig.mScaleWidth;
+                            this.mScaleHeight = orig.mScaleHeight;
+                            this.mGravity = orig.mGravity;
+                            this.mUseIntrinsicSizeAsMin = orig.mUseIntrinsicSizeAsMin;
+                            this.mCheckedConstantState = this.mCanConstantState = true;
+                        }
+                    }
+                    newDrawable() {
+                        return new ScaleDrawable(this);
+                    }
+                    canConstantState() {
+                        if (!this.mCheckedConstantState) {
+                            this.mCanConstantState = this.mDrawable.getConstantState() != null;
+                            this.mCheckedConstantState = true;
+                        }
+                        return this.mCanConstantState;
+                    }
+                }
+                ScaleDrawable.ScaleState = ScaleState;
+            })(ScaleDrawable = drawable_3.ScaleDrawable || (drawable_3.ScaleDrawable = {}));
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable) {
+            var Animatable;
+            (function (Animatable) {
+                function isImpl(obj) {
+                    return obj && obj['start'] && obj['stop'] && obj['isRunning'];
+                }
+                Animatable.isImpl = isImpl;
+            })(Animatable = drawable.Animatable || (drawable.Animatable = {}));
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/2.
@@ -6508,6 +7348,157 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/content/res/Resources.ts"/>
+///<reference path="../../../android/os/SystemClock.ts"/>
+///<reference path="../../../java/lang/System.ts"/>
+///<reference path="../../../java/lang/Runnable.ts"/>
+///<reference path="../../../android/graphics/drawable/Animatable.ts"/>
+///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../../android/graphics/drawable/DrawableContainer.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable) {
+            var SystemClock = android.os.SystemClock;
+            var DrawableContainer = android.graphics.drawable.DrawableContainer;
+            class AnimationDrawable extends DrawableContainer {
+                constructor(state) {
+                    super();
+                    this.mCurFrame = -1;
+                    let _as = new AnimationDrawable.AnimationState(state, this);
+                    this.mAnimationState = _as;
+                    this.setConstantState(_as);
+                    if (state != null) {
+                        this.setFrame(0, true, false);
+                    }
+                }
+                setVisible(visible, restart) {
+                    let changed = super.setVisible(visible, restart);
+                    if (visible) {
+                        if (changed || restart) {
+                            this.setFrame(0, true, true);
+                        }
+                    }
+                    else {
+                        this.unscheduleSelf(this);
+                    }
+                    return changed;
+                }
+                start() {
+                    if (!this.isRunning()) {
+                        this.run();
+                    }
+                }
+                stop() {
+                    if (this.isRunning()) {
+                        this.unscheduleSelf(this);
+                    }
+                }
+                isRunning() {
+                    return this.mCurFrame > -1;
+                }
+                run() {
+                    this.nextFrame(false);
+                }
+                unscheduleSelf(what) {
+                    this.mCurFrame = -1;
+                    super.unscheduleSelf(what);
+                }
+                getNumberOfFrames() {
+                    return this.mAnimationState.getChildCount();
+                }
+                getFrame(index) {
+                    return this.mAnimationState.getChild(index);
+                }
+                getDuration(i) {
+                    return this.mAnimationState.mDurations[i];
+                }
+                isOneShot() {
+                    return this.mAnimationState.mOneShot;
+                }
+                setOneShot(oneShot) {
+                    this.mAnimationState.mOneShot = oneShot;
+                }
+                addFrame(frame, duration) {
+                    this.mAnimationState.addFrame(frame, duration);
+                    if (this.mCurFrame < 0) {
+                        this.setFrame(0, true, false);
+                    }
+                }
+                nextFrame(unschedule) {
+                    let next = this.mCurFrame + 1;
+                    const N = this.mAnimationState.getChildCount();
+                    if (next >= N) {
+                        next = 0;
+                    }
+                    this.setFrame(next, unschedule, !this.mAnimationState.mOneShot || next < (N - 1));
+                }
+                setFrame(frame, unschedule, animate) {
+                    if (frame >= this.mAnimationState.getChildCount()) {
+                        return;
+                    }
+                    this.mCurFrame = frame;
+                    this.selectDrawable(frame);
+                    if (unschedule) {
+                        this.unscheduleSelf(this);
+                    }
+                    if (animate) {
+                        this.mCurFrame = frame;
+                        this.scheduleSelf(this, SystemClock.uptimeMillis() + this.mAnimationState.mDurations[frame]);
+                    }
+                }
+                mutate() {
+                    if (!this.mMutated && super.mutate() == this) {
+                        this.mAnimationState.mDurations = [...this.mAnimationState.mDurations];
+                        this.mMutated = true;
+                    }
+                    return this;
+                }
+            }
+            drawable.AnimationDrawable = AnimationDrawable;
+            (function (AnimationDrawable) {
+                class AnimationState extends DrawableContainer.DrawableContainerState {
+                    constructor(orig, owner) {
+                        super(orig, owner);
+                        if (orig != null) {
+                            this.mDurations = orig.mDurations;
+                            this.mOneShot = orig.mOneShot;
+                        }
+                        else {
+                            this.mDurations = new Array(this.getCapacity());
+                            this.mOneShot = true;
+                        }
+                    }
+                    newDrawable() {
+                        return new AnimationDrawable(this);
+                    }
+                    addFrame(dr, dur) {
+                        let pos = super.addChild(dr);
+                        this.mDurations[pos] = dur;
+                    }
+                }
+                AnimationDrawable.AnimationState = AnimationState;
+            })(AnimationDrawable = drawable.AnimationDrawable || (drawable.AnimationDrawable = {}));
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/2.
  */
@@ -6517,11 +7508,11 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_2) {
+        (function (drawable_4) {
             const DEBUG = android.util.Log.DBG_StateListDrawable;
             const TAG = "StateListDrawable";
             const DEFAULT_DITHER = true;
-            class StateListDrawable extends drawable_2.DrawableContainer {
+            class StateListDrawable extends drawable_4.DrawableContainer {
                 constructor() {
                     super();
                     this.initWithState(null);
@@ -6582,8 +7573,8 @@ var android;
                     return this;
                 }
             }
-            drawable_2.StateListDrawable = StateListDrawable;
-            class StateListState extends drawable_2.DrawableContainer.DrawableContainerState {
+            drawable_4.StateListDrawable = StateListDrawable;
+            class StateListState extends drawable_4.DrawableContainer.DrawableContainerState {
                 constructor(orig, owner) {
                     super(orig, owner);
                     if (orig != null) {
@@ -6617,6 +7608,18 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        class id {
+        }
+        id.background = 'background';
+        id.secondaryProgress = 'secondaryProgress';
+        id.progress = 'progress';
+        R.id = id;
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/15.
  */
@@ -6626,7 +7629,12 @@ var android;
 ///<reference path="../graphics/drawable/Drawable.ts"/>
 ///<reference path="../graphics/drawable/InsetDrawable.ts"/>
 ///<reference path="../graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../graphics/drawable/LayerDrawable.ts"/>
+///<reference path="../graphics/drawable/RotateDrawable.ts"/>
+///<reference path="../graphics/drawable/ScaleDrawable.ts"/>
+///<reference path="../graphics/drawable/AnimationDrawable.ts"/>
 ///<reference path="../graphics/drawable/StateListDrawable.ts"/>
+///<reference path="id.ts"/>
 var android;
 (function (android) {
     var R;
@@ -6636,7 +7644,12 @@ var android;
         var Color = android.graphics.Color;
         var InsetDrawable = android.graphics.drawable.InsetDrawable;
         var ColorDrawable = android.graphics.drawable.ColorDrawable;
+        var LayerDrawable = android.graphics.drawable.LayerDrawable;
+        var RotateDrawable = android.graphics.drawable.RotateDrawable;
+        var ScaleDrawable = android.graphics.drawable.ScaleDrawable;
+        var AnimationDrawable = android.graphics.drawable.AnimationDrawable;
         var StateListDrawable = android.graphics.drawable.StateListDrawable;
+        var Gravity = android.view.Gravity;
         window.addEventListener('AndroidUILoadFinish', () => {
             eval('View = android.view.View;');
         });
@@ -6708,6 +7721,131 @@ var android;
                 stateList.addState([-View.VIEW_STATE_CHECKED], R.image.btn_radio_off_disabled_holo_light);
                 stateList.addState([View.VIEW_STATE_CHECKED], R.image.btn_radio_on_disabled_holo_light);
                 return stateList;
+            }
+            static get progress_small_holo() {
+                let rotate1 = new RotateDrawable(null);
+                rotate1.mState.mDrawable = R.image.spinner_16_outer_holo;
+                rotate1.mState.mPivotXRel = true;
+                rotate1.mState.mPivotX = 0.5;
+                rotate1.mState.mPivotYRel = true;
+                rotate1.mState.mPivotY = 0.5;
+                rotate1.mState.mFromDegrees = 0;
+                rotate1.mState.mToDegrees = 1080;
+                let rotate2 = new RotateDrawable(null);
+                rotate2.mState.mDrawable = R.image.spinner_16_inner_holo;
+                rotate2.mState.mPivotXRel = true;
+                rotate2.mState.mPivotX = 0.5;
+                rotate2.mState.mPivotYRel = true;
+                rotate2.mState.mPivotY = 0.5;
+                rotate2.mState.mFromDegrees = 720;
+                rotate2.mState.mToDegrees = 0;
+                return new LayerDrawable([rotate1, rotate2]);
+            }
+            static get progress_medium_holo() {
+                let rotate1 = new RotateDrawable(null);
+                rotate1.mState.mDrawable = R.image.spinner_48_outer_holo;
+                rotate1.mState.mPivotXRel = true;
+                rotate1.mState.mPivotX = 0.5;
+                rotate1.mState.mPivotYRel = true;
+                rotate1.mState.mPivotY = 0.5;
+                rotate1.mState.mFromDegrees = 0;
+                rotate1.mState.mToDegrees = 1080;
+                let rotate2 = new RotateDrawable(null);
+                rotate2.mState.mDrawable = R.image.spinner_48_inner_holo;
+                rotate2.mState.mPivotXRel = true;
+                rotate2.mState.mPivotX = 0.5;
+                rotate2.mState.mPivotYRel = true;
+                rotate2.mState.mPivotY = 0.5;
+                rotate2.mState.mFromDegrees = 720;
+                rotate2.mState.mToDegrees = 0;
+                return new LayerDrawable([rotate1, rotate2]);
+            }
+            static get progress_large_holo() {
+                let rotate1 = new RotateDrawable(null);
+                rotate1.mState.mDrawable = R.image.spinner_76_outer_holo;
+                rotate1.mState.mPivotXRel = true;
+                rotate1.mState.mPivotX = 0.5;
+                rotate1.mState.mPivotYRel = true;
+                rotate1.mState.mPivotY = 0.5;
+                rotate1.mState.mFromDegrees = 0;
+                rotate1.mState.mToDegrees = 1080;
+                let rotate2 = new RotateDrawable(null);
+                rotate2.mState.mDrawable = R.image.spinner_76_inner_holo;
+                rotate2.mState.mPivotXRel = true;
+                rotate2.mState.mPivotX = 0.5;
+                rotate2.mState.mPivotYRel = true;
+                rotate2.mState.mPivotY = 0.5;
+                rotate2.mState.mFromDegrees = 720;
+                rotate2.mState.mToDegrees = 0;
+                return new LayerDrawable([rotate1, rotate2]);
+            }
+            static get progress_bg_holo_light() {
+                let line = new ColorDrawable(0x4c000000);
+                line.getIntrinsicHeight = () => 3 * density;
+                return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
+            }
+            static get progress_primary_holo_light() {
+                let line = new ColorDrawable(0xcc33b5e5);
+                line.getIntrinsicHeight = () => 3 * density;
+                return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
+            }
+            static get progress_secondary_holo_light() {
+                let line = new ColorDrawable(0x4c33b5e5);
+                line.getIntrinsicHeight = () => 3 * density;
+                return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
+            }
+            static get progress_horizontal_holo() {
+                let layerDrawable = new LayerDrawable(null);
+                layerDrawable.addLayer(R.drawable.progress_bg_holo_light, R.id.background);
+                let scaleSecondary = new ScaleDrawable(R.drawable.progress_secondary_holo_light, Gravity.LEFT, 1, -1);
+                layerDrawable.addLayer(scaleSecondary, R.id.secondaryProgress);
+                let scalePrimary = new ScaleDrawable(R.drawable.progress_primary_holo_light, Gravity.LEFT, 1, -1);
+                layerDrawable.addLayer(scalePrimary, R.id.progress);
+                return layerDrawable;
+            }
+            static get progress_indeterminate_horizontal_holo() {
+                let animDrawable = new AnimationDrawable();
+                animDrawable.setOneShot(false);
+                let frame = R.image.progressbar_indeterminate_holo1;
+                frame.setCallback(animDrawable);
+                animDrawable.addFrame(frame, 50);
+                frame = R.image.progressbar_indeterminate_holo2;
+                frame.setCallback(animDrawable);
+                animDrawable.addFrame(frame, 50);
+                frame = R.image.progressbar_indeterminate_holo3;
+                frame.setCallback(animDrawable);
+                animDrawable.addFrame(frame, 50);
+                frame = R.image.progressbar_indeterminate_holo4;
+                frame.setCallback(animDrawable);
+                animDrawable.addFrame(frame, 50);
+                frame = R.image.progressbar_indeterminate_holo5;
+                frame.setCallback(animDrawable);
+                animDrawable.addFrame(frame, 50);
+                frame = R.image.progressbar_indeterminate_holo6;
+                frame.setCallback(animDrawable);
+                animDrawable.addFrame(frame, 50);
+                frame = R.image.progressbar_indeterminate_holo7;
+                frame.setCallback(animDrawable);
+                animDrawable.addFrame(frame, 50);
+                frame = R.image.progressbar_indeterminate_holo8;
+                frame.setCallback(animDrawable);
+                animDrawable.addFrame(frame, 50);
+                return animDrawable;
+            }
+            static get scrubber_primary_holo() {
+                let line = new ColorDrawable(0xff33b5e5);
+                line.getIntrinsicHeight = () => 3 * density;
+                return new InsetDrawable(line, 0, 5 * density, 0, 5 * density);
+            }
+            static get scrubber_secondary_holo() {
+                let line = new ColorDrawable(0x4c33b5e5);
+                line.getIntrinsicHeight = () => 3 * density;
+                return new InsetDrawable(line, 0, 5 * density, 0, 5 * density);
+            }
+            static get scrubber_track_holo_light() {
+                let line = new ColorDrawable(0x66666666);
+                line.getIntrinsicHeight = () => 1 * density;
+                return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
             }
             static get list_selector_background() {
                 let stateList = new StateListDrawable();
@@ -6784,49 +7922,241 @@ var androidui;
         }
     })(image = androidui.image || (androidui.image = {}));
 })(androidui || (androidui = {}));
+/**
+ * Created by linfaxin on 15/11/2.
+ */
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="NetImage.ts"/>
+var androidui;
+(function (androidui) {
+    var image;
+    (function (image) {
+        var Drawable = android.graphics.drawable.Drawable;
+        var Rect = android.graphics.Rect;
+        class ChangeImageSizeDrawable extends Drawable {
+            constructor(drawable, overrideWidth, overrideHeight = overrideWidth) {
+                super();
+                this.mTmpRect = new Rect();
+                this.mMutated = false;
+                this.mState = new State(null, this);
+                this.mState.mDrawable = drawable;
+                this.mState.mOverrideWidth = overrideWidth;
+                this.mState.mOverrideHeight = overrideHeight;
+                if (drawable != null) {
+                    drawable.setCallback(this);
+                }
+            }
+            drawableSizeChange(who) {
+                const callback = this.getCallback();
+                if (callback != null && callback.drawableSizeChange) {
+                    callback.drawableSizeChange(this);
+                }
+            }
+            invalidateDrawable(who) {
+                const callback = this.getCallback();
+                if (callback != null) {
+                    callback.invalidateDrawable(this);
+                }
+            }
+            scheduleDrawable(who, what, when) {
+                const callback = this.getCallback();
+                if (callback != null) {
+                    callback.scheduleDrawable(this, what, when);
+                }
+            }
+            unscheduleDrawable(who, what) {
+                const callback = this.getCallback();
+                if (callback != null) {
+                    callback.unscheduleDrawable(this, what);
+                }
+            }
+            draw(canvas) {
+                this.mState.mDrawable.draw(canvas);
+            }
+            getPadding(padding) {
+                return this.mState.mDrawable.getPadding(padding);
+            }
+            setVisible(visible, restart) {
+                this.mState.mDrawable.setVisible(visible, restart);
+                return super.setVisible(visible, restart);
+            }
+            setAlpha(alpha) {
+                this.mState.mDrawable.setAlpha(alpha);
+            }
+            getAlpha() {
+                return this.mState.mDrawable.getAlpha();
+            }
+            getOpacity() {
+                return this.mState.mDrawable.getOpacity();
+            }
+            isStateful() {
+                return this.mState.mDrawable.isStateful();
+            }
+            onStateChange(state) {
+                let changed = this.mState.mDrawable.setState(state);
+                this.onBoundsChange(this.getBounds());
+                return changed;
+            }
+            onBoundsChange(r) {
+                this.mState.mDrawable.setBounds(r.left, r.top, r.right, r.bottom);
+            }
+            getIntrinsicWidth() {
+                return this.mState.mOverrideWidth;
+            }
+            getIntrinsicHeight() {
+                return this.mState.mOverrideHeight;
+            }
+            getConstantState() {
+                if (this.mState.canConstantState()) {
+                    return this.mState;
+                }
+                return null;
+            }
+            mutate() {
+                if (!this.mMutated && super.mutate() == this) {
+                    this.mState.mDrawable.mutate();
+                    this.mMutated = true;
+                }
+                return this;
+            }
+            getDrawable() {
+                return this.mState.mDrawable;
+            }
+        }
+        image.ChangeImageSizeDrawable = ChangeImageSizeDrawable;
+        class State {
+            constructor(orig, owner) {
+                this.mOverrideWidth = 0;
+                this.mOverrideHeight = 0;
+                if (orig != null) {
+                    this.mDrawable = orig.mDrawable.getConstantState().newDrawable();
+                    this.mDrawable.setCallback(owner);
+                    this.mOverrideWidth = orig.mOverrideWidth;
+                    this.mOverrideHeight = orig.mOverrideHeight;
+                    this.mCheckedConstantState = this.mCanConstantState = true;
+                }
+            }
+            newDrawable() {
+                let drawable = new ChangeImageSizeDrawable(null, 0);
+                drawable.mState = new State(this, drawable);
+                return drawable;
+            }
+            canConstantState() {
+                if (!this.mCheckedConstantState) {
+                    this.mCanConstantState = this.mDrawable.getConstantState() != null;
+                    this.mCheckedConstantState = true;
+                }
+                return this.mCanConstantState;
+            }
+        }
+    })(image = androidui.image || (androidui.image = {}));
+})(androidui || (androidui = {}));
 var android;
 (function (android) {
     var R;
     (function (R) {
         var image_base64;
         (function (image_base64) {
-            image_base64.x3 = 'data:image/png;base64,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';
+            image_base64.x3 = {
+                "btn_check_off_disabled_focused_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAFVBMVEUAAAAAmcwzMzMAmcwAmcwAmcwAmcySYuXAAAAAB3RSTlMAZk1gRhAMJ+/C7AAAAGhJREFUWMPt1rEJgFAMBuE02gedwA0EtRcXEFxAcP8dXCDvb14gzV3/9WdEVNJwebPtDsDnoiMApwJzAFYFpgC4WzP3JLA0SgQWBgAAAAAAANAJ8m+m5Mj0JGZs6KPAHoBRrfRrRFTRD3MwONmn2VynAAAAAElFTkSuQmCC",
+                "btn_check_off_disabled_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgAQMAAADYVuV7AAAABlBMVEUAAAAzMzPI8eYgAAAAAnRSTlMATX7+8BUAAAAhSURBVDjLYxgFZIP/YICNcwBEMI9yRjkkcPCkqlFALgAAVYo5bSUJskUAAAAASUVORK5CYII=",
+                "btn_check_off_focused_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAMFBMVEUAAAAAmcwAmcwAmcwxNTcAmcwAmcwAmcwAmcwAmcwAmcwvOT0AmcwAmcwAmcwAmczmhCwqAAAAEHRSTlMAmRIfzgUJGg4WJtCScyQtx2HoRgAAAORJREFUWMNjGAWjYEgC1lAcIACr8tDQNJwgNBSL8WEdSjhBR2oApgVN04uNcQDzSo1QDAsi9O8I4gRnP7ViaEj6I4gHnFcLQNfQeRGfBtkZ6BpC2w/i0yBTga6BTV1QcNVj7H62WyUoWJSApiFMWVBwcSX2QJ1uJSholIpFw/PdLljB7jocGiy3YNfgPRmHBiMX7GnMRXlUw6iGUQ2jGkY1jGoY1TCqgRINhBsnlDd/CDewKG3CsRJqJJLeDKW0ocsQpoWvKb0oFbOxnoSvsa4WSn53AKEDX4cjgNQuzSgYBUMRAABvBwmfTLNSCwAAAABJRU5ErkJggg==",
+                "btn_check_off_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgAQMAAADYVuV7AAAABlBMVEUAAAAzMzPI8eYgAAAAAnRSTlMAzORBQ6MAAAAhSURBVDjLYxgFZIP/YICNcwBEMI9yRjkkcPCkqlFALgAAVYo5bSUJskUAAAAASUVORK5CYII=",
+                "btn_check_off_pressed_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAGFBMVEVPT080NDQ0NDRHR0cAAABPT09PT09PT0+86ZyxAAAACHRSTlMm1MgyABYeBtShLDEAAAB4SURBVFjD7dixDYAwEATBSzAxLdACLbxzAkukLoGE/qEAXmIlZ9ym1uTvU8TV9bFyRCiqQO0BnYASqkI1nQzM2hmY1Bkocs4Nak1KwZKUg+21HCQvBgYGBgYGBv8A+HRI4uePc25M+IuPRwQ8U+AhhE4tfMzBc9ENzCYkZWqWtP8AAAAASUVORK5CYII=",
+                "btn_check_on_disabled_focused_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAMFBMVEUAAAAAmcw9PT09PT09PT09PT09PT0AmcwAmcwAmcw9PT09PT09PT09PT0Amcw9PT1vR1UqAAAAEHRSTlMAZoBNQTg7Xj8IR0pEMVYjBJa89wAAASlJREFUWMPt1rFJBEEYhuENVsE7DSbS+GfPyEC4BhYrGKxA7OBCQxsQM/MrQazgSrAKQ7ECXZnzRdmd7x84OIT50uWZN5mFaerq6vayo4cwuknwFArBfSlYlYLMp1lfCNbdBFiO7PIrYNYXgY1ZNwGasR2bkfCAzQAu/KC17727wZUNO/cVCNwIIAIAFdDgloALHBIQQAQAIqDANQEXOEgBBV5cAcDc+r+BEHLg2brfAQHm6fYTEGCdTiWQB7PtsSc/gWUWfGzPfbVhiyYLuJ4xBWIe8AMsCGQBiRRQgAQBCVpAlIAEAQlIRA1IEFCARHQAEgQEIBE9gEQKSEAiugAJAj7QRidgFfwjML4dgqntCKxCZqe+Zyg78z102Z3rKc3eHpu6urp97BNIunQiihmctwAAAABJRU5ErkJggg==",
+                "btn_check_on_disabled_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAG1BMVEUAAAA9PT09PT09PT09PT09PT09PT09PT09PT1gyl+KAAAACXRSTlMAgE05QT1HMyNi/YIlAAAA6ElEQVRYw+3TwQ2CQBRFUaOo6x/AtRILGDvADrQESrAD7VwxQ+4G/I/EhSb/bcmZGzKwiMVise9v084EXTXxoBnZ/hUwa2eBzqyaAONvYEZCAV0Pdjoo7L27DM7Wr9YKBC4yuBKQwJqAAghIgECSAIFyoYIVAQ2cCLjADwCOUgCwtFYJAA5WCwHAcrjYbQ54oBtu9pYDDtgM3w6B5iN45HMJOKDIBxNwQP7DSgIeyIkc8AAJAi4oAMkFJAi4gETyAQkCLuAuBECCgANIJAWQyAEXkEgSIEFAA0USAQvwR2Bi80EsFov98J52GzL3vLeyTQAAAABJRU5ErkJggg==",
+                "btn_check_on_focused_holo_light": "data:image/png;base64,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",
+                "btn_check_on_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAABPlBMVEUAAAAzteUzteU9PT0zteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteU9Pj4zteUzteUzteUzteUzteUzteUzteUMLTkzteUzteUzteUzteUzteUvp9QzteU9P0AIHCQ9QUMAT2kLKTQAV3QKIy0zteUAUWwzteUzteUzteUdaIQOM0Ays+MytOQpkrkzteUnjLErdIwpb4YmX3IPOEcjfZ8AU28oaH4zteUql74updIscokKIy0upNAnjLEnjbMufJYveZI9fJApa4ImZXoysuEsn8kdcY4uptETRFYiepormcIkgKJEh500gZsAWXc2bYAAPlMAOEoOMkAAmcwAmMoAksMAjbwOn88/stkQoNAqqtUsq9VBs9k+stgoqdRavd43r9cAj79HttoyrdYAibcmqNRAenSqAAAAV3RSTlMAAwbNDAgOEgohFBkXGx0fL84lNCMQOCoReDInQiw9Sj/Ra9THdc1wO8gpSFY5fVFNSEVEz8vCgzTJyFxLP81jRj401NHPycViTtFbREA6L9XVzce3s134HTq+AAAE2UlEQVRo3u2ZaXfSUBCGS1EhQoCEBAIxCIlIxbYuWDfUarXu+1qlVFqty///A85MhiZw0ZsCnqPn5P3c8zzcmZu5ye1CnDhx/pckDvI32GLmTxczX/xiKHM0hOFHOWHHXPgMT6ePYNJpdsxDEOAJfgxDElCwYXY+4RFumhbGRAcpyDAzn/GmlUodp6RS4JiLgfmEB3o2m6FkwWHBKoaGmfmMz6hqjqKCghaRZsHsfMLn8nmFkvcVUCVYAgpm5Vs+XjEMXV9ZX38BCjRYwRJm48PPV3OKYuh2u7zibm66LwwypKBILJiRn1Hh1wPdKTxr3fvy5ZZ7lQxYpLS0Rsk/RYM0MJ7nOYVqFfiDr18Hl9CQU2EJ0AWZICrfqxaLnda93b1+f2cbDbgEi2okE4gzefj4HjliprKZnKK3nUKxWOo0L+3u9T586JFByUGNogmILeLTB/xyoVos1YZ8MOx9f+xCF7LYBLlgFMw56m//rOrzS0v1C8zHbG1tvXuKAjOygNkMRzxtfzXv82v1G5Vbuzs9xn/cv+Ya0QQJX8BgJENoLFu4PYlf9PnbAf/TNXeDBNQDucCnE5hnvmn5T5dhE//EjcraCL+1YUcTJFDg45mMI98fnDgbbAf4dZH/3LGVPO+ihEzAeBr4OPER7o8e2j5L9ROPBH6hrOM2NWVPcgIFwXnCbBXoiG870F7i3w/zzzRvFgtlQ4EKRRMgn3pKPxzZNNgQj+29eFLgl6pYIW6BXBAa+FAXnMk4NhGPPx/410f5t5eKBxWS9Bj3Z1KD+iCfy27bZYAD3cefHedXbtdgAbyHqEJyAZ8ogF9x168CnOg1xJ89v3p9+3M/zK/zAnjURRBggYivr7gvN1t3iiWiE/7c6oNR/kngUwcywwXIBJqGRwrzX8Fp0urUmX7+nMg/ERSIOiB7ChZBwDMN6nN3G06TteYNpi8vT+QX2ka4QHIBdACeWuTDtITTZK3yiOjAvzyBzw1IBSe+VEBDH/l8mqytPlle7na7Vy4PBH5R4EcSQAfcx99/Ap8M91efdLsPJ/E9T+RLBSYKnr6FQwRhZLh+5eEY/5T/+z1P4EcUGO7r/Y+kYMNEfsHzRH60EhlX3dOfhob+529vLn+bwC97nsCPKrA3WiHDzmAwia97DYEvF+Bzllds507I0Ov3exP4SqMh4YtPMj8Hiu5U7zTZwBH5uUZDzhdHBXZZMeDw7bBB4NeZn2k05Hxx2HETnGrpwohB5B9vaCJfLuAawRKWLlTYMJmf0jSBLzPgeRAsocaGgD86HzRNzhePzNASSnU2MH98vmmayJcLeAm+ocZ9ID6eXyPzU0syP2pQQK/pXKTAgPzmTShP1WkH8yeZFPlywaJfJDTQizrt1n3kw/FYgPMrmD8kWDhMSBB8ien0utJpnf7x41TrJuLLupE/4JNg4bCCsW89VMDUONUivB3+3FvEv144ZJLJsa9VeuvaWH8P9Dbic2rwRQyChWkEbLBSw7cv3YboOuLxe3jIn1Lw+xsDvjIwmT+tIHynYqGCLz1UoPv4YP5MJxgacBGwCnyLp+DF0Oi90LQCNtAi0GGlIHTrxHjmTytgQ+hTiiNczU0vEO8WxcvFqQWS21HAE39qwaHyLwoi37H/J/8liBMnTpw4ceLEkeQXuf5HL4dNIhQAAAAASUVORK5CYII=",
+                "btn_check_on_pressed_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAANlBMVEVPT08+Pj4+Pj5KSkpAQEAAAAA/Pz9PT08/Pz9PT09PT08/Pz9AQEBAQEBPT09PT09CQkI9PT36oQq5AAAAEXRSTlMm1MgyiACTFp4eAZeNggYHXQY8LIYAAAExSURBVGje7drBbsJAFENRtx0YJlAg//+zTaRWruQNU+NFxfMa3SOxSBZ5OGy79oGnb/Tb3t6ApSO0vuzAMhDbWDagI7h+wBXR3dARXcdAdAO1Wq1We6mdjojutK6Twtuj++lTCABbn8LDwNT/I4IPaH/bOQGc11+7PxXQfoMBGH0DOErfBPw+gVCfgNv3gYv2fcDvE7D6PtCk7wCns99XQN8mfl8Bvk3svgLsU3D7CvBpf8H3Pu0+AfYpaJ+/ngfuUpO+AejzRvomoIL0PUAF6dsABe3bgAra9wEK2vcBCtr3ARG07wMUpO8DIrCfACg0JAAKDQmAQkMCoNCQACg0ZACugAJeC/iY2F+Auc0D75NDrVar1Wqz+0/fxEf8aCB+9pA+3IifnuSPZ5LnP9e9/QXc5ydUPu9cjgAAAABJRU5ErkJggg==",
+                "btn_radio_off_disabled_focused_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAaVBMVEUAAAAzteU9PT0zteU9PT09PT0zteUzteUzteU9PT0zteUzteU9PT09PT0zteU9PT0zteUzteU9PT0zteU9PT0zteUzteU9PT09PT09PT09PT0zteUzteUzteU9PT0zteUzteUzteU9PT3dmb2uAAAAI3RSTlMAZkxgRwQ4EkgOBiARPFMuWyYXTTYyLEAgCioMFkMyGxg/J0SE03YAAAMlSURBVGje7VnXltsgEEUDqlbv1Wv7/z8yoS2J4zVgmc0+6D75mIEpd4YyQgcOHDhw4DuxVMGW557n4TzfumpBb8VpK707lNcTehPCK/YeAgch2o9L5D1BtO61Xi3fBH0Ysv/WPmiUij1sJIEMRlQld0NVJMe6183P+RL5KXmo/iTGmxedqDi3ZfVEpOROvJRQHZ/bI4FpLNoMAEjWFuMkvei4FT2yRsApFMGJZwJ/gcyxUMG56F5YXxlWU8uhHevYR8iP67GF38hqPtoLDfbxwR/c+gyAnGv/z3G/PhOAjHvxga2jdGLrh2ypAgBuanWlYwaAmQ2sTIMF0yH+XD8eAAr/sdhUAGTTpwa8GNcXy28Wn5TAEH8tmQ5A0k+XGyuCe8YuQOs/E/VboaG3IHqhshszEKDQCPtnAKYhMg9SQ8s3ofEndH0dzkAmGldKQ4QM8EEdqKhxA7SIQxOljIaxovNCEwckXQUMPjLRQODGJpq5cKGGrJyAFOnBJWPput6Fq3RggBkZooBMuhBoawCLEqiBqADpg5SKYsAaUUZVSX9kMCJj3Hg6YIMNYxNupswBCxdiUaFXjSgWFM+cAXMWbiJBSs02J8NIo2qBFAZJ4PNq7kUux0CQFQjQco60JARiyxrhjKzQwqimP4E0oaDyNrjBLBJ1eyqXi2LMoEZWqFmirtpTgd5zEhFSK8QwiJ0+12Yp58xHVphYViTaPPWEAgBkBx+ImI//rwJMOXATIkXyspNk52nqptBGVWgut4qOTne+2Zlu17GL7VodOIWjAwdFzo5M94e++2uLunhFOy5eDq+OF7Oro7rDFkAmwwDNaqLd9T3zLa/vq+0D5Gz+ACmFA3qETp9Q9o9A0D0C9z9jJXH5j3mIi3d1ucpWAtG0Ei68lWDfLKoQd0LTDKlkZ8a+nRPctXPYgnftHCnqrCHVqHbR7pZaNjDLM9VSQ71oqf3EpuCfbc0vck2OL7sbs2Vw+WdPDLAY7NAOhI0ngKOgEq3lsA8iLP+Pwr3N8cZRc1xh/bK9fw3Re5A8+kCxndBbEcpPLF6eb0G1oAMHDhw48I34BUmSKxG/3YRpAAAAAElFTkSuQmCC",
+                "btn_radio_off_disabled_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAMFBMVEUAAAA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT1STLyxAAAAEHRSTlMATAUMRyoWMBA7P0MhNh49I5b3UAAAAXZJREFUWMNjGAWjYBSMAsoB8/NZgiJr6wyIVW/qKAgGIsHEqc8UFLyTwcDUdlZQcBox6u0F3ZMgLLUSwcmE1asKiirA2EyBggEE/btQXAHBYyqUIuTzFmkUFRwbPfCrZxO8hCqgK5iAV0OjOLpIoQReHzgWoAuxi+DzBZcsptjFBXg0BG7CFNMWxeMiwQZMQQ5B3G7iFMVq7QScGhKdsImqiOHUMPEANlEeSZxeEFHAJszkiMsTrKI4wg5XCuSWwBH9G3BoMHTALs4ijEPDwwLs4uxyuOL5AHZxHlFcoZqAI83L4tCw0QBHcEvj0OCogF2cSQSHBkEGXBKUaiDsJAo9TThYJSmNOMJJg9LERzh5U5qBCGdRcgsByosZfuwF2QfKi0qEYU5YXCSKr7iXUsAIo4ULSKtQeEUMyKqyKK8UEdVuA1q1S1nFTrjpEMRAEHQhN05WENv8SWZgMIM3fyhvYGH6/PgsQcGVNQYMo2AUjIJRQDEAAKdsRGG19ZMWAAAAAElFTkSuQmCC",
+                "btn_radio_off_focused_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAwFBMVEUAAAAzteU9PT0zteUzteUzteU9PT0zteUzteUzteUzteUzteUzteU9PT0zteUzteUzteUzteU9PT09PT09PT0zteUzteU9PT09PT09PT0zteU9PT0zteU9PT09PT0zteU9PT09PT0zteUzteU9PT09PT09PT09PT09PT09PT0zteUzteU9PT09PT09PT09PT09PT0zteU9PT09PT09PT0zteUzteU9PT0zteUzteU9PT09PT0zteU9PT09PT09PT2npJ6rAAAAQHRSTlMAmcwElCDAN48ValInxnBLPVclpJCHMQy1nnorizK6dGo6CYB9VhkKhHBkQz8eBwV5X6yYdR0PXSwaKRR3TCKGCl/ORQAAA8lJREFUaN7tWNl6qjAQxmErIIq74r4r7kvtqT3tef+3OkwCtLYWEii94r9Rv0xmnCWTyS9kyJAhQ4bfhKYajm1LuZxk205R1X5UuVh3arlPqB3q4g+plw8Pubt4KD0LyZEv5EKgy0kj/66+YFiyLLrxkmWr1H83oSWJvSFRLZKuXm6XLpburxVj50KzqQr7fjpH6piu/43phCrRclG/F7FqNNv1OPpXdO/K//eb6f5UMQGUymn/OvODuKIVZvHrL9EUjuiv8rIJN2gOyl4ydCJYjKVfWtEfwxYAmNXp8LoThO11OK2aANAaeq5KMSwUif48+X6tACiL9fbj+ny9UFwT1Is/EneUVNzRIYdoewYwB42vMo2lCbDckbNOEvGHoz4lTO8jSW0FYPJyX2w2AajMiAWygblaxXEQn64Cx/L3ku0m9NpBlPqsJ84IQjo0oToPE21UQekGRV3kCJBD/r8Jkwjh3QJM4oOOXl+YDGAjq40w/grqj8ICepiHESZaZ+rP6KyK9VOBKoP87gStnV95LN27gK0Zv5yh2RAY0GjCwPdcZ3RAxgoBaAtM6IJZ9ndG33EH34EKLAVG7OHku1CKPAOSdybX0JuzGmgogLVax+MvMjSJmkgceBKYMSAuiB13c9TV4LgyBsmAgg6wu7DBFhwdI/HBS/EZzgIHJjDw0lwLF3zEpoUR6vklxFpIRz+B4S3P8mq5DIrABQVm3hlSI/ocbVlT+MdnoAqvwfYw6F4d7LGGePAES68GD6FyeBPgRdOCIZ+BNelbMk5JoXJYyReS4w2fgTLJ8sXdPg6VwzIQSc7mfAZeoIk9O7JOcy7wE0DgQwMUb/9DmgZENBAZolHCEKWT5DeSZA2TnHqZMh20CUxjHzTGVrGI0yqKuD31Zsfarq987boZtGvWC2eZyoUj6EmvzEMql/5T+KWffGzp3YwtzIPXgH3wagWDF/vo2GUeHdsAHKOj0P8w/L5wD79c4/sRWluG8b3KOb6/P0DeFFiwP0A6xAEWPMd/QmlpPAJNrkcg/zNWaZPEode2yPcQJxW3OQLsOR/i/FSCMpjfic4goBLylErgJ0PUgAzpTW7JkO1HMsSiZEgcusigUV37dA5RWL6lc0RPNB4hVYgkpEYFfkKKoviVUmtVwIVLqU1DKDVuUnCshojEJQUptLFPa37DaPu0pxafmM1RdEr5z0v5UicZMUvxGHDIElLLhASTZcsoSAHjnJQgz/dzISjI6dL7VH1yiKrT+ay95tRF4SehWYZuk7KybcdQNSFDhgwZMvwi/gPvHkn+qOIQ7AAAAABJRU5ErkJggg==",
+                "btn_radio_off_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAaVBMVEUAAAA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT1Pag0XAAAAI3RSTlMAzL8LJcV8OyqQpLpwhGsbtp0zFwcFsZd3VFovqkEfoWEPTH3CfAwAAAGvSURBVGje7ZjpboMwEIR3bHxwhisQyJ33f8hKVSo1akS8hkRU8veXEWgZH7tDgUAgEAgEAh9mM+g+UYBIen3b0MJEWYkHyiKi5TAVABUPxm6JWmvGWAGoDC2DTQCRm5Z+IY+5AKolqmh3gCok/UFmCsi2NJNTAuiGntJoIJlp916giyYed0jtLHcVYjklkDFETd7UCvqFZJtDeddwEtCvVTlSTx/aA2IH2bbH2W8t7dBJF921ROG1gADrqlQR8UmQudfaE5sjUumqvQrUHgWM7uILvwQLId3VUuBEPDJkHLlmL6QUlrXn0RGLCIJYCDQs/YCcWMS4sfQaI7G4IGPpKxhiYRAzPd5wTTswPZPEokHJ0gPEQ0Ks6wM+v2hdJvss03VttNHjqFjXYff245p27AtnbVcm+9J/b9uSovZpvAp3wyq/1nHv6hciv+a3bHjNL799P7cO7Xvs275TJJC7DSBrHaHchkBV0wzq6THWdhB25iB+4A/i/ChBPI0SiokogR2GpNq0D591CEMYHM/3OOf7hZEZ7nHO/wmkfiK1KgGApNfDhgKBQCAQCAQ+yxdkJhHOkHWlWgAAAABJRU5ErkJggg==",
+                "btn_radio_off_pressed_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAb1BMVEVPT08AAAA+Pj5PT09PT09PT09PT09PT09PT09KSkpPT09PT08+Pj5EREQ+Pj5GRkY+Pj5PT08+Pj5AQEBAQEBBQUE+Pj4+Pj4/Pz9FRUVMTExAQEBAQEA/Pz9DQ0M/Pz9HR0dDQ0NEREQ+Pj5DQ0Mt5iyXAAAAJXRSTlMmANQNAyQiHxswCRfIS8NBvhHMhYxtsayTRiuJdp9XpDxaULhc1kjPGwAAAu5JREFUaN7M1cmS4jAQRdFHavY8gDHGjF3//41NrWiilLJU9qLPmuDaSmUYuygya3NrtFaA0trYvM3kLkpEQIrcwMPkQq4PyNYiwAq5KiCswgJlxa8DrUYUE0og4e95WiQHhEYSkyUFpEUyK+MDQoGRfk7gHz9dHhWQBr9m5HIg01hBZ0sBobCKEuGAwFpKhAICGxB8QGALKuMCmcJGBX9AKmxES2/AYDPWF8ixofZnQGBT4h1gBrDNGN4BiyX1YX9rOqKuue0PNZbkn4EMYae+og9Nf0JY9hEwCHkciai4zNfaAa5+zON37nhFiPk30CKgHIiKvsSH8ly8EqfwnN8BDdZ0Jqpmhx/cXBH1E1j6HWjBqgei3sHLvdrDfeEVEH6BZ0FNCVbZUFGGp4Dgjl07ujgEuBt11+BFQmgHnh2NCJtG6srQLiCwxHVBeywaqeLmoOQrwI94GuiCCBcaJn7M4JdsT41DBNdQDz/7HZDwKz2Hy/2STuwZgb1DA/WItKcje0bgPjRfVDlEcgU9uHsEbssGOiDaTEdu1yC5cy0mRHMFN4UdMu5Yz0gwcgPL0MKrohIJntTASyCHT00VkhRUw6eFhc+BRiS5MHfCwjAjOCDJTGcmoOFzpCuSfNENPgYKPg3dkaSmP/DR7MwcktyZW6HgR4Q0jrr/K/C3WTNKQRgGgmg1oQlN8KPgRxUEzf3vqCD+yXR182gv0EDa7s7Mm35XhL9k/DPFfzR8VODDDh/X+MKhVya+9HHZ0kd4XYXwktJx8UtHWvxq+d46yfc4cAbEb6EGZaHyqgm8O03guo291WNbtI19CBtrMeLNYcTtUcL54ogS4DDEHuecPHEOH0gdii1Sq/Nc/4jU+FCQjzXFwHDClkGgFQdq+R6Oj0Q4zsf7AuA4ns8iFhoS0ZiLBnXbo8bXCQWFpZpWa9zLAusSf0PuqSty997TGPZYe7AWN8rkq56ErGshce/lmc8hUyg5pXf9J+VcgrX+8wRytCpX/RrehwAAAABJRU5ErkJggg==",
+                "btn_radio_on_disabled_focused_holo_light": "data:image/png;base64,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",
+                "btn_radio_on_disabled_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAsVBMVEUAAAAzMzP///////89PT3///////89PT09PT09PT0+Pj49PT09PT1aWlo6OjoaGhogICA9PT09PT09PT04ODhFRUU9PT09PT1NTU09PT0uLi4dHR09PT1jY2NYWFg9PT08PDy6urpDQ0MxMTEmJiZoaGgUFBQYGBgjIyMlJSV3d3eYmJjr6+tfX19CQkJpaWlhYWEoKCgvLy8hISEWFhYrKysuLi5WVlZBQUEnJydHR0eJLZnuAAAAO3RSTlMAgAIFTQkMSSoDLw4WJDVSSCALPoAsOxGAf3hiQwV/RjIRgH1iH1lURUIcFQ54CICAbWdnVz48eHdubc5A5usAAAMCSURBVGje7VjZcuIwEIRkEskHMsY2+MQO933m/v8PWxGfIng3ltlUUqV+g3J1qzUjaWYaAgICAgICAgLfjI4udw0EgAwi651rsys4BAYhVq5Ir3YBABFdVaRGQ1JUnQBFV73W6g3KHqmU+yYBVVEjRCWu4ULClB4HN58QYCqBpdqhNQDkzc1FbGQAo2a4ewh8JWO8TZD9ofiAerWii4AELDurERBAaq31ywX2uwwFDbmGh07GH7PfZ6A/MoUIQs44SAaQnJ/SL8eWRYhljZcnicwEAYMvlzD4QU6/GsvPbU2bTDSt/SyPV/eZicAHzHW+AHoJP139wppNR+/r9Xa7Xr+PpjNrQV0kCj0AnhPXBRzvD+V/aM21w3q76/dtu9/fbdcHbd56yBQwdDkyFEIp52+PXnZ9e+CYzabpDOz+7mXUPinEAlIIKocBvchP1+40MzjUR1FBr25BASSlATjx2wOzWYA5sE8K6SZJqHIUMODUwGI+svPl5ybs0XyRWsCVE8mHXsx/t7K015SfVXjVrNVdrNADv+IhBtRIDIxnh0G6P+wuDQ6zcWKhgaDacdYhSgXkqZPzswrOVE4FItCrhSDOIcq/fPIcp3kRjuM9LalCnEe4YpKqiYFWe2+alwVMc99uJRZUIBVj3EkELM0tF3A1KxHoVIwyAikRiB6HDD+jMHyMEgEJUCUBgDTGZNL8CyYkjTLA/xWQAPi3qJw/36IAEH+QywWYIHOn6Vu5wFshTbv8B61cID5ot/FB478q3NIdYq4K/svuWCZwzC+7EDo1rmu3xEB+XSvg13lwvOHFHPWYB6fWk+ldjDD7ZNZ79D97GHrso1+3bPHO4uB6dcuWhnFWeB0LJobHs8LLuErp6O1d6sN19x5/6cgmUrj5SvG7CQHzlu9GwJTvLUsmRLZaTPke0M8k7gYk+ncDQgB1fmoLxTSBt2coNIE/uY39SiP+00cJ6TBEPh+GyJTeUK4+zvkQVHWCPsY5v2cglY/UgMLonkZqAgICAgICAgLfiz+OHkqDTzvSAwAAAABJRU5ErkJggg==",
+                "btn_radio_on_focused_holo_light": "data:image/png;base64,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",
+                "btn_radio_on_holo_light": "data:image/png;base64,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",
+                "btn_radio_on_pressed_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAkFBMVEVPT08AAAA+Pj5OTk5PT09PT09PT09PT09PT09PT09PT09GRkY+Pj5PT09KSkpPT08+Pj5FRUVAQEBAQEBDQ0M+Pj4+Pj5EREREREQ9PT0+Pj5PT08+Pj4+Pj4/Pz8+Pj4/Pz8/Pz9AQEBBQUFMTEw9PT1DQ0NBQUE9PT0/Pz9KSko+Pj5AQEBCQkJCQkI9PT27eu1wAAAAL3RSTlMmANQnDQMiHwkPGT/RATAVykWLhlrHvkpO9sMcsayQzp+ZeGor7Fdx4aQyuHxeYgwIBCAAAANrSURBVGjezJTJkuIwEESTkiUveGOxjcHsO9M9/v+/G0dMRMt0q4QBH/rdOKCnUmYZg05Iz08CVyk0KOUGie/JQSc6CKSTuDDgJo58XyD9BSwsfPmWwAnwkMB5VRD5Cp1w/cgq4I/vjOIUvMBReArXe0ogAzxNILsLHLyCchjBu9fXJFEXgXTxMq58LPAU3kB5jwQO3sSxC3ygZwOY+/dmQO/nAx4n8NATnlkg0RdKmgSRi95YRAZBgh5JtIAJuLcqgQmgpxi0IMAjhvvxNU+J0vw63g87PxK6NXQ0mdMd+WTUravo0CAxXRJRtj2fhjchbsPpeZsR0fIEG25b4MNCURFlk0LcOWfjtFFYp3C0IFJgOYxDmu9i/CDeZRRODmBR0ZfAt0RbNafEMBI37mr4YATYB5hllBdgmeWUFfYUYN2x05o2MSzcrrQ+WYsE2w7M1rQSsCJWtGZnCP4LJPv+qT7fZsjYHGQj4CM+VLQReIjYUHXgY24E3JKNKY/RgVtOE5hZNAL2hYowLL4t9DY9luUx3U7FfVRhOGLfCFyHRHV/L7G71F9cPsT9rEv2jcB1aErzGJpRWN9BI2jijKbcNxUDBSMV7aH5W9bfOH5Cs6Mlt2uQzApQdmiNU9Y/KPetEVJiUojgcRUatxbiWBsoWx1YcUXy4JsjnlOhf4S1ERKtgXMY8ZHAxIjmrReuGT70HVIamlPGAibOtNV/vnCCix5hQ3uYCODCxIrOOuGa5VNPyYSwgIKJJemP8JYXbFprc4UJF2by1pOmvGDdCu0PTCiYSUmv8ZEXHHWTaY5noFYFy5pHrxqlv0vwr1lzWUEYhoKoSmoUKihYtO1CwdciiP//dwpdBCEhtzecNtl1VUib3JkzA2wR9ZHx3xQ/aPhVgV929HVtRAPn0OoHjmxkvkNvkI1M9dBvb6Khr5ctJ6ls4YVX5R/jgtBLx8/jch0lHXnxG5fvLlu+b6cxIMses1BJE3jMNIFpG/vcr1zCxp7jNlZkxF2GEZejhNc9hBK6FEqgYYgK5ywGnNMJcA4OpFRIranrRoHUWCjIY02/SQyYjUcr+mV3QTi+BuA4hPfpgIKOWOiQiI656KBu/qgRDUt9Wq2Le8sJrH/LWEXkDpYGTIG1B3lxY4NWT0xVennmr/5jh/qP7UfUf77mb6LnjEYeBwAAAABJRU5ErkJggg==",
+                "progressbar_indeterminate_holo1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwBAMAAAAybmm2AAAAKlBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteWZdn3rAAAADXRSTlMABRAKFywhOfYnMR3v8BlJngAAAUFJREFUaN7s0D1qAlEUxfE7hBRJNc9ZgZk0IU3GZAXGzsZG0A1o4QIEewsFQURBtLHyoxURXIS9he7F8jRPEN6c7vzaPxwu10RERERERESe4R5ACYExmtgi+oXolvx6ZXGEEgBjLM4c+0L0zEofXmkcoQTAGEtmCftC9NQ+K17lnxeUABhjSa3EvhC9bNWW1yFLUAJgjKTz7/6O5AvR93aqey2LBZQAGCNp7t33jHwh+tTaXa9dsbDo5gBjJL2J+9qQL0Rf2/nmdRm/jW45wBjLwObsC9GvD/9Ve8VAAIyx9K1BvBBd/8r1X6t3DATAGMvQtsQL0fUv/evenh3bAACDMBDcf2tW4CUapLsRKBKwzevNvLz3/seDedlX277qHmr3kHu73dvynJbnyAtbXiiPbnm0vqP1Hfq02KcBAADAwgBwBEHj/3RdFwAAAABJRU5ErkJggg==",
+                "progressbar_indeterminate_holo2": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwBAMAAAAybmm2AAAALVBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUW/iK7AAAADnRSTlMABQoQITkYLCcz9hTw7fhFXIgAAAF4SURBVGje7dmxSgNBEAbgOUE03e5aWm0C9l7ExtJDlDRpUtgmcgg+QCS1KGqTQkHyAmIjKEF8Ct8iRQrvGcRrdCN7e4ObsBf+rzpuYJYZuGN3lgAAAAAAAADKkAUERdKnmdUCyy0ockdJ1e0kybpHWkTGaoHlliSdUU2Npp0m1fQoFpGxWmC5NSlnNKbd1C4WjbfUn55W5mpec6/spQzcas9i+o72aJzYvcqtxKOWVifJL4HlLq62m0dbdNq3Ot+XO1d9fy62Nw6NF0Hlzqt1RS/pqGN1fCvf7zv+PLxsXhsvgsqdV+uK3tFHZjelm8ynYS2bm+H6c8bArvYxj34W9mtCg8r0q73G6Re/2icaLLxf7dWf56r1a4p+saqdlOrXqDr9qv2/X6PiKPrF6xe+R873iP9X8P/7Zd9PYL/6Z7+K8xDvPITzNvO8PXbMMDw6mJm5BJa7W2aeg3khb16IeTRvHo37Dt59B+7TmPdpAAAAAAAAACV8AcebDMLiSs2oAAAAAElFTkSuQmCC",
+                "progressbar_indeterminate_holo3": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwCAMAAAD3noS3AAAAM1BMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteXQS9SJAAAAEHRSTlMABQIKDyEsGDkm9TMU8fft+mrRFgAAAchJREFUeNrs0ttuwyAQBNBZLsYY4vL/X1sbq/CKKky16pyHJJZWuyNnQERERERERERERERERP+BaT/mQ2UUgarIA2nXH+t9uj9E7m9jZLq2WRFdiVem7cfGBw3EWrkfxb5ABBCxiogARk3ilWl7TcYHBda56/l6ctO1zYroSrwybT82PmjhQnbWGOtymO/ZHBT5eRc6LEzbajI2KHXQIXsfrIgN/gX52axItmL0JF6aNtRjo4O55kOI0TsR5+M2Xdushq7EK9P2Y+ODMcCnFLNIjmmfrm1WQ1filWn7sfHB5PEp5YhAPMobEpCKKqm+Cy1Wpj23sWO1T/5TLl+1XhuwsV6PHdj01Gtl2jONHat9ikvqtQN7UYX1mlKvjfX68z9MV9pz/2W9EpBYr5Y4qarXsrTn6LEjsV7f7dsxCoAwEATAMlb+/7m2WlgYONjFmRccKCRcdhM+WNe0H34vh2PCcdM17Xm4e1V9sK5pA6/2FhMP1dPuLCasVa1VB9eqHoWKJy54FPKk3TtxwZP2aCBn1QVyVlUgZ8UHcsQJb8QJ32zGCYWhmyfOD0OrcqhyzFU5FNGaJ84voqnRqtGO1WgBAAAAAAD4gwuJzBUuUw2jkAAAAABJRU5ErkJggg==",
+                "progressbar_indeterminate_holo4": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwBAMAAAAybmm2AAAAMFBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteWkAkYNAAAAD3RSTlMAAwoGDyEsGDkmMxT39O9TQliZAAABzElEQVRo3u3ZP0sCcRgH8MehoCZ/6hvwDzSfNzZlRoOrIubiJAi1hHFEi6O01GJBEbgEBULQH6I3IOLSFjT5ElxFtOvH1XYafPGODvx+lpueh+89cMfvjxARERERES0tpVRYP0IK4dT5woniMecFF84hWliUaZqGEhU1EUrX+cOJ4jUjHFIL51C6iZJ0QjMkmgBgBQHonAyH0niOGU2SkspqSZXOArCCAHTOGNEUnmNGk4zsWpZ1klGpVwuhCyx/OFG8Vo9HchZg5kie49FcXV4K2qHaKEAegYIAdC7HI0dgiXskRd2kLMfVarWWVzsXVUAtbwIFWGfDh86t7Vhp4RytrVjpUvaazebptfl21wRgBf/f+f5p82rRHE6TWxna2qfc2JCxPNj+GOso3muvDWxM15Vjer4y/PqZ14ccBGVeIx3Fe41VdF59V45pZW3wO6+u7KNvdWb7YwREQeb1js7LlWNSWeW85ur9Na++dIIzr47tvcY6PC9Xjkmb88Lmxe9xvh7/Xx7877meANcTXK9i61Xuh7D9EPfb4H4bP89BCwLQuejZeQ7PC2eZf17I82jsPJr3Hdh9B+/TsPs03teC97VERERERERL6hv2rPU7MZ28hgAAAABJRU5ErkJggg==",
+                "progressbar_indeterminate_holo5": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwCAMAAAD3noS3AAAANlBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteV6AHYNAAAAEXRSTlMABQoQFyw5ITIm9R889PfwHc7yYP0AAAGqSURBVHja7NLbbsQgDARQc12T7KbL//9scfqQSyshdYWFpTmPEbFHMAQAAAAAAAAAAAAAAAAA8An3y/5VwbHMIBu5Tyn1Z5Nw/ka+O+cVHMvMsZH7lFJ/9k+/fLjx8p8PCo5l5tjIfUqpPlsONCHeBC+dizpaCNeWmSOXN3/ucSn7NZEDTVwfF2uUF29fFRzLjLGR+5RSf7YcIKJ3SRdlDc6FtSQFxzJjbOQembK8O7NlORE9OF9wkf8KZw1conOxLTNmzx1mzz0wZb8mcoCIvurNqxCVV1XCRFwN4v2SZjcw5ZY6s6VHf9RrSURpqUoyUa4G5f2SZjcw5cad2UtCvWZ8OBsp/10vJmK1m3sSPatBLTfPX6+BKbfcmb0w6jXjw9lIiXp9t2/HNgDDMAzA/v+6szcDHSIZ5AUCkqGN5aHn4DpSul5Dz8F1pFxcL5/2iR/NHSn9OQ49B9eRcnO9PKsGPlh2pNw8qxoK5Y1bOlJuhkJG2qdzJ4y0FXLO5k4o5KgTphX1OlIu6oTK0LdzB5ShrXLczR2wymER7XDu94toAAAAAAAAAD98BS4GIUUirlsAAAAASUVORK5CYII=",
+                "progressbar_indeterminate_holo6": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwCAMAAAD3noS3AAAAM1BMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteXQS9SJAAAAEHRSTlMABAoXECA5LAb1JjENTd7cUtpBCwAAAcdJREFUeNrt291ygyAQhuFdQCVgk9z/1ZbGtkfgTH/QVd+HQ2bYb8IeGEEBAAAAAAAAAAAAgL9Q1VgZqvXJ/uOrcjzcWIJbTt4h4LJmcyq6uo8sGl1P5iqfPfgSsMeazSkXqmanIurm0JG1ymcP3iHgsmZ0c3Uqisy+LjgRF/wOglMtlY+nBBfTwXsEDFHUhWYL+aHOO1Xnh57MVT578B4Bg1Odfauc+DTVpCGohiFNPRmrfPbgPQImP2ssazbKyTBW5RRiDCmPm8vJx+hL5aN5BQ+Gg/cImIegjd3KKajcnnW3JJLK5A6ySH4eUX79ZIZ1CPgIIm/NFmq31yQy7fNbjSLj84hK8Ml0e3UI+PDt9ppoL+O7Zz7g/ZftlUUy7fXT4Nl6e/13wPvQbq9MexnfPfMBaa82+7tnPiDt1WZ/98wHXG0vHu2NPzmbD3jnn2OT/d0zH3D9xQSvVW2/tTQfcP21KodCps9czAdcPxTiSPtCwXc40uZCzoWC9wjoVy/kcJ3Q9m098wHnteuEXIa+UPDtL0PzKceVgu/wKYe2SKE9Gax89uBSbLimvGhlfNPNxyc93LCffLHVkgAAAAAAAAAAALiGdyuD+5ssDOz3AAAAAElFTkSuQmCC",
+                "progressbar_indeterminate_holo7": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwBAMAAAAybmm2AAAAMFBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteWkAkYNAAAAD3RSTlMABQIKEBcsOSEm9jMd+vBmaXrxAAABc0lEQVRo3u2Zv0rDUBjFPzNEShZN4p7aJ4j6AkF9AFG3Dp0Et2wdfAFBBwe3OgtOydpdB1/A1UdwFy7xZvLDofY09HJpzm9qPw4/woGE+0cIIYQQQgghpLfsa9RgZTKRAIjjdnHq0in7c7iribPADmAAh0/21oWlMkkONXkW2EE38p0twIHbg8StS3cSy9GJ5jge2gEM4PDJ3rqwVC6nl5qLg5EdwAAOn+ytC0sVMr7VvOWJGuDgDtw+Gjt16dT9ubxfaZ6K1A5gAIdP9tYFpa5f5W6qmRfpbNqR+dke4MDt6cypS3dy8yhfjeb7YVA1HTF19AnEYfugcusyk9/Uy9++JmH3p6mjZo2UYeXWZepwvX2V2/rfRvX1zL7+xZQL+qoj7/uKKrcuo1If7Avri+/jEn3x++XV975P6wmuVxevV7kfwvZD3G9j+22e52DnOTwvhFIFz6OhVM77Duy+g/dpUCrjfS12X0sIIYQQQgghfeUH+E4C2CXdn30AAAAASUVORK5CYII=",
+                "progressbar_indeterminate_holo8": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwBAMAAAAybmm2AAAAMFBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteWkAkYNAAAAD3RSTlMABQMQFwksOSEy9h4L8O0G0W7OAAABgElEQVRo3u3ZsU7CUBQG4GMHlc0WuzG0TdxcDJCY6GJgKwuSvoFhwIWtcXZpZWGT8ABGpg4Y4kr0PXgMw2Jd1Jv0NjbXHG5K+L/xkvzDP9B7zyEAAAAAAICd5WU5RGR4HBy1IPV00pTz2wiRa0o88kwWlmO4Zo5ypRfniEYssgOJRW7Aonu0ZwfsRLph68kRjXSpV5csvVqdxaXlvuWdlyu9OEc00qRGW9L0em0WreuTRt55udKLc0QjLfKjrFHHfH+NOLwsa37ETqSf+npyRh3ru5E5LfqSuXnRZ3F7Vl3knZcrvThHNHJDcZh1d2+eP4YcJlfHcchOpFdjPTmikQmtUskzPaQ8xpV0g8aHiaacp59GPmmV9+sg5TE8SDdouJ9oypnRAH0p5Kz/7GtG0+3oq5JoyvmgKfpCX+hrK/rC/33WGt/Hf94ncF9Vu6/iPaT2HsJ7W+29jXmO2jwH80K1eSHm0WrzaOw71PYd2Kep7dOwr1Xb1wIAAAAAAOyqL3DZCqyBVRiEAAAAAElFTkSuQmCC",
+                "rate_star_big_half_holo_light": "data:image/png;base64,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",
+                "rate_star_big_off_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAABoCAMAAAAqwkWTAAAAyVBMVEUAAAAAAAA8PDwAAAAAAAAAAAAAAABoaGhBQUEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACJiYkAAAAAAAAAAAA1NTUJCQkAAAAAAAAAAAChoaGPj48kJCQAAAAAAAAAAACmpqajo6Ofn5+WlpaUlJR1dXUVFRUAAACrq6uampqYmJhwcHBgYGAAAAAAAAAAAAC0tLSxsbF/f394eHgAAAAAAACMjIyFhYV9fX1tbW0sLCwAAAAAAACioqIAAACvr69YWFhUVFS3t7eP8DjqAAAAQnRSTlMAgJkyeRpOs5x+BQNzDmEWOsxaaAmVg29TLuTSjkQlHurn4tjXvIg18d3aua5kPhH7+MS+ZijPycK2klZJ5mz1qadtR87CAAAEB0lEQVRo3u2ZiVbaQBSG5wshhbCGTdZKVVQExIXW3bbz/g/VTMSGJUgWxp6ew/cA5Myd//73/oPYs2fPv2Ba/S4+g1wVcyo+gTOgKfRjm7ikhXbKUIei0E0uD8fAodBMCx7l4BNuqQqOPIdsQWjlEE6llBnoCa1U4Nb90BGYttBIIQvn0qUOKaGRS8hIRQdmQh9K20Pp0dDatF+Vtt8YgSW08QQ38o2+TjkoKfyUcwyNcigrKbzzQ6PhVeFE/gXQNJZKyhV8xnAptPAMD9JnCAdCB6qJ2nKBro5h4TeRz0BTKzXhXnrobaWaqfx0iTpoWLxSYMhl7qAidk4RfshlriFbE4od249cJQNnQqHHfnw6Gmxopuxnjd0vKVNoyHUyUE5kAmmPVmrOs1WEsVznGA4sq5yak/bYpg/3dy8tqzKbZQmkLQPoEsjrbGJZPffL9qq9NKts4U4GcdzlY/KVVG5BuyzTMDzGX+Y4zpHcRN9xRl/mZAzFKcu0ln0M93dvHWf48nIlE9N/aTvOjftl4GDxzuwiau/YNUNVu5IQq18ayd3SWf2Owq4Av+UuuVXfma73jgUY3+SuuPoFVAsb7IzTodwN7TrwZG9Ic1n8WZCMC/hoSTrMozad5NwB5kfTtzABMokvarQmt2BJNI5lEr6pNi1uHR+pLGrdic9JA7ByYivpg0TlU92TDTfga5X45Wsbyt1KoRcEVb7buGXzuydk+Yy2jMgAMKPFM/tJle8ketleSyIiZ2bE8p3g0rRj5K5o5RvNyxYDu4nLRbgm9csWh5QJXRkGZQaWnSC25lVWCQFkW0mDeF+GoAuFRBlCBfEwjKGcMEOMw2q7mCh9hVJd8lxRU+lrO8kz2Rlkwu9wlUQvqB0ZjuskbwG2CdcyJAZ8TfBWYsiw3CR4R3mOsvj3wczFf2Xqy9DUY79BHW5y1OAANYj9ut+DQVCaNDCCtHgE1diGup4ozx9QGAFZ8zSmsdaCDPX4FDCDw/M4pjm04NdqV3rHseyU6U/55ObQBGcli3SBAyWtaZH1hHMdT+C51YfAqwEL87ps+otzMoGnob6UsB+BvO8ypYl3qOQCLy+n9HtcmrXFI19mVw51FGv6VRZn3lFdHWce4VYO1VmafnacK7p+vx3vOE/+cVYO9eJPv+gOfug794kSm9kK3seqiz11A70YVzTwgyKVwqaT99ShHi/eL2kS44q8KOageuejgF0q4vKlr2oco5Py3n9SF0oE2Z69xUPyQKPzNmbTkTfHrjwf4VIsbbfFZ1zqQ/kQ2e6+w+97fBFsI+2JIuOAFVkLDVysWth2UJ6kKEZdFxSTdJRqW1mI/OeVBcyiNt+0qWotInGZt77GyVO914nYs2fPf88fm/2TZoiTETIAAAAASUVORK5CYII=",
+                "rate_star_big_on_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAABoCAMAAAAqwkWTAAAAvVBMVEUAAAAAAAAAAAAAAAARPEwdZ4ISQFIAAAAAAAAtoMsAAAAAAAAAAAAAAAAmia0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqlLwONEICCQwupNAsncYnjbMjfZ4hdZMKJC0AAAAqlr4GFRoAAAAAAAAvqtcebYobX3kAAAAAAAAAAAAysuErmcIpkrklhakfcY8AAAAMLDgAAAAxr94xrtwieZkYVWwQOUkkgqQAAAAzteXrvX7WAAAAPnRSTlMAgBkzmbOcfAXmA2FzTc14Og9uVC1pWiUUfmXYlYPq4tLDvY5E24g1C/G3rlA+CPve18u6HZJJ+PbAqJjHIJaA4UwAAAP2SURBVGje7dkHduIwEAZg/YaAwdh0FkyvIfSEtE2Z+x9rPQ5ZAzbgpuzb9/gOgKPRzEijiKurq3+hXq2In5CtIl0XP+AWQFnIp+ZhUYR0BaAFaEK2bA5oAngUklWAJ9r+wC5VAYPugEZRSPUJTIgoBYyEVDVgQERdIK8KiYoN4I4sLSAhJFoCKWI9wBTycG5vyNaWWrS/OLe/zABdSFMG+vSlIzMdpg3glXbeJaZDgVPhmyGx4VWBe/oLgKTuoHBXcMyBpZDiGZiRYwOUhAxcRBnaM3QOCxlF5NhKKiWniOSW0irN/fRAC5Bw8UoASTr0AdRE7DTAoEOvQGMlWMwnER1LAbeCyWk/jp6ENmRy+3GJ/5JSB9rklgIKkZqAYqskdp51DZiTWxMo6XohsaPYpuI863eXul4zzTQ8ZcjDEJ6qpqnrI+vL6nF7KVdxwQN5aQ5xXq6WyO4dnTjUTtrmNzsPRpdO6RjG9mYnlWQT7DvsHgsA1u8ODGOTyawpsk4mYxh968sASvs1rWoAPihuY45dXYjjL20pXj3nOw61BuCN4vTb/R2WtfcpQ3FZv3GaF0+0M0w2FI9uC0BZPTHNcakacaXBuUvSZw5804nuAUC+cu7UMQGkIm/UjNNAOd9OdW4MTYoiw2WqTS/eDXij+hResw1Az4qLlFKk8HH1pP0d8Kta+PBlktzdFN8XBA7fbwruvu2qnkvhC9UmBhy2YOOZWrbDJy9sjlsO3yBI2OAKm5TwbV1hCxY+jP0dqXbY6iIkLt4h+cHNYKFGuDfmeFbxAWhUog7iHfJhGHFEL/Ig7sccKEScIeZ+c1uLNn15Z13cc8WUpy9PMc9kt0DK/x2uFukFtUf+vADp0HWkpoEX8ikJ/IrwVpIkv/oR3lGeg1we+B0lG/6VqUO+tUK/QT2e6qjrU8frSIQy8j74mu9498rFLlAN3VDdE+XdDOy9Sy6TkI116tVQmxMAee/heR6yOVTcg9mrvRxdTeSdUz56cyi7/urxEEDpk48PDe4J5yVcgmfzR4frevC1nL07ZioTQ4IrQIv2bJ4A5JwuUzftRUVP8AIwO7q7o7zaX/LyeFFdQAvVuccHEykv55BiL6p3cPqpgbdor3Ov+/ZyXKOVa1GpEB380enc98PTE6lSheXD6eCjEFs0cAZF1IqnVj7iRT2NvzfJDLFFze/5GqVzAalrsNx0OMZAOmgl5YBXojEnQXqkXughOQDt3tcxqwS+OQ7pbguLVr88jD7D0trQTeB29wt468MzCc4kRcoA9MC50IZlsfJbDoU8bFrQ6wLTggR8qjeAwP+8WgAwgxZffcGxFoEsc4swtzRlVNLE1dXVf+8PiLJs5G2Z9ooAAAAASUVORK5CYII=",
+                "scrubber_control_disabled_holo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAPFBMVEUAAACIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg4st+Ci486sd5LqMtwlaJJqc0zteWzIZSAAAAAE3RSTlMATUg+Ihs3AywVCEUP4FHVmWCf15i9tgAAAYlJREFUaN7t2Itu6yAMBmD/NhBuabuT93/XI03TOm0qJXasdVK+B4iFTQyYTqfT6S/pIScRBlgk5dDpSDUkxjecQqVDLDHhgRQX++cDY4CDMURgPMGB9IpgghRtdjImZVWeqmCaVEV6GDvw7jRF7BQV33eMEAHXCAUq03WoDBWuNGURKMlCMzLUslMB7oo5QfYkBZiEpwtgmPBiWoB9CUuDUVssPcLeMRLMEg1UHKDqS2wvcwJ8c8Q4ANNDHYfoviUAgrpRX27XbbveLhjL2hq/rdu79U1bZcHIZd0+rOM1CD3SMHLbPv3DSFPu0us9wKrcpxjavsCQewD3FLkX2X2buv9ov9cqIg4R3du194HjfmS6H/ru1xbvi5f71dH98ut+ffd/gPg/ocYEBkLPdRj0V3iIG5IkLzIMIeqqCNydB0bllUZq96Gj39ixN+zQOu1WE6alShphvgEp9YQJ0kkvNjzRItlEwYBEsiuZH2zNXOgYS8ztR2pyXOhItYQsH3IolU6n0+kP+Q9bEx2UrsdzRwAAAABJRU5ErkJggg==",
+                "scrubber_control_focused_holo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAllBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteVtyu1yzO1ryuxexetjx+tTwelvy+1yzO1yzO1xzO1syuxqyuxwzO1wy+1nyOxZw+pNv+hxy+1wy+wzteU1tuVOv+k9ueY4t+ZixutDu+dJvehVwelYwupSwelryuxGvOiB2w4OAAAAJXRSTlMATQYKEQ0XGh02RUkgQSwmMjvw1flze2To3M/j3IyrpYRsX62hrNdO2wAAAttJREFUaN7tWWlz2jAQrZb4Ej6wjc0dIC2+OfL//1xllxl1Wq9AVjQhGV6+BD68xx7aXa1+PPHEE5KA7k8LoMXoCmjxseSM1TCMlyvYv+yLjxJp2Rm1aZqWZXewLPaBybQa6uzQsVt24IQepYSBUi90AtvqNABAmd5k5B75Dx4TMdUkOnrLnVCCgE5cq5MYTm+6zpgIMHbcP1YM4mfO4fS4BHPUAIXOOz4ld4D6nZ+k+U03JHcidE1UAXdPQMndoAHiJpzf8okUfEtCoeWfEElMWoX7+R0iDQdRwH+/sg14/vhkEPx7cgnAMAMyEIFpANx2kEuHClCXO0kQgJAMRngrDAA8AEPDACA2wKYqAtTmJiAGOEQJDjcBifBYTWAsjDM3QM0EXQZwE3ADhDVi9mu5jqbr5XYvrBjMBPwMeARFuqhO54bhfKoWO4LCQ88CE8CLxNuyOtdFWWZZWRZ1XsUzvGAwAekQJ/NjXWaHK7KyPkaJdJhHBuqh/TQvGD1HVuTTBPWRMcJO8Rjxz5zzc4XoDckj5DTDCC1D8ZHzc4VjjBakEUgl6aaqOT9XqKuNVKKCgRXqRV4eelDmK6xoIwJIjJPOgF4TEiTKvQJopX49FYdeFMdXtGbLJNGy9VC/j2KJNAJ4sUkv5k3WL5A1EelFv8AIE5iiAu9TGQHQJ8BjoNVFoCHIymn6U5ym6gctxQ4aUouQUrFSLxXifrNDi52o46iX6/NCslzjDWcW9TacmaDhSLbMtKdlXlLBWCHd9NPon6Z/jlJB0x8wtsziKq+LMmPoxpaFeGwZMnjtVtUpb5r3Jj9V882NwWvY6LjfxuvLZR1vE9nRUf/wy6uF+vhuGZ95AeGZqmIA6L4Ear/G6r6I614laF+G6F7nfP5CSm2lpnspCA+y1hy8mNW8WoaHWo7Lr/cf74FC6onlUR+JdD1z4Q919hV/PdR9hafGG4+lX+e994knvjF+A/DCfuTfcOFvAAAAAElFTkSuQmCC",
+                "scrubber_control_normal_holo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAhFBMVEUzteUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteVKvugzteUzteUzteUzteUzteUzteU/uuczteUzteVJvehJvegzteUzteVKvug7uOZHvOhHvOhDu+dDu+czteU5t+Y8ueZAuudFvOclVTOqAAAAJ3RSTlOZAAQJDxgTITo2HSomlX0uijJC6IZuYVFMSbJmgf74kHjvp8/MvLsvv+3mAAADbElEQVRo3syU23aiQBBFz4w0NA2t3AXvmqxE8P//bxqMFip0G4W1Zr8keTmbOlUd/BmZ/0fw945hBJQ9mUwsy7Ib1C/qT7K8J2jCVTJjQjg/CMGY8jQSo8CYrr6bCcf3ZqHLf3DDmec7gqlZyPGC4PztzPFnLs+zdBcEgQSk+rFLs5y7M99h5zl0An08Eyq9WE63eGA7XRbKIZheAU28+njPjZYJekmWkeupMTRFoTffquPnUwktcjqvFVbvEOiLt0UdjyeoFcLuU6Dv8/2woHiTogj9viHQma8+n6cSTyNTroYgg1bQtB/mAX5FkIfNJsyCph43k/glMnP9LgM68j2+wwvsuNdhwEO+8KIVXmIVeeLBgI78BC+SdBjw0E8U4GWC6KEl3NxnnZ/gDRKuNn1zrbi5f+bzFd5ipQz0Hu4EE9txd3iTnevYkzsBLTjM8DZZeLNo3Cwgl3gbmXvtNaBVkM8DDEDA/VZJaBeUYhBSKqktYF4hMQiy8BgJWhc0xUBMW5cEGmCOwZjTCKABVsCAI1y2gBEGoBFIYAnawDAjCIsEzRuIJAZERvVbIIHFZksMynLGrLbAcRMYOXzG8Xodx58HGElchwR1QwVMfO1PVVUqquq0/4KJou7oKjA3dIhP1fH43XA8lqf4YO6IBOYbWmwqlU4cq83CfEdXge3wrT5/XZ7zyVCu9YYtd+yLQK0g1/ezoXwybPQt5WoJjaBZQQYdMfXTbimGjqxewlWQau/nRPltw0l7SykJLBFqd7wvvzsp99oth8K6CrTPbEED3I+w0D41EuiP6KPqE1Qf+jO6CNSVSt2Ky+8eSt2apbrT5wSbfsHmaQE0rPsFa2jQTDC8YPyKtuMsmc40GO1Mx39o4/+rMP+z+1etGeMACEIx1BuQqJPRwUQG739BHYzFEMNHfBE5AAwov+2rv3vsfOKx0wHYc80PHH5k8kPfLlvWfNmSJbx8KLy8VXhJOhr837B08zTN3TLYpaPEb7kBjP8CXL7DBoS3UKAJHOVjcRvLG3E+SuDDED7O4QMpPlLjQ0E+1lQwW3TRfasLAKNlOhyn430aUNCI5XtIdGAu9wxz1QHqAtQ4mj6eEzXWA0vzca/2Nx2gIwzAWtu/gdybfZmQe35pwF1LAy4oDdRce0gVN/5SPYlXTe2cDUmLl89GXuGIAAAAAElFTkSuQmCC",
+                "scrubber_control_pressed_holo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAA1VBMVEUzteUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteVsyu0zteVuy+0zteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteVdxOszteVpyexuy+1tyuwzteUzteVZw+pNv+huy+1xy+1lx+xgxuszteUzteVryuwzteUzteVSweluy+1uy+0zteUzteUzteUzteU1tuVOv+k8uOZVwuo4t+ZJvehCu+dgxutjx+tEu+dGvOfyQddBAAAAO3RSTlNmAHzex6Jq682mwiLmgYUv7m3hTPX14fmJNNmeY1HSvbCMmI47/e21tI+IeufcnZRyHf4Gn4DVv2BIOFolky4AAARISURBVGje5Zr9e5owEMdvIKiooCKgnS9Tu9p29r3dW0Sttv3//6Stu0BkJQlIfLY9+/5qnnzkcsld7gLvDqz/B1AbaJNSpRIQElQq1qTl1hQCbvrVOnmjerV/owJQ03TCla7VCgL6FSJRpV8AYJZJBpXNPQH9JsmoJuwBcI+Sc1RODdu2TQDTtrvGaJikH7k5AbVJws5VDd5IqybWp+TkAbgeidU2TODINNpsnOdmB2gklmWDULbFxmoZAU6JTd8AqRpWwkxyQC9e3foZZNJZvM/1nhzwPfZ9AzLLiPfEsQxwHERDu5BD3ehvBcdiQC8aWGpBLplW9Md6IoAT2f8D5NaHaB0cASDynyrsoWr08TwA8//3sJfeR/uBB3AT/7/AN7jpAMfj2D/3OnhOKqBETQgFZNE50gDfqJu1igBa1M2/pQCG+NMYCqlL48NbgCk8H3KfGuYbAEaoOhRWHSPg3W+AFoLPigPOcKbWbwBcHAsUyEJnSQK+IrahAtDAub4mABi/dVAiHTOFXUANobYagI2z1XYA+FVtUKQ22nsH0M60B85nF/7trX8xe8i0F9oMcEM3B4h0OX9ahY8/Fa6e5lcgEt20NzGgL1/iT/42fF6uFz+1Xj6H24tP8mXux4CqNAxMO6vNekGoFuvNqnMuDQzVGIC7WxPM/zFc4vQRYhl+FBA0PHcQEDlpU2CfDpufEToCKzXRUSlggBsDuPJXbH5GWF0AV7hxBxSAH3TK95/ths3PCM9bvi+dotEpwJCkEifhmqRoHfqSBMOgAEscyqb4ASmf8MRd5zEezhRwJHaiL6slSdVyNRO70RECaCy45i4xWijNRp+Bo2uMCRTgYQgCjjqPi3TA4vEEOMIA6VEADgeePr4QHqADPOEICgjwqDscoIlrcDgT6ehFh1vkIQagw7npSJwSXRXYaAWPirnsqCh22G3kh93Bj+usAechd8ApY8DJHDKv0kLmVB4yk0HfyBf0p9LEiAV9kF/OHvxtuInSlk249YVpC173AAEsNQWhLk9eE6+Xl9fE6+QShGLJaSJ1nIBY05k/v72d+7NzEGtCU0cG6KpNfvFw6+4Aeuz+oe4G0tu9gAzVX0CGiRsOKPwEjboMA7Bb7EgFYIQHQ/o1dgyFNU6/xt55qi7i6PLeHaeUcA8Fdc8rJdDITLpKiiF6SrXFJQp2m0lrtK6gIGWpL0hROYGqklrgpBcFB0WLggZBDXhlzbGasmbjjxRmUY6uqLQsL45bZk7/HBGU18tY3q/nK+/XZeV9RigTqvv8y0uaxxlaLHreFsu4zVosOZtEIw2k0kZ5mkSoRvY2V8NiYxs5GnVBxkadzsYFgzytRqckbzUapWSrsViztIzN0l9W+dUsTXaCdXePdq/pkYzyWns2rLEbIFPz+q5Ay30om37YL/pooCF6NGDXlDx7MNOfPZg19Q83XmemDzf+tacnfy/gB/s76qMkz3F7AAAAAElFTkSuQmCC",
+                "spinner_76_inner_holo": "data:image/png;base64,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",
+                "spinner_76_outer_holo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAADkCAMAAAC/iXi/AAAAsVBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+3mHKcAAAAO3RSTlMABgoSH/3yGiQO7CkW9vouMkDkRTfJzjvf0+jESqBcV2Hbt66ldlLXv06yZWmBqZtxu49tl5OLfXqFiHO5Lf0AAAtLSURBVHja7NxrU9NAFMbxZzeRNk1qYmxLWyxQLhYsooKI+v0/mHshOXu8dDTNZXHyO4X3/zmbDcMwoNfr9Xq9Xq/X6/V6vV6v1+v1er2eH7bb7WmWZSn+Zy8KL6cXj8eZxPMnNJhxI6n05fzT4ys8X8KCsIXit5HGwbvLCZ4fYVCjQIEl6nmyPN8GeEaEFAqvLEOdRP1FxuPxu9Nn0imkIhgq/M0mqVFnjlaH8J2QmmCVsIOdmxzrz9hY3Hh945pEW+k2FscVPNImUqbZpbH8NoCnTCJtkkDs3iRVlg4eQniIEqmSNqnnj5ukNVLkwejOu20KGUleyTa5+3alTGpUn+VXr55NlagaI75IsnuTFFk0HujRZq/hDRkp1PhLJuzs2iQVUqW28uTMikj5tfLXh3LHJsdm3MhCfi/Qvaiw48BCwCGyLJtst9/PZ/znHdZImdMMHROBE0mZbiV2iK8/3uZ079BZpcbRwfIGnZJB4FTyREmFu4XHF8sxXyQzGt0G6IyIqJGfV9uIv3f4PWfXThloZzFBR2Sg8UyKxL96czHii3RCR6OP6ET0lEiVdF4FqohOP9kfBHif/X4RoX2BZit/PrCobnLOd2hDjaME7aJGXikV7Ce7OKBd6sCychaiVcJJ5JXYX/yhSKQDa2xStIEaEzeTEuuRHbG7tTQ/RGtEQonu3SNQm22uEmmPhfwaLZGJolfJlylRp+Dzbza5XC5P0AqZGAHvjARqNpkVbdQ4Wuav0QKRWO5jGQUS9ZMf2Fld2plnaBg18kyBRpzmJo8qtXWMJlEjP7AR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"
+            };
         })(image_base64 = R.image_base64 || (R.image_base64 = {}));
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 ///<reference path="../../androidui/image/NetImage.ts"/>
+///<reference path="../../androidui/image/NetDrawable.ts"/>
 ///<reference path="../../androidui/image/RegionImageDrawable.ts"/>
+///<reference path="../../androidui/image/OverrideSizeDrawable.ts"/>
 ///<reference path="image_base64.ts"/>
 var android;
 (function (android) {
     var R;
     (function (R) {
-        var NetImage = androidui.image.NetImage;
-        var RegionImageDrawable = androidui.image.RegionImageDrawable;
-        var Rect = android.graphics.Rect;
-        const netImage = new NetImage(R.image_base64.x3, null, null, 3);
+        var NetDrawable = androidui.image.NetDrawable;
+        var OverrideSizeDrawable = androidui.image.ChangeImageSizeDrawable;
+        const density = android.content.res.Resources.getDisplayMetrics().density;
         class image {
+            static get btn_check_off_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_disabled_focused_holo_light, null, null, 3); }
+            static get btn_check_off_disabled_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_disabled_holo_light, null, null, 3); }
+            static get btn_check_off_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_focused_holo_light, null, null, 3); }
+            static get btn_check_off_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_holo_light, null, null, 3); }
+            static get btn_check_off_pressed_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_pressed_holo_light, null, null, 3); }
+            static get btn_check_on_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_disabled_focused_holo_light, null, null, 3); }
+            static get btn_check_on_disabled_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_disabled_holo_light, null, null, 3); }
+            static get btn_check_on_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_focused_holo_light, null, null, 3); }
+            static get btn_check_on_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_holo_light, null, null, 3); }
+            static get btn_check_on_pressed_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_pressed_holo_light, null, null, 3); }
+            static get btn_radio_off_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_disabled_focused_holo_light, null, null, 3); }
+            static get btn_radio_off_disabled_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_disabled_holo_light, null, null, 3); }
+            static get btn_radio_off_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_focused_holo_light, null, null, 3); }
+            static get btn_radio_off_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_holo_light, null, null, 3); }
+            static get btn_radio_off_pressed_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_pressed_holo_light, null, null, 3); }
+            static get btn_radio_on_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_disabled_focused_holo_light, null, null, 3); }
+            static get btn_radio_on_disabled_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_disabled_holo_light, null, null, 3); }
+            static get btn_radio_on_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_focused_holo_light, null, null, 3); }
+            static get btn_radio_on_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_holo_light, null, null, 3); }
+            static get btn_radio_on_pressed_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_pressed_holo_light, null, null, 3); }
+            static get progressbar_indeterminate_holo1() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo1, null, null, 3); }
+            static get progressbar_indeterminate_holo2() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo2, null, null, 3); }
+            static get progressbar_indeterminate_holo3() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo3, null, null, 3); }
+            static get progressbar_indeterminate_holo4() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo4, null, null, 3); }
+            static get progressbar_indeterminate_holo5() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo5, null, null, 3); }
+            static get progressbar_indeterminate_holo6() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo6, null, null, 3); }
+            static get progressbar_indeterminate_holo7() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo7, null, null, 3); }
+            static get progressbar_indeterminate_holo8() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo8, null, null, 3); }
+            static get rate_star_big_half_holo_light() { return new NetDrawable(R.image_base64.x3.rate_star_big_half_holo_light, null, null, 3); }
+            static get rate_star_big_off_holo_light() { return new NetDrawable(R.image_base64.x3.rate_star_big_off_holo_light, null, null, 3); }
+            static get rate_star_big_on_holo_light() { return new NetDrawable(R.image_base64.x3.rate_star_big_on_holo_light, null, null, 3); }
+            static get scrubber_control_disabled_holo() { return new NetDrawable(R.image_base64.x3.scrubber_control_disabled_holo, null, null, 3); }
+            static get scrubber_control_focused_holo() { return new NetDrawable(R.image_base64.x3.scrubber_control_focused_holo, null, null, 3); }
+            static get scrubber_control_normal_holo() { return new NetDrawable(R.image_base64.x3.scrubber_control_normal_holo, null, null, 3); }
+            static get scrubber_control_pressed_holo() { return new NetDrawable(R.image_base64.x3.scrubber_control_pressed_holo, null, null, 3); }
+            static get spinner_76_inner_holo() { return new NetDrawable(R.image_base64.x3.spinner_76_inner_holo, null, null, 3); }
+            static get spinner_76_outer_holo() { return new NetDrawable(R.image_base64.x3.spinner_76_outer_holo, null, null, 3); }
+            static get spinner_48_outer_holo() { return new OverrideSizeDrawable(image.spinner_76_outer_holo, 48 * density, 48 * density); }
+            static get spinner_48_inner_holo() { return new OverrideSizeDrawable(image.spinner_76_inner_holo, 48 * density, 48 * density); }
+            static get spinner_16_outer_holo() { return new OverrideSizeDrawable(image.spinner_76_outer_holo, 16 * density, 16 * density); }
+            static get spinner_16_inner_holo() { return new OverrideSizeDrawable(image.spinner_76_inner_holo, 16 * density, 16 * density); }
         }
-        image.btn_check_off_disabled_focused_holo_light = new RegionImageDrawable(netImage, new Rect(96, 0, 96 + 96, 0 + 96));
-        image.btn_check_off_focused_holo_light = new RegionImageDrawable(netImage, new Rect(0, 96, 0 + 96, 96 + 96));
-        image.btn_check_off_holo_light = new RegionImageDrawable(netImage, new Rect(96, 96, 96 + 96, 96 + 96));
-        image.btn_check_off_pressed_holo_light = new RegionImageDrawable(netImage, new Rect(192, 0, 192 + 96, 0 + 96));
-        image.btn_check_on_disabled_focused_holo_light = new RegionImageDrawable(netImage, new Rect(192, 96, 192 + 96, 96 + 96));
-        image.btn_check_on_disabled_holo_light = new RegionImageDrawable(netImage, new Rect(0, 192, 0 + 96, 192 + 96));
-        image.btn_check_on_focused_holo_light = new RegionImageDrawable(netImage, new Rect(96, 192, 96 + 96, 192 + 96));
-        image.btn_check_on_holo_light = new RegionImageDrawable(netImage, new Rect(192, 192, 192 + 96, 192 + 96));
-        image.btn_check_on_pressed_holo_light = new RegionImageDrawable(netImage, new Rect(288, 0, 288 + 96, 0 + 96));
-        image.btn_check_off_disabled_holo_light = new RegionImageDrawable(netImage, new Rect(288, 96, 288 + 96, 96 + 96));
-        image.btn_radio_off_disabled_focused_holo_light = new RegionImageDrawable(netImage, new Rect(0, 0, 0 + 96, 0 + 96));
-        image.btn_radio_off_disabled_holo_light = new RegionImageDrawable(netImage, new Rect(288, 192, 288 + 96, 192 + 96));
-        image.btn_radio_off_focused_holo_light = new RegionImageDrawable(netImage, new Rect(0, 288, 0 + 96, 288 + 96));
-        image.btn_radio_off_holo_light = new RegionImageDrawable(netImage, new Rect(96, 288, 96 + 96, 288 + 96));
-        image.btn_radio_off_pressed_holo_light = new RegionImageDrawable(netImage, new Rect(192, 288, 192 + 96, 288 + 96));
-        image.btn_radio_on_disabled_focused_holo_light = new RegionImageDrawable(netImage, new Rect(288, 288, 288 + 96, 288 + 96));
-        image.btn_radio_on_disabled_holo_light = new RegionImageDrawable(netImage, new Rect(384, 0, 384 + 96, 0 + 96));
-        image.btn_radio_on_focused_holo_light = new RegionImageDrawable(netImage, new Rect(384, 96, 384 + 96, 96 + 96));
-        image.btn_radio_on_holo_light = new RegionImageDrawable(netImage, new Rect(384, 192, 384 + 96, 192 + 96));
-        image.btn_radio_on_pressed_holo_light = new RegionImageDrawable(netImage, new Rect(384, 288, 384 + 96, 288 + 96));
         R.image = image;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
@@ -6917,6 +8247,49 @@ var android;
                 return Object.assign(this.buttonStyle, {
                     background: null,
                     button: R.drawable.btn_radio
+                });
+            }
+            static get progressBarStyle() {
+                return {
+                    indeterminateOnly: true,
+                    indeterminateDrawable: R.drawable.progress_medium_holo,
+                    indeterminateBehavior: 'repeat',
+                    indeterminateDuration: 3500,
+                    minWidth: '48dp',
+                    maxWidth: '48dp',
+                    minHeight: '48dp',
+                    maxHeight: '48dp',
+                    mirrorForRtl: false,
+                };
+            }
+            static get progressBarStyleHorizontal() {
+                return {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.progress_horizontal_holo,
+                    indeterminateDrawable: R.drawable.progress_indeterminate_horizontal_holo,
+                    indeterminateBehavior: 'repeat',
+                    indeterminateDuration: 3500,
+                    minHeight: '20dp',
+                    maxHeight: '20dp',
+                    mirrorForRtl: true,
+                };
+            }
+            static get progressBarStyleSmall() {
+                return Object.assign(this.progressBarStyle, {
+                    indeterminateDrawable: R.drawable.progress_small_holo,
+                    minWidth: '16dp',
+                    maxWidth: '16dp',
+                    minHeight: '16dp',
+                    maxHeight: '16dp'
+                });
+            }
+            static get progressBarStyleLarge() {
+                return Object.assign(this.progressBarStyle, {
+                    indeterminateDrawable: R.drawable.progress_large_holo,
+                    minWidth: '76dp',
+                    maxWidth: '76dp',
+                    minHeight: '76dp',
+                    maxHeight: '76dp'
                 });
             }
             static get gridViewStyle() {
@@ -12396,8 +13769,7 @@ var android;
                 this.mFpsStartTime = -1;
                 this.mFpsPrevTime = -1;
                 this.mFpsNumFrames = 0;
-                this._continuingTraversals = false;
-                this._lastContinueFakeTraversales = 0;
+                this._continueTraversalesCount = 0;
                 this.mInvalidateOnAnimationRunnable = new InvalidateOnAnimationRunnable(this.mHandler);
                 this.mAttachInfo = new View.AttachInfo(this, this.mHandler);
                 this.mTraversalRunnable = new TraversalRunnable(this);
@@ -12848,20 +14220,15 @@ var android;
             }
             checkContinueTraversalsNextFrame() {
                 //AndroidUI add:
-                //Because of some reason, sometime will skip a frame to traversals like scroll.
+                //Because of some reason, sometime will skip a frame to traversals when scroll.
                 //Let's continuing traversales next frame.
-                const now = SystemClock.uptimeMillis();
-                const fakeDuration = ViewRootImpl.DEBUG_FPS ? 1000 : 100;
-                if (!this.mTraversalScheduled && now - this._lastContinueFakeTraversales < fakeDuration) {
-                    if (!this._continuingTraversals) {
-                        this._lastContinueFakeTraversales = now;
-                        this._continuingTraversals = true;
-                    }
+                const continueFrame = ViewRootImpl.DEBUG_FPS ? 60 : 5;
+                if (!this.mTraversalScheduled && this._continueTraversalesCount < continueFrame) {
+                    this._continueTraversalesCount++;
                     this.scheduleTraversals();
                 }
                 else {
-                    this._continuingTraversals = false;
-                    this._lastContinueFakeTraversales = now;
+                    this._continueTraversalesCount = 0;
                 }
             }
             isLayoutRequested() {
@@ -16195,20 +17562,6 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-var java;
-(function (java) {
-    var lang;
-    (function (lang) {
-        class Float {
-            static parseFloat(value) {
-                return Number.parseFloat(value);
-            }
-        }
-        Float.MIN_VALUE = Number.MIN_VALUE;
-        Float.MAX_VALUE = Number.MAX_VALUE;
-        lang.Float = Float;
-    })(lang = java.lang || (java.lang = {}));
-})(java || (java = {}));
 /*
  * Copyright (C) 2010 The Android Open Source Project
  *
@@ -27008,14 +28361,16 @@ var android;
                     }
                 }
             }
-            drawableSizeChange(drawable) {
+            drawableSizeChange(d) {
                 const drawables = this.mDrawables;
-                if (drawables != null && this.verifyDrawable(drawable)) {
-                    drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+                const isCompoundDrawable = drawables != null && (d == drawables.mDrawableLeft || d == drawables.mDrawableTop
+                    || d == drawables.mDrawableRight || d == drawables.mDrawableBottom || d == drawables.mDrawableStart || d == drawables.mDrawableEnd);
+                if (isCompoundDrawable) {
+                    d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
                     this.setCompoundDrawables(drawables.mDrawableLeft, drawables.mDrawableTop, drawables.mDrawableRight, drawables.mDrawableBottom);
                 }
                 else {
-                    super.drawableSizeChange(drawable);
+                    super.drawableSizeChange(d);
                 }
             }
             invalidateDrawable(drawable) {
@@ -40046,388 +41401,629 @@ var android;
         })(NumberPicker = widget.NumberPicker || (widget.NumberPicker = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-///<reference path="../../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../../android/graphics/Paint.ts"/>
-///<reference path="../../../../android/graphics/RectF.ts"/>
-///<reference path="../../../../android/graphics/Color.ts"/>
-///<reference path="../../../../android/os/SystemClock.ts"/>
-///<reference path="../../../../android/util/DisplayMetrics.ts"/>
-///<reference path="../../../../android/util/TypedValue.ts"/>
-///<reference path="../../../../android/view/View.ts"/>
-///<reference path="../../../../java/lang/System.ts"/>
-var com;
-(function (com) {
-    var pnikosis;
-    (function (pnikosis) {
-        var materialishprogress;
-        (function (materialishprogress) {
-            var Paint = android.graphics.Paint;
-            var Style = android.graphics.Paint.Style;
-            var RectF = android.graphics.RectF;
-            var Color = android.graphics.Color;
-            var SystemClock = android.os.SystemClock;
-            var TypedValue = android.util.TypedValue;
-            var View = android.view.View;
-            class ProgressWheel extends View {
-                constructor(bindElement, rootElement) {
-                    super(bindElement, rootElement);
-                    this.barLength = 16;
-                    this.barMaxLength = 270;
-                    this.pauseGrowingTime = 200;
-                    this.circleRadius = 36;
-                    this.barWidth = 4;
-                    this.rimWidth = 4;
-                    this.fillRadius = false;
-                    this.timeStartGrowing = 0;
-                    this.barSpinCycleTime = 460;
-                    this.barExtraLength = 0;
-                    this.barGrowingFromFront = true;
-                    this.pausedTimeWithoutGrowing = 0;
-                    this.barColor = 0xAA000000;
-                    this.rimColor = 0x00FFFFFF;
-                    this.barPaint = new Paint();
-                    this.rimPaint = new Paint();
-                    this.circleBounds = new RectF();
-                    this.spinSpeed = 230.0;
-                    this.lastTimeAnimated = 0;
-                    this.mProgress = 0.0;
-                    this.mTargetProgress = 0.0;
-                    this.mIsSpinning = false;
-                    let metrics = this.getResources().getDisplayMetrics();
-                    this.barWidth = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.barWidth, metrics));
-                    this.rimWidth = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.rimWidth, metrics));
-                    this.circleRadius = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this.circleRadius, metrics));
-                    this._attrBinder.addAttr('circleRadius', (value) => {
-                        this.setCircleRadius(Math.floor(this._attrBinder.parseNumber(value, this.circleRadius)));
-                    });
-                    this._attrBinder.addAttr('fillRadius', (value) => {
-                        this.fillRadius = this._attrBinder.parseBoolean(value, this.fillRadius);
-                        this.invalidate();
-                    });
-                    this._attrBinder.addAttr('barWidth', (value) => {
-                        this.setBarWidth(Math.floor(this._attrBinder.parseNumber(value, this.barWidth)));
-                    });
-                    this._attrBinder.addAttr('rimWidth', (value) => {
-                        this.setRimWidth(Math.floor(this._attrBinder.parseNumber(value, this.rimWidth)));
-                    });
-                    this._attrBinder.addAttr('spinSpeed', (value) => {
-                        this.setSpinSpeed(this._attrBinder.parseNumber(value, this.spinSpeed / 360.0));
-                    });
-                    this._attrBinder.addAttr('barSpinCycleTime', (value) => {
-                        this.barSpinCycleTime = Math.floor(this._attrBinder.parseNumber(value, this.barSpinCycleTime));
-                    });
-                    this._attrBinder.addAttr('barColor', (value) => {
-                        this.setBarColor(this._attrBinder.parseColor(value, this.barColor));
-                    });
-                    this._attrBinder.addAttr('rimColor', (value) => {
-                        this.setRimColor(this._attrBinder.parseColor(value, this.rimColor));
-                    });
-                    this._attrBinder.addAttr('linearProgress', (value) => {
-                        this.setLinearProgress(this._attrBinder.parseBoolean(value, this.linearProgress));
-                    });
-                    this._attrBinder.addAttr('progress', (value) => {
-                        this.setProgress(this._attrBinder.parseNumber(value, this.getProgress()));
-                    });
-                    this._attrBinder.addAttr('progressIndeterminate', (value) => {
-                        if (this._attrBinder.parseBoolean(value, false)) {
-                            this.spin();
-                        }
-                    });
-                    this.applyDefaultAttributes({
-                        progressIndeterminate: true
-                    });
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Animation = android.view.animation.Animation;
+            class AlphaAnimation extends Animation {
+                constructor(fromAlpha, toAlpha) {
+                    super();
+                    this.mFromAlpha = 0;
+                    this.mToAlpha = 0;
+                    this.mFromAlpha = fromAlpha;
+                    this.mToAlpha = toAlpha;
                 }
-                onMeasure(widthMeasureSpec, heightMeasureSpec) {
-                    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-                    let viewWidth = this.circleRadius + this.getPaddingLeft() + this.getPaddingRight();
-                    let viewHeight = this.circleRadius + this.getPaddingTop() + this.getPaddingBottom();
-                    let widthMode = ProgressWheel.MeasureSpec.getMode(widthMeasureSpec);
-                    let widthSize = ProgressWheel.MeasureSpec.getSize(widthMeasureSpec);
-                    let heightMode = ProgressWheel.MeasureSpec.getMode(heightMeasureSpec);
-                    let heightSize = ProgressWheel.MeasureSpec.getSize(heightMeasureSpec);
-                    let width;
-                    let height;
-                    if (widthMode == ProgressWheel.MeasureSpec.EXACTLY) {
-                        width = widthSize;
-                    }
-                    else if (widthMode == ProgressWheel.MeasureSpec.AT_MOST) {
-                        width = Math.min(viewWidth, widthSize);
-                    }
-                    else {
-                        width = viewWidth;
-                    }
-                    if (heightMode == ProgressWheel.MeasureSpec.EXACTLY || widthMode == ProgressWheel.MeasureSpec.EXACTLY) {
-                        height = heightSize;
-                    }
-                    else if (heightMode == ProgressWheel.MeasureSpec.AT_MOST) {
-                        height = Math.min(viewHeight, heightSize);
-                    }
-                    else {
-                        height = viewHeight;
-                    }
-                    this.setMeasuredDimension(width, height);
+                applyTransformation(interpolatedTime, t) {
+                    const alpha = this.mFromAlpha;
+                    t.setAlpha(alpha + ((this.mToAlpha - alpha) * interpolatedTime));
                 }
-                onSizeChanged(w, h, oldw, oldh) {
-                    super.onSizeChanged(w, h, oldw, oldh);
-                    this.setupBounds(w, h);
-                    this.setupPaints();
-                    this.invalidate();
+                willChangeTransformationMatrix() {
+                    return false;
                 }
-                setupPaints() {
-                    this.barPaint.setColor(this.barColor);
-                    this.barPaint.setAntiAlias(true);
-                    this.barPaint.setStyle(Style.STROKE);
-                    this.barPaint.setStrokeWidth(this.barWidth);
-                    this.rimPaint.setColor(this.rimColor);
-                    this.rimPaint.setAntiAlias(true);
-                    this.rimPaint.setStyle(Style.STROKE);
-                    this.rimPaint.setStrokeWidth(this.rimWidth);
+                willChangeBounds() {
+                    return false;
                 }
-                setupBounds(layout_width, layout_height) {
-                    let paddingTop = this.getPaddingTop();
-                    let paddingBottom = this.getPaddingBottom();
-                    let paddingLeft = this.getPaddingLeft();
-                    let paddingRight = this.getPaddingRight();
-                    if (!this.fillRadius) {
-                        let minValue = Math.min(layout_width - paddingLeft - paddingRight, layout_height - paddingBottom - paddingTop);
-                        let circleDiameter = Math.min(minValue, this.circleRadius * 2 - this.barWidth * 2);
-                        let xOffset = (layout_width - paddingLeft - paddingRight - circleDiameter) / 2 + paddingLeft;
-                        let yOffset = (layout_height - paddingTop - paddingBottom - circleDiameter) / 2 + paddingTop;
-                        this.circleBounds = new RectF(xOffset + this.barWidth, yOffset + this.barWidth, xOffset + circleDiameter - this.barWidth, yOffset + circleDiameter - this.barWidth);
-                    }
-                    else {
-                        this.circleBounds = new RectF(paddingLeft + this.barWidth, paddingTop + this.barWidth, layout_width - paddingRight - this.barWidth, layout_height - paddingBottom - this.barWidth);
-                    }
-                }
-                setCallback(progressCallback) {
-                    this.callback = progressCallback;
-                    if (!this.mIsSpinning) {
-                        this.runCallback();
-                    }
-                }
-                onDraw(canvas) {
-                    super.onDraw(canvas);
-                    if (Color.alpha(this.rimPaint.getColor()) > 0)
-                        canvas.drawArc(this.circleBounds, 360, 360, false, this.rimPaint);
-                    let mustInvalidate = false;
-                    if (this.mIsSpinning) {
-                        mustInvalidate = true;
-                        let deltaTime = (SystemClock.uptimeMillis() - this.lastTimeAnimated);
-                        let deltaNormalized = deltaTime * this.spinSpeed / 1000.0;
-                        this.updateBarLength(deltaTime);
-                        this.mProgress += deltaNormalized;
-                        if (this.mProgress > 360) {
-                            this.mProgress -= 360;
-                            this.runCallback(-1.0);
-                        }
-                        this.lastTimeAnimated = SystemClock.uptimeMillis();
-                        let from = this.mProgress - 90;
-                        let length = this.barLength + this.barExtraLength;
-                        canvas.drawArc(this.circleBounds, from, length, false, this.barPaint);
-                    }
-                    else {
-                        let oldProgress = this.mProgress;
-                        if (this.mProgress != this.mTargetProgress) {
-                            mustInvalidate = true;
-                            let deltaTime = (SystemClock.uptimeMillis() - this.lastTimeAnimated) / 1000;
-                            let deltaNormalized = deltaTime * this.spinSpeed;
-                            this.mProgress = Math.min(this.mProgress + deltaNormalized, this.mTargetProgress);
-                            this.lastTimeAnimated = SystemClock.uptimeMillis();
-                        }
-                        if (oldProgress != this.mProgress) {
-                            this.runCallback();
-                        }
-                        let offset = 0.0;
-                        let progress = this.mProgress;
-                        if (!this.linearProgress) {
-                            let factor = 2.0;
-                            offset = (1.0 - Math.pow(1.0 - this.mProgress / 360.0, 2.0 * factor)) * 360.0;
-                            progress = (1.0 - Math.pow(1.0 - this.mProgress / 360.0, factor)) * 360.0;
-                        }
-                        canvas.drawArc(this.circleBounds, offset - 90, progress, false, this.barPaint);
-                    }
-                    if (mustInvalidate) {
-                        this.invalidate();
-                    }
-                }
-                onVisibilityChanged(changedView, visibility) {
-                    super.onVisibilityChanged(changedView, visibility);
-                    if (visibility == ProgressWheel.VISIBLE) {
-                        this.lastTimeAnimated = SystemClock.uptimeMillis();
-                    }
-                }
-                updateBarLength(deltaTimeInMilliSeconds) {
-                    if (this.pausedTimeWithoutGrowing >= this.pauseGrowingTime) {
-                        this.timeStartGrowing += deltaTimeInMilliSeconds;
-                        if (this.timeStartGrowing > this.barSpinCycleTime) {
-                            this.timeStartGrowing -= this.barSpinCycleTime;
-                            this.pausedTimeWithoutGrowing = 0;
-                            this.barGrowingFromFront = !this.barGrowingFromFront;
-                        }
-                        let distance = Math.cos((this.timeStartGrowing / this.barSpinCycleTime + 1) * Math.PI) / 2 + 0.5;
-                        let destLength = (this.barMaxLength - this.barLength);
-                        if (this.barGrowingFromFront) {
-                            this.barExtraLength = distance * destLength;
-                        }
-                        else {
-                            let newLength = destLength * (1 - distance);
-                            this.mProgress += (this.barExtraLength - newLength);
-                            this.barExtraLength = newLength;
-                        }
-                    }
-                    else {
-                        this.pausedTimeWithoutGrowing += deltaTimeInMilliSeconds;
-                    }
-                }
-                isSpinning() {
-                    return this.mIsSpinning;
-                }
-                resetCount() {
-                    this.mProgress = 0.0;
-                    this.mTargetProgress = 0.0;
-                    this.invalidate();
-                }
-                stopSpinning() {
-                    this.mIsSpinning = false;
-                    this.mProgress = 0.0;
-                    this.mTargetProgress = 0.0;
-                    this.invalidate();
-                }
-                spin() {
-                    this.lastTimeAnimated = SystemClock.uptimeMillis();
-                    this.mIsSpinning = true;
-                    this.invalidate();
-                }
-                runCallback(value) {
-                    if (this.callback != null) {
-                        if (value == null)
-                            value = Math.round(this.mProgress * 100 / 360.0) / 100;
-                        this.callback.onProgressUpdate(value);
-                    }
-                }
-                setInstantProgress(progress) {
-                    if (this.mIsSpinning) {
-                        this.mProgress = 0.0;
-                        this.mIsSpinning = false;
-                    }
-                    if (progress > 1.0) {
-                        progress -= 1.0;
-                    }
-                    else if (progress < 0) {
-                        progress = 0;
-                    }
-                    if (progress == this.mTargetProgress) {
-                        return;
-                    }
-                    this.mTargetProgress = Math.min(progress * 360.0, 360.0);
-                    this.mProgress = this.mTargetProgress;
-                    this.lastTimeAnimated = SystemClock.uptimeMillis();
-                    this.invalidate();
-                }
-                getProgress() {
-                    return this.mIsSpinning ? -1 : this.mProgress / 360.0;
-                }
-                setProgress(progress) {
-                    if (this.mIsSpinning) {
-                        this.mProgress = 0.0;
-                        this.mIsSpinning = false;
-                        this.runCallback();
-                    }
-                    if (progress > 1.0) {
-                        progress -= 1.0;
-                    }
-                    else if (progress < 0) {
-                        progress = 0;
-                    }
-                    if (progress == this.mTargetProgress) {
-                        return;
-                    }
-                    if (this.mProgress == this.mTargetProgress) {
-                        this.lastTimeAnimated = SystemClock.uptimeMillis();
-                    }
-                    this.mTargetProgress = Math.min(progress * 360.0, 360.0);
-                    this.invalidate();
-                }
-                setLinearProgress(isLinear) {
-                    this.linearProgress = isLinear;
-                    if (!this.mIsSpinning) {
-                        this.invalidate();
-                    }
-                }
-                getCircleRadius() {
-                    return this.circleRadius;
-                }
-                setCircleRadius(circleRadius) {
-                    this.circleRadius = circleRadius;
-                    if (!this.mIsSpinning) {
-                        this.invalidate();
-                    }
-                }
-                getBarWidth() {
-                    return this.barWidth;
-                }
-                setBarWidth(barWidth) {
-                    this.barWidth = barWidth;
-                    if (!this.mIsSpinning) {
-                        this.invalidate();
-                    }
-                }
-                getBarColor() {
-                    return this.barColor;
-                }
-                setBarColor(barColor) {
-                    this.barColor = barColor;
-                    this.setupPaints();
-                    if (!this.mIsSpinning) {
-                        this.invalidate();
-                    }
-                }
-                getRimColor() {
-                    return this.rimColor;
-                }
-                setRimColor(rimColor) {
-                    this.rimColor = rimColor;
-                    this.setupPaints();
-                    if (!this.mIsSpinning) {
-                        this.invalidate();
-                    }
-                }
-                getSpinSpeed() {
-                    return this.spinSpeed / 360.0;
-                }
-                setSpinSpeed(spinSpeed) {
-                    this.spinSpeed = spinSpeed * 360.0;
-                }
-                getRimWidth() {
-                    return this.rimWidth;
-                }
-                setRimWidth(rimWidth) {
-                    this.rimWidth = rimWidth;
-                    if (!this.mIsSpinning) {
-                        this.invalidate();
-                    }
+                hasAlpha() {
+                    return true;
                 }
             }
-            materialishprogress.ProgressWheel = ProgressWheel;
-        })(materialishprogress = pnikosis.materialishprogress || (pnikosis.materialishprogress = {}));
-    })(pnikosis = com.pnikosis || (com.pnikosis = {}));
-})(com || (com = {}));
-/**
- * Created by linfaxin on 15/12/23.
+            animation.AlphaAnimation = AlphaAnimation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-///<reference path="../view/View.ts"/>
-///<reference path="../../lib/com/pnikosis/materialishprogress/ProgressWheel.ts"/>
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/drawable/Animatable.ts"/>
+///<reference path="../../android/graphics/drawable/AnimationDrawable.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/drawable/LayerDrawable.ts"/>
+///<reference path="../../android/graphics/drawable/StateListDrawable.ts"/>
+///<reference path="../../android/util/Pools.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/animation/AlphaAnimation.ts"/>
+///<reference path="../../android/view/animation/Animation.ts"/>
+///<reference path="../../android/view/animation/AnimationUtils.ts"/>
+///<reference path="../../android/view/animation/Interpolator.ts"/>
+///<reference path="../../android/view/animation/LinearInterpolator.ts"/>
+///<reference path="../../android/view/animation/Transformation.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/R/id.ts"/>
 var android;
 (function (android) {
     var widget;
     (function (widget) {
-        var ProgressWheel = com.pnikosis.materialishprogress.ProgressWheel;
-        class ProgressBar extends ProgressWheel {
-            constructor(bindElement, rootElement) {
-                super(bindElement, rootElement);
+        var Animatable = android.graphics.drawable.Animatable;
+        var AnimationDrawable = android.graphics.drawable.AnimationDrawable;
+        var LayerDrawable = android.graphics.drawable.LayerDrawable;
+        var SynchronizedPool = android.util.Pools.SynchronizedPool;
+        var View = android.view.View;
+        var AlphaAnimation = android.view.animation.AlphaAnimation;
+        var Animation = android.view.animation.Animation;
+        var LinearInterpolator = android.view.animation.LinearInterpolator;
+        var Transformation = android.view.animation.Transformation;
+        var ArrayList = java.util.ArrayList;
+        var R = android.R;
+        class ProgressBar extends View {
+            constructor(bindElement, rootElement, defStyle) {
+                super(bindElement, rootElement, defStyle);
+                this.mMinWidth = 0;
+                this.mMaxWidth = 0;
+                this.mMinHeight = 0;
+                this.mMaxHeight = 0;
+                this.mProgress = 0;
+                this.mSecondaryProgress = 0;
+                this.mMax = 0;
+                this.mBehavior = 0;
+                this.mDuration = 0;
+                this.mMirrorForRtl = false;
+                this.mRefreshData = new ArrayList();
+                this.initProgressBar();
+                this._attrBinder.addAttr('progressDrawable', (value) => {
+                    let drawable = this._attrBinder.parseDrawable(value);
+                    if (drawable != null) {
+                        this.setProgressDrawable(drawable);
+                    }
+                }, () => {
+                    return this.mProgressDrawable;
+                });
+                this._attrBinder.addAttr('indeterminateDuration', (value) => {
+                    this.mDuration = Math.floor(this._attrBinder.parseNumber(value, this.mDuration));
+                }, () => {
+                    return this.mDuration;
+                });
+                this._attrBinder.addAttr('minWidth', (value) => {
+                    this.mMinWidth = Math.floor(this._attrBinder.parseNumber(value, this.mMinWidth));
+                }, () => {
+                    return this.mMinWidth;
+                });
+                this._attrBinder.addAttr('maxWidth', (value) => {
+                    this.mMaxWidth = Math.floor(this._attrBinder.parseNumber(value, this.mMaxWidth));
+                }, () => {
+                    return this.mMaxWidth;
+                });
+                this._attrBinder.addAttr('minHeight', (value) => {
+                    this.mMinHeight = Math.floor(this._attrBinder.parseNumber(value, this.mMinHeight));
+                }, () => {
+                    return this.mMinHeight;
+                });
+                this._attrBinder.addAttr('maxHeight', (value) => {
+                    this.mMaxHeight = Math.floor(this._attrBinder.parseNumber(value, this.mMaxHeight));
+                }, () => {
+                    return this.mMaxHeight;
+                });
+                this._attrBinder.addAttr('indeterminateBehavior', (value) => {
+                    if (value + ''.toLowerCase() == 'cycle') {
+                        this.mBehavior = Animation.REVERSE;
+                    }
+                    else {
+                        this.mBehavior = Animation.RESTART;
+                    }
+                });
+                this._attrBinder.addAttr('interpolator', (value) => {
+                });
+                this._attrBinder.addAttr('max', (value) => {
+                    this.setMax(this._attrBinder.parseNumber(value, this.mMax));
+                }, () => {
+                    return this.mMax;
+                });
+                this._attrBinder.addAttr('progress', (value) => {
+                    this.setProgress(this._attrBinder.parseNumber(value, this.mProgress));
+                }, () => {
+                    return this.mProgress;
+                });
+                this._attrBinder.addAttr('secondaryProgress', (value) => {
+                    this.setSecondaryProgress(this._attrBinder.parseNumber(value, this.mSecondaryProgress));
+                }, () => {
+                    return this.mSecondaryProgress;
+                });
+                this._attrBinder.addAttr('indeterminateDrawable', (value) => {
+                    let drawable = this._attrBinder.parseDrawable(value);
+                    if (drawable != null) {
+                        this.setIndeterminateDrawable(drawable);
+                    }
+                }, () => {
+                    return this.mIndeterminateDrawable;
+                });
+                this._attrBinder.addAttr('indeterminateOnly', (value) => {
+                    this.mOnlyIndeterminate = this._attrBinder.parseBoolean(value, this.mOnlyIndeterminate);
+                    this.setIndeterminate(this.mOnlyIndeterminate || this.mIndeterminate);
+                });
+                this._attrBinder.addAttr('indeterminate', (value) => {
+                    this.setIndeterminate(this.mOnlyIndeterminate || this._attrBinder.parseBoolean(value, this.mIndeterminate));
+                });
+                this.mNoInvalidate = true;
+                if (defStyle === undefined)
+                    defStyle = android.R.attr.progressBarStyle;
+                if (defStyle != null)
+                    this.applyDefaultAttributes(defStyle);
+                this.mNoInvalidate = false;
+                this.setIndeterminate(this.mOnlyIndeterminate || this.mIndeterminate);
+            }
+            tileify(drawable, clip) {
+                return drawable;
+            }
+            tileifyIndeterminate(drawable) {
+                if (drawable instanceof AnimationDrawable) {
+                    let background = drawable;
+                    const N = background.getNumberOfFrames();
+                    let newBg = new AnimationDrawable();
+                    newBg.setOneShot(background.isOneShot());
+                    for (let i = 0; i < N; i++) {
+                        let frame = this.tileify(background.getFrame(i), true);
+                        frame.setLevel(10000);
+                        newBg.addFrame(frame, background.getDuration(i));
+                    }
+                    newBg.setLevel(10000);
+                    drawable = newBg;
+                }
+                return drawable;
+            }
+            initProgressBar() {
+                this.mMax = 100;
+                this.mProgress = 0;
+                this.mSecondaryProgress = 0;
+                this.mIndeterminate = false;
+                this.mOnlyIndeterminate = false;
+                this.mDuration = 4000;
+                this.mBehavior = AlphaAnimation.RESTART;
+                this.mMinWidth = 24;
+                this.mMaxWidth = 48;
+                this.mMinHeight = 24;
+                this.mMaxHeight = 48;
+            }
+            isIndeterminate() {
+                return this.mIndeterminate;
+            }
+            setIndeterminate(indeterminate) {
+                if ((!this.mOnlyIndeterminate || !this.mIndeterminate) && indeterminate != this.mIndeterminate) {
+                    this.mIndeterminate = indeterminate;
+                    if (indeterminate) {
+                        this.mCurrentDrawable = this.mIndeterminateDrawable;
+                        this.startAnimation();
+                    }
+                    else {
+                        this.mCurrentDrawable = this.mProgressDrawable;
+                        this.stopAnimation();
+                    }
+                }
+            }
+            getIndeterminateDrawable() {
+                return this.mIndeterminateDrawable;
+            }
+            setIndeterminateDrawable(d) {
+                if (d != null) {
+                    d.setCallback(this);
+                }
+                this.mIndeterminateDrawable = d;
+                if (this.mIndeterminate) {
+                    this.mCurrentDrawable = d;
+                    this.postInvalidate();
+                }
+            }
+            getProgressDrawable() {
+                return this.mProgressDrawable;
+            }
+            setProgressDrawable(d) {
+                let needUpdate;
+                if (this.mProgressDrawable != null && d != this.mProgressDrawable) {
+                    this.mProgressDrawable.setCallback(null);
+                    needUpdate = true;
+                }
+                else {
+                    needUpdate = false;
+                }
+                if (d != null) {
+                    d.setCallback(this);
+                    let drawableHeight = d.getMinimumHeight();
+                    if (this.mMaxHeight < drawableHeight) {
+                        this.mMaxHeight = drawableHeight;
+                        this.requestLayout();
+                    }
+                }
+                this.mProgressDrawable = d;
+                if (!this.mIndeterminate) {
+                    this.mCurrentDrawable = d;
+                    this.postInvalidate();
+                }
+                if (needUpdate) {
+                    this.updateDrawableBounds(this.getWidth(), this.getHeight());
+                    this.updateDrawableState();
+                    this.doRefreshProgress(R.id.progress, this.mProgress, false, false);
+                    this.doRefreshProgress(R.id.secondaryProgress, this.mSecondaryProgress, false, false);
+                }
+            }
+            getCurrentDrawable() {
+                return this.mCurrentDrawable;
+            }
+            verifyDrawable(who) {
+                return who == this.mProgressDrawable || who == this.mIndeterminateDrawable || super.verifyDrawable(who);
+            }
+            jumpDrawablesToCurrentState() {
+                super.jumpDrawablesToCurrentState();
+                if (this.mProgressDrawable != null)
+                    this.mProgressDrawable.jumpToCurrentState();
+                if (this.mIndeterminateDrawable != null)
+                    this.mIndeterminateDrawable.jumpToCurrentState();
+            }
+            postInvalidate() {
+                if (!this.mNoInvalidate) {
+                    super.postInvalidate();
+                }
+            }
+            doRefreshProgress(id, progress, fromUser, callBackToApp) {
+                let scale = this.mMax > 0 ? progress / this.mMax : 0;
+                const d = this.mCurrentDrawable;
+                if (d != null) {
+                    let progressDrawable = null;
+                    if (d instanceof LayerDrawable) {
+                        progressDrawable = d.findDrawableByLayerId(id);
+                    }
+                    const level = Math.floor((scale * ProgressBar.MAX_LEVEL));
+                    (progressDrawable != null ? progressDrawable : d).setLevel(level);
+                }
+                else {
+                    this.invalidate();
+                }
+                if (callBackToApp && id == R.id.progress) {
+                    this.onProgressRefresh(scale, fromUser);
+                }
+            }
+            onProgressRefresh(scale, fromUser) {
+            }
+            refreshProgress(id, progress, fromUser) {
+                this.doRefreshProgress(id, progress, fromUser, true);
+            }
+            setProgress(progress, fromUser = false) {
+                if (this.mIndeterminate) {
+                    return;
+                }
+                if (progress < 0) {
+                    progress = 0;
+                }
+                if (progress > this.mMax) {
+                    progress = this.mMax;
+                }
+                if (progress != this.mProgress) {
+                    this.mProgress = progress;
+                    this.refreshProgress(R.id.progress, this.mProgress, fromUser);
+                }
+            }
+            setSecondaryProgress(secondaryProgress) {
+                if (this.mIndeterminate) {
+                    return;
+                }
+                if (secondaryProgress < 0) {
+                    secondaryProgress = 0;
+                }
+                if (secondaryProgress > this.mMax) {
+                    secondaryProgress = this.mMax;
+                }
+                if (secondaryProgress != this.mSecondaryProgress) {
+                    this.mSecondaryProgress = secondaryProgress;
+                    this.refreshProgress(R.id.secondaryProgress, this.mSecondaryProgress, false);
+                }
+            }
+            getProgress() {
+                return this.mIndeterminate ? 0 : this.mProgress;
+            }
+            getSecondaryProgress() {
+                return this.mIndeterminate ? 0 : this.mSecondaryProgress;
+            }
+            getMax() {
+                return this.mMax;
+            }
+            setMax(max) {
+                if (max < 0) {
+                    max = 0;
+                }
+                if (max != this.mMax) {
+                    this.mMax = max;
+                    this.postInvalidate();
+                    if (this.mProgress > max) {
+                        this.mProgress = max;
+                    }
+                    this.refreshProgress(R.id.progress, this.mProgress, false);
+                }
+            }
+            incrementProgressBy(diff) {
+                this.setProgress(this.mProgress + diff);
+            }
+            incrementSecondaryProgressBy(diff) {
+                this.setSecondaryProgress(this.mSecondaryProgress + diff);
+            }
+            startAnimation() {
+                if (this.getVisibility() != ProgressBar.VISIBLE) {
+                    return;
+                }
+                if (Animatable.isImpl(this.mIndeterminateDrawable)) {
+                    this.mShouldStartAnimationDrawable = true;
+                    this.mHasAnimation = false;
+                }
+                else {
+                    this.mHasAnimation = true;
+                    if (this.mInterpolator == null) {
+                        this.mInterpolator = new LinearInterpolator();
+                    }
+                    if (this.mTransformation == null) {
+                        this.mTransformation = new Transformation();
+                    }
+                    else {
+                        this.mTransformation.clear();
+                    }
+                    if (this.mAnimation == null) {
+                        this.mAnimation = new AlphaAnimation(0.0, 1.0);
+                    }
+                    else {
+                        this.mAnimation.reset();
+                    }
+                    this.mAnimation.setRepeatMode(this.mBehavior);
+                    this.mAnimation.setRepeatCount(Animation.INFINITE);
+                    this.mAnimation.setDuration(this.mDuration);
+                    this.mAnimation.setInterpolator(this.mInterpolator);
+                    this.mAnimation.setStartTime(Animation.START_ON_FIRST_FRAME);
+                }
+                this.postInvalidate();
+            }
+            stopAnimation() {
+                this.mHasAnimation = false;
+                if (Animatable.isImpl(this.mIndeterminateDrawable)) {
+                    this.mIndeterminateDrawable.stop();
+                    this.mShouldStartAnimationDrawable = false;
+                }
+                this.postInvalidate();
+            }
+            setInterpolator(interpolator) {
+                this.mInterpolator = interpolator;
+            }
+            getInterpolator() {
+                return this.mInterpolator;
+            }
+            setVisibility(v) {
+                if (this.getVisibility() != v) {
+                    super.setVisibility(v);
+                    if (this.mIndeterminate) {
+                        if (v == ProgressBar.GONE || v == ProgressBar.INVISIBLE) {
+                            this.stopAnimation();
+                        }
+                        else {
+                            this.startAnimation();
+                        }
+                    }
+                }
+            }
+            onVisibilityChanged(changedView, visibility) {
+                super.onVisibilityChanged(changedView, visibility);
+                if (this.mIndeterminate) {
+                    if (visibility == ProgressBar.GONE || visibility == ProgressBar.INVISIBLE) {
+                        this.stopAnimation();
+                    }
+                    else {
+                        this.startAnimation();
+                    }
+                }
+            }
+            invalidateDrawable(dr) {
+                if (!this.mInDrawing) {
+                    if (this.verifyDrawable(dr)) {
+                        const dirty = dr.getBounds();
+                        const scrollX = this.mScrollX + this.mPaddingLeft;
+                        const scrollY = this.mScrollY + this.mPaddingTop;
+                        this.invalidate(dirty.left + scrollX, dirty.top + scrollY, dirty.right + scrollX, dirty.bottom + scrollY);
+                    }
+                    else {
+                        super.invalidateDrawable(dr);
+                    }
+                }
+            }
+            onSizeChanged(w, h, oldw, oldh) {
+                this.updateDrawableBounds(w, h);
+            }
+            updateDrawableBounds(w, h) {
+                w -= this.mPaddingRight + this.mPaddingLeft;
+                h -= this.mPaddingTop + this.mPaddingBottom;
+                let right = w;
+                let bottom = h;
+                let top = 0;
+                let left = 0;
+                if (this.mIndeterminateDrawable != null) {
+                    if (this.mOnlyIndeterminate && !(this.mIndeterminateDrawable instanceof AnimationDrawable)) {
+                        const intrinsicWidth = this.mIndeterminateDrawable.getIntrinsicWidth();
+                        const intrinsicHeight = this.mIndeterminateDrawable.getIntrinsicHeight();
+                        const intrinsicAspect = intrinsicWidth / intrinsicHeight;
+                        const boundAspect = w / h;
+                        if (intrinsicAspect != boundAspect) {
+                            if (boundAspect > intrinsicAspect) {
+                                const width = Math.floor((h * intrinsicAspect));
+                                left = (w - width) / 2;
+                                right = left + width;
+                            }
+                            else {
+                                const height = Math.floor((w * (1 / intrinsicAspect)));
+                                top = (h - height) / 2;
+                                bottom = top + height;
+                            }
+                        }
+                    }
+                    if (this.isLayoutRtl() && this.mMirrorForRtl) {
+                        let tempLeft = left;
+                        left = w - right;
+                        right = w - tempLeft;
+                    }
+                    this.mIndeterminateDrawable.setBounds(left, top, right, bottom);
+                }
+                if (this.mProgressDrawable != null) {
+                    this.mProgressDrawable.setBounds(0, 0, right, bottom);
+                }
+            }
+            onDraw(canvas) {
+                super.onDraw(canvas);
+                let d = this.mCurrentDrawable;
+                if (d != null) {
+                    canvas.save();
+                    if (this.isLayoutRtl() && this.mMirrorForRtl) {
+                        canvas.translate(this.getWidth() - this.mPaddingRight, this.mPaddingTop);
+                        canvas.scale(-1.0, 1.0);
+                    }
+                    else {
+                        canvas.translate(this.mPaddingLeft, this.mPaddingTop);
+                    }
+                    let time = this.getDrawingTime();
+                    if (this.mHasAnimation) {
+                        this.mAnimation.getTransformation(time, this.mTransformation);
+                        let scale = this.mTransformation.getAlpha();
+                        try {
+                            this.mInDrawing = true;
+                            d.setLevel(Math.floor((scale * ProgressBar.MAX_LEVEL)));
+                        }
+                        finally {
+                            this.mInDrawing = false;
+                        }
+                        this.postInvalidateOnAnimation();
+                    }
+                    d.draw(canvas);
+                    canvas.restore();
+                    if (this.mShouldStartAnimationDrawable && Animatable.isImpl(d)) {
+                        d.start();
+                        this.mShouldStartAnimationDrawable = false;
+                    }
+                }
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                let d = this.mCurrentDrawable;
+                let dw = 0;
+                let dh = 0;
+                if (d != null) {
+                    dw = Math.max(this.mMinWidth, Math.min(this.mMaxWidth, d.getIntrinsicWidth()));
+                    dh = Math.max(this.mMinHeight, Math.min(this.mMaxHeight, d.getIntrinsicHeight()));
+                }
+                this.updateDrawableState();
+                dw += this.mPaddingLeft + this.mPaddingRight;
+                dh += this.mPaddingTop + this.mPaddingBottom;
+                this.setMeasuredDimension(ProgressBar.resolveSizeAndState(dw, widthMeasureSpec, 0), ProgressBar.resolveSizeAndState(dh, heightMeasureSpec, 0));
+            }
+            drawableStateChanged() {
+                super.drawableStateChanged();
+                this.updateDrawableState();
+            }
+            updateDrawableState() {
+                let state = this.getDrawableState();
+                if (this.mProgressDrawable != null && this.mProgressDrawable.isStateful()) {
+                    this.mProgressDrawable.setState(state);
+                }
+                if (this.mIndeterminateDrawable != null && this.mIndeterminateDrawable.isStateful()) {
+                    this.mIndeterminateDrawable.setState(state);
+                }
+            }
+            onAttachedToWindow() {
+                super.onAttachedToWindow();
+                if (this.mIndeterminate) {
+                    this.startAnimation();
+                }
+                if (this.mRefreshData != null) {
+                    {
+                        const count = this.mRefreshData.size();
+                        for (let i = 0; i < count; i++) {
+                            const rd = this.mRefreshData.get(i);
+                            this.doRefreshProgress(rd.id, rd.progress, rd.fromUser, true);
+                            rd.recycle();
+                        }
+                        this.mRefreshData.clear();
+                    }
+                }
+                this.mAttached = true;
+            }
+            onDetachedFromWindow() {
+                if (this.mIndeterminate) {
+                    this.stopAnimation();
+                }
+                super.onDetachedFromWindow();
+                this.mAttached = false;
             }
         }
+        ProgressBar.MAX_LEVEL = 10000;
+        ProgressBar.TIMEOUT_SEND_ACCESSIBILITY_EVENT = 200;
         widget.ProgressBar = ProgressBar;
+        (function (ProgressBar) {
+            class RefreshData {
+                constructor() {
+                    this.progress = 0;
+                }
+                static obtain(id, progress, fromUser) {
+                    let rd = RefreshData.sPool.acquire();
+                    if (rd == null) {
+                        rd = new RefreshData();
+                    }
+                    rd.id = id;
+                    rd.progress = progress;
+                    rd.fromUser = fromUser;
+                    return rd;
+                }
+                recycle() {
+                    RefreshData.sPool.release(this);
+                }
+            }
+            RefreshData.POOL_MAX = 24;
+            RefreshData.sPool = new SynchronizedPool(RefreshData.POOL_MAX);
+            ProgressBar.RefreshData = RefreshData;
+        })(ProgressBar = widget.ProgressBar || (widget.ProgressBar = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /*
@@ -40582,6 +42178,15 @@ var android;
                     let myDrawableState = this.getDrawableState();
                     this.mButtonDrawable.setState(myDrawableState);
                     this.invalidate();
+                }
+            }
+            drawableSizeChange(d) {
+                if (d == this.mButtonDrawable) {
+                    this.setButtonDrawable(d);
+                    this.requestLayout();
+                }
+                else {
+                    super.drawableSizeChange(d);
                 }
             }
             verifyDrawable(who) {
@@ -42138,56 +43743,6 @@ var android;
         }
         widget.BaseExpandableListAdapter = BaseExpandableListAdapter;
     })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var animation;
-        (function (animation) {
-            var Animation = android.view.animation.Animation;
-            class AlphaAnimation extends Animation {
-                constructor(fromAlpha, toAlpha) {
-                    super();
-                    this.mFromAlpha = 0;
-                    this.mToAlpha = 0;
-                    this.mFromAlpha = fromAlpha;
-                    this.mToAlpha = toAlpha;
-                }
-                applyTransformation(interpolatedTime, t) {
-                    const alpha = this.mFromAlpha;
-                    t.setAlpha(alpha + ((this.mToAlpha - alpha) * interpolatedTime));
-                }
-                willChangeTransformationMatrix() {
-                    return false;
-                }
-                willChangeBounds() {
-                    return false;
-                }
-                hasAlpha() {
-                    return true;
-                }
-            }
-            animation.AlphaAnimation = AlphaAnimation;
-        })(animation = view.animation || (view.animation = {}));
-    })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project

@@ -98,13 +98,13 @@ module android.graphics.drawable{
             return this.mInsetState.mDrawable.isStateful();
         }
 
-        onStateChange(state:Array<number>):boolean {
+        protected onStateChange(state:Array<number>):boolean {
             let changed = this.mInsetState.mDrawable.setState(state);
             this.onBoundsChange(this.getBounds());
             return changed;
         }
 
-        onBoundsChange(bounds:android.graphics.Rect):void {
+        protected onBoundsChange(bounds:android.graphics.Rect):void {
             const r = this.mTmpRect;
             r.set(bounds);
 

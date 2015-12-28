@@ -92,7 +92,7 @@ module android.graphics.drawable{
             }
         }
 
-        onBoundsChange(bounds:android.graphics.Rect) {
+        protected onBoundsChange(bounds:android.graphics.Rect) {
             super.onBoundsChange(bounds);
             this.mChanged = true;
         }

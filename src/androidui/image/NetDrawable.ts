@@ -20,10 +20,10 @@ module androidui.image{
         private mImageWidth = -1;
         private mImageHeight = -1;
 
-        constructor(src:string, res?:Resources, paint?:Paint){
+        constructor(src:string, res?:Resources, paint?:Paint, overrideImageRatio?:number){
             super();
             this.mState = new State(src, res, paint);
-            this.mImage = new NetImage(src, ()=>this.onLoad(), ()=>this.onError());
+            this.mImage = new NetImage(src, ()=>this.onLoad(), ()=>this.onError(), overrideImageRatio);
         }
 
         draw(canvas:Canvas):void {
@@ -97,7 +97,7 @@ module androidui.image{
             this.res = res || Resources.instance;
             this.src = src;
             this.paint = new Paint();
-            this.paint.set(paint);
+            if(paint!=null) this.paint.set(paint);
         }
         newDrawable():Drawable {
             return new NetDrawable(this.src, this.res, this.paint);

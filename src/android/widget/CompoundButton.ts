@@ -269,6 +269,15 @@ class CompoundButton extends Button implements Checkable {
         }
     }
 
+    drawableSizeChange(d:android.graphics.drawable.Drawable):void {
+        if(d == this.mButtonDrawable){
+            this.setButtonDrawable(d);
+            this.requestLayout();
+        }else{
+            super.drawableSizeChange(d);
+        }
+    }
+
     protected verifyDrawable(who:Drawable):boolean  {
         return super.verifyDrawable(who) || who == this.mButtonDrawable;
     }

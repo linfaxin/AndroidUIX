@@ -3732,13 +3732,16 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     }
 
 
-    drawableSizeChange(drawable:android.graphics.drawable.Drawable):void {
+    drawableSizeChange(d:android.graphics.drawable.Drawable):void {
         const drawables:TextView.Drawables = this.mDrawables;
-        if(drawables!=null && this.verifyDrawable(drawable)){
-            drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        const isCompoundDrawable = drawables!=null && (d == drawables.mDrawableLeft || d == drawables.mDrawableTop
+            || d == drawables.mDrawableRight || d == drawables.mDrawableBottom || d == drawables.mDrawableStart || d == drawables.mDrawableEnd);
+
+        if(isCompoundDrawable){
+            d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
             this.setCompoundDrawables(drawables.mDrawableLeft, drawables.mDrawableTop, drawables.mDrawableRight, drawables.mDrawableBottom);
         }else{
-            super.drawableSizeChange(drawable);
+            super.drawableSizeChange(d);
         }
     }
 

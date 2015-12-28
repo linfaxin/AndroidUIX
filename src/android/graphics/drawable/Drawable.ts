@@ -199,15 +199,15 @@ module android.graphics.drawable {
             return PixelFormat.OPAQUE;
         }
 
-        onStateChange(state:Array<number>):boolean {
+        protected onStateChange(state:Array<number>):boolean {
             return false;
         }
 
-        onLevelChange(level:number):boolean {
+        protected onLevelChange(level:number):boolean {
             return false;
         }
 
-        onBoundsChange(bounds:Rect):void {
+        protected onBoundsChange(bounds:Rect):void {
         }
 
         getIntrinsicWidth():number {

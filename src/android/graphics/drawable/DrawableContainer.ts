@@ -110,7 +110,7 @@ module android.graphics.drawable{
             this.mDrawableContainerState.mExitFadeDuration = ms;
         }
 
-        onBoundsChange(bounds:android.graphics.Rect):void {
+        protected onBoundsChange(bounds:android.graphics.Rect):void {
             if (this.mLastDrawable != null) {
                 this.mLastDrawable.setBounds(bounds);
             }
@@ -153,7 +153,7 @@ module android.graphics.drawable{
                 this.invalidateSelf();
             }
         }
-        onStateChange(state:Array<number>):boolean {
+        protected onStateChange(state:Array<number>):boolean {
             if (this.mLastDrawable != null) {
                 return this.mLastDrawable.setState(state);
             }
@@ -163,7 +163,7 @@ module android.graphics.drawable{
             return false;
         }
 
-        onLevelChange(level:number):boolean {
+        protected onLevelChange(level:number):boolean {
             if (this.mLastDrawable != null) {
                 return this.mLastDrawable.setLevel(level);
             }

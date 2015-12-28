@@ -70,6 +70,54 @@ module android.R {
             });
         }
 
+        static get progressBarStyle() {
+            return {
+                indeterminateOnly : true,
+                indeterminateDrawable : R.drawable.progress_medium_holo,
+                indeterminateBehavior : 'repeat',
+                indeterminateDuration : 3500,
+                minWidth : '48dp',
+                maxWidth : '48dp',
+                minHeight : '48dp',
+                maxHeight : '48dp',
+                mirrorForRtl : false,
+            };
+        }
+
+        static get progressBarStyleHorizontal() {
+            return {
+                indeterminateOnly : false,
+                progressDrawable : R.drawable.progress_horizontal_holo,
+                indeterminateDrawable : R.drawable.progress_indeterminate_horizontal_holo,
+                indeterminateBehavior : 'repeat',
+                indeterminateDuration : 3500,
+                minHeight : '20dp',
+                maxHeight : '20dp',
+                mirrorForRtl : true,
+            };
+        }
+
+        static get progressBarStyleSmall() {
+            return Object.assign(this.progressBarStyle, {
+                indeterminateDrawable : R.drawable.progress_small_holo,
+                minWidth : '16dp',
+                maxWidth : '16dp',
+                minHeight : '16dp',
+                maxHeight : '16dp'
+            });
+        }
+
+        static get progressBarStyleLarge() {
+            return Object.assign(this.progressBarStyle, {
+                indeterminateDrawable : R.drawable.progress_large_holo,
+                minWidth : '76dp',
+                maxWidth : '76dp',
+                minHeight : '76dp',
+                maxHeight : '76dp'
+            });
+        }
+
+
         static get gridViewStyle() {
             return {
                 listSelector: android.R.drawable.list_selector_background,
@@ -85,11 +133,14 @@ module android.R {
             };
         }
 
+
         static get expandableListViewStyle() {
             return Object.assign(this.listViewStyle, {
                 childDivider: android.R.drawable.list_divider,
             });
         }
+
+
 
         static get numberPickerStyle(){
             return {
