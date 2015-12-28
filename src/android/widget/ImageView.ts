@@ -570,7 +570,7 @@ export class ImageView extends View {
         }
         let d:Drawable = null;
         if (this.mUri != null) {
-            d = new androidui.image.NetDrawable(this.mUri, this.getResources());
+            d = new androidui.image.NetDrawable(this.mUri);
         } else {
             return;
         }

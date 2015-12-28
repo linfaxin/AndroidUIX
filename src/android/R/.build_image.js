@@ -10,8 +10,19 @@ files.forEach(function(fileName){
     dirImageData[name] = 'data:image/png;base64,' + base64;
 });
 
-var str = `module android.R.image_base64 {
-    export var x3 = ${JSON.stringify(dirImageData, null, 8)};
+
+var exportLines = '';
+for(var k of Object.keys(dirImageData)){
+    exportLines += `
+    export var ${k} = new NetImage(x3.${k}, 3);`;
+}
+
+var str =
+`///<reference path="../../androidui/image/NetImage.ts"/>
+module android.R.image_base64 {
+    import NetImage = androidui.image.NetImage;
+    var x3 = ${JSON.stringify(dirImageData, null, 8)};
+    ${exportLines}
 }`;
 
 fs.writeFile('image_base64.ts', str, 'utf-8');

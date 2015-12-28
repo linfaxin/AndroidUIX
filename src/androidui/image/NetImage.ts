@@ -13,15 +13,13 @@ module androidui.image{
         private mOnErrors = new Set<()=>void>();
         private mOverrideImageRatio:number;
 
-        constructor(src:string, onload?:()=>void, onerror?:()=>void, overrideImageRatio?:number) {
-            this.init(src, onload, onerror);
+        constructor(src:string, overrideImageRatio?:number) {
+            this.init(src);
             this.mOverrideImageRatio = overrideImageRatio;
         }
 
-        protected init(src:string, onload?:()=>void, onerror?:()=>void){
+        protected init(src:string){
             this.createImage();
-            if(onload) this.mOnLoads.add(onload);
-            if(onerror) this.mOnErrors.add(onerror);
             this.src = src;
         }
 

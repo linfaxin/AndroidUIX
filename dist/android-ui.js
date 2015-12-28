@@ -1814,20 +1814,16 @@ var androidui;
     var image;
     (function (image) {
         class NetImage {
-            constructor(src, onload, onerror, overrideImageRatio) {
+            constructor(src, overrideImageRatio) {
                 this.mImageWidth = 0;
                 this.mImageHeight = 0;
                 this.mOnLoads = new Set();
                 this.mOnErrors = new Set();
-                this.init(src, onload, onerror);
+                this.init(src);
                 this.mOverrideImageRatio = overrideImageRatio;
             }
-            init(src, onload, onerror) {
+            init(src) {
                 this.createImage();
-                if (onload)
-                    this.mOnLoads.add(onload);
-                if (onerror)
-                    this.mOnErrors.add(onerror);
                 this.src = src;
             }
             createImage() {
@@ -5522,21 +5518,30 @@ var androidui;
 var androidui;
 (function (androidui) {
     var image;
-    (function (image) {
+    (function (image_1) {
         var Paint = android.graphics.Paint;
         var Drawable = android.graphics.drawable.Drawable;
         var Resources = android.content.res.Resources;
         class NetDrawable extends Drawable {
-            constructor(src, res, paint, overrideImageRatio) {
+            constructor(src, paint, overrideImageRatio) {
                 super();
                 this.mImageWidth = -1;
                 this.mImageHeight = -1;
-                this.mState = new State(src, res, paint);
-                this.mImage = new image.NetImage(src, () => this.onLoad(), () => this.onError(), overrideImageRatio);
+                let image;
+                if (src instanceof image_1.NetImage) {
+                    image = src;
+                    if (overrideImageRatio)
+                        image.mOverrideImageRatio = overrideImageRatio;
+                }
+                else {
+                    image = new image_1.NetImage(src, overrideImageRatio);
+                }
+                image.addLoadListener(() => this.onLoad(), () => this.onError());
+                this.mState = new State(image, paint);
             }
             draw(canvas) {
                 if (this.isLoadFinish()) {
-                    canvas.drawImage(this.mImage, null, this.getBounds(), this.mState.paint);
+                    canvas.drawImage(this.mState.mImage, null, this.getBounds(), this.mState.paint);
                 }
             }
             setAlpha(alpha) {
@@ -5552,9 +5557,9 @@ var androidui;
                 return this.mImageHeight;
             }
             onLoad() {
-                let imageRatio = this.mImage.getImageRatio();
-                this.mImageWidth = Math.floor(this.mImage.width / imageRatio * this.mState.res.getDisplayMetrics().density);
-                this.mImageHeight = Math.floor(this.mImage.height / imageRatio * this.mState.res.getDisplayMetrics().density);
+                let imageRatio = this.mState.mImage.getImageRatio();
+                this.mImageWidth = Math.floor(this.mState.mImage.width / imageRatio * Resources.getDisplayMetrics().density);
+                this.mImageHeight = Math.floor(this.mState.mImage.height / imageRatio * Resources.getDisplayMetrics().density);
                 if (this.mLoadListener)
                     this.mLoadListener.onLoad(this);
                 this.invalidateSelf();
@@ -5571,7 +5576,7 @@ var androidui;
                 return this.mImageWidth >= 0 && this.mImageHeight >= 0;
             }
             getImage() {
-                return this.mImage;
+                return this.mState.mImage;
             }
             setLoadListener(loadListener) {
                 this.mLoadListener = loadListener;
@@ -5580,17 +5585,16 @@ var androidui;
                 return this.mState;
             }
         }
-        image.NetDrawable = NetDrawable;
+        image_1.NetDrawable = NetDrawable;
         class State {
-            constructor(src, res = Resources.instance, paint = new Paint()) {
-                this.res = res || Resources.instance;
-                this.src = src;
+            constructor(image, paint = new Paint()) {
+                this.mImage = image;
                 this.paint = new Paint();
                 if (paint != null)
                     this.paint.set(paint);
             }
             newDrawable() {
-                return new NetDrawable(this.src, this.res, this.paint);
+                return new NetDrawable(this.mImage, this.paint);
             }
         }
     })(image = androidui.image || (androidui.image = {}));
@@ -7875,7 +7879,7 @@ var android;
 var androidui;
 (function (androidui) {
     var image;
-    (function (image_1) {
+    (function (image_2) {
         var Paint = android.graphics.Paint;
         var Drawable = android.graphics.drawable.Drawable;
         var Resources = android.content.res.Resources;
@@ -7909,7 +7913,7 @@ var androidui;
                 return this.mState;
             }
         }
-        image_1.RegionImageDrawable = RegionImageDrawable;
+        image_2.RegionImageDrawable = RegionImageDrawable;
         class State {
             constructor(image, bound, paint) {
                 this.mImage = image;
@@ -8054,13 +8058,15 @@ var androidui;
         }
     })(image = androidui.image || (androidui.image = {}));
 })(androidui || (androidui = {}));
+///<reference path="../../androidui/image/NetImage.ts"/>
 var android;
 (function (android) {
     var R;
     (function (R) {
         var image_base64;
         (function (image_base64) {
-            image_base64.x3 = {
+            var NetImage = androidui.image.NetImage;
+            var x3 = {
                 "btn_check_off_disabled_focused_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAFVBMVEUAAAAAmcwzMzMAmcwAmcwAmcwAmcySYuXAAAAAB3RSTlMAZk1gRhAMJ+/C7AAAAGhJREFUWMPt1rEJgFAMBuE02gedwA0EtRcXEFxAcP8dXCDvb14gzV3/9WdEVNJwebPtDsDnoiMApwJzAFYFpgC4WzP3JLA0SgQWBgAAAAAAANAJ8m+m5Mj0JGZs6KPAHoBRrfRrRFTRD3MwONmn2VynAAAAAElFTkSuQmCC",
                 "btn_check_off_disabled_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgAQMAAADYVuV7AAAABlBMVEUAAAAzMzPI8eYgAAAAAnRSTlMATX7+8BUAAAAhSURBVDjLYxgFZIP/YICNcwBEMI9yRjkkcPCkqlFALgAAVYo5bSUJskUAAAAASUVORK5CYII=",
                 "btn_check_off_focused_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAMFBMVEUAAAAAmcwAmcwAmcwxNTcAmcwAmcwAmcwAmcwAmcwAmcwvOT0AmcwAmcwAmcwAmczmhCwqAAAAEHRSTlMAmRIfzgUJGg4WJtCScyQtx2HoRgAAAORJREFUWMNjGAWjYEgC1lAcIACr8tDQNJwgNBSL8WEdSjhBR2oApgVN04uNcQDzSo1QDAsi9O8I4gRnP7ViaEj6I4gHnFcLQNfQeRGfBtkZ6BpC2w/i0yBTga6BTV1QcNVj7H62WyUoWJSApiFMWVBwcSX2QJ1uJSholIpFw/PdLljB7jocGiy3YNfgPRmHBiMX7GnMRXlUw6iGUQ2jGkY1jGoY1TCqgRINhBsnlDd/CDewKG3CsRJqJJLeDKW0ocsQpoWvKb0oFbOxnoSvsa4WSn53AKEDX4cjgNQuzSgYBUMRAABvBwmfTLNSCwAAAABJRU5ErkJggg==",
@@ -8099,6 +8105,43 @@ var android;
                 "spinner_76_inner_holo": "data:image/png;base64,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",
                 "spinner_76_outer_holo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAADkCAMAAAC/iXi/AAAAsVBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+3mHKcAAAAO3RSTlMABgoSH/3yGiQO7CkW9vouMkDkRTfJzjvf0+jESqBcV2Hbt66ldlLXv06yZWmBqZtxu49tl5OLfXqFiHO5Lf0AAAtLSURBVHja7NxrU9NAFMbxZzeRNk1qYmxLWyxQLhYsooKI+v0/mHshOXu8dDTNZXHyO4X3/zmbDcMwoNfr9Xq9Xq/X6/V6vV6v1+v1er2eH7bb7WmWZSn+Zy8KL6cXj8eZxPMnNJhxI6n05fzT4ys8X8KCsIXit5HGwbvLCZ4fYVCjQIEl6nmyPN8GeEaEFAqvLEOdRP1FxuPxu9Nn0imkIhgq/M0mqVFnjlaH8J2QmmCVsIOdmxzrz9hY3Hh945pEW+k2FscVPNImUqbZpbH8NoCnTCJtkkDs3iRVlg4eQniIEqmSNqnnj5ukNVLkwejOu20KGUleyTa5+3alTGpUn+VXr55NlagaI75IsnuTFFk0HujRZq/hDRkp1PhLJuzs2iQVUqW28uTMikj5tfLXh3LHJsdm3MhCfi/Qvaiw48BCwCGyLJtst9/PZ/znHdZImdMMHROBE0mZbiV2iK8/3uZ079BZpcbRwfIGnZJB4FTyREmFu4XHF8sxXyQzGt0G6IyIqJGfV9uIv3f4PWfXThloZzFBR2Sg8UyKxL96czHii3RCR6OP6ET0lEiVdF4FqohOP9kfBHif/X4RoX2BZit/PrCobnLOd2hDjaME7aJGXikV7Ce7OKBd6sCychaiVcJJ5JXYX/yhSKQDa2xStIEaEzeTEuuRHbG7tTQ/RGtEQonu3SNQm22uEmmPhfwaLZGJolfJlylRp+Dzbza5XC5P0AqZGAHvjARqNpkVbdQ4Wuav0QKRWO5jGQUS9ZMf2Fld2plnaBg18kyBRpzmJo8qtXWMJlEjP7AR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"
             };
+            image_base64.btn_check_off_disabled_focused_holo_light = new NetImage(x3.btn_check_off_disabled_focused_holo_light, 3);
+            image_base64.btn_check_off_disabled_holo_light = new NetImage(x3.btn_check_off_disabled_holo_light, 3);
+            image_base64.btn_check_off_focused_holo_light = new NetImage(x3.btn_check_off_focused_holo_light, 3);
+            image_base64.btn_check_off_holo_light = new NetImage(x3.btn_check_off_holo_light, 3);
+            image_base64.btn_check_off_pressed_holo_light = new NetImage(x3.btn_check_off_pressed_holo_light, 3);
+            image_base64.btn_check_on_disabled_focused_holo_light = new NetImage(x3.btn_check_on_disabled_focused_holo_light, 3);
+            image_base64.btn_check_on_disabled_holo_light = new NetImage(x3.btn_check_on_disabled_holo_light, 3);
+            image_base64.btn_check_on_focused_holo_light = new NetImage(x3.btn_check_on_focused_holo_light, 3);
+            image_base64.btn_check_on_holo_light = new NetImage(x3.btn_check_on_holo_light, 3);
+            image_base64.btn_check_on_pressed_holo_light = new NetImage(x3.btn_check_on_pressed_holo_light, 3);
+            image_base64.btn_radio_off_disabled_focused_holo_light = new NetImage(x3.btn_radio_off_disabled_focused_holo_light, 3);
+            image_base64.btn_radio_off_disabled_holo_light = new NetImage(x3.btn_radio_off_disabled_holo_light, 3);
+            image_base64.btn_radio_off_focused_holo_light = new NetImage(x3.btn_radio_off_focused_holo_light, 3);
+            image_base64.btn_radio_off_holo_light = new NetImage(x3.btn_radio_off_holo_light, 3);
+            image_base64.btn_radio_off_pressed_holo_light = new NetImage(x3.btn_radio_off_pressed_holo_light, 3);
+            image_base64.btn_radio_on_disabled_focused_holo_light = new NetImage(x3.btn_radio_on_disabled_focused_holo_light, 3);
+            image_base64.btn_radio_on_disabled_holo_light = new NetImage(x3.btn_radio_on_disabled_holo_light, 3);
+            image_base64.btn_radio_on_focused_holo_light = new NetImage(x3.btn_radio_on_focused_holo_light, 3);
+            image_base64.btn_radio_on_holo_light = new NetImage(x3.btn_radio_on_holo_light, 3);
+            image_base64.btn_radio_on_pressed_holo_light = new NetImage(x3.btn_radio_on_pressed_holo_light, 3);
+            image_base64.progressbar_indeterminate_holo1 = new NetImage(x3.progressbar_indeterminate_holo1, 3);
+            image_base64.progressbar_indeterminate_holo2 = new NetImage(x3.progressbar_indeterminate_holo2, 3);
+            image_base64.progressbar_indeterminate_holo3 = new NetImage(x3.progressbar_indeterminate_holo3, 3);
+            image_base64.progressbar_indeterminate_holo4 = new NetImage(x3.progressbar_indeterminate_holo4, 3);
+            image_base64.progressbar_indeterminate_holo5 = new NetImage(x3.progressbar_indeterminate_holo5, 3);
+            image_base64.progressbar_indeterminate_holo6 = new NetImage(x3.progressbar_indeterminate_holo6, 3);
+            image_base64.progressbar_indeterminate_holo7 = new NetImage(x3.progressbar_indeterminate_holo7, 3);
+            image_base64.progressbar_indeterminate_holo8 = new NetImage(x3.progressbar_indeterminate_holo8, 3);
+            image_base64.rate_star_big_half_holo_light = new NetImage(x3.rate_star_big_half_holo_light, 3);
+            image_base64.rate_star_big_off_holo_light = new NetImage(x3.rate_star_big_off_holo_light, 3);
+            image_base64.rate_star_big_on_holo_light = new NetImage(x3.rate_star_big_on_holo_light, 3);
+            image_base64.scrubber_control_disabled_holo = new NetImage(x3.scrubber_control_disabled_holo, 3);
+            image_base64.scrubber_control_focused_holo = new NetImage(x3.scrubber_control_focused_holo, 3);
+            image_base64.scrubber_control_normal_holo = new NetImage(x3.scrubber_control_normal_holo, 3);
+            image_base64.scrubber_control_pressed_holo = new NetImage(x3.scrubber_control_pressed_holo, 3);
+            image_base64.spinner_76_inner_holo = new NetImage(x3.spinner_76_inner_holo, 3);
+            image_base64.spinner_76_outer_holo = new NetImage(x3.spinner_76_outer_holo, 3);
         })(image_base64 = R.image_base64 || (R.image_base64 = {}));
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
@@ -8115,43 +8158,43 @@ var android;
         var OverrideSizeDrawable = androidui.image.ChangeImageSizeDrawable;
         const density = android.content.res.Resources.getDisplayMetrics().density;
         class image {
-            static get btn_check_off_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_disabled_focused_holo_light, null, null, 3); }
-            static get btn_check_off_disabled_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_disabled_holo_light, null, null, 3); }
-            static get btn_check_off_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_focused_holo_light, null, null, 3); }
-            static get btn_check_off_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_holo_light, null, null, 3); }
-            static get btn_check_off_pressed_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_off_pressed_holo_light, null, null, 3); }
-            static get btn_check_on_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_disabled_focused_holo_light, null, null, 3); }
-            static get btn_check_on_disabled_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_disabled_holo_light, null, null, 3); }
-            static get btn_check_on_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_focused_holo_light, null, null, 3); }
-            static get btn_check_on_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_holo_light, null, null, 3); }
-            static get btn_check_on_pressed_holo_light() { return new NetDrawable(R.image_base64.x3.btn_check_on_pressed_holo_light, null, null, 3); }
-            static get btn_radio_off_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_disabled_focused_holo_light, null, null, 3); }
-            static get btn_radio_off_disabled_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_disabled_holo_light, null, null, 3); }
-            static get btn_radio_off_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_focused_holo_light, null, null, 3); }
-            static get btn_radio_off_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_holo_light, null, null, 3); }
-            static get btn_radio_off_pressed_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_off_pressed_holo_light, null, null, 3); }
-            static get btn_radio_on_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_disabled_focused_holo_light, null, null, 3); }
-            static get btn_radio_on_disabled_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_disabled_holo_light, null, null, 3); }
-            static get btn_radio_on_focused_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_focused_holo_light, null, null, 3); }
-            static get btn_radio_on_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_holo_light, null, null, 3); }
-            static get btn_radio_on_pressed_holo_light() { return new NetDrawable(R.image_base64.x3.btn_radio_on_pressed_holo_light, null, null, 3); }
-            static get progressbar_indeterminate_holo1() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo1, null, null, 3); }
-            static get progressbar_indeterminate_holo2() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo2, null, null, 3); }
-            static get progressbar_indeterminate_holo3() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo3, null, null, 3); }
-            static get progressbar_indeterminate_holo4() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo4, null, null, 3); }
-            static get progressbar_indeterminate_holo5() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo5, null, null, 3); }
-            static get progressbar_indeterminate_holo6() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo6, null, null, 3); }
-            static get progressbar_indeterminate_holo7() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo7, null, null, 3); }
-            static get progressbar_indeterminate_holo8() { return new NetDrawable(R.image_base64.x3.progressbar_indeterminate_holo8, null, null, 3); }
-            static get rate_star_big_half_holo_light() { return new NetDrawable(R.image_base64.x3.rate_star_big_half_holo_light, null, null, 3); }
-            static get rate_star_big_off_holo_light() { return new NetDrawable(R.image_base64.x3.rate_star_big_off_holo_light, null, null, 3); }
-            static get rate_star_big_on_holo_light() { return new NetDrawable(R.image_base64.x3.rate_star_big_on_holo_light, null, null, 3); }
-            static get scrubber_control_disabled_holo() { return new NetDrawable(R.image_base64.x3.scrubber_control_disabled_holo, null, null, 3); }
-            static get scrubber_control_focused_holo() { return new NetDrawable(R.image_base64.x3.scrubber_control_focused_holo, null, null, 3); }
-            static get scrubber_control_normal_holo() { return new NetDrawable(R.image_base64.x3.scrubber_control_normal_holo, null, null, 3); }
-            static get scrubber_control_pressed_holo() { return new NetDrawable(R.image_base64.x3.scrubber_control_pressed_holo, null, null, 3); }
-            static get spinner_76_inner_holo() { return new NetDrawable(R.image_base64.x3.spinner_76_inner_holo, null, null, 3); }
-            static get spinner_76_outer_holo() { return new NetDrawable(R.image_base64.x3.spinner_76_outer_holo, null, null, 3); }
+            static get btn_check_off_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.btn_check_off_disabled_focused_holo_light); }
+            static get btn_check_off_disabled_holo_light() { return new NetDrawable(R.image_base64.btn_check_off_disabled_holo_light); }
+            static get btn_check_off_focused_holo_light() { return new NetDrawable(R.image_base64.btn_check_off_focused_holo_light); }
+            static get btn_check_off_holo_light() { return new NetDrawable(R.image_base64.btn_check_off_holo_light); }
+            static get btn_check_off_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_check_off_pressed_holo_light); }
+            static get btn_check_on_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.btn_check_on_disabled_focused_holo_light); }
+            static get btn_check_on_disabled_holo_light() { return new NetDrawable(R.image_base64.btn_check_on_disabled_holo_light); }
+            static get btn_check_on_focused_holo_light() { return new NetDrawable(R.image_base64.btn_check_on_focused_holo_light); }
+            static get btn_check_on_holo_light() { return new NetDrawable(R.image_base64.btn_check_on_holo_light); }
+            static get btn_check_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_check_on_pressed_holo_light); }
+            static get btn_radio_off_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.btn_radio_off_disabled_focused_holo_light); }
+            static get btn_radio_off_disabled_holo_light() { return new NetDrawable(R.image_base64.btn_radio_off_disabled_holo_light); }
+            static get btn_radio_off_focused_holo_light() { return new NetDrawable(R.image_base64.btn_radio_off_focused_holo_light); }
+            static get btn_radio_off_holo_light() { return new NetDrawable(R.image_base64.btn_radio_off_holo_light); }
+            static get btn_radio_off_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_radio_off_pressed_holo_light); }
+            static get btn_radio_on_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_disabled_focused_holo_light); }
+            static get btn_radio_on_disabled_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_disabled_holo_light); }
+            static get btn_radio_on_focused_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_focused_holo_light); }
+            static get btn_radio_on_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_holo_light); }
+            static get btn_radio_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_pressed_holo_light); }
+            static get progressbar_indeterminate_holo1() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo1); }
+            static get progressbar_indeterminate_holo2() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo2); }
+            static get progressbar_indeterminate_holo3() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo3); }
+            static get progressbar_indeterminate_holo4() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo4); }
+            static get progressbar_indeterminate_holo5() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo5); }
+            static get progressbar_indeterminate_holo6() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo6); }
+            static get progressbar_indeterminate_holo7() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo7); }
+            static get progressbar_indeterminate_holo8() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo8); }
+            static get rate_star_big_half_holo_light() { return new NetDrawable(R.image_base64.rate_star_big_half_holo_light); }
+            static get rate_star_big_off_holo_light() { return new NetDrawable(R.image_base64.rate_star_big_off_holo_light); }
+            static get rate_star_big_on_holo_light() { return new NetDrawable(R.image_base64.rate_star_big_on_holo_light); }
+            static get scrubber_control_disabled_holo() { return new NetDrawable(R.image_base64.scrubber_control_disabled_holo); }
+            static get scrubber_control_focused_holo() { return new NetDrawable(R.image_base64.scrubber_control_focused_holo); }
+            static get scrubber_control_normal_holo() { return new NetDrawable(R.image_base64.scrubber_control_normal_holo); }
+            static get scrubber_control_pressed_holo() { return new NetDrawable(R.image_base64.scrubber_control_pressed_holo); }
+            static get spinner_76_inner_holo() { return new NetDrawable(R.image_base64.spinner_76_inner_holo); }
+            static get spinner_76_outer_holo() { return new NetDrawable(R.image_base64.spinner_76_outer_holo); }
             static get spinner_48_outer_holo() { return new OverrideSizeDrawable(image.spinner_76_outer_holo, 48 * density, 48 * density); }
             static get spinner_48_inner_holo() { return new OverrideSizeDrawable(image.spinner_76_inner_holo, 48 * density, 48 * density); }
             static get spinner_16_outer_holo() { return new OverrideSizeDrawable(image.spinner_76_outer_holo, 16 * density, 16 * density); }
@@ -9680,7 +9723,7 @@ var android;
                     if (value == null)
                         this.setBackground(null);
                     else {
-                        this.setBackground(new NetDrawable(value, this.getResources()));
+                        this.setBackground(new NetDrawable(value));
                     }
                 }, () => {
                     let d = this.mBackground;
@@ -27070,22 +27113,22 @@ var android;
                 });
                 this._attrBinder.addAttr('drawableLeftUri', (value) => {
                     let dr = this.mDrawables || {};
-                    let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+                    let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableTopUri', (value) => {
                     let dr = this.mDrawables || {};
-                    let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+                    let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableRightUri', (value) => {
                     let dr = this.mDrawables || {};
-                    let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+                    let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
                 });
                 this._attrBinder.addAttr('drawableBottomUri', (value) => {
                     let dr = this.mDrawables || {};
-                    let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+                    let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
                 });
                 this._attrBinder.addAttr('drawablePadding', (value) => {
@@ -38449,7 +38492,7 @@ var android;
                 }
                 let d = null;
                 if (this.mUri != null) {
-                    d = new androidui.image.NetDrawable(this.mUri, this.getResources());
+                    d = new androidui.image.NetDrawable(this.mUri);
                 }
                 else {
                     return;
@@ -49457,7 +49500,7 @@ var androidui;
             this.element.appendChild(this._canvas);
             this.initFocus();
             this.initEvent();
-            this.initSizeVisibleChange();
+            this.initSizeChange();
             this._viewRootImpl.setView(this._rootLayout);
             this._viewRootImpl.initSurface(this._canvas);
             this.initVisibleChange();
@@ -49651,7 +49694,7 @@ var androidui;
         }
         initGenericEvent() {
         }
-        initSizeVisibleChange() {
+        initSizeChange() {
             const _this = this;
             window.addEventListener('resize', () => {
                 _this.notifySizeChange();
@@ -49679,7 +49722,7 @@ var androidui;
                 if (document['hidden'] || document['webkitHidden']) {
                 }
                 else {
-                    this._viewRootImpl.scheduleTraversals();
+                    this._viewRootImpl.invalidate();
                 }
             }, false);
         }

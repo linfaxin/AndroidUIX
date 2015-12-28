@@ -909,7 +909,7 @@ module android.view {
             this._attrBinder.addAttr('backgroundUri', (value)=>{
                 if(value==null) this.setBackground(null);
                 else{
-                    this.setBackground(new NetDrawable(value, this.getResources()));
+                    this.setBackground(new NetDrawable(value));
                 }
             }, ()=>{
                 let d = this.mBackground;

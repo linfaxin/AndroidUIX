@@ -14,21 +14,27 @@ module androidui.image{
     import Resources = android.content.res.Resources;
 
     export class NetDrawable extends Drawable {
-        private mImage:NetImage;
         private mState:State;
         private mLoadListener:NetDrawable.LoadListener;
         private mImageWidth = -1;
         private mImageHeight = -1;
 
-        constructor(src:string, res?:Resources, paint?:Paint, overrideImageRatio?:number){
+        constructor(src:string|NetImage, paint?:Paint, overrideImageRatio?:number){
             super();
-            this.mState = new State(src, res, paint);
-            this.mImage = new NetImage(src, ()=>this.onLoad(), ()=>this.onError(), overrideImageRatio);
+            let image:NetImage;
+            if(src instanceof NetImage){
+                image = src;
+                if(overrideImageRatio) image.mOverrideImageRatio = overrideImageRatio;
+            }else{
+                image = new NetImage(<string>src, overrideImageRatio);
+            }
+            image.addLoadListener(()=>this.onLoad(), ()=>this.onError());
+            this.mState = new State(image, paint);
         }
 
         draw(canvas:Canvas):void {
             if(this.isLoadFinish()){
-                canvas.drawImage(this.mImage, null, this.getBounds(), this.mState.paint);
+                canvas.drawImage(this.mState.mImage, null, this.getBounds(), this.mState.paint);
             }
         }
 
@@ -49,9 +55,9 @@ module androidui.image{
         }
 
         protected onLoad(){
-            let imageRatio = this.mImage.getImageRatio();
-            this.mImageWidth = Math.floor(this.mImage.width / imageRatio * this.mState.res.getDisplayMetrics().density);
-            this.mImageHeight = Math.floor(this.mImage.height / imageRatio * this.mState.res.getDisplayMetrics().density);
+            let imageRatio = this.mState.mImage.getImageRatio();
+            this.mImageWidth = Math.floor(this.mState.mImage.width / imageRatio * Resources.getDisplayMetrics().density);
+            this.mImageHeight = Math.floor(this.mState.mImage.height / imageRatio * Resources.getDisplayMetrics().density);
             if(this.mLoadListener) this.mLoadListener.onLoad(this);
             this.invalidateSelf();
             this.notifySizeChangeSelf();
@@ -69,7 +75,7 @@ module androidui.image{
         }
 
         getImage():NetImage {
-            return this.mImage;
+            return this.mState.mImage;
         }
 
         setLoadListener(loadListener:NetDrawable.LoadListener):void {
@@ -90,17 +96,15 @@ module androidui.image{
     }
 
     class State implements Drawable.ConstantState{
-        src:string;
+        mImage:NetImage;
         paint:Paint;
-        res:Resources;
-        constructor(src:string, res=Resources.instance, paint=new Paint()) {
-            this.res = res || Resources.instance;
-            this.src = src;
+        constructor(image:NetImage, paint=new Paint()) {
+            this.mImage = image;
             this.paint = new Paint();
             if(paint!=null) this.paint.set(paint);
         }
         newDrawable():Drawable {
-            return new NetDrawable(this.src, this.res, this.paint);
+            return new NetDrawable(this.mImage, this.paint);
         }
     }
 }

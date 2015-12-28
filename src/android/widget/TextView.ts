@@ -536,22 +536,22 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         });
         this._attrBinder.addAttr('drawableLeftUri', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+            let drawable = value ? new NetDrawable(value) : null;
             this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
         });
         this._attrBinder.addAttr('drawableTopUri', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+            let drawable = value ? new NetDrawable(value) : null;
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
         });
         this._attrBinder.addAttr('drawableRightUri', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+            let drawable = value ? new NetDrawable(value) : null;
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
         });
         this._attrBinder.addAttr('drawableBottomUri', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = value ? new NetDrawable(value, this.getResources()) : null;
+            let drawable = value ? new NetDrawable(value) : null;
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
         });
         this._attrBinder.addAttr('drawablePadding', (value)=>{
