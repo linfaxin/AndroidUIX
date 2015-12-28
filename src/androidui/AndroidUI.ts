@@ -76,7 +76,7 @@ module androidui {
             this.initFocus();
             this.initEvent();
 
-            this.initSizeVisibleChange();
+            this.initSizeChange();
 
             this._viewRootImpl.setView(this._rootLayout);
             this._viewRootImpl.initSurface(this._canvas);
@@ -296,7 +296,7 @@ module androidui {
             // No generic Event current. Hover event should listen here
         }
 
-        private initSizeVisibleChange(){
+        private initSizeChange(){
             const _this = this;
             window.addEventListener('resize', ()=>{
                 _this.notifySizeChange();
@@ -327,7 +327,7 @@ module androidui {
                 if(document['hidden'] || document['webkitHidden']){
                     //hidden
                 }else{
-                    this._viewRootImpl.scheduleTraversals();
+                    this._viewRootImpl.invalidate();
                 }
             }, false);
         }
