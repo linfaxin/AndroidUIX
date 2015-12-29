@@ -1308,23 +1308,32 @@ declare module androidui.image {
         private mLoadListener;
         private mImageWidth;
         private mImageHeight;
+        private mTileModeX;
+        private mTileModeY;
+        private mTmpTileBound;
         constructor(src: string | NetImage, paint?: Paint, overrideImageRatio?: number);
         draw(canvas: Canvas): void;
+        private drawTile(canvas);
         setAlpha(alpha: number): void;
         getAlpha(): number;
         getIntrinsicWidth(): number;
         getIntrinsicHeight(): number;
         protected onLoad(): void;
         protected onError(): void;
-        isLoadFinish(): boolean;
+        isImageSizeEmpty(): boolean;
         getImage(): NetImage;
         setLoadListener(loadListener: NetDrawable.LoadListener): void;
+        setTileMode(tileX: NetDrawable.TileMode, tileY: NetDrawable.TileMode): void;
         getConstantState(): Drawable.ConstantState;
     }
     module NetDrawable {
         interface LoadListener {
             onLoad(drawable: NetDrawable): any;
             onError(drawable: NetDrawable): any;
+        }
+        enum TileMode {
+            DEFAULT = 0,
+            REPEAT = 1,
         }
     }
 }
@@ -1757,6 +1766,13 @@ declare module android.R {
         static progress_large_holo: Drawable;
         static progress_horizontal_holo: Drawable;
         static progress_indeterminate_horizontal_holo: Drawable;
+        static ratingbar_full_empty_holo_light: Drawable;
+        static ratingbar_full_filled_holo_light: Drawable;
+        static ratingbar_full_holo_light: Drawable;
+        static ratingbar_holo_light: Drawable;
+        static ratingbar_small_holo_light: Drawable;
+        static scrubber_control_selector_holo: Drawable;
+        static scrubber_progress_horizontal_holo_light: Drawable;
         static scrubber_primary_holo: Drawable;
         static scrubber_secondary_holo: Drawable;
         static scrubber_track_holo_light: Drawable;
@@ -1830,6 +1846,10 @@ declare module android.R.image_base64 {
     var btn_radio_on_focused_holo_light: NetImage;
     var btn_radio_on_holo_light: NetImage;
     var btn_radio_on_pressed_holo_light: NetImage;
+    var btn_rating_star_off_normal_holo_light: NetImage;
+    var btn_rating_star_off_pressed_holo_light: NetImage;
+    var btn_rating_star_on_normal_holo_light: NetImage;
+    var btn_rating_star_on_pressed_holo_light: NetImage;
     var progressbar_indeterminate_holo1: NetImage;
     var progressbar_indeterminate_holo2: NetImage;
     var progressbar_indeterminate_holo3: NetImage;
@@ -1872,6 +1892,10 @@ declare module android.R {
         static btn_radio_on_focused_holo_light: NetDrawable;
         static btn_radio_on_holo_light: NetDrawable;
         static btn_radio_on_pressed_holo_light: NetDrawable;
+        static btn_rating_star_off_pressed_holo_light: NetDrawable;
+        static btn_rating_star_off_normal_holo_light: NetDrawable;
+        static btn_rating_star_on_pressed_holo_light: NetDrawable;
+        static btn_rating_star_on_normal_holo_light: NetDrawable;
         static progressbar_indeterminate_holo1: NetDrawable;
         static progressbar_indeterminate_holo2: NetDrawable;
         static progressbar_indeterminate_holo3: NetDrawable;
@@ -1893,6 +1917,9 @@ declare module android.R {
         static spinner_48_inner_holo: OverrideSizeDrawable;
         static spinner_16_outer_holo: OverrideSizeDrawable;
         static spinner_16_inner_holo: OverrideSizeDrawable;
+        static rate_star_small_off_holo_light: OverrideSizeDrawable;
+        static rate_star_small_half_holo_light: OverrideSizeDrawable;
+        static rate_star_small_on_holo_light: OverrideSizeDrawable;
     }
 }
 declare module android.R {
@@ -1950,6 +1977,32 @@ declare module android.R {
         };
         static progressBarStyleSmall: any;
         static progressBarStyleLarge: any;
+        static seekBarStyle: {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            minHeight: string;
+            maxHeight: string;
+            thumb: Drawable;
+            thumbOffset: string;
+            focusable: boolean;
+            paddingLeft: string;
+            paddingRight: string;
+            mirrorForRtl: boolean;
+        };
+        static ratingBarStyle: {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            minHeight: string;
+            maxHeight: string;
+            numStars: string;
+            stepSize: string;
+            thumb: any;
+            mirrorForRtl: boolean;
+        };
+        static ratingBarStyleIndicator: any;
+        static ratingBarStyleSmall: any;
         static gridViewStyle: {
             listSelector: Drawable;
             numColumns: number;
@@ -2401,6 +2454,7 @@ declare module android.view {
         mPaddingTop: number;
         mPaddingBottom: number;
         constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        protected initBindAttr(a: AttrBinder): void;
         getWidth(): number;
         getHeight(): number;
         getPaddingLeft(): number;
@@ -6842,6 +6896,49 @@ declare module android.widget {
         }
     }
 }
+declare module android.graphics.drawable {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Runnable = java.lang.Runnable;
+    class ClipDrawable extends Drawable implements Drawable.Callback {
+        private mClipState;
+        private mTmpRect;
+        static HORIZONTAL: number;
+        static VERTICAL: number;
+        constructor(state?: ClipDrawable.ClipState);
+        constructor(drawable: Drawable, gravity: number, orientation: number);
+        drawableSizeChange(who: android.graphics.drawable.Drawable): void;
+        invalidateDrawable(who: Drawable): void;
+        scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
+        unscheduleDrawable(who: Drawable, what: Runnable): void;
+        getPadding(padding: Rect): boolean;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getOpacity(): number;
+        isStateful(): boolean;
+        protected onStateChange(state: number[]): boolean;
+        protected onLevelChange(level: number): boolean;
+        protected onBoundsChange(bounds: Rect): void;
+        draw(canvas: Canvas): void;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getConstantState(): Drawable.ConstantState;
+    }
+    module ClipDrawable {
+        class ClipState implements Drawable.ConstantState {
+            mDrawable: Drawable;
+            mOrientation: number;
+            mGravity: number;
+            private mCheckedConstantState;
+            private mCanConstantState;
+            constructor(orig: ClipState, owner: ClipDrawable);
+            newDrawable(): Drawable;
+            canConstantState(): boolean;
+        }
+    }
+}
 declare module android.view.animation {
     import Animation = android.view.animation.Animation;
     import Transformation = android.view.animation.Transformation;
@@ -6860,6 +6957,7 @@ declare module android.widget {
     import Drawable = android.graphics.drawable.Drawable;
     import View = android.view.View;
     import Interpolator = android.view.animation.Interpolator;
+    import NetDrawable = androidui.image.NetDrawable;
     class ProgressBar extends View {
         private static MAX_LEVEL;
         private static TIMEOUT_SEND_ACCESSIBILITY_EVENT;
@@ -6880,6 +6978,7 @@ declare module android.widget {
         private mIndeterminateDrawable;
         private mProgressDrawable;
         private mCurrentDrawable;
+        protected mSampleTile: NetDrawable;
         private mNoInvalidate;
         private mInterpolator;
         private mShouldStartAnimationDrawable;
@@ -6888,7 +6987,17 @@ declare module android.widget {
         private mRefreshIsPosted;
         mMirrorForRtl: boolean;
         private mRefreshData;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: {
+            indeterminateOnly: boolean;
+            indeterminateDrawable: Drawable;
+            indeterminateBehavior: string;
+            indeterminateDuration: number;
+            minWidth: string;
+            maxWidth: string;
+            minHeight: string;
+            maxHeight: string;
+            mirrorForRtl: boolean;
+        });
         private tileify(drawable, clip);
         private tileifyIndeterminate(drawable);
         private initProgressBar();
@@ -7033,6 +7142,121 @@ declare module android.widget {
             private mOnHierarchyChangeListener;
             onChildViewAdded(parent: View, child: View): void;
             onChildViewRemoved(parent: View, child: View): void;
+        }
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Drawable = android.graphics.drawable.Drawable;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import ProgressBar = android.widget.ProgressBar;
+    abstract class AbsSeekBar extends ProgressBar {
+        private mThumb;
+        private mThumbOffset;
+        mTouchProgressOffset: number;
+        mIsUserSeekable: boolean;
+        private mKeyProgressIncrement;
+        private static NO_ALPHA;
+        private mDisabledAlpha;
+        private mTouchDownX;
+        private mIsDragging;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        setThumb(thumb: Drawable): void;
+        getThumb(): Drawable;
+        getThumbOffset(): number;
+        setThumbOffset(thumbOffset: number): void;
+        setKeyProgressIncrement(increment: number): void;
+        getKeyProgressIncrement(): number;
+        setMax(max: number): void;
+        protected verifyDrawable(who: Drawable): boolean;
+        jumpDrawablesToCurrentState(): void;
+        protected drawableStateChanged(): void;
+        onProgressRefresh(scale: number, fromUser: boolean): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        private updateThumbPos(w, h);
+        private setThumbPos(w, thumb, scale, gap);
+        protected onDraw(canvas: Canvas): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        onTouchEvent(event: MotionEvent): boolean;
+        private trackTouchEvent(event);
+        private attemptClaimDrag();
+        onStartTrackingTouch(): void;
+        onStopTrackingTouch(): void;
+        onKeyChange(): void;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+    }
+}
+declare module android.widget {
+    import AbsSeekBar = android.widget.AbsSeekBar;
+    class SeekBar extends AbsSeekBar {
+        private mOnSeekBarChangeListener;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: {
+            indeterminateOnly: boolean;
+            progressDrawable: graphics.drawable.Drawable;
+            indeterminateDrawable: graphics.drawable.Drawable;
+            minHeight: string;
+            maxHeight: string;
+            thumb: graphics.drawable.Drawable;
+            thumbOffset: string;
+            focusable: boolean;
+            paddingLeft: string;
+            paddingRight: string;
+            mirrorForRtl: boolean;
+        });
+        onProgressRefresh(scale: number, fromUser: boolean): void;
+        setOnSeekBarChangeListener(l: SeekBar.OnSeekBarChangeListener): void;
+        onStartTrackingTouch(): void;
+        onStopTrackingTouch(): void;
+    }
+    module SeekBar {
+        interface OnSeekBarChangeListener {
+            onProgressChanged(seekBar: SeekBar, progress: number, fromUser: boolean): void;
+            onStartTrackingTouch(seekBar: SeekBar): void;
+            onStopTrackingTouch(seekBar: SeekBar): void;
+        }
+    }
+}
+declare module android.widget {
+    import AbsSeekBar = android.widget.AbsSeekBar;
+    class RatingBar extends AbsSeekBar {
+        private mNumStars;
+        private mProgressOnStartTracking;
+        private mOnRatingBarChangeListener;
+        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: {
+            indeterminateOnly: boolean;
+            progressDrawable: graphics.drawable.Drawable;
+            indeterminateDrawable: graphics.drawable.Drawable;
+            minHeight: string;
+            maxHeight: string;
+            numStars: string;
+            stepSize: string;
+            thumb: any;
+            mirrorForRtl: boolean;
+        });
+        setOnRatingBarChangeListener(listener: RatingBar.OnRatingBarChangeListener): void;
+        getOnRatingBarChangeListener(): RatingBar.OnRatingBarChangeListener;
+        setIsIndicator(isIndicator: boolean): void;
+        isIndicator(): boolean;
+        setNumStars(numStars: number): void;
+        getNumStars(): number;
+        setRating(rating: number): void;
+        getRating(): number;
+        setStepSize(stepSize: number): void;
+        getStepSize(): number;
+        private getProgressPerStar();
+        onProgressRefresh(scale: number, fromUser: boolean): void;
+        private updateSecondaryProgress(progress);
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        onStartTrackingTouch(): void;
+        onStopTrackingTouch(): void;
+        onKeyChange(): void;
+        dispatchRatingChange(fromUser: boolean): void;
+        setMax(max: number): void;
+    }
+    module RatingBar {
+        interface OnRatingBarChangeListener {
+            onRatingChanged(ratingBar: RatingBar, rating: number, fromUser: boolean): void;
         }
     }
 }

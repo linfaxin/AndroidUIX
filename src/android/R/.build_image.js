@@ -13,6 +13,7 @@ files.forEach(function(fileName){
 
 var exportLines = '';
 for(var k of Object.keys(dirImageData)){
+    console.log('export:'+k);
     exportLines += `
     export var ${k} = new NetImage(x3.${k}, 3);`;
 }

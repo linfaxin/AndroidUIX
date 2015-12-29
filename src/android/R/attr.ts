@@ -117,6 +117,60 @@ module android.R {
             });
         }
 
+        static get seekBarStyle(){
+            return {
+                indeterminateOnly : false,
+                progressDrawable : R.drawable.scrubber_progress_horizontal_holo_light,
+                indeterminateDrawable : R.drawable.scrubber_progress_horizontal_holo_light,
+                minHeight : '13dp',
+                maxHeight : '13dp',
+                thumb : R.drawable.scrubber_control_selector_holo,
+                thumbOffset : '16dp',
+                focusable : true,
+                paddingLeft : '16dp',
+                paddingRight : '16dp',
+                mirrorForRtl : true,
+            }
+        }
+
+        static get ratingBarStyle(){
+            return {
+                indeterminateOnly : false,
+                progressDrawable : R.drawable.ratingbar_full_holo_light,
+                indeterminateDrawable : R.drawable.ratingbar_full_holo_light,
+                minHeight : '48dip',
+                maxHeight : '48dip',
+                numStars : '5',
+                stepSize : '0.5',
+                thumb : null,
+                mirrorForRtl : true,
+            }
+        }
+
+        static get ratingBarStyleIndicator(){
+            return Object.assign(this.ratingBarStyle, {
+                indeterminateOnly : false,
+                progressDrawable : R.drawable.ratingbar_holo_light,
+                indeterminateDrawable : R.drawable.ratingbar_holo_light,
+                minHeight : '35dip',
+                maxHeight : '35dip',
+                thumb : null,
+                isIndicator : true,
+            })
+        }
+
+        static get ratingBarStyleSmall(){
+            return Object.assign(this.ratingBarStyle, {
+                indeterminateOnly : false,
+                progressDrawable : R.drawable.ratingbar_small_holo_light,
+                indeterminateDrawable : R.drawable.ratingbar_small_holo_light,
+                minHeight : '16dip',
+                maxHeight : '16dip',
+                thumb : null,
+                isIndicator : true,
+            })
+        }
+
 
         static get gridViewStyle() {
             return {

@@ -23,6 +23,8 @@
 ///<reference path="android/widget/CheckBox.ts"/>
 ///<reference path="android/widget/RadioButton.ts"/>
 ///<reference path="android/widget/RadioGroup.ts"/>
+///<reference path="android/widget/SeekBar.ts"/>
+///<reference path="android/widget/RatingBar.ts"/>
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
 

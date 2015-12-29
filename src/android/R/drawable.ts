@@ -249,6 +249,92 @@ module android.R{
             return animDrawable;
         }
 
+        static get ratingbar_full_empty_holo_light():Drawable {
+            let stateList = new StateListDrawable();
+            stateList.addState([View.VIEW_STATE_PRESSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+            stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+            //stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_focused_holo_light);
+            //stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_focused_holo_light);
+            stateList.addState([], R.image.btn_rating_star_off_normal_holo_light);
+            return stateList;
+        }
+        
+        static get ratingbar_full_filled_holo_light():Drawable {
+            let stateList = new StateListDrawable();
+            stateList.addState([View.VIEW_STATE_PRESSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+            stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+            //stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_focused_holo_light);
+            //stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_focused_holo_light);
+            stateList.addState([], R.image.btn_rating_star_on_normal_holo_light);
+            return stateList;
+        }
+
+        static get ratingbar_full_holo_light():Drawable {
+            let layerDrawable = new LayerDrawable(null);
+
+            layerDrawable.addLayer(R.drawable.ratingbar_full_empty_holo_light, R.id.background);
+            layerDrawable.addLayer(R.drawable.ratingbar_full_empty_holo_light, R.id.secondaryProgress);
+            layerDrawable.addLayer(R.drawable.ratingbar_full_filled_holo_light, R.id.progress);
+
+            layerDrawable.ensurePadding();
+            layerDrawable.onStateChange(layerDrawable.getState());
+
+            return layerDrawable;
+        }
+
+        static get ratingbar_holo_light():Drawable {
+            let layerDrawable = new LayerDrawable(null);
+
+            layerDrawable.addLayer(R.image.rate_star_big_off_holo_light, R.id.background);
+            layerDrawable.addLayer(R.image.rate_star_big_half_holo_light, R.id.secondaryProgress);
+            layerDrawable.addLayer(R.image.rate_star_big_on_holo_light, R.id.progress);
+
+            layerDrawable.ensurePadding();
+            layerDrawable.onStateChange(layerDrawable.getState());
+
+            return layerDrawable;
+        }
+
+        static get ratingbar_small_holo_light():Drawable {
+            let layerDrawable = new LayerDrawable(null);
+
+            layerDrawable.addLayer(R.image.rate_star_small_off_holo_light, R.id.background);
+            layerDrawable.addLayer(R.image.rate_star_small_half_holo_light, R.id.secondaryProgress);
+            layerDrawable.addLayer(R.image.rate_star_small_on_holo_light, R.id.progress);
+
+            layerDrawable.ensurePadding();
+            layerDrawable.onStateChange(layerDrawable.getState());
+
+            return layerDrawable;
+        }
+
+        static get scrubber_control_selector_holo():Drawable {
+            let stateList = new StateListDrawable();
+            stateList.addState([-View.VIEW_STATE_ENABLED], R.image.scrubber_control_disabled_holo);
+            stateList.addState([View.VIEW_STATE_PRESSED], R.image.scrubber_control_pressed_holo);
+            stateList.addState([View.VIEW_STATE_SELECTED], R.image.scrubber_control_focused_holo);
+            stateList.addState([], R.image.scrubber_control_normal_holo);
+            return stateList;
+        }
+
+        static get scrubber_progress_horizontal_holo_light():Drawable {
+            let layerDrawable = new LayerDrawable(null);
+
+            layerDrawable.addLayer(R.drawable.scrubber_track_holo_light, R.id.background);
+
+            let secondary = new ScaleDrawable(R.drawable.scrubber_secondary_holo, Gravity.LEFT, 1, -1);
+            layerDrawable.addLayer(secondary, R.id.secondaryProgress);
+
+            let progress = new ScaleDrawable(R.drawable.scrubber_primary_holo, Gravity.LEFT, 1, -1);
+            layerDrawable.addLayer(progress, R.id.progress);
+
+            layerDrawable.ensurePadding();
+            layerDrawable.onStateChange(layerDrawable.getState());
+
+            return layerDrawable;
+        }
 
         static get scrubber_primary_holo():Drawable {
             let line = new ColorDrawable(0xff33b5e5);

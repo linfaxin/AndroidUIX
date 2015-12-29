@@ -21,6 +21,7 @@
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/drawable/LayerDrawable.ts"/>
 ///<reference path="../../android/graphics/drawable/StateListDrawable.ts"/>
+///<reference path="../../android/graphics/drawable/ClipDrawable.ts"/>
 ///<reference path="../../android/util/Pools.ts"/>
 ///<reference path="../../android/view/Gravity.ts"/>
 ///<reference path="../../android/view/View.ts"/>
@@ -34,6 +35,7 @@
 ///<reference path="../../android/widget/LinearLayout.ts"/>
 ///<reference path="../../android/widget/TextView.ts"/>
 ///<reference path="../../android/R/id.ts"/>
+///<reference path="../../androidui/image/NetDrawable.ts"/>
 
 module android.widget {
 import Canvas = android.graphics.Canvas;
@@ -43,6 +45,7 @@ import AnimationDrawable = android.graphics.drawable.AnimationDrawable;
 import Drawable = android.graphics.drawable.Drawable;
 import LayerDrawable = android.graphics.drawable.LayerDrawable;
 import StateListDrawable = android.graphics.drawable.StateListDrawable;
+import ClipDrawable = android.graphics.drawable.ClipDrawable;
 import SynchronizedPool = android.util.Pools.SynchronizedPool;
 import Gravity = android.view.Gravity;
 import View = android.view.View;
@@ -56,6 +59,8 @@ import ArrayList = java.util.ArrayList;
 import LinearLayout = android.widget.LinearLayout;
 import TextView = android.widget.TextView;
 import R = android.R;
+import NetDrawable = androidui.image.NetDrawable;
+
 /**
  * <p>
  * Visual indicator of progress in some operation.  Displays a bar to the user
@@ -228,7 +233,7 @@ export class ProgressBar extends View {
 
     private mCurrentDrawable:Drawable;
 
-    //mSampleTile:Bitmap;
+    protected mSampleTile:NetDrawable;
 
     private mNoInvalidate:boolean;
 
@@ -257,46 +262,47 @@ export class ProgressBar extends View {
      * Create a new progress bar with range 0...100 and initial progress of 0.
      * @param context the application environment
      */
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle?:any) {
-        super(bindElement, rootElement, defStyle);
+    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle=android.R.attr.progressBarStyle) {
+        super(bindElement, rootElement, null);
 
         this.initProgressBar();
 
-        this._attrBinder.addAttr('progressDrawable', (value)=>{
-            let drawable = this._attrBinder.parseDrawable(value);
+        const a = this._attrBinder;
+        a.addAttr('progressDrawable', (value)=>{
+            let drawable = a.parseDrawable(value);
             if(drawable!=null){
-                //    drawable = this.tileify(drawable, false);
+                drawable = this.tileify(drawable, false);
                 this.setProgressDrawable(drawable);
             }
         }, ()=>{
             return this.mProgressDrawable;
         });
-        this._attrBinder.addAttr('indeterminateDuration', (value)=>{
-            this.mDuration = Math.floor(this._attrBinder.parseNumber(value, this.mDuration));
+        a.addAttr('indeterminateDuration', (value)=>{
+            this.mDuration = Math.floor(a.parseNumber(value, this.mDuration));
         }, ()=>{
             return this.mDuration;
         });
-        this._attrBinder.addAttr('minWidth', (value)=>{
-            this.mMinWidth = Math.floor(this._attrBinder.parseNumber(value, this.mMinWidth));
+        a.addAttr('minWidth', (value)=>{
+            this.mMinWidth = Math.floor(a.parseNumber(value, this.mMinWidth));
         }, ()=>{
             return this.mMinWidth;
         });
-        this._attrBinder.addAttr('maxWidth', (value)=>{
-            this.mMaxWidth = Math.floor(this._attrBinder.parseNumber(value, this.mMaxWidth));
+        a.addAttr('maxWidth', (value)=>{
+            this.mMaxWidth = Math.floor(a.parseNumber(value, this.mMaxWidth));
         }, ()=>{
             return this.mMaxWidth;
         });
-        this._attrBinder.addAttr('minHeight', (value)=>{
-            this.mMinHeight = Math.floor(this._attrBinder.parseNumber(value, this.mMinHeight));
+        a.addAttr('minHeight', (value)=>{
+            this.mMinHeight = Math.floor(a.parseNumber(value, this.mMinHeight));
         }, ()=>{
             return this.mMinHeight;
         });
-        this._attrBinder.addAttr('maxHeight', (value)=>{
-            this.mMaxHeight = Math.floor(this._attrBinder.parseNumber(value, this.mMaxHeight));
+        a.addAttr('maxHeight', (value)=>{
+            this.mMaxHeight = Math.floor(a.parseNumber(value, this.mMaxHeight));
         }, ()=>{
             return this.mMaxHeight;
         });
-        this._attrBinder.addAttr('indeterminateBehavior', (value)=>{
+        a.addAttr('indeterminateBehavior', (value)=>{
             if(value+''.toLowerCase() == 'cycle'){
                 this.mBehavior = Animation.REVERSE;
             }else {
@@ -304,45 +310,44 @@ export class ProgressBar extends View {
             }
         });
 
-        this._attrBinder.addAttr('interpolator', (value)=>{
+        a.addAttr('interpolator', (value)=>{
         });
-        this._attrBinder.addAttr('max', (value)=>{
-            this.setMax(this._attrBinder.parseNumber(value, this.mMax));
+        a.addAttr('max', (value)=>{
+            this.setMax(a.parseNumber(value, this.mMax));
         }, ()=>{
             return this.mMax;
         });
-        this._attrBinder.addAttr('progress', (value)=>{
-            this.setProgress(this._attrBinder.parseNumber(value, this.mProgress));
+        a.addAttr('progress', (value)=>{
+            this.setProgress(a.parseNumber(value, this.mProgress));
         }, ()=>{
             return this.mProgress;
         });
-        this._attrBinder.addAttr('secondaryProgress', (value)=>{
-            this.setSecondaryProgress(this._attrBinder.parseNumber(value, this.mSecondaryProgress));
+        a.addAttr('secondaryProgress', (value)=>{
+            this.setSecondaryProgress(a.parseNumber(value, this.mSecondaryProgress));
         }, ()=>{
             return this.mSecondaryProgress;
         });
 
-        this._attrBinder.addAttr('indeterminateDrawable', (value)=>{
-            let drawable = this._attrBinder.parseDrawable(value);
+        a.addAttr('indeterminateDrawable', (value)=>{
+            let drawable = a.parseDrawable(value);
             if(drawable!=null){
-                //drawable = this.tileifyIndeterminate(drawable);
+                drawable = this.tileifyIndeterminate(drawable);
                 this.setIndeterminateDrawable(drawable);
             }
         }, ()=>{
             return this.mIndeterminateDrawable;
         });
 
-        this._attrBinder.addAttr('indeterminateOnly', (value)=>{
-            this.mOnlyIndeterminate = this._attrBinder.parseBoolean(value, this.mOnlyIndeterminate);
+        a.addAttr('indeterminateOnly', (value)=>{
+            this.mOnlyIndeterminate = a.parseBoolean(value, this.mOnlyIndeterminate);
             this.setIndeterminate(this.mOnlyIndeterminate || this.mIndeterminate);
         });
-        this._attrBinder.addAttr('indeterminate', (value)=>{
-            this.setIndeterminate(this.mOnlyIndeterminate || this._attrBinder.parseBoolean(value, this.mIndeterminate));
+        a.addAttr('indeterminate', (value)=>{
+            this.setIndeterminate(this.mOnlyIndeterminate || a.parseBoolean(value, this.mIndeterminate));
         });
 
         this.mNoInvalidate = true;
-        if(defStyle === undefined) defStyle = android.R.attr.progressBarStyle;
-        if(defStyle != null) this.applyDefaultAttributes(defStyle);
+        if(defStyle) this.applyDefaultAttributes(defStyle);
         this.mNoInvalidate = false;
         this.setIndeterminate(this.mOnlyIndeterminate || this.mIndeterminate);
     }
@@ -395,28 +400,32 @@ export class ProgressBar extends View {
      * traverse layer and state list drawables.
      */
     private tileify(drawable:Drawable, clip:boolean):Drawable  {
-        //FIXME not support tile mode
-        //if (drawable instanceof LayerDrawable) {
-        //    let background:LayerDrawable = <LayerDrawable> drawable;
-        //    const N:number = background.getNumberOfLayers();
-        //    let outDrawables:Drawable[] = new Array<Drawable>(N);
-        //    for (let i:number = 0; i < N; i++) {
-        //        let id:number = background.getId(i);
-        //        outDrawables[i] = this.tileify(background.getDrawable(i), (id == R.id.progress || id == R.id.secondaryProgress));
-        //    }
-        //    let newBg:LayerDrawable = new LayerDrawable(outDrawables);
-        //    for (let i:number = 0; i < N; i++) {
-        //        newBg.setId(i, background.getId(i));
-        //    }
-        //    return newBg;
-        //} else if (drawable instanceof StateListDrawable) {
-        //    let _in:StateListDrawable = <StateListDrawable> drawable;
-        //    let out:StateListDrawable = new StateListDrawable();
-        //    let numStates:number = _in.getStateCount();
-        //    for (let i:number = 0; i < numStates; i++) {
-        //        out.addState(_in.getStateSet(i), this.tileify(_in.getStateDrawable(i), clip));
-        //    }
-        //    return out;
+        if (drawable instanceof LayerDrawable) {
+            let background:LayerDrawable = <LayerDrawable> drawable;
+            const N:number = background.getNumberOfLayers();
+            let outDrawables:Drawable[] = new Array<Drawable>(N);
+            let drawableChange = false;
+            for (let i:number = 0; i < N; i++) {
+                let id:string = background.getId(i);
+                let orig = background.getDrawable(i);
+                outDrawables[i] = this.tileify(orig, (id == R.id.progress || id == R.id.secondaryProgress));
+                drawableChange = drawableChange || outDrawables[i] !== orig;
+            }
+            if(!drawableChange) return background;
+
+            let newBg:LayerDrawable = new LayerDrawable(outDrawables);
+            for (let i:number = 0; i < N; i++) {
+                newBg.setId(i, background.getId(i));
+            }
+            return newBg;
+        } else if (drawable instanceof StateListDrawable) {
+            let _in:StateListDrawable = <StateListDrawable> drawable;
+            let out:StateListDrawable = new StateListDrawable();
+            let numStates:number = _in.getStateCount();
+            for (let i:number = 0; i < numStates; i++) {
+                out.addState(_in.getStateSet(i), this.tileify(_in.getStateDrawable(i), clip));
+            }
+            return out;
         //} else if (drawable instanceof BitmapDrawable) {
         //    const tileBitmap:Bitmap = (<BitmapDrawable> drawable).getBitmap();
         //    if (this.mSampleTile == null) {
@@ -426,7 +435,14 @@ export class ProgressBar extends View {
         //    const bitmapShader:BitmapShader = new BitmapShader(tileBitmap, Shader.TileMode.REPEAT, Shader.TileMode.CLAMP);
         //    shapeDrawable.getPaint().setShader(bitmapShader);
         //    return (clip) ? new ClipDrawable(shapeDrawable, Gravity.LEFT, ClipDrawable.HORIZONTAL) : shapeDrawable;
-        //}
+        } else if (drawable instanceof NetDrawable) {
+            const netDrawable = (<NetDrawable> drawable);
+            if (this.mSampleTile == null) {
+                this.mSampleTile = netDrawable;
+            }
+            netDrawable.setTileMode(NetDrawable.TileMode.REPEAT, null);
+            return (clip) ? new ClipDrawable(netDrawable, Gravity.LEFT, ClipDrawable.HORIZONTAL) : netDrawable;
+        }
         return drawable;
     }
 

@@ -35,6 +35,10 @@ module android.R {
         static get btn_radio_on_focused_holo_light(){return new NetDrawable(image_base64.btn_radio_on_focused_holo_light)}
         static get btn_radio_on_holo_light(){return new NetDrawable(image_base64.btn_radio_on_holo_light)}
         static get btn_radio_on_pressed_holo_light(){return new NetDrawable(image_base64.btn_radio_on_pressed_holo_light)}
+        static get btn_rating_star_off_pressed_holo_light(){return new NetDrawable(image_base64.btn_rating_star_off_pressed_holo_light)}
+        static get btn_rating_star_off_normal_holo_light(){return new NetDrawable(image_base64.btn_rating_star_off_normal_holo_light)}
+        static get btn_rating_star_on_pressed_holo_light(){return new NetDrawable(image_base64.btn_rating_star_on_pressed_holo_light)}
+        static get btn_rating_star_on_normal_holo_light(){return new NetDrawable(image_base64.btn_rating_star_on_normal_holo_light)}
         static get progressbar_indeterminate_holo1(){return new NetDrawable(image_base64.progressbar_indeterminate_holo1)}
         static get progressbar_indeterminate_holo2(){return new NetDrawable(image_base64.progressbar_indeterminate_holo2)}
         static get progressbar_indeterminate_holo3(){return new NetDrawable(image_base64.progressbar_indeterminate_holo3)}
@@ -58,6 +62,10 @@ module android.R {
         static get spinner_48_inner_holo(){ return new OverrideSizeDrawable(image.spinner_76_inner_holo, 48 * density, 48 * density)}
         static get spinner_16_outer_holo(){ return new OverrideSizeDrawable(image.spinner_76_outer_holo, 16 * density, 16 * density)}
         static get spinner_16_inner_holo(){ return new OverrideSizeDrawable(image.spinner_76_inner_holo, 16 * density, 16 * density)}
+
+        static get rate_star_small_off_holo_light(){ return new OverrideSizeDrawable(image.rate_star_big_half_holo_light, 16 * density, 16 * density)}
+        static get rate_star_small_half_holo_light(){ return new OverrideSizeDrawable(image.rate_star_big_off_holo_light, 16 * density, 16 * density)}
+        static get rate_star_small_on_holo_light(){ return new OverrideSizeDrawable(image.rate_star_big_on_holo_light, 16 * density, 16 * density)}
     }
 
 

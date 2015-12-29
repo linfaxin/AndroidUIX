@@ -5513,6 +5513,7 @@ var androidui;
  */
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
 ///<reference path="../../android/content/res/Resources.ts"/>
 ///<reference path="NetImage.ts"/>
 var androidui;
@@ -5520,6 +5521,7 @@ var androidui;
     var image;
     (function (image_1) {
         var Paint = android.graphics.Paint;
+        var Rect = android.graphics.Rect;
         var Drawable = android.graphics.drawable.Drawable;
         var Resources = android.content.res.Resources;
         class NetDrawable extends Drawable {
@@ -5527,6 +5529,7 @@ var androidui;
                 super();
                 this.mImageWidth = -1;
                 this.mImageHeight = -1;
+                this.mTmpTileBound = new Rect();
                 let image;
                 if (src instanceof image_1.NetImage) {
                     image = src;
@@ -5537,11 +5540,56 @@ var androidui;
                     image = new image_1.NetImage(src, overrideImageRatio);
                 }
                 image.addLoadListener(() => this.onLoad(), () => this.onError());
+                let imageRatio = image.getImageRatio();
+                this.mImageWidth = Math.floor(image.width / imageRatio * Resources.getDisplayMetrics().density);
+                this.mImageHeight = Math.floor(image.height / imageRatio * Resources.getDisplayMetrics().density);
                 this.mState = new State(image, paint);
             }
             draw(canvas) {
-                if (this.isLoadFinish()) {
-                    canvas.drawImage(this.mState.mImage, null, this.getBounds(), this.mState.paint);
+                if (!this.isImageSizeEmpty()) {
+                    let emptyTileX = this.mTileModeX == null || this.mTileModeX == NetDrawable.TileMode.DEFAULT;
+                    let emptyTileY = this.mTileModeY == null || this.mTileModeY == NetDrawable.TileMode.DEFAULT;
+                    if (emptyTileX && emptyTileY) {
+                        canvas.drawImage(this.mState.mImage, null, this.getBounds(), this.mState.paint);
+                    }
+                    else {
+                        this.drawTile(canvas);
+                    }
+                }
+            }
+            drawTile(canvas) {
+                let imageWidth = this.mImageWidth;
+                let imageHeight = this.mImageHeight;
+                if (imageHeight <= 0 || imageWidth <= 0)
+                    return;
+                let tileX = this.mTileModeX;
+                let tileY = this.mTileModeY;
+                let bound = this.getBounds();
+                let tmpBound = this.mTmpTileBound;
+                tmpBound.setEmpty();
+                function drawColumn() {
+                    if (tileY === NetDrawable.TileMode.REPEAT) {
+                        tmpBound.bottom = imageHeight;
+                        while (tmpBound.isEmpty() || tmpBound.intersects(bound)) {
+                            canvas.drawImage(this.mState.mImage, null, tmpBound, this.mState.paint);
+                            tmpBound.offset(0, imageHeight);
+                        }
+                    }
+                    else {
+                        tmpBound.bottom = bound.height();
+                        canvas.drawImage(this.mState.mImage, null, tmpBound, this.mState.paint);
+                    }
+                }
+                if (tileX === NetDrawable.TileMode.REPEAT) {
+                    tmpBound.right = imageWidth;
+                    while (tmpBound.isEmpty() || tmpBound.intersects(bound)) {
+                        drawColumn.call(this);
+                        tmpBound.offset(imageWidth, -tmpBound.top);
+                    }
+                }
+                else {
+                    tmpBound.right = bound.width();
+                    drawColumn.call(this);
                 }
             }
             setAlpha(alpha) {
@@ -5572,8 +5620,8 @@ var androidui;
                 this.invalidateSelf();
                 this.notifySizeChangeSelf();
             }
-            isLoadFinish() {
-                return this.mImageWidth >= 0 && this.mImageHeight >= 0;
+            isImageSizeEmpty() {
+                return this.mImageWidth <= 0 || this.mImageHeight <= 0;
             }
             getImage() {
                 return this.mState.mImage;
@@ -5581,11 +5629,23 @@ var androidui;
             setLoadListener(loadListener) {
                 this.mLoadListener = loadListener;
             }
+            setTileMode(tileX, tileY) {
+                this.mTileModeX = tileX;
+                this.mTileModeY = tileY;
+                this.invalidateSelf();
+            }
             getConstantState() {
                 return this.mState;
             }
         }
         image_1.NetDrawable = NetDrawable;
+        (function (NetDrawable) {
+            (function (TileMode) {
+                TileMode[TileMode["DEFAULT"] = 0] = "DEFAULT";
+                TileMode[TileMode["REPEAT"] = 1] = "REPEAT";
+            })(NetDrawable.TileMode || (NetDrawable.TileMode = {}));
+            var TileMode = NetDrawable.TileMode;
+        })(NetDrawable = image_1.NetDrawable || (image_1.NetDrawable = {}));
         class State {
             constructor(image, paint = new Paint()) {
                 this.mImage = image;
@@ -7824,6 +7884,68 @@ var android;
                 animDrawable.addFrame(frame, 50);
                 return animDrawable;
             }
+            static get ratingbar_full_empty_holo_light() {
+                let stateList = new StateListDrawable();
+                stateList.addState([View.VIEW_STATE_PRESSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+                stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+                stateList.addState([], R.image.btn_rating_star_off_normal_holo_light);
+                return stateList;
+            }
+            static get ratingbar_full_filled_holo_light() {
+                let stateList = new StateListDrawable();
+                stateList.addState([View.VIEW_STATE_PRESSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+                stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+                stateList.addState([], R.image.btn_rating_star_on_normal_holo_light);
+                return stateList;
+            }
+            static get ratingbar_full_holo_light() {
+                let layerDrawable = new LayerDrawable(null);
+                layerDrawable.addLayer(R.drawable.ratingbar_full_empty_holo_light, R.id.background);
+                layerDrawable.addLayer(R.drawable.ratingbar_full_empty_holo_light, R.id.secondaryProgress);
+                layerDrawable.addLayer(R.drawable.ratingbar_full_filled_holo_light, R.id.progress);
+                layerDrawable.ensurePadding();
+                layerDrawable.onStateChange(layerDrawable.getState());
+                return layerDrawable;
+            }
+            static get ratingbar_holo_light() {
+                let layerDrawable = new LayerDrawable(null);
+                layerDrawable.addLayer(R.image.rate_star_big_off_holo_light, R.id.background);
+                layerDrawable.addLayer(R.image.rate_star_big_half_holo_light, R.id.secondaryProgress);
+                layerDrawable.addLayer(R.image.rate_star_big_on_holo_light, R.id.progress);
+                layerDrawable.ensurePadding();
+                layerDrawable.onStateChange(layerDrawable.getState());
+                return layerDrawable;
+            }
+            static get ratingbar_small_holo_light() {
+                let layerDrawable = new LayerDrawable(null);
+                layerDrawable.addLayer(R.image.rate_star_small_off_holo_light, R.id.background);
+                layerDrawable.addLayer(R.image.rate_star_small_half_holo_light, R.id.secondaryProgress);
+                layerDrawable.addLayer(R.image.rate_star_small_on_holo_light, R.id.progress);
+                layerDrawable.ensurePadding();
+                layerDrawable.onStateChange(layerDrawable.getState());
+                return layerDrawable;
+            }
+            static get scrubber_control_selector_holo() {
+                let stateList = new StateListDrawable();
+                stateList.addState([-View.VIEW_STATE_ENABLED], R.image.scrubber_control_disabled_holo);
+                stateList.addState([View.VIEW_STATE_PRESSED], R.image.scrubber_control_pressed_holo);
+                stateList.addState([View.VIEW_STATE_SELECTED], R.image.scrubber_control_focused_holo);
+                stateList.addState([], R.image.scrubber_control_normal_holo);
+                return stateList;
+            }
+            static get scrubber_progress_horizontal_holo_light() {
+                let layerDrawable = new LayerDrawable(null);
+                layerDrawable.addLayer(R.drawable.scrubber_track_holo_light, R.id.background);
+                let secondary = new ScaleDrawable(R.drawable.scrubber_secondary_holo, Gravity.LEFT, 1, -1);
+                layerDrawable.addLayer(secondary, R.id.secondaryProgress);
+                let progress = new ScaleDrawable(R.drawable.scrubber_primary_holo, Gravity.LEFT, 1, -1);
+                layerDrawable.addLayer(progress, R.id.progress);
+                layerDrawable.ensurePadding();
+                layerDrawable.onStateChange(layerDrawable.getState());
+                return layerDrawable;
+            }
             static get scrubber_primary_holo() {
                 let line = new ColorDrawable(0xff33b5e5);
                 line.getIntrinsicHeight = () => 3 * density;
@@ -8075,6 +8197,10 @@ var android;
                 "btn_radio_on_focused_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAB11BMVEUAAAAzteUzteU9Pj4zteUzteUzteUztOQzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUMLDgPN0YzteUzteUzteU2kLAbY30zteUgcZAzteU9Pj83gZ0KJS89P0AzteUzteU9Pj89QUM8Q0Y8S1ACgq09P0AzteUzteU9Pj88Q0Y8REY8QkQzteU8QkQzteU7TVQ8SU48S08zteUIRlw9P0AMKjU9Pj8RPk4UR1kXU2kaXnczteUhdpYjfqAmhqovptIxseA7T1Y4dIk9P0A9P0A9QEIzteU9QkQzteU7TlU6WmU5bH48TVQzteUAl8kBkcIBibcFaIkRPEw9Pj8plb08SE0snsg8SU08Q0U6X2w9P0AzteU8RkozteUGUGkZPUoINkc9Pj8ZWG8oUmI7VmKy4O57w9sBksNYtdOOw9QlmL+VwM93ssU9m7qQu8ljipdAZnQbWG4IQFMrSlYRO0saXHU7VmA4dYwzteUmVGQ8Q0YAmcwHnM4Nn88Zo9I5sNhavd9LuNwnqdQjp9MSoNBCs9qi2u2T1Ol/zOZvxuJsw+Ca1+uQ0+mM0ehVu90wrdY0q10GAAAAiHRSTlMAmQTOIRYcEz4uGTUoOCpJHlQmV05RM5VDj0BGO8O2i1oxGYxLgWrDHc2mkm+9lXQp9cF2ZbiLhX96enJFODAM3MnIx6ylmJB8fHdzYFweC7ShmYZvX0s3KCQJ/vv46bGoamdkYFUznoBAJODW1qyU2zv+/Pz7+Pj29fX06N/f2diykT8kENuNq6nwywAABu5JREFUaN7tWWVD21AUHXlpkzaVpKmtRgUodPiKdMBguAwZG7rhtg2Yu/twl9mP3bsJhZZ6y/ap52PSnPOuvXff7bk00kgjjTT+JyQWrdfnM2RkGHw+r1ZJnSk54fBmZpzC9T4ZcUb0rP18Rlic56VnQK/Jz4iCHDJVz5/QV3E0yxLYXyxJc1UnElQqvtcZRBZDjqU2+FWtJcf/LotIevmtIkWrPizFMHP0/mKSRjAXxHRRCsaEAJ5arovRliXDbxa/NRJH7EMzlb2eBoTcnt7Kma4jDcIsZJiBTpyfF0M4LNIXF5WhIJTdKBYlasU00CbFbzCK9HeuYcorhdPVA06Kcg5UTxdewQ+u3RElzIYkFNTwzQWVQH/Zg1Bpeb+TkkjkAiQSytlf7sYSohUyQYFOKL7wRSYJ/N2X8OKLcimJXCplWRKDZaVSuYTKLcJmFHWDAgmBMCQQackFCC8L/EPjCFV8AXqS1CgUKgyFQkOSIDFYgZCnS1AwwAdU3PXVCgsS/FNTinpmKYmUxewqmUOvZxi93iFTYQ1WKqEe9qCCy8deuhhvxenAQSbgv9OACp2weo1KpmeUFlqARcnoZSoNWJHbi9w1oCAktTpOB8FqvML6G1AFLB/TM0raZDSrszDUZqOJVjJYAhvhLEcNgg05kBVf4xK4CAEexgJDboGfVMj0Stqo1uo4nrfbeZ7TadVGWqmXKUjspnJU0IUFaiHQOfHwK8BYJebvHkeFIj9jwfScfarN5WpudrnapuwclrAwgoJzDnm6sYISvmPjEKiCrRkK7BLqyQV+h5I2a7nO9pYmm9Wal2e12ppa2js5rZlWOkAhtwzdgIK7GJ8Jd2EhdzH/ZYQGRH6TWsd3uMbqP7x5/eLRoxev33yoH3N18Dq1SVR4iK4UYwUVfBn7jOvzGzCOLlFyViED/qvZjda3z3Z3f+z9/Ln3Y3f32VtrY/ZVUJApWDlVieb8JvAxawBqTIb5q1GBUyLVyBharZvKti283Pu1f7i+sbOzsX64/2vv5YIte0qnphmZBjupFNVgBT1kR6xaUIo/IggPmqSkpEpvMeP12x483j/4vba1vbK8vLK9tfb7YP/xAxu2wUzrVdhJN1AvFiAyhcVFhxf/hsOGXEZup4TVyJRGLY/5Dw/W11aXl46wvLq2fnD4zZbNa41KmYaV57rRECFuwfYYHoJsJiGFIAKkCjuI62hceLq+sbkC/H6Flc2N9acLjR0cdpKKlFMVkEhCglyPLiCFTQs8VAApJBjQ6bK+2tjZWlkKwsrWzsYrq6sTmwBR+Ix6wEewB0Tf8mgxl4liVIoNUOixAe1j73bWNoE/WGFzbe3dWDs2Qa/AJpSiLuwjON2YqAIc/kUWFphB3yHEjElrb6l//mdzeykE25t/nte32LUmBoeZKkT9WEAbc8fLEfOAqESTood0E011q1s4viFYxo/rmiZ0oo8mUREhHlR9UQVui8VIXEPVElbhsJi5Ntvo9io4KAQrq9ujtjbObHEoWEk/KsQCJJwKUQUgk2uxQAEalLMQAt5lLVmGBAoFflxidfEQBFY+i+5hga/489tRBaCOod1xI6eQpFn8/bxbS8vhBODprbz7fJaQqIOoDH83DGUaVQDOStiIEBKqwJRlb867uRQRN/Oa7VkmEMhFbtiOIMujC2CkIECAQEwXDYe4KBJCXFQLLko8yJEFTgeZgiAnnqaRBSKnaexCmz4ptMgCiRcaJ9Y6MY3KT7aKkUj8I4FbxYx/q0h8s5uPJDAfdrNLYrsuiRDi8Nt1EgfO4q2wObqY+IEDUfYfmaUBR2bdzTBFVhf2yOxL9NCnhUO/7slp/id1AYf+ZMChn2Tbslhyyv+LgW1LgdC2OITFxdN45YuNV1FQ4zU/EpCf80k3XhAoMcw1CD0MbB0/1r8fLRnB5CWj7+s/BraOAwhB66iIo3UEVPlNuITKBgOb308nze+nZJtfgOq4fb+HPM7A9n2izdXS3NziapsQ2nf6qH3vDWjfyYQuIMVuVB7/BSQzLgMA0uSvUFQCl0A6/CXQZDp9CWyoAX5jvJdAAHH75BrrDr7GMhgB19iBHlQqrF8FVvuIxC7iUlAYuodQZYoX8dijBHeRM+ooQSGOEhIehhgs4jBkHKGCipBhSOnxMMQiDkOSGRdxhCBR7Tka58xSGLPB4xzCnuzACJAfeyBVlQw/QB06UpsbB27PXPBIDUD/o6Gg0j8UTG2s6XOELxe9/z2V9GCWM4gUmZzm9CsFfzQvN2hTGZJLj2fIF/J1FlbY7VmW5vJBWUC+PNXhOEhERD55LnWQfZHG+3b2rP6gYEL/oMj0Oogz/ouF8/qEtGn1eXUW6lwaaaSRRhr/EX8B2K81Wi5jkwYAAAAASUVORK5CYII=",
                 "btn_radio_on_holo_light": "data:image/png;base64,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",
                 "btn_radio_on_pressed_holo_light": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAkFBMVEVPT08AAAA+Pj5OTk5PT09PT09PT09PT09PT09PT09PT09GRkY+Pj5PT09KSkpPT08+Pj5FRUVAQEBAQEBDQ0M+Pj4+Pj5EREREREQ9PT0+Pj5PT08+Pj4+Pj4/Pz8+Pj4/Pz8/Pz9AQEBBQUFMTEw9PT1DQ0NBQUE9PT0/Pz9KSko+Pj5AQEBCQkJCQkI9PT27eu1wAAAAL3RSTlMmANQnDQMiHwkPGT/RATAVykWLhlrHvkpO9sMcsayQzp+ZeGor7Fdx4aQyuHxeYgwIBCAAAANrSURBVGjezJTJkuIwEESTkiUveGOxjcHsO9M9/v+/G0dMRMt0q4QBH/rdOKCnUmYZg05Iz08CVyk0KOUGie/JQSc6CKSTuDDgJo58XyD9BSwsfPmWwAnwkMB5VRD5Cp1w/cgq4I/vjOIUvMBReArXe0ogAzxNILsLHLyCchjBu9fXJFEXgXTxMq58LPAU3kB5jwQO3sSxC3ygZwOY+/dmQO/nAx4n8NATnlkg0RdKmgSRi95YRAZBgh5JtIAJuLcqgQmgpxi0IMAjhvvxNU+J0vw63g87PxK6NXQ0mdMd+WTUravo0CAxXRJRtj2fhjchbsPpeZsR0fIEG25b4MNCURFlk0LcOWfjtFFYp3C0IFJgOYxDmu9i/CDeZRRODmBR0ZfAt0RbNafEMBI37mr4YATYB5hllBdgmeWUFfYUYN2x05o2MSzcrrQ+WYsE2w7M1rQSsCJWtGZnCP4LJPv+qT7fZsjYHGQj4CM+VLQReIjYUHXgY24E3JKNKY/RgVtOE5hZNAL2hYowLL4t9DY9luUx3U7FfVRhOGLfCFyHRHV/L7G71F9cPsT9rEv2jcB1aErzGJpRWN9BI2jijKbcNxUDBSMV7aH5W9bfOH5Cs6Mlt2uQzApQdmiNU9Y/KPetEVJiUojgcRUatxbiWBsoWx1YcUXy4JsjnlOhf4S1ERKtgXMY8ZHAxIjmrReuGT70HVIamlPGAibOtNV/vnCCix5hQ3uYCODCxIrOOuGa5VNPyYSwgIKJJemP8JYXbFprc4UJF2by1pOmvGDdCu0PTCiYSUmv8ZEXHHWTaY5noFYFy5pHrxqlv0vwr1lzWUEYhoKoSmoUKihYtO1CwdciiP//dwpdBCEhtzecNtl1VUib3JkzA2wR9ZHx3xQ/aPhVgV929HVtRAPn0OoHjmxkvkNvkI1M9dBvb6Khr5ctJ6ls4YVX5R/jgtBLx8/jch0lHXnxG5fvLlu+b6cxIMses1BJE3jMNIFpG/vcr1zCxp7jNlZkxF2GEZejhNc9hBK6FEqgYYgK5ywGnNMJcA4OpFRIranrRoHUWCjIY02/SQyYjUcr+mV3QTi+BuA4hPfpgIKOWOiQiI656KBu/qgRDUt9Wq2Le8sJrH/LWEXkDpYGTIG1B3lxY4NWT0xVennmr/5jh/qP7UfUf77mb6LnjEYeBwAAAABJRU5ErkJggg==",
+                "btn_rating_star_off_normal_holo_light": "data:image/png;base64,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",
+                "btn_rating_star_off_pressed_holo_light": "data:image/png;base64,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",
+                "btn_rating_star_on_normal_holo_light": "data:image/png;base64,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",
+                "btn_rating_star_on_pressed_holo_light": "data:image/png;base64,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",
                 "progressbar_indeterminate_holo1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwBAMAAAAybmm2AAAAKlBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteWZdn3rAAAADXRSTlMABRAKFywhOfYnMR3v8BlJngAAAUFJREFUaN7s0D1qAlEUxfE7hBRJNc9ZgZk0IU3GZAXGzsZG0A1o4QIEewsFQURBtLHyoxURXIS9he7F8jRPEN6c7vzaPxwu10RERERERESe4R5ACYExmtgi+oXolvx6ZXGEEgBjLM4c+0L0zEofXmkcoQTAGEtmCftC9NQ+K17lnxeUABhjSa3EvhC9bNWW1yFLUAJgjKTz7/6O5AvR93aqey2LBZQAGCNp7t33jHwh+tTaXa9dsbDo5gBjJL2J+9qQL0Rf2/nmdRm/jW45wBjLwObsC9GvD/9Ve8VAAIyx9K1BvBBd/8r1X6t3DATAGMvQtsQL0fUv/evenh3bAACDMBDcf2tW4CUapLsRKBKwzevNvLz3/seDedlX277qHmr3kHu73dvynJbnyAtbXiiPbnm0vqP1Hfq02KcBAADAwgBwBEHj/3RdFwAAAABJRU5ErkJggg==",
                 "progressbar_indeterminate_holo2": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwBAMAAAAybmm2AAAALVBMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUW/iK7AAAADnRSTlMABQoQITkYLCcz9hTw7fhFXIgAAAF4SURBVGje7dmxSgNBEAbgOUE03e5aWm0C9l7ExtJDlDRpUtgmcgg+QCS1KGqTQkHyAmIjKEF8Ct8iRQrvGcRrdCN7e4ObsBf+rzpuYJYZuGN3lgAAAAAAAADKkAUERdKnmdUCyy0ockdJ1e0kybpHWkTGaoHlliSdUU2Npp0m1fQoFpGxWmC5NSlnNKbd1C4WjbfUn55W5mpec6/spQzcas9i+o72aJzYvcqtxKOWVifJL4HlLq62m0dbdNq3Ot+XO1d9fy62Nw6NF0Hlzqt1RS/pqGN1fCvf7zv+PLxsXhsvgsqdV+uK3tFHZjelm8ynYS2bm+H6c8bArvYxj34W9mtCg8r0q73G6Re/2icaLLxf7dWf56r1a4p+saqdlOrXqDr9qv2/X6PiKPrF6xe+R873iP9X8P/7Zd9PYL/6Z7+K8xDvPITzNvO8PXbMMDw6mJm5BJa7W2aeg3khb16IeTRvHo37Dt59B+7TmPdpAAAAAAAAACV8AcebDMLiSs2oAAAAAElFTkSuQmCC",
                 "progressbar_indeterminate_holo3": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAl4AAAAwCAMAAAD3noS3AAAAM1BMVEUAAAAzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteUzteXQS9SJAAAAEHRSTlMABQIKDyEsGDkm9TMU8fft+mrRFgAAAchJREFUeNrs0ttuwyAQBNBZLsYY4vL/X1sbq/CKKky16pyHJJZWuyNnQERERERERERERERERP+BaT/mQ2UUgarIA2nXH+t9uj9E7m9jZLq2WRFdiVem7cfGBw3EWrkfxb5ABBCxiogARk3ilWl7TcYHBda56/l6ctO1zYroSrwybT82PmjhQnbWGOtymO/ZHBT5eRc6LEzbajI2KHXQIXsfrIgN/gX52axItmL0JF6aNtRjo4O55kOI0TsR5+M2Xdushq7EK9P2Y+ODMcCnFLNIjmmfrm1WQ1filWn7sfHB5PEp5YhAPMobEpCKKqm+Cy1Wpj23sWO1T/5TLl+1XhuwsV6PHdj01Gtl2jONHat9ikvqtQN7UYX1mlKvjfX68z9MV9pz/2W9EpBYr5Y4qarXsrTn6LEjsV7f7dsxCoAwEATAMlb+/7m2WlgYONjFmRccKCRcdhM+WNe0H34vh2PCcdM17Xm4e1V9sK5pA6/2FhMP1dPuLCasVa1VB9eqHoWKJy54FPKk3TtxwZP2aCBn1QVyVlUgZ8UHcsQJb8QJ32zGCYWhmyfOD0OrcqhyzFU5FNGaJ84voqnRqtGO1WgBAAAAAAD4gwuJzBUuUw2jkAAAAABJRU5ErkJggg==",
@@ -8113,6 +8239,10 @@ var android;
             image_base64.btn_radio_on_focused_holo_light = new NetImage(x3.btn_radio_on_focused_holo_light, 3);
             image_base64.btn_radio_on_holo_light = new NetImage(x3.btn_radio_on_holo_light, 3);
             image_base64.btn_radio_on_pressed_holo_light = new NetImage(x3.btn_radio_on_pressed_holo_light, 3);
+            image_base64.btn_rating_star_off_normal_holo_light = new NetImage(x3.btn_rating_star_off_normal_holo_light, 3);
+            image_base64.btn_rating_star_off_pressed_holo_light = new NetImage(x3.btn_rating_star_off_pressed_holo_light, 3);
+            image_base64.btn_rating_star_on_normal_holo_light = new NetImage(x3.btn_rating_star_on_normal_holo_light, 3);
+            image_base64.btn_rating_star_on_pressed_holo_light = new NetImage(x3.btn_rating_star_on_pressed_holo_light, 3);
             image_base64.progressbar_indeterminate_holo1 = new NetImage(x3.progressbar_indeterminate_holo1, 3);
             image_base64.progressbar_indeterminate_holo2 = new NetImage(x3.progressbar_indeterminate_holo2, 3);
             image_base64.progressbar_indeterminate_holo3 = new NetImage(x3.progressbar_indeterminate_holo3, 3);
@@ -8166,6 +8296,10 @@ var android;
             static get btn_radio_on_focused_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_focused_holo_light); }
             static get btn_radio_on_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_holo_light); }
             static get btn_radio_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_pressed_holo_light); }
+            static get btn_rating_star_off_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_off_pressed_holo_light); }
+            static get btn_rating_star_off_normal_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_off_normal_holo_light); }
+            static get btn_rating_star_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_pressed_holo_light); }
+            static get btn_rating_star_on_normal_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_normal_holo_light); }
             static get progressbar_indeterminate_holo1() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo1); }
             static get progressbar_indeterminate_holo2() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo2); }
             static get progressbar_indeterminate_holo3() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo3); }
@@ -8187,6 +8321,9 @@ var android;
             static get spinner_48_inner_holo() { return new OverrideSizeDrawable(image.spinner_76_inner_holo, 48 * density, 48 * density); }
             static get spinner_16_outer_holo() { return new OverrideSizeDrawable(image.spinner_76_outer_holo, 16 * density, 16 * density); }
             static get spinner_16_inner_holo() { return new OverrideSizeDrawable(image.spinner_76_inner_holo, 16 * density, 16 * density); }
+            static get rate_star_small_off_holo_light() { return new OverrideSizeDrawable(image.rate_star_big_half_holo_light, 16 * density, 16 * density); }
+            static get rate_star_small_half_holo_light() { return new OverrideSizeDrawable(image.rate_star_big_off_holo_light, 16 * density, 16 * density); }
+            static get rate_star_small_on_holo_light() { return new OverrideSizeDrawable(image.rate_star_big_on_holo_light, 16 * density, 16 * density); }
         }
         R.image = image;
     })(R = android.R || (android.R = {}));
@@ -8321,6 +8458,56 @@ var android;
                     maxWidth: '76dp',
                     minHeight: '76dp',
                     maxHeight: '76dp'
+                });
+            }
+            static get seekBarStyle() {
+                return {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.scrubber_progress_horizontal_holo_light,
+                    indeterminateDrawable: R.drawable.scrubber_progress_horizontal_holo_light,
+                    minHeight: '13dp',
+                    maxHeight: '13dp',
+                    thumb: R.drawable.scrubber_control_selector_holo,
+                    thumbOffset: '16dp',
+                    focusable: true,
+                    paddingLeft: '16dp',
+                    paddingRight: '16dp',
+                    mirrorForRtl: true,
+                };
+            }
+            static get ratingBarStyle() {
+                return {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.ratingbar_full_holo_light,
+                    indeterminateDrawable: R.drawable.ratingbar_full_holo_light,
+                    minHeight: '48dip',
+                    maxHeight: '48dip',
+                    numStars: '5',
+                    stepSize: '0.5',
+                    thumb: null,
+                    mirrorForRtl: true,
+                };
+            }
+            static get ratingBarStyleIndicator() {
+                return Object.assign(this.ratingBarStyle, {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.ratingbar_holo_light,
+                    indeterminateDrawable: R.drawable.ratingbar_holo_light,
+                    minHeight: '35dip',
+                    maxHeight: '35dip',
+                    thumb: null,
+                    isIndicator: true,
+                });
+            }
+            static get ratingBarStyleSmall() {
+                return Object.assign(this.ratingBarStyle, {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.ratingbar_small_holo_light,
+                    indeterminateDrawable: R.drawable.ratingbar_small_holo_light,
+                    minHeight: '16dip',
+                    maxHeight: '16dip',
+                    thumb: null,
+                    isIndicator: true,
                 });
             }
             static get gridViewStyle() {
@@ -9483,7 +9670,7 @@ var android;
         var Animation = view_1.animation.Animation;
         var Transformation = view_1.animation.Transformation;
         class View extends JavaObject {
-            constructor(bindElement, rootElement, defStyle) {
+            constructor(bindElement, rootElement, defStyle = android.R.attr.viewStyle) {
                 super();
                 this.mPrivateFlags = 0;
                 this.mPrivateFlags2 = 0;
@@ -9522,205 +9709,8 @@ var android;
                 this._attrBinder = new AttrBinder(this);
                 this.mTouchSlop = view_1.ViewConfiguration.get().getScaledTouchSlop();
                 this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
-                this._attrBinder.addAttr('background', (value) => {
-                    this.setBackground(this._attrBinder.parseDrawable(value));
-                }, () => {
-                    if (this.mBackground instanceof ColorDrawable) {
-                        return Color.toRGBAFunc(this.mBackground.getColor());
-                    }
-                    return this.mBackground;
-                });
-                this._attrBinder.addAttr('padding', (value) => {
-                    let [left, top, right, bottom] = this._attrBinder.parsePaddingMarginLTRB(value);
-                    this._setPaddingWithUnit(left, top, right, bottom);
-                }, () => {
-                    return this.mPaddingTop + ' ' + this.mPaddingRight + ' ' + this.mPaddingBottom + ' ' + this.mPaddingLeft;
-                }),
-                    this._attrBinder.addAttr('paddingLeft', (value) => {
-                        this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
-                    }, () => {
-                        return this.mPaddingLeft;
-                    }),
-                    this._attrBinder.addAttr('paddingTop', (value) => {
-                        this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
-                    }, () => {
-                        return this.mPaddingTop;
-                    }),
-                    this._attrBinder.addAttr('paddingRight', (value) => {
-                        this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
-                    }, () => {
-                        return this.mPaddingRight;
-                    }),
-                    this._attrBinder.addAttr('paddingBottom', (value) => {
-                        this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
-                    }, () => {
-                        return this.mPaddingBottom;
-                    }),
-                    this._attrBinder.addAttr('scrollX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value))
-                            this.scrollTo(value, this.mScrollY);
-                    }),
-                    this._attrBinder.addAttr('scrollY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value))
-                            this.scrollTo(this.mScrollX, value);
-                    }),
-                    this._attrBinder.addAttr('alpha', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('transformPivotX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('transformPivotY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('translationX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('translationY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('rotation', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('rotationX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('rotationY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('scaleX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('scaleY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
-                    }),
-                    this._attrBinder.addAttr('tag', (value) => {
-                    }),
-                    this._attrBinder.addAttr('id', (value) => {
-                        this.setId(value);
-                    }),
-                    this._attrBinder.addAttr('focusable', (value) => {
-                        if (this._attrBinder.parseBoolean(value, false)) {
-                            this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
-                        }
-                    }),
-                    this._attrBinder.addAttr('focusableInTouchMode', (value) => {
-                        if (this._attrBinder.parseBoolean(value, false)) {
-                            this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE, View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
-                        }
-                    }),
-                    this._attrBinder.addAttr('clickable', (value) => {
-                        if (this._attrBinder.parseBoolean(value, false)) {
-                            this.setFlags(View.CLICKABLE, View.CLICKABLE);
-                        }
-                    }),
-                    this._attrBinder.addAttr('longClickable', (value) => {
-                        if (this._attrBinder.parseBoolean(value, false)) {
-                            this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
-                        }
-                    }),
-                    this._attrBinder.addAttr('saveEnabled', (value) => {
-                        if (this._attrBinder.parseBoolean(value, false)) {
-                        }
-                    }),
-                    this._attrBinder.addAttr('duplicateParentState', (value) => {
-                        if (this._attrBinder.parseBoolean(value, false)) {
-                            this.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
-                        }
-                    }),
-                    this._attrBinder.addAttr('visibility', (value) => {
-                        if (value === 'gone')
-                            this.setVisibility(View.GONE);
-                        else if (value === 'invisible')
-                            this.setVisibility(View.INVISIBLE);
-                        else if (value === 'visible')
-                            this.setVisibility(View.VISIBLE);
-                    }),
-                    this._attrBinder.addAttr('scrollbars', (value) => {
-                        if (value === 'none') {
-                            this.setHorizontalScrollBarEnabled(false);
-                            this.setVerticalScrollBarEnabled(false);
-                        }
-                    }),
-                    this._attrBinder.addAttr('isScrollContainer', (value) => {
-                        if (this._attrBinder.parseBoolean(value, false)) {
-                            this.setScrollContainer(true);
-                        }
-                    }),
-                    this._attrBinder.addAttr('minWidth', (value) => {
-                        this.setMinimumWidth(this._attrBinder.parseNumber(value, 0));
-                    }, () => {
-                        return this.mMinWidth;
-                    }),
-                    this._attrBinder.addAttr('minHeight', (value) => {
-                        this.setMinimumHeight(this._attrBinder.parseNumber(value, 0));
-                    }, () => {
-                        return this.mMinHeight;
-                    }),
-                    this._attrBinder.addAttr('onClick', (value) => {
-                        if (this._attrBinder.parseBoolean(value))
-                            this.setClickable(true);
-                    }),
-                    this._attrBinder.addAttr('overScrollMode', (value) => {
-                        let scrollMode = View[('OVER_SCROLL_' + value).toUpperCase()];
-                        if (scrollMode === undefined)
-                            scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
-                        this.setOverScrollMode(scrollMode);
-                    }),
-                    this._attrBinder.addAttr('layerType', (value) => {
-                        if ((value + '').toLowerCase() == 'software') {
-                            this.setLayerType(View.LAYER_TYPE_SOFTWARE);
-                        }
-                        else {
-                            this.setLayerType(View.LAYER_TYPE_NONE);
-                        }
-                    });
-                this._attrBinder.addAttr('backgroundUri', (value) => {
-                    if (value == null)
-                        this.setBackground(null);
-                    else {
-                        this.setBackground(new NetDrawable(value));
-                    }
-                }, () => {
-                    let d = this.mBackground;
-                    if (d instanceof NetDrawable)
-                        return d.getImage().src;
-                });
+                this.initBindAttr(this._attrBinder);
                 this.initBindElement(bindElement, rootElement);
-                if (defStyle === undefined)
-                    defStyle = android.R.attr.viewStyle;
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
             }
@@ -9760,6 +9750,204 @@ var android;
                     value = 0;
                 }
                 this._mScrollY = Math.floor(value);
+            }
+            initBindAttr(a) {
+                a.addAttr('background', (value) => {
+                    this.setBackground(a.parseDrawable(value));
+                }, () => {
+                    if (this.mBackground instanceof ColorDrawable) {
+                        return Color.toRGBAFunc(this.mBackground.getColor());
+                    }
+                    return this.mBackground;
+                });
+                a.addAttr('padding', (value) => {
+                    let [left, top, right, bottom] = a.parsePaddingMarginLTRB(value);
+                    this._setPaddingWithUnit(left, top, right, bottom);
+                }, () => {
+                    return this.mPaddingTop + ' ' + this.mPaddingRight + ' ' + this.mPaddingBottom + ' ' + this.mPaddingLeft;
+                }),
+                    a.addAttr('paddingLeft', (value) => {
+                        this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
+                    }, () => {
+                        return this.mPaddingLeft;
+                    }),
+                    a.addAttr('paddingTop', (value) => {
+                        this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
+                    }, () => {
+                        return this.mPaddingTop;
+                    }),
+                    a.addAttr('paddingRight', (value) => {
+                        this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
+                    }, () => {
+                        return this.mPaddingRight;
+                    }),
+                    a.addAttr('paddingBottom', (value) => {
+                        this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
+                    }, () => {
+                        return this.mPaddingBottom;
+                    }),
+                    a.addAttr('scrollX', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            this.scrollTo(value, this.mScrollY);
+                    }),
+                    a.addAttr('scrollY', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value))
+                            this.scrollTo(this.mScrollX, value);
+                    }),
+                    a.addAttr('alpha', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('transformPivotX', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('transformPivotY', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('translationX', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('translationY', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('rotation', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('rotationX', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('rotationY', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('scaleX', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('scaleY', (value) => {
+                        value = Number.parseInt(value);
+                        if (Number.isInteger(value)) {
+                        }
+                        ;
+                    }),
+                    a.addAttr('tag', (value) => {
+                    }),
+                    a.addAttr('id', (value) => {
+                        this.setId(value);
+                    }),
+                    a.addAttr('focusable', (value) => {
+                        if (a.parseBoolean(value, false)) {
+                            this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                        }
+                    }),
+                    a.addAttr('focusableInTouchMode', (value) => {
+                        if (a.parseBoolean(value, false)) {
+                            this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE, View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                        }
+                    }),
+                    a.addAttr('clickable', (value) => {
+                        if (a.parseBoolean(value, false)) {
+                            this.setFlags(View.CLICKABLE, View.CLICKABLE);
+                        }
+                    }),
+                    a.addAttr('longClickable', (value) => {
+                        if (a.parseBoolean(value, false)) {
+                            this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
+                        }
+                    }),
+                    a.addAttr('saveEnabled', (value) => {
+                        if (a.parseBoolean(value, false)) {
+                        }
+                    }),
+                    a.addAttr('duplicateParentState', (value) => {
+                        if (a.parseBoolean(value, false)) {
+                            this.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
+                        }
+                    }),
+                    a.addAttr('visibility', (value) => {
+                        if (value === 'gone')
+                            this.setVisibility(View.GONE);
+                        else if (value === 'invisible')
+                            this.setVisibility(View.INVISIBLE);
+                        else if (value === 'visible')
+                            this.setVisibility(View.VISIBLE);
+                    }),
+                    a.addAttr('scrollbars', (value) => {
+                        if (value === 'none') {
+                            this.setHorizontalScrollBarEnabled(false);
+                            this.setVerticalScrollBarEnabled(false);
+                        }
+                    }),
+                    a.addAttr('isScrollContainer', (value) => {
+                        if (a.parseBoolean(value, false)) {
+                            this.setScrollContainer(true);
+                        }
+                    }),
+                    a.addAttr('minWidth', (value) => {
+                        this.setMinimumWidth(a.parseNumber(value, 0));
+                    }, () => {
+                        return this.mMinWidth;
+                    }),
+                    a.addAttr('minHeight', (value) => {
+                        this.setMinimumHeight(a.parseNumber(value, 0));
+                    }, () => {
+                        return this.mMinHeight;
+                    }),
+                    a.addAttr('onClick', (value) => {
+                        if (a.parseBoolean(value))
+                            this.setClickable(true);
+                    }),
+                    a.addAttr('overScrollMode', (value) => {
+                        let scrollMode = View[('OVER_SCROLL_' + value).toUpperCase()];
+                        if (scrollMode === undefined)
+                            scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                        this.setOverScrollMode(scrollMode);
+                    }),
+                    a.addAttr('layerType', (value) => {
+                        if ((value + '').toLowerCase() == 'software') {
+                            this.setLayerType(View.LAYER_TYPE_SOFTWARE);
+                        }
+                        else {
+                            this.setLayerType(View.LAYER_TYPE_NONE);
+                        }
+                    });
+                a.addAttr('backgroundUri', (value) => {
+                    if (value == null)
+                        this.setBackground(null);
+                    else {
+                        this.setBackground(new NetDrawable(value));
+                    }
+                }, () => {
+                    let d = this.mBackground;
+                    if (d instanceof NetDrawable)
+                        return d.getImage().src;
+                });
             }
             getWidth() {
                 return this.mRight - this.mLeft;
@@ -12242,6 +12430,9 @@ var android;
                         this.mBackgroundHeight = h;
                         this.requestLayout();
                     }
+                }
+                else if (this.verifyDrawable(who)) {
+                    this.requestLayout();
                 }
             }
             invalidateDrawable(drawable) {
@@ -41462,6 +41653,180 @@ var android;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+///<reference path="../../../android/graphics/Canvas.ts"/>
+///<reference path="../../../android/graphics/Rect.ts"/>
+///<reference path="../../../android/content/res/Resources.ts"/>
+///<reference path="../../../android/view/Gravity.ts"/>
+///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../../java/lang/Runnable.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable_5) {
+            var Rect = android.graphics.Rect;
+            var Gravity = android.view.Gravity;
+            var Drawable = android.graphics.drawable.Drawable;
+            class ClipDrawable extends Drawable {
+                constructor(...args) {
+                    super();
+                    this.mTmpRect = new Rect();
+                    if (args.length <= 1) {
+                        this.mClipState = new ClipDrawable.ClipState(args[0], this);
+                    }
+                    else {
+                        this.mClipState = new ClipDrawable.ClipState(null, this);
+                        let drawable = args[0];
+                        let gravity = args[1];
+                        let orientation = args[2];
+                        this.mClipState.mDrawable = drawable;
+                        this.mClipState.mGravity = gravity;
+                        this.mClipState.mOrientation = orientation;
+                        if (drawable != null) {
+                            drawable.setCallback(this);
+                        }
+                    }
+                }
+                drawableSizeChange(who) {
+                    const callback = this.getCallback();
+                    if (callback != null && callback.drawableSizeChange) {
+                        callback.drawableSizeChange(this);
+                    }
+                }
+                invalidateDrawable(who) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.invalidateDrawable(this);
+                    }
+                }
+                scheduleDrawable(who, what, when) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.scheduleDrawable(this, what, when);
+                    }
+                }
+                unscheduleDrawable(who, what) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.unscheduleDrawable(this, what);
+                    }
+                }
+                getPadding(padding) {
+                    return this.mClipState.mDrawable.getPadding(padding);
+                }
+                setVisible(visible, restart) {
+                    this.mClipState.mDrawable.setVisible(visible, restart);
+                    return super.setVisible(visible, restart);
+                }
+                setAlpha(alpha) {
+                    this.mClipState.mDrawable.setAlpha(alpha);
+                }
+                getAlpha() {
+                    return this.mClipState.mDrawable.getAlpha();
+                }
+                getOpacity() {
+                    return this.mClipState.mDrawable.getOpacity();
+                }
+                isStateful() {
+                    return this.mClipState.mDrawable.isStateful();
+                }
+                onStateChange(state) {
+                    return this.mClipState.mDrawable.setState(state);
+                }
+                onLevelChange(level) {
+                    this.mClipState.mDrawable.setLevel(level);
+                    this.invalidateSelf();
+                    return true;
+                }
+                onBoundsChange(bounds) {
+                    this.mClipState.mDrawable.setBounds(bounds);
+                }
+                draw(canvas) {
+                    if (this.mClipState.mDrawable.getLevel() == 0) {
+                        return;
+                    }
+                    const r = this.mTmpRect;
+                    const bounds = this.getBounds();
+                    let level = this.getLevel();
+                    let w = bounds.width();
+                    const iw = 0;
+                    if ((this.mClipState.mOrientation & ClipDrawable.HORIZONTAL) != 0) {
+                        w -= (w - iw) * (10000 - level) / 10000;
+                    }
+                    let h = bounds.height();
+                    const ih = 0;
+                    if ((this.mClipState.mOrientation & ClipDrawable.VERTICAL) != 0) {
+                        h -= (h - ih) * (10000 - level) / 10000;
+                    }
+                    Gravity.apply(this.mClipState.mGravity, w, h, bounds, r);
+                    if (w > 0 && h > 0) {
+                        canvas.save();
+                        canvas.clipRect(r);
+                        this.mClipState.mDrawable.draw(canvas);
+                        canvas.restore();
+                    }
+                }
+                getIntrinsicWidth() {
+                    return this.mClipState.mDrawable.getIntrinsicWidth();
+                }
+                getIntrinsicHeight() {
+                    return this.mClipState.mDrawable.getIntrinsicHeight();
+                }
+                getConstantState() {
+                    if (this.mClipState.canConstantState()) {
+                        return this.mClipState;
+                    }
+                    return null;
+                }
+            }
+            ClipDrawable.HORIZONTAL = 1;
+            ClipDrawable.VERTICAL = 2;
+            drawable_5.ClipDrawable = ClipDrawable;
+            (function (ClipDrawable) {
+                class ClipState {
+                    constructor(orig, owner) {
+                        this.mOrientation = 0;
+                        this.mGravity = 0;
+                        if (orig != null) {
+                            this.mDrawable = orig.mDrawable.getConstantState().newDrawable();
+                            this.mDrawable.setCallback(owner);
+                            this.mOrientation = orig.mOrientation;
+                            this.mGravity = orig.mGravity;
+                            this.mCheckedConstantState = this.mCanConstantState = true;
+                        }
+                    }
+                    newDrawable() {
+                        return new ClipDrawable(this);
+                    }
+                    canConstantState() {
+                        if (!this.mCheckedConstantState) {
+                            this.mCanConstantState = this.mDrawable.getConstantState() != null;
+                            this.mCheckedConstantState = true;
+                        }
+                        return this.mCanConstantState;
+                    }
+                }
+                ClipDrawable.ClipState = ClipState;
+            })(ClipDrawable = drawable_5.ClipDrawable || (drawable_5.ClipDrawable = {}));
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 ///<reference path="../../../android/view/animation/Animation.ts"/>
 ///<reference path="../../../android/view/animation/Transformation.ts"/>
 var android;
@@ -41519,6 +41884,7 @@ var android;
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/drawable/LayerDrawable.ts"/>
 ///<reference path="../../android/graphics/drawable/StateListDrawable.ts"/>
+///<reference path="../../android/graphics/drawable/ClipDrawable.ts"/>
 ///<reference path="../../android/util/Pools.ts"/>
 ///<reference path="../../android/view/Gravity.ts"/>
 ///<reference path="../../android/view/View.ts"/>
@@ -41532,6 +41898,7 @@ var android;
 ///<reference path="../../android/widget/LinearLayout.ts"/>
 ///<reference path="../../android/widget/TextView.ts"/>
 ///<reference path="../../android/R/id.ts"/>
+///<reference path="../../androidui/image/NetDrawable.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -41539,7 +41906,10 @@ var android;
         var Animatable = android.graphics.drawable.Animatable;
         var AnimationDrawable = android.graphics.drawable.AnimationDrawable;
         var LayerDrawable = android.graphics.drawable.LayerDrawable;
+        var StateListDrawable = android.graphics.drawable.StateListDrawable;
+        var ClipDrawable = android.graphics.drawable.ClipDrawable;
         var SynchronizedPool = android.util.Pools.SynchronizedPool;
+        var Gravity = android.view.Gravity;
         var View = android.view.View;
         var AlphaAnimation = android.view.animation.AlphaAnimation;
         var Animation = android.view.animation.Animation;
@@ -41547,9 +41917,10 @@ var android;
         var Transformation = android.view.animation.Transformation;
         var ArrayList = java.util.ArrayList;
         var R = android.R;
+        var NetDrawable = androidui.image.NetDrawable;
         class ProgressBar extends View {
-            constructor(bindElement, rootElement, defStyle) {
-                super(bindElement, rootElement, defStyle);
+            constructor(bindElement, rootElement, defStyle = android.R.attr.progressBarStyle) {
+                super(bindElement, rootElement, null);
                 this.mMinWidth = 0;
                 this.mMaxWidth = 0;
                 this.mMinHeight = 0;
@@ -41562,40 +41933,42 @@ var android;
                 this.mMirrorForRtl = false;
                 this.mRefreshData = new ArrayList();
                 this.initProgressBar();
-                this._attrBinder.addAttr('progressDrawable', (value) => {
-                    let drawable = this._attrBinder.parseDrawable(value);
+                const a = this._attrBinder;
+                a.addAttr('progressDrawable', (value) => {
+                    let drawable = a.parseDrawable(value);
                     if (drawable != null) {
+                        drawable = this.tileify(drawable, false);
                         this.setProgressDrawable(drawable);
                     }
                 }, () => {
                     return this.mProgressDrawable;
                 });
-                this._attrBinder.addAttr('indeterminateDuration', (value) => {
-                    this.mDuration = Math.floor(this._attrBinder.parseNumber(value, this.mDuration));
+                a.addAttr('indeterminateDuration', (value) => {
+                    this.mDuration = Math.floor(a.parseNumber(value, this.mDuration));
                 }, () => {
                     return this.mDuration;
                 });
-                this._attrBinder.addAttr('minWidth', (value) => {
-                    this.mMinWidth = Math.floor(this._attrBinder.parseNumber(value, this.mMinWidth));
+                a.addAttr('minWidth', (value) => {
+                    this.mMinWidth = Math.floor(a.parseNumber(value, this.mMinWidth));
                 }, () => {
                     return this.mMinWidth;
                 });
-                this._attrBinder.addAttr('maxWidth', (value) => {
-                    this.mMaxWidth = Math.floor(this._attrBinder.parseNumber(value, this.mMaxWidth));
+                a.addAttr('maxWidth', (value) => {
+                    this.mMaxWidth = Math.floor(a.parseNumber(value, this.mMaxWidth));
                 }, () => {
                     return this.mMaxWidth;
                 });
-                this._attrBinder.addAttr('minHeight', (value) => {
-                    this.mMinHeight = Math.floor(this._attrBinder.parseNumber(value, this.mMinHeight));
+                a.addAttr('minHeight', (value) => {
+                    this.mMinHeight = Math.floor(a.parseNumber(value, this.mMinHeight));
                 }, () => {
                     return this.mMinHeight;
                 });
-                this._attrBinder.addAttr('maxHeight', (value) => {
-                    this.mMaxHeight = Math.floor(this._attrBinder.parseNumber(value, this.mMaxHeight));
+                a.addAttr('maxHeight', (value) => {
+                    this.mMaxHeight = Math.floor(a.parseNumber(value, this.mMaxHeight));
                 }, () => {
                     return this.mMaxHeight;
                 });
-                this._attrBinder.addAttr('indeterminateBehavior', (value) => {
+                a.addAttr('indeterminateBehavior', (value) => {
                     if (value + ''.toLowerCase() == 'cycle') {
                         this.mBehavior = Animation.REVERSE;
                     }
@@ -41603,47 +41976,82 @@ var android;
                         this.mBehavior = Animation.RESTART;
                     }
                 });
-                this._attrBinder.addAttr('interpolator', (value) => {
+                a.addAttr('interpolator', (value) => {
                 });
-                this._attrBinder.addAttr('max', (value) => {
-                    this.setMax(this._attrBinder.parseNumber(value, this.mMax));
+                a.addAttr('max', (value) => {
+                    this.setMax(a.parseNumber(value, this.mMax));
                 }, () => {
                     return this.mMax;
                 });
-                this._attrBinder.addAttr('progress', (value) => {
-                    this.setProgress(this._attrBinder.parseNumber(value, this.mProgress));
+                a.addAttr('progress', (value) => {
+                    this.setProgress(a.parseNumber(value, this.mProgress));
                 }, () => {
                     return this.mProgress;
                 });
-                this._attrBinder.addAttr('secondaryProgress', (value) => {
-                    this.setSecondaryProgress(this._attrBinder.parseNumber(value, this.mSecondaryProgress));
+                a.addAttr('secondaryProgress', (value) => {
+                    this.setSecondaryProgress(a.parseNumber(value, this.mSecondaryProgress));
                 }, () => {
                     return this.mSecondaryProgress;
                 });
-                this._attrBinder.addAttr('indeterminateDrawable', (value) => {
-                    let drawable = this._attrBinder.parseDrawable(value);
+                a.addAttr('indeterminateDrawable', (value) => {
+                    let drawable = a.parseDrawable(value);
                     if (drawable != null) {
+                        drawable = this.tileifyIndeterminate(drawable);
                         this.setIndeterminateDrawable(drawable);
                     }
                 }, () => {
                     return this.mIndeterminateDrawable;
                 });
-                this._attrBinder.addAttr('indeterminateOnly', (value) => {
-                    this.mOnlyIndeterminate = this._attrBinder.parseBoolean(value, this.mOnlyIndeterminate);
+                a.addAttr('indeterminateOnly', (value) => {
+                    this.mOnlyIndeterminate = a.parseBoolean(value, this.mOnlyIndeterminate);
                     this.setIndeterminate(this.mOnlyIndeterminate || this.mIndeterminate);
                 });
-                this._attrBinder.addAttr('indeterminate', (value) => {
-                    this.setIndeterminate(this.mOnlyIndeterminate || this._attrBinder.parseBoolean(value, this.mIndeterminate));
+                a.addAttr('indeterminate', (value) => {
+                    this.setIndeterminate(this.mOnlyIndeterminate || a.parseBoolean(value, this.mIndeterminate));
                 });
                 this.mNoInvalidate = true;
-                if (defStyle === undefined)
-                    defStyle = android.R.attr.progressBarStyle;
-                if (defStyle != null)
+                if (defStyle)
                     this.applyDefaultAttributes(defStyle);
                 this.mNoInvalidate = false;
                 this.setIndeterminate(this.mOnlyIndeterminate || this.mIndeterminate);
             }
             tileify(drawable, clip) {
+                if (drawable instanceof LayerDrawable) {
+                    let background = drawable;
+                    const N = background.getNumberOfLayers();
+                    let outDrawables = new Array(N);
+                    let drawableChange = false;
+                    for (let i = 0; i < N; i++) {
+                        let id = background.getId(i);
+                        let orig = background.getDrawable(i);
+                        outDrawables[i] = this.tileify(orig, (id == R.id.progress || id == R.id.secondaryProgress));
+                        drawableChange = drawableChange || outDrawables[i] !== orig;
+                    }
+                    if (!drawableChange)
+                        return background;
+                    let newBg = new LayerDrawable(outDrawables);
+                    for (let i = 0; i < N; i++) {
+                        newBg.setId(i, background.getId(i));
+                    }
+                    return newBg;
+                }
+                else if (drawable instanceof StateListDrawable) {
+                    let _in = drawable;
+                    let out = new StateListDrawable();
+                    let numStates = _in.getStateCount();
+                    for (let i = 0; i < numStates; i++) {
+                        out.addState(_in.getStateSet(i), this.tileify(_in.getStateDrawable(i), clip));
+                    }
+                    return out;
+                }
+                else if (drawable instanceof NetDrawable) {
+                    const netDrawable = drawable;
+                    if (this.mSampleTile == null) {
+                        this.mSampleTile = netDrawable;
+                    }
+                    netDrawable.setTileMode(NetDrawable.TileMode.REPEAT, null);
+                    return (clip) ? new ClipDrawable(netDrawable, Gravity.LEFT, ClipDrawable.HORIZONTAL) : netDrawable;
+                }
                 return drawable;
             }
             tileifyIndeterminate(drawable) {
@@ -42487,6 +42895,538 @@ var android;
             }
             RadioGroup.PassThroughHierarchyChangeListener = PassThroughHierarchyChangeListener;
         })(RadioGroup = widget.RadioGroup || (widget.RadioGroup = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../android/widget/ProgressBar.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var KeyEvent = android.view.KeyEvent;
+        var MotionEvent = android.view.MotionEvent;
+        var Integer = java.lang.Integer;
+        var ProgressBar = android.widget.ProgressBar;
+        class AbsSeekBar extends ProgressBar {
+            constructor(bindElement, rootElement, defStyle) {
+                super(bindElement, rootElement, null);
+                this.mThumbOffset = 0;
+                this.mTouchProgressOffset = 0;
+                this.mIsUserSeekable = true;
+                this.mKeyProgressIncrement = 1;
+                this.mDisabledAlpha = 0;
+                this.mTouchDownX = 0;
+                let a = this._attrBinder;
+                a.addAttr('thumb', (value) => {
+                    this.setThumb(a.parseDrawable(value));
+                }, () => this.mThumb);
+                a.addAttr('thumbOffset', (value) => {
+                    this.setThumbOffset(a.parseNumber(value));
+                }, () => this.mThumbOffset);
+                a.addAttr('disabledAlpha', (value) => {
+                    this.mDisabledAlpha = a.parseNumber(value, 0.5);
+                }, () => this.mThumbOffset);
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
+            }
+            setThumb(thumb) {
+                let needUpdate;
+                if (this.mThumb != null && thumb != this.mThumb) {
+                    this.mThumb.setCallback(null);
+                    needUpdate = true;
+                }
+                else {
+                    needUpdate = false;
+                }
+                if (thumb != null) {
+                    thumb.setCallback(this);
+                    this.mThumbOffset = thumb.getIntrinsicWidth() / 2;
+                    if (needUpdate && (thumb.getIntrinsicWidth() != this.mThumb.getIntrinsicWidth() || thumb.getIntrinsicHeight() != this.mThumb.getIntrinsicHeight())) {
+                        this.requestLayout();
+                    }
+                }
+                this.mThumb = thumb;
+                this.invalidate();
+                if (needUpdate) {
+                    this.updateThumbPos(this.getWidth(), this.getHeight());
+                    if (thumb != null && thumb.isStateful()) {
+                        let state = this.getDrawableState();
+                        thumb.setState(state);
+                    }
+                }
+            }
+            getThumb() {
+                return this.mThumb;
+            }
+            getThumbOffset() {
+                return this.mThumbOffset;
+            }
+            setThumbOffset(thumbOffset) {
+                this.mThumbOffset = thumbOffset;
+                this.invalidate();
+            }
+            setKeyProgressIncrement(increment) {
+                this.mKeyProgressIncrement = increment < 0 ? -increment : increment;
+            }
+            getKeyProgressIncrement() {
+                return this.mKeyProgressIncrement;
+            }
+            setMax(max) {
+                super.setMax(max);
+                if ((this.mKeyProgressIncrement == 0) || (this.getMax() / this.mKeyProgressIncrement > 20)) {
+                    this.setKeyProgressIncrement(Math.max(1, Math.round(this.getMax() / 20)));
+                }
+            }
+            verifyDrawable(who) {
+                return who == this.mThumb || super.verifyDrawable(who);
+            }
+            jumpDrawablesToCurrentState() {
+                super.jumpDrawablesToCurrentState();
+                if (this.mThumb != null)
+                    this.mThumb.jumpToCurrentState();
+            }
+            drawableStateChanged() {
+                super.drawableStateChanged();
+                let progressDrawable = this.getProgressDrawable();
+                if (progressDrawable != null) {
+                    progressDrawable.setAlpha(this.isEnabled() ? AbsSeekBar.NO_ALPHA : Math.floor((AbsSeekBar.NO_ALPHA * this.mDisabledAlpha)));
+                }
+                if (this.mThumb != null && this.mThumb.isStateful()) {
+                    let state = this.getDrawableState();
+                    this.mThumb.setState(state);
+                }
+            }
+            onProgressRefresh(scale, fromUser) {
+                super.onProgressRefresh(scale, fromUser);
+                let thumb = this.mThumb;
+                if (thumb != null) {
+                    this.setThumbPos(this.getWidth(), thumb, scale, Integer.MIN_VALUE);
+                    this.invalidate();
+                }
+            }
+            onSizeChanged(w, h, oldw, oldh) {
+                super.onSizeChanged(w, h, oldw, oldh);
+                this.updateThumbPos(w, h);
+            }
+            updateThumbPos(w, h) {
+                let d = this.getCurrentDrawable();
+                let thumb = this.mThumb;
+                let thumbHeight = thumb == null ? 0 : thumb.getIntrinsicHeight();
+                let trackHeight = Math.min(this.mMaxHeight, h - this.mPaddingTop - this.mPaddingBottom);
+                let max = this.getMax();
+                let scale = max > 0 ? this.getProgress() / max : 0;
+                if (thumbHeight > trackHeight) {
+                    if (thumb != null) {
+                        this.setThumbPos(w, thumb, scale, 0);
+                    }
+                    let gapForCenteringTrack = (thumbHeight - trackHeight) / 2;
+                    if (d != null) {
+                        d.setBounds(0, gapForCenteringTrack, w - this.mPaddingRight - this.mPaddingLeft, h - this.mPaddingBottom - gapForCenteringTrack - this.mPaddingTop);
+                    }
+                }
+                else {
+                    if (d != null) {
+                        d.setBounds(0, 0, w - this.mPaddingRight - this.mPaddingLeft, h - this.mPaddingBottom - this.mPaddingTop);
+                    }
+                    let gap = (trackHeight - thumbHeight) / 2;
+                    if (thumb != null) {
+                        this.setThumbPos(w, thumb, scale, gap);
+                    }
+                }
+            }
+            setThumbPos(w, thumb, scale, gap) {
+                let available = w - this.mPaddingLeft - this.mPaddingRight;
+                let thumbWidth = thumb.getIntrinsicWidth();
+                let thumbHeight = thumb.getIntrinsicHeight();
+                available -= thumbWidth;
+                available += this.mThumbOffset * 2;
+                let thumbPos = Math.floor((scale * available));
+                let topBound, bottomBound;
+                if (gap == Integer.MIN_VALUE) {
+                    let oldBounds = thumb.getBounds();
+                    topBound = oldBounds.top;
+                    bottomBound = oldBounds.bottom;
+                }
+                else {
+                    topBound = gap;
+                    bottomBound = gap + thumbHeight;
+                }
+                const left = (this.isLayoutRtl() && this.mMirrorForRtl) ? available - thumbPos : thumbPos;
+                thumb.setBounds(left, topBound, left + thumbWidth, bottomBound);
+            }
+            onDraw(canvas) {
+                super.onDraw(canvas);
+                if (this.mThumb != null) {
+                    canvas.save();
+                    canvas.translate(this.mPaddingLeft - this.mThumbOffset, this.mPaddingTop);
+                    this.mThumb.draw(canvas);
+                    canvas.restore();
+                }
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                let d = this.getCurrentDrawable();
+                let thumbHeight = this.mThumb == null ? 0 : this.mThumb.getIntrinsicHeight();
+                let dw = 0;
+                let dh = 0;
+                if (d != null) {
+                    dw = Math.max(this.mMinWidth, Math.min(this.mMaxWidth, d.getIntrinsicWidth()));
+                    dh = Math.max(this.mMinHeight, Math.min(this.mMaxHeight, d.getIntrinsicHeight()));
+                    dh = Math.max(thumbHeight, dh);
+                }
+                dw += this.mPaddingLeft + this.mPaddingRight;
+                dh += this.mPaddingTop + this.mPaddingBottom;
+                this.setMeasuredDimension(AbsSeekBar.resolveSizeAndState(dw, widthMeasureSpec, 0), AbsSeekBar.resolveSizeAndState(dh, heightMeasureSpec, 0));
+            }
+            onTouchEvent(event) {
+                if (!this.mIsUserSeekable || !this.isEnabled()) {
+                    return false;
+                }
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        if (this.isInScrollingContainer()) {
+                            this.mTouchDownX = event.getX();
+                        }
+                        else {
+                            this.setPressed(true);
+                            if (this.mThumb != null) {
+                                this.invalidate(this.mThumb.getBounds());
+                            }
+                            this.onStartTrackingTouch();
+                            this.trackTouchEvent(event);
+                            this.attemptClaimDrag();
+                        }
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        if (this.mIsDragging) {
+                            this.trackTouchEvent(event);
+                        }
+                        else {
+                            const x = event.getX();
+                            if (Math.abs(x - this.mTouchDownX) > this.mTouchSlop) {
+                                this.setPressed(true);
+                                if (this.mThumb != null) {
+                                    this.invalidate(this.mThumb.getBounds());
+                                }
+                                this.onStartTrackingTouch();
+                                this.trackTouchEvent(event);
+                                this.attemptClaimDrag();
+                            }
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if (this.mIsDragging) {
+                            this.trackTouchEvent(event);
+                            this.onStopTrackingTouch();
+                            this.setPressed(false);
+                        }
+                        else {
+                            this.onStartTrackingTouch();
+                            this.trackTouchEvent(event);
+                            this.onStopTrackingTouch();
+                        }
+                        this.invalidate();
+                        break;
+                    case MotionEvent.ACTION_CANCEL:
+                        if (this.mIsDragging) {
+                            this.onStopTrackingTouch();
+                            this.setPressed(false);
+                        }
+                        this.invalidate();
+                        break;
+                }
+                return true;
+            }
+            trackTouchEvent(event) {
+                const width = this.getWidth();
+                const available = width - this.mPaddingLeft - this.mPaddingRight;
+                let x = Math.floor(event.getX());
+                let scale;
+                let progress = 0;
+                if (this.isLayoutRtl() && this.mMirrorForRtl) {
+                    if (x > width - this.mPaddingRight) {
+                        scale = 0.0;
+                    }
+                    else if (x < this.mPaddingLeft) {
+                        scale = 1.0;
+                    }
+                    else {
+                        scale = (available - x + this.mPaddingLeft) / available;
+                        progress = this.mTouchProgressOffset;
+                    }
+                }
+                else {
+                    if (x < this.mPaddingLeft) {
+                        scale = 0.0;
+                    }
+                    else if (x > width - this.mPaddingRight) {
+                        scale = 1.0;
+                    }
+                    else {
+                        scale = (x - this.mPaddingLeft) / available;
+                        progress = this.mTouchProgressOffset;
+                    }
+                }
+                const max = this.getMax();
+                progress += scale * max;
+                this.setProgress(Math.floor(progress), true);
+            }
+            attemptClaimDrag() {
+                if (this.mParent != null) {
+                    this.mParent.requestDisallowInterceptTouchEvent(true);
+                }
+            }
+            onStartTrackingTouch() {
+                this.mIsDragging = true;
+            }
+            onStopTrackingTouch() {
+                this.mIsDragging = false;
+            }
+            onKeyChange() {
+            }
+            onKeyDown(keyCode, event) {
+                if (this.isEnabled()) {
+                    let progress = this.getProgress();
+                    switch (keyCode) {
+                        case KeyEvent.KEYCODE_DPAD_LEFT:
+                            if (progress <= 0)
+                                break;
+                            this.setProgress(progress - this.mKeyProgressIncrement, true);
+                            this.onKeyChange();
+                            return true;
+                        case KeyEvent.KEYCODE_DPAD_RIGHT:
+                            if (progress >= this.getMax())
+                                break;
+                            this.setProgress(progress + this.mKeyProgressIncrement, true);
+                            this.onKeyChange();
+                            return true;
+                    }
+                }
+                return super.onKeyDown(keyCode, event);
+            }
+        }
+        AbsSeekBar.NO_ALPHA = 0xFF;
+        widget.AbsSeekBar = AbsSeekBar;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/widget/AbsSeekBar.ts"/>
+///<reference path="../../android/widget/ProgressBar.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var AbsSeekBar = android.widget.AbsSeekBar;
+        class SeekBar extends AbsSeekBar {
+            constructor(bindElement, rootElement, defStyle = android.R.attr.seekBarStyle) {
+                super(bindElement, rootElement, defStyle);
+            }
+            onProgressRefresh(scale, fromUser) {
+                super.onProgressRefresh(scale, fromUser);
+                if (this.mOnSeekBarChangeListener != null) {
+                    this.mOnSeekBarChangeListener.onProgressChanged(this, this.getProgress(), fromUser);
+                }
+            }
+            setOnSeekBarChangeListener(l) {
+                this.mOnSeekBarChangeListener = l;
+            }
+            onStartTrackingTouch() {
+                super.onStartTrackingTouch();
+                if (this.mOnSeekBarChangeListener != null) {
+                    this.mOnSeekBarChangeListener.onStartTrackingTouch(this);
+                }
+            }
+            onStopTrackingTouch() {
+                super.onStopTrackingTouch();
+                if (this.mOnSeekBarChangeListener != null) {
+                    this.mOnSeekBarChangeListener.onStopTrackingTouch(this);
+                }
+            }
+        }
+        widget.SeekBar = SeekBar;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/widget/AbsSeekBar.ts"/>
+///<reference path="../../android/widget/ProgressBar.ts"/>
+///<reference path="../../android/widget/SeekBar.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var AbsSeekBar = android.widget.AbsSeekBar;
+        class RatingBar extends AbsSeekBar {
+            constructor(bindElement, rootElement, defStyle = android.R.attr.ratingBarStyle) {
+                super(bindElement, rootElement, null);
+                this.mNumStars = 5;
+                this.mProgressOnStartTracking = 0;
+                const a = this._attrBinder;
+                a.addAttr('numStars', (value) => {
+                    this.setNumStars(a.parseNumber(value, this.mNumStars));
+                }, () => this.mNumStars);
+                a.addAttr('isIndicator', (value) => {
+                    this.setIsIndicator(a.parseBoolean(value, !this.mIsUserSeekable));
+                }, () => !this.mIsUserSeekable);
+                a.addAttr('stepSize', (value) => {
+                    this.setStepSize(a.parseNumber(value, 0.5));
+                }, () => this.getStepSize());
+                a.addAttr('rating', (value) => {
+                    this.setRating(a.parseNumber(value, this.getRating()));
+                }, () => this.getRating());
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
+                this.mTouchProgressOffset = 1.1;
+            }
+            setOnRatingBarChangeListener(listener) {
+                this.mOnRatingBarChangeListener = listener;
+            }
+            getOnRatingBarChangeListener() {
+                return this.mOnRatingBarChangeListener;
+            }
+            setIsIndicator(isIndicator) {
+                this.mIsUserSeekable = !isIndicator;
+                this.setFocusable(!isIndicator);
+            }
+            isIndicator() {
+                return !this.mIsUserSeekable;
+            }
+            setNumStars(numStars) {
+                if (numStars <= 0) {
+                    return;
+                }
+                let step = this.getStepSize();
+                this.mNumStars = numStars;
+                this.setStepSize(step);
+                this.requestLayout();
+            }
+            getNumStars() {
+                return this.mNumStars;
+            }
+            setRating(rating) {
+                this.setProgress(Math.round(rating * this.getProgressPerStar()));
+            }
+            getRating() {
+                return this.getProgress() / this.getProgressPerStar();
+            }
+            setStepSize(stepSize) {
+                if (Number.isNaN(stepSize) || !Number.isFinite(stepSize) || stepSize <= 0) {
+                    return;
+                }
+                const newMax = this.mNumStars / stepSize;
+                let newProgress = Math.floor((newMax / this.getMax() * this.getProgress()));
+                if (Number.isNaN(newProgress))
+                    newProgress = 0;
+                this.setMax(Math.floor(newMax));
+                this.setProgress(newProgress);
+            }
+            getStepSize() {
+                return this.getNumStars() / this.getMax();
+            }
+            getProgressPerStar() {
+                if (this.mNumStars > 0) {
+                    return 1 * this.getMax() / this.mNumStars;
+                }
+                else {
+                    return 1;
+                }
+            }
+            onProgressRefresh(scale, fromUser) {
+                super.onProgressRefresh(scale, fromUser);
+                this.updateSecondaryProgress(this.getProgress());
+                if (!fromUser) {
+                    this.dispatchRatingChange(false);
+                }
+            }
+            updateSecondaryProgress(progress) {
+                const ratio = this.getProgressPerStar();
+                if (ratio > 0) {
+                    const progressInStars = progress / ratio;
+                    const secondaryProgress = Math.floor((Math.ceil(progressInStars) * ratio));
+                    this.setSecondaryProgress(secondaryProgress);
+                }
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                if (this.mSampleTile != null) {
+                    const width = this.mSampleTile.getIntrinsicWidth() * this.mNumStars;
+                    this.setMeasuredDimension(RatingBar.resolveSizeAndState(width, widthMeasureSpec, 0), this.getMeasuredHeight());
+                }
+            }
+            onStartTrackingTouch() {
+                this.mProgressOnStartTracking = this.getProgress();
+                super.onStartTrackingTouch();
+            }
+            onStopTrackingTouch() {
+                super.onStopTrackingTouch();
+                if (this.getProgress() != this.mProgressOnStartTracking) {
+                    this.dispatchRatingChange(true);
+                }
+            }
+            onKeyChange() {
+                super.onKeyChange();
+                this.dispatchRatingChange(true);
+            }
+            dispatchRatingChange(fromUser) {
+                if (this.mOnRatingBarChangeListener != null) {
+                    this.mOnRatingBarChangeListener.onRatingChanged(this, this.getRating(), fromUser);
+                }
+            }
+            setMax(max) {
+                if (max <= 0) {
+                    return;
+                }
+                super.setMax(max);
+            }
+        }
+        widget.RatingBar = RatingBar;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /*
@@ -51630,6 +52570,8 @@ var androidui;
 ///<reference path="android/widget/CheckBox.ts"/>
 ///<reference path="android/widget/RadioButton.ts"/>
 ///<reference path="android/widget/RadioGroup.ts"/>
+///<reference path="android/widget/SeekBar.ts"/>
+///<reference path="android/widget/RatingBar.ts"/>
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
 ///<reference path="android/view/animation/AlphaAnimation.ts"/>

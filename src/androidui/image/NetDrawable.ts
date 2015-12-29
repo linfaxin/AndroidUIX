@@ -3,12 +3,14 @@
  */
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
 ///<reference path="../../android/content/res/Resources.ts"/>
 ///<reference path="NetImage.ts"/>
 
 
 module androidui.image{
     import Paint = android.graphics.Paint;
+    import Rect = android.graphics.Rect;
     import Drawable = android.graphics.drawable.Drawable;
     import Canvas = android.graphics.Canvas;
     import Resources = android.content.res.Resources;
@@ -18,6 +20,9 @@ module androidui.image{
         private mLoadListener:NetDrawable.LoadListener;
         private mImageWidth = -1;
         private mImageHeight = -1;
+        private mTileModeX:NetDrawable.TileMode;
+        private mTileModeY:NetDrawable.TileMode;
+        private mTmpTileBound = new Rect();
 
         constructor(src:string|NetImage, paint?:Paint, overrideImageRatio?:number){
             super();
@@ -29,12 +34,61 @@ module androidui.image{
                 image = new NetImage(<string>src, overrideImageRatio);
             }
             image.addLoadListener(()=>this.onLoad(), ()=>this.onError());
+
+            let imageRatio = image.getImageRatio();
+            this.mImageWidth = Math.floor(image.width / imageRatio * Resources.getDisplayMetrics().density);
+            this.mImageHeight = Math.floor(image.height / imageRatio * Resources.getDisplayMetrics().density);
+
             this.mState = new State(image, paint);
         }
 
         draw(canvas:Canvas):void {
-            if(this.isLoadFinish()){
-                canvas.drawImage(this.mState.mImage, null, this.getBounds(), this.mState.paint);
+            if(!this.isImageSizeEmpty()){
+                let emptyTileX = this.mTileModeX == null || this.mTileModeX == NetDrawable.TileMode.DEFAULT;
+                let emptyTileY = this.mTileModeY == null || this.mTileModeY == NetDrawable.TileMode.DEFAULT;
+
+                if(emptyTileX && emptyTileY){
+                    canvas.drawImage(this.mState.mImage, null, this.getBounds(), this.mState.paint);
+                } else{
+                    this.drawTile(canvas);
+                }
+            }
+        }
+
+        private drawTile(canvas:Canvas):void {
+            let imageWidth = this.mImageWidth;
+            let imageHeight = this.mImageHeight;
+            if(imageHeight<=0 || imageWidth<=0) return;
+            let tileX = this.mTileModeX;
+            let tileY = this.mTileModeY;
+            let bound = this.getBounds();
+
+            let tmpBound = this.mTmpTileBound;
+            tmpBound.setEmpty();
+
+            function drawColumn(){
+                if(tileY === NetDrawable.TileMode.REPEAT){
+                    tmpBound.bottom = imageHeight;
+                    while(tmpBound.isEmpty() || tmpBound.intersects(bound)){
+                        canvas.drawImage(this.mState.mImage, null, tmpBound, this.mState.paint);
+                        tmpBound.offset(0, imageHeight);
+                    }
+                }else{
+                    tmpBound.bottom = bound.height();
+                    canvas.drawImage(this.mState.mImage, null, tmpBound, this.mState.paint);
+                }
+            }
+
+            if(tileX === NetDrawable.TileMode.REPEAT){
+                tmpBound.right = imageWidth;
+                while(tmpBound.isEmpty() || tmpBound.intersects(bound)){
+                    drawColumn.call(this);
+                    tmpBound.offset(imageWidth, -tmpBound.top);
+                }
+
+            }else{
+                tmpBound.right = bound.width();
+                drawColumn.call(this);
             }
         }
 
@@ -70,8 +124,8 @@ module androidui.image{
             this.notifySizeChangeSelf();
         }
 
-        isLoadFinish():boolean {
-            return this.mImageWidth >=0 && this.mImageHeight >= 0;
+        isImageSizeEmpty():boolean {
+            return this.mImageWidth <=0 || this.mImageHeight <= 0;
         }
 
         getImage():NetImage {
@@ -80,6 +134,12 @@ module androidui.image{
 
         setLoadListener(loadListener:NetDrawable.LoadListener):void {
             this.mLoadListener = loadListener;
+        }
+
+        setTileMode(tileX:NetDrawable.TileMode, tileY:NetDrawable.TileMode){
+            this.mTileModeX = tileX;
+            this.mTileModeY = tileY;
+            this.invalidateSelf();
         }
 
         getConstantState():Drawable.ConstantState {
@@ -92,6 +152,12 @@ module androidui.image{
         export interface LoadListener {
             onLoad(drawable:NetDrawable);
             onError(drawable:NetDrawable);
+        }
+
+        export enum TileMode{
+            DEFAULT,
+            REPEAT,
+            //MIRROR  //TODO not support now
         }
     }
 
