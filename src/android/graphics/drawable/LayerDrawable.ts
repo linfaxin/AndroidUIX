@@ -587,7 +587,7 @@ export class LayerState implements Drawable.ConstantState {
 
     mChildren:LayerDrawable.ChildDrawable[];
 
-    mChangingConfigurations:number = 0;
+    //mChangingConfigurations:number = 0;
 
     //mChildrenChangingConfigurations:number = 0;
 
@@ -611,7 +611,7 @@ export class LayerState implements Drawable.ConstantState {
             const N:number = orig.mNum;
             this.mNum = N;
             this.mChildren = new Array<LayerDrawable.ChildDrawable>(N);
-            this.mChangingConfigurations = orig.mChangingConfigurations;
+            //this.mChangingConfigurations = orig.mChangingConfigurations;
             //this.mChildrenChangingConfigurations = orig.mChildrenChangingConfigurations;
             for (let i:number = 0; i < N; i++) {
                 const r:LayerDrawable.ChildDrawable = this.mChildren[i] = new LayerDrawable.ChildDrawable();
@@ -645,9 +645,9 @@ export class LayerState implements Drawable.ConstantState {
         return new LayerDrawable(null, this);
     }
 
-    getChangingConfigurations():number  {
-        return this.mChangingConfigurations;
-    }
+    //getChangingConfigurations():number  {
+    //    return this.mChangingConfigurations;
+    //}
 
     getOpacity():number  {
         if (this.mHaveOpacity) {

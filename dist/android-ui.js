@@ -6221,7 +6221,6 @@ var android;
                 class LayerState {
                     constructor(orig, owner) {
                         this.mNum = 0;
-                        this.mChangingConfigurations = 0;
                         this.mHaveOpacity = false;
                         this.mOpacity = 0;
                         this.mHaveStateful = false;
@@ -6230,7 +6229,6 @@ var android;
                             const N = orig.mNum;
                             this.mNum = N;
                             this.mChildren = new Array(N);
-                            this.mChangingConfigurations = orig.mChangingConfigurations;
                             for (let i = 0; i < N; i++) {
                                 const r = this.mChildren[i] = new LayerDrawable.ChildDrawable();
                                 const or = origChildDrawable[i];
@@ -6256,9 +6254,6 @@ var android;
                     }
                     newDrawable() {
                         return new LayerDrawable(null, this);
-                    }
-                    getChangingConfigurations() {
-                        return this.mChangingConfigurations;
                     }
                     getOpacity() {
                         if (this.mHaveOpacity) {
@@ -7783,28 +7778,21 @@ var android;
                 rotate2.mState.mToDegrees = 0;
                 return new LayerDrawable([rotate1, rotate2]);
             }
-            static get progress_bg_holo_light() {
-                let line = new ColorDrawable(0x4c000000);
-                line.getIntrinsicHeight = () => 3 * density;
-                return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
-            }
-            static get progress_primary_holo_light() {
-                let line = new ColorDrawable(0xcc33b5e5);
-                line.getIntrinsicHeight = () => 3 * density;
-                return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
-            }
-            static get progress_secondary_holo_light() {
-                let line = new ColorDrawable(0x4c33b5e5);
-                line.getIntrinsicHeight = () => 3 * density;
-                return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
-            }
             static get progress_horizontal_holo() {
                 let layerDrawable = new LayerDrawable(null);
-                layerDrawable.addLayer(R.drawable.progress_bg_holo_light, R.id.background);
-                let scaleSecondary = new ScaleDrawable(R.drawable.progress_secondary_holo_light, Gravity.LEFT, 1, -1);
-                layerDrawable.addLayer(scaleSecondary, R.id.secondaryProgress);
-                let scalePrimary = new ScaleDrawable(R.drawable.progress_primary_holo_light, Gravity.LEFT, 1, -1);
-                layerDrawable.addLayer(scalePrimary, R.id.progress);
+                let returnHeight = () => 3 * density;
+                let insetTopBottom = Math.floor(8 * density);
+                let bg = new ColorDrawable(0x4c000000);
+                bg.getIntrinsicHeight = returnHeight;
+                layerDrawable.addLayer(bg, R.id.background, 0, insetTopBottom, 0, insetTopBottom);
+                let secondary = new ScaleDrawable(new ColorDrawable(0x4c33b5e5), Gravity.LEFT, 1, -1);
+                secondary.getIntrinsicHeight = returnHeight;
+                layerDrawable.addLayer(secondary, R.id.secondaryProgress, 0, insetTopBottom, 0, insetTopBottom);
+                let progress = new ScaleDrawable(new ColorDrawable(0xcc33b5e5), Gravity.LEFT, 1, -1);
+                progress.getIntrinsicHeight = returnHeight;
+                layerDrawable.addLayer(progress, R.id.progress, 0, insetTopBottom, 0, insetTopBottom);
+                layerDrawable.ensurePadding();
+                layerDrawable.onStateChange(layerDrawable.getState());
                 return layerDrawable;
             }
             static get progress_indeterminate_horizontal_holo() {
@@ -13002,7 +12990,22 @@ var android;
                     return null;
                 }
                 let children = Array.from(domtree.children);
-                let rootView = new rootViewClass(domtree, rootElement);
+                let defStyle;
+                let styleAttrValue = domtree.getAttribute('style');
+                if (styleAttrValue) {
+                    try {
+                        while (styleAttrValue.startsWith('@'))
+                            styleAttrValue = styleAttrValue.substring(1);
+                        defStyle = eval(styleAttrValue);
+                    }
+                    catch (e) {
+                    }
+                }
+                let rootView;
+                if (defStyle)
+                    rootView = new rootViewClass(domtree, rootElement, defStyle);
+                else
+                    rootView = new rootViewClass(domtree, rootElement);
                 if (rootView['onInflateAdapter']) {
                     rootView.onInflateAdapter(domtree, rootElement, viewParent);
                     domtree.parentNode.removeChild(domtree);

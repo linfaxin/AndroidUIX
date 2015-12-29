@@ -194,31 +194,26 @@ module android.R{
             return new LayerDrawable([rotate1, rotate2]);
         }
 
-        static get progress_bg_holo_light():Drawable {
-            let line = new ColorDrawable(0x4c000000);
-            line.getIntrinsicHeight = ()=> 3 * density;
-            return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
-        }
-
-        static get progress_primary_holo_light():Drawable {
-            let line = new ColorDrawable(0xcc33b5e5);
-            line.getIntrinsicHeight = ()=> 3 * density;
-            return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
-        }
-
-        static get progress_secondary_holo_light():Drawable {
-            let line = new ColorDrawable(0x4c33b5e5);
-            line.getIntrinsicHeight = ()=> 3 * density;
-            return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
-        }
-
         static get progress_horizontal_holo():Drawable {
             let layerDrawable = new LayerDrawable(null);
-            layerDrawable.addLayer(R.drawable.progress_bg_holo_light, R.id.background);
-            let scaleSecondary = new ScaleDrawable(R.drawable.progress_secondary_holo_light, Gravity.LEFT, 1, -1);
-            layerDrawable.addLayer(scaleSecondary, R.id.secondaryProgress);
-            let scalePrimary = new ScaleDrawable(R.drawable.progress_primary_holo_light, Gravity.LEFT, 1, -1);
-            layerDrawable.addLayer(scalePrimary, R.id.progress);
+            let returnHeight = ()=> 3 * density;
+            let insetTopBottom = Math.floor(8 * density);
+
+            let bg = new ColorDrawable(0x4c000000);
+            bg.getIntrinsicHeight = returnHeight;
+            layerDrawable.addLayer(bg, R.id.background, 0, insetTopBottom, 0, insetTopBottom);
+
+            let secondary = new ScaleDrawable(new ColorDrawable(0x4c33b5e5), Gravity.LEFT, 1, -1);
+            secondary.getIntrinsicHeight = returnHeight;
+            layerDrawable.addLayer(secondary, R.id.secondaryProgress, 0, insetTopBottom, 0, insetTopBottom);
+
+            let progress = new ScaleDrawable(new ColorDrawable(0xcc33b5e5), Gravity.LEFT, 1, -1);
+            progress.getIntrinsicHeight = returnHeight;
+            layerDrawable.addLayer(progress, R.id.progress, 0, insetTopBottom, 0, insetTopBottom);
+
+            layerDrawable.ensurePadding();
+            layerDrawable.onStateChange(layerDrawable.getState());
+
             return layerDrawable;
         }
 

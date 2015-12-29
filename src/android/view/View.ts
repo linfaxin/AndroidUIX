@@ -5772,7 +5772,20 @@ module android.view {
                 return null;
             }
             let children = Array.from(domtree.children);//children may change when new the view
-            let rootView:View = new rootViewClass(domtree, rootElement);
+            //parse default style
+            let defStyle;
+            let styleAttrValue = domtree.getAttribute('style');
+            if(styleAttrValue){
+                try {
+                    while(styleAttrValue.startsWith('@')) styleAttrValue = styleAttrValue.substring(1);
+                    defStyle = eval(styleAttrValue);
+                } catch (e) {
+                }
+            }
+            let rootView:View;
+            if(defStyle) rootView = new rootViewClass(domtree, rootElement, defStyle);
+            else rootView = new rootViewClass(domtree, rootElement);
+
             if(rootView['onInflateAdapter']){//inflate a adapter.
                 (<HtmlDataAdapter><any>rootView).onInflateAdapter(domtree, rootElement, viewParent);
                 domtree.parentNode.removeChild(domtree);

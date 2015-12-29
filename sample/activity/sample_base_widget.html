@@ -28,6 +28,7 @@
     <ScrollView>
         <LinearLayout
                 android:orientation="vertical"
+                android:padding="12dp"
                 android:gravity="center">
             <TextView android:layout_width="wrap_content">
                 文本
@@ -59,6 +60,14 @@
             <ProgressBar android:layout_height="wrap_content"
                          android:layout_width="wrap_content"
                          android:layout_marginBottom="12dp"></ProgressBar>
+            <ProgressBar android:layout_height="wrap_content"
+                         android:layout_width="match_parent"
+                         android:layout_marginBottom="12dp"
+                         style="@android.R.attr.progressBarStyleHorizontal"
+                         android:max="100"
+                         android:progress="50"
+                         android:secondaryProgress="70"></ProgressBar>
+
         </LinearLayout>
     </ScrollView>
 </android-Activity>

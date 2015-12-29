@@ -1461,7 +1461,6 @@ declare module android.graphics.drawable {
         class LayerState implements Drawable.ConstantState {
             mNum: number;
             mChildren: LayerDrawable.ChildDrawable[];
-            mChangingConfigurations: number;
             private mHaveOpacity;
             private mOpacity;
             private mHaveStateful;
@@ -1471,7 +1470,6 @@ declare module android.graphics.drawable {
             private mAutoMirrored;
             constructor(orig: LayerState, owner: LayerDrawable);
             newDrawable(): Drawable;
-            getChangingConfigurations(): number;
             getOpacity(): number;
             isStateful(): boolean;
             canConstantState(): boolean;
@@ -1757,9 +1755,6 @@ declare module android.R {
         static progress_small_holo: Drawable;
         static progress_medium_holo: Drawable;
         static progress_large_holo: Drawable;
-        static progress_bg_holo_light: Drawable;
-        static progress_primary_holo_light: Drawable;
-        static progress_secondary_holo_light: Drawable;
         static progress_horizontal_holo: Drawable;
         static progress_indeterminate_horizontal_holo: Drawable;
         static scrubber_primary_holo: Drawable;
