@@ -1,0 +1,16 @@
+<ScrollView android:fillViewport="true">
+    <LinearLayout
+            android:orientation="vertical">
+        <HtmlView>
+            <p style="font-size: 24px;text-align: center">HtmlView</p>
+        </HtmlView>
+        <HtmlView style="padding:0 20px;box-sizing: border-box;line-height: 20px;">
+            <p>HtmlView使用浏览器<span style="color: red;font-weight: bold;">DOM</span>渲染, 可与Android的View混用, 但因为DOM的性能差, 会影响移动端流畅度.不提倡使用</p>
+            <p>HtmlView在Canvas DOM之上, 即会盖在所有Android的View之上.</p>
+        </HtmlView>
+        <TextView android:gravity="center">TextView</TextView>
+        <HtmlView style="overflow: visible;text-align: center;">
+            <input style="font-size: 16px;text-align: center;box-shadow: 0 0 1px black;margin: 12px 0; padding: 6px;" placeholder="请输入"/>
+        </HtmlView>
+    </LinearLayout>
+</ScrollView>

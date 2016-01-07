@@ -8,6 +8,7 @@
 ///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../../android/support/v4/view/ViewPager.ts"/>
 ///<reference path="../../android/support/v4/view/PagerAdapter.ts"/>
+///<reference path="../../android/content/Context.ts"/>
 
 module androidui.widget{
 
@@ -18,17 +19,18 @@ module androidui.widget{
     import View = android.view.View;
     import ViewPager = android.support.v4.view.ViewPager;
     import PagerAdapter = android.support.v4.view.PagerAdapter;
+    import Context = android.content.Context;
 
     export class HtmlDataPagerAdapter extends PagerAdapter implements HtmlDataAdapter{
         static RefElementTag = "ref-element".toUpperCase();
         static RefElementProperty = "RefElement";
         static BindAdapterProperty = "BindAdapter";
         bindElementData:HTMLElement;
-        rootElement:HTMLElement;
+        mContext:Context;
 
-        onInflateAdapter(bindElement:HTMLElement, rootElement:HTMLElement, parent:android.view.ViewGroup):void {
+        onInflateAdapter(bindElement:HTMLElement, context?:Context, parent?:android.view.ViewGroup):void {
             this.bindElementData = bindElement;
-            this.rootElement = rootElement;
+            this.mContext = context;
             if(parent instanceof ViewPager){
                 parent.setAdapter(this);
             }
@@ -55,7 +57,7 @@ module androidui.widget{
             let view:View = element[View.AndroidViewProperty];
             this.checkReplaceWithRef(element);
             if(!view){
-                view = View.inflate(<HTMLElement>element, this.rootElement, container);
+                view = View.inflate(this.mContext, <HTMLElement>element);
                 element[View.AndroidViewProperty] = view;
             }
             container.addView(view);

@@ -457,8 +457,8 @@ module android.widget {
          * @param attrs a collection of attributes.
          * @param defStyle The default style to apply to this view.
          */
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-            super(bindElement, rootElement);
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+            super(context, bindElement, defStyle);
             this.mHasSelectorWheel = true;
             this._attrBinder.addAttr('solidColor', (value)=>{
                 this.mSolidColor = this._attrBinder.parseColor(value) || 0;

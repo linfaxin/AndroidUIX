@@ -67,8 +67,8 @@ module android.widget {
 
         private mActivePointerId = ScrollView.INVALID_POINTER;
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-            super(bindElement, rootElement);
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+            super(context, bindElement, defStyle);
             this.initScrollView();
             this._attrBinder.addAttr('fillViewport', (value)=>{
                 this.setFillViewport(this._attrBinder.parseBoolean(value));

@@ -68,8 +68,8 @@ export class RadioGroup extends LinearLayout {
     private mPassThroughListener:RadioGroup.PassThroughHierarchyChangeListener;
 
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        super(context, bindElement, defStyle);
         this.setOrientation(RadioGroup.VERTICAL);
         this.init();
         this._attrBinder.addAttr('checkedButton', (value)=>{

@@ -1,48 +1,59 @@
-declare module android.util {
-    class SparseMap<K, T> {
-        map: Map<K, T>;
-        constructor(initialCapacity?: number);
-        clone(): SparseMap<K, T>;
-        get(key: K, valueIfKeyNotFound?: T): T;
-        delete(key: K): void;
-        remove(key: K): void;
-        removeAt(index: number): void;
-        removeAtRange(index: number, size?: number): void;
-        put(key: K, value: T): void;
+declare module java.util {
+    interface List<T> {
         size(): number;
-        keyAt(index: number): K;
-        valueAt(index: number): T;
-        setValueAt(index: number, value: T): void;
-        indexOfKey(key: K): number;
-        indexOfValue(value: T): number;
+        isEmpty(): boolean;
+        contains(o: T): any;
+        indexOf(o: T): any;
+        lastIndexOf(o: T): any;
+        clone(): List<T>;
+        toArray(a: Array<T>): Array<T>;
+        getArray(): Array<T>;
+        get(index: number): T;
+        set(index: number, element: T): T;
+        add(t: T): any;
+        add(index: number, t: T): any;
+        remove(o: number | T): any;
+        clear(): any;
+        addAll(list: List<T>): any;
+        addAll(index: number, list: List<T>): any;
+        removeAll(list: List<T>): boolean;
+        subList(fromIndex: number, toIndex: number): List<T>;
+        sort(compareFn?: (a: T, b: T) => number): any;
+    }
+}
+declare module java.util {
+    class ArrayList<T> implements List<T> {
+        array: Array<T>;
+        constructor(initialCapacity?: number);
+        size(): number;
+        isEmpty(): boolean;
+        contains(o: T): boolean;
+        indexOf(o: T): number;
+        lastIndexOf(o: T): number;
+        clone(): ArrayList<T>;
+        toArray(a?: T[]): Array<T>;
+        getArray(): Array<T>;
+        get(index: number): T;
+        set(index: number, element: T): T;
+        add(t: T): any;
+        add(index: number, t: T): any;
+        remove(o: number | T): T;
         clear(): void;
-        append(key: any, value: any): void;
+        addAll(list: ArrayList<T>): any;
+        addAll(index: number, list: ArrayList<T>): any;
+        removeAll(list: ArrayList<T>): boolean;
+        [Symbol.iterator](): () => IterableIterator<T>;
+        subList(fromIndex: number, toIndex: number): ArrayList<T>;
+        toString(): string;
+        sort(compareFn?: (a: T, b: T) => number): void;
     }
 }
-declare module android.util {
-    class SparseArray<T> extends SparseMap<number, T> {
-    }
-}
-declare module android.util {
-    class Log {
-        static View_DBG: boolean;
-        static VelocityTracker_DBG: boolean;
-        static DBG_DrawableContainer: boolean;
-        static DBG_StateListDrawable: boolean;
-        static VERBOSE: number;
-        static DEBUG: number;
-        static INFO: number;
-        static WARN: number;
-        static ERROR: number;
-        static ASSERT: number;
-        static PriorityString: string[];
-        static getPriorityString(priority: number): string;
-        static v(tag: string, msg: string, tr?: Error): void;
-        static d(tag: string, msg: string): void;
-        static i(tag: string, msg: string, tr?: Error): void;
-        static w(tag: string, msg: string, tr?: Error): void;
-        static e(tag: string, msg: string, tr?: Error): void;
-        private static getLogMsg(priority, tag, msg);
+declare module android.os {
+    class Bundle {
+        constructor(copy?: Bundle);
+        get(key: string, defaultValue: any): any;
+        put(key: string, value: any): void;
+        containsKey(key: string): boolean;
     }
 }
 declare module java.lang {
@@ -99,6 +110,86 @@ declare module android.graphics {
         union(left: number, top: number, right: number, bottom: number): any;
         sort(): void;
         scale(scale: number): void;
+    }
+}
+declare module android.view {
+    import Rect = android.graphics.Rect;
+    class Gravity {
+        static NO_GRAVITY: number;
+        static AXIS_SPECIFIED: number;
+        static AXIS_PULL_BEFORE: number;
+        static AXIS_PULL_AFTER: number;
+        static AXIS_CLIP: number;
+        static AXIS_X_SHIFT: number;
+        static AXIS_Y_SHIFT: number;
+        static TOP: number;
+        static BOTTOM: number;
+        static LEFT: number;
+        static RIGHT: number;
+        static START: number;
+        static END: number;
+        static CENTER_VERTICAL: number;
+        static FILL_VERTICAL: number;
+        static CENTER_HORIZONTAL: number;
+        static FILL_HORIZONTAL: number;
+        static CENTER: number;
+        static FILL: number;
+        static CLIP_VERTICAL: number;
+        static CLIP_HORIZONTAL: number;
+        static HORIZONTAL_GRAVITY_MASK: number;
+        static VERTICAL_GRAVITY_MASK: number;
+        static RELATIVE_HORIZONTAL_GRAVITY_MASK: number;
+        static DISPLAY_CLIP_VERTICAL: number;
+        static DISPLAY_CLIP_HORIZONTAL: number;
+        static apply(gravity: number, w: number, h: number, container: Rect, outRect: Rect, layoutDirection?: number): void;
+        static getAbsoluteGravity(gravity: number, layoutDirection: number): number;
+    }
+}
+declare module android.util {
+    class SparseMap<K, T> {
+        map: Map<K, T>;
+        constructor(initialCapacity?: number);
+        clone(): SparseMap<K, T>;
+        get(key: K, valueIfKeyNotFound?: T): T;
+        delete(key: K): void;
+        remove(key: K): void;
+        removeAt(index: number): void;
+        removeAtRange(index: number, size?: number): void;
+        put(key: K, value: T): void;
+        size(): number;
+        keyAt(index: number): K;
+        valueAt(index: number): T;
+        setValueAt(index: number, value: T): void;
+        indexOfKey(key: K): number;
+        indexOfValue(value: T): number;
+        clear(): void;
+        append(key: any, value: any): void;
+    }
+}
+declare module android.util {
+    class SparseArray<T> extends SparseMap<number, T> {
+    }
+}
+declare module android.util {
+    class Log {
+        static View_DBG: boolean;
+        static VelocityTracker_DBG: boolean;
+        static DBG_DrawableContainer: boolean;
+        static DBG_StateListDrawable: boolean;
+        static VERBOSE: number;
+        static DEBUG: number;
+        static INFO: number;
+        static WARN: number;
+        static ERROR: number;
+        static ASSERT: number;
+        static PriorityString: string[];
+        static getPriorityString(priority: number): string;
+        static v(tag: string, msg: string, tr?: Error): void;
+        static d(tag: string, msg: string): void;
+        static i(tag: string, msg: string, tr?: Error): void;
+        static w(tag: string, msg: string, tr?: Error): void;
+        static e(tag: string, msg: string, tr?: Error): void;
+        private static getLogMsg(priority, tag, msg);
     }
 }
 declare module android.graphics {
@@ -733,56 +824,6 @@ declare module java.lang.util.concurrent {
         remove(item: T): void;
     }
 }
-declare module java.util {
-    interface List<T> {
-        size(): number;
-        isEmpty(): boolean;
-        contains(o: T): any;
-        indexOf(o: T): any;
-        lastIndexOf(o: T): any;
-        clone(): List<T>;
-        toArray(a: Array<T>): Array<T>;
-        getArray(): Array<T>;
-        get(index: number): T;
-        set(index: number, element: T): T;
-        add(t: T): any;
-        add(index: number, t: T): any;
-        remove(o: number | T): any;
-        clear(): any;
-        addAll(list: List<T>): any;
-        addAll(index: number, list: List<T>): any;
-        removeAll(list: List<T>): boolean;
-        subList(fromIndex: number, toIndex: number): List<T>;
-        sort(compareFn?: (a: T, b: T) => number): any;
-    }
-}
-declare module java.util {
-    class ArrayList<T> implements List<T> {
-        array: Array<T>;
-        constructor(initialCapacity?: number);
-        size(): number;
-        isEmpty(): boolean;
-        contains(o: T): boolean;
-        indexOf(o: T): number;
-        lastIndexOf(o: T): number;
-        clone(): ArrayList<T>;
-        toArray(a?: T[]): Array<T>;
-        getArray(): Array<T>;
-        get(index: number): T;
-        set(index: number, element: T): T;
-        add(t: T): any;
-        add(index: number, t: T): any;
-        remove(o: number | T): T;
-        clear(): void;
-        addAll(list: ArrayList<T>): any;
-        addAll(index: number, list: ArrayList<T>): any;
-        removeAll(list: ArrayList<T>): boolean;
-        [Symbol.iterator](): () => IterableIterator<T>;
-        subList(fromIndex: number, toIndex: number): ArrayList<T>;
-        toString(): string;
-        sort(compareFn?: (a: T, b: T) => number): void;
-    }
-}
 declare module android.util {
     class CopyOnWriteArray<T> {
         private mData;
@@ -800,24 +841,16 @@ declare module android.util {
 }
 declare module android.view {
     class ViewTreeObserver {
-        private mOnWindowAttachListeners;
-        private mOnGlobalFocusListeners;
         private mOnTouchModeChangeListeners;
         private mOnGlobalLayoutListeners;
         private mOnScrollChangedListeners;
         private mOnPreDrawListeners;
         private mOnDrawListeners;
         private mAlive;
-        addOnWindowAttachListener(listener: ViewTreeObserver.OnWindowAttachListener): void;
-        removeOnWindowAttachListener(victim: ViewTreeObserver.OnWindowAttachListener): void;
-        dispatchOnWindowAttachedChange(attached: boolean): void;
         addOnGlobalLayoutListener(listener: ViewTreeObserver.OnGlobalLayoutListener): void;
         removeGlobalOnLayoutListener(victim: ViewTreeObserver.OnGlobalLayoutListener): void;
         removeOnGlobalLayoutListener(victim: ViewTreeObserver.OnGlobalLayoutListener): void;
         dispatchOnGlobalLayout(): void;
-        addOnGlobalFocusChangeListener(listener: ViewTreeObserver.OnGlobalFocusChangeListener): void;
-        removeOnGlobalFocusChangeListener(victim: ViewTreeObserver.OnGlobalFocusChangeListener): void;
-        dispatchOnGlobalFocusChange(oldFocus: android.view.View, newFocus: android.view.View): void;
         addOnPreDrawListener(listener: ViewTreeObserver.OnPreDrawListener): void;
         removeOnPreDrawListener(victim: ViewTreeObserver.OnPreDrawListener): void;
         dispatchOnPreDraw(): boolean;
@@ -836,10 +869,6 @@ declare module android.view {
         private kill();
     }
     module ViewTreeObserver {
-        interface OnWindowAttachListener {
-            onWindowAttached(): any;
-            onWindowDetached(): any;
-        }
         interface OnGlobalFocusChangeListener {
             onGlobalFocusChanged(oldFocus: android.view.View, newFocus: android.view.View): any;
         }
@@ -878,14 +907,80 @@ declare module android.util {
         ydpi: number;
     }
 }
+declare module android.content {
+    import Bundle = android.os.Bundle;
+    class Intent {
+        private mExtras;
+        private activityName;
+        constructor(activityClassOrName: string);
+        getBooleanExtra(name: string, defaultValue: boolean): boolean;
+        getIntExtra(name: string, defaultValue: number): number;
+        getLongExtra(name: string, defaultValue: number): number;
+        getFloatExtra(name: string, defaultValue: number): number;
+        getDoubleExtra(name: string, defaultValue: number): number;
+        getStringExtra(name: string, defaultValue: string): string;
+        getStringArrayExtra(name: string, defaultValue: string[]): string[];
+        getIntegerArrayExtra(name: string, defaultValue: number[]): number[];
+        getLongArrayExtra(name: string, defaultValue: number[]): number[];
+        getFloatArrayExtra(name: string, defaultValue: number[]): number[];
+        getDoubleArrayExtra(name: string, defaultValue: number[]): number[];
+        getBooleanArrayExtra(name: string, defaultValue: boolean[]): boolean[];
+        hasExtra(name: string): boolean;
+        putExtra(name: string, value: any): Intent;
+        getExtras(): Bundle;
+    }
+}
+declare module androidui.util {
+    class ClassFinder {
+        static findClass(classFullName: string, findInRoot?: any): any;
+    }
+}
+declare module androidui.widget {
+    import ViewGroup = android.view.ViewGroup;
+    import Context = android.content.Context;
+    interface HtmlDataAdapter {
+        onInflateAdapter(bindElement: HTMLElement, context?: Context, parent?: ViewGroup): void;
+    }
+}
+declare module android.view {
+    import Context = android.content.Context;
+    class LayoutInflater {
+        protected mContext: Context;
+        static from(context: Context): LayoutInflater;
+        constructor(context: Context);
+        getContext(): Context;
+        inflate(domtree: HTMLElement, viewParent?: ViewGroup, attachToRoot?: boolean): View;
+    }
+}
+declare module android.content {
+    import LayoutInflater = android.view.LayoutInflater;
+    class Context {
+        androidUI: androidui.AndroidUI;
+        mLayoutInflater: LayoutInflater;
+        mResources: res.Resources;
+        mWindowManager: view.WindowManager;
+        getApplicationContext(): android.app.Application;
+        getResources(): android.content.res.Resources;
+        getLayoutInflater(): LayoutInflater;
+        getWindowManager(): android.view.WindowManager;
+    }
+}
 declare module android.content.res {
     import DisplayMetrics = android.util.DisplayMetrics;
     class Resources {
-        static instance: Resources;
+        private static instance;
         private displayMetrics;
-        static from(any: any): Resources;
+        private context;
+        constructor(context?: Context);
+        static getSystem(): Resources;
+        private static from(context);
         static getDisplayMetrics(): DisplayMetrics;
         getDisplayMetrics(): DisplayMetrics;
+        getString(refString: string): string;
+        getLayout(refString: string): HTMLElement;
+        private static emptySelectorNode;
+        static buildResourcesElement: HTMLElement;
+        private getReference(refString, cloneNode?);
     }
 }
 declare module android.view {
@@ -1171,39 +1266,6 @@ declare module android.util {
         static complexToDimensionPixelSize(valueWithUnit: string, baseValue?: number, metrics?: DisplayMetrics): number;
     }
 }
-declare module android.view {
-    import Rect = android.graphics.Rect;
-    class Gravity {
-        static NO_GRAVITY: number;
-        static AXIS_SPECIFIED: number;
-        static AXIS_PULL_BEFORE: number;
-        static AXIS_PULL_AFTER: number;
-        static AXIS_CLIP: number;
-        static AXIS_X_SHIFT: number;
-        static AXIS_Y_SHIFT: number;
-        static TOP: number;
-        static BOTTOM: number;
-        static LEFT: number;
-        static RIGHT: number;
-        static START: number;
-        static END: number;
-        static CENTER_VERTICAL: number;
-        static FILL_VERTICAL: number;
-        static CENTER_HORIZONTAL: number;
-        static FILL_HORIZONTAL: number;
-        static CENTER: number;
-        static FILL: number;
-        static CLIP_VERTICAL: number;
-        static CLIP_HORIZONTAL: number;
-        static HORIZONTAL_GRAVITY_MASK: number;
-        static VERTICAL_GRAVITY_MASK: number;
-        static RELATIVE_HORIZONTAL_GRAVITY_MASK: number;
-        static DISPLAY_CLIP_VERTICAL: number;
-        static DISPLAY_CLIP_HORIZONTAL: number;
-        static apply(gravity: number, w: number, h: number, container: Rect, outRect: Rect, layoutDirection?: number): void;
-        static getAbsoluteGravity(gravity: number, layoutDirection: number): number;
-    }
-}
 declare module android.view.animation {
     interface Interpolator {
         getInterpolation(input: number): number;
@@ -1243,13 +1305,15 @@ declare module androidui.attr {
     }
 }
 declare module androidui.attr {
+    import View = android.view.View;
     class StateAttrList {
         private list;
         private list_reverse;
         private match_list;
-        constructor(ele: Element, rootElement: HTMLElement);
-        private _initStyleAttributes(ele, inParseState, rootElement);
-        private _initStyleAttr(attr, ele, inParseState, rootElement);
+        private mView;
+        constructor(view: View);
+        private _initStyleAttributes(ele, inParseState);
+        private _initStyleAttr(attr, ele, inParseState);
         private static EmptyArray;
         getDefaultStateAttr(): StateAttr;
         getStateAttr(state: number[]): StateAttr;
@@ -1262,15 +1326,16 @@ declare module androidui.attr {
     import ViewGroup = android.view.ViewGroup;
     import Drawable = android.graphics.drawable.Drawable;
     import ColorStateList = android.content.res.ColorStateList;
+    import Context = android.content.Context;
     class AttrBinder {
         private host;
         private attrChangeMap;
         private attrStashMap;
         private objectRefs;
-        private rootElement;
+        private mContext;
         constructor(host: View | ViewGroup.LayoutParams);
         addAttr(attrName: string, onAttrChange: (newValue: any) => void, stashAttrValueWhenStateChange?: () => any): void;
-        onAttrChange(attrName: string, attrValue: any, rootElement: HTMLElement): void;
+        onAttrChange(attrName: string, attrValue: any, context: Context): void;
         getAttrValue(attrName: string): any;
         private getRefObject(ref, recycel?);
         private setRefObject(obj);
@@ -1281,17 +1346,6 @@ declare module androidui.attr {
         parseColor(value: string, defaultValue?: number): number;
         parseColorList(value: string): ColorStateList;
         parseNumber(value: any, defaultValue?: number, baseValue?: number): number;
-    }
-}
-declare module androidui.util {
-    class ClassFinder {
-        static findClass(classFullName: string, findInRoot?: any): any;
-    }
-}
-declare module androidui.widget {
-    import ViewGroup = android.view.ViewGroup;
-    interface HtmlDataAdapter {
-        onInflateAdapter(bindElement: HTMLElement, rootElement?: HTMLElement, parent?: ViewGroup): void;
     }
 }
 declare module androidui.util {
@@ -1366,10 +1420,17 @@ declare module android.view {
         private static FLAG_START_TRACKING;
         mFlags: number;
         private mAction;
+        private mKeyCode;
         private mDownTime;
-        _activeKeyEvent: KeyboardEvent;
-        _downingKeyEventMap: Map<number, KeyboardEvent[]>;
-        appendKeyEvent(keyEvent: KeyboardEvent, action: number): void;
+        private mEventTime;
+        private mAltKey;
+        private mShiftKey;
+        private mCtrlKey;
+        private mMetaKey;
+        private mIsTypingKey;
+        private _downingKeyEventMap;
+        static obtain(action: number, code: number): KeyEvent;
+        initKeyEvent(keyEvent: KeyboardEvent, action: number): void;
         static isConfirmKey(keyCode: number): boolean;
         isAltPressed(): boolean;
         isShiftPressed(): boolean;
@@ -1750,6 +1811,7 @@ declare module android.graphics.drawable {
 }
 declare module android.R {
     class id {
+        static content: string;
         static background: string;
         static secondaryProgress: string;
         static progress: string;
@@ -1935,17 +1997,11 @@ declare module android.R {
     class attr {
         static _viewStyle: any;
         static viewStyle: any;
-        static buttonStyle: {
-            background: Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            textSize: string;
-            gravity: number;
-        };
         static textViewStyle: {
             textSize: string;
             textColor: content.res.ColorStateList;
         };
+        static buttonStyle: any;
         static imageButtonStyle: {
             background: Drawable;
             focusable: boolean;
@@ -2247,6 +2303,7 @@ declare module android.view {
     import Canvas = android.graphics.Canvas;
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import ArrayList = java.util.ArrayList;
+    import Context = android.content.Context;
     import Resources = android.content.res.Resources;
     import AttrBinder = androidui.attr.AttrBinder;
     import KeyEvent = android.view.KeyEvent;
@@ -2391,6 +2448,7 @@ declare module android.view {
         mPrivateFlags: number;
         private mPrivateFlags2;
         private mPrivateFlags3;
+        private mContext;
         protected mCurrentAnimation: Animation;
         private mOldWidthMeasureSpec;
         private mOldHeightMeasureSpec;
@@ -2453,8 +2511,9 @@ declare module android.view {
         mPaddingRight: number;
         mPaddingTop: number;
         mPaddingBottom: number;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        constructor(context?: Context, bindElement?: HTMLElement, defStyle?: any);
         protected initBindAttr(a: AttrBinder): void;
+        getContext(): Context;
         getWidth(): number;
         getHeight(): number;
         getPaddingLeft(): number;
@@ -2818,19 +2877,14 @@ declare module android.view {
         setIsRootNamespace(isRoot: boolean): void;
         isRootNamespace(): boolean;
         getResources(): Resources;
-        static inflate(eleOrRef: HTMLElement | string, rootElement: HTMLElement, viewParent?: ViewGroup): View;
-        static optReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
-        static findReferenceString(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector): string;
-        static findReference(refString: string, currentElement?: NodeSelector, rootElement?: NodeSelector, cloneNode?: boolean): Element;
+        static inflate(context: Context, xml: HTMLElement, root?: ViewGroup): View;
         bindElement: HTMLElement;
-        _rootElement: HTMLElement;
         private _AttrObserver;
         private _stateAttrList;
         protected _attrBinder: AttrBinder;
         static AndroidViewProperty: string;
-        rootElement: HTMLElement;
         private _AttrObserverCallBack(arr, observer);
-        protected initBindElement(bindElement?: HTMLElement, rootElement?: HTMLElement): void;
+        protected initBindElement(bindElement?: HTMLElement): void;
         private _syncToElementLock;
         private _syncToElementImmediatelyLock;
         private _syncToElementRun;
@@ -2889,8 +2943,6 @@ declare module android.view {
         }
         class AttachInfo {
             mRootView: View;
-            mWindowLeft: number;
-            mWindowTop: number;
             mKeyDispatchState: KeyEvent.DispatcherState;
             mDrawingTime: number;
             mViewRootImpl: ViewRootImpl;
@@ -2900,16 +2952,10 @@ declare module android.view {
             mTmpMatrix: Matrix;
             mTmpTransformation: Transformation;
             mScrollContainers: Set<View>;
-            mViewScrollChanged: boolean;
-            mTreeObserver: ViewTreeObserver;
             mViewRequestingLayout: View;
-            mViewVisibilityChanged: boolean;
             mInvalidateChildLocation: number[];
-            mIgnoreDirtyState: boolean;
-            mSetIgnoreDirtyState: boolean;
             mHasWindowFocus: boolean;
             mWindowVisibility: number;
-            mInTouchMode: boolean;
             constructor(mViewRootImpl: ViewRootImpl, mHandler: Handler);
         }
         class ListenerInfo {
@@ -3008,6 +3054,84 @@ declare module android.view {
         unlockCanvasAndPost(canvas: Canvas): void;
     }
 }
+declare module PageStack {
+    var currentStack: StateStack;
+    var backListener: () => boolean;
+    var pageOpenHandler: (pageId: string, pageExtra?: any) => boolean;
+    var pageCloseHandler: (pageId: string, pageExtra?: any) => boolean;
+    function init(): void;
+    function go(delta: number): void;
+    function back(): void;
+    function openPage(pageId: string, extra?: any): void;
+    function notifyPageClosed(pageId: string, pageExtra: any): boolean;
+    function notifyNewPageOpened(pageId: string, extra?: any): void;
+    interface StateStack {
+        pageId: string;
+        isRoot?: boolean;
+        stack: StateSaved[];
+    }
+    interface StateSaved {
+        pageId: string;
+        extra?: any;
+    }
+}
+declare module android.app {
+    import Intent = android.content.Intent;
+    class ActivityThread {
+        androidUI: androidui.AndroidUI;
+        activityNameClassMap: Map<string, any>;
+        mLaunchedActivities: Set<Activity>;
+        constructor(androidUI: androidui.AndroidUI);
+        private initWithPageStack();
+        scheduleLaunchActivity(intent: Intent, options?: android.os.Bundle): void;
+        performLaunchActivity(intent: Intent): Activity;
+        performDestroyActivity(activity: Activity): void;
+    }
+}
+declare module androidui {
+    class AndroidUI {
+        static DomClassName: string;
+        static BindToElementName: string;
+        androidUIElement: AndroidUIElement;
+        private _canvas;
+        private windowManager;
+        private mActivityThread;
+        private _viewRootImpl;
+        private mApplication;
+        private rootResourceElement;
+        private _windowBound;
+        private tempRect;
+        windowBound: android.graphics.Rect;
+        private touchEvent;
+        private touchAvailable;
+        private ketEvent;
+        constructor(androidUIElement: AndroidUIElement);
+        private init();
+        private initApplication();
+        private initLaunchActivity();
+        private refreshWindowBound();
+        private initAndroidUIElement();
+        private initEvent();
+        private initTouchEvent();
+        private initMouseEvent();
+        private initKeyEvent();
+        private initGenericEvent();
+        private initRootSizeChange();
+        private initBrowserVisibleChange();
+        private notifyRootSizeChange();
+        showDebugLayout(): void;
+    }
+}
+declare module androidui {
+    class AndroidUIElement extends HTMLElement {
+        AndroidUI: AndroidUI;
+        private performCreate();
+        createdCallback(): void;
+        attachedCallback(): void;
+        detachedCallback(): void;
+        attributeChangedCallback(attributeName: string, oldVal: string, newVal: string): void;
+    }
+}
 declare module android.view {
     import ViewParent = android.view.ViewParent;
     import View = android.view.View;
@@ -3027,14 +3151,13 @@ declare module android.view {
         static DEBUG_FPS: boolean;
         static ContinueEventToDom: symbol;
         private mView;
-        rootElement: HTMLElement;
+        private androidUIElement;
         private mViewVisibility;
         private mStopped;
         private mWidth;
         private mHeight;
         private mDirty;
         private mIsAnimating;
-        private mAttachInfo;
         private mTempRect;
         private mVisRect;
         private mTraversalScheduled;
@@ -3046,12 +3169,17 @@ declare module android.view {
         private mIsDrawing;
         private mAdded;
         private mAddedTouchMode;
+        private mInTouchMode;
         private mWinFrame;
         private mInLayout;
         private mLayoutRequesters;
         private mHandlingLayoutInLayoutRequest;
         private mRemoved;
         private mHandler;
+        private mViewScrollChanged;
+        private mTreeObserver;
+        private mIgnoreDirtyState;
+        private mSetIgnoreDirtyState;
         private mFirstInputStage;
         private mFpsStartTime;
         private mFpsPrevTime;
@@ -3173,6 +3301,7 @@ declare module java.lang {
         static MIN_VALUE: number;
         static MAX_VALUE: number;
         static parseInt(value: string): number;
+        static toHexString(n: number): string;
     }
 }
 declare module android.view {
@@ -3180,8 +3309,8 @@ declare module android.view {
     import Point = android.graphics.Point;
     import Rect = android.graphics.Rect;
     import RectF = android.graphics.RectF;
+    import Context = android.content.Context;
     import ArrayList = java.util.ArrayList;
-    import AttrBinder = androidui.attr.AttrBinder;
     import Animation = animation.Animation;
     import Transformation = animation.Transformation;
     abstract class ViewGroup extends View implements ViewParent {
@@ -3236,7 +3365,7 @@ declare module android.view {
         mSuppressLayout: boolean;
         private mLayoutCalledWhileSuppressed;
         private mChildCountWithTransientState;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initViewGroup();
         getDescendantFocusability(): number;
         setDescendantFocusability(focusability: number): void;
@@ -3396,11 +3525,11 @@ declare module android.view {
             _measuringParentWidthMeasureSpec: number;
             _measuringParentHeightMeasureSpec: number;
             _measuringMeasureSpec: android.util.DisplayMetrics;
-            _attrBinder: AttrBinder;
+            _attrBinder: androidui.attr.AttrBinder;
             constructor();
             constructor(src: LayoutParams);
             constructor(width: number, height: number);
-            parseAttributeFrom(node: Node, rootElement: HTMLElement): void;
+            parseAttributeFrom(node: Node, context: Context): void;
         }
         class MarginLayoutParams extends LayoutParams {
             private _leftMargin;
@@ -3458,183 +3587,6 @@ declare module android.view {
         }
     }
 }
-declare module android.view {
-    import MotionEvent = android.view.MotionEvent;
-    class VelocityTracker {
-        private static TAG;
-        private static DEBUG;
-        private static localLOGV;
-        private static NUM_PAST;
-        private static MAX_AGE_MILLISECONDS;
-        private static POINTER_POOL_CAPACITY;
-        private static sPool;
-        private static sRecycledPointerListHead;
-        private static sRecycledPointerCount;
-        private mPointerListHead;
-        private mLastTouchIndex;
-        private mGeneration;
-        private mNext;
-        static obtain(): VelocityTracker;
-        recycle(): void;
-        setNextPoolable(element: VelocityTracker): void;
-        getNextPoolable(): VelocityTracker;
-        constructor();
-        clear(): void;
-        addMovement(ev: MotionEvent): void;
-        computeCurrentVelocity(units: number, maxVelocity?: number): void;
-        getXVelocity(id?: number): number;
-        getYVelocity(id?: number): number;
-        private getPointer(id);
-        private static obtainPointer();
-        private static releasePointer(pointer);
-        private static releasePointerList(pointer);
-    }
-}
-declare module android.view {
-    import MotionEvent = android.view.MotionEvent;
-    class ScaleGestureDetector {
-        private static TAG;
-        private mListener;
-        private mFocusX;
-        private mFocusY;
-        private mQuickScaleEnabled;
-        private mCurrSpan;
-        private mPrevSpan;
-        private mInitialSpan;
-        private mCurrSpanX;
-        private mCurrSpanY;
-        private mPrevSpanX;
-        private mPrevSpanY;
-        private mCurrTime;
-        private mPrevTime;
-        private mInProgress;
-        private mSpanSlop;
-        private mMinSpan;
-        private mTouchUpper;
-        private mTouchLower;
-        private mTouchHistoryLastAccepted;
-        private mTouchHistoryDirection;
-        private mTouchHistoryLastAcceptedTime;
-        private mTouchMinMajor;
-        private mDoubleTapEvent;
-        private mDoubleTapMode;
-        private mHandler;
-        private static TOUCH_STABILIZE_TIME;
-        private static DOUBLE_TAP_MODE_NONE;
-        private static DOUBLE_TAP_MODE_IN_PROGRESS;
-        private static SCALE_FACTOR;
-        private mGestureDetector;
-        private mEventBeforeOrAboveStartingGestureEvent;
-        constructor(listener: ScaleGestureDetector.OnScaleGestureListener, handler?: any);
-        private addTouchHistory(ev);
-        private clearTouchHistory();
-        onTouchEvent(event: MotionEvent): boolean;
-        private inDoubleTapMode();
-        setQuickScaleEnabled(scales: boolean): void;
-        isQuickScaleEnabled(): boolean;
-        isInProgress(): boolean;
-        getFocusX(): number;
-        getFocusY(): number;
-        getCurrentSpan(): number;
-        getCurrentSpanX(): number;
-        getCurrentSpanY(): number;
-        getPreviousSpan(): number;
-        getPreviousSpanX(): number;
-        getPreviousSpanY(): number;
-        getScaleFactor(): number;
-        getTimeDelta(): number;
-        getEventTime(): number;
-    }
-    module ScaleGestureDetector {
-        interface OnScaleGestureListener {
-            onScale(detector: ScaleGestureDetector): boolean;
-            onScaleBegin(detector: ScaleGestureDetector): boolean;
-            onScaleEnd(detector: ScaleGestureDetector): void;
-        }
-        class SimpleOnScaleGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
-            onScale(detector: ScaleGestureDetector): boolean;
-            onScaleBegin(detector: ScaleGestureDetector): boolean;
-            onScaleEnd(detector: ScaleGestureDetector): void;
-        }
-    }
-}
-declare module android.view {
-    import Handler = android.os.Handler;
-    import Message = android.os.Message;
-    import MotionEvent = android.view.MotionEvent;
-    class GestureDetector {
-        private mTouchSlopSquare;
-        private mDoubleTapTouchSlopSquare;
-        private mDoubleTapSlopSquare;
-        private mMinimumFlingVelocity;
-        private mMaximumFlingVelocity;
-        private static LONGPRESS_TIMEOUT;
-        private static TAP_TIMEOUT;
-        private static DOUBLE_TAP_TIMEOUT;
-        private static DOUBLE_TAP_MIN_TIME;
-        private static SHOW_PRESS;
-        private static LONG_PRESS;
-        private static TAP;
-        private mHandler;
-        private mListener;
-        private mDoubleTapListener;
-        private mStillDown;
-        private mDeferConfirmSingleTap;
-        private mInLongPress;
-        private mAlwaysInTapRegion;
-        private mAlwaysInBiggerTapRegion;
-        private mCurrentDownEvent;
-        private mPreviousUpEvent;
-        private mIsDoubleTapping;
-        private mLastFocusX;
-        private mLastFocusY;
-        private mDownFocusX;
-        private mDownFocusY;
-        private mIsLongpressEnabled;
-        private mVelocityTracker;
-        constructor(listener: GestureDetector.OnGestureListener, handler?: any);
-        private init();
-        setOnDoubleTapListener(onDoubleTapListener: GestureDetector.OnDoubleTapListener): void;
-        setIsLongpressEnabled(isLongpressEnabled: boolean): void;
-        isLongpressEnabled(): boolean;
-        onTouchEvent(ev: MotionEvent): boolean;
-        private cancel();
-        private cancelTaps();
-        private isConsideredDoubleTap(firstDown, firstUp, secondDown);
-        private dispatchLongPress();
-    }
-    module GestureDetector {
-        interface OnGestureListener {
-            onDown(e: MotionEvent): boolean;
-            onShowPress(e: MotionEvent): void;
-            onSingleTapUp(e: MotionEvent): boolean;
-            onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: number, distanceY: number): boolean;
-            onLongPress(e: MotionEvent): void;
-            onFling(e1: MotionEvent, e2: MotionEvent, velocityX: number, velocityY: number): boolean;
-        }
-        interface OnDoubleTapListener {
-            onSingleTapConfirmed(e: MotionEvent): boolean;
-            onDoubleTap(e: MotionEvent): boolean;
-            onDoubleTapEvent(e: MotionEvent): boolean;
-        }
-        class SimpleOnGestureListener implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
-            onSingleTapUp(e: MotionEvent): boolean;
-            onLongPress(e: MotionEvent): void;
-            onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: number, distanceY: number): boolean;
-            onFling(e1: MotionEvent, e2: MotionEvent, velocityX: number, velocityY: number): boolean;
-            onShowPress(e: MotionEvent): void;
-            onDown(e: MotionEvent): boolean;
-            onDoubleTap(e: MotionEvent): boolean;
-            onDoubleTapEvent(e: MotionEvent): boolean;
-            onSingleTapConfirmed(e: MotionEvent): boolean;
-        }
-        class GestureHandler extends Handler {
-            _GestureDetector_this: GestureDetector;
-            constructor(arg: GestureDetector);
-            handleMessage(msg: Message): void;
-        }
-    }
-}
 declare module android.widget {
     import ViewGroup = android.view.ViewGroup;
     import Drawable = android.graphics.drawable.Drawable;
@@ -3653,7 +3605,7 @@ declare module android.widget {
         mForegroundInPadding: boolean;
         mForegroundBoundsChanged: boolean;
         private mMatchParentChildren;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         getForegroundGravity(): number;
         setForegroundGravity(foregroundGravity: number): void;
         protected verifyDrawable(who: Drawable): boolean;
@@ -3684,401 +3636,6 @@ declare module android.widget {
             constructor(source: ViewGroup.LayoutParams);
             constructor(width: number, height: number, gravity?: number);
         }
-    }
-}
-declare module androidui.util {
-    class NumberChecker {
-        static warnNotNumber(...n: number[]): boolean;
-        static assetNotNumber(...ns: number[]): void;
-        static checkIsNumber(...ns: number[]): boolean;
-    }
-}
-declare module android.widget {
-    import Interpolator = android.view.animation.Interpolator;
-    class OverScroller {
-        private mMode;
-        private mScrollerX;
-        private mScrollerY;
-        private mInterpolator;
-        private mFlywheel;
-        static DEFAULT_DURATION: number;
-        static SCROLL_MODE: number;
-        static FLING_MODE: number;
-        constructor(interpolator?: Interpolator, flywheel?: boolean);
-        setInterpolator(interpolator: Interpolator): void;
-        setFriction(friction: number): void;
-        isFinished(): boolean;
-        forceFinished(finished: boolean): void;
-        getCurrX(): number;
-        getCurrY(): number;
-        getCurrVelocity(): number;
-        getStartX(): number;
-        getStartY(): number;
-        getFinalX(): number;
-        getFinalY(): number;
-        getDuration(): number;
-        computeScrollOffset(): boolean;
-        startScroll(startX: number, startY: number, dx: number, dy: number, duration?: number): void;
-        springBack(startX: number, startY: number, minX: number, maxX: number, minY: number, maxY: number): boolean;
-        fling(startX: number, startY: number, velocityX: number, velocityY: number, minX: number, maxX: number, minY: number, maxY: number, overX?: number, overY?: number): void;
-        notifyHorizontalEdgeReached(startX: number, finalX: number, overX: number): void;
-        notifyVerticalEdgeReached(startY: number, finalY: number, overY: number): void;
-        isOverScrolled(): boolean;
-        abortAnimation(): void;
-        timePassed(): number;
-        isScrollingInDirection(xvel: number, yvel: number): boolean;
-    }
-}
-declare module android.widget {
-    import View = android.view.View;
-    import MotionEvent = android.view.MotionEvent;
-    import Rect = android.graphics.Rect;
-    import KeyEvent = android.view.KeyEvent;
-    class ScrollView extends FrameLayout {
-        static ANIMATED_SCROLL_GAP: number;
-        static MAX_SCROLL_FACTOR: number;
-        private static TAG;
-        private static INVALID_POINTER;
-        private mLastScroll;
-        private mTempRect;
-        private mScroller;
-        private mLastMotionY;
-        private mIsLayoutDirty;
-        private mChildToScrollTo;
-        private mIsBeingDragged;
-        private mVelocityTracker;
-        private mFillViewport;
-        private mSmoothScrollingEnabled;
-        private mMinimumVelocity;
-        private mMaximumVelocity;
-        private mOverscrollDistance;
-        private _mOverflingDistance;
-        private mOverflingDistance;
-        private mActivePointerId;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        shouldDelayChildPressedState(): boolean;
-        getMaxScrollAmount(): number;
-        private initScrollView();
-        addView(...args: any[]): any;
-        private canScroll();
-        isFillViewport(): boolean;
-        setFillViewport(fillViewport: boolean): void;
-        isSmoothScrollingEnabled(): boolean;
-        setSmoothScrollingEnabled(smoothScrollingEnabled: boolean): void;
-        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        dispatchKeyEvent(event: KeyEvent): boolean;
-        executeKeyEvent(event: KeyEvent): boolean;
-        private inChild(x, y);
-        private initOrResetVelocityTracker();
-        private initVelocityTrackerIfNotExists();
-        private recycleVelocityTracker();
-        requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
-        onInterceptTouchEvent(ev: MotionEvent): boolean;
-        onTouchEvent(ev: MotionEvent): boolean;
-        private onSecondaryPointerUp(ev);
-        onGenericMotionEvent(event: MotionEvent): boolean;
-        protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
-        private getScrollRange();
-        private findFocusableViewInBounds(topFocus, top, bottom);
-        pageScroll(direction: number): boolean;
-        fullScroll(direction: number): boolean;
-        private scrollAndFocus(direction, top, bottom);
-        arrowScroll(direction: number): boolean;
-        private isOffScreen(descendant);
-        private isWithinDeltaOfScreen(descendant, delta, height);
-        private doScrollY(delta);
-        smoothScrollBy(dx: number, dy: number): void;
-        smoothScrollTo(x: number, y: number): void;
-        protected computeVerticalScrollRange(): number;
-        protected computeVerticalScrollOffset(): number;
-        protected measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
-        protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
-        computeScroll(): void;
-        private scrollToChild(child);
-        private scrollToChildRect(rect, immediate);
-        computeScrollDeltaToGetChildRectOnScreen(rect: Rect): number;
-        requestChildFocus(child: View, focused: View): void;
-        protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
-        requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
-        requestLayout(): void;
-        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
-        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
-        private static isViewDescendantOf(child, parent);
-        fling(velocityY: number): void;
-        private endDrag();
-        scrollTo(x: number, y: number): void;
-        private static clamp(n, my, child);
-        canScrollVertically(direction: number): boolean;
-    }
-}
-declare module android.widget {
-    import View = android.view.View;
-    import ViewGroup = android.view.ViewGroup;
-    import Drawable = android.graphics.drawable.Drawable;
-    import Canvas = android.graphics.Canvas;
-    class LinearLayout extends ViewGroup {
-        static HORIZONTAL: number;
-        static VERTICAL: number;
-        static SHOW_DIVIDER_NONE: number;
-        static SHOW_DIVIDER_BEGINNING: number;
-        static SHOW_DIVIDER_MIDDLE: number;
-        static SHOW_DIVIDER_END: number;
-        private mBaselineAligned;
-        private mBaselineAlignedChildIndex;
-        private mBaselineChildTop;
-        private mOrientation;
-        private mGravity;
-        private mTotalLength;
-        private mWeightSum;
-        private mUseLargestChild;
-        private mMaxAscent;
-        private mMaxDescent;
-        private static VERTICAL_GRAVITY_COUNT;
-        private static INDEX_CENTER_VERTICAL;
-        private static INDEX_TOP;
-        private static INDEX_BOTTOM;
-        private static INDEX_FILL;
-        private mDivider;
-        private mDividerWidth;
-        private mDividerHeight;
-        private mShowDividers;
-        private mDividerPadding;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
-        setShowDividers(showDividers: number): void;
-        shouldDelayChildPressedState(): boolean;
-        getShowDividers(): number;
-        getDividerDrawable(): Drawable;
-        setDividerDrawable(divider: Drawable): void;
-        setDividerPadding(padding: number): void;
-        getDividerPadding(): number;
-        getDividerWidth(): number;
-        protected onDraw(canvas: Canvas): void;
-        drawDividersVertical(canvas: Canvas): void;
-        drawDividersHorizontal(canvas: Canvas): void;
-        drawHorizontalDivider(canvas: Canvas, top: number): void;
-        drawVerticalDivider(canvas: Canvas, left: number): void;
-        isBaselineAligned(): boolean;
-        setBaselineAligned(baselineAligned: boolean): void;
-        isMeasureWithLargestChildEnabled(): boolean;
-        setMeasureWithLargestChildEnabled(enabled: boolean): void;
-        getBaseline(): number;
-        getBaselineAlignedChildIndex(): number;
-        setBaselineAlignedChildIndex(i: number): void;
-        getVirtualChildAt(index: number): View;
-        getVirtualChildCount(): number;
-        getWeightSum(): number;
-        setWeightSum(weightSum: number): void;
-        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
-        hasDividerBeforeChildAt(childIndex: number): boolean;
-        measureVertical(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        forceUniformWidth(count: number, heightMeasureSpec: number): void;
-        measureHorizontal(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        private forceUniformHeight(count, widthMeasureSpec);
-        getChildrenSkipCount(child: View, index: number): number;
-        measureNullChild(childIndex: number): number;
-        measureChildBeforeLayout(child: View, childIndex: number, widthMeasureSpec: number, totalWidth: number, heightMeasureSpec: number, totalHeight: number): void;
-        getLocationOffset(child: View): number;
-        getNextLocationOffset(child: View): number;
-        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
-        layoutVertical(left: number, top: number, right: number, bottom: number): void;
-        layoutHorizontal(left: number, top: number, right: number, bottom: number): void;
-        private setChildFrame(child, left, top, width, height);
-        setOrientation(orientation: number): void;
-        getOrientation(): number;
-        setGravity(gravity: number): void;
-        setHorizontalGravity(horizontalGravity: number): void;
-        setVerticalGravity(verticalGravity: number): void;
-        protected generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
-        protected generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
-        protected checkLayoutParams(p: android.view.ViewGroup.LayoutParams): boolean;
-    }
-    module LinearLayout {
-        class LayoutParams extends android.view.ViewGroup.MarginLayoutParams {
-            weight: number;
-            gravity: number;
-            constructor();
-            constructor(source: ViewGroup.LayoutParams);
-            constructor(width: number, height: number, weight?: number);
-        }
-    }
-}
-declare module android.util {
-    class ArrayMap<K, V> {
-        private map;
-        constructor(capacity?: number);
-        clear(): void;
-        erase(): void;
-        ensureCapacity(minimumCapacity: number): void;
-        containsKey(key: K): boolean;
-        indexOfValue(value: V): number;
-        containsValue(value: V): boolean;
-        get(key: K): V;
-        keyAt(index: number): K;
-        valueAt(index: number): V;
-        setValueAt(index: number, value: V): V;
-        isEmpty(): boolean;
-        put(key: K, value: V): V;
-        append(key: K, value: V): void;
-        remove(key: K): V;
-        removeAt(index: number): V;
-        keySet(): Set<K>;
-        size(): number;
-    }
-}
-declare module java.util {
-    class ArrayDeque<E> extends ArrayList<E> {
-        addFirst(e: E): void;
-        addLast(e: E): void;
-        offerFirst(e: E): boolean;
-        offerLast(e: E): boolean;
-        removeFirst(): E;
-        removeLast(): E;
-        pollFirst(): E;
-        pollLast(): E;
-        getFirst(): E;
-        getLast(): E;
-        peekFirst(): E;
-        peekLast(): E;
-        removeFirstOccurrence(o: any): boolean;
-        removeLastOccurrence(o: any): boolean;
-        offer(e: E): boolean;
-        remove(): E;
-        poll(): E;
-        element(): E;
-        peek(): E;
-        push(e: E): void;
-        pop(): E;
-        private delete(i);
-    }
-}
-declare module android.util {
-    class MathUtils {
-        private static DEG_TO_RAD;
-        private static RAD_TO_DEG;
-        constructor();
-        static abs(v: number): number;
-        static constrain(amount: number, low: number, high: number): number;
-        static log(a: number): number;
-        static exp(a: number): number;
-        static pow(a: number, b: number): number;
-        static max(a: number, b: number, c?: number): number;
-        static min(a: number, b: number, c?: number): number;
-        static dist(x1: number, y1: number, x2: number, y2: number): number;
-        static dist3(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number): number;
-        static mag(a: number, b: number, c?: number): number;
-        static sq(v: number): number;
-        static radians(degrees: number): number;
-        static degrees(radians: number): number;
-        static acos(value: number): number;
-        static asin(value: number): number;
-        static atan(value: number): number;
-        static atan2(a: number, b: number): number;
-        static tan(angle: number): number;
-        static lerp(start: number, stop: number, amount: number): number;
-        static norm(start: number, stop: number, value: number): number;
-        static map(minStart: number, minStop: number, maxStart: number, maxStop: number, value: number): number;
-        static random(howbig: number): number;
-        static random(howsmall: number, howbig: number): number;
-    }
-}
-declare module android.util {
-    class SparseBooleanArray extends SparseArray<boolean> {
-    }
-}
-declare module android.view {
-    class SoundEffectConstants {
-        static CLICK: number;
-        static NAVIGATION_LEFT: number;
-        static NAVIGATION_UP: number;
-        static NAVIGATION_RIGHT: number;
-        static NAVIGATION_DOWN: number;
-        static getContantForFocusDirection(direction: number): number;
-    }
-}
-declare module android.os {
-    class Trace {
-        private static TAG;
-        static TRACE_TAG_NEVER: number;
-        static TRACE_TAG_ALWAYS: number;
-        static TRACE_TAG_GRAPHICS: number;
-        static TRACE_TAG_INPUT: number;
-        static TRACE_TAG_VIEW: number;
-        static TRACE_TAG_WEBVIEW: number;
-        static TRACE_TAG_WINDOW_MANAGER: number;
-        static TRACE_TAG_ACTIVITY_MANAGER: number;
-        static TRACE_TAG_SYNC_MANAGER: number;
-        static TRACE_TAG_AUDIO: number;
-        static TRACE_TAG_VIDEO: number;
-        static TRACE_TAG_CAMERA: number;
-        static TRACE_TAG_HAL: number;
-        static TRACE_TAG_APP: number;
-        static TRACE_TAG_RESOURCES: number;
-        static TRACE_TAG_DALVIK: number;
-        static TRACE_TAG_RS: number;
-        private static TRACE_TAG_NOT_READY;
-        private static MAX_SECTION_NAME_LEN;
-        private static sEnabledTags;
-        private static nativeGetEnabledTags();
-        private static nativeTraceCounter(tag, name, value);
-        private static nativeTraceBegin(tag, name);
-        private static nativeTraceEnd(tag);
-        private static nativeAsyncTraceBegin(tag, name, cookie);
-        private static nativeAsyncTraceEnd(tag, name, cookie);
-        private static nativeSetAppTracingAllowed(allowed);
-        private static nativeSetTracingEnabled(allowed);
-        private static cacheEnabledTags();
-        static isTagEnabled(traceTag: number): boolean;
-        static traceCounter(traceTag: number, counterName: string, counterValue: number): void;
-        static setAppTracingAllowed(allowed: boolean): void;
-        static setTracingEnabled(enabled: boolean): void;
-        static traceBegin(traceTag: number, methodName: string): void;
-        static traceEnd(traceTag: number): void;
-        static asyncTraceBegin(traceTag: number, methodName: string, cookie: number): void;
-        static asyncTraceEnd(traceTag: number, methodName: string, cookie: number): void;
-        static beginSection(sectionName: string): void;
-        static endSection(): void;
-    }
-}
-declare module android.text {
-    class InputType {
-        static TYPE_MASK_CLASS: number;
-        static TYPE_MASK_VARIATION: number;
-        static TYPE_MASK_FLAGS: number;
-        static TYPE_NULL: number;
-        static TYPE_CLASS_TEXT: number;
-        static TYPE_TEXT_FLAG_CAP_CHARACTERS: number;
-        static TYPE_TEXT_FLAG_CAP_WORDS: number;
-        static TYPE_TEXT_FLAG_CAP_SENTENCES: number;
-        static TYPE_TEXT_FLAG_AUTO_CORRECT: number;
-        static TYPE_TEXT_FLAG_AUTO_COMPLETE: number;
-        static TYPE_TEXT_FLAG_MULTI_LINE: number;
-        static TYPE_TEXT_FLAG_IME_MULTI_LINE: number;
-        static TYPE_TEXT_FLAG_NO_SUGGESTIONS: number;
-        static TYPE_TEXT_VARIATION_NORMAL: number;
-        static TYPE_TEXT_VARIATION_URI: number;
-        static TYPE_TEXT_VARIATION_EMAIL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_EMAIL_SUBJECT: number;
-        static TYPE_TEXT_VARIATION_SHORT_MESSAGE: number;
-        static TYPE_TEXT_VARIATION_LONG_MESSAGE: number;
-        static TYPE_TEXT_VARIATION_PERSON_NAME: number;
-        static TYPE_TEXT_VARIATION_POSTAL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_PASSWORD: number;
-        static TYPE_TEXT_VARIATION_VISIBLE_PASSWORD: number;
-        static TYPE_TEXT_VARIATION_WEB_EDIT_TEXT: number;
-        static TYPE_TEXT_VARIATION_FILTER: number;
-        static TYPE_TEXT_VARIATION_PHONETIC: number;
-        static TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_WEB_PASSWORD: number;
-        static TYPE_CLASS_NUMBER: number;
-        static TYPE_NUMBER_FLAG_SIGNED: number;
-        static TYPE_NUMBER_FLAG_DECIMAL: number;
-        static TYPE_NUMBER_VARIATION_NORMAL: number;
-        static TYPE_NUMBER_VARIATION_PASSWORD: number;
-        static TYPE_CLASS_PHONE: number;
-        static TYPE_CLASS_DATETIME: number;
-        static TYPE_DATETIME_VARIATION_NORMAL: number;
-        static TYPE_DATETIME_VARIATION_DATE: number;
-        static TYPE_DATETIME_VARIATION_TIME: number;
     }
 }
 declare module android.text {
@@ -4616,6 +4173,799 @@ declare module android.text {
         interface EllipsizeCallback {
             ellipsized(start: number, end: number): void;
         }
+    }
+}
+declare module android.view {
+    import ViewGroup = android.view.ViewGroup;
+    import Window = android.view.Window;
+    import Context = android.content.Context;
+    class WindowManager {
+        private mWindowsLayout;
+        constructor(context: Context);
+        getWindowsLayout(): ViewGroup;
+        addWindow(window: Window, params?: ViewGroup.LayoutParams): void;
+        updateWindowLayout(window: Window, params: ViewGroup.LayoutParams): void;
+        removeWindow(window: Window): void;
+        private clearWindowVisible();
+        private clearWindowFocus();
+        private checkTopLevelWindowFocus();
+        private checkTopLevelWindowVisible();
+    }
+    module WindowManager {
+        class Layout extends android.widget.FrameLayout {
+            tagName(): string;
+        }
+        class LayoutParams extends android.widget.FrameLayout.LayoutParams {
+            x: number;
+            y: number;
+            horizontalWeight: number;
+            verticalWeight: number;
+            type: number;
+            static FIRST_APPLICATION_WINDOW: number;
+            static TYPE_BASE_APPLICATION: number;
+            static TYPE_APPLICATION: number;
+            static TYPE_APPLICATION_STARTING: number;
+            static LAST_APPLICATION_WINDOW: number;
+            static FIRST_SUB_WINDOW: number;
+            static TYPE_APPLICATION_PANEL: number;
+            static TYPE_APPLICATION_MEDIA: number;
+            static TYPE_APPLICATION_SUB_PANEL: number;
+            static TYPE_APPLICATION_ATTACHED_DIALOG: number;
+            static TYPE_APPLICATION_MEDIA_OVERLAY: number;
+            static LAST_SUB_WINDOW: number;
+            static FIRST_SYSTEM_WINDOW: number;
+            static TYPE_STATUS_BAR: number;
+            static TYPE_SEARCH_BAR: number;
+            static TYPE_PHONE: number;
+            static TYPE_SYSTEM_ALERT: number;
+            static TYPE_KEYGUARD: number;
+            static TYPE_TOAST: number;
+            static TYPE_SYSTEM_OVERLAY: number;
+            static TYPE_PRIORITY_PHONE: number;
+            static TYPE_SYSTEM_DIALOG: number;
+            static LAST_SYSTEM_WINDOW: number;
+            static FLAG_DIM_BEHIND: number;
+            static FLAG_NOT_FOCUSABLE: number;
+            static FLAG_NOT_TOUCHABLE: number;
+            static FLAG_NOT_TOUCH_MODAL: number;
+            static FLAG_SPLIT_TOUCH: number;
+            flags: number;
+            gravity: number;
+            horizontalMargin: number;
+            verticalMargin: number;
+            format: number;
+            alpha: number;
+            dimAmount: number;
+            constructor(_type?: number);
+            setTitle(title: string): void;
+            getTitle(): string;
+            static LAYOUT_CHANGED: number;
+            static TYPE_CHANGED: number;
+            static FLAGS_CHANGED: number;
+            static FORMAT_CHANGED: number;
+            static ANIMATION_CHANGED: number;
+            static DIM_AMOUNT_CHANGED: number;
+            static TITLE_CHANGED: number;
+            static ALPHA_CHANGED: number;
+            copyFrom(o: LayoutParams): number;
+            private mTitle;
+            private isFocusable();
+        }
+    }
+}
+declare module android.view {
+    import Drawable = android.graphics.drawable.Drawable;
+    import KeyEvent = android.view.KeyEvent;
+    import LayoutInflater = android.view.LayoutInflater;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import WindowManager = android.view.WindowManager;
+    import Animation = android.view.animation.Animation;
+    import Context = android.content.Context;
+    class Window {
+        private mContext;
+        private mCallback;
+        private mWindowManager;
+        private mContainer;
+        private mActiveChild;
+        private mIsActive;
+        private mHasChildren;
+        private mCloseOnTouchOutside;
+        private mSetCloseOnTouchOutside;
+        private mHaveWindowFormat;
+        private mHaveDimAmount;
+        private mDefaultWindowFormat;
+        private mDestroyed;
+        private mWindowAttributes;
+        private mAttachInfo;
+        private mDecor;
+        private mContentParent;
+        private mIsFloating;
+        private mLayoutInflater;
+        private mTitle;
+        private mExitAnimation;
+        private mEnterAnimation;
+        constructor(context: Context);
+        getContext(): Context;
+        setContainer(container: Window): void;
+        getContainer(): Window;
+        hasChildren(): boolean;
+        destroy(): void;
+        isDestroyed(): boolean;
+        setWindowManager(wm: WindowManager): void;
+        getWindowManager(): WindowManager;
+        setCallback(callback: Window.Callback): void;
+        getCallback(): Window.Callback;
+        isFloating(): boolean;
+        setLayout(width: number, height: number): void;
+        setGravity(gravity: number): void;
+        setType(type: number): void;
+        setFormat(format: number): void;
+        setWindowAnimations(enterAnimation: Animation, exitAnimation: Animation): void;
+        addFlags(flags: number): void;
+        clearFlags(flags: number): void;
+        setFlags(flags: number, mask: number): void;
+        setDimAmount(amount: number): void;
+        setAttributes(a: WindowManager.LayoutParams): void;
+        getAttributes(): WindowManager.LayoutParams;
+        setCloseOnTouchOutside(close: boolean): void;
+        setCloseOnTouchOutsideIfNotSet(close: boolean): void;
+        shouldCloseOnTouch(context: Context, event: MotionEvent): boolean;
+        private isOutOfBounds(context, event);
+        makeActive(): void;
+        isActive(): boolean;
+        findViewById(id: string): View;
+        setContentView(view: View, params?: ViewGroup.LayoutParams): void;
+        addContentView(view: View, params: ViewGroup.LayoutParams): void;
+        getCurrentFocus(): View;
+        getLayoutInflater(): LayoutInflater;
+        setTitle(title: string): void;
+        setBackgroundDrawable(drawable: Drawable): void;
+        takeKeyEvents(_get: boolean): void;
+        superDispatchKeyEvent(event: KeyEvent): boolean;
+        superDispatchTouchEvent(event: MotionEvent): boolean;
+        superDispatchGenericMotionEvent(event: MotionEvent): boolean;
+        getDecorView(): View;
+        peekDecorView(): View;
+        protected onActive(): void;
+        protected setDefaultWindowFormat(format: number): void;
+        protected haveDimAmount(): boolean;
+    }
+    module Window {
+        interface Callback {
+            dispatchKeyEvent(event: KeyEvent): boolean;
+            dispatchTouchEvent(event: MotionEvent): boolean;
+            dispatchGenericMotionEvent(event: MotionEvent): boolean;
+            onWindowAttributesChanged(attrs: WindowManager.LayoutParams): void;
+            onContentChanged(): void;
+            onWindowFocusChanged(hasFocus: boolean): void;
+            onAttachedToWindow(): void;
+            onDetachedFromWindow(): void;
+        }
+    }
+}
+declare module android.app {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Window = android.view.Window;
+    import Bundle = android.os.Bundle;
+    import Context = android.content.Context;
+    import Intent = android.content.Intent;
+    class Activity extends Context {
+        mWindow: Window;
+        mIntent: Intent;
+        onCreate(): void;
+        private performCreate();
+        setIntent(intent: Intent): void;
+        getIntent(): Intent;
+        getWindow(): Window;
+        startActivity(intent: Intent | string, options?: Bundle): void;
+        setContentView(view: View | HTMLElement): void;
+        addContentView(view: View, params: ViewGroup.LayoutParams): void;
+        findViewById(id: string): View;
+    }
+}
+declare module android.app {
+    import Bundle = android.os.Bundle;
+    import Context = android.content.Context;
+    import Activity = android.app.Activity;
+    class Application extends Context {
+        private mActivityLifecycleCallbacks;
+        onCreate(): void;
+        registerActivityLifecycleCallbacks(callback: Application.ActivityLifecycleCallbacks): void;
+        unregisterActivityLifecycleCallbacks(callback: Application.ActivityLifecycleCallbacks): void;
+        dispatchActivityCreated(activity: Activity, savedInstanceState: Bundle): void;
+        dispatchActivityStarted(activity: Activity): void;
+        dispatchActivityResumed(activity: Activity): void;
+        dispatchActivityPaused(activity: Activity): void;
+        dispatchActivityStopped(activity: Activity): void;
+        dispatchActivitySaveInstanceState(activity: Activity, outState: Bundle): void;
+        dispatchActivityDestroyed(activity: Activity): void;
+        private collectActivityLifecycleCallbacks();
+    }
+    module Application {
+        interface ActivityLifecycleCallbacks {
+            onActivityCreated(activity: Activity, savedInstanceState: Bundle): void;
+            onActivityStarted(activity: Activity): void;
+            onActivityResumed(activity: Activity): void;
+            onActivityPaused(activity: Activity): void;
+            onActivityStopped(activity: Activity): void;
+            onActivitySaveInstanceState(activity: Activity, outState: Bundle): void;
+            onActivityDestroyed(activity: Activity): void;
+        }
+    }
+}
+declare module android.view {
+    import MotionEvent = android.view.MotionEvent;
+    class VelocityTracker {
+        private static TAG;
+        private static DEBUG;
+        private static localLOGV;
+        private static NUM_PAST;
+        private static MAX_AGE_MILLISECONDS;
+        private static POINTER_POOL_CAPACITY;
+        private static sPool;
+        private static sRecycledPointerListHead;
+        private static sRecycledPointerCount;
+        private mPointerListHead;
+        private mLastTouchIndex;
+        private mGeneration;
+        private mNext;
+        static obtain(): VelocityTracker;
+        recycle(): void;
+        setNextPoolable(element: VelocityTracker): void;
+        getNextPoolable(): VelocityTracker;
+        constructor();
+        clear(): void;
+        addMovement(ev: MotionEvent): void;
+        computeCurrentVelocity(units: number, maxVelocity?: number): void;
+        getXVelocity(id?: number): number;
+        getYVelocity(id?: number): number;
+        private getPointer(id);
+        private static obtainPointer();
+        private static releasePointer(pointer);
+        private static releasePointerList(pointer);
+    }
+}
+declare module android.view {
+    import MotionEvent = android.view.MotionEvent;
+    class ScaleGestureDetector {
+        private static TAG;
+        private mListener;
+        private mFocusX;
+        private mFocusY;
+        private mQuickScaleEnabled;
+        private mCurrSpan;
+        private mPrevSpan;
+        private mInitialSpan;
+        private mCurrSpanX;
+        private mCurrSpanY;
+        private mPrevSpanX;
+        private mPrevSpanY;
+        private mCurrTime;
+        private mPrevTime;
+        private mInProgress;
+        private mSpanSlop;
+        private mMinSpan;
+        private mTouchUpper;
+        private mTouchLower;
+        private mTouchHistoryLastAccepted;
+        private mTouchHistoryDirection;
+        private mTouchHistoryLastAcceptedTime;
+        private mTouchMinMajor;
+        private mDoubleTapEvent;
+        private mDoubleTapMode;
+        private mHandler;
+        private static TOUCH_STABILIZE_TIME;
+        private static DOUBLE_TAP_MODE_NONE;
+        private static DOUBLE_TAP_MODE_IN_PROGRESS;
+        private static SCALE_FACTOR;
+        private mGestureDetector;
+        private mEventBeforeOrAboveStartingGestureEvent;
+        constructor(listener: ScaleGestureDetector.OnScaleGestureListener, handler?: any);
+        private addTouchHistory(ev);
+        private clearTouchHistory();
+        onTouchEvent(event: MotionEvent): boolean;
+        private inDoubleTapMode();
+        setQuickScaleEnabled(scales: boolean): void;
+        isQuickScaleEnabled(): boolean;
+        isInProgress(): boolean;
+        getFocusX(): number;
+        getFocusY(): number;
+        getCurrentSpan(): number;
+        getCurrentSpanX(): number;
+        getCurrentSpanY(): number;
+        getPreviousSpan(): number;
+        getPreviousSpanX(): number;
+        getPreviousSpanY(): number;
+        getScaleFactor(): number;
+        getTimeDelta(): number;
+        getEventTime(): number;
+    }
+    module ScaleGestureDetector {
+        interface OnScaleGestureListener {
+            onScale(detector: ScaleGestureDetector): boolean;
+            onScaleBegin(detector: ScaleGestureDetector): boolean;
+            onScaleEnd(detector: ScaleGestureDetector): void;
+        }
+        class SimpleOnScaleGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
+            onScale(detector: ScaleGestureDetector): boolean;
+            onScaleBegin(detector: ScaleGestureDetector): boolean;
+            onScaleEnd(detector: ScaleGestureDetector): void;
+        }
+    }
+}
+declare module android.view {
+    import Handler = android.os.Handler;
+    import Message = android.os.Message;
+    import MotionEvent = android.view.MotionEvent;
+    class GestureDetector {
+        private mTouchSlopSquare;
+        private mDoubleTapTouchSlopSquare;
+        private mDoubleTapSlopSquare;
+        private mMinimumFlingVelocity;
+        private mMaximumFlingVelocity;
+        private static LONGPRESS_TIMEOUT;
+        private static TAP_TIMEOUT;
+        private static DOUBLE_TAP_TIMEOUT;
+        private static DOUBLE_TAP_MIN_TIME;
+        private static SHOW_PRESS;
+        private static LONG_PRESS;
+        private static TAP;
+        private mHandler;
+        private mListener;
+        private mDoubleTapListener;
+        private mStillDown;
+        private mDeferConfirmSingleTap;
+        private mInLongPress;
+        private mAlwaysInTapRegion;
+        private mAlwaysInBiggerTapRegion;
+        private mCurrentDownEvent;
+        private mPreviousUpEvent;
+        private mIsDoubleTapping;
+        private mLastFocusX;
+        private mLastFocusY;
+        private mDownFocusX;
+        private mDownFocusY;
+        private mIsLongpressEnabled;
+        private mVelocityTracker;
+        constructor(listener: GestureDetector.OnGestureListener, handler?: any);
+        private init();
+        setOnDoubleTapListener(onDoubleTapListener: GestureDetector.OnDoubleTapListener): void;
+        setIsLongpressEnabled(isLongpressEnabled: boolean): void;
+        isLongpressEnabled(): boolean;
+        onTouchEvent(ev: MotionEvent): boolean;
+        private cancel();
+        private cancelTaps();
+        private isConsideredDoubleTap(firstDown, firstUp, secondDown);
+        private dispatchLongPress();
+    }
+    module GestureDetector {
+        interface OnGestureListener {
+            onDown(e: MotionEvent): boolean;
+            onShowPress(e: MotionEvent): void;
+            onSingleTapUp(e: MotionEvent): boolean;
+            onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: number, distanceY: number): boolean;
+            onLongPress(e: MotionEvent): void;
+            onFling(e1: MotionEvent, e2: MotionEvent, velocityX: number, velocityY: number): boolean;
+        }
+        interface OnDoubleTapListener {
+            onSingleTapConfirmed(e: MotionEvent): boolean;
+            onDoubleTap(e: MotionEvent): boolean;
+            onDoubleTapEvent(e: MotionEvent): boolean;
+        }
+        class SimpleOnGestureListener implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
+            onSingleTapUp(e: MotionEvent): boolean;
+            onLongPress(e: MotionEvent): void;
+            onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: number, distanceY: number): boolean;
+            onFling(e1: MotionEvent, e2: MotionEvent, velocityX: number, velocityY: number): boolean;
+            onShowPress(e: MotionEvent): void;
+            onDown(e: MotionEvent): boolean;
+            onDoubleTap(e: MotionEvent): boolean;
+            onDoubleTapEvent(e: MotionEvent): boolean;
+            onSingleTapConfirmed(e: MotionEvent): boolean;
+        }
+        class GestureHandler extends Handler {
+            _GestureDetector_this: GestureDetector;
+            constructor(arg: GestureDetector);
+            handleMessage(msg: Message): void;
+        }
+    }
+}
+declare module androidui.util {
+    class NumberChecker {
+        static warnNotNumber(...n: number[]): boolean;
+        static assetNotNumber(...ns: number[]): void;
+        static checkIsNumber(...ns: number[]): boolean;
+    }
+}
+declare module android.widget {
+    import Interpolator = android.view.animation.Interpolator;
+    class OverScroller {
+        private mMode;
+        private mScrollerX;
+        private mScrollerY;
+        private mInterpolator;
+        private mFlywheel;
+        static DEFAULT_DURATION: number;
+        static SCROLL_MODE: number;
+        static FLING_MODE: number;
+        constructor(interpolator?: Interpolator, flywheel?: boolean);
+        setInterpolator(interpolator: Interpolator): void;
+        setFriction(friction: number): void;
+        isFinished(): boolean;
+        forceFinished(finished: boolean): void;
+        getCurrX(): number;
+        getCurrY(): number;
+        getCurrVelocity(): number;
+        getStartX(): number;
+        getStartY(): number;
+        getFinalX(): number;
+        getFinalY(): number;
+        getDuration(): number;
+        computeScrollOffset(): boolean;
+        startScroll(startX: number, startY: number, dx: number, dy: number, duration?: number): void;
+        springBack(startX: number, startY: number, minX: number, maxX: number, minY: number, maxY: number): boolean;
+        fling(startX: number, startY: number, velocityX: number, velocityY: number, minX: number, maxX: number, minY: number, maxY: number, overX?: number, overY?: number): void;
+        notifyHorizontalEdgeReached(startX: number, finalX: number, overX: number): void;
+        notifyVerticalEdgeReached(startY: number, finalY: number, overY: number): void;
+        isOverScrolled(): boolean;
+        abortAnimation(): void;
+        timePassed(): number;
+        isScrollingInDirection(xvel: number, yvel: number): boolean;
+    }
+}
+declare module android.widget {
+    import View = android.view.View;
+    import MotionEvent = android.view.MotionEvent;
+    import Rect = android.graphics.Rect;
+    import KeyEvent = android.view.KeyEvent;
+    class ScrollView extends FrameLayout {
+        static ANIMATED_SCROLL_GAP: number;
+        static MAX_SCROLL_FACTOR: number;
+        private static TAG;
+        private static INVALID_POINTER;
+        private mLastScroll;
+        private mTempRect;
+        private mScroller;
+        private mLastMotionY;
+        private mIsLayoutDirty;
+        private mChildToScrollTo;
+        private mIsBeingDragged;
+        private mVelocityTracker;
+        private mFillViewport;
+        private mSmoothScrollingEnabled;
+        private mMinimumVelocity;
+        private mMaximumVelocity;
+        private mOverscrollDistance;
+        private _mOverflingDistance;
+        private mOverflingDistance;
+        private mActivePointerId;
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        shouldDelayChildPressedState(): boolean;
+        getMaxScrollAmount(): number;
+        private initScrollView();
+        addView(...args: any[]): any;
+        private canScroll();
+        isFillViewport(): boolean;
+        setFillViewport(fillViewport: boolean): void;
+        isSmoothScrollingEnabled(): boolean;
+        setSmoothScrollingEnabled(smoothScrollingEnabled: boolean): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        executeKeyEvent(event: KeyEvent): boolean;
+        private inChild(x, y);
+        private initOrResetVelocityTracker();
+        private initVelocityTrackerIfNotExists();
+        private recycleVelocityTracker();
+        requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
+        onInterceptTouchEvent(ev: MotionEvent): boolean;
+        onTouchEvent(ev: MotionEvent): boolean;
+        private onSecondaryPointerUp(ev);
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
+        private getScrollRange();
+        private findFocusableViewInBounds(topFocus, top, bottom);
+        pageScroll(direction: number): boolean;
+        fullScroll(direction: number): boolean;
+        private scrollAndFocus(direction, top, bottom);
+        arrowScroll(direction: number): boolean;
+        private isOffScreen(descendant);
+        private isWithinDeltaOfScreen(descendant, delta, height);
+        private doScrollY(delta);
+        smoothScrollBy(dx: number, dy: number): void;
+        smoothScrollTo(x: number, y: number): void;
+        protected computeVerticalScrollRange(): number;
+        protected computeVerticalScrollOffset(): number;
+        protected measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
+        protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
+        computeScroll(): void;
+        private scrollToChild(child);
+        private scrollToChildRect(rect, immediate);
+        computeScrollDeltaToGetChildRectOnScreen(rect: Rect): number;
+        requestChildFocus(child: View, focused: View): void;
+        protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
+        requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
+        requestLayout(): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        private static isViewDescendantOf(child, parent);
+        fling(velocityY: number): void;
+        private endDrag();
+        scrollTo(x: number, y: number): void;
+        private static clamp(n, my, child);
+        canScrollVertically(direction: number): boolean;
+    }
+}
+declare module android.widget {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Canvas = android.graphics.Canvas;
+    class LinearLayout extends ViewGroup {
+        static HORIZONTAL: number;
+        static VERTICAL: number;
+        static SHOW_DIVIDER_NONE: number;
+        static SHOW_DIVIDER_BEGINNING: number;
+        static SHOW_DIVIDER_MIDDLE: number;
+        static SHOW_DIVIDER_END: number;
+        private mBaselineAligned;
+        private mBaselineAlignedChildIndex;
+        private mBaselineChildTop;
+        private mOrientation;
+        private mGravity;
+        private mTotalLength;
+        private mWeightSum;
+        private mUseLargestChild;
+        private mMaxAscent;
+        private mMaxDescent;
+        private static VERTICAL_GRAVITY_COUNT;
+        private static INDEX_CENTER_VERTICAL;
+        private static INDEX_TOP;
+        private static INDEX_BOTTOM;
+        private static INDEX_FILL;
+        private mDivider;
+        private mDividerWidth;
+        private mDividerHeight;
+        private mShowDividers;
+        private mDividerPadding;
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        setShowDividers(showDividers: number): void;
+        shouldDelayChildPressedState(): boolean;
+        getShowDividers(): number;
+        getDividerDrawable(): Drawable;
+        setDividerDrawable(divider: Drawable): void;
+        setDividerPadding(padding: number): void;
+        getDividerPadding(): number;
+        getDividerWidth(): number;
+        protected onDraw(canvas: Canvas): void;
+        drawDividersVertical(canvas: Canvas): void;
+        drawDividersHorizontal(canvas: Canvas): void;
+        drawHorizontalDivider(canvas: Canvas, top: number): void;
+        drawVerticalDivider(canvas: Canvas, left: number): void;
+        isBaselineAligned(): boolean;
+        setBaselineAligned(baselineAligned: boolean): void;
+        isMeasureWithLargestChildEnabled(): boolean;
+        setMeasureWithLargestChildEnabled(enabled: boolean): void;
+        getBaseline(): number;
+        getBaselineAlignedChildIndex(): number;
+        setBaselineAlignedChildIndex(i: number): void;
+        getVirtualChildAt(index: number): View;
+        getVirtualChildCount(): number;
+        getWeightSum(): number;
+        setWeightSum(weightSum: number): void;
+        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        hasDividerBeforeChildAt(childIndex: number): boolean;
+        measureVertical(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        forceUniformWidth(count: number, heightMeasureSpec: number): void;
+        measureHorizontal(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        private forceUniformHeight(count, widthMeasureSpec);
+        getChildrenSkipCount(child: View, index: number): number;
+        measureNullChild(childIndex: number): number;
+        measureChildBeforeLayout(child: View, childIndex: number, widthMeasureSpec: number, totalWidth: number, heightMeasureSpec: number, totalHeight: number): void;
+        getLocationOffset(child: View): number;
+        getNextLocationOffset(child: View): number;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        layoutVertical(left: number, top: number, right: number, bottom: number): void;
+        layoutHorizontal(left: number, top: number, right: number, bottom: number): void;
+        private setChildFrame(child, left, top, width, height);
+        setOrientation(orientation: number): void;
+        getOrientation(): number;
+        setGravity(gravity: number): void;
+        setHorizontalGravity(horizontalGravity: number): void;
+        setVerticalGravity(verticalGravity: number): void;
+        protected generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
+        protected generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
+        protected checkLayoutParams(p: android.view.ViewGroup.LayoutParams): boolean;
+    }
+    module LinearLayout {
+        class LayoutParams extends android.view.ViewGroup.MarginLayoutParams {
+            weight: number;
+            gravity: number;
+            constructor();
+            constructor(source: ViewGroup.LayoutParams);
+            constructor(width: number, height: number, weight?: number);
+        }
+    }
+}
+declare module android.util {
+    class ArrayMap<K, V> {
+        private map;
+        constructor(capacity?: number);
+        clear(): void;
+        erase(): void;
+        ensureCapacity(minimumCapacity: number): void;
+        containsKey(key: K): boolean;
+        indexOfValue(value: V): number;
+        containsValue(value: V): boolean;
+        get(key: K): V;
+        keyAt(index: number): K;
+        valueAt(index: number): V;
+        setValueAt(index: number, value: V): V;
+        isEmpty(): boolean;
+        put(key: K, value: V): V;
+        append(key: K, value: V): void;
+        remove(key: K): V;
+        removeAt(index: number): V;
+        keySet(): Set<K>;
+        size(): number;
+    }
+}
+declare module java.util {
+    class ArrayDeque<E> extends ArrayList<E> {
+        addFirst(e: E): void;
+        addLast(e: E): void;
+        offerFirst(e: E): boolean;
+        offerLast(e: E): boolean;
+        removeFirst(): E;
+        removeLast(): E;
+        pollFirst(): E;
+        pollLast(): E;
+        getFirst(): E;
+        getLast(): E;
+        peekFirst(): E;
+        peekLast(): E;
+        removeFirstOccurrence(o: any): boolean;
+        removeLastOccurrence(o: any): boolean;
+        offer(e: E): boolean;
+        remove(): E;
+        poll(): E;
+        element(): E;
+        peek(): E;
+        push(e: E): void;
+        pop(): E;
+        private delete(i);
+    }
+}
+declare module android.util {
+    class MathUtils {
+        private static DEG_TO_RAD;
+        private static RAD_TO_DEG;
+        constructor();
+        static abs(v: number): number;
+        static constrain(amount: number, low: number, high: number): number;
+        static log(a: number): number;
+        static exp(a: number): number;
+        static pow(a: number, b: number): number;
+        static max(a: number, b: number, c?: number): number;
+        static min(a: number, b: number, c?: number): number;
+        static dist(x1: number, y1: number, x2: number, y2: number): number;
+        static dist3(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number): number;
+        static mag(a: number, b: number, c?: number): number;
+        static sq(v: number): number;
+        static radians(degrees: number): number;
+        static degrees(radians: number): number;
+        static acos(value: number): number;
+        static asin(value: number): number;
+        static atan(value: number): number;
+        static atan2(a: number, b: number): number;
+        static tan(angle: number): number;
+        static lerp(start: number, stop: number, amount: number): number;
+        static norm(start: number, stop: number, value: number): number;
+        static map(minStart: number, minStop: number, maxStart: number, maxStop: number, value: number): number;
+        static random(howbig: number): number;
+        static random(howsmall: number, howbig: number): number;
+    }
+}
+declare module android.util {
+    class SparseBooleanArray extends SparseArray<boolean> {
+    }
+}
+declare module android.view {
+    class SoundEffectConstants {
+        static CLICK: number;
+        static NAVIGATION_LEFT: number;
+        static NAVIGATION_UP: number;
+        static NAVIGATION_RIGHT: number;
+        static NAVIGATION_DOWN: number;
+        static getContantForFocusDirection(direction: number): number;
+    }
+}
+declare module android.os {
+    class Trace {
+        private static TAG;
+        static TRACE_TAG_NEVER: number;
+        static TRACE_TAG_ALWAYS: number;
+        static TRACE_TAG_GRAPHICS: number;
+        static TRACE_TAG_INPUT: number;
+        static TRACE_TAG_VIEW: number;
+        static TRACE_TAG_WEBVIEW: number;
+        static TRACE_TAG_WINDOW_MANAGER: number;
+        static TRACE_TAG_ACTIVITY_MANAGER: number;
+        static TRACE_TAG_SYNC_MANAGER: number;
+        static TRACE_TAG_AUDIO: number;
+        static TRACE_TAG_VIDEO: number;
+        static TRACE_TAG_CAMERA: number;
+        static TRACE_TAG_HAL: number;
+        static TRACE_TAG_APP: number;
+        static TRACE_TAG_RESOURCES: number;
+        static TRACE_TAG_DALVIK: number;
+        static TRACE_TAG_RS: number;
+        private static TRACE_TAG_NOT_READY;
+        private static MAX_SECTION_NAME_LEN;
+        private static sEnabledTags;
+        private static nativeGetEnabledTags();
+        private static nativeTraceCounter(tag, name, value);
+        private static nativeTraceBegin(tag, name);
+        private static nativeTraceEnd(tag);
+        private static nativeAsyncTraceBegin(tag, name, cookie);
+        private static nativeAsyncTraceEnd(tag, name, cookie);
+        private static nativeSetAppTracingAllowed(allowed);
+        private static nativeSetTracingEnabled(allowed);
+        private static cacheEnabledTags();
+        static isTagEnabled(traceTag: number): boolean;
+        static traceCounter(traceTag: number, counterName: string, counterValue: number): void;
+        static setAppTracingAllowed(allowed: boolean): void;
+        static setTracingEnabled(enabled: boolean): void;
+        static traceBegin(traceTag: number, methodName: string): void;
+        static traceEnd(traceTag: number): void;
+        static asyncTraceBegin(traceTag: number, methodName: string, cookie: number): void;
+        static asyncTraceEnd(traceTag: number, methodName: string, cookie: number): void;
+        static beginSection(sectionName: string): void;
+        static endSection(): void;
+    }
+}
+declare module android.text {
+    class InputType {
+        static TYPE_MASK_CLASS: number;
+        static TYPE_MASK_VARIATION: number;
+        static TYPE_MASK_FLAGS: number;
+        static TYPE_NULL: number;
+        static TYPE_CLASS_TEXT: number;
+        static TYPE_TEXT_FLAG_CAP_CHARACTERS: number;
+        static TYPE_TEXT_FLAG_CAP_WORDS: number;
+        static TYPE_TEXT_FLAG_CAP_SENTENCES: number;
+        static TYPE_TEXT_FLAG_AUTO_CORRECT: number;
+        static TYPE_TEXT_FLAG_AUTO_COMPLETE: number;
+        static TYPE_TEXT_FLAG_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_IME_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_NO_SUGGESTIONS: number;
+        static TYPE_TEXT_VARIATION_NORMAL: number;
+        static TYPE_TEXT_VARIATION_URI: number;
+        static TYPE_TEXT_VARIATION_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_EMAIL_SUBJECT: number;
+        static TYPE_TEXT_VARIATION_SHORT_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_LONG_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_PERSON_NAME: number;
+        static TYPE_TEXT_VARIATION_POSTAL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_VISIBLE_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_WEB_EDIT_TEXT: number;
+        static TYPE_TEXT_VARIATION_FILTER: number;
+        static TYPE_TEXT_VARIATION_PHONETIC: number;
+        static TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_WEB_PASSWORD: number;
+        static TYPE_CLASS_NUMBER: number;
+        static TYPE_NUMBER_FLAG_SIGNED: number;
+        static TYPE_NUMBER_FLAG_DECIMAL: number;
+        static TYPE_NUMBER_VARIATION_NORMAL: number;
+        static TYPE_NUMBER_VARIATION_PASSWORD: number;
+        static TYPE_CLASS_PHONE: number;
+        static TYPE_CLASS_DATETIME: number;
+        static TYPE_DATETIME_VARIATION_NORMAL: number;
+        static TYPE_DATETIME_VARIATION_DATE: number;
+        static TYPE_DATETIME_VARIATION_TIME: number;
     }
 }
 declare module android.util {
@@ -5237,7 +5587,7 @@ declare module android.widget {
         mTextSelectHandleRes: number;
         mTextEditSuggestionItemLayout: number;
         private mEditor;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private setTypefaceFromAttrs(familyName, typefaceIndex, styleIndex);
         private setRelativeDrawablesIfNeeded(start, end);
         setEnabled(enabled: boolean): void;
@@ -5609,7 +5959,7 @@ declare module android.widget {
 }
 declare module android.widget {
     class Button extends TextView {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
     }
 }
 declare module android.widget {
@@ -5756,7 +6106,7 @@ declare module android.widget {
         private mLastHandledItemCount;
         static sLinearInterpolator: Interpolator;
         private mPendingSync;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initAbsListView();
         setOverScrollMode(mode: number): void;
         setAdapter(adapter: ListAdapter): void;
@@ -6168,7 +6518,11 @@ declare module android.widget {
         private mDividerPaint;
         private mArrowScrollFocusResult;
         private mFocusSelector;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
+            divider: Drawable;
+            listSelector: Drawable;
+            dividerHeight: number;
+        });
         getMaxScrollAmount(): number;
         private adjustViewsUpOrDown();
         addHeaderView(v: View, data?: any, isSelectable?: boolean): void;
@@ -6324,7 +6678,7 @@ declare module android.widget {
         private mOverflingDistance;
         private mActivePointerId;
         private static INVALID_POINTER;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         protected getLeftFadingEdgeStrength(): number;
         protected getRightFadingEdgeStrength(): number;
         getMaxScrollAmount(): number;
@@ -6428,7 +6782,7 @@ declare module android.widget {
         private mAllowBrokenMeasureSpecs;
         private mMeasureVerticalWithPaddingMargin;
         private static DEFAULT_WIDTH;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private queryCompatibilityModes();
         shouldDelayChildPressedState(): boolean;
         setIgnoreGravity(viewId: string): void;
@@ -6532,7 +6886,7 @@ declare module android.widget {
         private mBaseline;
         private mBaselineAlignBottom;
         private mAdjustViewBoundsCompat;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initImageView();
         protected verifyDrawable(dr: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
@@ -6597,7 +6951,12 @@ declare module android.widget {
 }
 declare module android.widget {
     class ImageButton extends ImageView {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
+            background: graphics.drawable.Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            gravity: number;
+        });
     }
 }
 declare module android.widget {
@@ -6623,7 +6982,10 @@ declare module android.widget {
         private mReferenceViewInSelectedRow;
         private mGravity;
         private mTempRect;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
+            listSelector: graphics.drawable.Drawable;
+            numColumns: number;
+        });
         getAdapter(): ListAdapter;
         setAdapter(adapter: ListAdapter): void;
         lookForSelectablePosition(position: number, lookDown: boolean): number;
@@ -6779,7 +7141,7 @@ declare module android.widget {
         private mDecrementVirtualButtonPressed;
         private mPressedStateHelper;
         private mLastHandledDownDpadKeyCode;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         private moveToFinalScrollerPosition(scroller);
@@ -6987,7 +7349,7 @@ declare module android.widget {
         private mRefreshIsPosted;
         mMirrorForRtl: boolean;
         private mRefreshData;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: {
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             indeterminateOnly: boolean;
             indeterminateDrawable: Drawable;
             indeterminateBehavior: string;
@@ -7063,7 +7425,7 @@ declare module android.widget {
         private mOnCheckedChangeListener;
         private mOnCheckedChangeWidgetListener;
         private static CHECKED_STATE_SET;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         toggle(): void;
         performClick(): boolean;
         isChecked(): boolean;
@@ -7090,13 +7452,13 @@ declare module android.widget {
 declare module android.widget {
     import CompoundButton = android.widget.CompoundButton;
     class CheckBox extends CompoundButton {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
     }
 }
 declare module android.widget {
     import CompoundButton = android.widget.CompoundButton;
     class RadioButton extends CompoundButton {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         toggle(): void;
     }
 }
@@ -7111,7 +7473,7 @@ declare module android.widget {
         private mProtectFromCheckedChange;
         private mOnCheckedChangeListener;
         private mPassThroughListener;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private init();
         setOnHierarchyChangeListener(listener: ViewGroup.OnHierarchyChangeListener): void;
         protected onFinishInflate(): void;
@@ -7161,7 +7523,7 @@ declare module android.widget {
         private mDisabledAlpha;
         private mTouchDownX;
         private mIsDragging;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         setThumb(thumb: Drawable): void;
         getThumb(): Drawable;
         getThumbOffset(): number;
@@ -7191,7 +7553,7 @@ declare module android.widget {
     import AbsSeekBar = android.widget.AbsSeekBar;
     class SeekBar extends AbsSeekBar {
         private mOnSeekBarChangeListener;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: {
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             indeterminateOnly: boolean;
             progressDrawable: graphics.drawable.Drawable;
             indeterminateDrawable: graphics.drawable.Drawable;
@@ -7223,7 +7585,7 @@ declare module android.widget {
         private mNumStars;
         private mProgressOnStartTracking;
         private mOnRatingBarChangeListener;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: {
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             indeterminateOnly: boolean;
             progressDrawable: graphics.drawable.Drawable;
             indeterminateDrawable: graphics.drawable.Drawable;
@@ -7432,7 +7794,7 @@ declare module android.widget {
         private static CHILD_LAST_STATE_SET;
         private mChildDivider;
         private mIndicatorRect;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private isRtlCompatibilityMode();
         private hasRtlSupport();
         onRtlPropertiesChanged(layoutDirection: number): void;
@@ -7614,7 +7976,7 @@ declare module android.view.animation {
         private mTempTransformation;
         private mLastEnd;
         private mStoredOffsets;
-        constructor(shareInterpolator: boolean);
+        constructor(shareInterpolator?: boolean);
         private setFlag(mask, value);
         private init();
         setFillAfter(fillAfter: boolean): void;
@@ -7740,7 +8102,7 @@ declare module android.support.v4.view {
         static SCROLL_STATE_SETTLING: number;
         private mEndScrollRunnable;
         private mScrollState;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initViewPager();
         protected onDetachedFromWindow(): void;
         private setScrollState(newState);
@@ -8015,7 +8377,7 @@ declare module android.support.v4.widget {
         private mInitialMotionY;
         private mShadowLeft;
         private mShadowRight;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         setDrawerShadow(shadowDrawable: Drawable, gravity: number): void;
         setScrimColor(color: number): void;
         setDrawerListener(listener: DrawerLayout.DrawerListener): void;
@@ -8404,7 +8766,7 @@ declare module uk.co.senab.photoview {
     class PhotoView extends ImageView implements IPhotoView {
         private mAttacher;
         private mPendingScaleType;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         protected init(): void;
         setPhotoViewRotation(rotationDegree: number): void;
         setRotationTo(rotationDegree: number): void;
@@ -8451,65 +8813,10 @@ declare module uk.co.senab.photoview {
         protected onAttachedToWindow(): void;
     }
 }
-declare module androidui {
-    import View = android.view.View;
-    import ViewGroup = android.view.ViewGroup;
-    class AndroidUI {
-        static DomClassName: string;
-        static BindToElementName: string;
-        element: HTMLElement;
-        private _canvas;
-        private _viewRootImpl;
-        private _rootLayout;
-        private rootStyleElement;
-        private rootResourceElement;
-        private _windowBound;
-        private tempRect;
-        windowBound: android.graphics.Rect;
-        private touchEvent;
-        private touchAvailable;
-        private ketEvent;
-        private AndroidID;
-        constructor(element: HTMLElement);
-        private init();
-        private initInflateView();
-        private initElementStyle();
-        private refreshWindowBound();
-        private initFocus();
-        private initEvent();
-        private initTouchEvent();
-        private initMouseEvent();
-        private initKeyEvent();
-        private initGenericEvent();
-        private initSizeChange();
-        private initVisibleChange();
-        notifySizeChange(): void;
-        setContentView(view: View): void;
-        addContentView(view: View, params?: ViewGroup.LayoutParams): void;
-        findViewById(id: string): View;
-        showDebugLayout(): void;
-    }
-}
-declare module android.app {
-    import View = android.view.View;
-    class Activity extends HTMLDivElement {
-        private AndroidUI;
-        onCreate(): void;
-        private performCreate();
-        createdCallback(): void;
-        attachedCallback(): void;
-        detachedCallback(): void;
-        attributeChangedCallback(attributeName: string, oldVal: string, newVal: string): void;
-        setContentView(view: View): void;
-        addContentView(view: View): void;
-        findViewById(id: string): View;
-        static registerCustomElement(): void;
-    }
-}
 declare module androidui.widget {
     import View = android.view.View;
     class HtmlBaseView extends View {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         onTouchEvent(event: android.view.MotionEvent): boolean;
         requestSyncBoundToElement(immediately?: boolean): void;
         protected onAttachedToWindow(): void;
@@ -8517,7 +8824,7 @@ declare module androidui.widget {
 }
 declare module androidui.widget {
     class HtmlView extends HtmlBaseView {
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         setHtml(html: string): void;
         getHtml(): string;
@@ -8536,7 +8843,7 @@ declare module androidui.widget {
         private mDrawableHeight;
         private mAdjustViewBoundsCompat;
         private mImgElement;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initImageView();
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;
@@ -8559,13 +8866,14 @@ declare module androidui.widget {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import BaseAdapter = android.widget.BaseAdapter;
+    import Context = android.content.Context;
     class HtmlDataListAdapter extends BaseAdapter implements HtmlDataAdapter {
         static RefElementTag: string;
         static RefElementProperty: string;
         static BindAdapterProperty: string;
         bindElementData: HTMLElement;
-        rootElement: HTMLElement;
-        onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
+        mContext: Context;
+        onInflateAdapter(bindElement: HTMLElement, context?: Context, parent?: android.view.ViewGroup): void;
         private registerHtmlDataObserver();
         getItemViewType(position: number): number;
         getView(position: number, convertView: View, parent: ViewGroup): View;
@@ -8579,13 +8887,14 @@ declare module androidui.widget {
 }
 declare module androidui.widget {
     import PagerAdapter = android.support.v4.view.PagerAdapter;
+    import Context = android.content.Context;
     class HtmlDataPagerAdapter extends PagerAdapter implements HtmlDataAdapter {
         static RefElementTag: string;
         static RefElementProperty: string;
         static BindAdapterProperty: string;
         bindElementData: HTMLElement;
-        rootElement: HTMLElement;
-        onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
+        mContext: Context;
+        onInflateAdapter(bindElement: HTMLElement, context?: Context, parent?: android.view.ViewGroup): void;
         private registerHtmlDataObserver();
         getCount(): number;
         instantiateItem(container: android.view.ViewGroup, position: number): any;
@@ -8599,10 +8908,10 @@ declare module androidui.widget {
     }
 }
 declare module androidui.widget {
+    import Context = android.content.Context;
     class HtmlDataPickerAdapter implements HtmlDataAdapter {
         bindElementData: HTMLElement;
-        rootElement: HTMLElement;
-        onInflateAdapter(bindElement: HTMLElement, rootElement: HTMLElement, parent: android.view.ViewGroup): void;
+        onInflateAdapter(bindElement: HTMLElement, context?: Context, parent?: android.view.ViewGroup): void;
     }
 }
 declare module androidui.widget {
@@ -8641,7 +8950,7 @@ declare module androidui.widget {
         private contentOverY;
         private overScrollLocker;
         private refreshLoadListener;
-        constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         protected onViewAdded(child: View): void;
         private configHeaderView();
         private configFooterView();
@@ -8686,13 +8995,13 @@ declare module androidui.widget {
         class DefaultHeaderView extends HeaderView {
             textView: TextView;
             progressBar: ProgressBar;
-            constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+            constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
             onStateChange(newState: number, oldState: number): void;
         }
         class DefaultFooterView extends FooterView {
             textView: TextView;
             progressBar: ProgressBar;
-            constructor(bindElement?: HTMLElement, rootElement?: HTMLElement);
+            constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
             onStateChange(newState: number, oldState: number): void;
         }
     }

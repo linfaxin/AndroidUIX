@@ -7,9 +7,8 @@
 
 module android.widget{
     export class ImageButton extends ImageView {
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-            super(bindElement, rootElement);
-            this.applyDefaultAttributes(android.R.attr.imageButtonStyle);
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.imageButtonStyle){
+            super(context, bindElement, defStyle);
         }
     }
 }

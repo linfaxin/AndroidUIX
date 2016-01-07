@@ -30,21 +30,22 @@ module android.R {
             return attr._viewStyle;
         }
 
-        static get buttonStyle() {
-            return {
-                background: drawable.button_background,
-                focusable: true,
-                clickable: true,
-                textSize: '18sp',
-                gravity: Gravity.CENTER
-            };
-        }
 
         static get textViewStyle() {
             return {
                 textSize: '14sp',
                 textColor: color.textView_textColor
             };
+        }
+
+        static get buttonStyle() {
+            return Object.assign(attr.textViewStyle, {
+                background: drawable.button_background,
+                focusable: true,
+                clickable: true,
+                textSize: '18sp',
+                gravity: Gravity.CENTER
+            });
         }
 
         static get imageButtonStyle() {

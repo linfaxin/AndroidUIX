@@ -2,8 +2,9 @@
  * Created by linfaxin on 15/10/9.
  */
 ///<reference path="../view/Gravity.ts"/>
-///<reference path="../view/View.ts"/>
+///<reference path="../view/ViewOverlay.ts"/>
 ///<reference path="../view/ViewGroup.ts"/>
+///<reference path="../view/View.ts"/>
 ///<reference path="../graphics/drawable/Drawable.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>
@@ -32,8 +33,8 @@ module android.widget {
         mForegroundBoundsChanged = false;
         private mMatchParentChildren = new Array<View>(1);
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-            super(bindElement, rootElement);
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+            super(context, bindElement, defStyle);
             this._attrBinder.addAttr('foregroundGravity', (value)=>{
                 this.mForegroundGravity = this._attrBinder.parseGravity(value, this.mForegroundGravity);
             }, ()=>{

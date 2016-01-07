@@ -1,6 +1,7 @@
 /**
  * Created by linfaxin on 15/10/5.
  */
+///<reference path="ViewOverlay.ts"/>
 ///<reference path="ViewRootImpl.ts"/>
 ///<reference path="View.ts"/>
 ///<reference path="MotionEvent.ts"/>
@@ -12,6 +13,7 @@
 ///<reference path="../graphics/RectF.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/TypedValue.ts"/>
+///<reference path="../content/Context.ts"/>
 ///<reference path="FocusFinder.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
 ///<reference path="animation/Animation.ts"/>
@@ -28,9 +30,9 @@ module android.view {
     import Matrix = android.graphics.Matrix;
     import SystemClock = android.os.SystemClock;
     import TypedValue = android.util.TypedValue;
+    import Context = android.content.Context;
     import System = java.lang.System;
     import ArrayList = java.util.ArrayList;
-    import AttrBinder = androidui.attr.AttrBinder;
     import Integer = java.lang.Integer;
     import Animation = animation.Animation;
     import Transformation = animation.Transformation;
@@ -133,8 +135,8 @@ module android.view {
         private mLayoutCalledWhileSuppressed = false;
         private mChildCountWithTransientState = 0;
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-            super(bindElement, rootElement);
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+            super(context, bindElement, defStyle);
             this.initViewGroup();
             this._attrBinder.addAttr('clipChildren', (value)=>{
                 this.setClipChildren(this._attrBinder.parseBoolean(value));
@@ -461,7 +463,7 @@ module android.view {
             let index = -1;
             if (args.length == 2) {
                 if (args[1] instanceof ViewGroup.LayoutParams) params = args[1];
-                else index = args[1];
+                else if(typeof args[1] === 'number') index = args[1];
             } else if (args.length == 3) {
                 if (args[2] instanceof ViewGroup.LayoutParams) {
                     index = args[1];
@@ -2508,7 +2510,7 @@ module android.view {
             _measuringParentWidthMeasureSpec = 0;
             _measuringParentHeightMeasureSpec = 0;
             _measuringMeasureSpec:android.util.DisplayMetrics;
-            _attrBinder:AttrBinder;
+            _attrBinder:androidui.attr.AttrBinder;
 
 
             constructor();
@@ -2526,7 +2528,7 @@ module android.view {
                 }
 
                 if(!this._attrBinder) {
-                    this._attrBinder = new AttrBinder(this);
+                    this._attrBinder = new androidui.attr.AttrBinder(this);
 
                     this._attrBinder.addAttr('width', (value)=>{
                         if(value==null) value = -2;
@@ -2543,10 +2545,10 @@ module android.view {
                 }
             }
 
-            parseAttributeFrom(node:Node, rootElement:HTMLElement):void {
+            parseAttributeFrom(node:Node, context:Context):void {
                 Array.from(node.attributes).forEach((attr:Attr)=>{
                     let layoutParamFiled = attr.name.split("layout_")[1];
-                    this._attrBinder.onAttrChange(layoutParamFiled, attr.value, rootElement);
+                    this._attrBinder.onAttrChange(layoutParamFiled, attr.value, context);
                 });
             }
         }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="width: 100%;height: 100%;">
+<html lang="en">
 <head>
     <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -13,6 +13,7 @@
         }
         html {
             height: 100%;
+            width: 100%;
         }
         body {
             font-size: 14px;
@@ -23,48 +24,45 @@
             -webkit-user-select: none;
             font-family: Helvetica;
         }
-        p{
-            margin: 0;
-        }
     </style>
-
 </head>
 <body>
-<android-Activity style="width: 100%; height:100%;display: none;" oncreate="onCreate">
-    <ScrollView>
-        <LinearLayout
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:gravity="center">
-            <TextView id="android_tip" android:visibility="gone">注:Android端建议在Chrome浏览器体验</TextView>
-            <Button onclick="location.href='activity/sample_base_widget.html'">基本控件</Button>
-            <Button onclick="location.href='activity/sample_framelayout.html'">Framelayout布局</Button>
-            <Button onclick="location.href='activity/sample_linearlayout.html'">Linearlayout线性布局</Button>
-            <Button onclick="location.href='activity/sample_relativelayout.html'">Relativelayout相对布局</Button>
-            <Button onclick="location.href='activity/sample_textview.html'">TextView文本组件</Button>
-            <Button onclick="location.href='activity/sample_button.html'">Button自定义样式</Button>
-            <Button onclick="location.href='activity/sample_imageview.html'">ImageView图片组件</Button>
-            <Button onclick="location.href='activity/sample_listview.html'">ListView列表组件</Button>
-            <Button onclick="location.href='activity/sample_gridview.html'">GridView列表组件</Button>
-            <Button onclick="location.href='activity/sample_expand_listview.html'">ExpandableListView组件</Button>
-            <Button onclick="location.href='activity/sample_viewpager.html'">ViewPager页卡组件</Button>
-            <Button onclick="location.href='activity/sample_horizontalscrollview.html'">HorizontalScrollView横向滑动组件</Button>
-            <Button onclick="location.href='activity/sample_drawerlayout.html'">DrawerLayout侧抽屉</Button>
-            <Button onclick="location.href='activity/sample_viewpager_gallery.html'">图片画廊（手势支持）</Button>
-            <Button onclick="location.href='activity/sample_pullrefreshload.html'">列表下拉刷新&上拉加载</Button>
-            <Button onclick="location.href='activity/sample_picker.html'">Picker组件</Button>
-            <Button onclick="location.href='activity/sample_animation.html'">Animation动画</Button>
-            <Button onclick="location.href='activity/sample_htmlview.html'">HtmlView组件</Button>
-            <Button onclick="location.href='activity/sample_more_widget.html'">...更多组件</Button>
-        </LinearLayout>
-    </ScrollView>
-</android-Activity>
+<android-ui debug style="width: 100%; height:100%;display: none;">
+    <Activity oncreate="onCreate">
+        <ScrollView>
+            <LinearLayout
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:gravity="center">
+                <TextView id="android_tip" android:visibility="gone">注:Android端建议在Chrome浏览器体验</TextView>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleBaseWidgetActivity')">基本控件</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleFrameLayoutActivity')">FrameLayout布局</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleLinearLayoutActivity')">LinearLayout线性布局</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleRelativeLayoutActivity')">RelativeLayout相对布局</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleTextViewActivity')">TextView文本组件</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleButtonActivity')">Button自定义样式</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleImageViewActivity')">ImageView图片组件</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleListViewActivity')">ListView列表组件</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleGridViewActivity')">GridView列表组件</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleExpandableListViewActivity')">ExpandableListView组件</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleViewPagerActivity')">ViewPager页卡组件</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleDrawerLayoutActivity')">DrawerLayout侧抽屉</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleViewPagerGalleryActivity')">图片画廊（手势支持）</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SamplePullRefreshLoadActivity')">列表下拉刷新&上拉加载</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SamplePickerActivity')">Picker组件</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleAnimationActivity')">Animation动画</Button>
+                <Button onclick="this.AndroidView.getContext().startActivity('sample.app.SampleHtmlViewActivity')">HtmlView组件</Button>
+            </LinearLayout>
+        </ScrollView>
+    </Activity>
+</android-ui>
 
-<script src="lib/browser-polyfill.min.js"></script>
-<script src="lib/CustomElements.min.js"></script>
+<script src="assets/lib/browser-polyfill.min.js"></script>
+<script src="assets/lib/CustomElements.min.js"></script>
 <script src="../dist/android-ui.es5.js"></script>
 <script src="build/main.es5.js"></script>
 <script>
+    android.view.ViewRootImpl.DEBUG_FPS = true;
     function onCreate(activity){
         if(navigator.userAgent.match('Android')){
             activity.findViewById('android_tip').setVisibility(android.view.View.VISIBLE);

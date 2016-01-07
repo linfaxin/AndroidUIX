@@ -15,6 +15,7 @@
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../androidui/AndroidUIElement.ts"/>
 module android.view {
     import ViewParent = android.view.ViewParent;
     import View = android.view.View;
@@ -44,14 +45,13 @@ module android.view {
         static ContinueEventToDom = Symbol();
 
         private mView:View;
-        rootElement:HTMLElement;
+        private androidUIElement : androidui.AndroidUIElement;
         private mViewVisibility = View.GONE;
         private mStopped = false;
         private mWidth:number = -1;
         private mHeight:number = -1;
         private mDirty = new Rect();
         private mIsAnimating = false;
-        private mAttachInfo:View.AttachInfo;
         private mTempRect:Rect = new Rect();
         private mVisRect:Rect = new Rect();
         private mTraversalScheduled:boolean = false;
@@ -63,12 +63,17 @@ module android.view {
         private mIsDrawing:boolean = false;
         private mAdded:boolean = false;
         private mAddedTouchMode:boolean = false;
+        private mInTouchMode:boolean = false;
         private mWinFrame = new Rect();//Root Element Bound
         private mInLayout:boolean;
         private mLayoutRequesters : Array<View> = [];
         private mHandlingLayoutInLayoutRequest:boolean;
         private mRemoved:boolean;
         private mHandler = new ViewRootHandler();
+        private mViewScrollChanged = false;
+        private mTreeObserver = new ViewTreeObserver();
+        private mIgnoreDirtyState = false;
+        private mSetIgnoreDirtyState = false;
 
         private mFirstInputStage:InputStage;
         //private mFirstPostImeInputStage:InputStage;
@@ -82,8 +87,6 @@ module android.view {
         private mSurface : Surface;
 
         constructor() {
-            this.mAttachInfo = new View.AttachInfo(this, this.mHandler);
-            this.mTraversalRunnable = new TraversalRunnable(this);
         }
 
         initSurface(canvasElement:HTMLCanvasElement){
@@ -100,7 +103,7 @@ module android.view {
             if (this.mView == null) {
                 this.mView = view;
 
-                this.mAttachInfo.mRootView = view;
+                //this.mAttachInfo.mRootView = view;
                 this.mAdded = true;
 
                 // Schedule the first layout -before- adding to the window
@@ -133,7 +136,7 @@ module android.view {
             return this.mView.getVisibility();
         }
 
-        private mTraversalRunnable : TraversalRunnable;
+        private mTraversalRunnable:TraversalRunnable = new TraversalRunnable(this);
 
         private scheduleTraversals() {
             if (!this.mTraversalScheduled) {
@@ -222,7 +225,7 @@ module android.view {
             let desiredWindowWidth;
             let desiredWindowHeight;
 
-            let attachInfo = this.mAttachInfo;
+            //let attachInfo = this.mAttachInfo;
 
             let viewVisibility = this.getHostVisibility();
             let viewVisibilityChanged = this.mViewVisibility != viewVisibility;// || mNewSurfaceNeeded;
@@ -230,31 +233,31 @@ module android.view {
             let params:ViewGroup.LayoutParams = null;
 
             let frame = this.mWinFrame;
+            desiredWindowWidth = frame.width();
+            desiredWindowHeight = frame.height();
             if (this.mFirst) {
                 this.mFullRedrawNeeded = true;
                 this.mLayoutRequested = true;
 
-                let packageMetrics = Resources.getDisplayMetrics();
-                desiredWindowWidth = packageMetrics.widthPixels;//FIXME
-                desiredWindowHeight = packageMetrics.heightPixels;
+                //let packageMetrics = Resources.getDisplayMetrics();
+                //desiredWindowWidth = packageMetrics.widthPixels;
+                //desiredWindowHeight = packageMetrics.heightPixels;
 
-                attachInfo.mHasWindowFocus = true;//FIXME fix when window impl
-                attachInfo.mWindowVisibility = viewVisibility;
+                //attachInfo.mHasWindowFocus = true;
+                //attachInfo.mWindowVisibility = viewVisibility;
                 viewVisibilityChanged = false;
                 //mLastConfiguration.setTo(host.getResources().getConfiguration());
                 // Set the layout direction if it has not been set before (inherit is the default)
                 //if (mViewLayoutDirectionInitial == View.LAYOUT_DIRECTION_INHERIT) {
                 //    host.setLayoutDirection(mLastConfiguration.getLayoutDirection());
                 //}
-                host.dispatchAttachedToWindow(attachInfo, 0);
-                attachInfo.mTreeObserver.dispatchOnWindowAttachedChange(true);
+                //host.dispatchAttachedToWindow(attachInfo, 0);
+                //attachInfo.mTreeObserver.dispatchOnWindowAttachedChange(true);
                 //mFitSystemWindowsInsets.set(mAttachInfo.mContentInsets);
                 //host.fitSystemWindows(mFitSystemWindowsInsets);
                 //Log.i(TAG, "Screen on initialized: " + attachInfo.mKeepScreenOn);
 
             } else {
-                desiredWindowWidth = frame.width();
-                desiredWindowHeight = frame.height();
                 if (desiredWindowWidth != this.mWidth || desiredWindowHeight != this.mHeight) {
                     if (ViewRootImpl.DEBUG_ORIENTATION) {
                         Log.v(ViewRootImpl.TAG, "View " + host + " resized to: " + frame);
@@ -266,8 +269,9 @@ module android.view {
             }
 
             if (viewVisibilityChanged) {
-                attachInfo.mWindowVisibility = viewVisibility;
-                host.dispatchWindowVisibilityChanged(viewVisibility);
+                //attachInfo.mWindowVisibility = viewVisibility;
+                //host.dispatchWindowVisibilityChanged(viewVisibility);
+
                 //if (viewVisibility == View.GONE) {
                     // After making a window gone, we will count it as being
                     // shown for the first time the next time it gets focus.
@@ -276,7 +280,7 @@ module android.view {
             }
 
             // Execute enqueued actions on every traversal in case a detached view enqueued an action
-            ViewRootImpl.getRunQueue(this).executeActions(attachInfo.mHandler);
+            ViewRootImpl.getRunQueue(this).executeActions(this.mHandler);
 
             let layoutRequested = this.mLayoutRequested;
             if (layoutRequested) {
@@ -284,7 +288,7 @@ module android.view {
                 if (this.mFirst) {
                     // make sure touch mode code executes by setting cached value
                     // to opposite of the added touch mode.
-                    this.mAttachInfo.mInTouchMode = !this.mAddedTouchMode;
+                    this.mInTouchMode = !this.mAddedTouchMode;
                     this.ensureTouchModeLocally(this.mAddedTouchMode);
 
                 } else {
@@ -302,9 +306,9 @@ module android.view {
                     if (lp.width < 0 || lp.height < 0) {
                         windowSizeMayChange = true;
 
-                        let packageMetrics = Resources.getDisplayMetrics();
-                        desiredWindowWidth = packageMetrics.widthPixels;
-                        desiredWindowHeight = packageMetrics.heightPixels;
+                        //let packageMetrics = Resources.getDisplayMetrics();
+                        //desiredWindowWidth = packageMetrics.widthPixels;
+                        //desiredWindowHeight = packageMetrics.heightPixels;
                     }
                 }
 
@@ -313,9 +317,9 @@ module android.view {
                     desiredWindowWidth, desiredWindowHeight) || windowSizeMayChange;
             }
 
-            if (this.mFirst || attachInfo.mViewVisibilityChanged) {
-                attachInfo.mViewVisibilityChanged = false;
-            }
+            //if (this.mFirst || attachInfo.mViewVisibilityChanged) {
+            //    attachInfo.mViewVisibilityChanged = false;
+            //}
 
             if (layoutRequested) {
                 // Clear this now, so that if anything requests a layout in the
@@ -340,8 +344,8 @@ module android.view {
 
                 if (ViewRootImpl.DEBUG_ORIENTATION) Log.v(ViewRootImpl.TAG, "Relayout returned: frame=" + frame);
 
-                attachInfo.mWindowLeft = frame.left;
-                attachInfo.mWindowTop = frame.top;
+                //attachInfo.mWindowLeft = frame.left;
+                //attachInfo.mWindowTop = frame.top;
 
                 // !!FIXME!! This next section handles the case where we did not get the
                 // window size we asked for. We should avoid this by getting a maximum size from
@@ -367,12 +371,12 @@ module android.view {
                     layoutRequested = true;
                 }
             }else{
-                const windowMoved = (attachInfo.mWindowLeft != frame.left
-                || attachInfo.mWindowTop != frame.top);
-                if (windowMoved) {
-                    attachInfo.mWindowLeft = frame.left;
-                    attachInfo.mWindowTop = frame.top;
-                }
+                //const windowMoved = (attachInfo.mWindowLeft != frame.left
+                //|| attachInfo.mWindowTop != frame.top);
+                //if (windowMoved) {
+                //    attachInfo.mWindowLeft = frame.left;
+                //    attachInfo.mWindowTop = frame.top;
+                //}
             }
 
             const didLayout = layoutRequested;
@@ -392,7 +396,7 @@ module android.view {
 
             if (triggerGlobalLayoutListener) {
                 //attachInfo.mRecomputeGlobalAttributes = false;
-                attachInfo.mTreeObserver.dispatchOnGlobalLayout();
+                this.mTreeObserver.dispatchOnGlobalLayout();
             }
 
             let skipDraw = false;
@@ -426,7 +430,7 @@ module android.view {
             this.mWillDrawSoon = false;
             this.mViewVisibility = viewVisibility;
 
-            let cancelDraw = attachInfo.mTreeObserver.dispatchOnPreDraw() ||
+            let cancelDraw = this.mTreeObserver.dispatchOnPreDraw() ||
                 viewVisibility != View.VISIBLE;
 
             if (!cancelDraw) {
@@ -613,7 +617,7 @@ module android.view {
                         this._showFPSNode.style.background = 'black';
                         this._showFPSNode.style.color = 'white';
                         this._showFPSNode.style.opacity = '0.7';
-                        this.rootElement.appendChild(this._showFPSNode);
+                        this.androidUIElement.appendChild(this._showFPSNode);
                     }
                     this._showFPSNode.innerText = 'FPS:'+fps.toFixed(1);
 
@@ -645,14 +649,13 @@ module android.view {
             }
 
 
-            let attachInfo = this.mAttachInfo;
-            if (attachInfo.mViewScrollChanged) {
-                attachInfo.mViewScrollChanged = false;
-                attachInfo.mTreeObserver.dispatchOnScrollChanged();
+            if (this.mViewScrollChanged) {
+                this.mViewScrollChanged = false;
+                this.mTreeObserver.dispatchOnScrollChanged();
             }
 
             if (fullRedrawNeeded) {
-                attachInfo.mIgnoreDirtyState = true;
+                this.mIgnoreDirtyState = true;
                 this.mDirty.set(0, 0, this.mWidth, this.mHeight);
             }
 
@@ -660,7 +663,7 @@ module android.view {
                 Log.v(ViewRootImpl.TAG, "Draw " + this.mView + ", width=" + this.mWidth + ", height=" + this.mHeight + ", dirty="+this.mDirty);
             }
 
-            attachInfo.mTreeObserver.dispatchOnDraw();
+            this.mTreeObserver.dispatchOnDraw();
 
             this.drawSoftware();
 
@@ -676,19 +679,19 @@ module android.view {
             }
             this.mDirty.setEmpty();
             this.mIsAnimating = false;
-            let attachInfo = this.mAttachInfo;
+            //let attachInfo = this.mAttachInfo;
 
-            attachInfo.mDrawingTime = SystemClock.uptimeMillis();
+            //attachInfo.mDrawingTime = SystemClock.uptimeMillis();
             this.mView.mPrivateFlags |= View.PFLAG_DRAWN;
 
-            attachInfo.mSetIgnoreDirtyState = false;
+            this.mSetIgnoreDirtyState = false;
 
             this.mView.draw(canvas);
 
 
-            if (!attachInfo.mSetIgnoreDirtyState) {
+            if (!this.mSetIgnoreDirtyState) {
                 // Only clear the flag if it was not set during the mView.draw() call
-                attachInfo.mIgnoreDirtyState = false;
+                this.mIgnoreDirtyState = false;
             }
 
             this.mSurface.unlockCanvasAndPost(canvas);
@@ -793,8 +796,8 @@ module android.view {
 
             const localDirty = this.mDirty;
             if (!localDirty.isEmpty() && !localDirty.contains(dirty)) {
-                this.mAttachInfo.mSetIgnoreDirtyState = true;
-                this.mAttachInfo.mIgnoreDirtyState = true;
+                this.mSetIgnoreDirtyState = true;
+                this.mIgnoreDirtyState = true;
             }
 
             // Add the new dirty rect to the current one
@@ -924,7 +927,7 @@ module android.view {
 
         private checkForLeavingTouchModeAndConsume(event:KeyEvent) {
             // Only relevant in touch mode.
-            if (!this.mAttachInfo.mInTouchMode) {
+            if (!this.mInTouchMode) {
                 return false;
             }
 
@@ -980,7 +983,7 @@ module android.view {
         }
         private static isTypingKey(keyEvent:KeyEvent):boolean {
             try {
-                return keyEvent._activeKeyEvent['keyIdentifier'].startsWith('U+');
+                return keyEvent.mIsTypingKey;
             } catch (e) {
                 console.warn(e);
             }
@@ -988,8 +991,8 @@ module android.view {
         }
         ensureTouchMode(inTouchMode:boolean):boolean {
             if (ViewRootImpl.DBG) Log.d("touchmode", "ensureTouchMode(" + inTouchMode + "), current "
-                + "touch mode is " + this.mAttachInfo.mInTouchMode);
-            if (this.mAttachInfo.mInTouchMode == inTouchMode) return false;
+                + "touch mode is " + this.mInTouchMode);
+            if (this.mInTouchMode == inTouchMode) return false;
 
             // tell the window manager
             //try {
@@ -1006,12 +1009,12 @@ module android.view {
 
         ensureTouchModeLocally(inTouchMode:boolean):boolean {
             if (ViewRootImpl.DBG) Log.d("touchmode", "ensureTouchModeLocally(" + inTouchMode + "), current "
-                + "touch mode is " + this.mAttachInfo.mInTouchMode);
+                + "touch mode is " + this.mInTouchMode);
 
-            if (this.mAttachInfo.mInTouchMode == inTouchMode) return false;
+            if (this.mInTouchMode == inTouchMode) return false;
 
-            this.mAttachInfo.mInTouchMode = inTouchMode;
-            this.mAttachInfo.mTreeObserver.dispatchOnTouchModeChanged(inTouchMode);
+            this.mInTouchMode = inTouchMode;
+            this.mTreeObserver.dispatchOnTouchModeChanged(inTouchMode);
 
             return (inTouchMode) ? this.enterTouchMode() : this.leaveTouchMode();
         }
@@ -1290,13 +1293,14 @@ module android.view {
             if ((<any>this.ViewRootImpl_this).mView == null || !(<any>this.ViewRootImpl_this).mAdded) {
                 Log.w(ViewRootImpl.TAG, "Dropping event due to root view being removed: " + event);
                 return true;
-            } else if ((!(<any>this.ViewRootImpl_this).mAttachInfo.mHasWindowFocus ||
-                (<any>this.ViewRootImpl_this).mStopped)) {
-
-                // Drop non-terminal input events.
-                Log.w(ViewRootImpl.TAG, "Dropping event due to no window focus: " + event);
-                return true;
             }
+            //else if ((!this.ViewRootImpl_this.mAttachInfo.mHasWindowFocus ||
+            //    (<any>this.ViewRootImpl_this).mStopped)) {
+            //
+            //    // Drop non-terminal input events.
+            //    Log.w(ViewRootImpl.TAG, "Dropping event due to no window focus: " + event);
+            //    return true;
+            //}
             return false;
         }
     }
@@ -1335,7 +1339,7 @@ module android.view {
             }
 
             // Offset the window bound
-            event.offsetLocation((<any>this.ViewRootImpl_this).mWinFrame.left, (<any>this.ViewRootImpl_this).mWinFrame.top);
+            event.offsetLocation(this.ViewRootImpl_this.mWinFrame.left, this.ViewRootImpl_this.mWinFrame.top);
 
 
             // Offset the scroll position.

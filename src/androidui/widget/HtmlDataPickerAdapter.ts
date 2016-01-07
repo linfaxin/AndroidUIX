@@ -4,21 +4,21 @@
 
 ///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../../android/widget/NumberPicker.ts"/>
+///<reference path="../../android/content/Context.ts"/>
 
 module androidui.widget{
 
     import ViewGroup = android.view.ViewGroup;
     import View = android.view.View;
     import NumberPicker = android.widget.NumberPicker;
+    import Context = android.content.Context;
 
 
     export class HtmlDataPickerAdapter implements HtmlDataAdapter{
         bindElementData:HTMLElement;
-        rootElement:HTMLElement;
 
-        onInflateAdapter(bindElement:HTMLElement, rootElement:HTMLElement, parent:android.view.ViewGroup):void {
+        onInflateAdapter(bindElement:HTMLElement, context?:Context, parent?:android.view.ViewGroup):void {
             this.bindElementData = bindElement;
-            this.rootElement = rootElement;
             if(parent instanceof NumberPicker){
                 const callBack = (arr: MutationRecord[], observer: MutationObserver)=>{
                     const values = [];

@@ -174,8 +174,8 @@ export class DrawerLayout extends ViewGroup {
     private mShadowRight:Drawable;
 
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        super(context, bindElement, defStyle);
 
         const density:number = this.getResources().getDisplayMetrics().density;
         this.mMinDrawerMargin = Math.floor((DrawerLayout.MIN_DRAWER_MARGIN * density + 0.5));

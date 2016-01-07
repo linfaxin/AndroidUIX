@@ -1,12 +1,16 @@
 /**
  * Created by linfaxin on 15/10/23.
  */
+///<reference path="../android/app/Application.ts"/>
 ///<reference path="../android/view/View.ts"/>
 ///<reference path="../android/view/ViewGroup.ts"/>
 ///<reference path="../android/view/ViewRootImpl.ts"/>
 ///<reference path="../android/widget/FrameLayout.ts"/>
 ///<reference path="../android/view/MotionEvent.ts"/>
 ///<reference path="../android/view/KeyEvent.ts"/>
+///<reference path="../android/view/WindowManager.ts"/>
+///<reference path="../android/app/ActivityThread.ts"/>
+///<reference path="AndroidUIElement.ts"/>
 
 /**
  * Bridge between Html Element and Android View
@@ -14,23 +18,25 @@
 module androidui {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
-    import ViewRootImpl = android.view.ViewRootImpl;
     import FrameLayout = android.widget.FrameLayout;
     import MotionEvent = android.view.MotionEvent;
     import KeyEvent = android.view.KeyEvent;
-
-    let sNextAndroidID = 0;
+    import WindowManager = android.view.WindowManager;
+    import Intent = android.content.Intent;
+    import ActivityThread = android.app.ActivityThread;
 
     export class AndroidUI {
         static DomClassName = 'AndroidUI';
         static BindToElementName = 'AndroidUI';
 
-        element:HTMLElement;
+        androidUIElement:AndroidUIElement;
 
-        private _canvas:HTMLCanvasElement;
-        private _viewRootImpl:ViewRootImpl;
-        private _rootLayout:RootLayout;
-        private rootStyleElement:HTMLStyleElement;
+        private _canvas:HTMLCanvasElement = document.createElement("canvas");
+        private windowManager:WindowManager;
+        private mActivityThread:ActivityThread = new ActivityThread(this);
+        private _viewRootImpl:android.view.ViewRootImpl;
+        private mApplication:android.app.Application;
+
         private rootResourceElement:Element;
 
         private _windowBound = new android.graphics.Rect();
@@ -42,80 +48,79 @@ module androidui {
         private touchAvailable = false;
         private ketEvent = new KeyEvent();
 
-        private AndroidID:number;
-
-        constructor(element:HTMLElement) {
-            this.element = element;
-            if(element[AndroidUI.BindToElementName]){
+        constructor(androidUIElement:AndroidUIElement) {
+            this.androidUIElement = androidUIElement;
+            if(androidUIElement[AndroidUI.BindToElementName]){
                 throw Error('already init a AndroidUI with this element');
             }
-            element[AndroidUI.BindToElementName] = this;
+            androidUIElement[AndroidUI.BindToElementName] = this;
             this.init();
         }
 
 
         private init() {
-            this.AndroidID = sNextAndroidID++;
-            this.element.classList.add(AndroidUI.DomClassName);
-            this.element.classList.add('id-'+this.AndroidID);
+            this.androidUIElement.classList.add(AndroidUI.DomClassName);
 
-            this._viewRootImpl = new ViewRootImpl();
-            this._viewRootImpl.rootElement = this.element;
-            this._rootLayout = new RootLayout();
-            this._canvas = document.createElement("canvas");
+            this._viewRootImpl = new android.view.ViewRootImpl();
+            this._viewRootImpl.androidUIElement = this.androidUIElement;
 
-            this.initInflateView();
-            this.element.innerHTML = '';
+            this.rootResourceElement = this.androidUIElement.querySelector('resources');
+            if(this.rootResourceElement) this.androidUIElement.removeChild(this.rootResourceElement)
+            else this.rootResourceElement = document.createElement('resources')
 
-            this.initElementStyle();
-            if(this.rootResourceElement) this.element.appendChild(this.rootResourceElement);
-            if(this.rootStyleElement) this.element.appendChild(this.rootStyleElement);
-            this.element.appendChild(this._canvas);
+            this.initApplication();
+            this.windowManager = this.mApplication.getWindowManager();
+
+            this.androidUIElement.appendChild(this._canvas);
 
 
-            this.initFocus();
             this.initEvent();
 
-            this.initSizeChange();
+            this.initRootSizeChange();
 
-            this._viewRootImpl.setView(this._rootLayout);
+            this._viewRootImpl.setView(this.windowManager.getWindowsLayout());
             this._viewRootImpl.initSurface(this._canvas);
 
-            this.initVisibleChange();
+            this.initBrowserVisibleChange();
 
+            this.initLaunchActivity();
 
-            let debugAttr = this.element.getAttribute('debug');
-            if(debugAttr!=null && debugAttr!='0' && debugAttr!='false') this.showDebugLayout();
+            this.initAndroidUIElement();
         }
 
-        private initInflateView() {
-            Array.from(this.element.children).forEach((item)=> {
-                if(item.tagName.toLowerCase()==='resources'){
-                    this.rootResourceElement = item;
+        private initApplication() {
+            this.mApplication = new android.app.Application();
+            this.mApplication.androidUI  = this;
 
-                }else if (item instanceof HTMLStyleElement) {
-                    this.rootStyleElement = item;
+            this.mApplication.onCreate();
+        }
 
-                }else if (item instanceof HTMLElement) {
-                    let view = View.inflate(item, this.element, this._rootLayout);
-                    if (view) this._rootLayout.addView(view);
+        private initLaunchActivity(){
+            //launch activity defined in 'android-ui' element
+            for(let ele of Array.from(this.androidUIElement.children)){
+                let activityName = ele.tagName;
+
+                let intent = new Intent(activityName);
+                let activity = this.mActivityThread.performLaunchActivity(intent);
+                if (activity) {
+                    this.androidUIElement.removeChild(ele);
+
+                    //activity could have a attribute defined callback when created
+                    let onCreateFunc = ele.getAttribute('oncreate');
+                    if(onCreateFunc && typeof window[onCreateFunc] === "function"){
+                        window[onCreateFunc].call(this, this);
+                    }
+
+                    for(let element of Array.from((<HTMLElement>ele).children)){
+                        android.view.LayoutInflater.from(activity).inflate(<HTMLElement>element, activity.getWindow().mContentParent, true);
+                    }
+
+                }else if(ele instanceof HTMLUnknownElement){
+                    console.warn('load activity fail: ' + activityName);
                 }
-            });
-        }
-
-        private initElementStyle() {
-            if (!this.rootStyleElement){
-                this.rootStyleElement = document.createElement("style");
-            }
-            this.rootStyleElement.setAttribute('scoped', '');//don't set scoped, or safari will lose the style
-
-            if (this.element.style.display==='none') {
-                this.element.style.display = '';
             }
 
-            if(this.rootStyleElement.innerHTML.length==0){
-                this.rootStyleElement = null;
-            }
+
         }
 
 
@@ -123,7 +128,7 @@ module androidui {
          * @returns {boolean} is bound change
          */
         private refreshWindowBound():boolean {
-            let rootViewBound = this.element.getBoundingClientRect();//get viewRoot bound on touch start
+            let rootViewBound = this.androidUIElement.getBoundingClientRect();//get viewRoot bound on touch start
             let boundLeft = rootViewBound.left;
             let boundTop = rootViewBound.top;
             let boundRight = rootViewBound.right;
@@ -136,9 +141,13 @@ module androidui {
             return true;
         }
 
-        private initFocus(){
-            this.element.setAttribute('tabindex', '0');//let element could get focus. so the key event can handle.
-            this.element.focus();
+        private initAndroidUIElement(){
+            if (this.androidUIElement.style.display==='none') {
+                this.androidUIElement.style.display = '';
+            }
+
+            this.androidUIElement.setAttribute('tabindex', '0');//let element could get focus. so the key event can handle.
+            this.androidUIElement.focus();
         }
 
         private initEvent(){
@@ -149,11 +158,11 @@ module androidui {
         }
 
         private initTouchEvent() {
-            this.element.addEventListener('touchstart', (e)=> {
+            this.androidUIElement.addEventListener('touchstart', (e)=> {
                 this.touchAvailable = true;
                 this.refreshWindowBound();
 
-                this.element.focus();
+                this.androidUIElement.focus();
 
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
@@ -163,7 +172,7 @@ module androidui {
                 }
 
             }, true);
-            this.element.addEventListener('touchmove', (e)=> {
+            this.androidUIElement.addEventListener('touchmove', (e)=> {
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_MOVE, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
@@ -171,7 +180,7 @@ module androidui {
                     return true;
                 }
             }, true);
-            this.element.addEventListener('touchend', (e)=> {
+            this.androidUIElement.addEventListener('touchend', (e)=> {
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_UP, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
@@ -179,7 +188,7 @@ module androidui {
                     return true;
                 }
             }, true);
-            this.element.addEventListener('touchcancel', (e)=> {
+            this.androidUIElement.addEventListener('touchcancel', (e)=> {
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_CANCEL, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
@@ -210,12 +219,12 @@ module androidui {
             }
             let isMouseDown = false;
 
-            this.element.addEventListener('mousedown', (e:MouseEvent)=> {
+            this.androidUIElement.addEventListener('mousedown', (e:MouseEvent)=> {
                 if(this.touchAvailable) return;
                 isMouseDown = true;
                 this.refreshWindowBound();
 
-                this.element.focus();
+                this.androidUIElement.focus();
 
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
@@ -225,7 +234,7 @@ module androidui {
                 }
             }, true);
 
-            this.element.addEventListener('mousemove', (e)=> {
+            this.androidUIElement.addEventListener('mousemove', (e)=> {
                 if(this.touchAvailable) return;
                 if(!isMouseDown) return;
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
@@ -236,7 +245,7 @@ module androidui {
                 }
             }, true);
 
-            this.element.addEventListener('mouseup', (e)=> {
+            this.androidUIElement.addEventListener('mouseup', (e)=> {
                 if(this.touchAvailable) return;
                 isMouseDown = false;
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
@@ -247,9 +256,9 @@ module androidui {
                 }
             }, true);
 
-            this.element.addEventListener('mouseleave', (e)=> {
+            this.androidUIElement.addEventListener('mouseleave', (e)=> {
                 if(this.touchAvailable) return;
-                if(e.fromElement === this.element){
+                if(e.fromElement === this.androidUIElement){
                     isMouseDown = false;
                     this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
                     if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
@@ -263,7 +272,7 @@ module androidui {
 
             let scrollEvent = new MotionEvent();
             //Action_Scroll
-            this.element.addEventListener('mousewheel', (e:MouseWheelEvent)=> {
+            this.androidUIElement.addEventListener('mousewheel', (e:MouseWheelEvent)=> {
                 scrollEvent.initWithMouseWheel(<WheelEvent><any>e);
                 if(this._viewRootImpl.dispatchInputEvent(scrollEvent)){
                     e.stopPropagation();
@@ -274,16 +283,16 @@ module androidui {
         }
 
         private initKeyEvent(){
-            this.element.addEventListener('keydown', (e:KeyboardEvent)=> {
-                this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_DOWN);
+            this.androidUIElement.addEventListener('keydown', (e:KeyboardEvent)=> {
+                this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_DOWN);
                 if(this._viewRootImpl.dispatchInputEvent(this.ketEvent)){
                     e.stopPropagation();
                     e.preventDefault();
                     return true;
                 }
             }, true);
-            this.element.addEventListener('keyup', (e:KeyboardEvent)=> {
-                this.ketEvent.appendKeyEvent(e, KeyEvent.ACTION_UP);
+            this.androidUIElement.addEventListener('keyup', (e:KeyboardEvent)=> {
+                this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_UP);
                 if(this._viewRootImpl.dispatchInputEvent(this.ketEvent)){
                     e.stopPropagation();
                     e.preventDefault();
@@ -293,32 +302,32 @@ module androidui {
 
         }
         private initGenericEvent(){
-            // No generic Event current. Hover event should listen here
+            // No generic Event current. Hover event should listen & dispatch here
         }
 
-        private initSizeChange(){
+        private initRootSizeChange(){
             const _this = this;
             window.addEventListener('resize', ()=>{
-                _this.notifySizeChange();
+                _this.notifyRootSizeChange();
             });
 
-            let lastWidth = this.element.offsetWidth;
-            let lastHeight = this.element.offsetHeight;
-            if(lastWidth>0 && lastHeight>0) this.notifySizeChange();
+            let lastWidth = this.androidUIElement.offsetWidth;
+            let lastHeight = this.androidUIElement.offsetHeight;
+            if(lastWidth>0 && lastHeight>0) this.notifyRootSizeChange();
 
             setInterval(()=>{
-                let width = _this.element.offsetWidth;
-                let height = _this.element.offsetHeight;
+                let width = _this.androidUIElement.offsetWidth;
+                let height = _this.androidUIElement.offsetHeight;
                 if(lastHeight !== height || lastWidth !== width){
                     lastWidth = width;
                     lastHeight = height;
-                    _this.notifySizeChange();
+                    _this.notifyRootSizeChange();
                 }
 
             }, 500);
         }
 
-        private initVisibleChange(){
+        private initBrowserVisibleChange(){
             var eventName = 'visibilitychange';
             if (document['webkitHidden'] != undefined) {
                 eventName = 'webkitvisibilitychange';
@@ -327,12 +336,13 @@ module androidui {
                 if(document['hidden'] || document['webkitHidden']){
                     //hidden
                 }else{
+                    //TODO fire window visible change
                     this._viewRootImpl.invalidate();
                 }
             }, false);
         }
 
-        notifySizeChange(){
+        private notifyRootSizeChange(){
             if(this.refreshWindowBound()) {
                 let density = android.content.res.Resources.getDisplayMetrics().density;
                 this.tempRect.set(this._windowBound.left * density, this._windowBound.top * density,
@@ -347,20 +357,10 @@ module androidui {
             }
         }
 
-        setContentView(view:View){
-            this._rootLayout.removeAllViews();
-            this._rootLayout.addView(view, -1, -1);
-        }
-        addContentView(view:View, params = new ViewGroup.LayoutParams(-1, -1)){
-            this._rootLayout.addView(view, params);
-        }
-        findViewById(id:string):View{
-            return this._rootLayout.findViewById(id);
-        }
 
         showDebugLayout(){
-            if(this._rootLayout.bindElement.parentNode === null){
-                this.element.appendChild(this._rootLayout.bindElement);
+            if(this.windowManager.getWindowsLayout().bindElement.parentNode === null){
+                this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
             }
         }
     }
@@ -394,10 +394,4 @@ module androidui {
         `;
     document.head.appendChild(styleElement);
 
-    //debug layout show the layout in dom.
-    class RootLayout extends FrameLayout{
-        tagName():string {
-            return 'debuglayout';
-        }
-    }
 }

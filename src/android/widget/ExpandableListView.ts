@@ -228,8 +228,8 @@ export class ExpandableListView extends ListView {
     private mIndicatorRect:Rect = new Rect();
 
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle?) {
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.expandableListViewStyle){
+        super(context, bindElement, null);
 
         this._attrBinder.addAttr('groupIndicator', (value)=>{
             this.setGroupIndicator(this._attrBinder.parseDrawable(value));
@@ -274,8 +274,6 @@ export class ExpandableListView extends ListView {
             this.setChildDivider(this._attrBinder.parseDrawable(value));
         });
 
-
-        if(defStyle === undefined) defStyle = android.R.attr.expandableListViewStyle;
         if(defStyle) this.applyDefaultAttributes(defStyle);
     }
 

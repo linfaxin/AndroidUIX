@@ -91,8 +91,8 @@ module com.pnikosis.materialishprogress {
 
         private callback:ProgressWheel.ProgressCallback;
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-            super(bindElement, rootElement);
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:any){
+            super(context, bindElement, null);
 
             // We transform the default values from DIP to pixels
             let metrics:DisplayMetrics = this.getResources().getDisplayMetrics();
@@ -136,9 +136,9 @@ module com.pnikosis.materialishprogress {
                     this.spin();
                 }
             });
-            this.applyDefaultAttributes({
-                progressIndeterminate: true
-            });
+
+            if(defStyle === undefined) defStyle = {progressIndeterminate: true};
+            if(defStyle) this.applyDefaultAttributes(defStyle);
         }
 
 

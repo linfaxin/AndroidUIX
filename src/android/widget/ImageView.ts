@@ -115,8 +115,8 @@ export class ImageView extends View {
     //    ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE ];
 
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        super(context, bindElement, defStyle);
         this.initImageView();
 
         this._attrBinder.addAttr('src', (value)=>{

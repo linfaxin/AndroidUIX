@@ -10,6 +10,7 @@
 ///<reference path="../../android/widget/SpinnerAdapter.ts"/>
 ///<reference path="../../android/database/DataSetObservable.ts"/>
 ///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/content/Context.ts"/>
 
 module androidui.widget{
     import View = android.view.View;
@@ -21,6 +22,7 @@ module androidui.widget{
     import SpinnerAdapter = android.widget.SpinnerAdapter;
     import DataSetObservable = android.database.DataSetObservable;
     import DataSetObserver = android.database.DataSetObserver;
+    import Context = android.content.Context;
 
     export class HtmlDataListAdapter extends BaseAdapter implements HtmlDataAdapter{
         static RefElementTag = "ref-element".toUpperCase();
@@ -28,11 +30,11 @@ module androidui.widget{
         static BindAdapterProperty = "BindAdapter";
 
         bindElementData:HTMLElement;
-        rootElement:HTMLElement;
+        mContext:Context;
 
-        onInflateAdapter(bindElement:HTMLElement, rootElement:HTMLElement, parent:android.view.ViewGroup):void {
+        onInflateAdapter(bindElement:HTMLElement, context?:Context, parent?:android.view.ViewGroup):void {
             this.bindElementData = bindElement;
-            this.rootElement = rootElement;
+            this.mContext = context;
             if(parent instanceof AbsListView){
                 parent.setAdapter(this);
             }
@@ -59,7 +61,7 @@ module androidui.widget{
             let view:View = element[View.AndroidViewProperty];
             this.checkReplaceWithRef(element);
             if(!view){
-                view = View.inflate(<HTMLElement>element, this.rootElement, parent);
+                view = View.inflate(this.mContext, <HTMLElement>element);
                 element[View.AndroidViewProperty] = view;
             }
             return view;

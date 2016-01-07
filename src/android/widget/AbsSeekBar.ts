@@ -66,8 +66,8 @@ class AbsSeekBar extends ProgressBar {
     private mIsDragging:boolean;
 
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle?:any) {
-        super(bindElement, rootElement, null);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        super(context, bindElement, null);
 
         let a = this._attrBinder;
         a.addAttr('thumb', (value)=>{

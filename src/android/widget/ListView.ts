@@ -141,8 +141,8 @@ export class ListView extends AbsListView {
     // Keeps focused children visible through resizes
     private mFocusSelector:ListView.FocusSelector;
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.listViewStyle){
+        super(context, bindElement, null);
         this._attrBinder.addAttr('divider', (value)=>{
             let divider = this._attrBinder.parseDrawable(value);
             if(divider) this.setDivider(divider);
@@ -168,7 +168,7 @@ export class ListView extends AbsListView {
             this.setFooterDividersEnabled(this._attrBinder.parseBoolean(value, true));
         })
 
-        this.applyDefaultAttributes(android.R.attr.listViewStyle);
+        if(defStyle) this.applyDefaultAttributes(defStyle);
     }
 
 // constructor(context:Context, attrs:AttributeSet, defStyle:number) {

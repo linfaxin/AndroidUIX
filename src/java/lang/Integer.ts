@@ -9,5 +9,10 @@ module java.lang{
         static parseInt(value:string):number {
             return Number.parseInt(value);
         }
+
+        static toHexString(n:number):string {
+            if(!n) return n+'';
+            return n.toString(16);
+        }
     }
 }

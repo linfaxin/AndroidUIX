@@ -461,8 +461,9 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     //    p.measureText("H");
     //}
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.textViewStyle){
+        super(context, bindElement, null);
+
         this.mText = "";
         const res:Resources = this.getResources();
         this.mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -672,7 +673,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return this.mSpacingMult;
         });
 
-        this.applyDefaultAttributes(android.R.attr.textViewStyle);
+        if(defStyle) this.applyDefaultAttributes(defStyle);
 
         this.bindElement.innerHTML = this.bindElement.innerHTML.trim();//trim space html
         let text = this.mText || this.bindElement.innerText;

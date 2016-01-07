@@ -1,0 +1,53 @@
+<ScrollView>
+    <LinearLayout
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:gravity="center">
+        <TextView android:layout_width="wrap_content">
+            文本
+        </TextView>
+        <Button android:layout_width="wrap_content">
+            按钮
+        </Button>
+        <ImageView android:src="assets/images/logo_google_3.png">
+        </ImageView>
+        <CheckBox android:layout_width="wrap_content"
+                  android:layout_marginBottom="12dp">
+            复选框
+        </CheckBox>
+        <RadioGroup
+                android:gravity="center"
+                android:orientation="HORIZONTAL"
+                android:layout_marginBottom="12dp">
+            <RadioButton android:layout_width="wrap_content">
+                单选框1
+            </RadioButton>
+            <RadioButton android:layout_width="wrap_content">
+                单选框2
+            </RadioButton>
+            <RadioButton android:layout_width="wrap_content">
+                单选框3
+            </RadioButton>
+        </RadioGroup>
+
+        <ProgressBar android:layout_height="wrap_content"
+                     android:layout_width="wrap_content"
+                     android:layout_marginBottom="12dp"></ProgressBar>
+        <ProgressBar android:layout_height="wrap_content"
+                     android:layout_width="match_parent"
+                     android:layout_marginBottom="12dp"
+                     style="@android.R.attr.progressBarStyleHorizontal"
+                     android:max="100"
+                     android:progress="50"
+                     android:secondaryProgress="70"></ProgressBar>
+
+        <SeekBar android:layout_height="wrap_content"
+                 android:layout_width="match_parent"
+                 android:layout_marginBottom="12dp"></SeekBar>
+
+        <RatingBar android:layout_height="wrap_content"
+                   android:layout_width="wrap_content"
+                   android:layout_marginBottom="12dp"></RatingBar>
+
+    </LinearLayout>
+</ScrollView>

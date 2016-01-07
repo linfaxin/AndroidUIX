@@ -6,6 +6,7 @@
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/drawable/ColorDrawable.ts"/>
 ///<reference path="../../android/content/res/ColorStateList.ts"/>
+///<reference path="../../android/content/Context.ts"/>
 
 module androidui.attr {
     import View = android.view.View;
@@ -15,6 +16,7 @@ module androidui.attr {
     import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import Color = android.graphics.Color;
     import ColorStateList = android.content.res.ColorStateList;
+    import Context = android.content.Context;
     import TypedValue = android.util.TypedValue;
 
     export class AttrBinder {
@@ -22,7 +24,7 @@ module androidui.attr {
         private attrChangeMap = new Map<string, (newValue:any)=>void>();
         private attrStashMap = new Map<string, ()=>any>();
         private objectRefs = [];
-        private rootElement:HTMLElement;
+        private mContext:Context;
 
         constructor(host:View|ViewGroup.LayoutParams){
             this.host = host;
@@ -35,8 +37,8 @@ module androidui.attr {
             if(stashAttrValueWhenStateChange) this.attrStashMap.set(attrName, stashAttrValueWhenStateChange);
         }
 
-        onAttrChange(attrName:string, attrValue:any, rootElement:HTMLElement):void {
-            this.rootElement = rootElement;
+        onAttrChange(attrName:string, attrValue:any, context:Context):void {
+            this.mContext = context;
             if(!attrName) return;
             attrName = attrName.toLowerCase();
             let onAttrChangeCall = this.attrChangeMap.get(attrName);

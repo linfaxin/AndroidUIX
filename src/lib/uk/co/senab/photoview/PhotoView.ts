@@ -45,8 +45,8 @@ export class PhotoView extends ImageView implements IPhotoView {
 
     private mPendingScaleType:ScaleType;
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        super(context, bindElement, defStyle);
         super.setScaleType(ScaleType.MATRIX);
         this.init();
     }

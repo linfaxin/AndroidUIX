@@ -11,8 +11,8 @@ module android.view {
 
     export class ViewTreeObserver {
 
-        private mOnWindowAttachListeners:CopyOnWriteArrayList<ViewTreeObserver.OnWindowAttachListener>;
-        private mOnGlobalFocusListeners:CopyOnWriteArrayList<ViewTreeObserver.OnGlobalFocusChangeListener>;
+        //private mOnWindowAttachListeners:CopyOnWriteArrayList<ViewTreeObserver.OnWindowAttachListener>;
+        //private mOnGlobalFocusListeners:CopyOnWriteArrayList<ViewTreeObserver.OnGlobalFocusChangeListener>;
         private mOnTouchModeChangeListeners:CopyOnWriteArrayList<ViewTreeObserver.OnTouchModeChangeListener>;
 
         private mOnGlobalLayoutListeners:CopyOnWriteArray<ViewTreeObserver.OnGlobalLayoutListener>;
@@ -23,35 +23,35 @@ module android.view {
 
         private mAlive = true;
 
-        addOnWindowAttachListener(listener:ViewTreeObserver.OnWindowAttachListener) {
-            this.checkIsAlive();
-
-            if (this.mOnWindowAttachListeners == null) {
-                this.mOnWindowAttachListeners = new CopyOnWriteArrayList<ViewTreeObserver.OnWindowAttachListener>();
-            }
-
-            this.mOnWindowAttachListeners.add(listener);
-        }
-        removeOnWindowAttachListener(victim:ViewTreeObserver.OnWindowAttachListener) {
-            this.checkIsAlive();
-            if (this.mOnWindowAttachListeners == null) {
-                return;
-            }
-            this.mOnWindowAttachListeners.remove(victim);
-        }
-        dispatchOnWindowAttachedChange(attached:boolean) {
-            // NOTE: because of the use of CopyOnWriteArrayList, we *must* use an iterator to
-            // perform the dispatching. The iterator is a safe guard against listeners that
-            // could mutate the list by calling the various add/remove methods. This prevents
-            // the array from being modified while we iterate it.
-            let listeners = this.mOnWindowAttachListeners;
-            if (listeners != null && listeners.size() > 0) {
-                for (let listener of listeners) {
-                    if (attached) listener.onWindowAttached();
-                    else listener.onWindowDetached();
-                }
-            }
-        }
+        //addOnWindowAttachListener(listener:ViewTreeObserver.OnWindowAttachListener) {
+        //    this.checkIsAlive();
+        //
+        //    if (this.mOnWindowAttachListeners == null) {
+        //        this.mOnWindowAttachListeners = new CopyOnWriteArrayList<ViewTreeObserver.OnWindowAttachListener>();
+        //    }
+        //
+        //    this.mOnWindowAttachListeners.add(listener);
+        //}
+        //removeOnWindowAttachListener(victim:ViewTreeObserver.OnWindowAttachListener) {
+        //    this.checkIsAlive();
+        //    if (this.mOnWindowAttachListeners == null) {
+        //        return;
+        //    }
+        //    this.mOnWindowAttachListeners.remove(victim);
+        //}
+        //dispatchOnWindowAttachedChange(attached:boolean) {
+        //    // NOTE: because of the use of CopyOnWriteArrayList, we *must* use an iterator to
+        //    // perform the dispatching. The iterator is a safe guard against listeners that
+        //    // could mutate the list by calling the various add/remove methods. This prevents
+        //    // the array from being modified while we iterate it.
+        //    let listeners = this.mOnWindowAttachListeners;
+        //    if (listeners != null && listeners.size() > 0) {
+        //        for (let listener of listeners) {
+        //            if (attached) listener.onWindowAttached();
+        //            else listener.onWindowDetached();
+        //        }
+        //    }
+        //}
 
         addOnGlobalLayoutListener(listener:ViewTreeObserver.OnGlobalLayoutListener) {
             this.checkIsAlive();
@@ -90,35 +90,35 @@ module android.view {
                 }
             }
         }
-        addOnGlobalFocusChangeListener(listener:ViewTreeObserver.OnGlobalFocusChangeListener) {
-            this.checkIsAlive();
-
-            if (this.mOnGlobalFocusListeners == null) {
-                this.mOnGlobalFocusListeners = new CopyOnWriteArrayList<ViewTreeObserver.OnGlobalFocusChangeListener>();
-            }
-
-            this.mOnGlobalFocusListeners.add(listener);
-        }
-        removeOnGlobalFocusChangeListener(victim:ViewTreeObserver.OnGlobalFocusChangeListener) {
-            this.checkIsAlive();
-            if (this.mOnGlobalFocusListeners == null) {
-                return;
-            }
-            this.mOnGlobalFocusListeners.remove(victim);
-        }
-
-        dispatchOnGlobalFocusChange(oldFocus:android.view.View, newFocus:android.view.View) {
-            // NOTE: because of the use of CopyOnWriteArrayList, we *must* use an iterator to
-            // perform the dispatching. The iterator is a safe guard against listeners that
-            // could mutate the list by calling the various add/remove methods. This prevents
-            // the array from being modified while we iterate it.
-            const listeners = this.mOnGlobalFocusListeners;
-            if (listeners != null && listeners.size() > 0) {
-                for (let listener of listeners) {
-                    listener.onGlobalFocusChanged(oldFocus, newFocus);
-                }
-            }
-        }
+        //addOnGlobalFocusChangeListener(listener:ViewTreeObserver.OnGlobalFocusChangeListener) {
+        //    this.checkIsAlive();
+        //
+        //    if (this.mOnGlobalFocusListeners == null) {
+        //        this.mOnGlobalFocusListeners = new CopyOnWriteArrayList<ViewTreeObserver.OnGlobalFocusChangeListener>();
+        //    }
+        //
+        //    this.mOnGlobalFocusListeners.add(listener);
+        //}
+        //removeOnGlobalFocusChangeListener(victim:ViewTreeObserver.OnGlobalFocusChangeListener) {
+        //    this.checkIsAlive();
+        //    if (this.mOnGlobalFocusListeners == null) {
+        //        return;
+        //    }
+        //    this.mOnGlobalFocusListeners.remove(victim);
+        //}
+        //
+        //dispatchOnGlobalFocusChange(oldFocus:android.view.View, newFocus:android.view.View) {
+        //    // NOTE: because of the use of CopyOnWriteArrayList, we *must* use an iterator to
+        //    // perform the dispatching. The iterator is a safe guard against listeners that
+        //    // could mutate the list by calling the various add/remove methods. This prevents
+        //    // the array from being modified while we iterate it.
+        //    const listeners = this.mOnGlobalFocusListeners;
+        //    if (listeners != null && listeners.size() > 0) {
+        //        for (let listener of listeners) {
+        //            listener.onGlobalFocusChanged(oldFocus, newFocus);
+        //        }
+        //    }
+        //}
 
         addOnPreDrawListener(listener:ViewTreeObserver.OnPreDrawListener) {
             this.checkIsAlive();
@@ -232,13 +232,13 @@ module android.view {
             }
         }
         merge(observer:ViewTreeObserver){
-            if (observer.mOnWindowAttachListeners != null) {
-                if (this.mOnWindowAttachListeners != null) {
-                    this.mOnWindowAttachListeners.addAll(observer.mOnWindowAttachListeners);
-                } else {
-                    this.mOnWindowAttachListeners = observer.mOnWindowAttachListeners;
-                }
-            }
+            //if (observer.mOnWindowAttachListeners != null) {
+            //    if (this.mOnWindowAttachListeners != null) {
+            //        this.mOnWindowAttachListeners.addAll(observer.mOnWindowAttachListeners);
+            //    } else {
+            //        this.mOnWindowAttachListeners = observer.mOnWindowAttachListeners;
+            //    }
+            //}
 
             //if (observer.mOnWindowFocusListeners != null) {
             //    if (this.mOnWindowFocusListeners != null) {
@@ -314,10 +314,10 @@ module android.view {
     }
 
     export module ViewTreeObserver {
-        export interface OnWindowAttachListener {
-            onWindowAttached();
-            onWindowDetached();
-        }
+        //export interface OnWindowAttachListener {
+        //    onWindowAttached();
+        //    onWindowDetached();
+        //}
         export interface OnGlobalFocusChangeListener {
             onGlobalFocusChanged(oldFocus:android.view.View, newFocus:android.view.View);
         }

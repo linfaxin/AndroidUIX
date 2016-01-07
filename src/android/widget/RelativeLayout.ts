@@ -251,8 +251,8 @@ export class RelativeLayout extends ViewGroup {
     private static DEFAULT_WIDTH:number = 0x00010000;
 
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        super(context, bindElement, defStyle);
 
         this._attrBinder.addAttr('ignoreGravity', (value)=>{
             this.setIgnoreGravity(value);

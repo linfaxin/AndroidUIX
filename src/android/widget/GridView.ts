@@ -119,8 +119,8 @@ export class GridView extends AbsListView {
 
     private mTempRect:Rect = new Rect();
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-        super(bindElement, rootElement);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.gridViewStyle){
+        super(context, bindElement, null);
 
         this._attrBinder.addAttr('horizontalSpacing', (value)=>{
             this.setHorizontalSpacing(this._attrBinder.parseNumber(value, 0));
@@ -147,7 +147,7 @@ export class GridView extends AbsListView {
             this.setNumColumns(this._attrBinder.parseNumber(value, 1));
         });
 
-        this.applyDefaultAttributes(android.R.attr.gridViewStyle);
+        if(defStyle) this.applyDefaultAttributes(defStyle);
     }
 
     // constructor(context:Context, attrs:AttributeSet, defStyle:number) {

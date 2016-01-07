@@ -66,8 +66,8 @@ class CompoundButton extends Button implements Checkable {
 
     private static CHECKED_STATE_SET:number[] = [ View.VIEW_STATE_CHECKED ];
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle?:any) {
-        super(bindElement, rootElement, defStyle);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        super(context, bindElement, null);
 
         this._attrBinder.addAttr('button', (value)=>{
             this.setButtonDrawable(this._attrBinder.parseDrawable(value));
@@ -79,6 +79,7 @@ class CompoundButton extends Button implements Checkable {
         }, ()=>{
             return this.isChecked();
         });
+        if(defStyle!=null) this.applyDefaultAttributes(defStyle);
     }
 
     toggle():void  {

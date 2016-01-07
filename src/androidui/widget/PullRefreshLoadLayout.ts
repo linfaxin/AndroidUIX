@@ -66,10 +66,10 @@ module androidui.widget{
         private overScrollLocker:OverScrollLocker;
         private refreshLoadListener:PullRefreshLoadLayout.RefreshLoadListener;
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-            super(bindElement, rootElement);
-            this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView());
-            this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView());
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+            super(context, bindElement, defStyle);
+            this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView(context));
+            this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView(context));
 
             this._attrBinder.addAttr('refreshEnable', (value)=>{
                 this.setRefreshEnable(this._attrBinder.parseBoolean(value, true));
@@ -400,8 +400,8 @@ module androidui.widget{
         export class DefaultHeaderView extends HeaderView{
             textView:TextView;
             progressBar:ProgressBar;
-            constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-                super(bindElement, rootElement);
+            constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+                super(context, bindElement, defStyle);
                 this.progressBar = new ProgressBar();
                 this.progressBar.setVisibility(View.GONE);
                 this.textView = new TextView();
@@ -441,8 +441,8 @@ module androidui.widget{
         export class DefaultFooterView extends FooterView{
             textView:TextView;
             progressBar:ProgressBar;
-            constructor(bindElement?:HTMLElement, rootElement?:HTMLElement){
-                super(bindElement, rootElement);
+            constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+                super(context, bindElement, defStyle);
                 this.progressBar = new ProgressBar();
                 this.progressBar.setVisibility(View.GONE);
                 this.textView = new TextView();

@@ -84,14 +84,44 @@ module android.view{
         mFlags:number;
 
         private mAction : number;
+        private mKeyCode : number;
         private mDownTime : number;
+        private mEventTime : number;
+        private mAltKey : boolean;
+        private mShiftKey : boolean;
+        private mCtrlKey : boolean;
+        private mMetaKey : boolean;
 
-        _activeKeyEvent : KeyboardEvent;
-        _downingKeyEventMap = new Map<number, KeyboardEvent[]>();
 
+        private mIsTypingKey:boolean;
+        //private _activeKeyEvent : KeyboardEvent;
+        private _downingKeyEventMap = new Map<number, KeyboardEvent[]>();
 
-        appendKeyEvent(keyEvent:KeyboardEvent, action:number){
-            this._activeKeyEvent = keyEvent;
+        static obtain(action:number, code:number):KeyEvent  {
+            let ev:KeyEvent = new KeyEvent();
+            ev.mDownTime = SystemClock.uptimeMillis();
+            ev.mEventTime = SystemClock.uptimeMillis();
+            ev.mAction = action;
+            ev.mKeyCode = code;
+            //ev.mRepeatCount = repeat;
+            //ev.mMetaState = metaState;
+            //ev.mDeviceId = deviceId;
+            //ev.mScanCode = scancode;
+            //ev.mFlags = flags;
+            //ev.mSource = source;
+            //ev.mCharacters = characters;
+            return ev;
+        }
+
+        initKeyEvent(keyEvent:KeyboardEvent, action:number){
+            this.mEventTime = SystemClock.uptimeMillis();
+            this.mKeyCode = keyEvent.keyCode;
+            this.mAltKey = keyEvent.altKey;
+            this.mShiftKey = keyEvent.shiftKey;
+            this.mCtrlKey = keyEvent.ctrlKey;
+            this.mMetaKey = keyEvent.metaKey;
+
+            this.mIsTypingKey = (keyEvent['keyIdentifier']+'').startsWith('U+');//use for check should level touch mode
 
             if(action === KeyEvent.ACTION_DOWN){
                 this.mDownTime = SystemClock.uptimeMillis();
@@ -127,19 +157,19 @@ module android.view{
         }
 
         isAltPressed():boolean{
-            return this._activeKeyEvent.altKey;
+            return this.mAltKey;
         }
 
         isShiftPressed():boolean{
-            return this._activeKeyEvent.shiftKey;
+            return this.mShiftKey;
         }
 
         isCtrlPressed():boolean{
-            return this._activeKeyEvent.ctrlKey;
+            return this.mCtrlKey;
         }
 
         isMetaPressed():boolean{
-            return this._activeKeyEvent.metaKey;
+            return this.mMetaKey;
         }
 
         /**
@@ -184,7 +214,7 @@ module android.view{
         }
 
         getKeyCode():number {
-            return this._activeKeyEvent.keyCode;
+            return this.mKeyCode;
         }
 
         /**
@@ -196,7 +226,7 @@ module android.view{
          * @return The number of times the key has repeated.
          */
         getRepeatCount() {
-            let downArray = this._downingKeyEventMap.get(this._activeKeyEvent.keyCode);
+            let downArray = this._downingKeyEventMap.get(this.mKeyCode);
             return downArray ? downArray.length-1 : 0;
         }
 
@@ -223,7 +253,7 @@ module android.view{
          * in the {@link android.os.SystemClock#uptimeMillis} time base.
          */
         getEventTime():number {
-            return this._activeKeyEvent.timeStamp;
+            return this.mEventTime;
         }
 
 
@@ -312,7 +342,7 @@ module android.view{
         }
 
         toString() {
-            return JSON.stringify(this._activeKeyEvent);
+            return JSON.stringify(this);
         }
 
         static actionToString(action:number):string {

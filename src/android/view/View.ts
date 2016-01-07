@@ -25,6 +25,7 @@
 ///<reference path="TouchDelegate.ts"/>
 ///<reference path="../os/Handler.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
+///<reference path="../content/Context.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../content/res/ColorStateList.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
@@ -40,8 +41,6 @@
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
 ///<reference path="../../androidui/attr/AttrBinder.ts"/>
-///<reference path="../../androidui/util/ClassFinder.ts"/>
-///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
 ///<reference path="../../androidui/util/PerformanceAdjuster.ts"/>
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
 ///<reference path="KeyEvent.ts"/>
@@ -77,6 +76,7 @@ module android.view {
     import CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
     import ArrayList = java.util.ArrayList;
     import OnAttachStateChangeListener = View.OnAttachStateChangeListener;
+    import Context = android.content.Context;
     import Resources = android.content.res.Resources;
     import ColorStateList = android.content.res.ColorStateList;
     import Pools = android.util.Pools;
@@ -86,8 +86,6 @@ module android.view {
     import StateAttrList = androidui.attr.StateAttrList;
     import StateAttr = androidui.attr.StateAttr;
     import AttrBinder = androidui.attr.AttrBinder;
-    import ClassFinder = androidui.util.ClassFinder;
-    import HtmlDataAdapter = androidui.widget.HtmlDataAdapter;
     import PerformanceAdjuster = androidui.util.PerformanceAdjuster;
     import NetDrawable = androidui.image.NetDrawable;
     import KeyEvent = android.view.KeyEvent;
@@ -626,6 +624,8 @@ module android.view {
         private mPrivateFlags2 = 0;
         private mPrivateFlags3 = 0;
 
+        private mContext:Context;
+
         protected mCurrentAnimation:Animation = null;
 
         private mOldWidthMeasureSpec = Number.MIN_SAFE_INTEGER;
@@ -730,15 +730,15 @@ module android.view {
         mPaddingTop = 0;
         mPaddingBottom = 0;
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle=android.R.attr.viewStyle) {
+        constructor(context?:Context, bindElement?:HTMLElement, defStyle=android.R.attr.viewStyle) {
             super();
-
+            this.mContext = context;
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
             this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
 
             this.initBindAttr(this._attrBinder);
 
-            this.initBindElement(bindElement, rootElement);
+            this.initBindElement(bindElement);
 
             if(defStyle) this.applyDefaultAttributes(defStyle);
         }
@@ -924,7 +924,12 @@ module android.view {
                 if(d instanceof NetDrawable) return d.getImage().src;
             });
         }
-
+        getContext():Context {
+            if(this.mContext == null && this.mAttachInfo!=null){
+                return this.mAttachInfo.mRootView.mContext;
+            }
+            return this.mContext;
+        }
         getWidth():number {
             return this.mRight - this.mLeft;
         }
@@ -2320,9 +2325,9 @@ module android.view {
                     // time it is visible and gets invalidated
                     this.mPrivateFlags |= View.PFLAG_DRAWN;
                 }
-                if (this.mAttachInfo != null) {
-                    this.mAttachInfo.mViewVisibilityChanged = true;
-                }
+                //if (this.mAttachInfo != null) {
+                //    this.mAttachInfo.mViewVisibilityChanged = true;
+                //}
             }
 
 
@@ -2341,9 +2346,9 @@ module android.view {
                         if (this.hasFocus()) this.clearFocus();
                     }
                 }
-                if (this.mAttachInfo != null) {
-                    this.mAttachInfo.mViewVisibilityChanged = true;
-                }
+                //if (this.mAttachInfo != null) {
+                //    this.mAttachInfo.mViewVisibilityChanged = true;
+                //}
             }
             if ((changed & View.VISIBILITY_MASK) != 0) {
                 // If the view is invisible, cleanup its display list to free up resources
@@ -2404,9 +2409,9 @@ module android.view {
         onScrollChanged(l:number, t:number, oldl:number, oldt:number) {
             this.mBackgroundSizeChanged = true;
 
-            let ai = this.mAttachInfo;
-            if (ai != null) {
-                ai.mViewScrollChanged = true;
+            let rootImpl = this.getViewRootImpl();
+            if (rootImpl != null) {
+                rootImpl.mViewScrollChanged = true;
             }
         }
         protected onSizeChanged(w:number, h:number, oldw:number, oldh:number):void {
@@ -2541,9 +2546,9 @@ module android.view {
             }
         }
         notifyGlobalFocusCleared(oldFocus:View) {
-            if (oldFocus != null && this.mAttachInfo != null) {
-                this.mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, null);
-            }
+            //if (oldFocus != null && this.mAttachInfo != null) {
+            //    this.mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, null);
+            //}
         }
         rootViewRequestFocus() {
             const root = this.getRootView();
@@ -2715,9 +2720,9 @@ module android.view {
                     this.mParent.requestChildFocus(this, this);
                 }
 
-                if (this.mAttachInfo != null) {
-                    this.mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, this);
-                }
+                //if (this.mAttachInfo != null) {
+                //    this.mAttachInfo.mTreeObserver.dispatchOnGlobalFocusChange(oldFocus, this);
+                //}
 
                 this.onFocusChanged(true, direction, previouslyFocusedRect);
                 this.refreshDrawableState();
@@ -2783,8 +2788,8 @@ module android.view {
 
 
         isInTouchMode():boolean{
-            if (this.mAttachInfo != null) {
-                return this.mAttachInfo.mInTouchMode;
+            if (this.getViewRootImpl() != null) {
+                return this.getViewRootImpl().mInTouchMode;
             } else {
                 return false;
             }
@@ -2819,7 +2824,7 @@ module android.view {
         dispatchVisibilityChanged(changedView:View, visibility:number) {
             this.onVisibilityChanged(changedView, visibility);
         }
-        protected onVisibilityChanged(changedView:View, visibility:number) {
+        protected onVisibilityChanged(changedView:View, visibility:number):void {
             if (visibility == View.VISIBLE) {
                 if (this.mAttachInfo != null) {
                     this.initialAwakenScrollBars();
@@ -3044,9 +3049,9 @@ module android.view {
                             // take focus if we don't have it already and we should in
                             // touch mode.
                             let focusTaken = false;
-                            //if (isFocusable() && isFocusableInTouchMode() && !isFocused()) {//TODO when focus ok
-                            //    focusTaken = requestFocus();
-                            //}
+                            if (this.isFocusable() && this.isFocusableInTouchMode() && !this.isFocused()) {
+                                focusTaken = this.requestFocus();
+                            }
 
                             if (prepressed) {
                                 // The button is being released before we actually
@@ -3444,7 +3449,7 @@ module android.view {
         }
         getViewTreeObserver() {
             if (this.mAttachInfo != null) {
-                return this.mAttachInfo.mTreeObserver;
+                return this.mAttachInfo.mViewRootImpl.mTreeObserver;
             }
             if (this.mFloatingTreeObserver == null) {
                 this.mFloatingTreeObserver = new ViewTreeObserver();
@@ -4414,7 +4419,7 @@ module android.view {
             }
             let privateFlags = this.mPrivateFlags;
             const dirtyOpaque = (privateFlags & View.PFLAG_DIRTY_MASK) == View.PFLAG_DIRTY_OPAQUE &&
-                (this.mAttachInfo == null || !this.mAttachInfo.mIgnoreDirtyState);
+                (this.getViewRootImpl() == null || !this.getViewRootImpl().mIgnoreDirtyState);
             this.mPrivateFlags = (privateFlags & ~View.PFLAG_DIRTY_MASK) | View.PFLAG_DRAWN;
 
             // draw the background, if needed
@@ -4913,7 +4918,7 @@ module android.view {
             if ((this.mViewFlags & View.ENABLED_MASK) == View.ENABLED) viewStateIndex |= View.VIEW_STATE_ENABLED;
             if (this.isFocused()) viewStateIndex |= View.VIEW_STATE_FOCUSED;
             if ((privateFlags & View.PFLAG_SELECTED) != 0) viewStateIndex |= View.VIEW_STATE_SELECTED;
-            if (this.hasWindowFocus()) viewStateIndex |= View.VIEW_STATE_WINDOW_FOCUSED;//TODO impl when focus ok
+            if (this.hasWindowFocus()) viewStateIndex |= View.VIEW_STATE_WINDOW_FOCUSED;
             if ((privateFlags & View.PFLAG_ACTIVATED) != 0) viewStateIndex |= View.VIEW_STATE_ACTIVATED;
 //        if (mAttachInfo != null && mAttachInfo.mHardwareAccelerationRequested &&
 //                HardwareRenderer.isAvailable()) {
@@ -5534,7 +5539,7 @@ module android.view {
             // We will need to evaluate the drawable state at least once.
             this.mPrivateFlags |= View.PFLAG_DRAWABLE_STATE_DIRTY;
             if (this.mFloatingTreeObserver != null) {
-                info.mTreeObserver.merge(this.mFloatingTreeObserver);
+                info.mViewRootImpl.mTreeObserver.merge(this.mFloatingTreeObserver);
                 this.mFloatingTreeObserver = null;
             }
             if ((this.mPrivateFlags&View.PFLAG_SCROLL_CONTAINER) != 0) {
@@ -5719,159 +5724,24 @@ module android.view {
         }
 
         getResources():Resources {
-            return Resources.from(this);
+            let context = this.getContext();
+            if(context!=null){
+                return context.getResources();
+            }
+            return Resources.getSystem();
         }
 
-        static inflate(eleOrRef:HTMLElement|string, rootElement:HTMLElement, viewParent?:ViewGroup):View{
-            let domtree : HTMLElement;
-            if(typeof eleOrRef === "string"){
-                let ref = <HTMLElement>View.findReference(eleOrRef, rootElement);
-                if(ref==null){
-                    console.warn('not find Reference :'+ eleOrRef);
-                    return null;
-                }
-                domtree = <HTMLElement>ref.firstElementChild;
-            }else{
-                domtree = <HTMLElement>eleOrRef;
-            }
-            let className = domtree.tagName;
-            if(className.startsWith('ANDROID-')){
-                className = className.substring('ANDROID-'.length);
-            }
-            if(className === 'LAYOUT'){// android-layout defined in resources tag
-                let child = domtree.firstElementChild;
-                if(child) return View.inflate(<HTMLElement>child, rootElement, viewParent);
-                return null;
-
-            }else if(className === 'INCLUDE'){
-                let refLayoutId = domtree.getAttribute('layout');
-                let view = View.inflate(refLayoutId, rootElement, viewParent);
-                if(view){
-                    //merge attr
-                    for(let attr of Array.from(domtree.attributes)){
-                        let name = attr.name;
-                        if(name==='layout') continue;
-                        view.bindElement.setAttribute(name, attr.value);
-                    }
-                }
-                return view;
-
-            }else if(className === 'MERGE'){
-                if(!viewParent) throw Error('merge tag need ViewParent');
-                Array.from(domtree.children).forEach((item)=>{
-                    if(item instanceof HTMLElement){
-                        let view = View.inflate(item, rootElement, viewParent);
-                        if(view instanceof View) viewParent.addView(view);
-                    }
-                });
-                return viewParent;
-            }
-
-            let rootViewClass = ClassFinder.findClass(className, android.view);
-            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android['widget']);
-            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, androidui['widget']);
-            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className);
-            if(!rootViewClass){
-                if(document.createElement(className) instanceof HTMLUnknownElement){
-                    console.warn('inflate: not find class ' + className);
-                }
-                return null;
-            }
-            let children = Array.from(domtree.children);//children may change when new the view
-            //parse default style
-            let defStyle;
-            let styleAttrValue = domtree.getAttribute('style');
-            if(styleAttrValue){
-                try {
-                    while(styleAttrValue.startsWith('@')) styleAttrValue = styleAttrValue.substring(1);
-                    defStyle = eval(styleAttrValue);
-                } catch (e) {
-                }
-            }
-            let rootView:View;
-            if(defStyle) rootView = new rootViewClass(domtree, rootElement, defStyle);
-            else rootView = new rootViewClass(domtree, rootElement);
-
-            if(rootView['onInflateAdapter']){//inflate a adapter.
-                (<HtmlDataAdapter><any>rootView).onInflateAdapter(domtree, rootElement, viewParent);
-                domtree.parentNode.removeChild(domtree);
-            }
-            if(!(rootView instanceof View)) return rootView;
-
-            let params;
-            if(viewParent){
-                params = viewParent.generateDefaultLayoutParams();
-                params.parseAttributeFrom(domtree, rootElement);
-                rootView.setLayoutParams(params);
-            }
-
-            //fire attr change after layout ok. So 'layout_xxx' attr will be parsed
-            rootView._fireInitedAttributeChange();
-
-            if(rootView instanceof ViewGroup){
-                let parent = <ViewGroup><any>rootView;
-                children.forEach((item)=>{
-                    if(item instanceof HTMLElement){
-                        let view = View.inflate(item, rootElement, parent);
-                        if(view instanceof View && view!==parent) parent.addView(view);
-                    }
-                });
-            }
-
-            rootView.onFinishInflate();
-            return rootView;
+        static inflate(context:Context, xml:HTMLElement, root?:ViewGroup):View{
+            return LayoutInflater.from(context).inflate(xml, root);
         }
-
-        static optReferenceString(refString:string, currentElement:NodeSelector=document,
-                                     rootElement:NodeSelector=document):string {
-            return View.findReferenceString(refString, currentElement, rootElement) || refString;
-        }
-
-        static findReferenceString(refString:string, currentElement:NodeSelector=document,
-                                   rootElement:NodeSelector=document):string {
-            if(!refString.startsWith('@')) return null;
-            let referenceArray = [];
-            let attrValue = refString;
-            while(attrValue && attrValue.startsWith('@')){//ref value
-                let reference = View.findReference(attrValue, currentElement, rootElement, false);
-                if(referenceArray.indexOf(reference)>=0) throw Error('findReference Error: circle reference');
-                referenceArray.push(reference);
-
-                attrValue = (<HTMLElement>reference).innerText;
-            }
-            return attrValue;
-        }
-
-        static findReference(refString:string, currentElement:NodeSelector=document,
-                             rootElement:NodeSelector=document, cloneNode=true):Element {
-            if(refString && refString.startsWith('@')){
-                let [tagName, ...refIds] = refString.split('/');
-                tagName = tagName.substring(1);
-                if(!refIds || refIds.length===0) return null;
-
-                if(!tagName.startsWith('android-')) tagName = 'android-'+tagName;
-                //@style/btn1/pressed => resources android-style#btn1 #pressed
-                let q = 'resources '+tagName + '#' + (<any>refIds).join(' #');
-                let el = currentElement.querySelector(q) || rootElement.querySelector(q) || document.querySelector(q);
-                return cloneNode ? <Element>el.cloneNode(true) : el;
-            }
-            return null;
-        }
-
 
 
         //bind Element show the layout and extra info
         bindElement: HTMLElement;
-        _rootElement: HTMLElement;
         private _AttrObserver:MutationObserver;
         private _stateAttrList:StateAttrList;
         protected _attrBinder = new AttrBinder(this);
         static AndroidViewProperty = 'AndroidView';
-        get rootElement():HTMLElement{
-            if(this._rootElement) return this._rootElement;
-            if(this.getViewRootImpl()) return this.getViewRootImpl().rootElement;
-            return null;
-        }
         private _AttrObserverCallBack(arr: MutationRecord[], observer: MutationObserver){
             arr.forEach((record)=>{
                 let target = <Element>record.target;
@@ -5885,7 +5755,7 @@ module android.view {
             });
         }
 
-        protected initBindElement(bindElement?:HTMLElement, rootElement?:HTMLElement):void{
+        protected initBindElement(bindElement?:HTMLElement):void{
             if(this.bindElement){
                 this.bindElement[View.AndroidViewProperty] = null;
             }
@@ -5897,9 +5767,8 @@ module android.view {
                 if(oldBindView._AttrObserver) oldBindView._AttrObserver.disconnect();
             }
             this.bindElement[View.AndroidViewProperty]=this;
-            this._rootElement = rootElement;
 
-            this._stateAttrList = new StateAttrList(this.bindElement, rootElement);
+            this._stateAttrList = new StateAttrList(this);
             this._parseInitedAttribute();
             this._initAttrObserver();
         }
@@ -6114,13 +5983,13 @@ module android.view {
                 attrName = attrName.substring('layout_'.length);
                 let params = this.getLayoutParams();
                 if(params){
-                    params._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
+                    params._attrBinder.onAttrChange(attrName, newVal, this.getContext());
                     this.requestLayout();
                 }
                 return;
             }
 
-            this._attrBinder.onAttrChange(attrName, newVal, this.rootElement);
+            this._attrBinder.onAttrChange(attrName, newVal, this.getContext());
             
         }
 
@@ -6142,14 +6011,14 @@ module android.view {
         applyDefaultAttributes(attrs:any){
             for(let key in attrs){
                 if(!this.hasAttributeIgnoreCase(key)){
-                    this._attrBinder.onAttrChange(key, attrs[key], this.rootElement);
+                    this._attrBinder.onAttrChange(key, attrs[key], this.getContext());
                 }
             }
         }
 
 
         tagName() : string{
-            return "ANDROID-"+this.constructor.name;
+            return this.constructor.name;
         }
     }
 
@@ -6322,9 +6191,9 @@ module android.view {
             }
         }
         export class AttachInfo {
-            mRootView:View;
-            mWindowLeft = 0;
-            mWindowTop = 0;
+            mRootView:View;//root view of window
+            //mWindowLeft = 0;
+            //mWindowTop = 0;
             mKeyDispatchState = new KeyEvent.DispatcherState();
             mDrawingTime=0;
             //mCanvas : Canvas;
@@ -6341,16 +6210,14 @@ module android.view {
              */
             mTmpTransformation:Transformation = new Transformation();
             mScrollContainers = new Set<View>();
-            mViewScrollChanged = false;
-            mTreeObserver = new ViewTreeObserver();
+            //mViewScrollChanged = false;
+            //mTreeObserver = new ViewTreeObserver();
             mViewRequestingLayout:View;
-            mViewVisibilityChanged = false;
+            //mViewVisibilityChanged = false;
             mInvalidateChildLocation = new Array<number>(2);
-            mIgnoreDirtyState = false;
-            mSetIgnoreDirtyState = false;
             mHasWindowFocus = false;
             mWindowVisibility = 0;
-            mInTouchMode = false;
+            //mInTouchMode = false;
 
             constructor(mViewRootImpl:ViewRootImpl, mHandler:Handler) {
                 this.mViewRootImpl = mViewRootImpl;

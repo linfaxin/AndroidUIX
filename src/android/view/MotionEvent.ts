@@ -8,7 +8,6 @@
 
 
 module android.view {
-    import Resources = android.content.res.Resources;
     import Rect = android.graphics.Rect;
     import ViewConfiguration = android.view.ViewConfiguration;
 
@@ -290,12 +289,12 @@ module android.view {
         }
 
         getX(pointerIndex = 0):number {
-            let density = Resources.getDisplayMetrics().density;
+            let density = android.content.res.Resources.getDisplayMetrics().density;
             return (this.mTouchingPointers[pointerIndex].clientX) * density + this.mXOffset;
         }
 
         getY(pointerIndex = 0):number {
-            let density = Resources.getDisplayMetrics().density;
+            let density = android.content.res.Resources.getDisplayMetrics().density;
             return (this.mTouchingPointers[pointerIndex].clientY) * density + this.mYOffset;
         }
 
@@ -318,12 +317,12 @@ module android.view {
         }
 
         getRawX():number {
-            let density = Resources.getDisplayMetrics().density;
+            let density = android.content.res.Resources.getDisplayMetrics().density;
             return (this.mTouchingPointers[0].clientX) * density;
         }
 
         getRawY():number {
-            let density = Resources.getDisplayMetrics().density;
+            let density = android.content.res.Resources.getDisplayMetrics().density;
             return (this.mTouchingPointers[0].clientY) * density;
         }
 
@@ -333,13 +332,13 @@ module android.view {
         }
 
         getHistoricalX(pointerIndex:number, pos:number):number {
-            let density = Resources.getDisplayMetrics().density;
+            let density = android.content.res.Resources.getDisplayMetrics().density;
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
             return (moveHistory[pos].clientX) * density + this.mXOffset;
         }
 
         getHistoricalY(pointerIndex:number, pos:number):number {
-            let density = Resources.getDisplayMetrics().density;
+            let density = android.content.res.Resources.getDisplayMetrics().density;
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
             return (moveHistory[pos].clientY) * density + this.mYOffset;
         }
@@ -360,10 +359,10 @@ module android.view {
         }
 
         getTouchMajor(pointerIndex?:number):number {
-            return Math.floor(Resources.getDisplayMetrics().density);//no touch major impl
+            return Math.floor(android.content.res.Resources.getDisplayMetrics().density);//no touch major impl
         }
         getHistoricalTouchMajor(pointerIndex?:number, pos?:number):number {
-            return Math.floor(Resources.getDisplayMetrics().density);//no touch major impl
+            return Math.floor(android.content.res.Resources.getDisplayMetrics().density);//no touch major impl
         }
 
         /**

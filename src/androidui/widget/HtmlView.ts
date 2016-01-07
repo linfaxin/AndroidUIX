@@ -22,8 +22,8 @@ module androidui.widget {
 
     export class HtmlView extends HtmlBaseView {
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-            super(bindElement, rootElement);
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+            super(context, bindElement, defStyle);
         }
 
         protected onMeasure(widthMeasureSpec:any, heightMeasureSpec:any):void {

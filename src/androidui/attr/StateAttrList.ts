@@ -6,23 +6,26 @@
 ///<reference path="../../android/util/StateSet.ts"/>
 
 module androidui.attr{
+    import View = android.view.View;
 
     export class StateAttrList{
         private list = new Array<StateAttr>(0);
         private list_reverse:StateAttr[];
         private match_list = new Array<StateAttr>(0);
+        private mView:View;
 
-        constructor(ele:Element, rootElement:HTMLElement){
+        constructor(view:View){
+            this.mView = view;
             this.list.push(new StateAttr([]));//init state
-            this._initStyleAttributes(ele, [], rootElement);
+            this._initStyleAttributes(view.bindElement, []);
         }
 
-        private _initStyleAttributes(ele:Element, inParseState:number[], rootElement:HTMLElement){
+        private _initStyleAttributes(ele:Element, inParseState:number[]){
             let attributes = Array.from(ele.attributes);
             //parse ref style first
             attributes.forEach((attr:Attr)=>{
                 if(attr.name==='style' || attr.name==='android:style'){
-                    this._initStyleAttr(attr, ele, inParseState, rootElement);
+                    this._initStyleAttr(attr, ele, inParseState);
                 }
             });
             //parse inline style (override the ref style)
@@ -33,19 +36,19 @@ module androidui.attr{
                 if(attr.name.startsWith('android:state_') || attr.name.startsWith('state_')){
                     return;
                 }
-                this._initStyleAttr(attr, ele, inParseState, rootElement);
+                this._initStyleAttr(attr, ele, inParseState);
             });
             //parse ref stated style
             attributes.forEach((attr:Attr)=>{
                 if(attr.name.startsWith('android:state_') || attr.name.startsWith('state_')){
-                    this._initStyleAttr(attr, ele, inParseState, rootElement);
+                    this._initStyleAttr(attr, ele, inParseState);
                 }
             });
 
             this.list_reverse = this.list.concat().reverse();
         }
 
-        private _initStyleAttr(attr:Attr, ele:Element, inParseState:number[], rootElement:HTMLElement){
+        private _initStyleAttr(attr:Attr, ele:Element, inParseState:number[]){
             let attrName = attr.name;
             if(!attrName.startsWith('android:')) return;
             attrName = attrName.substring('android:'.length);
@@ -69,18 +72,18 @@ module androidui.attr{
             if(attrName.startsWith('state_') || attrName==='style'){
                 //attr with state
                 if(attrValue.startsWith('@')){
-                    let reference = android.view.View.findReference(attrValue, ele, rootElement, false);
-                    if(reference) this._initStyleAttributes(reference, inParseState, rootElement);
+                    let reference = this.mView.getResources().getReference(attrValue, false);
+                    if(reference) this._initStyleAttributes(reference, inParseState);
 
                 }else{
                     for(let part of attrValue.split(';')){
                         let [name, value] = part.split(':');
-                        value = value ? android.view.View.optReferenceString(value.trim(), ele, rootElement) : '';
+                        value = value ? this.mView.getResources().getString(value) : '';
                         if(name) _stateAttr.setAttr(name.trim().toLowerCase(), value);
                     }
                 }
             }else{
-                attrValue = android.view.View.optReferenceString(attrValue, ele, rootElement);
+                attrValue = this.mView.getResources().getString(attrValue);
                 _stateAttr.setAttr(attrName, attrValue);
             }
         }

@@ -5,7 +5,6 @@
 ///<reference path="../content/res/Resources.ts"/>
 
 module android.util{
-    import Resources = android.content.res.Resources;
 
     export class TypedValue{
         static COMPLEX_UNIT_PX = 'px';
@@ -52,7 +51,7 @@ module android.util{
             return size * scale;
         }
 
-        static complexToDimensionPixelSize(valueWithUnit:string, baseValue = 0, metrics = Resources.getDisplayMetrics()):number {
+        static complexToDimensionPixelSize(valueWithUnit:string, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()):number {
             if(this.initUnit) this.initUnit();
             if(valueWithUnit===undefined || valueWithUnit===null){
                 throw Error('complexToDimensionPixelSize error: valueWithUnit is '+valueWithUnit);

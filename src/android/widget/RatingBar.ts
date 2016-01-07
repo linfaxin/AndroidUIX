@@ -56,8 +56,8 @@ export class RatingBar extends AbsSeekBar {
     private mOnRatingBarChangeListener:RatingBar.OnRatingBarChangeListener;
 
 
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle=android.R.attr.ratingBarStyle) {
-        super(bindElement, rootElement, null);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.ratingBarStyle){
+        super(context, bindElement, null);
 
         const a = this._attrBinder;
         a.addAttr('numStars', (value)=>{

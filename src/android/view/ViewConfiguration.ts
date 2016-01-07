@@ -6,7 +6,6 @@
 
 module android.view{
     import SparseArray = android.util.SparseArray;
-    import Resources = android.content.res.Resources;
 
     export class ViewConfiguration{
         private static SCROLL_BAR_SIZE = 8;
@@ -50,7 +49,7 @@ module android.view{
             return ViewConfiguration.instance;
         }
 
-        private density = Resources.getDisplayMetrics().density;
+        private density = android.content.res.Resources.getDisplayMetrics().density;
         private sizeAndDensity = this.density;
         mEdgeSlop:number = this.sizeAndDensity * ViewConfiguration.EDGE_SLOP;
         mFadingEdgeLength:number = this.sizeAndDensity * ViewConfiguration.FADING_EDGE_LENGTH;

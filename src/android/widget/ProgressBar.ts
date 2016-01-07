@@ -262,8 +262,8 @@ export class ProgressBar extends View {
      * Create a new progress bar with range 0...100 and initial progress of 0.
      * @param context the application environment
      */
-    constructor(bindElement?:HTMLElement, rootElement?:HTMLElement, defStyle=android.R.attr.progressBarStyle) {
-        super(bindElement, rootElement, null);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.progressBarStyle){
+        super(context, bindElement, null);
 
         this.initProgressBar();
 

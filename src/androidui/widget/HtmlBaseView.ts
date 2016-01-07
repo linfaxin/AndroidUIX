@@ -18,9 +18,8 @@ module androidui.widget {
 
     export class HtmlBaseView extends View {
 
-        constructor(bindElement?:HTMLElement, rootElement?:HTMLElement) {
-            super(bindElement, rootElement);
-
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:any) {
+            super(context, bindElement, defStyle);
         }
 
         onTouchEvent(event:android.view.MotionEvent):boolean {
@@ -36,11 +35,7 @@ module androidui.widget {
 
         protected onAttachedToWindow():void {
             //HtmlBaseView show at debug layout
-            if(this.rootElement){
-                let androidUI:androidui.AndroidUI = this.rootElement[androidui.AndroidUI.BindToElementName];
-                androidUI.showDebugLayout();
-            }
-
+            this.getContext().androidUI.showDebugLayout();
             return super.onAttachedToWindow();
         }
     }

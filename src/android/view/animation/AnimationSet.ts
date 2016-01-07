@@ -124,7 +124,7 @@ export class AnimationSet extends Animation {
      *        should use the interpolator associated with this AnimationSet.
      *        Pass false if each animation should use its own interpolator.
      */
-    constructor(shareInterpolator:boolean) {
+    constructor(shareInterpolator=false) {
         super();
         this.setFlag(AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK, shareInterpolator);
         this.init();
