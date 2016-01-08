@@ -2677,7 +2677,6 @@ declare module android.view {
         playSoundEffect(soundConstant: number): void;
         performHapticFeedback(feedbackConstant: number): boolean;
         performClick(event?: MotionEvent): boolean;
-        private _sendClickToBindElement(event?);
         callOnClick(): boolean;
         performLongClick(): boolean;
         performButtonActionOnTouchDown(event: MotionEvent): boolean;
@@ -2879,6 +2878,7 @@ declare module android.view {
         getResources(): Resources;
         static inflate(context: Context, xml: HTMLElement, root?: ViewGroup): View;
         bindElement: HTMLElement;
+        private bindElementOnClickAttr;
         private _AttrObserver;
         private _stateAttrList;
         protected _attrBinder: AttrBinder;
@@ -3122,7 +3122,7 @@ declare module androidui {
     }
 }
 declare module androidui {
-    class AndroidUIElement extends HTMLElement {
+    class AndroidUIElement extends HTMLDivElement {
         AndroidUI: AndroidUI;
         private performCreate();
         createdCallback(): void;

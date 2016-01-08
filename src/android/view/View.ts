@@ -3317,29 +3317,17 @@ module android.view {
         }
 
         performClick(event?:MotionEvent):boolean {
-            this._sendClickToBindElement(event);
+            let handle = false;
+            if(this.bindElementOnClickAttr){
+                handle = eval(this.bindElementOnClickAttr);
+            }
 
             let li = this.mListenerInfo;
             if (li != null && li.mOnClickListener != null) {
-                li.mOnClickListener.onClick(this);
-                return true;
+                handle = li.mOnClickListener.onClick(this) || handle;
             }
 
-            return false;
-        }
-        private _sendClickToBindElement(event?:MotionEvent){
-            let touch = event ? event._activeTouch : null;
-            let screenX = touch ? touch.screenX : 0;
-            let screenY = touch ? touch.screenY : 0;
-            let clientX = touch ? touch.clientX : 0;
-            let clientY = touch ? touch.clientY : 0;
-
-            // Synthesise a click event, with an extra attribute so it can be tracked
-            let clickEvent = document.createEvent('MouseEvents');
-            clickEvent.initMouseEvent('click', false, true, window, 1, screenX, screenY, clientX, clientY, false, false, false, false, 0, null);
-            (<any>clickEvent).forwardedTouchEvent = true;
-            clickEvent[View.AndroidViewProperty] = this;
-            this.bindElement.dispatchEvent(clickEvent);
+            return handle;
         }
 
         callOnClick():boolean {
@@ -5743,6 +5731,7 @@ module android.view {
 
         //bind Element show the layout and extra info
         bindElement: HTMLElement;
+        private bindElementOnClickAttr:string;
         private _AttrObserver:MutationObserver;
         private _stateAttrList:StateAttrList;
         protected _attrBinder = new AttrBinder(this);
@@ -5765,6 +5754,9 @@ module android.view {
                 this.bindElement[View.AndroidViewProperty] = null;
             }
             this.bindElement = bindElement || document.createElement(this.tagName());
+            this.bindElementOnClickAttr = this.bindElement.getAttribute('onclick');
+            this.bindElement.removeAttribute('onclick');//remove avoid when debug layout show, will trigger click twice on safari.
+
             this.bindElement.style.position = 'absolute';
 
             let oldBindView:View = this.bindElement[View.AndroidViewProperty];

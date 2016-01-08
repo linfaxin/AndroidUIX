@@ -11635,25 +11635,15 @@ var android;
                 return false;
             }
             performClick(event) {
-                this._sendClickToBindElement(event);
+                let handle = false;
+                if (this.bindElementOnClickAttr) {
+                    handle = eval(this.bindElementOnClickAttr);
+                }
                 let li = this.mListenerInfo;
                 if (li != null && li.mOnClickListener != null) {
-                    li.mOnClickListener.onClick(this);
-                    return true;
+                    handle = li.mOnClickListener.onClick(this) || handle;
                 }
-                return false;
-            }
-            _sendClickToBindElement(event) {
-                let touch = event ? event._activeTouch : null;
-                let screenX = touch ? touch.screenX : 0;
-                let screenY = touch ? touch.screenY : 0;
-                let clientX = touch ? touch.clientX : 0;
-                let clientY = touch ? touch.clientY : 0;
-                let clickEvent = document.createEvent('MouseEvents');
-                clickEvent.initMouseEvent('click', false, true, window, 1, screenX, screenY, clientX, clientY, false, false, false, false, 0, null);
-                clickEvent.forwardedTouchEvent = true;
-                clickEvent[View.AndroidViewProperty] = this;
-                this.bindElement.dispatchEvent(clickEvent);
+                return handle;
             }
             callOnClick() {
                 let li = this.mListenerInfo;
@@ -13410,6 +13400,8 @@ var android;
                     this.bindElement[View.AndroidViewProperty] = null;
                 }
                 this.bindElement = bindElement || document.createElement(this.tagName());
+                this.bindElementOnClickAttr = this.bindElement.getAttribute('onclick');
+                this.bindElement.removeAttribute('onclick');
                 this.bindElement.style.position = 'absolute';
                 let oldBindView = this.bindElement[View.AndroidViewProperty];
                 if (oldBindView) {
@@ -14780,7 +14772,7 @@ var androidui;
         _HTMLDivElement.prototype = HTMLDivElement.prototype;
         HTMLDivElement = _HTMLDivElement;
     }
-    class AndroidUIElement extends HTMLElement {
+    class AndroidUIElement extends HTMLDivElement {
         performCreate() {
             this.AndroidUI = new androidui.AndroidUI(this);
             let debugAttr = this.getAttribute('debug');
