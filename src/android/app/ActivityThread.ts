@@ -74,9 +74,8 @@ module android.app{
             try {
                 if(typeof clazz === 'string') clazz = eval(clazz);
             } catch (e) {}
-            if(typeof clazz === 'function') activity = new clazz();
+            if(typeof clazz === 'function') activity = new clazz(this.androidUI);
             if(activity instanceof Activity){
-                activity.androidUI = this.androidUI;
                 activity.setIntent(intent);
                 activity.performCreate();
                 this.androidUI.windowManager.addWindow(activity.getWindow());//TODO window params

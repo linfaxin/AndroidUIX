@@ -3995,7 +3995,8 @@ var android;
     (function (content) {
         var LayoutInflater = android.view.LayoutInflater;
         class Context {
-            constructor() {
+            constructor(androidUI) {
+                this.androidUI = androidUI;
                 this.mLayoutInflater = new LayoutInflater(this);
                 this.mResources = new android.content.res.Resources(this);
                 this.mWindowManager = new android.view.WindowManager(this);
@@ -4124,7 +4125,8 @@ var android;
                 this.mWindowTouchSlop = this.sizeAndDensity * ViewConfiguration.WINDOW_TOUCH_SLOP;
                 this.mOverscrollDistance = this.sizeAndDensity * ViewConfiguration.OVERSCROLL_DISTANCE;
                 this.mOverflingDistance = this.sizeAndDensity * ViewConfiguration.OVERFLING_DISTANCE;
-                this.mMaximumDrawingCacheSize = ViewConfiguration.MAXIMUM_DRAWING_CACHE_SIZE;
+                this.mMaximumDrawingCacheSize = android.content.res.Resources.getDisplayMetrics().widthPixels
+                    * android.content.res.Resources.getDisplayMetrics().heightPixels * 4 * 2;
             }
             static get(arg) {
                 if (!ViewConfiguration.instance) {
@@ -4225,7 +4227,6 @@ var android;
         ViewConfiguration.WINDOW_TOUCH_SLOP = 16;
         ViewConfiguration.MINIMUM_FLING_VELOCITY = 50;
         ViewConfiguration.MAXIMUM_FLING_VELOCITY = 8000;
-        ViewConfiguration.MAXIMUM_DRAWING_CACHE_SIZE = 480 * 800 * 4;
         ViewConfiguration.SCROLL_FRICTION = 0.015;
         ViewConfiguration.OVERSCROLL_DISTANCE = 800;
         ViewConfiguration.OVERFLING_DISTANCE = 100;
@@ -10804,6 +10805,9 @@ var android;
                 if (this.mAttachInfo != null) {
                     return this.mAttachInfo.mViewRootImpl;
                 }
+                if (this.mContext != null) {
+                    return this.mContext.androidUI._viewRootImpl;
+                }
                 return null;
             }
             post(action) {
@@ -12255,7 +12259,7 @@ var android;
                 return (this.mClipBounds != null) ? new Rect(this.mClipBounds) : null;
             }
             getDrawingTime() {
-                return this.mAttachInfo != null ? this.mAttachInfo.mDrawingTime : 0;
+                return this.getViewRootImpl() != null ? this.getViewRootImpl().mDrawingTime : 0;
             }
             drawFromParent(canvas, parent, drawingTime) {
                 let useDisplayListProperties = false;
@@ -12624,8 +12628,7 @@ var android;
                     const attachInfo = this.mAttachInfo;
                     const drawingCacheBackgroundColor = this.mDrawingCacheBackgroundColor;
                     const opaque = drawingCacheBackgroundColor != 0 || this.isOpaque();
-                    const use32BitCache = true;
-                    const projectedBitmapSize = width * height * (opaque && !use32BitCache ? 2 : 4);
+                    const projectedBitmapSize = width * height * 4;
                     const drawingCacheSize = view_2.ViewConfiguration.get().getScaledMaximumDrawingCacheSize();
                     if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
                         if (width > 0 && height > 0) {
@@ -13219,6 +13222,8 @@ var android;
             }
             dispatchAttachedToWindow(info, visibility) {
                 this.mAttachInfo = info;
+                if (info.mRootView && info.mRootView.mContext)
+                    this.mContext = info.mRootView.mContext;
                 if (this.mOverlay != null) {
                     this.mOverlay.getOverlayView().dispatchAttachedToWindow(info, visibility);
                 }
@@ -13862,7 +13867,6 @@ var android;
             class AttachInfo {
                 constructor(mViewRootImpl, mHandler) {
                     this.mKeyDispatchState = new KeyEvent.DispatcherState();
-                    this.mDrawingTime = 0;
                     this.mTmpInvalRect = new Rect();
                     this.mTmpTransformRect = new Rect();
                     this.mTmpMatrix = new Matrix();
@@ -14421,9 +14425,8 @@ var android;
                 }
                 catch (e) { }
                 if (typeof clazz === 'function')
-                    activity = new clazz();
+                    activity = new clazz(this.androidUI);
                 if (activity instanceof app.Activity) {
-                    activity.androidUI = this.androidUI;
                     activity.setIntent(intent);
                     activity.performCreate();
                     this.androidUI.windowManager.addWindow(activity.getWindow());
@@ -14499,8 +14502,7 @@ var androidui;
             this.initAndroidUIElement();
         }
         initApplication() {
-            this.mApplication = new android.app.Application();
-            this.mApplication.androidUI = this;
+            this.mApplication = new android.app.Application(this);
             this.mApplication.onCreate();
         }
         initLaunchActivity() {
@@ -14510,12 +14512,12 @@ var androidui;
                 let activity = this.mActivityThread.performLaunchActivity(intent);
                 if (activity) {
                     this.androidUIElement.removeChild(ele);
-                    let onCreateFunc = ele.getAttribute('oncreate');
-                    if (onCreateFunc && typeof window[onCreateFunc] === "function") {
-                        window[onCreateFunc].call(this, this);
-                    }
                     for (let element of Array.from(ele.children)) {
                         android.view.LayoutInflater.from(activity).inflate(element, activity.getWindow().mContentParent, true);
+                    }
+                    let onCreateFunc = ele.getAttribute('oncreate');
+                    if (onCreateFunc && typeof window[onCreateFunc] === "function") {
+                        window[onCreateFunc].call(this, activity);
                     }
                 }
                 else if (ele instanceof HTMLUnknownElement) {
@@ -14841,6 +14843,7 @@ var android;
         var View = android.view.View;
         var Rect = android.graphics.Rect;
         var Handler = android.os.Handler;
+        var SystemClock = android.os.SystemClock;
         var System = java.lang.System;
         var Log = android.util.Log;
         var Surface = android.view.Surface;
@@ -14871,6 +14874,7 @@ var android;
                 this.mTreeObserver = new view_3.ViewTreeObserver();
                 this.mIgnoreDirtyState = false;
                 this.mSetIgnoreDirtyState = false;
+                this.mDrawingTime = 0;
                 this.mFpsStartTime = -1;
                 this.mFpsPrevTime = -1;
                 this.mFpsNumFrames = 0;
@@ -15283,6 +15287,7 @@ var android;
                 }
                 this.mDirty.setEmpty();
                 this.mIsAnimating = false;
+                this.mDrawingTime = SystemClock.uptimeMillis();
                 this.mView.mPrivateFlags |= View.PFLAG_DRAWN;
                 this.mSetIgnoreDirtyState = false;
                 this.mView.draw(canvas);
@@ -21575,15 +21580,22 @@ var android;
 ///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
 ///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/animation/Animation.ts"/>
 var android;
 (function (android) {
     var view;
     (function (view) {
         var PixelFormat = android.graphics.PixelFormat;
         var View = android.view.View;
+        var ViewGroup = android.view.ViewGroup;
         class WindowManager {
             constructor(context) {
-                this.mWindowsLayout = new WindowManager.Layout();
+                this.mWindowsLayout = new WindowManager.Layout(context);
+                let viewRootImpl = context.androidUI._viewRootImpl;
+                let fakeAttachInfo = new View.AttachInfo(viewRootImpl, viewRootImpl.mHandler);
+                fakeAttachInfo.mRootView = this.mWindowsLayout;
+                this.mWindowsLayout.dispatchAttachedToWindow(fakeAttachInfo, 0);
+                this.mWindowsLayout.mGroupFlags |= ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;
             }
             getWindowsLayout() {
                 return this.mWindowsLayout;
@@ -21594,7 +21606,7 @@ var android;
                     wparams = new WindowManager.LayoutParams();
                 }
                 if (!(wparams instanceof WindowManager.LayoutParams)) {
-                    throw Error('class Case Error: ' + wparams);
+                    throw Error('can\'t addWindow, params must be WindowManager.LayoutParams : ' + wparams);
                 }
                 if (!window.isFloating())
                     this.clearWindowVisible();
@@ -21605,6 +21617,10 @@ var android;
                     this.clearWindowFocus();
                     decorView.dispatchWindowFocusChanged(true);
                 }
+                if (window.mEnterAnimation) {
+                    window.mEnterAnimation.setDuration(window.mWindowAnimationDuration);
+                    window.mDecor.startAnimation(window.mEnterAnimation);
+                }
             }
             updateWindowLayout(window, params) {
                 if (!(params instanceof WindowManager.LayoutParams)) {
@@ -21613,14 +21629,46 @@ var android;
                 window.getDecorView().setLayoutParams(params);
             }
             removeWindow(window) {
-                let decorView = window.getDecorView();
-                this.mWindowsLayout.removeView(decorView);
-                this.checkTopLevelWindowVisible();
-                this.checkTopLevelWindowFocus();
+                let decor = window.getDecorView();
+                if (window.mExitAnimation) {
+                    window.mExitAnimation.setDuration(window.mWindowAnimationDuration);
+                    let t = this;
+                    window.mExitAnimation.setAnimationListener({
+                        onAnimationStart(animation) {
+                            decor.getParent().removeView(decor);
+                            t.checkTopLevelWindowVisible();
+                            t.checkTopLevelWindowFocus();
+                        },
+                        onAnimationEnd(animation) { },
+                        onAnimationRepeat(animation) { }
+                    });
+                    decor.startAnimation(window.mExitAnimation);
+                }
+                else {
+                    decor.getParent().removeView(decor);
+                }
             }
             clearWindowVisible() {
                 for (let i = 0, count = this.mWindowsLayout.getChildCount(); i < count; i++) {
-                    this.mWindowsLayout.getChildAt(i).setVisibility(View.GONE);
+                    let decorView = this.mWindowsLayout.getChildAt(i);
+                    if (decorView.getVisibility() == View.VISIBLE) {
+                        let window = decorView.getContext().getWindow();
+                        let decor = window.mDecor;
+                        if (window.mHideAnimation) {
+                            window.mHideAnimation.setDuration(window.mWindowAnimationDuration);
+                            window.mHideAnimation.setAnimationListener({
+                                onAnimationStart(animation) {
+                                    decor.setVisibility(View.GONE);
+                                },
+                                onAnimationEnd(animation) { },
+                                onAnimationRepeat(animation) { }
+                            });
+                            decor.startAnimation(window.mHideAnimation);
+                        }
+                        else {
+                            decor.setVisibility(View.GONE);
+                        }
+                    }
                 }
             }
             clearWindowFocus() {
@@ -21630,8 +21678,13 @@ var android;
             checkTopLevelWindowVisible() {
                 for (let i = this.mWindowsLayout.getChildCount() - 1; i >= 0; i++) {
                     let decorView = this.mWindowsLayout.getChildAt(i);
-                    decorView.setVisibility(View.VISIBLE);
-                    if (!decorView.getContext().getWindow().isFloating()) {
+                    let window = decorView.getContext().getWindow();
+                    window.mDecor.setVisibility(View.VISIBLE);
+                    if (window.mShowAnimation) {
+                        window.mShowAnimation.setDuration(window.mWindowAnimationDuration);
+                        window.mDecor.startAnimation(window.mShowAnimation);
+                    }
+                    if (!window.isFloating()) {
                         break;
                     }
                 }
@@ -21796,6 +21849,89 @@ var android;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Animation = android.view.animation.Animation;
+            class TranslateAnimation extends Animation {
+                constructor(...args) {
+                    super();
+                    this.mFromXType = TranslateAnimation.ABSOLUTE;
+                    this.mToXType = TranslateAnimation.ABSOLUTE;
+                    this.mFromYType = TranslateAnimation.ABSOLUTE;
+                    this.mToYType = TranslateAnimation.ABSOLUTE;
+                    this.mFromXValue = 0.0;
+                    this.mToXValue = 0.0;
+                    this.mFromYValue = 0.0;
+                    this.mToYValue = 0.0;
+                    this.mFromXDelta = 0;
+                    this.mToXDelta = 0;
+                    this.mFromYDelta = 0;
+                    this.mToYDelta = 0;
+                    if (args.length === 4) {
+                        this.mFromXValue = args[0];
+                        this.mToXValue = args[1];
+                        this.mFromYValue = args[2];
+                        this.mToYValue = args[3];
+                        this.mFromXType = TranslateAnimation.ABSOLUTE;
+                        this.mToXType = TranslateAnimation.ABSOLUTE;
+                        this.mFromYType = TranslateAnimation.ABSOLUTE;
+                        this.mToYType = TranslateAnimation.ABSOLUTE;
+                    }
+                    else {
+                        this.mFromXType = args[0];
+                        this.mFromXValue = args[1];
+                        this.mToXType = args[2];
+                        this.mToXValue = args[3];
+                        this.mFromYType = args[4];
+                        this.mFromYValue = args[5];
+                        this.mToYType = args[6];
+                        this.mToYValue = args[7];
+                    }
+                }
+                applyTransformation(interpolatedTime, t) {
+                    let dx = this.mFromXDelta;
+                    let dy = this.mFromYDelta;
+                    if (this.mFromXDelta != this.mToXDelta) {
+                        dx = this.mFromXDelta + ((this.mToXDelta - this.mFromXDelta) * interpolatedTime);
+                    }
+                    if (this.mFromYDelta != this.mToYDelta) {
+                        dy = this.mFromYDelta + ((this.mToYDelta - this.mFromYDelta) * interpolatedTime);
+                    }
+                    t.getMatrix().setTranslate(dx, dy);
+                }
+                initialize(width, height, parentWidth, parentHeight) {
+                    super.initialize(width, height, parentWidth, parentHeight);
+                    this.mFromXDelta = this.resolveSize(this.mFromXType, this.mFromXValue, width, parentWidth);
+                    this.mToXDelta = this.resolveSize(this.mToXType, this.mToXValue, width, parentWidth);
+                    this.mFromYDelta = this.resolveSize(this.mFromYType, this.mFromYValue, height, parentHeight);
+                    this.mToYDelta = this.resolveSize(this.mToYType, this.mToYValue, height, parentHeight);
+                }
+            }
+            animation.TranslateAnimation = TranslateAnimation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 ///<reference path="../../android/view/WindowManager.ts"/>
 ///<reference path="../../android/view/MotionEvent.ts"/>
 ///<reference path="../../android/widget/FrameLayout.ts"/>
@@ -21810,6 +21946,7 @@ var android;
 ///<reference path="../../android/view/ViewConfiguration.ts"/>
 ///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../../android/view/animation/Animation.ts"/>
+///<reference path="../../android/view/animation/TranslateAnimation.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
 ///<reference path="../../android/os/SystemClock.ts"/>
 var android;
@@ -21821,8 +21958,9 @@ var android;
         var View = android.view.View;
         var ViewConfiguration = android.view.ViewConfiguration;
         var WindowManager = android.view.WindowManager;
+        var Animation = android.view.animation.Animation;
+        var TranslateAnimation = android.view.animation.TranslateAnimation;
         var FrameLayout = android.widget.FrameLayout;
-        var SystemClock = android.os.SystemClock;
         class Window {
             constructor(context) {
                 this.mIsActive = false;
@@ -21834,13 +21972,20 @@ var android;
                 this.mDefaultWindowFormat = PixelFormat.OPAQUE;
                 this.mWindowAttributes = new WindowManager.LayoutParams();
                 this.mIsFloating = false;
+                this.mWindowAnimationDuration = 300;
                 this.mContext = context;
-                this.mLayoutInflater = context.getLayoutInflater();
+                this.initDecorView();
+                this.initAttachInfo();
+                this.initDefaultWindowAnimation();
+            }
+            initDecorView() {
                 this.mDecor = new DecorView(this);
-                this.mContentParent = new FrameLayout(context);
+                this.mContentParent = new FrameLayout(this.mContext);
                 this.mContentParent.setId(android.R.id.content);
                 this.mDecor.addView(this.mContentParent, -1, -1);
-                let viewRootImpl = context.androidUI._viewRootImpl;
+            }
+            initAttachInfo() {
+                let viewRootImpl = this.mContext.androidUI._viewRootImpl;
                 this.mAttachInfo = new View.AttachInfo(viewRootImpl, viewRootImpl.mHandler);
                 this.mAttachInfo.mRootView = this.mDecor;
                 this.mAttachInfo.mHasWindowFocus = true;
@@ -21918,9 +22063,18 @@ var android;
                     this.mCallback.onWindowAttributesChanged(attrs);
                 }
             }
-            setWindowAnimations(enterAnimation, exitAnimation) {
+            initDefaultWindowAnimation() {
+                let enterAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 1, Animation.RELATIVE_TO_SELF, 0, 0, 0, 0, 0);
+                let exitAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1, 0, 0, 0, 0);
+                let showAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, -0.25, Animation.RELATIVE_TO_SELF, 0, 0, 0, 0, 0);
+                let hideAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -0.25, 0, 0, 0, 0);
+                this.setWindowAnimations(enterAnimation, exitAnimation, showAnimation, hideAnimation);
+            }
+            setWindowAnimations(enterAnimation, exitAnimation, showAnimation = this.mShowAnimation, hideAnimation = this.mHideAnimation) {
                 this.mEnterAnimation = enterAnimation;
                 this.mExitAnimation = exitAnimation;
+                this.mShowAnimation = showAnimation;
+                this.mHideAnimation = hideAnimation;
             }
             addFlags(flags) {
                 this.setFlags(flags, flags);
@@ -22011,7 +22165,7 @@ var android;
                 return this.mDecor != null ? this.mDecor.findFocus() : null;
             }
             getLayoutInflater() {
-                return this.mLayoutInflater;
+                return this.mContext.getLayoutInflater();
             }
             setTitle(title) {
                 this.mTitle = title;
@@ -22062,6 +22216,36 @@ var android;
                 super(window.mContext);
                 this.Window_this = window;
                 this.bindElement.classList.add(window.mContext.constructor.name);
+                this.setBackgroundColor(android.graphics.Color.WHITE);
+            }
+            drawFromParent(canvas, parent, drawingTime) {
+                let windowAnimation = this.getAnimation();
+                let shadowColor;
+                if (windowAnimation != null) {
+                    const duration = windowAnimation.getDuration();
+                    let startTime = windowAnimation.getStartTime();
+                    if (startTime < 0)
+                        startTime = drawingTime;
+                    let startOffset = windowAnimation.getStartOffset();
+                    let normalizedTime;
+                    if (duration != 0) {
+                        normalizedTime = (drawingTime - (startTime + startOffset)) / duration;
+                    }
+                    else {
+                        normalizedTime = drawingTime < startTime ? 0.0 : 1.0;
+                    }
+                    const interpolatedTime = windowAnimation.getInterpolator().getInterpolation(normalizedTime);
+                    if (windowAnimation === this.Window_this.mExitAnimation) {
+                        shadowColor = android.graphics.Color.argb(150 * (1 - interpolatedTime), 0, 0, 0);
+                    }
+                    else if (windowAnimation === this.Window_this.mEnterAnimation) {
+                        shadowColor = android.graphics.Color.argb(150 * interpolatedTime, 0, 0, 0);
+                    }
+                }
+                if (shadowColor) {
+                    canvas.drawColor(shadowColor);
+                }
+                return super.drawFromParent(canvas, parent, drawingTime);
             }
             tagName() {
                 return 'Window';
@@ -22124,10 +22308,6 @@ var android;
                 if (cb != null && !this.Window_this.isDestroyed()) {
                     cb.onDetachedFromWindow();
                 }
-            }
-            dispatchDraw(canvas) {
-                this.Window_this.mAttachInfo.mDrawingTime = SystemClock.uptimeMillis();
-                super.dispatchDraw(canvas);
             }
         }
     })(view = android.view || (android.view = {}));
@@ -46472,89 +46652,6 @@ var android;
                 }
             }
             animation.RotateAnimation = RotateAnimation;
-        })(animation = view.animation || (view.animation = {}));
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var animation;
-        (function (animation) {
-            var Animation = android.view.animation.Animation;
-            class TranslateAnimation extends Animation {
-                constructor(...args) {
-                    super();
-                    this.mFromXType = TranslateAnimation.ABSOLUTE;
-                    this.mToXType = TranslateAnimation.ABSOLUTE;
-                    this.mFromYType = TranslateAnimation.ABSOLUTE;
-                    this.mToYType = TranslateAnimation.ABSOLUTE;
-                    this.mFromXValue = 0.0;
-                    this.mToXValue = 0.0;
-                    this.mFromYValue = 0.0;
-                    this.mToYValue = 0.0;
-                    this.mFromXDelta = 0;
-                    this.mToXDelta = 0;
-                    this.mFromYDelta = 0;
-                    this.mToYDelta = 0;
-                    if (args.length === 4) {
-                        this.mFromXValue = args[0];
-                        this.mToXValue = args[1];
-                        this.mFromYValue = args[2];
-                        this.mToYValue = args[3];
-                        this.mFromXType = TranslateAnimation.ABSOLUTE;
-                        this.mToXType = TranslateAnimation.ABSOLUTE;
-                        this.mFromYType = TranslateAnimation.ABSOLUTE;
-                        this.mToYType = TranslateAnimation.ABSOLUTE;
-                    }
-                    else {
-                        this.mFromXType = args[0];
-                        this.mFromXValue = args[1];
-                        this.mToXType = args[2];
-                        this.mToXValue = args[3];
-                        this.mFromYType = args[4];
-                        this.mFromYValue = args[5];
-                        this.mToYType = args[6];
-                        this.mToYValue = args[7];
-                    }
-                }
-                applyTransformation(interpolatedTime, t) {
-                    let dx = this.mFromXDelta;
-                    let dy = this.mFromYDelta;
-                    if (this.mFromXDelta != this.mToXDelta) {
-                        dx = this.mFromXDelta + ((this.mToXDelta - this.mFromXDelta) * interpolatedTime);
-                    }
-                    if (this.mFromYDelta != this.mToYDelta) {
-                        dy = this.mFromYDelta + ((this.mToYDelta - this.mFromYDelta) * interpolatedTime);
-                    }
-                    t.getMatrix().setTranslate(dx, dy);
-                }
-                initialize(width, height, parentWidth, parentHeight) {
-                    super.initialize(width, height, parentWidth, parentHeight);
-                    this.mFromXDelta = this.resolveSize(this.mFromXType, this.mFromXValue, width, parentWidth);
-                    this.mToXDelta = this.resolveSize(this.mToXType, this.mToXValue, width, parentWidth);
-                    this.mFromYDelta = this.resolveSize(this.mFromYType, this.mFromYValue, height, parentHeight);
-                    this.mToYDelta = this.resolveSize(this.mToYType, this.mToYValue, height, parentHeight);
-                }
-            }
-            animation.TranslateAnimation = TranslateAnimation;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));

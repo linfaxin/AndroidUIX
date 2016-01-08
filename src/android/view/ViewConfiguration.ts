@@ -36,7 +36,8 @@ module android.view{
          * The maximum size of View's drawing cache, expressed in bytes. This size
          * should be at least equal to the size of the screen in ARGB888 format.
          */
-        private static MAXIMUM_DRAWING_CACHE_SIZE:number = 480 * 800 * 4;
+        //private static MAXIMUM_DRAWING_CACHE_SIZE:number = 480 * 800 * 4;
+
         private static SCROLL_FRICTION = 0.015;
         private static OVERSCROLL_DISTANCE = 800;//defaul 0
         private static OVERFLING_DISTANCE = 100;//default 6
@@ -63,7 +64,8 @@ module android.view{
         mWindowTouchSlop:number = this.sizeAndDensity * ViewConfiguration.WINDOW_TOUCH_SLOP;
         mOverscrollDistance:number = this.sizeAndDensity * ViewConfiguration.OVERSCROLL_DISTANCE;
         mOverflingDistance:number = this.sizeAndDensity * ViewConfiguration.OVERFLING_DISTANCE;
-        mMaximumDrawingCacheSize:number = ViewConfiguration.MAXIMUM_DRAWING_CACHE_SIZE;
+        mMaximumDrawingCacheSize:number = android.content.res.Resources.getDisplayMetrics().widthPixels
+            * android.content.res.Resources.getDisplayMetrics().heightPixels * 4 * 2;//android ui x2
 
         getScaledScrollBarSize():number {
             return this.mScrollbarSize;

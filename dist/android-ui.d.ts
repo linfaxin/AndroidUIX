@@ -957,8 +957,9 @@ declare module android.content {
     class Context {
         androidUI: androidui.AndroidUI;
         mLayoutInflater: LayoutInflater;
-        mResources: res.Resources;
-        mWindowManager: view.WindowManager;
+        mResources: android.content.res.Resources;
+        mWindowManager: android.view.WindowManager;
+        constructor(androidUI: androidui.AndroidUI);
         getApplicationContext(): android.app.Application;
         getResources(): android.content.res.Resources;
         getLayoutInflater(): LayoutInflater;
@@ -1008,7 +1009,6 @@ declare module android.view {
         private static WINDOW_TOUCH_SLOP;
         private static MINIMUM_FLING_VELOCITY;
         private static MAXIMUM_FLING_VELOCITY;
-        private static MAXIMUM_DRAWING_CACHE_SIZE;
         private static SCROLL_FRICTION;
         private static OVERSCROLL_DISTANCE;
         private static OVERFLING_DISTANCE;
@@ -2761,7 +2761,7 @@ declare module android.view {
         setClipBounds(clipBounds: Rect): void;
         getClipBounds(): Rect;
         getDrawingTime(): number;
-        drawFromParent(canvas: Canvas, parent: ViewGroup, drawingTime: number): boolean;
+        protected drawFromParent(canvas: Canvas, parent: ViewGroup, drawingTime: number): boolean;
         draw(canvas: Canvas): void;
         protected onDraw(canvas: Canvas): void;
         protected dispatchDraw(canvas: Canvas): void;
@@ -2944,7 +2944,6 @@ declare module android.view {
         class AttachInfo {
             mRootView: View;
             mKeyDispatchState: KeyEvent.DispatcherState;
-            mDrawingTime: number;
             mViewRootImpl: ViewRootImpl;
             mHandler: Handler;
             mTmpInvalRect: Rect;
@@ -3180,6 +3179,7 @@ declare module android.view {
         private mTreeObserver;
         private mIgnoreDirtyState;
         private mSetIgnoreDirtyState;
+        private mDrawingTime;
         private mFirstInputStage;
         private mFpsStartTime;
         private mFpsPrevTime;
@@ -4253,6 +4253,28 @@ declare module android.view {
         }
     }
 }
+declare module android.view.animation {
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class TranslateAnimation extends Animation {
+        private mFromXType;
+        private mToXType;
+        private mFromYType;
+        private mToYType;
+        private mFromXValue;
+        private mToXValue;
+        private mFromYValue;
+        private mToYValue;
+        private mFromXDelta;
+        private mToXDelta;
+        private mFromYDelta;
+        private mToYDelta;
+        constructor(fromXDelta: number, toXDelta: number, fromYDelta: number, toYDelta: number);
+        constructor(fromXType: number, fromXValue: number, toXType: number, toXValue: number, fromYType: number, fromYValue: number, toYType: number, toYValue: number);
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import KeyEvent = android.view.KeyEvent;
@@ -4282,11 +4304,15 @@ declare module android.view {
         private mDecor;
         private mContentParent;
         private mIsFloating;
-        private mLayoutInflater;
         private mTitle;
+        private mWindowAnimationDuration;
         private mExitAnimation;
         private mEnterAnimation;
+        private mShowAnimation;
+        private mHideAnimation;
         constructor(context: Context);
+        private initDecorView();
+        private initAttachInfo();
         getContext(): Context;
         setContainer(container: Window): void;
         getContainer(): Window;
@@ -4302,7 +4328,8 @@ declare module android.view {
         setGravity(gravity: number): void;
         setType(type: number): void;
         setFormat(format: number): void;
-        setWindowAnimations(enterAnimation: Animation, exitAnimation: Animation): void;
+        private initDefaultWindowAnimation();
+        setWindowAnimations(enterAnimation: Animation, exitAnimation: Animation, showAnimation?: Animation, hideAnimation?: Animation): void;
         addFlags(flags: number): void;
         clearFlags(flags: number): void;
         setFlags(flags: number, mask: number): void;
@@ -7930,28 +7957,6 @@ declare module android.view.animation {
         private mPivotY;
         constructor(fromDegrees: number, toDegrees: number, pivotXType?: number, pivotXValue?: number, pivotYType?: number, pivotYValue?: number);
         private initializePivotPoint();
-        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
-        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
-    }
-}
-declare module android.view.animation {
-    import Animation = android.view.animation.Animation;
-    import Transformation = android.view.animation.Transformation;
-    class TranslateAnimation extends Animation {
-        private mFromXType;
-        private mToXType;
-        private mFromYType;
-        private mToYType;
-        private mFromXValue;
-        private mToXValue;
-        private mFromYValue;
-        private mToYValue;
-        private mFromXDelta;
-        private mToXDelta;
-        private mFromYDelta;
-        private mToYDelta;
-        constructor(fromXDelta: number, toXDelta: number, fromYDelta: number, toYDelta: number);
-        constructor(fromXType: number, fromXValue: number, toXType: number, toXValue: number, fromYType: number, fromYValue: number, toYType: number, toYValue: number);
         protected applyTransformation(interpolatedTime: number, t: Transformation): void;
         initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
     }

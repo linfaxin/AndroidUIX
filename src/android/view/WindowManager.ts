@@ -27,6 +27,7 @@
 ///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
 ///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/animation/Animation.ts"/>
 
 module android.view {
 import PixelFormat = android.graphics.PixelFormat;
@@ -41,6 +42,7 @@ import View = android.view.View;
 import ViewGroup = android.view.ViewGroup;
 import Window = android.view.Window;
 import Context = android.content.Context;
+import Animation = android.view.animation.Animation;
 
 /**
  * The interface that apps use to talk to the window manager.
@@ -65,7 +67,12 @@ export class WindowManager {
     private mWindowsLayout:WindowManager.Layout;
 
     constructor(context:Context) {
-        this.mWindowsLayout = new WindowManager.Layout();
+        this.mWindowsLayout = new WindowManager.Layout(context);
+        let viewRootImpl = context.androidUI._viewRootImpl;
+        let fakeAttachInfo = new View.AttachInfo(viewRootImpl, viewRootImpl.mHandler);
+        fakeAttachInfo.mRootView = this.mWindowsLayout;
+        this.mWindowsLayout.dispatchAttachedToWindow(fakeAttachInfo, 0);
+        this.mWindowsLayout.mGroupFlags |= ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;//make attachInfo not handle when addWindow
     }
 
     getWindowsLayout():ViewGroup {
@@ -78,7 +85,7 @@ export class WindowManager {
             wparams = new WindowManager.LayoutParams();
         }
         if(!(wparams instanceof WindowManager.LayoutParams)){
-            throw Error('class Case Error: '+wparams);
+            throw Error('can\'t addWindow, params must be WindowManager.LayoutParams : '+wparams);
         }
 
         if(!window.isFloating()) this.clearWindowVisible();
@@ -92,6 +99,11 @@ export class WindowManager {
             this.clearWindowFocus();
             decorView.dispatchWindowFocusChanged(true);
         }
+
+        if(window.mEnterAnimation){
+            window.mEnterAnimation.setDuration(window.mWindowAnimationDuration);
+            window.mDecor.startAnimation(window.mEnterAnimation);
+        }
     }
 
     updateWindowLayout(window:Window, params:ViewGroup.LayoutParams):void{
@@ -102,15 +114,45 @@ export class WindowManager {
     }
 
     removeWindow(window:Window):void{
-        let decorView = window.getDecorView();
-        this.mWindowsLayout.removeView(decorView);
-        this.checkTopLevelWindowVisible();
-        this.checkTopLevelWindowFocus();
+        let decor = window.getDecorView();
+        if(window.mExitAnimation){
+            window.mExitAnimation.setDuration(window.mWindowAnimationDuration);
+            let t = this;
+            window.mExitAnimation.setAnimationListener({
+                onAnimationStart(animation:Animation):void{
+                    (<ViewGroup>decor.getParent()).removeView(decor);
+                    t.checkTopLevelWindowVisible();
+                    t.checkTopLevelWindowFocus();
+                },
+                onAnimationEnd(animation:Animation):void{},
+                onAnimationRepeat(animation:Animation):void{}
+            });
+            decor.startAnimation(window.mExitAnimation);
+        }else{
+            (<ViewGroup>decor.getParent()).removeView(decor);
+        }
     }
 
     private clearWindowVisible(){
         for(let i=0, count=this.mWindowsLayout.getChildCount(); i<count; i++){
-            this.mWindowsLayout.getChildAt(i).setVisibility(View.GONE);
+            let decorView = this.mWindowsLayout.getChildAt(i);
+            if(decorView.getVisibility() == View.VISIBLE){
+                let window = (<android.app.Activity>decorView.getContext()).getWindow();
+                let decor = window.mDecor;
+                if(window.mHideAnimation){
+                    window.mHideAnimation.setDuration(window.mWindowAnimationDuration);
+                    window.mHideAnimation.setAnimationListener({
+                        onAnimationStart(animation:Animation):void{
+                            decor.setVisibility(View.GONE);
+                        },
+                        onAnimationEnd(animation:Animation):void{},
+                        onAnimationRepeat(animation:Animation):void{}
+                    });
+                    decor.startAnimation(window.mHideAnimation);
+                }else{
+                    decor.setVisibility(View.GONE);
+                }
+            }
         }
     }
 
@@ -123,8 +165,15 @@ export class WindowManager {
     private checkTopLevelWindowVisible(){
         for(let i=this.mWindowsLayout.getChildCount()-1; i>=0; i++){
             let decorView = this.mWindowsLayout.getChildAt(i);
-            decorView.setVisibility(View.VISIBLE);
-            if(!(<android.app.Activity>decorView.getContext()).getWindow().isFloating()){
+            let window = (<android.app.Activity>decorView.getContext()).getWindow();
+
+            window.mDecor.setVisibility(View.VISIBLE);
+            if(window.mShowAnimation){
+                window.mShowAnimation.setDuration(window.mWindowAnimationDuration);
+                window.mDecor.startAnimation(window.mShowAnimation);
+            }
+
+            if(!window.isFloating()){
                 break;
             }
         }
@@ -134,7 +183,7 @@ export class WindowManager {
 export module WindowManager{
 
     /**
-     * children ara windows
+     * children ara windows decor view
      */
     export class Layout extends android.widget.FrameLayout {
 

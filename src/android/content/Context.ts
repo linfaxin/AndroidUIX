@@ -17,9 +17,16 @@ module android.content {
 
     export class Context {
         androidUI: androidui.AndroidUI;
-        mLayoutInflater = new LayoutInflater(this);
-        mResources = new android.content.res.Resources(this);
-        mWindowManager = new android.view.WindowManager(this);
+        mLayoutInflater:LayoutInflater;
+        mResources:android.content.res.Resources;
+        mWindowManager:android.view.WindowManager;
+
+        constructor(androidUI:androidui.AndroidUI) {
+            this.androidUI = androidUI;
+            this.mLayoutInflater = new LayoutInflater(this);
+            this.mResources = new android.content.res.Resources(this);
+            this.mWindowManager = new android.view.WindowManager(this);
+        }
 
         getApplicationContext():android.app.Application{
             return this.androidUI.mApplication;

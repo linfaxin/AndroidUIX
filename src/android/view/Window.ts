@@ -28,6 +28,7 @@
 ///<reference path="../../android/view/ViewConfiguration.ts"/>
 ///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../../android/view/animation/Animation.ts"/>
+///<reference path="../../android/view/animation/TranslateAnimation.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
 ///<reference path="../../android/os/SystemClock.ts"/>
 
@@ -45,6 +46,7 @@ import ViewConfiguration = android.view.ViewConfiguration;
 import ViewGroup = android.view.ViewGroup;
 import WindowManager = android.view.WindowManager;
 import Animation = android.view.animation.Animation;
+import TranslateAnimation = android.view.animation.TranslateAnimation;
 import FrameLayout = android.widget.FrameLayout;
 import Context = android.content.Context;
 import SystemClock = android.os.SystemClock;
@@ -217,26 +219,33 @@ export class Window {
     private mContentParent:ViewGroup;
 
     private mIsFloating = false;
-    private mLayoutInflater:LayoutInflater;
     private mTitle:string;
 
+    private mWindowAnimationDuration = 300;
     private mExitAnimation:Animation;
     private mEnterAnimation:Animation;
+    private mShowAnimation:Animation;
+    private mHideAnimation:Animation;
 
     constructor(context:Context) {
         this.mContext = context;
 
-        this.mLayoutInflater = context.getLayoutInflater();
+        this.initDecorView();
+        this.initAttachInfo();
+        this.initDefaultWindowAnimation();
+    }
+
+    private initDecorView(){
         this.mDecor = new DecorView(this);
-        this.mContentParent = new FrameLayout(context);
+        this.mContentParent = new FrameLayout(this.mContext);
         this.mContentParent.setId(android.R.id.content);
-
         this.mDecor.addView(this.mContentParent, -1, -1);
+    }
 
-        let viewRootImpl = context.androidUI._viewRootImpl;
+    private initAttachInfo(){
+        let viewRootImpl = this.mContext.androidUI._viewRootImpl;
         this.mAttachInfo = new View.AttachInfo(viewRootImpl, viewRootImpl.mHandler);
         this.mAttachInfo.mRootView = this.mDecor;
-
         this.mAttachInfo.mHasWindowFocus = true;
     }
 
@@ -495,16 +504,24 @@ export class Window {
         }
     }
 
+
+    private initDefaultWindowAnimation(){
+        let enterAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 1, Animation.RELATIVE_TO_SELF, 0, 0, 0, 0, 0);
+        let exitAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1, 0, 0, 0, 0);
+        let showAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, -0.25, Animation.RELATIVE_TO_SELF, 0, 0, 0, 0, 0);
+        let hideAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -0.25, 0, 0, 0, 0);
+        this.setWindowAnimations(enterAnimation, exitAnimation, showAnimation, hideAnimation);
+    }
+
+
     /**
-     * Specify custom animations to use for the window, as per
-     * {@link WindowManager.LayoutParams#windowAnimations
-     * WindowManager.LayoutParams.windowAnimations}.  Providing anything besides
-     * 0 here will override the animations the window would
-     * normally retrieve from its theme.
+     * Specify custom animations to use for the window
      */
-    setWindowAnimations(enterAnimation:Animation, exitAnimation:Animation):void  {
+    setWindowAnimations(enterAnimation:Animation, exitAnimation:Animation, showAnimation=this.mShowAnimation, hideAnimation=this.mHideAnimation):void  {
         this.mEnterAnimation = enterAnimation;
         this.mExitAnimation = exitAnimation;
+        this.mShowAnimation = showAnimation;
+        this.mHideAnimation = hideAnimation;
         //const attrs:WindowManager.LayoutParams = this.getAttributes();
         //attrs.windowAnimations = resId;
         //if (this.mCallback != null) {
@@ -828,7 +845,7 @@ export class Window {
      * @return LayoutInflater The shared LayoutInflater.
      */
     getLayoutInflater():LayoutInflater{
-        return this.mLayoutInflater;
+        return this.mContext.getLayoutInflater();
     }
 
     setTitle(title:string):void{
@@ -1458,6 +1475,39 @@ export interface Callback {
             super(window.mContext);
             this.Window_this = window;
             this.bindElement.classList.add(window.mContext.constructor.name);
+            this.setBackgroundColor(android.graphics.Color.WHITE);//default window bg
+        }
+
+        protected drawFromParent(canvas:android.graphics.Canvas, parent:ViewGroup, drawingTime:number):boolean {
+            //draw shadow when window enter/exit
+            let windowAnimation = this.getAnimation();
+            let shadowColor:number;
+            if(windowAnimation!=null){
+                const duration:number = windowAnimation.getDuration();
+                let startTime:number = windowAnimation.getStartTime();
+                if(startTime<0) startTime = drawingTime;
+                let startOffset:number = windowAnimation.getStartOffset();
+
+                let normalizedTime:number;
+                if (duration != 0) {
+                    normalizedTime = (<number> (drawingTime - (startTime + startOffset))) / <number> duration;
+                } else {
+                    // time is a step-change with a zero duration
+                    normalizedTime = drawingTime < startTime ? 0.0 : 1.0;
+                }
+                const interpolatedTime:number = windowAnimation.getInterpolator().getInterpolation(normalizedTime);
+
+                if(windowAnimation === this.Window_this.mExitAnimation){
+                    shadowColor = android.graphics.Color.argb(150 * (1-interpolatedTime), 0, 0, 0);
+                }else if(windowAnimation === this.Window_this.mEnterAnimation){
+                    shadowColor = android.graphics.Color.argb(150 * interpolatedTime, 0, 0, 0);
+                }
+            }
+            if(shadowColor){
+                canvas.drawColor(shadowColor);
+            }
+
+            return super.drawFromParent(canvas, parent, drawingTime);
         }
 
         tagName():string {
@@ -1540,11 +1590,6 @@ export interface Callback {
             if (cb != null && !this.Window_this.isDestroyed()){// && mFeatureId < 0) {
                 cb.onDetachedFromWindow();
             }
-        }
-
-        protected dispatchDraw(canvas:android.graphics.Canvas):void {
-            this.Window_this.mAttachInfo.mDrawingTime = SystemClock.uptimeMillis();
-            super.dispatchDraw(canvas);
         }
     }
 

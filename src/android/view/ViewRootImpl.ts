@@ -74,6 +74,7 @@ module android.view {
         private mTreeObserver = new ViewTreeObserver();
         private mIgnoreDirtyState = false;
         private mSetIgnoreDirtyState = false;
+        private mDrawingTime = 0;
 
         private mFirstInputStage:InputStage;
         //private mFirstPostImeInputStage:InputStage;
@@ -681,7 +682,7 @@ module android.view {
             this.mIsAnimating = false;
             //let attachInfo = this.mAttachInfo;
 
-            //attachInfo.mDrawingTime = SystemClock.uptimeMillis();
+            this.mDrawingTime = SystemClock.uptimeMillis();
             this.mView.mPrivateFlags |= View.PFLAG_DRAWN;
 
             this.mSetIgnoreDirtyState = false;

@@ -1,6 +1,7 @@
 
-var SDKReferencePath = '../../../dist/android-ui.d.ts';//TODO config path
-var packageName = 'sample.app';
+var args = process.argv.slice(2);
+var packageName = args[0];
+var SDKReferencePath = args[1];
 
 var fs = require('fs');
 buildLayout();

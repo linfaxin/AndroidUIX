@@ -58,7 +58,7 @@ export class Transformation {
     /**
      * Creates a new transformation with alpha = 1 and the identity matrix.
      */
-    constructor( ) {
+    constructor() {
         this.clear();
     }
 

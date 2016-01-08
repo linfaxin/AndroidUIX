@@ -2219,6 +2219,9 @@ module android.view {
             if (this.mAttachInfo != null) {
                 return this.mAttachInfo.mViewRootImpl;
             }
+            if(this.mContext!=null){
+                return this.mContext.androidUI._viewRootImpl;
+            }
             return null;
         }
         post(action:Runnable):boolean {
@@ -4180,10 +4183,10 @@ module android.view {
 
 
         getDrawingTime() {
-            return this.mAttachInfo != null ? this.mAttachInfo.mDrawingTime : 0;
+            return this.getViewRootImpl() != null ? this.getViewRootImpl().mDrawingTime : 0;
         }
 
-        drawFromParent(canvas:Canvas, parent:ViewGroup, drawingTime:number):boolean {
+        protected drawFromParent(canvas:Canvas, parent:ViewGroup, drawingTime:number):boolean {
             let useDisplayListProperties = false;
             let more = false;
             let childHasIdentityMatrix = this.hasIdentityMatrix();
@@ -4757,8 +4760,8 @@ module android.view {
                 const attachInfo:View.AttachInfo = this.mAttachInfo;
                 const drawingCacheBackgroundColor:number = this.mDrawingCacheBackgroundColor;
                 const opaque:boolean = drawingCacheBackgroundColor != 0 || this.isOpaque();
-                const use32BitCache:boolean = true;
-                const projectedBitmapSize:number = width * height * (opaque && !use32BitCache ? 2 : 4);
+                //const use32BitCache:boolean = true;
+                const projectedBitmapSize:number = width * height * 4;//(opaque && !use32BitCache ? 2 : 4);
                 const drawingCacheSize:number = ViewConfiguration.get().getScaledMaximumDrawingCacheSize();
                 if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
                     if (width > 0 && height > 0) {
@@ -5532,6 +5535,8 @@ module android.view {
         dispatchAttachedToWindow(info: View.AttachInfo, visibility:number) {
             //System.out.println("Attached! " + this);
             this.mAttachInfo = info;
+            if(info.mRootView && info.mRootView.mContext) this.mContext = info.mRootView.mContext;//android ui add
+
             if (this.mOverlay != null) {
                 this.mOverlay.getOverlayView().dispatchAttachedToWindow(info, visibility);
             }
@@ -6195,7 +6200,7 @@ module android.view {
             //mWindowLeft = 0;
             //mWindowTop = 0;
             mKeyDispatchState = new KeyEvent.DispatcherState();
-            mDrawingTime=0;
+            //mDrawingTime=0;
             //mCanvas : Canvas;
             mViewRootImpl : ViewRootImpl;
             mHandler : Handler;

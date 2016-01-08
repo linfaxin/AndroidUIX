@@ -89,9 +89,7 @@ module androidui {
         }
 
         private initApplication() {
-            this.mApplication = new android.app.Application();
-            this.mApplication.androidUI  = this;
-
+            this.mApplication = new android.app.Application(this);
             this.mApplication.onCreate();
         }
 
@@ -105,14 +103,14 @@ module androidui {
                 if (activity) {
                     this.androidUIElement.removeChild(ele);
 
+                    for(let element of Array.from((<HTMLElement>ele).children)){
+                        android.view.LayoutInflater.from(activity).inflate(<HTMLElement>element, activity.getWindow().mContentParent, true);
+                    }
+
                     //activity could have a attribute defined callback when created
                     let onCreateFunc = ele.getAttribute('oncreate');
                     if(onCreateFunc && typeof window[onCreateFunc] === "function"){
-                        window[onCreateFunc].call(this, this);
-                    }
-
-                    for(let element of Array.from((<HTMLElement>ele).children)){
-                        android.view.LayoutInflater.from(activity).inflate(<HTMLElement>element, activity.getWindow().mContentParent, true);
+                        window[onCreateFunc].call(this, activity);
                     }
 
                 }else if(ele instanceof HTMLUnknownElement){
