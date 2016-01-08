@@ -15,7 +15,7 @@ module androidui{
     /**
      * Root Element of a android ui.
      */
-    export class AndroidUIElement extends HTMLElement{
+    export class AndroidUIElement extends HTMLDivElement{
         AndroidUI:AndroidUI;
 
         private performCreate(){
