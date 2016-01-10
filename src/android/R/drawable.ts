@@ -355,6 +355,26 @@ module android.R{
         }
 
         static get list_selector_background():Drawable {
+            return this.item_background;
+        }
+
+        static get list_divider():Drawable {
+            let divider = new ColorDrawable(0xffcccccc);
+            return divider;
+        }
+
+        static get divider_vertical():Drawable {
+            return this.divider_horizontal;
+        }
+
+        static get divider_horizontal():Drawable {
+            let divider = new ColorDrawable(0xffdddddd);
+            divider.getIntrinsicWidth = ()=> 1;
+            divider.getIntrinsicHeight = ()=> 1;
+            return divider;
+        }
+
+        static get item_background(){
             let stateList = new StateListDrawable();
             stateList.addState([View.VIEW_STATE_FOCUSED, -View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
             stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
@@ -364,9 +384,76 @@ module android.R{
             return stateList;
         }
 
-        static get list_divider():Drawable {
-            let divider = new ColorDrawable(0xffcccccc);
-            return divider;
+        static get popup_full_dark(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xe6000000);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 13 * density);
+        }
+
+        static get popup_top_dark(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xe6000000);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 0);
+        }
+
+        static get popup_center_dark(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xe6000000);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 0);
+        }
+
+        static get popup_bottom_dark(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xe6000000);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
+        }
+
+        static get popup_full_bright(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xffffffff);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 13 * density);
+        }
+
+        static get popup_top_bright(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xffffffff);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 0);
+        }
+
+        static get popup_center_bright(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xffffffff);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 0);
+        }
+
+        static get popup_bottom_bright(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xffffffff);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
+        }
+
+        static get popup_bottom_medium(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xff9a9a9a);
+            bg.getIntrinsicWidth = ()=> 30 * density;
+            bg.getIntrinsicHeight = ()=> 30 * density;
+            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
         }
 
     }

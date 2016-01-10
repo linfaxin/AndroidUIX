@@ -758,162 +758,172 @@ module android.view {
             }, ()=>{
                 return this.mPaddingTop + ' ' + this.mPaddingRight + ' ' + this.mPaddingBottom + ' ' + this.mPaddingLeft;
             }),
-                a.addAttr('paddingLeft', (value)=>{
-                    this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
-                }, ()=>{
-                    return this.mPaddingLeft;
-                }),
-                a.addAttr('paddingTop', (value)=>{
-                    this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
-                }, ()=>{
-                    return this.mPaddingTop;
-                }),
-                a.addAttr('paddingRight', (value)=>{
-                    this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
-                }, ()=>{
-                    return this.mPaddingRight;
-                }),
-                a.addAttr('paddingBottom', (value)=>{
-                    this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
-                }, ()=>{
-                    return this.mPaddingBottom;
-                }),
-                a.addAttr('scrollX', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) this.scrollTo(value, this.mScrollY);
-                }),
-                a.addAttr('scrollY', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) this.scrollTo(this.mScrollX, value);
-                }),
-                a.addAttr('alpha', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('transformPivotX', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('transformPivotY', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('translationX', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('translationY', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('rotation', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('rotationX', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('rotationY', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('scaleX', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('scaleY', (value)=>{
-                    value = Number.parseInt(value);
-                    if(Number.isInteger(value)) {//TODO
-                    };
-                }),
-                a.addAttr('tag', (value)=>{
-                }),
-                a.addAttr('id', (value)=>{
-                    this.setId(value);
-                }),
-                a.addAttr('focusable', (value)=>{
-                    if(a.parseBoolean(value, false)){
-                        this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
-                    }
-                }),
-                a.addAttr('focusableInTouchMode', (value)=>{
-                    if(a.parseBoolean(value, false)){
-                        this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
-                            View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
-                    }
-                }),
-                a.addAttr('clickable', (value)=>{
-                    if(a.parseBoolean(value, false)){
-                        this.setFlags(View.CLICKABLE, View.CLICKABLE);
-                    }
-                }),
-                a.addAttr('longClickable', (value)=>{
-                    if(a.parseBoolean(value, false)){
-                        this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
-                    }
-                }),
-                a.addAttr('saveEnabled', (value)=>{
-                    if(a.parseBoolean(value, false)){
-                        //this.setFlags(View.SAVE_DISABLED, View.SAVE_DISABLED_MASK);
-                    }
-                }),
-                a.addAttr('duplicateParentState', (value)=>{
-                    if(a.parseBoolean(value, false)){
-                        this.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
-                    }
-                }),
-                a.addAttr('visibility', (value)=>{
-                    if(value === 'gone') this.setVisibility(View.GONE);
-                    else if(value === 'invisible') this.setVisibility(View.INVISIBLE);
-                    else if(value === 'visible') this.setVisibility(View.VISIBLE);
-                }),
-                a.addAttr('scrollbars', (value)=>{
-                    if(value==='none') {
-                        this.setHorizontalScrollBarEnabled(false);
-                        this.setVerticalScrollBarEnabled(false);
-                    }
-                }),
-                a.addAttr('isScrollContainer', (value)=>{
-                    if(a.parseBoolean(value, false)){
-                        this.setScrollContainer(true);
-                    }
-                }),
-                a.addAttr('minWidth', (value)=>{
-                    this.setMinimumWidth(a.parseNumber(value, 0));
-                }, ()=>{
-                    return this.mMinWidth;
-                }),
-                a.addAttr('minHeight', (value)=>{
-                    this.setMinimumHeight(a.parseNumber(value, 0));
-                }, ()=>{
-                    return this.mMinHeight;
-                }),
-                a.addAttr('onClick', (value)=>{
-                    if(a.parseBoolean(value)) this.setClickable(true);
-                    //will fire on perform click
-                }),
-                a.addAttr('overScrollMode', (value)=>{
-                    let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
-                    if(scrollMode===undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
-                    this.setOverScrollMode(scrollMode);
-                }),
-                a.addAttr('layerType', (value)=>{
-                    if((value+'').toLowerCase() == 'software'){
-                        this.setLayerType(View.LAYER_TYPE_SOFTWARE);
-                    }else{
-                        this.setLayerType(View.LAYER_TYPE_NONE);
-                    }
-                });
+            a.addAttr('paddingLeft', (value)=>{
+                this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
+            }, ()=>{
+                return this.mPaddingLeft;
+            }),
+            a.addAttr('paddingStart', (value)=>{
+                this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
+            }, ()=>{
+                return this.mPaddingLeft;
+            }),
+            a.addAttr('paddingTop', (value)=>{
+                this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
+            }, ()=>{
+                return this.mPaddingTop;
+            }),
+            a.addAttr('paddingRight', (value)=>{
+                this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
+            }, ()=>{
+                return this.mPaddingRight;
+            }),
+            a.addAttr('paddingEnd', (value)=>{
+                this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
+            }, ()=>{
+                return this.mPaddingRight;
+            }),
+            a.addAttr('paddingBottom', (value)=>{
+                this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
+            }, ()=>{
+                return this.mPaddingBottom;
+            }),
+            a.addAttr('scrollX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.scrollTo(value, this.mScrollY);
+            }),
+            a.addAttr('scrollY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) this.scrollTo(this.mScrollX, value);
+            }),
+            a.addAttr('alpha', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('transformPivotX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('transformPivotY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('translationX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('translationY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('rotation', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('rotationX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('rotationY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('scaleX', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('scaleY', (value)=>{
+                value = Number.parseInt(value);
+                if(Number.isInteger(value)) {//TODO
+                };
+            }),
+            a.addAttr('tag', (value)=>{
+            }),
+            a.addAttr('id', (value)=>{
+                this.setId(value);
+            }),
+            a.addAttr('focusable', (value)=>{
+                if(a.parseBoolean(value, false)){
+                    this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                }
+            }),
+            a.addAttr('focusableInTouchMode', (value)=>{
+                if(a.parseBoolean(value, false)){
+                    this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
+                        View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                }
+            }),
+            a.addAttr('clickable', (value)=>{
+                if(a.parseBoolean(value, false)){
+                    this.setFlags(View.CLICKABLE, View.CLICKABLE);
+                }
+            }),
+            a.addAttr('longClickable', (value)=>{
+                if(a.parseBoolean(value, false)){
+                    this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
+                }
+            }),
+            a.addAttr('saveEnabled', (value)=>{
+                if(a.parseBoolean(value, false)){
+                    //this.setFlags(View.SAVE_DISABLED, View.SAVE_DISABLED_MASK);
+                }
+            }),
+            a.addAttr('duplicateParentState', (value)=>{
+                if(a.parseBoolean(value, false)){
+                    this.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
+                }
+            }),
+            a.addAttr('visibility', (value)=>{
+                if(value === 'gone') this.setVisibility(View.GONE);
+                else if(value === 'invisible') this.setVisibility(View.INVISIBLE);
+                else if(value === 'visible') this.setVisibility(View.VISIBLE);
+            }),
+            a.addAttr('scrollbars', (value)=>{
+                if(value==='none') {
+                    this.setHorizontalScrollBarEnabled(false);
+                    this.setVerticalScrollBarEnabled(false);
+                }
+            }),
+            a.addAttr('isScrollContainer', (value)=>{
+                if(a.parseBoolean(value, false)){
+                    this.setScrollContainer(true);
+                }
+            }),
+            a.addAttr('minWidth', (value)=>{
+                this.setMinimumWidth(a.parseNumber(value, 0));
+            }, ()=>{
+                return this.mMinWidth;
+            }),
+            a.addAttr('minHeight', (value)=>{
+                this.setMinimumHeight(a.parseNumber(value, 0));
+            }, ()=>{
+                return this.mMinHeight;
+            }),
+            a.addAttr('onClick', (value)=>{
+                if(a.parseBoolean(value)) this.setClickable(true);
+                //will fire on perform click
+            }),
+            a.addAttr('overScrollMode', (value)=>{
+                let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
+                if(scrollMode===undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                this.setOverScrollMode(scrollMode);
+            }),
+            a.addAttr('layerType', (value)=>{
+                if((value+'').toLowerCase() == 'software'){
+                    this.setLayerType(View.LAYER_TYPE_SOFTWARE);
+                }else{
+                    this.setLayerType(View.LAYER_TYPE_NONE);
+                }
+            });
             a.addAttr('backgroundUri', (value)=>{
                 if(value==null) this.setBackground(null);
                 else{
@@ -1023,6 +1033,9 @@ module android.view {
                     }
                 });
             }
+        }
+        resolvePadding():void  {
+            //no need resolve padding.(not support RTL now)
         }
 
         setScrollX(value:number) {
@@ -3990,12 +4003,15 @@ module android.view {
         invalidate(dirty:Rect);
         invalidate(l:number, t:number, r:number, b:number);
         invalidate(...args){
-            if(args.length===0 || (args.length===1&& typeof args[0]==='boolean' )){
-                this._invalidateCache(args[0]);
+            if(args.length===0){
+                this._invalidateCache(true);
 
             }else if(args.length===1 && args[0] instanceof Rect){
                 let rect:Rect = args[0];
                 this._invalidateRect(rect.left, rect.top, rect.right, rect.bottom);
+
+            }else if(args.length===1){
+                this._invalidateCache(args[0]);
 
             }else if(args.length===4){
                 (<any>this)._invalidateRect(...args);
@@ -5724,7 +5740,7 @@ module android.view {
             return Resources.getSystem();
         }
 
-        static inflate(context:Context, xml:HTMLElement, root?:ViewGroup):View{
+        static inflate(context:Context, xml:HTMLElement|string, root?:ViewGroup):View{
             return LayoutInflater.from(context).inflate(xml, root);
         }
 

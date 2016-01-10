@@ -46,6 +46,27 @@ module ${packageName}.R.image_base64 {
 }`;
 
     fs.writeFile('gen/R/image_base64.ts', str, 'utf-8');
+
+
+    var exportImage_tsLines = '';
+    for(var k of Object.keys(dirImageData)){
+        //console.log('export:'+k);
+        exportImage_tsLines += `
+        static get ${k}(){return new NetDrawable(image_base64.${k})}`;
+    }
+    var image_ts =
+        `///<reference path="${SDKReferencePath}"/>
+///<reference path="image_base64.ts"/>
+module ${packageName}.R.image {
+    import NetDrawable = androidui.image.NetDrawable;
+    export class image{
+${exportImage_tsLines}
+    }
+    android.content.res.Resources.buildDrawableFinder = (refString:string)=>{
+        return image[refString];
+    }
+}`;
+    fs.writeFile('gen/R/image.ts', image_ts, 'utf-8');
 }
 
 function buildLayout(){
@@ -61,30 +82,33 @@ function buildLayout(){
     });
 
 
-    var parsedLines = '';
-    for(var k of Object.keys(layoutData)){
-        //console.log('export:'+k);
-        parsedLines += `
-    const _${k} = parse2html(_layout_data.${k});`;
-    }
     var exportLines = '';
     for(var k of Object.keys(layoutData)){
-        //console.log('export:'+k);
         exportLines += `
-        static get ${k}(){return <HTMLElement>_${k}.cloneNode(true);}`;
+        static ${k} = '@layout/${k}';`;
     }
 
+
     var str =
-        `module ${packageName}.R {
+        `///<reference path="${SDKReferencePath}"/>
+    module ${packageName}.R {
     const _layout_data = ${JSON.stringify(layoutData, null, 8)};
     const _tempDiv = document.createElement('div');
-    function parse2html(s):HTMLElement{
-        _tempDiv.innerHTML = s;
-        return <HTMLElement>_tempDiv.firstElementChild;
-    }
-    ${parsedLines}
+
     export class layout{
+        static getLayoutData(layoutRef:string):HTMLElement{
+            if(!layoutRef) return null;
+            layoutRef = layoutRef.replace('/', '.').split('.').pop();
+            if(!_layout_data[layoutRef]) return null;
+            _tempDiv.innerHTML = _layout_data[layoutRef];
+            let data = <HTMLElement>_tempDiv.firstElementChild;
+            _tempDiv.removeChild(data);
+            return data;
+        }
         ${exportLines}
+    }
+    android.content.res.Resources.buildLayoutFinder = (refString:string)=>{
+        return layout.getLayoutData(refString)
     }
 }`;
 

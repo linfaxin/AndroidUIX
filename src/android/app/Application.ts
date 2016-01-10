@@ -43,6 +43,7 @@ import Activity = android.app.Activity;
 export class Application extends Context{
 
     private mActivityLifecycleCallbacks:ArrayList<Application.ActivityLifecycleCallbacks> = new ArrayList<Application.ActivityLifecycleCallbacks>();
+    private mWindowManager:android.view.WindowManager;
 
 
     /**
@@ -55,6 +56,11 @@ export class Application extends Context{
      * If you override this method, be sure to call super.onCreate().
      */
     onCreate():void  {
+    }
+
+    getWindowManager():android.view.WindowManager{
+        if(!this.mWindowManager) this.mWindowManager = new android.view.WindowManager(this);
+        return this.mWindowManager;
     }
 
     registerActivityLifecycleCallbacks(callback:Application.ActivityLifecycleCallbacks):void  {

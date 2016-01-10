@@ -1,16 +1,11 @@
-///<reference path="../../androidui/image/NetImage.ts"/>
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
-///<reference path="../../androidui/image/RegionImageDrawable.ts"/>
 ///<reference path="../../androidui/image/OverrideSizeDrawable.ts"/>
 ///<reference path="image_base64.ts"/>
 
 
 module android.R {
-    import NetImage = androidui.image.NetImage;
     import NetDrawable = androidui.image.NetDrawable;
-    import RegionImageDrawable = androidui.image.RegionImageDrawable;
     import OverrideSizeDrawable = androidui.image.ChangeImageSizeDrawable;
-    import Rect = android.graphics.Rect;
 
     const density = android.content.res.Resources.getDisplayMetrics().density;
 

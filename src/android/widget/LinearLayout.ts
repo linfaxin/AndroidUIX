@@ -135,13 +135,13 @@ module android.widget{
             this._attrBinder.addAttr('showDividers', (value)=>{
                 let fieldName = ('SHOW_DIVIDER_' + value).toUpperCase();
                 if(Number.isInteger(LinearLayout[fieldName])){
-                    this.mShowDividers = LinearLayout[fieldName];
+                    this.setShowDividers(LinearLayout[fieldName])
                 }
             });
             this._attrBinder.addAttr('dividerPadding', (value)=>{
                 value = Number.parseInt(value);
                 if(Number.isInteger(value)){
-                    this.mDividerPadding = value;
+                    this.setDividerPadding(value);
                 }
             });
         }

@@ -71,6 +71,12 @@ module android.R {
             });
         }
 
+        static get checkedTextViewStyle(){
+            return {
+                textAlignment : 'viewStart'
+            }
+        }
+
         static get progressBarStyle() {
             return {
                 indeterminateOnly : true,

@@ -15,18 +15,19 @@ module android.content {
     import Bundle = android.os.Bundle;
     import LayoutInflater = android.view.LayoutInflater;
 
-    export class Context {
+    export abstract
+    class Context {
         androidUI: androidui.AndroidUI;
-        mLayoutInflater:LayoutInflater;
-        mResources:android.content.res.Resources;
-        mWindowManager:android.view.WindowManager;
+        private mLayoutInflater:LayoutInflater;
+        private mResources:android.content.res.Resources;
 
         constructor(androidUI:androidui.AndroidUI) {
             this.androidUI = androidUI;
             this.mLayoutInflater = new LayoutInflater(this);
             this.mResources = new android.content.res.Resources(this);
-            this.mWindowManager = new android.view.WindowManager(this);
         }
+
+        abstract getWindowManager():android.view.WindowManager;
 
         getApplicationContext():android.app.Application{
             return this.androidUI.mApplication;
@@ -41,9 +42,6 @@ module android.content {
             return this.mLayoutInflater;
         }
 
-        getWindowManager():android.view.WindowManager{
-            return this.mWindowManager;
-        }
 
     }
 }

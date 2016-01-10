@@ -1003,7 +1003,7 @@ export class ListView extends AbsListView {
      *         UNSPECIFIED/AT_MOST modes, false otherwise.
      * @hide
      */
-    recycleOnMeasure():boolean  {
+    protected recycleOnMeasure():boolean  {
         return true;
     }
 

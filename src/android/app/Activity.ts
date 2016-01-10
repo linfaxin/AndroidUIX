@@ -27,8 +27,8 @@ module android.app{
     import Intent = android.content.Intent;
 
     export class Activity extends Context{
-        mWindow:Window;
-        mIntent:Intent;
+        private mWindow:Window;
+        private mIntent:Intent;
 
         onCreate():void{
         }
@@ -49,14 +49,18 @@ module android.app{
             return this.mWindow;
         }
 
+        getWindowManager():android.view.WindowManager{
+            return this.mWindow.getWindowManager();
+        }
+
         startActivity(intent:Intent|string, options?:Bundle):void{
             if(typeof intent === 'string') intent = new Intent(<string>intent);
             this.androidUI.mActivityThread.scheduleLaunchActivity(<Intent>intent, options);
         }
 
-        setContentView(view:View|HTMLElement){
-            if(view instanceof HTMLElement){
-                view = this.getLayoutInflater().inflate(<HTMLElement>view);
+        setContentView(view:View|HTMLElement|string){
+            if(!(view instanceof View)){
+                view = this.getLayoutInflater().inflate(<HTMLElement|string>view);
             }
             this.mWindow.setContentView(<View>view);
         }

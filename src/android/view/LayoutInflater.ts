@@ -52,7 +52,7 @@ module android.view{
          * that is done at build time. Therefore, it is not currently possible to
          * use LayoutInflater with an XmlPullParser over a plain XML file at runtime.
          *
-         * @param domtree XML dom node containing the description of the view
+         * @param layout XML dom node containing the description of the view
          *        hierarchy.
          * @param viewParent Optional view to be the parent of the generated hierarchy (if
          *        <em>attachToRoot</em> is true), or else simply an object that
@@ -65,7 +65,12 @@ module android.view{
          *         attachToRoot is true, this is root; otherwise it is the root of
          *         the inflated XML file.
          */
-        inflate(domtree:HTMLElement, viewParent?:ViewGroup, attachToRoot = (viewParent != null)):View  {
+        inflate(layout:HTMLElement|string, viewParent?:ViewGroup, attachToRoot = (viewParent != null)):View  {
+            let domtree:HTMLElement = layout instanceof HTMLElement ? layout : this.mContext.getResources().getLayout(<string>layout);
+            if(!domtree){
+                console.error('not find layout: '+layout);
+                return null;
+            }
             let className = domtree.tagName;
             if(className.startsWith('ANDROID-')){
                 className = className.substring('ANDROID-'.length);
@@ -99,6 +104,10 @@ module android.view{
                     }
                 });
                 return viewParent;
+
+            }else if(className === 'VIEW'){
+                let overrideClass = domtree.className || domtree.getAttribute('android:class');
+                if(overrideClass) className = overrideClass;
             }
 
             let rootViewClass = ClassFinder.findClass(className, android.view);
@@ -115,17 +124,13 @@ module android.view{
             let children = Array.from(domtree.children);//children may change when new the view
             //parse default style
             let defStyle;
-            let styleAttrValue = domtree.getAttribute('style');//@android.R.attr.textView
+            let styleAttrValue = domtree.getAttribute('style');//@android:attr/textView
             if(styleAttrValue){
-                try {
-                    while(styleAttrValue.startsWith('@')) styleAttrValue = styleAttrValue.substring(1);
-                    defStyle = eval(styleAttrValue);
-                } catch (e) {
-                }
+                defStyle = this.mContext.getResources().getAttr(styleAttrValue);
             }
 
             let rootView:View;
-            if(defStyle) rootView = new rootViewClass(this.mContext, domtree, defStyle);
+            if(styleAttrValue) rootView = new rootViewClass(this.mContext, domtree, defStyle);
             else rootView = new rootViewClass(this.mContext, domtree);
 
             //support for HtmlDataAdapter

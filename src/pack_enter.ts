@@ -28,6 +28,9 @@
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
 
+///<reference path="android/app/AlertDialog.ts"/>
+
+
 ///<reference path="android/view/animation/AlphaAnimation.ts"/>
 ///<reference path="android/view/animation/ScaleAnimation.ts"/>
 ///<reference path="android/view/animation/RotateAnimation.ts"/>

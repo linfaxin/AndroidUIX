@@ -6,6 +6,7 @@
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/drawable/ColorDrawable.ts"/>
 ///<reference path="../../android/content/res/ColorStateList.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
 
 module androidui.attr {
@@ -16,6 +17,7 @@ module androidui.attr {
     import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import Color = android.graphics.Color;
     import ColorStateList = android.content.res.ColorStateList;
+    import Resources = android.content.res.Resources;
     import Context = android.content.Context;
     import TypedValue = android.util.TypedValue;
 
@@ -136,12 +138,7 @@ module androidui.attr {
                 let refObj = this.getRefObject(s);
                 if(refObj) return refObj;
 
-                //support like @android.R.drawable.xxx
-                try {
-                    return (<any>window).eval(s.substring(1));
-                } catch (e) {
-                    console.log(e);
-                }
+                return Resources.getSystem().getDrawable(s);
 
             }else{
                 try {
@@ -169,16 +166,21 @@ module androidui.attr {
                     return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
                         Number.parseInt(parts[2]), Number.parseFloat(parts[3]) * 255);
 
+                } else if(value.startsWith('@')) {
+                    return Resources.getSystem().getColor(value);
+
                 } else {
                     if (value.startsWith('#') && value.length === 4) {//support parse #333
                         value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
                     }
                     return Color.parseColor(value);
                 }
+
+
             } catch (e) {
                 if(defaultValue==null) throw e;
-                return defaultValue;
             }
+            return defaultValue;
         }
         parseColorList(value:string):ColorStateList{
             if(!value) return null;
@@ -187,12 +189,7 @@ module androidui.attr {
                 let refObj = this.getRefObject(value);
                 if(refObj) return refObj;
 
-                //support like @android.R.color.xxx
-                try {
-                    return (<any>window).eval(value.substring(1));
-                } catch (e) {
-                    console.log(e);
-                }
+                return Resources.getSystem().getColorStateList(value);
 
             }else {
                 try {
@@ -206,6 +203,9 @@ module androidui.attr {
         }
 
         parseNumber(value, defaultValue = 0, baseValue = 0):number{
+            if(typeof value === 'string' && value.startsWith('@')){
+                value = Resources.getSystem().getString(value);
+            }
             try {
                 return TypedValue.complexToDimensionPixelSize(value, baseValue);
             } catch (e) {

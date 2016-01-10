@@ -21,7 +21,6 @@ module androidui {
     import FrameLayout = android.widget.FrameLayout;
     import MotionEvent = android.view.MotionEvent;
     import KeyEvent = android.view.KeyEvent;
-    import WindowManager = android.view.WindowManager;
     import Intent = android.content.Intent;
     import ActivityThread = android.app.ActivityThread;
 
@@ -32,7 +31,9 @@ module androidui {
         androidUIElement:AndroidUIElement;
 
         private _canvas:HTMLCanvasElement = document.createElement("canvas");
-        private windowManager:WindowManager;
+        get windowManager(){
+            return this.mApplication.getWindowManager();
+        }
         private mActivityThread:ActivityThread = new ActivityThread(this);
         private _viewRootImpl:android.view.ViewRootImpl;
         private mApplication:android.app.Application;
@@ -69,7 +70,6 @@ module androidui {
             else this.rootResourceElement = document.createElement('resources')
 
             this.initApplication();
-            this.windowManager = this.mApplication.getWindowManager();
 
             this.androidUIElement.appendChild(this._canvas);
 

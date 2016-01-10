@@ -3,6 +3,8 @@
  */
 module android.R{
     export class string_{
+        static ok = 'OK';
+        static cancel = 'Cancel';
         static prll_header_state_normal = 'Pull to refresh';
         static prll_header_state_ready = 'Release to refresh';
         static prll_header_state_loading = 'Loading';
@@ -14,6 +16,8 @@ module android.R{
         static prll_footer_state_no_more = 'Load Finish';
 
         static zh(){
+            this.ok = '确定';
+            this.cancel = '取消';
             this.prll_header_state_normal = '下拉以刷新';
             this.prll_header_state_ready = '松开马上刷新';
             this.prll_header_state_loading = '正在刷新...';

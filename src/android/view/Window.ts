@@ -31,6 +31,7 @@
 ///<reference path="../../android/view/animation/TranslateAnimation.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
 ///<reference path="../../android/os/SystemClock.ts"/>
+///<reference path="../../android/R/anim.ts"/>
 
 module android.view {
 import PixelFormat = android.graphics.PixelFormat;
@@ -196,11 +197,11 @@ export class Window {
     //
     //private mLocalFeatures:number = Window.DEFAULT_FEATURES;
 
-    private mHaveWindowFormat:boolean = false;
+    //private mHaveWindowFormat:boolean = false;
 
-    private mHaveDimAmount:boolean = false;
+    //private mHaveDimAmount:boolean = false;
 
-    private mDefaultWindowFormat:number = PixelFormat.OPAQUE;
+    //private mDefaultWindowFormat:number = PixelFormat.OPAQUE;
 
     //private mHasSoftInputMode:boolean = false;
 
@@ -221,18 +222,16 @@ export class Window {
     private mIsFloating = false;
     private mTitle:string;
 
-    private mWindowAnimationDuration = 300;
-    private mExitAnimation:Animation;
-    private mEnterAnimation:Animation;
-    private mShowAnimation:Animation;
-    private mHideAnimation:Animation;
+    private mExitAnimation:Animation = android.R.anim.activity_close_exit_ios;
+    private mEnterAnimation:Animation = android.R.anim.activity_open_enter_ios;
+    private mShowAnimation:Animation = android.R.anim.activity_close_enter_ios;
+    private mHideAnimation:Animation = android.R.anim.activity_open_exit_ios;
 
     constructor(context:Context) {
         this.mContext = context;
 
         this.initDecorView();
         this.initAttachInfo();
-        this.initDefaultWindowAnimation();
     }
 
     private initDecorView(){
@@ -323,6 +322,10 @@ export class Window {
         //    wm = <WindowManager> this.mContext.getSystemService(Context.WINDOW_SERVICE);
         //}
         //this.mWindowManager = (<WindowManagerImpl> wm).createLocalWindowManager(this);
+
+        if(this.mWindowManager){
+            this.mDecor.removeView(this.mWindowManager.getWindowsLayout());
+        }
         this.mWindowManager = wm;
     }
 
@@ -378,6 +381,10 @@ export class Window {
      * @return WindowManager The ViewManager.
      */
     getWindowManager():WindowManager  {
+        if(!this.mWindowManager){
+            this.mWindowManager = new WindowManager(this.mContext);
+            this.mDecor.addView(this.mWindowManager.getWindowsLayout(), -1, -1);
+        }
         return this.mWindowManager;
     }
 
@@ -414,6 +421,10 @@ export class Window {
 //     */
 //    abstract
 //takeInputQueue(callback:InputQueue.Callback):void ;
+
+    setFloating(isFloating:boolean):void {
+        this.mIsFloating = isFloating;
+    }
 
     /**
      * Return whether this window is being displayed with a floating style
@@ -479,39 +490,30 @@ export class Window {
         }
     }
 
-    /**
-     * Set the format of window, as per the PixelFormat types.  This overrides
-     * the default format that is selected by the Window based on its
-     * window decorations.
-     *
-     * @param format The new window format (see PixelFormat).  Use
-     *               PixelFormat.UNKNOWN to allow the Window to select
-     *               the format.
-     *
-     * @see PixelFormat
-     */
-    setFormat(format:number):void  {
-        const attrs:WindowManager.LayoutParams = this.getAttributes();
-        if (format != PixelFormat.UNKNOWN) {
-            attrs.format = format;
-            this.mHaveWindowFormat = true;
-        } else {
-            attrs.format = this.mDefaultWindowFormat;
-            this.mHaveWindowFormat = false;
-        }
-        if (this.mCallback != null) {
-            this.mCallback.onWindowAttributesChanged(attrs);
-        }
-    }
-
-
-    private initDefaultWindowAnimation(){
-        let enterAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 1, Animation.RELATIVE_TO_SELF, 0, 0, 0, 0, 0);
-        let exitAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1, 0, 0, 0, 0);
-        let showAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, -0.25, Animation.RELATIVE_TO_SELF, 0, 0, 0, 0, 0);
-        let hideAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -0.25, 0, 0, 0, 0);
-        this.setWindowAnimations(enterAnimation, exitAnimation, showAnimation, hideAnimation);
-    }
+    ///**
+    // * Set the format of window, as per the PixelFormat types.  This overrides
+    // * the default format that is selected by the Window based on its
+    // * window decorations.
+    // *
+    // * @param format The new window format (see PixelFormat).  Use
+    // *               PixelFormat.UNKNOWN to allow the Window to select
+    // *               the format.
+    // *
+    // * @see PixelFormat
+    // */
+    //setFormat(format:number):void  {
+    //    const attrs:WindowManager.LayoutParams = this.getAttributes();
+    //    if (format != PixelFormat.UNKNOWN) {
+    //        attrs.format = format;
+    //        this.mHaveWindowFormat = true;
+    //    } else {
+    //        attrs.format = this.mDefaultWindowFormat;
+    //        this.mHaveWindowFormat = false;
+    //    }
+    //    if (this.mCallback != null) {
+    //        this.mCallback.onWindowAttributesChanged(attrs);
+    //    }
+    //}
 
 
     /**
@@ -528,6 +530,7 @@ export class Window {
         //    this.mCallback.onWindowAttributesChanged(attrs);
         //}
     }
+
 
     ///**
     // * Specify an explicit soft input mode to use for the window, as per
@@ -626,7 +629,7 @@ export class Window {
     setDimAmount(amount:number):void  {
         const attrs:WindowManager.LayoutParams = this.getAttributes();
         attrs.dimAmount = amount;
-        this.mHaveDimAmount = true;
+        //this.mHaveDimAmount = true;
         if (this.mCallback != null) {
             this.mCallback.onWindowAttributesChanged(attrs);
         }
@@ -911,7 +914,14 @@ export class Window {
     setBackgroundDrawable(drawable:Drawable):void{
         if (this.mDecor != null) {
             this.mDecor.setBackground(drawable);
-            this.setDefaultWindowFormat(drawable.getOpacity());
+            //this.setDefaultWindowFormat(drawable.getOpacity());
+        }
+    }
+
+    setBackgroundColor(color:number):void{
+        if (this.mDecor != null) {
+            this.mDecor.setBackgroundColor(color);
+            //this.setDefaultWindowFormat(drawable.getOpacity());
         }
     }
 
@@ -1110,32 +1120,32 @@ export class Window {
     //protected getLocalFeatures():number  {
     //    return this.mLocalFeatures;
     //}
-
-    /**
-     * Set the default format of window, as per the PixelFormat types.  This
-     * is the format that will be used unless the client specifies in explicit
-     * format with setFormat();
-     *
-     * @param format The new window format (see PixelFormat).
-     *
-     * @see #setFormat
-     * @see PixelFormat
-     */
-    protected setDefaultWindowFormat(format:number):void  {
-        this.mDefaultWindowFormat = format;
-        if (!this.mHaveWindowFormat) {
-            const attrs:WindowManager.LayoutParams = this.getAttributes();
-            attrs.format = format;
-            if (this.mCallback != null) {
-                this.mCallback.onWindowAttributesChanged(attrs);
-            }
-        }
-    }
-
-    /** @hide */
-    protected haveDimAmount():boolean  {
-        return this.mHaveDimAmount;
-    }
+    //
+    ///**
+    // * Set the default format of window, as per the PixelFormat types.  This
+    // * is the format that will be used unless the client specifies in explicit
+    // * format with setFormat();
+    // *
+    // * @param format The new window format (see PixelFormat).
+    // *
+    // * @see #setFormat
+    // * @see PixelFormat
+    // */
+    //protected setDefaultWindowFormat(format:number):void  {
+    //    this.mDefaultWindowFormat = format;
+    //    if (!this.mHaveWindowFormat) {
+    //        const attrs:WindowManager.LayoutParams = this.getAttributes();
+    //        attrs.format = format;
+    //        if (this.mCallback != null) {
+    //            this.mCallback.onWindowAttributesChanged(attrs);
+    //        }
+    //    }
+    //}
+    //
+    ///** @hide */
+    //protected haveDimAmount():boolean  {
+    //    return this.mHaveDimAmount;
+    //}
 
 //    abstract
 //setChildDrawable(featureId:number, drawable:Drawable):void ;
@@ -1481,7 +1491,7 @@ export interface Callback {
         protected drawFromParent(canvas:android.graphics.Canvas, parent:ViewGroup, drawingTime:number):boolean {
             //draw shadow when window enter/exit
             let windowAnimation = this.getAnimation();
-            let shadowColor:number;
+            let shadowAlpha:number = this.Window_this.getAttributes().dimAmount * 255;
             if(windowAnimation!=null){
                 const duration:number = windowAnimation.getDuration();
                 let startTime:number = windowAnimation.getStartTime();
@@ -1498,13 +1508,16 @@ export interface Callback {
                 const interpolatedTime:number = windowAnimation.getInterpolator().getInterpolation(normalizedTime);
 
                 if(windowAnimation === this.Window_this.mExitAnimation){
-                    shadowColor = android.graphics.Color.argb(150 * (1-interpolatedTime), 0, 0, 0);
+                    shadowAlpha = shadowAlpha * (1-interpolatedTime);
+                    parent.invalidate();
+
                 }else if(windowAnimation === this.Window_this.mEnterAnimation){
-                    shadowColor = android.graphics.Color.argb(150 * interpolatedTime, 0, 0, 0);
+                    shadowAlpha = shadowAlpha * interpolatedTime;
+                    parent.invalidate();
                 }
             }
-            if(shadowColor){
-                canvas.drawColor(shadowColor);
+            if( (windowAnimation!=null || this.Window_this.isFloating()) && shadowAlpha){
+                canvas.drawColor(android.graphics.Color.argb(shadowAlpha, 0, 0, 0));
             }
 
             return super.drawFromParent(canvas, parent, drawingTime);
@@ -1515,6 +1528,16 @@ export interface Callback {
         }
 
         dispatchKeyEvent(event:android.view.KeyEvent):boolean {
+
+            //dialog hold on this window's windowManager, dispatch to it first
+            const count:number = this.getChildCount();
+            for (let i:number = count-1; i >=0; i--) {
+                let child = this.getChildAt(i);
+                if(child instanceof WindowManager.Layout && child.dispatchKeyEvent(event)){
+                    return true;
+                }
+            }
+
             //const keyCode = event.getKeyCode();
             const action = event.getAction();
             //const isDown = action == KeyEvent.ACTION_DOWN;
@@ -1529,8 +1552,18 @@ export interface Callback {
         }
 
         dispatchTouchEvent(ev:android.view.MotionEvent):boolean {
-            const cb = this.Window_this.getCallback();
-            return cb != null && !this.Window_this.isDestroyed() /*&& mFeatureId < 0*/ ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev);
+            let wparams = <WindowManager.LayoutParams>this.getLayoutParams();
+            //if(this.Window_this.shouldCloseOnTouch(this.getContext(), ev)){
+            //    (<WindowManager.Layout>this.getParent()).mWindowManager.removeWindow(this.Window_this);
+            //    return true;
+            //}
+            let handle = wparams.isTouchModal();
+            if(wparams.isTouchable()){
+                const cb = this.Window_this.getCallback();
+                handle = (cb != null && !this.Window_this.isDestroyed() /*&& mFeatureId < 0*/ ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev))
+                    || handle;
+            }
+            return handle;
         }
 
         dispatchGenericMotionEvent(ev:android.view.MotionEvent):boolean {

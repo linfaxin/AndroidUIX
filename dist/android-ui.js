@@ -3884,7 +3884,12 @@ var android;
             getContext() {
                 return this.mContext;
             }
-            inflate(domtree, viewParent, attachToRoot = (viewParent != null)) {
+            inflate(layout, viewParent, attachToRoot = (viewParent != null)) {
+                let domtree = layout instanceof HTMLElement ? layout : this.mContext.getResources().getLayout(layout);
+                if (!domtree) {
+                    console.error('not find layout: ' + layout);
+                    return null;
+                }
                 let className = domtree.tagName;
                 if (className.startsWith('ANDROID-')) {
                     className = className.substring('ANDROID-'.length);
@@ -3918,6 +3923,11 @@ var android;
                     });
                     return viewParent;
                 }
+                else if (className === 'VIEW') {
+                    let overrideClass = domtree.className || domtree.getAttribute('android:class');
+                    if (overrideClass)
+                        className = overrideClass;
+                }
                 let rootViewClass = ClassFinder.findClass(className, android.view);
                 if (!rootViewClass)
                     rootViewClass = ClassFinder.findClass(className, android['widget']);
@@ -3935,16 +3945,10 @@ var android;
                 let defStyle;
                 let styleAttrValue = domtree.getAttribute('style');
                 if (styleAttrValue) {
-                    try {
-                        while (styleAttrValue.startsWith('@'))
-                            styleAttrValue = styleAttrValue.substring(1);
-                        defStyle = eval(styleAttrValue);
-                    }
-                    catch (e) {
-                    }
+                    defStyle = this.mContext.getResources().getAttr(styleAttrValue);
                 }
                 let rootView;
-                if (defStyle)
+                if (styleAttrValue)
                     rootView = new rootViewClass(this.mContext, domtree, defStyle);
                 else
                     rootView = new rootViewClass(this.mContext, domtree);
@@ -3999,7 +4003,6 @@ var android;
                 this.androidUI = androidUI;
                 this.mLayoutInflater = new LayoutInflater(this);
                 this.mResources = new android.content.res.Resources(this);
-                this.mWindowManager = new android.view.WindowManager(this);
             }
             getApplicationContext() {
                 return this.androidUI.mApplication;
@@ -4010,18 +4013,52 @@ var android;
             getLayoutInflater() {
                 return this.mLayoutInflater;
             }
-            getWindowManager() {
-                return this.mWindowManager;
-            }
         }
         content.Context = Context;
     })(content = android.content || (android.content = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        const _layout_data = {
+            "alert_dialog": "\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<LinearLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"parentPanel\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:layout_marginStart=\"8dip\"\n    android:layout_marginEnd=\"8dip\"\n    android:orientation=\"vertical\">\n\n    <LinearLayout android:id=\"topPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\">\n        <View android:id=\"titleDividerTop\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <LinearLayout android:id=\"title_template\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:gravity=\"center_vertical|start\"\n            android:minHeight=\"64dp\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\">\n            <ImageView android:id=\"icon\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:paddingEnd=\"8dip\"></ImageView>\n            <TextView android:id=\"alertTitle\"\n                android:maxLines=\"1\"\n                android:scrollHorizontally=\"true\"\n                android:textSize=\"22sp\"\n                android:textColor=\"#333\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:textAlignment=\"viewStart\"></TextView>\n        </LinearLayout>\n        <View android:id=\"titleDivider\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </LinearLayout>\n\n    <LinearLayout android:id=\"contentPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:orientation=\"vertical\"\n        android:minHeight=\"64dp\">\n        <ScrollView android:id=\"scrollView\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:clipToPadding=\"false\">\n            <TextView android:id=\"message\"\n                android:textSize=\"18sp\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:paddingStart=\"16dip\"\n                android:paddingEnd=\"16dip\"\n                android:paddingTop=\"8dip\"\n                android:paddingBottom=\"8dip\"></TextView>\n        </ScrollView>\n    </LinearLayout>\n\n    <FrameLayout android:id=\"customPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:minHeight=\"64dp\">\n        <FrameLayout android:id=\"custom\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\" ></FrameLayout>\n    </FrameLayout>\n\n    <LinearLayout android:id=\"buttonPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:minHeight=\"48dip\"\n        android:orientation=\"vertical\"\n        android:divider=\"@android:drawable/divider_horizontal\"\n        android:showDividers=\"beginning\"\n        android:dividerPadding=\"0dip\">\n        <LinearLayout\n            android:divider=\"@android:drawable/divider_vertical\"\n            android:showDividers=\"middle\"\n            android:dividerPadding=\"0dp\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:layoutDirection=\"locale\"\n            android:measureWithLargestChild=\"true\">\n            <Button android:id=\"button2\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"start\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button3\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"center_horizontal\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button1\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"end\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n        </LinearLayout>\n     </LinearLayout>\n</LinearLayout>\n",
+            "alert_dialog_progress": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2011 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"wrap_content\" android:layout_height=\"match_parent\">\n        <ProgressBar android:id=\"progress\"\n            style=\"@android:attr/progressBarStyleHorizontal\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dip\"\n            android:layout_marginBottom=\"1dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_centerHorizontal=\"true\"></ProgressBar>\n        <TextView\n            android:id=\"progress_percent\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:paddingBottom=\"16dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_alignParentStart=\"true\"\n            android:layout_below=\"progress\"\n        ></TextView>\n        <TextView\n            android:id=\"progress_number\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:paddingBottom=\"16dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_alignParentEnd=\"true\"\n            android:layout_below=\"progress\"\n        ></TextView>\n</RelativeLayout>\n",
+            "select_dialog": "<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the ListView to display the items.\n    Assign an ID so its state will be saved/restored.\n-->\n<view class=\"android.app.AlertController.RecycleListView\"\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"select_dialog_listview\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:cacheColorHint=\"@null\"\n    android:divider=\"@android:drawable/list_divider\"\n    android:scrollbars=\"vertical\"\n    android:overScrollMode=\"ifContentScrolls\"\n    android:textAlignment=\"viewStart\" />\n",
+            "select_dialog_item": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the TextView to display individual\n    items.\n-->\n<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:ellipsize=\"marquee\"\n></TextView>\n",
+            "select_dialog_multichoice": "\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_check\"\n    android:ellipsize=\"marquee\"\n></CheckedTextView>\n",
+            "select_dialog_singlechoice": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_radio\"\n    android:ellipsize=\"marquee\"\n></CheckedTextView>\n"
+        };
+        const _tempDiv = document.createElement('div');
+        class layout {
+            static getLayoutData(layoutRef) {
+                if (!layoutRef)
+                    return null;
+                layoutRef = layoutRef.replace('/', '.').split('.').pop();
+                if (!_layout_data[layoutRef])
+                    return null;
+                _tempDiv.innerHTML = _layout_data[layoutRef];
+                let data = _tempDiv.firstElementChild;
+                _tempDiv.removeChild(data);
+                return data;
+            }
+        }
+        layout.alert_dialog = '@android:layout/alert_dialog';
+        layout.alert_dialog_progress = '@android:layout/alert_dialog_progress';
+        layout.select_dialog = '@android:layout/select_dialog';
+        layout.select_dialog_item = '@android:layout/select_dialog_item';
+        layout.select_dialog_multichoice = '@android:layout/select_dialog_multichoice';
+        layout.select_dialog_singlechoice = '@android:layout/select_dialog_singlechoice';
+        R.layout = layout;
+    })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/5.
  */
 ///<reference path="../../util/DisplayMetrics.ts"/>
 ///<reference path="../../content/Context.ts"/>
+///<reference path="../../graphics/drawable/Drawable.ts"/>
+///<reference path="../../R/layout.ts"/>
 var android;
 (function (android) {
     var content;
@@ -4057,13 +4094,61 @@ var android;
                     displayMetrics.heightPixels = window.innerHeight * density;
                     return displayMetrics;
                 }
-                getString(refString) {
+                getObjectRef(refString) {
+                    if (refString.startsWith('@'))
+                        refString = refString.substring(1);
+                    if (refString == 'null')
+                        return null;
+                    try {
+                        return window.eval(refString);
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                }
+                getAttr(refString) {
+                    if (refString.startsWith('@android:attr/')) {
+                        refString = refString.substring('@android:attr/'.length);
+                        return android.R.attr[refString];
+                    }
+                    else if (Resources.buildAttrFinder && refString.startsWith('@attr/')) {
+                        return Resources.buildAttrFinder(refString);
+                    }
+                    else if (refString.startsWith('@')) {
+                        return this.getObjectRef(refString);
+                    }
+                    return null;
+                }
+                getDrawable(refString) {
+                    if (refString.startsWith('@android:drawable/')) {
+                        refString = refString.substring('@android:drawable/'.length);
+                        return android.R.drawable[refString] || android.R.image[refString];
+                    }
+                    else if (Resources.buildDrawableFinder && refString.startsWith('@drawable/')) {
+                        return Resources.buildDrawableFinder(refString);
+                    }
+                    else if (refString.startsWith('@')) {
+                        return this.getObjectRef(refString);
+                    }
+                }
+                getColor(refString) {
+                    let s = this.getString(refString);
+                    return android.graphics.Color.parseColor(s);
+                }
+                getColorStateList(refString) {
+                    if (refString.startsWith('@')) {
+                        return this.getObjectRef(refString);
+                    }
+                }
+                getString(refString, notFindValue = refString) {
                     if (!refString || !refString.startsWith('@'))
-                        return refString;
+                        return notFindValue;
                     let referenceArray = [];
                     let attrValue = refString;
                     while (attrValue && attrValue.startsWith('@')) {
                         let reference = this.getReference(attrValue, false);
+                        if (!reference)
+                            return notFindValue;
                         if (referenceArray.indexOf(reference) >= 0)
                             throw Error('findReference Error: circle reference');
                         referenceArray.push(reference);
@@ -4072,8 +4157,20 @@ var android;
                     return attrValue;
                 }
                 getLayout(refString) {
+                    if (!refString || !refString.trim().startsWith('@'))
+                        return null;
                     let reference = this.getReference(refString, true);
-                    return reference ? reference.firstElementChild : null;
+                    if (reference)
+                        return reference.firstElementChild;
+                    if (refString.startsWith('@android:layout/')) {
+                        return android.R.layout.getLayoutData(refString);
+                    }
+                    else if (Resources.buildLayoutFinder && refString.startsWith('@layout/')) {
+                        return Resources.buildLayoutFinder(refString);
+                    }
+                    else if (refString.startsWith('@')) {
+                        return this.getObjectRef(refString);
+                    }
                 }
                 getReference(refString, cloneNode = true) {
                     if (refString)
@@ -4083,11 +4180,18 @@ var android;
                         let [tagName, ...refIds] = refString.split('/');
                         if (!refIds || refIds.length === 0)
                             return null;
+                        let resourcesElement = Resources.buildResourcesElement;
+                        if (tagName.startsWith('android:')) {
+                            tagName = tagName.substring('android:'.length);
+                            resourcesElement = Resources.SDKResourcesElement;
+                        }
                         if (!tagName.startsWith('android-'))
                             tagName = 'android-' + tagName;
                         let q = 'resources ' + tagName + '#' + refIds.join(' #');
                         let rootElement = this.context ? this.context.androidUI.rootResourceElement : Resources.emptySelectorNode;
-                        let el = rootElement.querySelector(q) || Resources.buildResourcesElement.querySelector(q) || document.querySelector(q);
+                        let el = rootElement.querySelector(q) || resourcesElement.querySelector(q);
+                        if (!el)
+                            return null;
                         return cloneNode ? el.cloneNode(true) : el;
                     }
                     return null;
@@ -4096,6 +4200,7 @@ var android;
             Resources.instance = new Resources();
             Resources.emptySelectorNode = document.createElement('resources');
             Resources.buildResourcesElement = document.createElement('resources');
+            Resources.SDKResourcesElement = document.createElement('resources');
             res.Resources = Resources;
         })(res = content.res || (content.res = {}));
     })(content = android.content || (android.content = {}));
@@ -4733,19 +4838,31 @@ var android;
             static obtain(...args) {
                 let m = Message.sPool.acquire();
                 m = m || new Message();
-                if (args.length === 1 && args[0] instanceof Message) {
-                    let orig = args[0];
-                    [m.target, m.what, m.arg1, m.arg2, m.obj, m.callback] =
-                        [orig.target, orig.what, orig.arg1, orig.arg2, orig.obj, orig.callback];
+                if (args.length === 1) {
+                    if (args[0] instanceof Message) {
+                        let orig = args[0];
+                        [m.target, m.what, m.arg1, m.arg2, m.obj, m.callback] =
+                            [orig.target, orig.what, orig.arg1, orig.arg2, orig.obj, orig.callback];
+                    }
+                    else {
+                        m.target = args[0];
+                    }
                 }
                 else if (args.length === 2) {
-                    [m.what = 0, m.callback] = args;
+                    m.target = args[0];
+                    if (typeof args[1] === 'number')
+                        m.what = args[1];
+                    else
+                        m.callback = args[1];
                 }
                 else if (args.length === 3) {
-                    [m.what = 0, m.arg1 = 0, m.obj] = args;
+                    [m.target, m.what, m.obj] = args;
+                }
+                else if (args.length === 4) {
+                    [m.target, m.what, m.arg1, m.arg2] = args;
                 }
                 else {
-                    [m.target, m.what = 0, m.arg1 = 0, m.arg2 = 0, m.obj, m.callback] = args;
+                    [m.target, m.what, m.arg1 = 0, m.arg2, m.obj, m.callback] = args;
                 }
                 return m;
             }
@@ -5443,6 +5560,7 @@ var androidui;
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/graphics/drawable/ColorDrawable.ts"/>
 ///<reference path="../../android/content/res/ColorStateList.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
 var androidui;
 (function (androidui) {
@@ -5453,6 +5571,7 @@ var androidui;
         var ColorDrawable = android.graphics.drawable.ColorDrawable;
         var Color = android.graphics.Color;
         var ColorStateList = android.content.res.ColorStateList;
+        var Resources = android.content.res.Resources;
         var TypedValue = android.util.TypedValue;
         class AttrBinder {
             constructor(host) {
@@ -5572,12 +5691,7 @@ var androidui;
                     let refObj = this.getRefObject(s);
                     if (refObj)
                         return refObj;
-                    try {
-                        return window.eval(s.substring(1));
-                    }
-                    catch (e) {
-                        console.log(e);
-                    }
+                    return Resources.getSystem().getDrawable(s);
                 }
                 else {
                     try {
@@ -5605,6 +5719,9 @@ var androidui;
                         let parts = value.split(',');
                         return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseFloat(parts[3]) * 255);
                     }
+                    else if (value.startsWith('@')) {
+                        return Resources.getSystem().getColor(value);
+                    }
                     else {
                         if (value.startsWith('#') && value.length === 4) {
                             value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
@@ -5615,8 +5732,8 @@ var androidui;
                 catch (e) {
                     if (defaultValue == null)
                         throw e;
-                    return defaultValue;
                 }
+                return defaultValue;
             }
             parseColorList(value) {
                 if (!value)
@@ -5627,12 +5744,7 @@ var androidui;
                     let refObj = this.getRefObject(value);
                     if (refObj)
                         return refObj;
-                    try {
-                        return window.eval(value.substring(1));
-                    }
-                    catch (e) {
-                        console.log(e);
-                    }
+                    return Resources.getSystem().getColorStateList(value);
                 }
                 else {
                     try {
@@ -5646,6 +5758,9 @@ var androidui;
                 return null;
             }
             parseNumber(value, defaultValue = 0, baseValue = 0) {
+                if (typeof value === 'string' && value.startsWith('@')) {
+                    value = Resources.getSystem().getString(value);
+                }
                 try {
                     return TypedValue.complexToDimensionPixelSize(value, baseValue);
                 }
@@ -5773,7 +5888,6 @@ var androidui;
         var Paint = android.graphics.Paint;
         var Rect = android.graphics.Rect;
         var Drawable = android.graphics.drawable.Drawable;
-        var Resources = android.content.res.Resources;
         class NetDrawable extends Drawable {
             constructor(src, paint, overrideImageRatio) {
                 super();
@@ -5791,8 +5905,8 @@ var androidui;
                 }
                 image.addLoadListener(() => this.onLoad(), () => this.onError());
                 let imageRatio = image.getImageRatio();
-                this.mImageWidth = Math.floor(image.width / imageRatio * Resources.getDisplayMetrics().density);
-                this.mImageHeight = Math.floor(image.height / imageRatio * Resources.getDisplayMetrics().density);
+                this.mImageWidth = Math.floor(image.width / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+                this.mImageHeight = Math.floor(image.height / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
                 this.mState = new State(image, paint);
             }
             draw(canvas) {
@@ -5856,8 +5970,8 @@ var androidui;
             }
             onLoad() {
                 let imageRatio = this.mState.mImage.getImageRatio();
-                this.mImageWidth = Math.floor(this.mState.mImage.width / imageRatio * Resources.getDisplayMetrics().density);
-                this.mImageHeight = Math.floor(this.mState.mImage.height / imageRatio * Resources.getDisplayMetrics().density);
+                this.mImageWidth = Math.floor(this.mState.mImage.width / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+                this.mImageHeight = Math.floor(this.mState.mImage.height / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
                 if (this.mLoadListener)
                     this.mLoadListener.onLoad(this);
                 this.invalidateSelf();
@@ -6073,6 +6187,9 @@ var android;
             }
             toString() {
                 return JSON.stringify(this);
+            }
+            isCanceled() {
+                return false;
             }
             static actionToString(action) {
                 switch (action) {
@@ -7941,6 +8058,24 @@ var android;
         id.background = 'background';
         id.secondaryProgress = 'secondaryProgress';
         id.progress = 'progress';
+        id.contentPanel = 'contentPanel';
+        id.topPanel = 'topPanel';
+        id.buttonPanel = 'buttonPanel';
+        id.customPanel = 'customPanel';
+        id.custom = 'custom';
+        id.titleDivider = 'titleDivider';
+        id.titleDividerTop = 'titleDividerTop';
+        id.title_template = 'title_template';
+        id.icon = 'icon';
+        id.alertTitle = 'alertTitle';
+        id.scrollView = 'scrollView';
+        id.message = 'message';
+        id.button1 = 'button1';
+        id.button2 = 'button2';
+        id.button3 = 'button3';
+        id.leftSpacer = 'leftSpacer';
+        id.rightSpacer = 'rightSpacer';
+        id.text1 = 'text1';
         R.id = id;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
@@ -8227,6 +8362,22 @@ var android;
                 return new InsetDrawable(line, 0, 6 * density, 0, 6 * density);
             }
             static get list_selector_background() {
+                return this.item_background;
+            }
+            static get list_divider() {
+                let divider = new ColorDrawable(0xffcccccc);
+                return divider;
+            }
+            static get divider_vertical() {
+                return this.divider_horizontal;
+            }
+            static get divider_horizontal() {
+                let divider = new ColorDrawable(0xffdddddd);
+                divider.getIntrinsicWidth = () => 1;
+                divider.getIntrinsicHeight = () => 1;
+                return divider;
+            }
+            static get item_background() {
                 let stateList = new StateListDrawable();
                 stateList.addState([View.VIEW_STATE_FOCUSED, -View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
                 stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
@@ -8235,72 +8386,64 @@ var android;
                 stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
                 return stateList;
             }
-            static get list_divider() {
-                let divider = new ColorDrawable(0xffcccccc);
-                return divider;
+            static get popup_full_dark() {
+                let bg = new ColorDrawable(0xe6000000);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 13 * density);
+            }
+            static get popup_top_dark() {
+                let bg = new ColorDrawable(0xe6000000);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 0);
+            }
+            static get popup_center_dark() {
+                let bg = new ColorDrawable(0xe6000000);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 0);
+            }
+            static get popup_bottom_dark() {
+                let bg = new ColorDrawable(0xe6000000);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
+            }
+            static get popup_full_bright() {
+                let bg = new ColorDrawable(0xffffffff);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 13 * density);
+            }
+            static get popup_top_bright() {
+                let bg = new ColorDrawable(0xffffffff);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 0);
+            }
+            static get popup_center_bright() {
+                let bg = new ColorDrawable(0xffffffff);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 0);
+            }
+            static get popup_bottom_bright() {
+                let bg = new ColorDrawable(0xffffffff);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
+            }
+            static get popup_bottom_medium() {
+                let bg = new ColorDrawable(0xff9a9a9a);
+                bg.getIntrinsicWidth = () => 30 * density;
+                bg.getIntrinsicHeight = () => 30 * density;
+                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
             }
         }
         R.drawable = drawable;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/24.
- */
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="NetImage.ts"/>
-var androidui;
-(function (androidui) {
-    var image;
-    (function (image_2) {
-        var Paint = android.graphics.Paint;
-        var Drawable = android.graphics.drawable.Drawable;
-        var Resources = android.content.res.Resources;
-        class RegionImageDrawable extends Drawable {
-            constructor(image, bound, paint = new Paint()) {
-                super();
-                this.mState = new State(image, bound, paint);
-                image.addLoadListener(() => {
-                    this.invalidateSelf();
-                });
-            }
-            draw(canvas) {
-                canvas.drawImage(this.mState.mImage, this.mState.mBound, this.getBounds(), this.mState.mPaint);
-            }
-            setAlpha(alpha) {
-                this.mState.mPaint.setAlpha(alpha);
-            }
-            getAlpha() {
-                return this.mState.mPaint.getAlpha();
-            }
-            getIntrinsicWidth() {
-                return Math.floor(this.mState.mBound.width() * Resources.getDisplayMetrics().density / this.mState.mImage.getImageRatio());
-            }
-            getIntrinsicHeight() {
-                return Math.floor(this.mState.mBound.height() * Resources.getDisplayMetrics().density / this.mState.mImage.getImageRatio());
-            }
-            getImage() {
-                return this.mState.mImage;
-            }
-            getConstantState() {
-                return this.mState;
-            }
-        }
-        image_2.RegionImageDrawable = RegionImageDrawable;
-        class State {
-            constructor(image, bound, paint) {
-                this.mImage = image;
-                this.mBound = bound;
-                this.mPaint = paint;
-            }
-            newDrawable() {
-                return new RegionImageDrawable(this.mImage, this.mBound, this.mPaint);
-            }
-        }
-    })(image = androidui.image || (androidui.image = {}));
-})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/11/2.
  */
@@ -8528,9 +8671,7 @@ var android;
         })(image_base64 = R.image_base64 || (R.image_base64 = {}));
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-///<reference path="../../androidui/image/NetImage.ts"/>
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
-///<reference path="../../androidui/image/RegionImageDrawable.ts"/>
 ///<reference path="../../androidui/image/OverrideSizeDrawable.ts"/>
 ///<reference path="image_base64.ts"/>
 var android;
@@ -8681,6 +8822,11 @@ var android;
                     background: null,
                     button: R.drawable.btn_radio
                 });
+            }
+            static get checkedTextViewStyle() {
+                return {
+                    textAlignment: 'viewStart'
+                };
             }
             static get progressBarStyle() {
                 return {
@@ -10035,12 +10181,22 @@ var android;
                     }, () => {
                         return this.mPaddingLeft;
                     }),
+                    a.addAttr('paddingStart', (value) => {
+                        this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
+                    }, () => {
+                        return this.mPaddingLeft;
+                    }),
                     a.addAttr('paddingTop', (value) => {
                         this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
                     }, () => {
                         return this.mPaddingTop;
                     }),
                     a.addAttr('paddingRight', (value) => {
+                        this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
+                    }, () => {
+                        return this.mPaddingRight;
+                    }),
+                    a.addAttr('paddingEnd', (value) => {
                         this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
                     }, () => {
                         return this.mPaddingRight;
@@ -10308,6 +10464,8 @@ var android;
                         }
                     });
                 }
+            }
+            resolvePadding() {
             }
             setScrollX(value) {
                 this.scrollTo(value, this.mScrollY);
@@ -12094,12 +12252,15 @@ var android;
                 }
             }
             invalidate(...args) {
-                if (args.length === 0 || (args.length === 1 && typeof args[0] === 'boolean')) {
-                    this._invalidateCache(args[0]);
+                if (args.length === 0) {
+                    this._invalidateCache(true);
                 }
                 else if (args.length === 1 && args[0] instanceof Rect) {
                     let rect = args[0];
                     this._invalidateRect(rect.left, rect.top, rect.right, rect.bottom);
+                }
+                else if (args.length === 1) {
+                    this._invalidateCache(args[0]);
                 }
                 else if (args.length === 4) {
                     this._invalidateRect(...args);
@@ -14470,6 +14631,9 @@ var androidui;
             androidUIElement[AndroidUI.BindToElementName] = this;
             this.init();
         }
+        get windowManager() {
+            return this.mApplication.getWindowManager();
+        }
         get windowBound() {
             return this._windowBound;
         }
@@ -14483,7 +14647,6 @@ var androidui;
             else
                 this.rootResourceElement = document.createElement('resources');
             this.initApplication();
-            this.windowManager = this.mApplication.getWindowManager();
             this.androidUIElement.appendChild(this._canvas);
             this.initEvent();
             this.initRootSizeChange();
@@ -18172,6 +18335,13 @@ var android;
                     }, () => {
                         return this._leftMarginOrig;
                     });
+                    this._attrBinder.addAttr('marginStart', (value) => {
+                        if (value == null)
+                            value = 0;
+                        this.leftMargin = value;
+                    }, () => {
+                        return this._leftMarginOrig;
+                    });
                     this._attrBinder.addAttr('marginTop', (value) => {
                         if (value == null)
                             value = 0;
@@ -18180,6 +18350,13 @@ var android;
                         return this._topMarginOrig;
                     });
                     this._attrBinder.addAttr('marginRight', (value) => {
+                        if (value == null)
+                            value = 0;
+                        this.rightMargin = value;
+                    }, () => {
+                        return this._rightMarginOrig;
+                    });
+                    this._attrBinder.addAttr('marginEnd', (value) => {
                         if (value == null)
                             value = 0;
                         this.rightMargin = value;
@@ -19132,6 +19309,11 @@ var android;
         })(style = text.style || (text.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
+/**
+ * Created by linfaxin on 15/12/6.
+ */
+///<reference path="List.ts"/>
+///<reference path="ArrayList.ts"/>
 var java;
 (function (java) {
     var util;
@@ -19160,6 +19342,11 @@ var java;
                 if (toIndex > arrayLength) {
                     throw new Error('ArrayIndexOutOfBoundsException:' + toIndex);
                 }
+            }
+            static asList(array) {
+                let list = new util.ArrayList();
+                list.array.push(...array);
+                return list;
             }
         }
         util.Arrays = Arrays;
@@ -21577,12 +21764,11 @@ var android;
 (function (android) {
     var view;
     (function (view) {
-        var PixelFormat = android.graphics.PixelFormat;
         var View = android.view.View;
         var ViewGroup = android.view.ViewGroup;
         class WindowManager {
             constructor(context) {
-                this.mWindowsLayout = new WindowManager.Layout(context);
+                this.mWindowsLayout = new WindowManager.Layout(context, this);
                 let viewRootImpl = context.androidUI._viewRootImpl;
                 let fakeAttachInfo = new View.AttachInfo(viewRootImpl, viewRootImpl.mHandler);
                 fakeAttachInfo.mRootView = this.mWindowsLayout;
@@ -21603,14 +21789,13 @@ var android;
                 if (!window.isFloating())
                     this.clearWindowVisible();
                 let decorView = window.getDecorView();
-                this.mWindowsLayout.addView(decorView, params);
+                this.mWindowsLayout.addView(decorView, wparams);
                 decorView.dispatchAttachedToWindow(window.mAttachInfo, 0);
                 if (wparams.isFocusable()) {
                     this.clearWindowFocus();
                     decorView.dispatchWindowFocusChanged(true);
                 }
                 if (window.mEnterAnimation) {
-                    window.mEnterAnimation.setDuration(window.mWindowAnimationDuration);
                     window.mDecor.startAnimation(window.mEnterAnimation);
                 }
             }
@@ -21623,13 +21808,16 @@ var android;
             removeWindow(window) {
                 let decor = window.getDecorView();
                 if (window.mExitAnimation) {
-                    window.mExitAnimation.setDuration(window.mWindowAnimationDuration);
                     let t = this;
                     window.mExitAnimation.setAnimationListener({
                         onAnimationStart(animation) {
-                            decor.getParent().removeView(decor);
-                            t.checkTopLevelWindowVisible();
-                            t.checkTopLevelWindowFocus();
+                            decor.postOnAnimation({
+                                run() {
+                                    decor.getParent().removeView(decor);
+                                    t.checkTopLevelWindowVisible(!window.isFloating());
+                                    t.checkTopLevelWindowFocus();
+                                }
+                            });
                         },
                         onAnimationEnd(animation) { },
                         onAnimationRepeat(animation) { }
@@ -21647,7 +21835,6 @@ var android;
                         let window = decorView.getContext().getWindow();
                         let decor = window.mDecor;
                         if (window.mHideAnimation) {
-                            window.mHideAnimation.setDuration(window.mWindowAnimationDuration);
                             window.mHideAnimation.setAnimationListener({
                                 onAnimationStart(animation) {
                                     decor.setVisibility(View.GONE);
@@ -21667,13 +21854,12 @@ var android;
             }
             checkTopLevelWindowFocus() {
             }
-            checkTopLevelWindowVisible() {
+            checkTopLevelWindowVisible(showAnim = true) {
                 for (let i = this.mWindowsLayout.getChildCount() - 1; i >= 0; i++) {
                     let decorView = this.mWindowsLayout.getChildAt(i);
                     let window = decorView.getContext().getWindow();
                     window.mDecor.setVisibility(View.VISIBLE);
-                    if (window.mShowAnimation) {
-                        window.mShowAnimation.setDuration(window.mWindowAnimationDuration);
+                    if (showAnim && window.mShowAnimation) {
                         window.mDecor.startAnimation(window.mShowAnimation);
                     }
                     if (!window.isFloating()) {
@@ -21685,29 +21871,41 @@ var android;
         view.WindowManager = WindowManager;
         (function (WindowManager) {
             class Layout extends android.widget.FrameLayout {
+                constructor(context, windowManager) {
+                    super(context);
+                    this.mWindowManager = windowManager;
+                }
+                dispatchKeyEvent(event) {
+                    const count = this.getChildCount();
+                    for (let i = count - 1; i >= 0; i--) {
+                        let child = this.getChildAt(i);
+                        let wparams = child.getLayoutParams();
+                        if (wparams.isFocusable() && child.dispatchKeyEvent(event)) {
+                            return true;
+                        }
+                    }
+                    return super.dispatchKeyEvent(event);
+                }
+                isTransformedTouchPointInView(x, y, child, outLocalPoint) {
+                    let wparams = child.getLayoutParams();
+                    if (wparams.isFocusable() && wparams.isTouchable()) {
+                        return true;
+                    }
+                    return super.isTransformedTouchPointInView(x, y, child, outLocalPoint);
+                }
                 tagName() {
-                    return 'debug-layout';
+                    return 'windows-layout';
                 }
             }
             WindowManager.Layout = Layout;
             class LayoutParams extends android.widget.FrameLayout.LayoutParams {
                 constructor(_type = LayoutParams.TYPE_APPLICATION) {
                     super(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
-                    this.x = 0;
-                    this.y = 0;
-                    this.horizontalWeight = 0;
-                    this.verticalWeight = 0;
                     this.type = 0;
                     this.flags = 0;
-                    this.gravity = 0;
-                    this.horizontalMargin = 0;
-                    this.verticalMargin = 0;
-                    this.format = 0;
-                    this.alpha = 1.0;
-                    this.dimAmount = 1.0;
+                    this.dimAmount = 0.6;
                     this.mTitle = "";
                     this.type = _type;
-                    this.format = PixelFormat.OPAQUE;
                 }
                 setTitle(title) {
                     if (null == title)
@@ -21727,30 +21925,6 @@ var android;
                         this.height = o.height;
                         changes |= LayoutParams.LAYOUT_CHANGED;
                     }
-                    if (this.x != o.x) {
-                        this.x = o.x;
-                        changes |= LayoutParams.LAYOUT_CHANGED;
-                    }
-                    if (this.y != o.y) {
-                        this.y = o.y;
-                        changes |= LayoutParams.LAYOUT_CHANGED;
-                    }
-                    if (this.horizontalWeight != o.horizontalWeight) {
-                        this.horizontalWeight = o.horizontalWeight;
-                        changes |= LayoutParams.LAYOUT_CHANGED;
-                    }
-                    if (this.verticalWeight != o.verticalWeight) {
-                        this.verticalWeight = o.verticalWeight;
-                        changes |= LayoutParams.LAYOUT_CHANGED;
-                    }
-                    if (this.horizontalMargin != o.horizontalMargin) {
-                        this.horizontalMargin = o.horizontalMargin;
-                        changes |= LayoutParams.LAYOUT_CHANGED;
-                    }
-                    if (this.verticalMargin != o.verticalMargin) {
-                        this.verticalMargin = o.verticalMargin;
-                        changes |= LayoutParams.LAYOUT_CHANGED;
-                    }
                     if (this.type != o.type) {
                         this.type = o.type;
                         changes |= LayoutParams.TYPE_CHANGED;
@@ -21764,17 +21938,9 @@ var android;
                         this.gravity = o.gravity;
                         changes |= LayoutParams.LAYOUT_CHANGED;
                     }
-                    if (this.format != o.format) {
-                        this.format = o.format;
-                        changes |= LayoutParams.FORMAT_CHANGED;
-                    }
                     if (this.mTitle != (o.mTitle)) {
                         this.mTitle = o.mTitle;
                         changes |= LayoutParams.TITLE_CHANGED;
-                    }
-                    if (this.alpha != o.alpha) {
-                        this.alpha = o.alpha;
-                        changes |= LayoutParams.ALPHA_CHANGED;
                     }
                     if (this.dimAmount != o.dimAmount) {
                         this.dimAmount = o.dimAmount;
@@ -21784,6 +21950,12 @@ var android;
                 }
                 isFocusable() {
                     return (this.flags & LayoutParams.FLAG_NOT_FOCUSABLE) == 0;
+                }
+                isTouchable() {
+                    return (this.flags & LayoutParams.FLAG_NOT_TOUCHABLE) == 0;
+                }
+                isTouchModal() {
+                    return (this.flags & LayoutParams.FLAG_NOT_TOUCH_MODAL) == 0;
                 }
             }
             LayoutParams.FIRST_APPLICATION_WINDOW = 1;
@@ -21924,6 +22096,777 @@ var android;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Animation = android.view.animation.Animation;
+            class AlphaAnimation extends Animation {
+                constructor(fromAlpha, toAlpha) {
+                    super();
+                    this.mFromAlpha = 0;
+                    this.mToAlpha = 0;
+                    this.mFromAlpha = fromAlpha;
+                    this.mToAlpha = toAlpha;
+                }
+                applyTransformation(interpolatedTime, t) {
+                    const alpha = this.mFromAlpha;
+                    t.setAlpha(alpha + ((this.mToAlpha - alpha) * interpolatedTime));
+                }
+                willChangeTransformationMatrix() {
+                    return false;
+                }
+                willChangeBounds() {
+                    return false;
+                }
+                hasAlpha() {
+                    return true;
+                }
+            }
+            animation.AlphaAnimation = AlphaAnimation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/content/res/Resources.ts"/>
+///<reference path="../../../android/util/TypedValue.ts"/>
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var Animation = android.view.animation.Animation;
+            class ScaleAnimation extends Animation {
+                constructor(fromX, toX, fromY, toY, pivotXType = ScaleAnimation.ABSOLUTE, pivotXValue = 0, pivotYType = ScaleAnimation.ABSOLUTE, pivotYValue = 0) {
+                    super();
+                    this.mFromX = 0;
+                    this.mToX = 0;
+                    this.mFromY = 0;
+                    this.mToY = 0;
+                    this.mFromXData = 0;
+                    this.mToXData = 0;
+                    this.mFromYData = 0;
+                    this.mToYData = 0;
+                    this.mPivotXType = ScaleAnimation.ABSOLUTE;
+                    this.mPivotYType = ScaleAnimation.ABSOLUTE;
+                    this.mPivotXValue = 0.0;
+                    this.mPivotYValue = 0.0;
+                    this.mPivotX = 0;
+                    this.mPivotY = 0;
+                    this.mResources = null;
+                    this.mFromX = fromX;
+                    this.mToX = toX;
+                    this.mFromY = fromY;
+                    this.mToY = toY;
+                    this.mPivotXValue = pivotXValue;
+                    this.mPivotXType = pivotXType;
+                    this.mPivotYValue = pivotYValue;
+                    this.mPivotYType = pivotYType;
+                    this.initializePivotPoint();
+                }
+                initializePivotPoint() {
+                    if (this.mPivotXType == ScaleAnimation.ABSOLUTE) {
+                        this.mPivotX = this.mPivotXValue;
+                    }
+                    if (this.mPivotYType == ScaleAnimation.ABSOLUTE) {
+                        this.mPivotY = this.mPivotYValue;
+                    }
+                }
+                applyTransformation(interpolatedTime, t) {
+                    let sx = 1.0;
+                    let sy = 1.0;
+                    let scale = this.getScaleFactor();
+                    if (this.mFromX != 1.0 || this.mToX != 1.0) {
+                        sx = this.mFromX + ((this.mToX - this.mFromX) * interpolatedTime);
+                    }
+                    if (this.mFromY != 1.0 || this.mToY != 1.0) {
+                        sy = this.mFromY + ((this.mToY - this.mFromY) * interpolatedTime);
+                    }
+                    if (this.mPivotX == 0 && this.mPivotY == 0) {
+                        t.getMatrix().setScale(sx, sy);
+                    }
+                    else {
+                        t.getMatrix().setScale(sx, sy, scale * this.mPivotX, scale * this.mPivotY);
+                    }
+                }
+                initialize(width, height, parentWidth, parentHeight) {
+                    super.initialize(width, height, parentWidth, parentHeight);
+                    this.mPivotX = this.resolveSize(this.mPivotXType, this.mPivotXValue, width, parentWidth);
+                    this.mPivotY = this.resolveSize(this.mPivotYType, this.mPivotYValue, height, parentHeight);
+                }
+            }
+            animation.ScaleAnimation = ScaleAnimation;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/graphics/RectF.ts"/>
+///<reference path="../../../java/util/ArrayList.ts"/>
+///<reference path="../../../java/util/List.ts"/>
+///<reference path="../../../java/lang/Long.ts"/>
+///<reference path="../../../android/view/animation/Animation.ts"/>
+///<reference path="../../../android/view/animation/Interpolator.ts"/>
+///<reference path="../../../android/view/animation/Transformation.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            var ArrayList = java.util.ArrayList;
+            var Long = java.lang.Long;
+            var Animation = android.view.animation.Animation;
+            var Transformation = android.view.animation.Transformation;
+            class AnimationSet extends Animation {
+                constructor(shareInterpolator = false) {
+                    super();
+                    this.mFlags = 0;
+                    this.mAnimations = new ArrayList();
+                    this.mTempTransformation = new Transformation();
+                    this.mLastEnd = 0;
+                    this.setFlag(AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK, shareInterpolator);
+                    this.init();
+                }
+                setFlag(mask, value) {
+                    if (value) {
+                        this.mFlags |= mask;
+                    }
+                    else {
+                        this.mFlags &= ~mask;
+                    }
+                }
+                init() {
+                    this.mStartTime = 0;
+                }
+                setFillAfter(fillAfter) {
+                    this.mFlags |= AnimationSet.PROPERTY_FILL_AFTER_MASK;
+                    super.setFillAfter(fillAfter);
+                }
+                setFillBefore(fillBefore) {
+                    this.mFlags |= AnimationSet.PROPERTY_FILL_BEFORE_MASK;
+                    super.setFillBefore(fillBefore);
+                }
+                setRepeatMode(repeatMode) {
+                    this.mFlags |= AnimationSet.PROPERTY_REPEAT_MODE_MASK;
+                    super.setRepeatMode(repeatMode);
+                }
+                setStartOffset(startOffset) {
+                    this.mFlags |= AnimationSet.PROPERTY_START_OFFSET_MASK;
+                    super.setStartOffset(startOffset);
+                }
+                hasAlpha() {
+                    if (this.mDirty) {
+                        this.mDirty = this.mHasAlpha = false;
+                        const count = this.mAnimations.size();
+                        const animations = this.mAnimations;
+                        for (let i = 0; i < count; i++) {
+                            if (animations.get(i).hasAlpha()) {
+                                this.mHasAlpha = true;
+                                break;
+                            }
+                        }
+                    }
+                    return this.mHasAlpha;
+                }
+                setDuration(durationMillis) {
+                    this.mFlags |= AnimationSet.PROPERTY_DURATION_MASK;
+                    super.setDuration(durationMillis);
+                    this.mLastEnd = this.mStartOffset + this.mDuration;
+                }
+                addAnimation(a) {
+                    this.mAnimations.add(a);
+                    let noMatrix = (this.mFlags & AnimationSet.PROPERTY_MORPH_MATRIX_MASK) == 0;
+                    if (noMatrix && a.willChangeTransformationMatrix()) {
+                        this.mFlags |= AnimationSet.PROPERTY_MORPH_MATRIX_MASK;
+                    }
+                    let changeBounds = (this.mFlags & AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK) == 0;
+                    if (changeBounds && a.willChangeBounds()) {
+                        this.mFlags |= AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK;
+                    }
+                    if ((this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK) {
+                        this.mLastEnd = this.mStartOffset + this.mDuration;
+                    }
+                    else {
+                        if (this.mAnimations.size() == 1) {
+                            this.mDuration = a.getStartOffset() + a.getDuration();
+                            this.mLastEnd = this.mStartOffset + this.mDuration;
+                        }
+                        else {
+                            this.mLastEnd = Math.max(this.mLastEnd, a.getStartOffset() + a.getDuration());
+                            this.mDuration = this.mLastEnd - this.mStartOffset;
+                        }
+                    }
+                    this.mDirty = true;
+                }
+                setStartTime(startTimeMillis) {
+                    super.setStartTime(startTimeMillis);
+                    const count = this.mAnimations.size();
+                    const animations = this.mAnimations;
+                    for (let i = 0; i < count; i++) {
+                        let a = animations.get(i);
+                        a.setStartTime(startTimeMillis);
+                    }
+                }
+                getStartTime() {
+                    let startTime = Long.MAX_VALUE;
+                    const count = this.mAnimations.size();
+                    const animations = this.mAnimations;
+                    for (let i = 0; i < count; i++) {
+                        let a = animations.get(i);
+                        startTime = Math.min(startTime, a.getStartTime());
+                    }
+                    return startTime;
+                }
+                restrictDuration(durationMillis) {
+                    super.restrictDuration(durationMillis);
+                    const animations = this.mAnimations;
+                    let count = animations.size();
+                    for (let i = 0; i < count; i++) {
+                        animations.get(i).restrictDuration(durationMillis);
+                    }
+                }
+                getDuration() {
+                    const animations = this.mAnimations;
+                    const count = animations.size();
+                    let duration = 0;
+                    let durationSet = (this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK;
+                    if (durationSet) {
+                        duration = this.mDuration;
+                    }
+                    else {
+                        for (let i = 0; i < count; i++) {
+                            duration = Math.max(duration, animations.get(i).getDuration());
+                        }
+                    }
+                    return duration;
+                }
+                computeDurationHint() {
+                    let duration = 0;
+                    const count = this.mAnimations.size();
+                    const animations = this.mAnimations;
+                    for (let i = count - 1; i >= 0; --i) {
+                        const d = animations.get(i).computeDurationHint();
+                        if (d > duration)
+                            duration = d;
+                    }
+                    return duration;
+                }
+                initializeInvalidateRegion(left, top, right, bottom) {
+                    const region = this.mPreviousRegion;
+                    region.set(left, top, right, bottom);
+                    region.inset(-1.0, -1.0);
+                    if (this.mFillBefore) {
+                        const count = this.mAnimations.size();
+                        const animations = this.mAnimations;
+                        const temp = this.mTempTransformation;
+                        const previousTransformation = this.mPreviousTransformation;
+                        for (let i = count - 1; i >= 0; --i) {
+                            const a = animations.get(i);
+                            if (!a.isFillEnabled() || a.getFillBefore() || a.getStartOffset() == 0) {
+                                temp.clear();
+                                const interpolator = a.mInterpolator;
+                                a.applyTransformation(interpolator != null ? interpolator.getInterpolation(0.0) : 0.0, temp);
+                                previousTransformation.compose(temp);
+                            }
+                        }
+                    }
+                }
+                getTransformation(currentTime, t) {
+                    const count = this.mAnimations.size();
+                    const animations = this.mAnimations;
+                    const temp = this.mTempTransformation;
+                    let more = false;
+                    let started = false;
+                    let ended = true;
+                    t.clear();
+                    for (let i = count - 1; i >= 0; --i) {
+                        const a = animations.get(i);
+                        temp.clear();
+                        more = a.getTransformation(currentTime, temp, this.getScaleFactor()) || more;
+                        t.compose(temp);
+                        started = started || a.hasStarted();
+                        ended = a.hasEnded() && ended;
+                    }
+                    if (started && !this.mStarted) {
+                        if (this.mListener != null) {
+                            this.mListener.onAnimationStart(this);
+                        }
+                        this.mStarted = true;
+                    }
+                    if (ended != this.mEnded) {
+                        if (this.mListener != null) {
+                            this.mListener.onAnimationEnd(this);
+                        }
+                        this.mEnded = ended;
+                    }
+                    return more;
+                }
+                scaleCurrentDuration(scale) {
+                    const animations = this.mAnimations;
+                    let count = animations.size();
+                    for (let i = 0; i < count; i++) {
+                        animations.get(i).scaleCurrentDuration(scale);
+                    }
+                }
+                initialize(width, height, parentWidth, parentHeight) {
+                    super.initialize(width, height, parentWidth, parentHeight);
+                    let durationSet = (this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK;
+                    let fillAfterSet = (this.mFlags & AnimationSet.PROPERTY_FILL_AFTER_MASK) == AnimationSet.PROPERTY_FILL_AFTER_MASK;
+                    let fillBeforeSet = (this.mFlags & AnimationSet.PROPERTY_FILL_BEFORE_MASK) == AnimationSet.PROPERTY_FILL_BEFORE_MASK;
+                    let repeatModeSet = (this.mFlags & AnimationSet.PROPERTY_REPEAT_MODE_MASK) == AnimationSet.PROPERTY_REPEAT_MODE_MASK;
+                    let shareInterpolator = (this.mFlags & AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK) == AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK;
+                    let startOffsetSet = (this.mFlags & AnimationSet.PROPERTY_START_OFFSET_MASK) == AnimationSet.PROPERTY_START_OFFSET_MASK;
+                    if (shareInterpolator) {
+                        this.ensureInterpolator();
+                    }
+                    const children = this.mAnimations;
+                    const count = children.size();
+                    const duration = this.mDuration;
+                    const fillAfter = this.mFillAfter;
+                    const fillBefore = this.mFillBefore;
+                    const repeatMode = this.mRepeatMode;
+                    const interpolator = this.mInterpolator;
+                    const startOffset = this.mStartOffset;
+                    let storedOffsets = this.mStoredOffsets;
+                    if (startOffsetSet) {
+                        if (storedOffsets == null || storedOffsets.length != count) {
+                            storedOffsets = this.mStoredOffsets = new Array(count);
+                        }
+                    }
+                    else if (storedOffsets != null) {
+                        storedOffsets = this.mStoredOffsets = null;
+                    }
+                    for (let i = 0; i < count; i++) {
+                        let a = children.get(i);
+                        if (durationSet) {
+                            a.setDuration(duration);
+                        }
+                        if (fillAfterSet) {
+                            a.setFillAfter(fillAfter);
+                        }
+                        if (fillBeforeSet) {
+                            a.setFillBefore(fillBefore);
+                        }
+                        if (repeatModeSet) {
+                            a.setRepeatMode(repeatMode);
+                        }
+                        if (shareInterpolator) {
+                            a.setInterpolator(interpolator);
+                        }
+                        if (startOffsetSet) {
+                            let offset = a.getStartOffset();
+                            a.setStartOffset(offset + startOffset);
+                            storedOffsets[i] = offset;
+                        }
+                        a.initialize(width, height, parentWidth, parentHeight);
+                    }
+                }
+                reset() {
+                    super.reset();
+                    this.restoreChildrenStartOffset();
+                }
+                restoreChildrenStartOffset() {
+                    const offsets = this.mStoredOffsets;
+                    if (offsets == null)
+                        return;
+                    const children = this.mAnimations;
+                    const count = children.size();
+                    for (let i = 0; i < count; i++) {
+                        children.get(i).setStartOffset(offsets[i]);
+                    }
+                }
+                getAnimations() {
+                    return this.mAnimations;
+                }
+                willChangeTransformationMatrix() {
+                    return (this.mFlags & AnimationSet.PROPERTY_MORPH_MATRIX_MASK) == AnimationSet.PROPERTY_MORPH_MATRIX_MASK;
+                }
+                willChangeBounds() {
+                    return (this.mFlags & AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK) == AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK;
+                }
+            }
+            AnimationSet.PROPERTY_FILL_AFTER_MASK = 0x1;
+            AnimationSet.PROPERTY_FILL_BEFORE_MASK = 0x2;
+            AnimationSet.PROPERTY_REPEAT_MODE_MASK = 0x4;
+            AnimationSet.PROPERTY_START_OFFSET_MASK = 0x8;
+            AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK = 0x10;
+            AnimationSet.PROPERTY_DURATION_MASK = 0x20;
+            AnimationSet.PROPERTY_MORPH_MATRIX_MASK = 0x40;
+            AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK = 0x80;
+            animation.AnimationSet = AnimationSet;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class AccelerateInterpolator {
+                constructor(factor = 1) {
+                    this.mFactor = factor;
+                    this.mDoubleFactor = factor * 2;
+                }
+                getInterpolation(input) {
+                    if (this.mFactor == 1.0) {
+                        return input * input;
+                    }
+                    else {
+                        return Math.pow(input, this.mDoubleFactor);
+                    }
+                }
+            }
+            animation.AccelerateInterpolator = AccelerateInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class AnticipateInterpolator {
+                constructor(tension = 2) {
+                    this.mTension = tension;
+                }
+                getInterpolation(t) {
+                    return t * t * ((this.mTension + 1) * t - this.mTension);
+                }
+            }
+            animation.AnticipateInterpolator = AnticipateInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class AnticipateOvershootInterpolator {
+                constructor(tension = 2, extraTension = 1.5) {
+                    this.mTension = tension * extraTension;
+                }
+                static a(t, s) {
+                    return t * t * ((s + 1) * t - s);
+                }
+                static o(t, s) {
+                    return t * t * ((s + 1) * t + s);
+                }
+                getInterpolation(t) {
+                    if (t < 0.5)
+                        return 0.5 * AnticipateOvershootInterpolator.a(t * 2.0, this.mTension);
+                    else
+                        return 0.5 * (AnticipateOvershootInterpolator.o(t * 2.0 - 2.0, this.mTension) + 2.0);
+                }
+            }
+            animation.AnticipateOvershootInterpolator = AnticipateOvershootInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class BounceInterpolator {
+                static bounce(t) {
+                    return t * t * 8.0;
+                }
+                getInterpolation(t) {
+                    t *= 1.1226;
+                    if (t < 0.3535)
+                        return BounceInterpolator.bounce(t);
+                    else if (t < 0.7408)
+                        return BounceInterpolator.bounce(t - 0.54719) + 0.7;
+                    else if (t < 0.9644)
+                        return BounceInterpolator.bounce(t - 0.8526) + 0.9;
+                    else
+                        return BounceInterpolator.bounce(t - 1.0435) + 0.95;
+                }
+            }
+            animation.BounceInterpolator = BounceInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class CycleInterpolator {
+                constructor(mCycles) {
+                    this.mCycles = mCycles;
+                }
+                getInterpolation(input) {
+                    return (Math.sin(2 * this.mCycles * Math.PI * input));
+                }
+            }
+            animation.CycleInterpolator = CycleInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/11/1.
+ */
+///<reference path="Interpolator.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var animation;
+        (function (animation) {
+            class OvershootInterpolator {
+                constructor(tension = 2) {
+                    this.mTension = tension;
+                }
+                getInterpolation(t) {
+                    t -= 1.0;
+                    return t * t * ((this.mTension + 1) * t + this.mTension) + 1.0;
+                }
+            }
+            animation.OvershootInterpolator = OvershootInterpolator;
+        })(animation = view.animation || (view.animation = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 16/1/10.
+ */
+///<reference path="../view/animation/Interpolator"/>
+///<reference path="../view/animation/AccelerateDecelerateInterpolator"/>
+///<reference path="../view/animation/AccelerateInterpolator"/>
+///<reference path="../view/animation/AnticipateInterpolator"/>
+///<reference path="../view/animation/AnticipateOvershootInterpolator"/>
+///<reference path="../view/animation/BounceInterpolator"/>
+///<reference path="../view/animation/CycleInterpolator"/>
+///<reference path="../view/animation/DecelerateInterpolator"/>
+///<reference path="../view/animation/LinearInterpolator"/>
+///<reference path="../view/animation/OvershootInterpolator"/>
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        var AccelerateDecelerateInterpolator = android.view.animation.AccelerateDecelerateInterpolator;
+        var AccelerateInterpolator = android.view.animation.AccelerateInterpolator;
+        var AnticipateInterpolator = android.view.animation.AnticipateInterpolator;
+        var AnticipateOvershootInterpolator = android.view.animation.AnticipateOvershootInterpolator;
+        var BounceInterpolator = android.view.animation.BounceInterpolator;
+        var CycleInterpolator = android.view.animation.CycleInterpolator;
+        var DecelerateInterpolator = android.view.animation.DecelerateInterpolator;
+        var LinearInterpolator = android.view.animation.LinearInterpolator;
+        var OvershootInterpolator = android.view.animation.OvershootInterpolator;
+        class interpolator {
+        }
+        interpolator.accelerate_cubic = new AccelerateInterpolator(1.5);
+        interpolator.accelerate_decelerate = new AccelerateDecelerateInterpolator();
+        interpolator.accelerate_quad = new AccelerateInterpolator();
+        interpolator.accelerate_quint = new AccelerateInterpolator(2.5);
+        interpolator.anticipate_overshoot = new AnticipateOvershootInterpolator();
+        interpolator.anticipate = new AnticipateInterpolator();
+        interpolator.bounce = new BounceInterpolator();
+        interpolator.cycle = new CycleInterpolator(1);
+        interpolator.decelerate_cubic = new DecelerateInterpolator(1.5);
+        interpolator.decelerate_quad = new DecelerateInterpolator();
+        interpolator.decelerate_quint = new DecelerateInterpolator(2.5);
+        interpolator.linear = new LinearInterpolator();
+        interpolator.overshoot = new OvershootInterpolator();
+        R.interpolator = interpolator;
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 16/1/10.
+ */
+///<reference path="../view/animation/Animation.ts"/>
+///<reference path="../view/animation/AlphaAnimation.ts"/>
+///<reference path="../view/animation/TranslateAnimation.ts"/>
+///<reference path="../view/animation/ScaleAnimation.ts"/>
+///<reference path="../view/animation/AnimationSet.ts"/>
+///<reference path="interpolator.ts"/>
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        var Animation = android.view.animation.Animation;
+        var AlphaAnimation = android.view.animation.AlphaAnimation;
+        var TranslateAnimation = android.view.animation.TranslateAnimation;
+        var ScaleAnimation = android.view.animation.ScaleAnimation;
+        var AnimationSet = android.view.animation.AnimationSet;
+        class anim {
+            static get activity_close_enter() {
+                let alpha = new AlphaAnimation(1, 1);
+                alpha.setDuration(300);
+                alpha.setFillBefore(true);
+                alpha.setFillEnabled(true);
+                alpha.setFillAfter(true);
+                return alpha;
+            }
+            static get activity_close_exit() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(1, 0);
+                alpha.setDuration(300);
+                alpha.setFillBefore(true);
+                alpha.setFillEnabled(true);
+                alpha.setFillAfter(true);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(1, 0.8, 1, 0.8, Animation.RELATIVE_TO_PARENT, 0.5, Animation.RELATIVE_TO_PARENT, 0.5);
+                scale.setDuration(300);
+                scale.setFillBefore(true);
+                scale.setFillEnabled(true);
+                scale.setFillAfter(true);
+                scale.setInterpolator(R.interpolator.decelerate_cubic);
+                animSet.addAnimation(alpha);
+                animSet.addAnimation(scale);
+                return animSet;
+            }
+            static get activity_open_enter() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(0, 1);
+                alpha.setDuration(300);
+                alpha.setFillBefore(false);
+                alpha.setFillEnabled(true);
+                alpha.setFillAfter(true);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(0.8, 1, 0.8, 1, Animation.RELATIVE_TO_PARENT, 0.5, Animation.RELATIVE_TO_PARENT, 0.5);
+                scale.setDuration(300);
+                scale.setFillBefore(false);
+                scale.setFillEnabled(true);
+                scale.setFillAfter(true);
+                scale.setInterpolator(R.interpolator.decelerate_cubic);
+                animSet.addAnimation(alpha);
+                animSet.addAnimation(scale);
+                return animSet;
+            }
+            static get activity_open_exit() {
+                let alpha = new AlphaAnimation(1, 0);
+                alpha.setDuration(300);
+                alpha.setFillBefore(false);
+                alpha.setFillEnabled(true);
+                alpha.setFillAfter(true);
+                alpha.setInterpolator(R.interpolator.decelerate_quint);
+                return alpha;
+            }
+            static get activity_close_enter_ios() {
+                let anim = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, -0.25, Animation.RELATIVE_TO_PARENT, 0, 0, 0, 0, 0);
+                anim.setDuration(300);
+                return anim;
+            }
+            static get activity_close_exit_ios() {
+                let anim = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0, Animation.RELATIVE_TO_PARENT, 1, 0, 0, 0, 0);
+                anim.setDuration(300);
+                return anim;
+            }
+            static get activity_open_enter_ios() {
+                let anim = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 1, Animation.RELATIVE_TO_PARENT, 0, 0, 0, 0, 0);
+                anim.setDuration(300);
+                return anim;
+            }
+            static get activity_open_exit_ios() {
+                let anim = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0, Animation.RELATIVE_TO_PARENT, -0.25, 0, 0, 0, 0);
+                anim.setDuration(300);
+                return anim;
+            }
+            static get dialog_enter() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(0, 1);
+                alpha.setDuration(150);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_PARENT, 0.5, Animation.RELATIVE_TO_PARENT, 0.5);
+                scale.setDuration(220);
+                scale.setInterpolator(R.interpolator.decelerate_quint);
+                animSet.addAnimation(scale);
+                animSet.addAnimation(alpha);
+                return animSet;
+            }
+            static get dialog_exit() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(1, 0);
+                alpha.setDuration(150);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_PARENT, 0.5, Animation.RELATIVE_TO_PARENT, 0.5);
+                scale.setDuration(220);
+                scale.setInterpolator(R.interpolator.decelerate_quint);
+                animSet.addAnimation(scale);
+                animSet.addAnimation(alpha);
+                return animSet;
+            }
+        }
+        R.anim = anim;
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 ///<reference path="../../android/view/WindowManager.ts"/>
 ///<reference path="../../android/view/MotionEvent.ts"/>
 ///<reference path="../../android/widget/FrameLayout.ts"/>
@@ -21941,17 +22884,15 @@ var android;
 ///<reference path="../../android/view/animation/TranslateAnimation.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
 ///<reference path="../../android/os/SystemClock.ts"/>
+///<reference path="../../android/R/anim.ts"/>
 var android;
 (function (android) {
     var view;
     (function (view_6) {
-        var PixelFormat = android.graphics.PixelFormat;
         var MotionEvent = android.view.MotionEvent;
         var View = android.view.View;
         var ViewConfiguration = android.view.ViewConfiguration;
         var WindowManager = android.view.WindowManager;
-        var Animation = android.view.animation.Animation;
-        var TranslateAnimation = android.view.animation.TranslateAnimation;
         var FrameLayout = android.widget.FrameLayout;
         class Window {
             constructor(context) {
@@ -21959,16 +22900,15 @@ var android;
                 this.mHasChildren = false;
                 this.mCloseOnTouchOutside = false;
                 this.mSetCloseOnTouchOutside = false;
-                this.mHaveWindowFormat = false;
-                this.mHaveDimAmount = false;
-                this.mDefaultWindowFormat = PixelFormat.OPAQUE;
                 this.mWindowAttributes = new WindowManager.LayoutParams();
                 this.mIsFloating = false;
-                this.mWindowAnimationDuration = 300;
+                this.mExitAnimation = android.R.anim.activity_close_exit_ios;
+                this.mEnterAnimation = android.R.anim.activity_open_enter_ios;
+                this.mShowAnimation = android.R.anim.activity_close_enter_ios;
+                this.mHideAnimation = android.R.anim.activity_open_exit_ios;
                 this.mContext = context;
                 this.initDecorView();
                 this.initAttachInfo();
-                this.initDefaultWindowAnimation();
             }
             initDecorView() {
                 this.mDecor = new DecorView(this);
@@ -22005,9 +22945,23 @@ var android;
                 return this.mDestroyed;
             }
             setWindowManager(wm) {
+                //this.mAppToken = appToken;
+                //this.mAppName = appName;
+                //this.mHardwareAccelerated = hardwareAccelerated;// || SystemProperties.getBoolean(Window.PROPERTY_HARDWARE_UI, false);
+                //if (wm == null) {
+                //    wm = <WindowManager> this.mContext.getSystemService(Context.WINDOW_SERVICE);
+                //}
+                //this.mWindowManager = (<WindowManagerImpl> wm).createLocalWindowManager(this);
+                if (this.mWindowManager) {
+                    this.mDecor.removeView(this.mWindowManager.getWindowsLayout());
+                }
                 this.mWindowManager = wm;
             }
             getWindowManager() {
+                if (!this.mWindowManager) {
+                    this.mWindowManager = new WindowManager(this.mContext);
+                    this.mDecor.addView(this.mWindowManager.getWindowsLayout(), -1, -1);
+                }
                 return this.mWindowManager;
             }
             setCallback(callback) {
@@ -22015,6 +22969,9 @@ var android;
             }
             getCallback() {
                 return this.mCallback;
+            }
+            setFloating(isFloating) {
+                this.mIsFloating = isFloating;
             }
             isFloating() {
                 return this.mIsFloating;
@@ -22041,27 +22998,6 @@ var android;
                     this.mCallback.onWindowAttributesChanged(attrs);
                 }
             }
-            setFormat(format) {
-                const attrs = this.getAttributes();
-                if (format != PixelFormat.UNKNOWN) {
-                    attrs.format = format;
-                    this.mHaveWindowFormat = true;
-                }
-                else {
-                    attrs.format = this.mDefaultWindowFormat;
-                    this.mHaveWindowFormat = false;
-                }
-                if (this.mCallback != null) {
-                    this.mCallback.onWindowAttributesChanged(attrs);
-                }
-            }
-            initDefaultWindowAnimation() {
-                let enterAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 1, Animation.RELATIVE_TO_SELF, 0, 0, 0, 0, 0);
-                let exitAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1, 0, 0, 0, 0);
-                let showAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, -0.25, Animation.RELATIVE_TO_SELF, 0, 0, 0, 0, 0);
-                let hideAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -0.25, 0, 0, 0, 0);
-                this.setWindowAnimations(enterAnimation, exitAnimation, showAnimation, hideAnimation);
-            }
             setWindowAnimations(enterAnimation, exitAnimation, showAnimation = this.mShowAnimation, hideAnimation = this.mHideAnimation) {
                 this.mEnterAnimation = enterAnimation;
                 this.mExitAnimation = exitAnimation;
@@ -22084,7 +23020,6 @@ var android;
             setDimAmount(amount) {
                 const attrs = this.getAttributes();
                 attrs.dimAmount = amount;
-                this.mHaveDimAmount = true;
                 if (this.mCallback != null) {
                     this.mCallback.onWindowAttributesChanged(attrs);
                 }
@@ -22165,7 +23100,11 @@ var android;
             setBackgroundDrawable(drawable) {
                 if (this.mDecor != null) {
                     this.mDecor.setBackground(drawable);
-                    this.setDefaultWindowFormat(drawable.getOpacity());
+                }
+            }
+            setBackgroundColor(color) {
+                if (this.mDecor != null) {
+                    this.mDecor.setBackgroundColor(color);
                 }
             }
             takeKeyEvents(_get) {
@@ -22188,19 +23127,6 @@ var android;
             }
             onActive() {
             }
-            setDefaultWindowFormat(format) {
-                this.mDefaultWindowFormat = format;
-                if (!this.mHaveWindowFormat) {
-                    const attrs = this.getAttributes();
-                    attrs.format = format;
-                    if (this.mCallback != null) {
-                        this.mCallback.onWindowAttributesChanged(attrs);
-                    }
-                }
-            }
-            haveDimAmount() {
-                return this.mHaveDimAmount;
-            }
         }
         view_6.Window = Window;
         class DecorView extends FrameLayout {
@@ -22212,7 +23138,7 @@ var android;
             }
             drawFromParent(canvas, parent, drawingTime) {
                 let windowAnimation = this.getAnimation();
-                let shadowColor;
+                let shadowAlpha = this.Window_this.getAttributes().dimAmount * 255;
                 if (windowAnimation != null) {
                     const duration = windowAnimation.getDuration();
                     let startTime = windowAnimation.getStartTime();
@@ -22228,14 +23154,16 @@ var android;
                     }
                     const interpolatedTime = windowAnimation.getInterpolator().getInterpolation(normalizedTime);
                     if (windowAnimation === this.Window_this.mExitAnimation) {
-                        shadowColor = android.graphics.Color.argb(150 * (1 - interpolatedTime), 0, 0, 0);
+                        shadowAlpha = shadowAlpha * (1 - interpolatedTime);
+                        parent.invalidate();
                     }
                     else if (windowAnimation === this.Window_this.mEnterAnimation) {
-                        shadowColor = android.graphics.Color.argb(150 * interpolatedTime, 0, 0, 0);
+                        shadowAlpha = shadowAlpha * interpolatedTime;
+                        parent.invalidate();
                     }
                 }
-                if (shadowColor) {
-                    canvas.drawColor(shadowColor);
+                if ((windowAnimation != null || this.Window_this.isFloating()) && shadowAlpha) {
+                    canvas.drawColor(android.graphics.Color.argb(shadowAlpha, 0, 0, 0));
                 }
                 return super.drawFromParent(canvas, parent, drawingTime);
             }
@@ -22243,6 +23171,13 @@ var android;
                 return 'Window';
             }
             dispatchKeyEvent(event) {
+                const count = this.getChildCount();
+                for (let i = count - 1; i >= 0; i--) {
+                    let child = this.getChildAt(i);
+                    if (child instanceof WindowManager.Layout && child.dispatchKeyEvent(event)) {
+                        return true;
+                    }
+                }
                 const action = event.getAction();
                 if (!this.Window_this.isDestroyed()) {
                     const cb = this.Window_this.getCallback();
@@ -22254,8 +23189,14 @@ var android;
                 return super.dispatchKeyEvent(event);
             }
             dispatchTouchEvent(ev) {
-                const cb = this.Window_this.getCallback();
-                return cb != null && !this.Window_this.isDestroyed() ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev);
+                let wparams = this.getLayoutParams();
+                let handle = wparams.isTouchModal();
+                if (wparams.isTouchable()) {
+                    const cb = this.Window_this.getCallback();
+                    handle = (cb != null && !this.Window_this.isDestroyed() ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev))
+                        || handle;
+                }
+                return handle;
             }
             dispatchGenericMotionEvent(ev) {
                 const cb = this.Window_this.getCallback();
@@ -22322,6 +23263,7 @@ var android;
 (function (android) {
     var app;
     (function (app) {
+        var View = android.view.View;
         var Window = android.view.Window;
         var Context = android.content.Context;
         var Intent = android.content.Intent;
@@ -22341,13 +23283,16 @@ var android;
             getWindow() {
                 return this.mWindow;
             }
+            getWindowManager() {
+                return this.mWindow.getWindowManager();
+            }
             startActivity(intent, options) {
                 if (typeof intent === 'string')
                     intent = new Intent(intent);
                 this.androidUI.mActivityThread.scheduleLaunchActivity(intent, options);
             }
             setContentView(view) {
-                if (view instanceof HTMLElement) {
+                if (!(view instanceof View)) {
                     view = this.getLayoutInflater().inflate(view);
                 }
                 this.mWindow.setContentView(view);
@@ -22393,6 +23338,11 @@ var android;
                 this.mActivityLifecycleCallbacks = new ArrayList();
             }
             onCreate() {
+            }
+            getWindowManager() {
+                if (!this.mWindowManager)
+                    this.mWindowManager = new android.view.WindowManager(this);
+                return this.mWindowManager;
             }
             registerActivityLifecycleCallbacks(callback) {
                 {
@@ -24814,13 +25764,13 @@ var android;
                 this._attrBinder.addAttr('showDividers', (value) => {
                     let fieldName = ('SHOW_DIVIDER_' + value).toUpperCase();
                     if (Number.isInteger(LinearLayout[fieldName])) {
-                        this.mShowDividers = LinearLayout[fieldName];
+                        this.setShowDividers(LinearLayout[fieldName]);
                     }
                 });
                 this._attrBinder.addAttr('dividerPadding', (value) => {
                     value = Number.parseInt(value);
                     if (Number.isInteger(value)) {
-                        this.mDividerPadding = value;
+                        this.setDividerPadding(value);
                     }
                 });
             }
@@ -26857,6 +27807,8 @@ var android;
     (function (R) {
         class string_ {
             static zh() {
+                this.ok = '确定';
+                this.cancel = '取消';
                 this.prll_header_state_normal = '下拉以刷新';
                 this.prll_header_state_ready = '松开马上刷新';
                 this.prll_header_state_loading = '正在刷新...';
@@ -26868,6 +27820,8 @@ var android;
                 this.prll_footer_state_fail = '加载失败,点击重试';
             }
         }
+        string_.ok = 'OK';
+        string_.cancel = 'Cancel';
         string_.prll_header_state_normal = 'Pull to refresh';
         string_.prll_header_state_ready = 'Release to refresh';
         string_.prll_header_state_loading = 'Loading';
@@ -32293,7 +33247,7 @@ var android;
                     this.setTranscriptMode(transcriptMode);
                 });
                 this._attrBinder.addAttr('cacheColorHint', (value) => {
-                    let color = this._attrBinder.parseNumber(value, 0);
+                    let color = this._attrBinder.parseColor(value, 0);
                     this.setCacheColorHint(color);
                 });
                 this._attrBinder.addAttr('fastScrollEnabled', (value) => {
@@ -42290,48 +43244,6 @@ var java;
         util.Collections = Collections;
     })(util = java.util || (java.util = {}));
 })(java || (java = {}));
-var android;
-(function (android) {
-    var R;
-    (function (R) {
-        const div = document.createElement('div');
-        function stringToElement(html) {
-            div.innerHTML = html;
-            return div.firstElementChild;
-        }
-        class layout {
-            static get number_picker() {
-                return stringToElement(`
-                    <merge>
-                        <ImageButton android:id="@+id/increment"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:background="transparent"
-                            android:state_pressed="#ddd"
-                            android:paddingTop="22dip"
-                            android:paddingBottom="22dip"
-                            android:contentDescription="@string/number_picker_increment_button" ></ImageButton>
-
-                        <View
-                            android:id="@+id/numberpicker_input"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"></View>
-
-                        <ImageButton android:id="@+id/decrement"
-                            android:layout_width="fill_parent"
-                            android:layout_height="wrap_content"
-                            android:background="transparent"
-                            android:state_pressed="#ddd"
-                            android:paddingTop="22dip"
-                            android:paddingBottom="22dip"
-                            android:contentDescription="@string/number_picker_decrement_button" ></ImageButton>
-                    </merge>`)
-                    .cloneNode(true);
-            }
-        }
-        R.layout = layout;
-    })(R = android.R || (android.R = {}));
-})(android || (android = {}));
 /*
  * Copyright (C) 2008 The Android Open Source Project
  *
@@ -43576,56 +44488,6 @@ var android;
             })(ClipDrawable = drawable_5.ClipDrawable || (drawable_5.ClipDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var animation;
-        (function (animation) {
-            var Animation = android.view.animation.Animation;
-            class AlphaAnimation extends Animation {
-                constructor(fromAlpha, toAlpha) {
-                    super();
-                    this.mFromAlpha = 0;
-                    this.mToAlpha = 0;
-                    this.mFromAlpha = fromAlpha;
-                    this.mToAlpha = toAlpha;
-                }
-                applyTransformation(interpolatedTime, t) {
-                    const alpha = this.mFromAlpha;
-                    t.setAlpha(alpha + ((this.mToAlpha - alpha) * interpolatedTime));
-                }
-                willChangeTransformationMatrix() {
-                    return false;
-                }
-                willChangeBounds() {
-                    return false;
-                }
-                hasAlpha() {
-                    return true;
-                }
-            }
-            animation.AlphaAnimation = AlphaAnimation;
-        })(animation = view.animation || (view.animation = {}));
-    })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -46502,79 +47364,1328 @@ var android;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-///<reference path="../../../android/content/res/Resources.ts"/>
-///<reference path="../../../android/util/TypedValue.ts"/>
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
 var android;
 (function (android) {
-    var view;
-    (function (view) {
-        var animation;
-        (function (animation) {
-            var Animation = android.view.animation.Animation;
-            class ScaleAnimation extends Animation {
-                constructor(fromX, toX, fromY, toY, pivotXType = ScaleAnimation.ABSOLUTE, pivotXValue = 0, pivotYType = ScaleAnimation.ABSOLUTE, pivotYValue = 0) {
-                    super();
-                    this.mFromX = 0;
-                    this.mToX = 0;
-                    this.mFromY = 0;
-                    this.mToY = 0;
-                    this.mFromXData = 0;
-                    this.mToXData = 0;
-                    this.mFromYData = 0;
-                    this.mToYData = 0;
-                    this.mPivotXType = ScaleAnimation.ABSOLUTE;
-                    this.mPivotYType = ScaleAnimation.ABSOLUTE;
-                    this.mPivotXValue = 0.0;
-                    this.mPivotYValue = 0.0;
-                    this.mPivotX = 0;
-                    this.mPivotY = 0;
-                    this.mResources = null;
-                    this.mFromX = fromX;
-                    this.mToX = toX;
-                    this.mFromY = fromY;
-                    this.mToY = toY;
-                    this.mPivotXValue = pivotXValue;
-                    this.mPivotXType = pivotXType;
-                    this.mPivotYValue = pivotYValue;
-                    this.mPivotYType = pivotYType;
-                    this.initializePivotPoint();
+    var content;
+    (function (content) {
+        var DialogInterface;
+        (function (DialogInterface) {
+            DialogInterface.BUTTON_POSITIVE = -1;
+            DialogInterface.BUTTON_NEGATIVE = -2;
+            DialogInterface.BUTTON_NEUTRAL = -3;
+            DialogInterface.BUTTON1 = DialogInterface.BUTTON_POSITIVE;
+            DialogInterface.BUTTON2 = DialogInterface.BUTTON_NEGATIVE;
+            DialogInterface.BUTTON3 = DialogInterface.BUTTON_NEUTRAL;
+        })(DialogInterface = content.DialogInterface || (content.DialogInterface = {}));
+    })(content = android.content || (android.content = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/DialogInterface.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/os/Bundle.ts"/>
+///<reference path="../../android/os/Handler.ts"/>
+///<reference path="../../android/os/Message.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/util/TypedValue.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/LayoutInflater.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/view/Window.ts"/>
+///<reference path="../../android/view/WindowManager.ts"/>
+///<reference path="../../java/lang/ref/WeakReference.ts"/>
+///<reference path="../../android/app/Activity.ts"/>
+///<reference path="../../android/app/Application.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+var android;
+(function (android) {
+    var app;
+    (function (app) {
+        var Handler = android.os.Handler;
+        var Message = android.os.Message;
+        var Log = android.util.Log;
+        var Gravity = android.view.Gravity;
+        var KeyEvent = android.view.KeyEvent;
+        var View = android.view.View;
+        var ViewGroup = android.view.ViewGroup;
+        var Window = android.view.Window;
+        var WeakReference = java.lang.ref.WeakReference;
+        class Dialog {
+            constructor(context, cancelable, cancelListener) {
+                this.mCancelable = true;
+                this.mCreated = false;
+                this.mShowing = false;
+                this.mCanceled = false;
+                this.mHandler = new Handler();
+                this.mDismissAction = (() => {
+                    const _this = this;
+                    class _Inner {
+                        run() {
+                            _this.dismissDialog();
+                        }
+                    }
+                    return new _Inner();
+                })();
+                this.mContext = context;
+                this.mWindowManager = context.getWindowManager();
+                let w = new Window(context);
+                w.setFloating(true);
+                w.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                this.mWindow = w;
+                let dm = context.getResources().getDisplayMetrics();
+                let decor = w.getDecorView();
+                decor.setMinimumWidth(dm.density * 300);
+                decor.setMinimumHeight(dm.density * 20);
+                let wp = w.getAttributes();
+                wp.height = wp.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+                wp.leftMargin = wp.rightMargin = wp.topMargin = wp.bottomMargin = dm.density * 16;
+                w.setWindowAnimations(android.R.anim.dialog_enter, android.R.anim.dialog_exit, null, null);
+                w.setWindowManager(this.mWindowManager);
+                w.setGravity(Gravity.CENTER);
+                w.setCallback(this);
+                this.mListenersHandler = new Dialog.ListenersHandler(this);
+                this.mCancelable = cancelable;
+                this.setOnCancelListener(cancelListener);
+            }
+            getContext() {
+                return this.mContext;
+            }
+            isShowing() {
+                return this.mShowing;
+            }
+            show() {
+                if (this.mShowing) {
+                    if (this.mDecor != null) {
+                        this.mDecor.setVisibility(View.VISIBLE);
+                    }
+                    return;
                 }
-                initializePivotPoint() {
-                    if (this.mPivotXType == ScaleAnimation.ABSOLUTE) {
-                        this.mPivotX = this.mPivotXValue;
-                    }
-                    if (this.mPivotYType == ScaleAnimation.ABSOLUTE) {
-                        this.mPivotY = this.mPivotYValue;
-                    }
+                this.mCanceled = false;
+                if (!this.mCreated) {
+                    this.dispatchOnCreate(null);
                 }
-                applyTransformation(interpolatedTime, t) {
-                    let sx = 1.0;
-                    let sy = 1.0;
-                    let scale = this.getScaleFactor();
-                    if (this.mFromX != 1.0 || this.mToX != 1.0) {
-                        sx = this.mFromX + ((this.mToX - this.mFromX) * interpolatedTime);
-                    }
-                    if (this.mFromY != 1.0 || this.mToY != 1.0) {
-                        sy = this.mFromY + ((this.mToY - this.mFromY) * interpolatedTime);
-                    }
-                    if (this.mPivotX == 0 && this.mPivotY == 0) {
-                        t.getMatrix().setScale(sx, sy);
-                    }
-                    else {
-                        t.getMatrix().setScale(sx, sy, scale * this.mPivotX, scale * this.mPivotY);
-                    }
+                this.onStart();
+                this.mDecor = this.mWindow.getDecorView();
+                let l = this.mWindow.getAttributes();
+                try {
+                    this.mWindowManager.addWindow(this.mWindow, l);
+                    this.mShowing = true;
+                    this.sendShowMessage();
                 }
-                initialize(width, height, parentWidth, parentHeight) {
-                    super.initialize(width, height, parentWidth, parentHeight);
-                    this.mPivotX = this.resolveSize(this.mPivotXType, this.mPivotXValue, width, parentWidth);
-                    this.mPivotY = this.resolveSize(this.mPivotYType, this.mPivotYValue, height, parentHeight);
+                finally {
                 }
             }
-            animation.ScaleAnimation = ScaleAnimation;
-        })(animation = view.animation || (view.animation = {}));
-    })(view = android.view || (android.view = {}));
+            hide() {
+                if (this.mDecor != null) {
+                    this.mDecor.setVisibility(View.GONE);
+                }
+            }
+            dismiss() {
+                this.dismissDialog();
+            }
+            dismissDialog() {
+                if (this.mDecor == null || !this.mShowing) {
+                    return;
+                }
+                if (this.mWindow.isDestroyed()) {
+                    Log.e(Dialog.TAG, "Tried to dismissDialog() but the Dialog's window was already destroyed!");
+                    return;
+                }
+                try {
+                    this.mWindowManager.removeWindow(this.mWindow);
+                }
+                finally {
+                    this.mDecor = null;
+                    this.onStop();
+                    this.mShowing = false;
+                    this.sendDismissMessage();
+                }
+            }
+            sendDismissMessage() {
+                if (this.mDismissMessage != null) {
+                    Message.obtain(this.mDismissMessage).sendToTarget();
+                }
+            }
+            sendShowMessage() {
+                if (this.mShowMessage != null) {
+                    Message.obtain(this.mShowMessage).sendToTarget();
+                }
+            }
+            dispatchOnCreate(savedInstanceState) {
+                if (!this.mCreated) {
+                    this.onCreate(savedInstanceState);
+                    this.mCreated = true;
+                }
+            }
+            onCreate(savedInstanceState) {
+            }
+            onStart() {
+            }
+            onStop() {
+            }
+            getWindow() {
+                return this.mWindow;
+            }
+            getCurrentFocus() {
+                return this.mWindow != null ? this.mWindow.getCurrentFocus() : null;
+            }
+            findViewById(id) {
+                return this.mWindow.findViewById(id);
+            }
+            setContentView(view, params) {
+                this.mWindow.setContentView(view, params);
+            }
+            addContentView(view, params) {
+                this.mWindow.addContentView(view, params);
+            }
+            setTitle(title) {
+                this.mWindow.setTitle(title);
+                this.mWindow.getAttributes().setTitle(title);
+            }
+            onKeyDown(keyCode, event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    event.startTracking();
+                    return true;
+                }
+                return false;
+            }
+            onKeyLongPress(keyCode, event) {
+                return false;
+            }
+            onKeyUp(keyCode, event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK && event.isTracking() && !event.isCanceled()) {
+                    this.onBackPressed();
+                    return true;
+                }
+                return false;
+            }
+            onKeyMultiple(keyCode, repeatCount, event) {
+                return false;
+            }
+            onBackPressed() {
+                if (this.mCancelable) {
+                    this.cancel();
+                }
+            }
+            onTouchEvent(event) {
+                if (this.mCancelable && this.mShowing && this.mWindow.shouldCloseOnTouch(this.mContext, event)) {
+                    this.cancel();
+                    return true;
+                }
+                return false;
+            }
+            onTrackballEvent(event) {
+                return false;
+            }
+            onGenericMotionEvent(event) {
+                return false;
+            }
+            onWindowAttributesChanged(params) {
+                if (this.mDecor != null) {
+                    this.mWindowManager.updateWindowLayout(this.mWindow, params);
+                }
+            }
+            onContentChanged() {
+            }
+            onWindowFocusChanged(hasFocus) {
+            }
+            onAttachedToWindow() {
+            }
+            onDetachedFromWindow() {
+            }
+            dispatchKeyEvent(event) {
+                if ((this.mOnKeyListener != null) && (this.mOnKeyListener.onKey(this, event.getKeyCode(), event))) {
+                    return true;
+                }
+                if (this.mWindow.superDispatchKeyEvent(event)) {
+                    return true;
+                }
+                return event.dispatch(this, this.mDecor != null ? this.mDecor.getKeyDispatcherState() : null, this);
+            }
+            dispatchTouchEvent(ev) {
+                if (this.mWindow.superDispatchTouchEvent(ev)) {
+                    return true;
+                }
+                return this.onTouchEvent(ev);
+            }
+            dispatchGenericMotionEvent(ev) {
+                if (this.mWindow.superDispatchGenericMotionEvent(ev)) {
+                    return true;
+                }
+                return this.onGenericMotionEvent(ev);
+            }
+            takeKeyEvents(get) {
+                this.mWindow.takeKeyEvents(get);
+            }
+            getLayoutInflater() {
+                return this.getWindow().getLayoutInflater();
+            }
+            setCancelable(flag) {
+                this.mCancelable = flag;
+            }
+            setCanceledOnTouchOutside(cancel) {
+                if (cancel && !this.mCancelable) {
+                    this.mCancelable = true;
+                }
+                this.mWindow.setCloseOnTouchOutside(cancel);
+            }
+            cancel() {
+                if (!this.mCanceled && this.mCancelMessage != null) {
+                    this.mCanceled = true;
+                    Message.obtain(this.mCancelMessage).sendToTarget();
+                }
+                this.dismiss();
+            }
+            setOnCancelListener(listener) {
+                if (this.mCancelAndDismissTaken != null) {
+                    throw Error(`new IllegalStateException("OnCancelListener is already taken by " + this.mCancelAndDismissTaken + " and can not be replaced.")`);
+                }
+                if (listener != null) {
+                    this.mCancelMessage = this.mListenersHandler.obtainMessage(Dialog.CANCEL, listener);
+                }
+                else {
+                    this.mCancelMessage = null;
+                }
+            }
+            setCancelMessage(msg) {
+                this.mCancelMessage = msg;
+            }
+            setOnDismissListener(listener) {
+                if (this.mCancelAndDismissTaken != null) {
+                    throw Error(`new IllegalStateException("OnDismissListener is already taken by " + this.mCancelAndDismissTaken + " and can not be replaced.")`);
+                }
+                if (listener != null) {
+                    this.mDismissMessage = this.mListenersHandler.obtainMessage(Dialog.DISMISS, listener);
+                }
+                else {
+                    this.mDismissMessage = null;
+                }
+            }
+            setOnShowListener(listener) {
+                if (listener != null) {
+                    this.mShowMessage = this.mListenersHandler.obtainMessage(Dialog.SHOW, listener);
+                }
+                else {
+                    this.mShowMessage = null;
+                }
+            }
+            setDismissMessage(msg) {
+                this.mDismissMessage = msg;
+            }
+            takeCancelAndDismissListeners(msg, cancel, dismiss) {
+                if (this.mCancelAndDismissTaken != null) {
+                    this.mCancelAndDismissTaken = null;
+                }
+                else if (this.mCancelMessage != null || this.mDismissMessage != null) {
+                    return false;
+                }
+                this.setOnCancelListener(cancel);
+                this.setOnDismissListener(dismiss);
+                this.mCancelAndDismissTaken = msg;
+                return true;
+            }
+            setOnKeyListener(onKeyListener) {
+                this.mOnKeyListener = onKeyListener;
+            }
+        }
+        Dialog.TAG = "Dialog";
+        Dialog.DISMISS = 0x43;
+        Dialog.CANCEL = 0x44;
+        Dialog.SHOW = 0x45;
+        Dialog.DIALOG_SHOWING_TAG = "android:dialogShowing";
+        Dialog.DIALOG_HIERARCHY_TAG = "android:dialogHierarchy";
+        app.Dialog = Dialog;
+        (function (Dialog) {
+            class ListenersHandler extends Handler {
+                constructor(dialog) {
+                    super();
+                    this.mDialog = new WeakReference(dialog);
+                }
+                handleMessage(msg) {
+                    switch (msg.what) {
+                        case Dialog.DISMISS:
+                            msg.obj.onDismiss(this.mDialog.get());
+                            break;
+                        case Dialog.CANCEL:
+                            msg.obj.onCancel(this.mDialog.get());
+                            break;
+                        case Dialog.SHOW:
+                            msg.obj.onShow(this.mDialog.get());
+                            break;
+                    }
+                }
+            }
+            Dialog.ListenersHandler = ListenersHandler;
+        })(Dialog = app.Dialog || (app.Dialog = {}));
+    })(app = android.app || (android.app = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/view/LayoutInflater.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../java/util/ArrayList.ts"/>
+///<reference path="../../java/util/Arrays.ts"/>
+///<reference path="../../java/util/Collections.ts"/>
+///<reference path="../../java/util/Comparator.ts"/>
+///<reference path="../../java/util/List.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/BaseAdapter.ts"/>
+///<reference path="../../android/widget/ImageView.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Log = android.util.Log;
+        var Arrays = java.util.Arrays;
+        var Collections = java.util.Collections;
+        var BaseAdapter = android.widget.BaseAdapter;
+        class ArrayAdapter extends BaseAdapter {
+            constructor(context, resource, textViewResourceId, objects) {
+                super();
+                this.mNotifyOnChange = true;
+                this.init(context, resource, textViewResourceId, objects);
+            }
+            add(object) {
+                {
+                    this.mObjects.add(object);
+                }
+                if (this.mNotifyOnChange)
+                    this.notifyDataSetChanged();
+            }
+            addAll(collection) {
+                {
+                    this.mObjects.addAll(collection);
+                }
+                if (this.mNotifyOnChange)
+                    this.notifyDataSetChanged();
+            }
+            insert(object, index) {
+                {
+                    this.mObjects.add(index, object);
+                }
+                if (this.mNotifyOnChange)
+                    this.notifyDataSetChanged();
+            }
+            remove(object) {
+                {
+                    this.mObjects.remove(object);
+                }
+                if (this.mNotifyOnChange)
+                    this.notifyDataSetChanged();
+            }
+            clear() {
+                {
+                    this.mObjects.clear();
+                }
+                if (this.mNotifyOnChange)
+                    this.notifyDataSetChanged();
+            }
+            sort(comparator) {
+                {
+                    Collections.sort(this.mObjects, comparator);
+                }
+                if (this.mNotifyOnChange)
+                    this.notifyDataSetChanged();
+            }
+            notifyDataSetChanged() {
+                super.notifyDataSetChanged();
+                this.mNotifyOnChange = true;
+            }
+            setNotifyOnChange(notifyOnChange) {
+                this.mNotifyOnChange = notifyOnChange;
+            }
+            init(context, resource, textViewResourceId, objects) {
+                this.mContext = context;
+                this.mInflater = context.getLayoutInflater();
+                this.mResource = this.mDropDownResource = resource;
+                if (objects instanceof Array)
+                    objects = Arrays.asList(objects);
+                this.mObjects = objects;
+                this.mFieldId = textViewResourceId;
+            }
+            getContext() {
+                return this.mContext;
+            }
+            getCount() {
+                return this.mObjects.size();
+            }
+            getItem(position) {
+                return this.mObjects.get(position);
+            }
+            getPosition(item) {
+                return this.mObjects.indexOf(item);
+            }
+            getItemId(position) {
+                return position;
+            }
+            getView(position, convertView, parent) {
+                return this.createViewFromResource(position, convertView, parent, this.mResource);
+            }
+            createViewFromResource(position, convertView, parent, resource) {
+                let view;
+                let text;
+                if (convertView == null) {
+                    view = this.mInflater.inflate(this.mContext.getResources().getLayout(resource), parent, false);
+                }
+                else {
+                    view = convertView;
+                }
+                try {
+                    if (this.mFieldId == null) {
+                        text = view;
+                    }
+                    else {
+                        text = view.findViewById(this.mFieldId);
+                    }
+                }
+                catch (e) {
+                    Log.e("ArrayAdapter", "You must supply a resource ID for a TextView");
+                    throw Error(`new IllegalStateException("ArrayAdapter requires the resource ID to be a TextView", e)`);
+                }
+                let item = this.getItem(position);
+                if (typeof item === 'string') {
+                    text.setText(item);
+                }
+                else {
+                    text.setText(item.toString());
+                }
+                return view;
+            }
+            setDropDownViewResource(resource) {
+                this.mDropDownResource = resource;
+            }
+            getDropDownView(position, convertView, parent) {
+                return this.createViewFromResource(position, convertView, parent, this.mDropDownResource);
+            }
+        }
+        widget.ArrayAdapter = ArrayAdapter;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/app/AlertDialog.ts"/>
+///<reference path="../../android/content/DialogInterface.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/os/Handler.ts"/>
+///<reference path="../../android/os/Message.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+///<reference path="../../android/util/TypedValue.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/LayoutInflater.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/view/Window.ts"/>
+///<reference path="../../android/view/WindowManager.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
+///<reference path="../../android/widget/ArrayAdapter.ts"/>
+///<reference path="../../android/widget/Button.ts"/>
+///<reference path="../../android/widget/FrameLayout.ts"/>
+///<reference path="../../android/widget/ImageView.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/widget/ScrollView.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../java/lang/ref/WeakReference.ts"/>
+///<reference path="../../android/app/AlertDialog.ts"/>
+///<reference path="../../android/app/Dialog.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+///<reference path="../../android/R/layout.ts"/>
+///<reference path="../../android/R/id.ts"/>
+var android;
+(function (android) {
+    var app;
+    (function (app) {
+        const MATCH_PARENT = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+        var R = android.R;
+        var DialogInterface = android.content.DialogInterface;
+        var Handler = android.os.Handler;
+        var Message = android.os.Message;
+        var TextUtils = android.text.TextUtils;
+        var Gravity = android.view.Gravity;
+        var View = android.view.View;
+        var LayoutParams = android.view.ViewGroup.LayoutParams;
+        var ArrayAdapter = android.widget.ArrayAdapter;
+        var LinearLayout = android.widget.LinearLayout;
+        var ListView = android.widget.ListView;
+        var WeakReference = java.lang.ref.WeakReference;
+        class AlertController {
+            constructor(context, di, window) {
+                this.mViewSpacingLeft = 0;
+                this.mViewSpacingTop = 0;
+                this.mViewSpacingRight = 0;
+                this.mViewSpacingBottom = 0;
+                this.mViewSpacingSpecified = false;
+                this.mCheckedItem = -1;
+                this.mButtonHandler = (() => {
+                    const _this = this;
+                    class _Inner {
+                        onClick(v) {
+                            let m = null;
+                            if (v == _this.mButtonPositive && _this.mButtonPositiveMessage != null) {
+                                m = Message.obtain(_this.mButtonPositiveMessage);
+                            }
+                            else if (v == _this.mButtonNegative && _this.mButtonNegativeMessage != null) {
+                                m = Message.obtain(_this.mButtonNegativeMessage);
+                            }
+                            else if (v == _this.mButtonNeutral && _this.mButtonNeutralMessage != null) {
+                                m = Message.obtain(_this.mButtonNeutralMessage);
+                            }
+                            if (m != null) {
+                                m.sendToTarget();
+                            }
+                            _this.mHandler.obtainMessage(AlertController.ButtonHandler.MSG_DISMISS_DIALOG, _this.mDialogInterface).sendToTarget();
+                        }
+                    }
+                    return new _Inner();
+                })();
+                this.mContext = context;
+                this.mDialogInterface = di;
+                this.mWindow = window;
+                this.mHandler = new AlertController.ButtonHandler(di);
+                this.mAlertDialogLayout = R.layout.alert_dialog;
+                this.mListLayout = R.layout.select_dialog;
+                this.mMultiChoiceItemLayout = R.layout.select_dialog_multichoice;
+                this.mSingleChoiceItemLayout = R.layout.select_dialog_singlechoice;
+                this.mListItemLayout = R.layout.select_dialog_item;
+            }
+            static shouldCenterSingleButton(context) {
+                return true;
+            }
+            installContent() {
+                let layout = this.mContext.getLayoutInflater().inflate(this.mAlertDialogLayout);
+                this.mWindow.setContentView(layout);
+                this.setupView();
+            }
+            setTitle(title) {
+                this.mTitle = title;
+                if (this.mTitleView != null) {
+                    this.mTitleView.setText(title);
+                }
+            }
+            setCustomTitle(customTitleView) {
+                this.mCustomTitleView = customTitleView;
+            }
+            setMessage(message) {
+                this.mMessage = message;
+                if (this.mMessageView != null) {
+                    this.mMessageView.setText(message);
+                }
+            }
+            setView(view, viewSpacingLeft = 0, viewSpacingTop = 0, viewSpacingRight = 0, viewSpacingBottom = 0) {
+                this.mView = view;
+                if (!viewSpacingLeft && !viewSpacingTop && !viewSpacingRight && !viewSpacingBottom) {
+                    this.mViewSpacingSpecified = false;
+                }
+                else {
+                    this.mViewSpacingSpecified = true;
+                    this.mViewSpacingLeft = viewSpacingLeft;
+                    this.mViewSpacingTop = viewSpacingTop;
+                    this.mViewSpacingRight = viewSpacingRight;
+                    this.mViewSpacingBottom = viewSpacingBottom;
+                }
+            }
+            setButton(whichButton, text, listener, msg) {
+                if (msg == null && listener != null) {
+                    msg = this.mHandler.obtainMessage(whichButton, listener);
+                }
+                switch (whichButton) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                        this.mButtonPositiveText = text;
+                        this.mButtonPositiveMessage = msg;
+                        break;
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        this.mButtonNegativeText = text;
+                        this.mButtonNegativeMessage = msg;
+                        break;
+                    case DialogInterface.BUTTON_NEUTRAL:
+                        this.mButtonNeutralText = text;
+                        this.mButtonNeutralMessage = msg;
+                        break;
+                    default:
+                        throw Error(`new IllegalArgumentException("Button does not exist")`);
+                }
+            }
+            setIcon(icon) {
+                this.mIcon = icon;
+                if ((this.mIconView != null) && (this.mIcon != null)) {
+                    this.mIconView.setImageDrawable(icon);
+                }
+            }
+            setInverseBackgroundForced(forceInverseBackground) {
+                this.mForceInverseBackground = forceInverseBackground;
+            }
+            getListView() {
+                return this.mListView;
+            }
+            getButton(whichButton) {
+                switch (whichButton) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                        return this.mButtonPositive;
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        return this.mButtonNegative;
+                    case DialogInterface.BUTTON_NEUTRAL:
+                        return this.mButtonNeutral;
+                    default:
+                        return null;
+                }
+            }
+            onKeyDown(keyCode, event) {
+                return this.mScrollView != null && this.mScrollView.executeKeyEvent(event);
+            }
+            onKeyUp(keyCode, event) {
+                return this.mScrollView != null && this.mScrollView.executeKeyEvent(event);
+            }
+            setupView() {
+                let contentPanel = this.mWindow.findViewById(R.id.contentPanel);
+                this.setupContent(contentPanel);
+                let hasButtons = this.setupButtons();
+                let topPanel = this.mWindow.findViewById(R.id.topPanel);
+                let hasTitle = this.setupTitle(topPanel);
+                let buttonPanel = this.mWindow.findViewById(R.id.buttonPanel);
+                if (!hasButtons) {
+                    buttonPanel.setVisibility(View.GONE);
+                    this.mWindow.setCloseOnTouchOutsideIfNotSet(true);
+                }
+                let customPanel = null;
+                if (this.mView != null) {
+                    customPanel = this.mWindow.findViewById(R.id.customPanel);
+                    let custom = this.mWindow.findViewById(R.id.custom);
+                    custom.addView(this.mView, new LayoutParams(MATCH_PARENT, MATCH_PARENT));
+                    if (this.mViewSpacingSpecified) {
+                        custom.setPadding(this.mViewSpacingLeft, this.mViewSpacingTop, this.mViewSpacingRight, this.mViewSpacingBottom);
+                    }
+                    if (this.mListView != null) {
+                        customPanel.getLayoutParams().weight = 0;
+                    }
+                }
+                else {
+                    this.mWindow.findViewById(R.id.customPanel).setVisibility(View.GONE);
+                }
+                if (hasTitle) {
+                    let divider = null;
+                    if (this.mMessage != null || this.mView != null || this.mListView != null) {
+                        divider = this.mWindow.findViewById(R.id.titleDivider);
+                    }
+                    else {
+                        divider = this.mWindow.findViewById(R.id.titleDividerTop);
+                    }
+                    if (divider != null) {
+                        divider.setVisibility(View.VISIBLE);
+                    }
+                }
+                this.setBackground(topPanel, contentPanel, customPanel, hasButtons, hasTitle, buttonPanel);
+            }
+            setupTitle(topPanel) {
+                let hasTitle = true;
+                if (this.mCustomTitleView != null) {
+                    let lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    topPanel.addView(this.mCustomTitleView, 0, lp);
+                    let titleTemplate = this.mWindow.findViewById(R.id.title_template);
+                    titleTemplate.setVisibility(View.GONE);
+                }
+                else {
+                    const hasTextTitle = !TextUtils.isEmpty(this.mTitle);
+                    this.mIconView = this.mWindow.findViewById(R.id.icon);
+                    if (hasTextTitle) {
+                        this.mTitleView = this.mWindow.findViewById(R.id.alertTitle);
+                        this.mTitleView.setText(this.mTitle);
+                        if (this.mIcon != null) {
+                            this.mIconView.setImageDrawable(this.mIcon);
+                        }
+                        else {
+                            this.mTitleView.setPadding(this.mIconView.getPaddingLeft(), this.mIconView.getPaddingTop(), this.mIconView.getPaddingRight(), this.mIconView.getPaddingBottom());
+                            this.mIconView.setVisibility(View.GONE);
+                        }
+                    }
+                    else {
+                        let titleTemplate = this.mWindow.findViewById(R.id.title_template);
+                        titleTemplate.setVisibility(View.GONE);
+                        this.mIconView.setVisibility(View.GONE);
+                        topPanel.setVisibility(View.GONE);
+                        hasTitle = false;
+                    }
+                }
+                return hasTitle;
+            }
+            setupContent(contentPanel) {
+                this.mScrollView = this.mWindow.findViewById(R.id.scrollView);
+                this.mScrollView.setFocusable(false);
+                this.mMessageView = this.mWindow.findViewById(R.id.message);
+                if (this.mMessageView == null) {
+                    return;
+                }
+                if (this.mMessage != null) {
+                    this.mMessageView.setText(this.mMessage);
+                }
+                else {
+                    this.mMessageView.setVisibility(View.GONE);
+                    this.mScrollView.removeView(this.mMessageView);
+                    if (this.mListView != null) {
+                        contentPanel.removeView(this.mWindow.findViewById(R.id.scrollView));
+                        contentPanel.addView(this.mListView, new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+                        contentPanel.setLayoutParams(new LinearLayout.LayoutParams(MATCH_PARENT, 0, 1.0));
+                    }
+                    else {
+                        contentPanel.setVisibility(View.GONE);
+                    }
+                }
+            }
+            setupButtons() {
+                let BIT_BUTTON_POSITIVE = 1;
+                let BIT_BUTTON_NEGATIVE = 2;
+                let BIT_BUTTON_NEUTRAL = 4;
+                let whichButtons = 0;
+                this.mButtonPositive = this.mWindow.findViewById(R.id.button1);
+                this.mButtonPositive.setOnClickListener(this.mButtonHandler);
+                if (TextUtils.isEmpty(this.mButtonPositiveText)) {
+                    this.mButtonPositive.setVisibility(View.GONE);
+                }
+                else {
+                    this.mButtonPositive.setText(this.mButtonPositiveText);
+                    this.mButtonPositive.setVisibility(View.VISIBLE);
+                    whichButtons = whichButtons | BIT_BUTTON_POSITIVE;
+                }
+                this.mButtonNegative = this.mWindow.findViewById(R.id.button2);
+                this.mButtonNegative.setOnClickListener(this.mButtonHandler);
+                if (TextUtils.isEmpty(this.mButtonNegativeText)) {
+                    this.mButtonNegative.setVisibility(View.GONE);
+                }
+                else {
+                    this.mButtonNegative.setText(this.mButtonNegativeText);
+                    this.mButtonNegative.setVisibility(View.VISIBLE);
+                    whichButtons = whichButtons | BIT_BUTTON_NEGATIVE;
+                }
+                this.mButtonNeutral = this.mWindow.findViewById(R.id.button3);
+                this.mButtonNeutral.setOnClickListener(this.mButtonHandler);
+                if (TextUtils.isEmpty(this.mButtonNeutralText)) {
+                    this.mButtonNeutral.setVisibility(View.GONE);
+                }
+                else {
+                    this.mButtonNeutral.setText(this.mButtonNeutralText);
+                    this.mButtonNeutral.setVisibility(View.VISIBLE);
+                    whichButtons = whichButtons | BIT_BUTTON_NEUTRAL;
+                }
+                if (AlertController.shouldCenterSingleButton(this.mContext)) {
+                    if (whichButtons == BIT_BUTTON_POSITIVE) {
+                        this.centerButton(this.mButtonPositive);
+                    }
+                    else if (whichButtons == BIT_BUTTON_NEGATIVE) {
+                        this.centerButton(this.mButtonNegative);
+                    }
+                    else if (whichButtons == BIT_BUTTON_NEUTRAL) {
+                        this.centerButton(this.mButtonNeutral);
+                    }
+                }
+                return whichButtons != 0;
+            }
+            centerButton(button) {
+                let params = button.getLayoutParams();
+                params.gravity = Gravity.CENTER_HORIZONTAL;
+                params.weight = 0.5;
+                button.setLayoutParams(params);
+                let leftSpacer = this.mWindow.findViewById(R.id.leftSpacer);
+                if (leftSpacer != null) {
+                    leftSpacer.setVisibility(View.VISIBLE);
+                }
+                let rightSpacer = this.mWindow.findViewById(R.id.rightSpacer);
+                if (rightSpacer != null) {
+                    rightSpacer.setVisibility(View.VISIBLE);
+                }
+            }
+            setBackground(topPanel, contentPanel, customPanel, hasButtons, hasTitle, buttonPanel) {
+                let fullDark = R.drawable.popup_full_bright;
+                let topDark = R.drawable.popup_top_bright;
+                let centerDark = R.drawable.popup_center_bright;
+                let bottomDark = R.drawable.popup_bottom_bright;
+                let fullBright = R.drawable.popup_full_bright;
+                let topBright = R.drawable.popup_top_bright;
+                let centerBright = R.drawable.popup_center_bright;
+                let bottomBright = R.drawable.popup_bottom_bright;
+                let bottomMedium = R.drawable.popup_bottom_bright;
+                let views = new Array(4);
+                let light = new Array(4);
+                let lastView = null;
+                let lastLight = false;
+                let pos = 0;
+                if (hasTitle) {
+                    views[pos] = topPanel;
+                    light[pos] = false;
+                    pos++;
+                }
+                views[pos] = (contentPanel.getVisibility() == View.GONE) ? null : contentPanel;
+                light[pos] = this.mListView != null;
+                pos++;
+                if (customPanel != null) {
+                    views[pos] = customPanel;
+                    light[pos] = this.mForceInverseBackground;
+                    pos++;
+                }
+                if (hasButtons) {
+                    views[pos] = buttonPanel;
+                    light[pos] = true;
+                }
+                let setView = false;
+                for (pos = 0; pos < views.length; pos++) {
+                    let v = views[pos];
+                    if (v == null) {
+                        continue;
+                    }
+                    if (lastView != null) {
+                        if (!setView) {
+                            lastView.setBackground(lastLight ? topBright : topDark);
+                        }
+                        else {
+                            lastView.setBackground(lastLight ? centerBright : centerDark);
+                        }
+                        setView = true;
+                    }
+                    lastView = v;
+                    lastLight = light[pos];
+                }
+                if (lastView != null) {
+                    if (setView) {
+                        lastView.setBackground(lastLight ? (hasButtons ? bottomMedium : bottomBright) : bottomDark);
+                    }
+                    else {
+                        lastView.setBackground(lastLight ? fullBright : fullDark);
+                    }
+                }
+                if ((this.mListView != null) && (this.mAdapter != null)) {
+                    this.mListView.setAdapter(this.mAdapter);
+                    if (this.mCheckedItem > -1) {
+                        this.mListView.setItemChecked(this.mCheckedItem, true);
+                        this.mListView.setSelection(this.mCheckedItem);
+                    }
+                }
+            }
+        }
+        app.AlertController = AlertController;
+        (function (AlertController) {
+            class ButtonHandler extends Handler {
+                constructor(dialog) {
+                    super();
+                    this.mDialog = new WeakReference(dialog);
+                }
+                handleMessage(msg) {
+                    switch (msg.what) {
+                        case DialogInterface.BUTTON_POSITIVE:
+                        case DialogInterface.BUTTON_NEGATIVE:
+                        case DialogInterface.BUTTON_NEUTRAL:
+                            msg.obj.onClick(this.mDialog.get(), msg.what);
+                            break;
+                        case ButtonHandler.MSG_DISMISS_DIALOG:
+                            msg.obj.dismiss();
+                    }
+                }
+            }
+            ButtonHandler.MSG_DISMISS_DIALOG = 1;
+            AlertController.ButtonHandler = ButtonHandler;
+            class RecycleListView extends ListView {
+                constructor(context, bindElement, defStyle) {
+                    super(context, bindElement, defStyle);
+                    this.mRecycleOnMeasure = true;
+                }
+                recycleOnMeasure() {
+                    return this.mRecycleOnMeasure;
+                }
+            }
+            AlertController.RecycleListView = RecycleListView;
+            class AlertParams {
+                constructor(context) {
+                    this.mIconId = 0;
+                    this.mViewSpacingLeft = 0;
+                    this.mViewSpacingTop = 0;
+                    this.mViewSpacingRight = 0;
+                    this.mViewSpacingBottom = 0;
+                    this.mViewSpacingSpecified = false;
+                    this.mCheckedItem = -1;
+                    this.mRecycleOnMeasure = true;
+                    this.mContext = context;
+                    this.mCancelable = true;
+                    this.mInflater = context.getLayoutInflater();
+                }
+                apply(dialog) {
+                    if (this.mCustomTitleView != null) {
+                        dialog.setCustomTitle(this.mCustomTitleView);
+                    }
+                    else {
+                        if (this.mTitle != null) {
+                            dialog.setTitle(this.mTitle);
+                        }
+                        if (this.mIcon != null) {
+                            dialog.setIcon(this.mIcon);
+                        }
+                    }
+                    if (this.mMessage != null) {
+                        dialog.setMessage(this.mMessage);
+                    }
+                    if (this.mPositiveButtonText != null) {
+                        dialog.setButton(DialogInterface.BUTTON_POSITIVE, this.mPositiveButtonText, this.mPositiveButtonListener, null);
+                    }
+                    if (this.mNegativeButtonText != null) {
+                        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, this.mNegativeButtonText, this.mNegativeButtonListener, null);
+                    }
+                    if (this.mNeutralButtonText != null) {
+                        dialog.setButton(DialogInterface.BUTTON_NEUTRAL, this.mNeutralButtonText, this.mNeutralButtonListener, null);
+                    }
+                    if (this.mForceInverseBackground) {
+                        dialog.setInverseBackgroundForced(true);
+                    }
+                    if ((this.mItems != null) || (this.mAdapter != null)) {
+                        this.createListView(dialog);
+                    }
+                    if (this.mView != null) {
+                        if (this.mViewSpacingSpecified) {
+                            dialog.setView(this.mView, this.mViewSpacingLeft, this.mViewSpacingTop, this.mViewSpacingRight, this.mViewSpacingBottom);
+                        }
+                        else {
+                            dialog.setView(this.mView);
+                        }
+                    }
+                }
+                createListView(dialog) {
+                    const listView = this.mInflater.inflate(dialog.mListLayout, null);
+                    let adapter;
+                    if (this.mIsMultiChoice) {
+                        adapter = (() => {
+                            const _this = this;
+                            class _Inner extends ArrayAdapter {
+                                getView(position, convertView, parent) {
+                                    let view = super.getView(position, convertView, parent);
+                                    if (_this.mCheckedItems != null) {
+                                        let isItemChecked = _this.mCheckedItems[position];
+                                        if (isItemChecked) {
+                                            listView.setItemChecked(position, true);
+                                        }
+                                    }
+                                    return view;
+                                }
+                            }
+                            return new _Inner(this.mContext, dialog.mMultiChoiceItemLayout, R.id.text1, this.mItems);
+                        })();
+                    }
+                    else {
+                        let layout = this.mIsSingleChoice ? dialog.mSingleChoiceItemLayout : dialog.mListItemLayout;
+                        adapter = (this.mAdapter != null) ? this.mAdapter : new ArrayAdapter(this.mContext, layout, R.id.text1, this.mItems);
+                    }
+                    if (this.mOnPrepareListViewListener != null) {
+                        this.mOnPrepareListViewListener.onPrepareListView(listView);
+                    }
+                    dialog.mAdapter = adapter;
+                    dialog.mCheckedItem = this.mCheckedItem;
+                    const _this = this;
+                    if (this.mOnClickListener != null) {
+                        listView.setOnItemClickListener({
+                            onItemClick(parent, v, position, id) {
+                                _this.mOnClickListener.onClick(dialog.mDialogInterface, position);
+                                if (!_this.mIsSingleChoice) {
+                                    dialog.mDialogInterface.dismiss();
+                                }
+                            }
+                        });
+                    }
+                    else if (this.mOnCheckboxClickListener != null) {
+                        listView.setOnItemClickListener({
+                            onItemClick(parent, v, position, id) {
+                                if (_this.mCheckedItems != null) {
+                                    _this.mCheckedItems[position] = listView.isItemChecked(position);
+                                }
+                                _this.mOnCheckboxClickListener.onClick(dialog.mDialogInterface, position, listView.isItemChecked(position));
+                            }
+                        });
+                    }
+                    if (this.mOnItemSelectedListener != null) {
+                        listView.setOnItemSelectedListener(this.mOnItemSelectedListener);
+                    }
+                    if (this.mIsSingleChoice) {
+                        listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+                    }
+                    else if (this.mIsMultiChoice) {
+                        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+                    }
+                    listView.mRecycleOnMeasure = this.mRecycleOnMeasure;
+                    dialog.mListView = listView;
+                }
+            }
+            AlertController.AlertParams = AlertParams;
+        })(AlertController = app.AlertController || (app.AlertController = {}));
+    })(app = android.app || (android.app = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/DialogInterface.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/os/Bundle.ts"/>
+///<reference path="../../android/os/Message.ts"/>
+///<reference path="../../android/util/TypedValue.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/WindowManager.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
+///<reference path="../../android/widget/Button.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/app/Application.ts"/>
+///<reference path="../../android/app/Dialog.ts"/>
+///<reference path="../../android/app/AlertController.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+var android;
+(function (android) {
+    var app;
+    (function (app) {
+        var Dialog = android.app.Dialog;
+        class AlertDialog extends Dialog {
+            constructor(context, cancelable, cancelListener) {
+                super(context);
+                this.setCancelable(cancelable);
+                this.setOnCancelListener(cancelListener);
+                this.mAlert = new app.AlertController(context, this, this.getWindow());
+            }
+            getButton(whichButton) {
+                return this.mAlert.getButton(whichButton);
+            }
+            getListView() {
+                return this.mAlert.getListView();
+            }
+            setTitle(title) {
+                super.setTitle(title);
+                this.mAlert.setTitle(title);
+            }
+            setCustomTitle(customTitleView) {
+                this.mAlert.setCustomTitle(customTitleView);
+            }
+            setMessage(message) {
+                this.mAlert.setMessage(message);
+            }
+            setView(view, viewSpacingLeft = 0, viewSpacingTop = 0, viewSpacingRight = 0, viewSpacingBottom = 0) {
+                this.mAlert.setView(view, viewSpacingLeft, viewSpacingTop, viewSpacingRight, viewSpacingBottom);
+            }
+            setButton(whichButton, text, listener) {
+                this.mAlert.setButton(whichButton, text, listener, null);
+            }
+            setIcon(icon) {
+                this.mAlert.setIcon(icon);
+            }
+            onCreate(savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                this.mAlert.installContent();
+            }
+            onKeyDown(keyCode, event) {
+                if (this.mAlert.onKeyDown(keyCode, event))
+                    return true;
+                return super.onKeyDown(keyCode, event);
+            }
+            onKeyUp(keyCode, event) {
+                if (this.mAlert.onKeyUp(keyCode, event))
+                    return true;
+                return super.onKeyUp(keyCode, event);
+            }
+        }
+        AlertDialog.THEME_TRADITIONAL = 1;
+        AlertDialog.THEME_HOLO_DARK = 2;
+        AlertDialog.THEME_HOLO_LIGHT = 3;
+        AlertDialog.THEME_DEVICE_DEFAULT_DARK = 4;
+        AlertDialog.THEME_DEVICE_DEFAULT_LIGHT = 5;
+        app.AlertDialog = AlertDialog;
+        (function (AlertDialog) {
+            class Builder {
+                constructor(context) {
+                    this.P = new app.AlertController.AlertParams(context);
+                }
+                getContext() {
+                    return this.P.mContext;
+                }
+                setTitle(title) {
+                    this.P.mTitle = title;
+                    return this;
+                }
+                setCustomTitle(customTitleView) {
+                    this.P.mCustomTitleView = customTitleView;
+                    return this;
+                }
+                setMessage(message) {
+                    this.P.mMessage = message;
+                    return this;
+                }
+                setIcon(icon) {
+                    this.P.mIcon = icon;
+                    return this;
+                }
+                setPositiveButton(text, listener) {
+                    this.P.mPositiveButtonText = text;
+                    this.P.mPositiveButtonListener = listener;
+                    return this;
+                }
+                setNegativeButton(text, listener) {
+                    this.P.mNegativeButtonText = text;
+                    this.P.mNegativeButtonListener = listener;
+                    return this;
+                }
+                setNeutralButton(text, listener) {
+                    this.P.mNeutralButtonText = text;
+                    this.P.mNeutralButtonListener = listener;
+                    return this;
+                }
+                setCancelable(cancelable) {
+                    this.P.mCancelable = cancelable;
+                    return this;
+                }
+                setOnCancelListener(onCancelListener) {
+                    this.P.mOnCancelListener = onCancelListener;
+                    return this;
+                }
+                setOnDismissListener(onDismissListener) {
+                    this.P.mOnDismissListener = onDismissListener;
+                    return this;
+                }
+                setOnKeyListener(onKeyListener) {
+                    this.P.mOnKeyListener = onKeyListener;
+                    return this;
+                }
+                setItems(items, listener) {
+                    this.P.mItems = items;
+                    this.P.mOnClickListener = listener;
+                    return this;
+                }
+                setAdapter(adapter, listener) {
+                    this.P.mAdapter = adapter;
+                    this.P.mOnClickListener = listener;
+                    return this;
+                }
+                setMultiChoiceItems(items, checkedItems, listener) {
+                    this.P.mItems = items;
+                    this.P.mOnCheckboxClickListener = listener;
+                    this.P.mCheckedItems = checkedItems;
+                    this.P.mIsMultiChoice = true;
+                    return this;
+                }
+                setSingleChoiceItems(items, checkedItem, listener) {
+                    this.P.mItems = items;
+                    this.P.mOnClickListener = listener;
+                    this.P.mCheckedItem = checkedItem;
+                    this.P.mIsSingleChoice = true;
+                    return this;
+                }
+                setSingleChoiceItemsWithAdapter(adapter, checkedItem, listener) {
+                    this.P.mAdapter = adapter;
+                    this.P.mOnClickListener = listener;
+                    this.P.mCheckedItem = checkedItem;
+                    this.P.mIsSingleChoice = true;
+                    return this;
+                }
+                setOnItemSelectedListener(listener) {
+                    this.P.mOnItemSelectedListener = listener;
+                    return this;
+                }
+                setView(view, viewSpacingLeft = 0, viewSpacingTop = 0, viewSpacingRight = 0, viewSpacingBottom = 0) {
+                    this.P.mView = view;
+                    if (!viewSpacingLeft && !viewSpacingTop && !viewSpacingRight && !viewSpacingBottom) {
+                        this.P.mViewSpacingSpecified = false;
+                    }
+                    else {
+                        this.P.mViewSpacingSpecified = true;
+                        this.P.mViewSpacingLeft = viewSpacingLeft;
+                        this.P.mViewSpacingTop = viewSpacingTop;
+                        this.P.mViewSpacingRight = viewSpacingRight;
+                        this.P.mViewSpacingBottom = viewSpacingBottom;
+                    }
+                    return this;
+                }
+                setInverseBackgroundForced(useInverseBackground) {
+                    this.P.mForceInverseBackground = useInverseBackground;
+                    return this;
+                }
+                setRecycleOnMeasureEnabled(enabled) {
+                    this.P.mRecycleOnMeasure = enabled;
+                    return this;
+                }
+                create() {
+                    const dialog = new AlertDialog(this.P.mContext);
+                    this.P.apply(dialog.mAlert);
+                    dialog.setCancelable(this.P.mCancelable);
+                    if (this.P.mCancelable) {
+                        dialog.setCanceledOnTouchOutside(true);
+                    }
+                    dialog.setOnCancelListener(this.P.mOnCancelListener);
+                    dialog.setOnDismissListener(this.P.mOnDismissListener);
+                    if (this.P.mOnKeyListener != null) {
+                        dialog.setOnKeyListener(this.P.mOnKeyListener);
+                    }
+                    return dialog;
+                }
+                show() {
+                    let dialog = this.create();
+                    dialog.show();
+                    return dialog;
+                }
+            }
+            AlertDialog.Builder = Builder;
+        })(AlertDialog = app.AlertDialog || (app.AlertDialog = {}));
+    })(app = android.app || (android.app = {}));
 })(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -46644,318 +48755,6 @@ var android;
                 }
             }
             animation.RotateAnimation = RotateAnimation;
-        })(animation = view.animation || (view.animation = {}));
-    })(view = android.view || (android.view = {}));
-})(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/RectF.ts"/>
-///<reference path="../../../java/util/ArrayList.ts"/>
-///<reference path="../../../java/util/List.ts"/>
-///<reference path="../../../java/lang/Long.ts"/>
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Interpolator.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
-var android;
-(function (android) {
-    var view;
-    (function (view) {
-        var animation;
-        (function (animation) {
-            var ArrayList = java.util.ArrayList;
-            var Long = java.lang.Long;
-            var Animation = android.view.animation.Animation;
-            var Transformation = android.view.animation.Transformation;
-            class AnimationSet extends Animation {
-                constructor(shareInterpolator = false) {
-                    super();
-                    this.mFlags = 0;
-                    this.mAnimations = new ArrayList();
-                    this.mTempTransformation = new Transformation();
-                    this.mLastEnd = 0;
-                    this.setFlag(AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK, shareInterpolator);
-                    this.init();
-                }
-                setFlag(mask, value) {
-                    if (value) {
-                        this.mFlags |= mask;
-                    }
-                    else {
-                        this.mFlags &= ~mask;
-                    }
-                }
-                init() {
-                    this.mStartTime = 0;
-                }
-                setFillAfter(fillAfter) {
-                    this.mFlags |= AnimationSet.PROPERTY_FILL_AFTER_MASK;
-                    super.setFillAfter(fillAfter);
-                }
-                setFillBefore(fillBefore) {
-                    this.mFlags |= AnimationSet.PROPERTY_FILL_BEFORE_MASK;
-                    super.setFillBefore(fillBefore);
-                }
-                setRepeatMode(repeatMode) {
-                    this.mFlags |= AnimationSet.PROPERTY_REPEAT_MODE_MASK;
-                    super.setRepeatMode(repeatMode);
-                }
-                setStartOffset(startOffset) {
-                    this.mFlags |= AnimationSet.PROPERTY_START_OFFSET_MASK;
-                    super.setStartOffset(startOffset);
-                }
-                hasAlpha() {
-                    if (this.mDirty) {
-                        this.mDirty = this.mHasAlpha = false;
-                        const count = this.mAnimations.size();
-                        const animations = this.mAnimations;
-                        for (let i = 0; i < count; i++) {
-                            if (animations.get(i).hasAlpha()) {
-                                this.mHasAlpha = true;
-                                break;
-                            }
-                        }
-                    }
-                    return this.mHasAlpha;
-                }
-                setDuration(durationMillis) {
-                    this.mFlags |= AnimationSet.PROPERTY_DURATION_MASK;
-                    super.setDuration(durationMillis);
-                    this.mLastEnd = this.mStartOffset + this.mDuration;
-                }
-                addAnimation(a) {
-                    this.mAnimations.add(a);
-                    let noMatrix = (this.mFlags & AnimationSet.PROPERTY_MORPH_MATRIX_MASK) == 0;
-                    if (noMatrix && a.willChangeTransformationMatrix()) {
-                        this.mFlags |= AnimationSet.PROPERTY_MORPH_MATRIX_MASK;
-                    }
-                    let changeBounds = (this.mFlags & AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK) == 0;
-                    if (changeBounds && a.willChangeBounds()) {
-                        this.mFlags |= AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK;
-                    }
-                    if ((this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK) {
-                        this.mLastEnd = this.mStartOffset + this.mDuration;
-                    }
-                    else {
-                        if (this.mAnimations.size() == 1) {
-                            this.mDuration = a.getStartOffset() + a.getDuration();
-                            this.mLastEnd = this.mStartOffset + this.mDuration;
-                        }
-                        else {
-                            this.mLastEnd = Math.max(this.mLastEnd, a.getStartOffset() + a.getDuration());
-                            this.mDuration = this.mLastEnd - this.mStartOffset;
-                        }
-                    }
-                    this.mDirty = true;
-                }
-                setStartTime(startTimeMillis) {
-                    super.setStartTime(startTimeMillis);
-                    const count = this.mAnimations.size();
-                    const animations = this.mAnimations;
-                    for (let i = 0; i < count; i++) {
-                        let a = animations.get(i);
-                        a.setStartTime(startTimeMillis);
-                    }
-                }
-                getStartTime() {
-                    let startTime = Long.MAX_VALUE;
-                    const count = this.mAnimations.size();
-                    const animations = this.mAnimations;
-                    for (let i = 0; i < count; i++) {
-                        let a = animations.get(i);
-                        startTime = Math.min(startTime, a.getStartTime());
-                    }
-                    return startTime;
-                }
-                restrictDuration(durationMillis) {
-                    super.restrictDuration(durationMillis);
-                    const animations = this.mAnimations;
-                    let count = animations.size();
-                    for (let i = 0; i < count; i++) {
-                        animations.get(i).restrictDuration(durationMillis);
-                    }
-                }
-                getDuration() {
-                    const animations = this.mAnimations;
-                    const count = animations.size();
-                    let duration = 0;
-                    let durationSet = (this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK;
-                    if (durationSet) {
-                        duration = this.mDuration;
-                    }
-                    else {
-                        for (let i = 0; i < count; i++) {
-                            duration = Math.max(duration, animations.get(i).getDuration());
-                        }
-                    }
-                    return duration;
-                }
-                computeDurationHint() {
-                    let duration = 0;
-                    const count = this.mAnimations.size();
-                    const animations = this.mAnimations;
-                    for (let i = count - 1; i >= 0; --i) {
-                        const d = animations.get(i).computeDurationHint();
-                        if (d > duration)
-                            duration = d;
-                    }
-                    return duration;
-                }
-                initializeInvalidateRegion(left, top, right, bottom) {
-                    const region = this.mPreviousRegion;
-                    region.set(left, top, right, bottom);
-                    region.inset(-1.0, -1.0);
-                    if (this.mFillBefore) {
-                        const count = this.mAnimations.size();
-                        const animations = this.mAnimations;
-                        const temp = this.mTempTransformation;
-                        const previousTransformation = this.mPreviousTransformation;
-                        for (let i = count - 1; i >= 0; --i) {
-                            const a = animations.get(i);
-                            if (!a.isFillEnabled() || a.getFillBefore() || a.getStartOffset() == 0) {
-                                temp.clear();
-                                const interpolator = a.mInterpolator;
-                                a.applyTransformation(interpolator != null ? interpolator.getInterpolation(0.0) : 0.0, temp);
-                                previousTransformation.compose(temp);
-                            }
-                        }
-                    }
-                }
-                getTransformation(currentTime, t) {
-                    const count = this.mAnimations.size();
-                    const animations = this.mAnimations;
-                    const temp = this.mTempTransformation;
-                    let more = false;
-                    let started = false;
-                    let ended = true;
-                    t.clear();
-                    for (let i = count - 1; i >= 0; --i) {
-                        const a = animations.get(i);
-                        temp.clear();
-                        more = a.getTransformation(currentTime, temp, this.getScaleFactor()) || more;
-                        t.compose(temp);
-                        started = started || a.hasStarted();
-                        ended = a.hasEnded() && ended;
-                    }
-                    if (started && !this.mStarted) {
-                        if (this.mListener != null) {
-                            this.mListener.onAnimationStart(this);
-                        }
-                        this.mStarted = true;
-                    }
-                    if (ended != this.mEnded) {
-                        if (this.mListener != null) {
-                            this.mListener.onAnimationEnd(this);
-                        }
-                        this.mEnded = ended;
-                    }
-                    return more;
-                }
-                scaleCurrentDuration(scale) {
-                    const animations = this.mAnimations;
-                    let count = animations.size();
-                    for (let i = 0; i < count; i++) {
-                        animations.get(i).scaleCurrentDuration(scale);
-                    }
-                }
-                initialize(width, height, parentWidth, parentHeight) {
-                    super.initialize(width, height, parentWidth, parentHeight);
-                    let durationSet = (this.mFlags & AnimationSet.PROPERTY_DURATION_MASK) == AnimationSet.PROPERTY_DURATION_MASK;
-                    let fillAfterSet = (this.mFlags & AnimationSet.PROPERTY_FILL_AFTER_MASK) == AnimationSet.PROPERTY_FILL_AFTER_MASK;
-                    let fillBeforeSet = (this.mFlags & AnimationSet.PROPERTY_FILL_BEFORE_MASK) == AnimationSet.PROPERTY_FILL_BEFORE_MASK;
-                    let repeatModeSet = (this.mFlags & AnimationSet.PROPERTY_REPEAT_MODE_MASK) == AnimationSet.PROPERTY_REPEAT_MODE_MASK;
-                    let shareInterpolator = (this.mFlags & AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK) == AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK;
-                    let startOffsetSet = (this.mFlags & AnimationSet.PROPERTY_START_OFFSET_MASK) == AnimationSet.PROPERTY_START_OFFSET_MASK;
-                    if (shareInterpolator) {
-                        this.ensureInterpolator();
-                    }
-                    const children = this.mAnimations;
-                    const count = children.size();
-                    const duration = this.mDuration;
-                    const fillAfter = this.mFillAfter;
-                    const fillBefore = this.mFillBefore;
-                    const repeatMode = this.mRepeatMode;
-                    const interpolator = this.mInterpolator;
-                    const startOffset = this.mStartOffset;
-                    let storedOffsets = this.mStoredOffsets;
-                    if (startOffsetSet) {
-                        if (storedOffsets == null || storedOffsets.length != count) {
-                            storedOffsets = this.mStoredOffsets = new Array(count);
-                        }
-                    }
-                    else if (storedOffsets != null) {
-                        storedOffsets = this.mStoredOffsets = null;
-                    }
-                    for (let i = 0; i < count; i++) {
-                        let a = children.get(i);
-                        if (durationSet) {
-                            a.setDuration(duration);
-                        }
-                        if (fillAfterSet) {
-                            a.setFillAfter(fillAfter);
-                        }
-                        if (fillBeforeSet) {
-                            a.setFillBefore(fillBefore);
-                        }
-                        if (repeatModeSet) {
-                            a.setRepeatMode(repeatMode);
-                        }
-                        if (shareInterpolator) {
-                            a.setInterpolator(interpolator);
-                        }
-                        if (startOffsetSet) {
-                            let offset = a.getStartOffset();
-                            a.setStartOffset(offset + startOffset);
-                            storedOffsets[i] = offset;
-                        }
-                        a.initialize(width, height, parentWidth, parentHeight);
-                    }
-                }
-                reset() {
-                    super.reset();
-                    this.restoreChildrenStartOffset();
-                }
-                restoreChildrenStartOffset() {
-                    const offsets = this.mStoredOffsets;
-                    if (offsets == null)
-                        return;
-                    const children = this.mAnimations;
-                    const count = children.size();
-                    for (let i = 0; i < count; i++) {
-                        children.get(i).setStartOffset(offsets[i]);
-                    }
-                }
-                getAnimations() {
-                    return this.mAnimations;
-                }
-                willChangeTransformationMatrix() {
-                    return (this.mFlags & AnimationSet.PROPERTY_MORPH_MATRIX_MASK) == AnimationSet.PROPERTY_MORPH_MATRIX_MASK;
-                }
-                willChangeBounds() {
-                    return (this.mFlags & AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK) == AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK;
-                }
-            }
-            AnimationSet.PROPERTY_FILL_AFTER_MASK = 0x1;
-            AnimationSet.PROPERTY_FILL_BEFORE_MASK = 0x2;
-            AnimationSet.PROPERTY_REPEAT_MODE_MASK = 0x4;
-            AnimationSet.PROPERTY_START_OFFSET_MASK = 0x8;
-            AnimationSet.PROPERTY_SHARE_INTERPOLATOR_MASK = 0x10;
-            AnimationSet.PROPERTY_DURATION_MASK = 0x20;
-            AnimationSet.PROPERTY_MORPH_MATRIX_MASK = 0x40;
-            AnimationSet.PROPERTY_CHANGE_BOUNDS_MASK = 0x80;
-            animation.AnimationSet = AnimationSet;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
@@ -53832,6 +55631,7 @@ var androidui;
 ///<reference path="android/widget/RatingBar.ts"/>
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
+///<reference path="android/app/AlertDialog.ts"/>
 ///<reference path="android/view/animation/AlphaAnimation.ts"/>
 ///<reference path="android/view/animation/ScaleAnimation.ts"/>
 ///<reference path="android/view/animation/RotateAnimation.ts"/>

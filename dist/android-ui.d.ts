@@ -949,25 +949,36 @@ declare module android.view {
         static from(context: Context): LayoutInflater;
         constructor(context: Context);
         getContext(): Context;
-        inflate(domtree: HTMLElement, viewParent?: ViewGroup, attachToRoot?: boolean): View;
+        inflate(layout: HTMLElement | string, viewParent?: ViewGroup, attachToRoot?: boolean): View;
     }
 }
 declare module android.content {
     import LayoutInflater = android.view.LayoutInflater;
-    class Context {
+    abstract class Context {
         androidUI: androidui.AndroidUI;
-        mLayoutInflater: LayoutInflater;
-        mResources: android.content.res.Resources;
-        mWindowManager: android.view.WindowManager;
+        private mLayoutInflater;
+        private mResources;
         constructor(androidUI: androidui.AndroidUI);
+        abstract getWindowManager(): android.view.WindowManager;
         getApplicationContext(): android.app.Application;
         getResources(): android.content.res.Resources;
         getLayoutInflater(): LayoutInflater;
-        getWindowManager(): android.view.WindowManager;
+    }
+}
+declare module android.R {
+    class layout {
+        static getLayoutData(layoutRef: string): HTMLElement;
+        static alert_dialog: string;
+        static alert_dialog_progress: string;
+        static select_dialog: string;
+        static select_dialog_item: string;
+        static select_dialog_multichoice: string;
+        static select_dialog_singlechoice: string;
     }
 }
 declare module android.content.res {
     import DisplayMetrics = android.util.DisplayMetrics;
+    import Drawable = android.graphics.drawable.Drawable;
     class Resources {
         private static instance;
         private displayMetrics;
@@ -977,10 +988,19 @@ declare module android.content.res {
         private static from(context);
         static getDisplayMetrics(): DisplayMetrics;
         getDisplayMetrics(): DisplayMetrics;
-        getString(refString: string): string;
+        private getObjectRef(refString);
+        static buildAttrFinder: (refString: string) => any;
+        getAttr(refString: string): any;
+        static buildDrawableFinder: (refString: string) => Drawable;
+        getDrawable(refString: string): Drawable;
+        getColor(refString: string): number;
+        getColorStateList(refString: string): ColorStateList;
+        getString(refString: string, notFindValue?: string): string;
+        static buildLayoutFinder: (refString: string) => HTMLElement;
         getLayout(refString: string): HTMLElement;
         private static emptySelectorNode;
         static buildResourcesElement: HTMLElement;
+        static SDKResourcesElement: HTMLElement;
         private getReference(refString, cloneNode?);
     }
 }
@@ -1166,10 +1186,10 @@ declare module android.os {
         toString(now?: number): string;
         static obtain(): Message;
         static obtain(orig: Message): Message;
-        static obtain(h: Handler, callback: Runnable): Message;
-        static obtain(h: Handler, what: number, obj: any): Message;
         static obtain(h: Handler): Message;
+        static obtain(h: Handler, callback: Runnable): Message;
         static obtain(h: Handler, what: number): Message;
+        static obtain(h: Handler, what: number, obj: any): Message;
         static obtain(h: Handler, what: number, arg1: number, arg2: number): Message;
         static obtain(h: Handler, what: number, arg1: number, arg2: number, obj: any): Message;
     }
@@ -1449,6 +1469,7 @@ declare module android.view {
         hasModifiers(modifiers: number): boolean;
         getMetaState(): number;
         toString(): string;
+        isCanceled(): boolean;
         static actionToString(action: number): string;
         static keyCodeToString(keyCode: number): string;
     }
@@ -1815,10 +1836,30 @@ declare module android.R {
         static background: string;
         static secondaryProgress: string;
         static progress: string;
+        static contentPanel: string;
+        static topPanel: string;
+        static buttonPanel: string;
+        static customPanel: string;
+        static custom: string;
+        static titleDivider: string;
+        static titleDividerTop: string;
+        static title_template: string;
+        static icon: string;
+        static alertTitle: string;
+        static scrollView: string;
+        static message: string;
+        static button1: string;
+        static button2: string;
+        static button3: string;
+        static leftSpacer: string;
+        static rightSpacer: string;
+        static text1: string;
     }
 }
 declare module android.R {
     import Drawable = android.graphics.drawable.Drawable;
+    import InsetDrawable = android.graphics.drawable.InsetDrawable;
+    import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class drawable {
         static button_background: Drawable;
         static btn_check: Drawable;
@@ -1840,22 +1881,18 @@ declare module android.R {
         static scrubber_track_holo_light: Drawable;
         static list_selector_background: Drawable;
         static list_divider: Drawable;
-    }
-}
-declare module androidui.image {
-    import Paint = android.graphics.Paint;
-    import Drawable = android.graphics.drawable.Drawable;
-    import Canvas = android.graphics.Canvas;
-    class RegionImageDrawable extends Drawable {
-        private mState;
-        constructor(image: NetImage, bound: any, paint?: Paint);
-        draw(canvas: Canvas): void;
-        setAlpha(alpha: number): void;
-        getAlpha(): number;
-        getIntrinsicWidth(): number;
-        getIntrinsicHeight(): number;
-        getImage(): NetImage;
-        getConstantState(): Drawable.ConstantState;
+        static divider_vertical: Drawable;
+        static divider_horizontal: Drawable;
+        static item_background: StateListDrawable;
+        static popup_full_dark: InsetDrawable;
+        static popup_top_dark: InsetDrawable;
+        static popup_center_dark: InsetDrawable;
+        static popup_bottom_dark: InsetDrawable;
+        static popup_full_bright: InsetDrawable;
+        static popup_top_bright: InsetDrawable;
+        static popup_center_bright: InsetDrawable;
+        static popup_bottom_bright: InsetDrawable;
+        static popup_bottom_medium: InsetDrawable;
     }
 }
 declare module androidui.image {
@@ -2010,6 +2047,9 @@ declare module android.R {
         };
         static checkboxStyle: any;
         static radiobuttonStyle: any;
+        static checkedTextViewStyle: {
+            textAlignment: string;
+        };
         static progressBarStyle: {
             indeterminateOnly: boolean;
             indeterminateDrawable: Drawable;
@@ -2526,6 +2566,7 @@ declare module android.view {
         setPaddingBottom(bottom: number): void;
         setPadding(left: number, top: number, right: number, bottom: number): void;
         private _setPaddingWithUnit(left, top, right, bottom);
+        resolvePadding(): void;
         setScrollX(value: number): void;
         setScrollY(value: number): void;
         getScrollX(): number;
@@ -2876,7 +2917,7 @@ declare module android.view {
         setIsRootNamespace(isRoot: boolean): void;
         isRootNamespace(): boolean;
         getResources(): Resources;
-        static inflate(context: Context, xml: HTMLElement, root?: ViewGroup): View;
+        static inflate(context: Context, xml: HTMLElement | string, root?: ViewGroup): View;
         bindElement: HTMLElement;
         private bindElementOnClickAttr;
         private _AttrObserver;
@@ -3093,7 +3134,7 @@ declare module androidui {
         static BindToElementName: string;
         androidUIElement: AndroidUIElement;
         private _canvas;
-        private windowManager;
+        windowManager: android.view.WindowManager;
         private mActivityThread;
         private _viewRootImpl;
         private mApplication;
@@ -3442,7 +3483,7 @@ declare module android.view {
         private removePointersFromTouchTargets(pointerIdBits);
         private cancelTouchTarget(view);
         private static canViewReceivePointerEvents(child);
-        isTransformedTouchPointInView(x: number, y: number, child: View, outLocalPoint: Point): boolean;
+        protected isTransformedTouchPointInView(x: number, y: number, child: View, outLocalPoint: Point): boolean;
         private dispatchTransformedTouchEvent(event, cancel, child, desiredPointerIdBits);
         setMotionEventSplittingEnabled(split: boolean): void;
         isMotionEventSplittingEnabled(): boolean;
@@ -3810,6 +3851,7 @@ declare module java.util {
     class Arrays {
         static sort(a: number[], fromIndex: number, toIndex: number): void;
         private static rangeCheck(arrayLength, fromIndex, toIndex);
+        static asList<T>(array: T[]): List<T>;
     }
 }
 declare module android.text {
@@ -4189,17 +4231,17 @@ declare module android.view {
         private clearWindowVisible();
         private clearWindowFocus();
         private checkTopLevelWindowFocus();
-        private checkTopLevelWindowVisible();
+        private checkTopLevelWindowVisible(showAnim?);
     }
     module WindowManager {
         class Layout extends android.widget.FrameLayout {
+            private mWindowManager;
+            constructor(context: android.content.Context, windowManager: WindowManager);
+            dispatchKeyEvent(event: android.view.KeyEvent): boolean;
+            protected isTransformedTouchPointInView(x: number, y: number, child: android.view.View, outLocalPoint: android.graphics.Point): boolean;
             tagName(): string;
         }
         class LayoutParams extends android.widget.FrameLayout.LayoutParams {
-            x: number;
-            y: number;
-            horizontalWeight: number;
-            verticalWeight: number;
             type: number;
             static FIRST_APPLICATION_WINDOW: number;
             static TYPE_BASE_APPLICATION: number;
@@ -4230,11 +4272,6 @@ declare module android.view {
             static FLAG_NOT_TOUCH_MODAL: number;
             static FLAG_SPLIT_TOUCH: number;
             flags: number;
-            gravity: number;
-            horizontalMargin: number;
-            verticalMargin: number;
-            format: number;
-            alpha: number;
             dimAmount: number;
             constructor(_type?: number);
             setTitle(title: string): void;
@@ -4250,6 +4287,8 @@ declare module android.view {
             copyFrom(o: LayoutParams): number;
             private mTitle;
             private isFocusable();
+            private isTouchable();
+            private isTouchModal();
         }
     }
 }
@@ -4275,6 +4314,175 @@ declare module android.view.animation {
         initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
     }
 }
+declare module android.view.animation {
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class AlphaAnimation extends Animation {
+        private mFromAlpha;
+        private mToAlpha;
+        constructor(fromAlpha: number, toAlpha: number);
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        willChangeTransformationMatrix(): boolean;
+        willChangeBounds(): boolean;
+        hasAlpha(): boolean;
+    }
+}
+declare module android.view.animation {
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class ScaleAnimation extends Animation {
+        private mResources;
+        private mFromX;
+        private mToX;
+        private mFromY;
+        private mToY;
+        private mFromXData;
+        private mToXData;
+        private mFromYData;
+        private mToYData;
+        private mPivotXType;
+        private mPivotYType;
+        private mPivotXValue;
+        private mPivotYValue;
+        private mPivotX;
+        private mPivotY;
+        constructor(fromX: number, toX: number, fromY: number, toY: number, pivotXType?: number, pivotXValue?: number, pivotYType?: number, pivotYValue?: number);
+        private initializePivotPoint();
+        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
+        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+    }
+}
+declare module android.view.animation {
+    import List = java.util.List;
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    class AnimationSet extends Animation {
+        private static PROPERTY_FILL_AFTER_MASK;
+        private static PROPERTY_FILL_BEFORE_MASK;
+        private static PROPERTY_REPEAT_MODE_MASK;
+        private static PROPERTY_START_OFFSET_MASK;
+        private static PROPERTY_SHARE_INTERPOLATOR_MASK;
+        private static PROPERTY_DURATION_MASK;
+        private static PROPERTY_MORPH_MATRIX_MASK;
+        private static PROPERTY_CHANGE_BOUNDS_MASK;
+        private mFlags;
+        private mDirty;
+        private mHasAlpha;
+        private mAnimations;
+        private mTempTransformation;
+        private mLastEnd;
+        private mStoredOffsets;
+        constructor(shareInterpolator?: boolean);
+        private setFlag(mask, value);
+        private init();
+        setFillAfter(fillAfter: boolean): void;
+        setFillBefore(fillBefore: boolean): void;
+        setRepeatMode(repeatMode: number): void;
+        setStartOffset(startOffset: number): void;
+        hasAlpha(): boolean;
+        setDuration(durationMillis: number): void;
+        addAnimation(a: Animation): void;
+        setStartTime(startTimeMillis: number): void;
+        getStartTime(): number;
+        restrictDuration(durationMillis: number): void;
+        getDuration(): number;
+        computeDurationHint(): number;
+        initializeInvalidateRegion(left: number, top: number, right: number, bottom: number): void;
+        getTransformation(currentTime: number, t: Transformation): boolean;
+        scaleCurrentDuration(scale: number): void;
+        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+        reset(): void;
+        restoreChildrenStartOffset(): void;
+        getAnimations(): List<Animation>;
+        willChangeTransformationMatrix(): boolean;
+        willChangeBounds(): boolean;
+    }
+}
+declare module android.view.animation {
+    class AccelerateInterpolator implements Interpolator {
+        private mFactor;
+        private mDoubleFactor;
+        constructor(factor?: number);
+        getInterpolation(input: number): number;
+    }
+}
+declare module android.view.animation {
+    class AnticipateInterpolator implements Interpolator {
+        private mTension;
+        constructor(tension?: number);
+        getInterpolation(t: number): number;
+    }
+}
+declare module android.view.animation {
+    class AnticipateOvershootInterpolator implements Interpolator {
+        private mTension;
+        constructor(tension?: number, extraTension?: number);
+        private static a(t, s);
+        private static o(t, s);
+        getInterpolation(t: number): number;
+    }
+}
+declare module android.view.animation {
+    class BounceInterpolator implements Interpolator {
+        private static bounce(t);
+        getInterpolation(t: number): number;
+    }
+}
+declare module android.view.animation {
+    class CycleInterpolator implements Interpolator {
+        private mCycles;
+        constructor(mCycles: number);
+        getInterpolation(input: number): number;
+    }
+}
+declare module android.view.animation {
+    class OvershootInterpolator implements Interpolator {
+        private mTension;
+        constructor(tension?: number);
+        getInterpolation(t: number): number;
+    }
+}
+declare module android.R {
+    import AccelerateDecelerateInterpolator = android.view.animation.AccelerateDecelerateInterpolator;
+    import AccelerateInterpolator = android.view.animation.AccelerateInterpolator;
+    import AnticipateInterpolator = android.view.animation.AnticipateInterpolator;
+    import AnticipateOvershootInterpolator = android.view.animation.AnticipateOvershootInterpolator;
+    import BounceInterpolator = android.view.animation.BounceInterpolator;
+    import CycleInterpolator = android.view.animation.CycleInterpolator;
+    import DecelerateInterpolator = android.view.animation.DecelerateInterpolator;
+    import LinearInterpolator = android.view.animation.LinearInterpolator;
+    import OvershootInterpolator = android.view.animation.OvershootInterpolator;
+    class interpolator {
+        static accelerate_cubic: AccelerateInterpolator;
+        static accelerate_decelerate: AccelerateDecelerateInterpolator;
+        static accelerate_quad: AccelerateInterpolator;
+        static accelerate_quint: AccelerateInterpolator;
+        static anticipate_overshoot: AnticipateOvershootInterpolator;
+        static anticipate: AnticipateInterpolator;
+        static bounce: BounceInterpolator;
+        static cycle: CycleInterpolator;
+        static decelerate_cubic: DecelerateInterpolator;
+        static decelerate_quad: DecelerateInterpolator;
+        static decelerate_quint: DecelerateInterpolator;
+        static linear: LinearInterpolator;
+        static overshoot: OvershootInterpolator;
+    }
+}
+declare module android.R {
+    import Animation = android.view.animation.Animation;
+    class anim {
+        static activity_close_enter: Animation;
+        static activity_close_exit: Animation;
+        static activity_open_enter: Animation;
+        static activity_open_exit: Animation;
+        static activity_close_enter_ios: Animation;
+        static activity_close_exit_ios: Animation;
+        static activity_open_enter_ios: Animation;
+        static activity_open_exit_ios: Animation;
+        static dialog_enter: Animation;
+        static dialog_exit: Animation;
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import KeyEvent = android.view.KeyEvent;
@@ -4295,9 +4503,6 @@ declare module android.view {
         private mHasChildren;
         private mCloseOnTouchOutside;
         private mSetCloseOnTouchOutside;
-        private mHaveWindowFormat;
-        private mHaveDimAmount;
-        private mDefaultWindowFormat;
         private mDestroyed;
         private mWindowAttributes;
         private mAttachInfo;
@@ -4305,7 +4510,6 @@ declare module android.view {
         private mContentParent;
         private mIsFloating;
         private mTitle;
-        private mWindowAnimationDuration;
         private mExitAnimation;
         private mEnterAnimation;
         private mShowAnimation;
@@ -4323,12 +4527,11 @@ declare module android.view {
         getWindowManager(): WindowManager;
         setCallback(callback: Window.Callback): void;
         getCallback(): Window.Callback;
+        setFloating(isFloating: boolean): void;
         isFloating(): boolean;
         setLayout(width: number, height: number): void;
         setGravity(gravity: number): void;
         setType(type: number): void;
-        setFormat(format: number): void;
-        private initDefaultWindowAnimation();
         setWindowAnimations(enterAnimation: Animation, exitAnimation: Animation, showAnimation?: Animation, hideAnimation?: Animation): void;
         addFlags(flags: number): void;
         clearFlags(flags: number): void;
@@ -4349,6 +4552,7 @@ declare module android.view {
         getLayoutInflater(): LayoutInflater;
         setTitle(title: string): void;
         setBackgroundDrawable(drawable: Drawable): void;
+        setBackgroundColor(color: number): void;
         takeKeyEvents(_get: boolean): void;
         superDispatchKeyEvent(event: KeyEvent): boolean;
         superDispatchTouchEvent(event: MotionEvent): boolean;
@@ -4356,8 +4560,6 @@ declare module android.view {
         getDecorView(): View;
         peekDecorView(): View;
         protected onActive(): void;
-        protected setDefaultWindowFormat(format: number): void;
-        protected haveDimAmount(): boolean;
     }
     module Window {
         interface Callback {
@@ -4380,15 +4582,16 @@ declare module android.app {
     import Context = android.content.Context;
     import Intent = android.content.Intent;
     class Activity extends Context {
-        mWindow: Window;
-        mIntent: Intent;
+        private mWindow;
+        private mIntent;
         onCreate(): void;
         private performCreate();
         setIntent(intent: Intent): void;
         getIntent(): Intent;
         getWindow(): Window;
+        getWindowManager(): android.view.WindowManager;
         startActivity(intent: Intent | string, options?: Bundle): void;
-        setContentView(view: View | HTMLElement): void;
+        setContentView(view: View | HTMLElement | string): void;
         addContentView(view: View, params: ViewGroup.LayoutParams): void;
         findViewById(id: string): View;
     }
@@ -4399,7 +4602,9 @@ declare module android.app {
     import Activity = android.app.Activity;
     class Application extends Context {
         private mActivityLifecycleCallbacks;
+        private mWindowManager;
         onCreate(): void;
+        getWindowManager(): android.view.WindowManager;
         registerActivityLifecycleCallbacks(callback: Application.ActivityLifecycleCallbacks): void;
         unregisterActivityLifecycleCallbacks(callback: Application.ActivityLifecycleCallbacks): void;
         dispatchActivityCreated(activity: Activity, savedInstanceState: Bundle): void;
@@ -5144,6 +5349,8 @@ declare module android.widget {
 }
 declare module android.R {
     class string_ {
+        static ok: string;
+        static cancel: string;
         static prll_header_state_normal: string;
         static prll_header_state_ready: string;
         static prll_header_state_loading: string;
@@ -6581,7 +6788,7 @@ declare module android.widget {
         protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         private measureScrapChild(child, position, widthMeasureSpec);
-        recycleOnMeasure(): boolean;
+        protected recycleOnMeasure(): boolean;
         measureHeightOfChildren(widthMeasureSpec: number, startPosition: number, endPosition: number, maxHeight: number, disallowPartialChildPosition: number): number;
         findMotionRow(y: number): number;
         private fillSpecific(position, top);
@@ -7094,11 +7301,6 @@ declare module java.util {
         static sort<T>(list: List<T>, c?: Comparator<T>): void;
     }
 }
-declare module android.R {
-    class layout {
-        static number_picker: HTMLElement;
-    }
-}
 declare module android.widget {
     import Canvas = android.graphics.Canvas;
     import KeyEvent = android.view.KeyEvent;
@@ -7326,19 +7528,6 @@ declare module android.graphics.drawable {
             newDrawable(): Drawable;
             canConstantState(): boolean;
         }
-    }
-}
-declare module android.view.animation {
-    import Animation = android.view.animation.Animation;
-    import Transformation = android.view.animation.Transformation;
-    class AlphaAnimation extends Animation {
-        private mFromAlpha;
-        private mToAlpha;
-        constructor(fromAlpha: number, toAlpha: number);
-        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
-        willChangeTransformationMatrix(): boolean;
-        willChangeBounds(): boolean;
-        hasAlpha(): boolean;
     }
 }
 declare module android.widget {
@@ -7918,29 +8107,363 @@ declare module android.widget {
         abstract isChildSelectable(groupPosition: number, childPosition: number): boolean;
     }
 }
-declare module android.view.animation {
-    import Animation = android.view.animation.Animation;
-    import Transformation = android.view.animation.Transformation;
-    class ScaleAnimation extends Animation {
-        private mResources;
-        private mFromX;
-        private mToX;
-        private mFromY;
-        private mToY;
-        private mFromXData;
-        private mToXData;
-        private mFromYData;
-        private mToYData;
-        private mPivotXType;
-        private mPivotYType;
-        private mPivotXValue;
-        private mPivotYValue;
-        private mPivotX;
-        private mPivotY;
-        constructor(fromX: number, toX: number, fromY: number, toY: number, pivotXType?: number, pivotXValue?: number, pivotYType?: number, pivotYValue?: number);
-        private initializePivotPoint();
-        protected applyTransformation(interpolatedTime: number, t: Transformation): void;
-        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+declare module android.content {
+    import KeyEvent = android.view.KeyEvent;
+    interface DialogInterface {
+        cancel(): void;
+        dismiss(): void;
+    }
+    module DialogInterface {
+        interface OnCancelListener {
+            onCancel(dialog: DialogInterface): void;
+        }
+        interface OnDismissListener {
+            onDismiss(dialog: DialogInterface): void;
+        }
+        interface OnShowListener {
+            onShow(dialog: DialogInterface): void;
+        }
+        interface OnClickListener {
+            onClick(dialog: DialogInterface, which: number): void;
+        }
+        interface OnMultiChoiceClickListener {
+            onClick(dialog: DialogInterface, which: number, isChecked: boolean): void;
+        }
+        interface OnKeyListener {
+            onKey(dialog: DialogInterface, keyCode: number, event: KeyEvent): boolean;
+        }
+        var BUTTON_POSITIVE: number;
+        var BUTTON_NEGATIVE: number;
+        var BUTTON_NEUTRAL: number;
+        var BUTTON1: number;
+        var BUTTON2: number;
+        var BUTTON3: number;
+    }
+}
+declare module android.app {
+    import DialogInterface = android.content.DialogInterface;
+    import Bundle = android.os.Bundle;
+    import Handler = android.os.Handler;
+    import Message = android.os.Message;
+    import KeyEvent = android.view.KeyEvent;
+    import LayoutInflater = android.view.LayoutInflater;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Window = android.view.Window;
+    import WindowManager = android.view.WindowManager;
+    import Context = android.content.Context;
+    class Dialog implements DialogInterface, Window.Callback, KeyEvent.Callback {
+        private static TAG;
+        mContext: Context;
+        mWindowManager: WindowManager;
+        mWindow: Window;
+        mDecor: View;
+        protected mCancelable: boolean;
+        private mCancelAndDismissTaken;
+        private mCancelMessage;
+        private mDismissMessage;
+        private mShowMessage;
+        private mOnKeyListener;
+        private mCreated;
+        private mShowing;
+        private mCanceled;
+        private mHandler;
+        private static DISMISS;
+        private static CANCEL;
+        private static SHOW;
+        private mListenersHandler;
+        private mDismissAction;
+        constructor(context: Context, cancelable?: boolean, cancelListener?: DialogInterface.OnCancelListener);
+        getContext(): Context;
+        isShowing(): boolean;
+        show(): void;
+        hide(): void;
+        dismiss(): void;
+        dismissDialog(): void;
+        private sendDismissMessage();
+        private sendShowMessage();
+        dispatchOnCreate(savedInstanceState: Bundle): void;
+        protected onCreate(savedInstanceState: Bundle): void;
+        protected onStart(): void;
+        protected onStop(): void;
+        private static DIALOG_SHOWING_TAG;
+        private static DIALOG_HIERARCHY_TAG;
+        getWindow(): Window;
+        getCurrentFocus(): View;
+        findViewById(id: string): View;
+        setContentView(view: View, params?: ViewGroup.LayoutParams): void;
+        addContentView(view: View, params: ViewGroup.LayoutParams): void;
+        setTitle(title: string): void;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        onKeyLongPress(keyCode: number, event: KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+        onKeyMultiple(keyCode: number, repeatCount: number, event: KeyEvent): boolean;
+        onBackPressed(): void;
+        onTouchEvent(event: MotionEvent): boolean;
+        onTrackballEvent(event: MotionEvent): boolean;
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        onWindowAttributesChanged(params: WindowManager.LayoutParams): void;
+        onContentChanged(): void;
+        onWindowFocusChanged(hasFocus: boolean): void;
+        onAttachedToWindow(): void;
+        onDetachedFromWindow(): void;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        dispatchTouchEvent(ev: MotionEvent): boolean;
+        dispatchGenericMotionEvent(ev: MotionEvent): boolean;
+        takeKeyEvents(get: boolean): void;
+        getLayoutInflater(): LayoutInflater;
+        setCancelable(flag: boolean): void;
+        setCanceledOnTouchOutside(cancel: boolean): void;
+        cancel(): void;
+        setOnCancelListener(listener: DialogInterface.OnCancelListener): void;
+        setCancelMessage(msg: Message): void;
+        setOnDismissListener(listener: DialogInterface.OnDismissListener): void;
+        setOnShowListener(listener: DialogInterface.OnShowListener): void;
+        setDismissMessage(msg: Message): void;
+        takeCancelAndDismissListeners(msg: string, cancel: DialogInterface.OnCancelListener, dismiss: DialogInterface.OnDismissListener): boolean;
+        setOnKeyListener(onKeyListener: DialogInterface.OnKeyListener): void;
+    }
+    module Dialog {
+        class ListenersHandler extends Handler {
+            private mDialog;
+            constructor(dialog: Dialog);
+            handleMessage(msg: Message): void;
+        }
+    }
+}
+declare module android.widget {
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Comparator = java.util.Comparator;
+    import List = java.util.List;
+    import BaseAdapter = android.widget.BaseAdapter;
+    import Context = android.content.Context;
+    class ArrayAdapter<T> extends BaseAdapter {
+        private mObjects;
+        private mResource;
+        private mDropDownResource;
+        private mFieldId;
+        private mNotifyOnChange;
+        private mContext;
+        private mInflater;
+        constructor(context: Context, resource: string, textViewResourceId: string, objects: T[] | List<T>);
+        add(object: T): void;
+        addAll(collection: List<T>): void;
+        insert(object: T, index: number): void;
+        remove(object: T): void;
+        clear(): void;
+        sort(comparator: Comparator<T>): void;
+        notifyDataSetChanged(): void;
+        setNotifyOnChange(notifyOnChange: boolean): void;
+        private init(context, resource, textViewResourceId, objects);
+        getContext(): Context;
+        getCount(): number;
+        getItem(position: number): T;
+        getPosition(item: T): number;
+        getItemId(position: number): number;
+        getView(position: number, convertView: View, parent: ViewGroup): View;
+        private createViewFromResource(position, convertView, parent, resource);
+        setDropDownViewResource(resource: string): void;
+        getDropDownView(position: number, convertView: View, parent: ViewGroup): View;
+    }
+    module ArrayAdapter {
+    }
+}
+declare module android.app {
+    import DialogInterface = android.content.DialogInterface;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Handler = android.os.Handler;
+    import Message = android.os.Message;
+    import KeyEvent = android.view.KeyEvent;
+    import LayoutInflater = android.view.LayoutInflater;
+    import View = android.view.View;
+    import Window = android.view.Window;
+    import AdapterView = android.widget.AdapterView;
+    import Button = android.widget.Button;
+    import ListAdapter = android.widget.ListAdapter;
+    import ListView = android.widget.ListView;
+    import Context = android.content.Context;
+    class AlertController {
+        private mContext;
+        private mDialogInterface;
+        private mWindow;
+        private mTitle;
+        private mMessage;
+        private mListView;
+        private mView;
+        private mViewSpacingLeft;
+        private mViewSpacingTop;
+        private mViewSpacingRight;
+        private mViewSpacingBottom;
+        private mViewSpacingSpecified;
+        private mButtonPositive;
+        private mButtonPositiveText;
+        private mButtonPositiveMessage;
+        private mButtonNegative;
+        private mButtonNegativeText;
+        private mButtonNegativeMessage;
+        private mButtonNeutral;
+        private mButtonNeutralText;
+        private mButtonNeutralMessage;
+        private mScrollView;
+        private mIcon;
+        private mIconView;
+        private mTitleView;
+        private mMessageView;
+        private mCustomTitleView;
+        private mForceInverseBackground;
+        private mAdapter;
+        private mCheckedItem;
+        private mAlertDialogLayout;
+        private mListLayout;
+        private mMultiChoiceItemLayout;
+        private mSingleChoiceItemLayout;
+        private mListItemLayout;
+        private mHandler;
+        mButtonHandler: View.OnClickListener;
+        private static shouldCenterSingleButton(context);
+        constructor(context: Context, di: DialogInterface, window: Window);
+        installContent(): void;
+        setTitle(title: string): void;
+        setCustomTitle(customTitleView: View): void;
+        setMessage(message: string): void;
+        setView(view: View, viewSpacingLeft?: number, viewSpacingTop?: number, viewSpacingRight?: number, viewSpacingBottom?: number): void;
+        setButton(whichButton: number, text: string, listener: DialogInterface.OnClickListener, msg: Message): void;
+        setIcon(icon: Drawable): void;
+        setInverseBackgroundForced(forceInverseBackground: boolean): void;
+        getListView(): ListView;
+        getButton(whichButton: number): Button;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+        private setupView();
+        private setupTitle(topPanel);
+        private setupContent(contentPanel);
+        private setupButtons();
+        private centerButton(button);
+        private setBackground(topPanel, contentPanel, customPanel, hasButtons, hasTitle, buttonPanel);
+    }
+    module AlertController {
+        class ButtonHandler extends Handler {
+            private static MSG_DISMISS_DIALOG;
+            private mDialog;
+            constructor(dialog: DialogInterface);
+            handleMessage(msg: Message): void;
+        }
+        class RecycleListView extends ListView {
+            mRecycleOnMeasure: boolean;
+            constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
+            protected recycleOnMeasure(): boolean;
+        }
+        class AlertParams {
+            mContext: Context;
+            mInflater: LayoutInflater;
+            mIconId: number;
+            mIcon: Drawable;
+            mTitle: string;
+            mCustomTitleView: View;
+            mMessage: string;
+            mPositiveButtonText: string;
+            mPositiveButtonListener: DialogInterface.OnClickListener;
+            mNegativeButtonText: string;
+            mNegativeButtonListener: DialogInterface.OnClickListener;
+            mNeutralButtonText: string;
+            mNeutralButtonListener: DialogInterface.OnClickListener;
+            mCancelable: boolean;
+            mOnCancelListener: DialogInterface.OnCancelListener;
+            mOnDismissListener: DialogInterface.OnDismissListener;
+            mOnKeyListener: DialogInterface.OnKeyListener;
+            mItems: string[];
+            mAdapter: ListAdapter;
+            mOnClickListener: DialogInterface.OnClickListener;
+            mView: View;
+            mViewSpacingLeft: number;
+            mViewSpacingTop: number;
+            mViewSpacingRight: number;
+            mViewSpacingBottom: number;
+            mViewSpacingSpecified: boolean;
+            mCheckedItems: boolean[];
+            mIsMultiChoice: boolean;
+            mIsSingleChoice: boolean;
+            mCheckedItem: number;
+            mOnCheckboxClickListener: DialogInterface.OnMultiChoiceClickListener;
+            mLabelColumn: string;
+            mIsCheckedColumn: string;
+            mForceInverseBackground: boolean;
+            mOnItemSelectedListener: AdapterView.OnItemSelectedListener;
+            mOnPrepareListViewListener: AlertParams.OnPrepareListViewListener;
+            mRecycleOnMeasure: boolean;
+            constructor(context: Context);
+            apply(dialog: AlertController): void;
+            private createListView(dialog);
+        }
+        module AlertParams {
+            interface OnPrepareListViewListener {
+                onPrepareListView(listView: ListView): void;
+            }
+        }
+    }
+}
+declare module android.app {
+    import DialogInterface = android.content.DialogInterface;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Bundle = android.os.Bundle;
+    import KeyEvent = android.view.KeyEvent;
+    import View = android.view.View;
+    import AdapterView = android.widget.AdapterView;
+    import Button = android.widget.Button;
+    import ListAdapter = android.widget.ListAdapter;
+    import ListView = android.widget.ListView;
+    import Dialog = android.app.Dialog;
+    import Context = android.content.Context;
+    class AlertDialog extends Dialog implements DialogInterface {
+        private mAlert;
+        static THEME_TRADITIONAL: number;
+        static THEME_HOLO_DARK: number;
+        static THEME_HOLO_LIGHT: number;
+        static THEME_DEVICE_DEFAULT_DARK: number;
+        static THEME_DEVICE_DEFAULT_LIGHT: number;
+        constructor(context: Context, cancelable?: boolean, cancelListener?: DialogInterface.OnCancelListener);
+        getButton(whichButton: number): Button;
+        getListView(): ListView;
+        setTitle(title: string): void;
+        setCustomTitle(customTitleView: View): void;
+        setMessage(message: string): void;
+        setView(view: View, viewSpacingLeft?: number, viewSpacingTop?: number, viewSpacingRight?: number, viewSpacingBottom?: number): void;
+        setButton(whichButton: number, text: string, listener: DialogInterface.OnClickListener): void;
+        setIcon(icon: Drawable): void;
+        protected onCreate(savedInstanceState: Bundle): void;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+    }
+    module AlertDialog {
+        class Builder {
+            private P;
+            constructor(context: Context);
+            getContext(): Context;
+            setTitle(title: string): Builder;
+            setCustomTitle(customTitleView: View): Builder;
+            setMessage(message: string): Builder;
+            setIcon(icon: Drawable): Builder;
+            setPositiveButton(text: string, listener: DialogInterface.OnClickListener): Builder;
+            setNegativeButton(text: string, listener: DialogInterface.OnClickListener): Builder;
+            setNeutralButton(text: string, listener: DialogInterface.OnClickListener): Builder;
+            setCancelable(cancelable: boolean): Builder;
+            setOnCancelListener(onCancelListener: DialogInterface.OnCancelListener): Builder;
+            setOnDismissListener(onDismissListener: DialogInterface.OnDismissListener): Builder;
+            setOnKeyListener(onKeyListener: DialogInterface.OnKeyListener): Builder;
+            setItems(items: string[], listener: DialogInterface.OnClickListener): Builder;
+            setAdapter(adapter: ListAdapter, listener: DialogInterface.OnClickListener): Builder;
+            setMultiChoiceItems(items: string[], checkedItems: boolean[], listener: DialogInterface.OnMultiChoiceClickListener): Builder;
+            setSingleChoiceItems(items: string[], checkedItem: number, listener: DialogInterface.OnClickListener): Builder;
+            setSingleChoiceItemsWithAdapter(adapter: ListAdapter, checkedItem: number, listener: DialogInterface.OnClickListener): Builder;
+            setOnItemSelectedListener(listener: AdapterView.OnItemSelectedListener): Builder;
+            setView(view: View, viewSpacingLeft?: number, viewSpacingTop?: number, viewSpacingRight?: number, viewSpacingBottom?: number): Builder;
+            setInverseBackgroundForced(useInverseBackground: boolean): Builder;
+            setRecycleOnMeasureEnabled(enabled: boolean): Builder;
+            create(): AlertDialog;
+            show(): AlertDialog;
+        }
     }
 }
 declare module android.view.animation {
@@ -7959,52 +8482,6 @@ declare module android.view.animation {
         private initializePivotPoint();
         protected applyTransformation(interpolatedTime: number, t: Transformation): void;
         initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
-    }
-}
-declare module android.view.animation {
-    import List = java.util.List;
-    import Animation = android.view.animation.Animation;
-    import Transformation = android.view.animation.Transformation;
-    class AnimationSet extends Animation {
-        private static PROPERTY_FILL_AFTER_MASK;
-        private static PROPERTY_FILL_BEFORE_MASK;
-        private static PROPERTY_REPEAT_MODE_MASK;
-        private static PROPERTY_START_OFFSET_MASK;
-        private static PROPERTY_SHARE_INTERPOLATOR_MASK;
-        private static PROPERTY_DURATION_MASK;
-        private static PROPERTY_MORPH_MATRIX_MASK;
-        private static PROPERTY_CHANGE_BOUNDS_MASK;
-        private mFlags;
-        private mDirty;
-        private mHasAlpha;
-        private mAnimations;
-        private mTempTransformation;
-        private mLastEnd;
-        private mStoredOffsets;
-        constructor(shareInterpolator?: boolean);
-        private setFlag(mask, value);
-        private init();
-        setFillAfter(fillAfter: boolean): void;
-        setFillBefore(fillBefore: boolean): void;
-        setRepeatMode(repeatMode: number): void;
-        setStartOffset(startOffset: number): void;
-        hasAlpha(): boolean;
-        setDuration(durationMillis: number): void;
-        addAnimation(a: Animation): void;
-        setStartTime(startTimeMillis: number): void;
-        getStartTime(): number;
-        restrictDuration(durationMillis: number): void;
-        getDuration(): number;
-        computeDurationHint(): number;
-        initializeInvalidateRegion(left: number, top: number, right: number, bottom: number): void;
-        getTransformation(currentTime: number, t: Transformation): boolean;
-        scaleCurrentDuration(scale: number): void;
-        initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
-        reset(): void;
-        restoreChildrenStartOffset(): void;
-        getAnimations(): List<Animation>;
-        willChangeTransformationMatrix(): boolean;
-        willChangeBounds(): boolean;
     }
 }
 declare module android.support.v4.view {

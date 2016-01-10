@@ -716,7 +716,7 @@ module android.widget {
                 this.setTranscriptMode(transcriptMode);
             });
             this._attrBinder.addAttr('cacheColorHint', (value)=>{
-                let color:number = this._attrBinder.parseNumber(value, 0);
+                let color:number = this._attrBinder.parseColor(value, 0);
                 this.setCacheColorHint(color);
             });
             this._attrBinder.addAttr('fastScrollEnabled', (value)=>{

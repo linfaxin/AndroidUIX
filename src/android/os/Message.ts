@@ -81,28 +81,37 @@ module android.os {
 
         static obtain():Message;
         static obtain(orig:Message):Message;
-        static obtain(h:Handler, callback:Runnable):Message;
-        static obtain(h:Handler, what:number, obj:any):Message;
         static obtain(h:Handler):Message;
+        static obtain(h:Handler, callback:Runnable):Message;
         static obtain(h:Handler, what:number):Message;
+        static obtain(h:Handler, what:number, obj:any):Message;
         static obtain(h:Handler, what:number, arg1:number, arg2:number):Message;
         static obtain(h:Handler, what:number, arg1:number, arg2:number, obj:any):Message;
         static obtain(...args){
             let m = Message.sPool.acquire();
             m = m || new Message();
-            if(args.length === 1 && args[0] instanceof Message){
-                let orig = args[0];
-                [m.target, m.what, m.arg1, m.arg2, m.obj, m.callback] =
-                    [orig.target, orig.what, orig.arg1, orig.arg2, orig.obj, orig.callback];
+            if(args.length === 1){
+                if(args[0] instanceof Message){
+                    let orig = args[0];
+                    [m.target, m.what, m.arg1, m.arg2, m.obj, m.callback] =
+                        [orig.target, orig.what, orig.arg1, orig.arg2, orig.obj, orig.callback];
+                }else{
+                    m.target = args[0];
+                }
 
             } else if(args.length===2){
-                [m.what=0, m.callback] = args;
+                m.target = args[0];
+                if(typeof args[1] === 'number') m.what = args[1];
+                else m.callback = args[1];
 
             } else if(args.length===3){
-                [m.what=0, m.arg1=0, m.obj] = args;
+                [m.target, m.what, m.obj] = args;
+
+            } else if(args.length===4){
+                [m.target, m.what, m.arg1, m.arg2] = args;
 
             } else {
-                [m.target, m.what=0, m.arg1=0, m.arg2=0, m.obj, m.callback] = args;
+                [m.target, m.what, m.arg1=0, m.arg2, m.obj, m.callback] = args;
             }
 
             return m;

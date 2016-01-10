@@ -17,11 +17,51 @@ var sample;
         (function (R) {
             var image_base64;
             (function (image_base64) {
-                var x3 = {};
+                var NetImage = androidui.image.NetImage;
+                var x3 = {
+                    "sample_icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAG1BMVEUAAAA9PT09PT09PT09PT09PT09PT09PT09PT1gyl+KAAAACXRSTlMAgE05QT1HMyNi/YIlAAAA6ElEQVRYw+3TwQ2CQBRFUaOo6x/AtRILGDvADrQESrAD7VwxQ+4G/I/EhSb/bcmZGzKwiMVise9v084EXTXxoBnZ/hUwa2eBzqyaAONvYEZCAV0Pdjoo7L27DM7Wr9YKBC4yuBKQwJqAAghIgECSAIFyoYIVAQ2cCLjADwCOUgCwtFYJAA5WCwHAcrjYbQ54oBtu9pYDDtgM3w6B5iN45HMJOKDIBxNwQP7DSgIeyIkc8AAJAi4oAMkFJAi4gETyAQkCLuAuBECCgANIJAWQyAEXkEgSIEFAA0USAQvwR2Bi80EsFov98J52GzL3vLeyTQAAAABJRU5ErkJggg=="
+                };
+                image_base64.sample_icon = new NetImage(x3.sample_icon, 3);
             })(image_base64 = R.image_base64 || (R.image_base64 = {}));
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
+///<reference path="../../../dist/android-ui.d.ts"/>
+///<reference path="image_base64.ts"/>
+var sample;
+(function (sample) {
+    var app;
+    (function (app) {
+        var R;
+        (function (R) {
+            var image;
+            (function (image_1) {
+                var NetDrawable = androidui.image.NetDrawable;
+
+                var image = (function () {
+                    function image() {
+                        _classCallCheck(this, image);
+                    }
+
+                    _createClass(image, null, [{
+                        key: "sample_icon",
+                        get: function get() {
+                            return new NetDrawable(R.image_base64.sample_icon);
+                        }
+                    }]);
+
+                    return image;
+                })();
+
+                image_1.image = image;
+                android.content.res.Resources.buildDrawableFinder = function (refString) {
+                    return image[refString];
+                };
+            })(image = R.image || (R.image = {}));
+        })(R = app.R || (app.R = {}));
+    })(app = sample.app || (sample.app = {}));
+})(sample || (sample = {}));
+///<reference path="../../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -30,7 +70,7 @@ var sample;
         (function (R) {
             var _layout_data = {
                 "sample_animation": "<ScrollView>\n    <LinearLayout\n            android:padding=\"0 6dp\"\n            gravity=\"center\"\n            android:orientation=\"vertical\">\n        <TextView gravity=\"center\">旋转:</TextView>\n        <ImageView\n                id=\"rotate_repeat\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"20dp 12dp\"\n                ></ImageView>\n        <TextView gravity=\"center\">平移:</TextView>\n        <ImageView\n                id=\"translate_repeat\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"12dp\"\n                ></ImageView>\n        <TextView gravity=\"center\">缩放:</TextView>\n        <ImageView\n                id=\"scale_repeat\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"12dp\"\n                ></ImageView>\n        <TextView gravity=\"center\">透明:</TextView>\n        <ImageView\n                id=\"alpha_repeat\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"12dp\"\n                ></ImageView>\n        <TextView gravity=\"center\">动画组合:</TextView>\n        <ImageView\n                id=\"anim_set\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"12dp\"\n                ></ImageView>\n    </LinearLayout>\n</ScrollView>",
-                "sample_base_widget": "<ScrollView>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:padding=\"12dp\"\n            android:gravity=\"center\">\n        <TextView android:layout_width=\"wrap_content\">\n            文本\n        </TextView>\n        <Button android:layout_width=\"wrap_content\">\n            按钮\n        </Button>\n        <ImageView android:src=\"assets/images/logo_google_3.png\">\n        </ImageView>\n        <CheckBox android:layout_width=\"wrap_content\"\n                  android:layout_marginBottom=\"12dp\">\n            复选框\n        </CheckBox>\n        <RadioGroup\n                android:gravity=\"center\"\n                android:orientation=\"HORIZONTAL\"\n                android:layout_marginBottom=\"12dp\">\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框1\n            </RadioButton>\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框2\n            </RadioButton>\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框3\n            </RadioButton>\n        </RadioGroup>\n\n        <ProgressBar android:layout_height=\"wrap_content\"\n                     android:layout_width=\"wrap_content\"\n                     android:layout_marginBottom=\"12dp\"></ProgressBar>\n        <ProgressBar android:layout_height=\"wrap_content\"\n                     android:layout_width=\"match_parent\"\n                     android:layout_marginBottom=\"12dp\"\n                     style=\"@android.R.attr.progressBarStyleHorizontal\"\n                     android:max=\"100\"\n                     android:progress=\"50\"\n                     android:secondaryProgress=\"70\"></ProgressBar>\n\n        <SeekBar android:layout_height=\"wrap_content\"\n                 android:layout_width=\"match_parent\"\n                 android:layout_marginBottom=\"12dp\"></SeekBar>\n\n        <RatingBar android:layout_height=\"wrap_content\"\n                   android:layout_width=\"wrap_content\"\n                   android:layout_marginBottom=\"12dp\"></RatingBar>\n\n    </LinearLayout>\n</ScrollView>",
+                "sample_base_widget": "<ScrollView>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:padding=\"12dp\"\n            android:gravity=\"center\">\n        <TextView android:layout_width=\"wrap_content\">\n            文本\n        </TextView>\n        <Button android:layout_width=\"wrap_content\">\n            按钮\n        </Button>\n        <ImageView android:src=\"assets/images/logo_google_3.png\">\n        </ImageView>\n        <CheckBox android:layout_width=\"wrap_content\"\n                  android:layout_marginBottom=\"12dp\">\n            复选框\n        </CheckBox>\n        <RadioGroup\n                android:gravity=\"center\"\n                android:orientation=\"HORIZONTAL\"\n                android:layout_marginBottom=\"12dp\">\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框1\n            </RadioButton>\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框2\n            </RadioButton>\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框3\n            </RadioButton>\n        </RadioGroup>\n        <Button id=\"btn_open_dialog\"\n                android:layout_width=\"wrap_content\">\n            打开对话框\n        </Button>\n\n        <ProgressBar android:layout_height=\"wrap_content\"\n                     android:layout_width=\"wrap_content\"\n                     android:layout_marginBottom=\"12dp\"></ProgressBar>\n        <ProgressBar android:layout_height=\"wrap_content\"\n                     android:layout_width=\"match_parent\"\n                     android:layout_marginBottom=\"12dp\"\n                     style=\"@android:attr/progressBarStyleHorizontal\"\n                     android:max=\"100\"\n                     android:progress=\"50\"\n                     android:secondaryProgress=\"70\"></ProgressBar>\n\n        <SeekBar android:layout_height=\"wrap_content\"\n                 android:layout_width=\"match_parent\"\n                 android:layout_marginBottom=\"12dp\"></SeekBar>\n\n        <RatingBar android:layout_height=\"wrap_content\"\n                   android:layout_width=\"wrap_content\"\n                   android:layout_marginBottom=\"12dp\"></RatingBar>\n\n    </LinearLayout>\n</ScrollView>",
                 "sample_button": "<ScrollView>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:gravity=\"center\">\n        <Button\n                android:layout_width=\"wrap_content\">\n            普通-按钮\n        </Button>\n        <Button\n                android:layout_width=\"wrap_content\"\n                android:enabled=\"false\">\n            Disable按钮\n        </Button>\n        <Button id=\"btn_click\">\n            点击没有300msDelay\n        </Button>\n        <Button id=\"btn_long_click\">\n            长按LongClick\n        </Button>\n        <Button android:layout_width=\"wrap_content\"\n                onclick=\"this.AndroidView.setText('点击:'+new Date().getTime());\">\n            也可以用onclick属性/addEventListener设置监听\n        </Button>\n\n        <Button\n                android:style=\"@style/btn_custom1\"\n                >\n            引用样式\n        </Button>\n        <Button\n                android:style=\"@style/btn_custom1\"\n                android:enabled=\"false\"\n                >\n            引用样式Disable\n        </Button>\n        <Button\n                android:padding=\"8dp\"\n                android:layout_margin=\"6dp\"\n                android:textColor=\"@color/white\"\n                android:background=\"#f00\"\n                android:state_pressed=\"@style/btn_custom1/pressed\"\n                >\n            引用状态样式\n        </Button>\n        <Button\n                android:padding=\"8dp\"\n                android:layout_margin=\"6dp\"\n                android:textColor=\"@color/white\"\n                android:background=\"#f00\"\n                android:state_pressed=\"background:#f66;\"\n                >\n            内联状态样式\n        </Button>\n    </LinearLayout>\n</ScrollView>",
                 "sample_drawerlayout": "<android.support.v4.widget.DrawerLayout>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:gravity=\"center\"\n            android:layout_height=\"match_parent\"\n            android:layout_width=\"match_parent\">\n        <Button\n                onclick=\"this.AndroidView.getParent().getParent().openDrawer(android.view.Gravity.LEFT);\"\n                android:layout_height=\"wrap_content\"\n                android:layout_width=\"wrap_content\"\n                >打开左抽屉</Button>\n        <Button\n                onclick=\"this.AndroidView.getParent().getParent().openDrawer(android.view.Gravity.RIGHT);\"\n                android:layout_height=\"wrap_content\"\n                android:layout_width=\"wrap_content\"\n                >打开右抽屉</Button>\n    </LinearLayout>\n    <LinearLayout\n            android:layout_gravity=\"left\"\n            android:background=\"white\"\n            android:clickable=\"true\"\n            android:layout_height=\"match_parent\"\n            android:layout_width=\"220dp\">\n        <TextView\n                android:layout_height=\"match_parent\"\n                android:layout_width=\"match_parent\"\n                android:gravity=\"center\"\n                >左抽屉</TextView>\n    </LinearLayout>\n    <LinearLayout\n            android:layout_gravity=\"right\"\n            android:background=\"white\"\n            android:clickable=\"true\"\n            android:layout_height=\"match_parent\"\n            android:layout_width=\"220dp\">\n        <TextView\n                android:layout_height=\"match_parent\"\n                android:layout_width=\"match_parent\"\n                android:gravity=\"center\"\n                >右抽屉</TextView>\n    </LinearLayout>\n</android.support.v4.widget.DrawerLayout>",
                 "sample_expand_listview_item": "<FrameLayout id=\"item_child_layout\"\n             android:layout_width=\"match_parent\"\n             android:padding=\"12dp\">\n    <TextView id=\"item_child_text\"\n              android:padding=\"12dp\"\n              android:layout_width=\"wrap_content\"\n              android:layout_height=\"wrap_content\"\n              android:background=\"#55000000\"\n              android:textColor=\"white\"\n              android:layout_gravity=\"center\"\n            >\n    </TextView>\n</FrameLayout>",
@@ -52,31 +92,6 @@ var sample;
                 "sample_viewpager_page": "<FrameLayout id=\"page_bg\">\n    <TextView id=\"page_text\"\n              android:padding=\"12dp\"\n              android:layout_width=\"wrap_content\"\n              android:layout_height=\"wrap_content\"\n              android:background=\"#55000000\"\n              android:textColor=\"white\"\n              android:layout_gravity=\"center\"\n            >\n    </TextView>\n</FrameLayout>"
             };
             var _tempDiv = document.createElement('div');
-            function parse2html(s) {
-                _tempDiv.innerHTML = s;
-                return _tempDiv.firstElementChild;
-            }
-            var _sample_animation = parse2html(_layout_data.sample_animation);
-            var _sample_base_widget = parse2html(_layout_data.sample_base_widget);
-            var _sample_button = parse2html(_layout_data.sample_button);
-            var _sample_drawerlayout = parse2html(_layout_data.sample_drawerlayout);
-            var _sample_expand_listview_item = parse2html(_layout_data.sample_expand_listview_item);
-            var _sample_framelayout = parse2html(_layout_data.sample_framelayout);
-            var _sample_gridview = parse2html(_layout_data.sample_gridview);
-            var _sample_gridview_item = parse2html(_layout_data.sample_gridview_item);
-            var _sample_htmlview = parse2html(_layout_data.sample_htmlview);
-            var _sample_imageview = parse2html(_layout_data.sample_imageview);
-            var _sample_linearlayout = parse2html(_layout_data.sample_linearlayout);
-            var _sample_listview = parse2html(_layout_data.sample_listview);
-            var _sample_listview_item = parse2html(_layout_data.sample_listview_item);
-            var _sample_picker = parse2html(_layout_data.sample_picker);
-            var _sample_pullrefreshload = parse2html(_layout_data.sample_pullrefreshload);
-            var _sample_pullrefreshload_item = parse2html(_layout_data.sample_pullrefreshload_item);
-            var _sample_relativelayout = parse2html(_layout_data.sample_relativelayout);
-            var _sample_textview = parse2html(_layout_data.sample_textview);
-            var _sample_viewpager = parse2html(_layout_data.sample_viewpager);
-            var _sample_viewpager_gallery = parse2html(_layout_data.sample_viewpager_gallery);
-            var _sample_viewpager_page = parse2html(_layout_data.sample_viewpager_page);
 
             var layout = (function () {
                 function layout() {
@@ -84,116 +99,46 @@ var sample;
                 }
 
                 _createClass(layout, null, [{
-                    key: "sample_animation",
-                    get: function get() {
-                        return _sample_animation.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_base_widget",
-                    get: function get() {
-                        return _sample_base_widget.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_button",
-                    get: function get() {
-                        return _sample_button.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_drawerlayout",
-                    get: function get() {
-                        return _sample_drawerlayout.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_expand_listview_item",
-                    get: function get() {
-                        return _sample_expand_listview_item.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_framelayout",
-                    get: function get() {
-                        return _sample_framelayout.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_gridview",
-                    get: function get() {
-                        return _sample_gridview.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_gridview_item",
-                    get: function get() {
-                        return _sample_gridview_item.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_htmlview",
-                    get: function get() {
-                        return _sample_htmlview.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_imageview",
-                    get: function get() {
-                        return _sample_imageview.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_linearlayout",
-                    get: function get() {
-                        return _sample_linearlayout.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_listview",
-                    get: function get() {
-                        return _sample_listview.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_listview_item",
-                    get: function get() {
-                        return _sample_listview_item.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_picker",
-                    get: function get() {
-                        return _sample_picker.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_pullrefreshload",
-                    get: function get() {
-                        return _sample_pullrefreshload.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_pullrefreshload_item",
-                    get: function get() {
-                        return _sample_pullrefreshload_item.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_relativelayout",
-                    get: function get() {
-                        return _sample_relativelayout.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_textview",
-                    get: function get() {
-                        return _sample_textview.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_viewpager",
-                    get: function get() {
-                        return _sample_viewpager.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_viewpager_gallery",
-                    get: function get() {
-                        return _sample_viewpager_gallery.cloneNode(true);
-                    }
-                }, {
-                    key: "sample_viewpager_page",
-                    get: function get() {
-                        return _sample_viewpager_page.cloneNode(true);
+                    key: "getLayoutData",
+                    value: function getLayoutData(layoutRef) {
+                        if (!layoutRef) return null;
+                        layoutRef = layoutRef.replace('/', '.').split('.').pop();
+                        if (!_layout_data[layoutRef]) return null;
+                        _tempDiv.innerHTML = _layout_data[layoutRef];
+                        var data = _tempDiv.firstElementChild;
+                        _tempDiv.removeChild(data);
+                        return data;
                     }
                 }]);
 
                 return layout;
             })();
 
+            layout.sample_animation = '@layout/sample_animation';
+            layout.sample_base_widget = '@layout/sample_base_widget';
+            layout.sample_button = '@layout/sample_button';
+            layout.sample_drawerlayout = '@layout/sample_drawerlayout';
+            layout.sample_expand_listview_item = '@layout/sample_expand_listview_item';
+            layout.sample_framelayout = '@layout/sample_framelayout';
+            layout.sample_gridview = '@layout/sample_gridview';
+            layout.sample_gridview_item = '@layout/sample_gridview_item';
+            layout.sample_htmlview = '@layout/sample_htmlview';
+            layout.sample_imageview = '@layout/sample_imageview';
+            layout.sample_linearlayout = '@layout/sample_linearlayout';
+            layout.sample_listview = '@layout/sample_listview';
+            layout.sample_listview_item = '@layout/sample_listview_item';
+            layout.sample_picker = '@layout/sample_picker';
+            layout.sample_pullrefreshload = '@layout/sample_pullrefreshload';
+            layout.sample_pullrefreshload_item = '@layout/sample_pullrefreshload_item';
+            layout.sample_relativelayout = '@layout/sample_relativelayout';
+            layout.sample_textview = '@layout/sample_textview';
+            layout.sample_viewpager = '@layout/sample_viewpager';
+            layout.sample_viewpager_gallery = '@layout/sample_viewpager_gallery';
+            layout.sample_viewpager_page = '@layout/sample_viewpager_page';
             R.layout = layout;
+            android.content.res.Resources.buildLayoutFinder = function (refString) {
+                return layout.getLayoutData(refString);
+            };
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
@@ -279,6 +224,8 @@ var sample;
     var app;
     (function (app) {
         var Activity = android.app.Activity;
+        var AlertDialog = android.app.AlertDialog;
+        var NetDrawable = androidui.image.NetDrawable;
         var R = sample.app.R;
 
         var SampleBaseWidgetActivity = (function (_Activity2) {
@@ -294,6 +241,16 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     this.setContentView(R.layout.sample_base_widget);
+                    var btnOpenDialog = this.findViewById('btn_open_dialog');
+                    btnOpenDialog.setOnClickListener({
+                        onClick: function onClick(view) {
+                            new AlertDialog.Builder(view.getContext()).setTitle('标题').setMessage('内容内容\n*支持后退按钮关闭对话框:)').setPositiveButton(android.R.string_.ok, {
+                                onClick: function onClick(dialog, which) {
+                                    console.log('dialog click ok');
+                                }
+                            }).setIcon(new NetDrawable('assets/images/logo_android_1@2x.png')).setNegativeButton(android.R.string_.cancel, null).show();
+                        }
+                    });
                 }
             }]);
 

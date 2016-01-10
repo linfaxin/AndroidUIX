@@ -1,6 +1,9 @@
 /**
  * Created by linfaxin on 15/12/6.
  */
+///<reference path="List.ts"/>
+///<reference path="ArrayList.ts"/>
+
 module java.util {
     export class Arrays {
 
@@ -55,6 +58,12 @@ module java.util {
             if (toIndex > arrayLength) {
                 throw new Error('ArrayIndexOutOfBoundsException:' + toIndex);
             }
+        }
+
+        static asList<T>(array:T[]):List<T> {
+            let list = new ArrayList<T>();
+            list.array.push(...array);
+            return list;
         }
     }
 }

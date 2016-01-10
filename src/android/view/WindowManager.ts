@@ -67,7 +67,7 @@ export class WindowManager {
     private mWindowsLayout:WindowManager.Layout;
 
     constructor(context:Context) {
-        this.mWindowsLayout = new WindowManager.Layout(context);
+        this.mWindowsLayout = new WindowManager.Layout(context, this);
         let viewRootImpl = context.androidUI._viewRootImpl;
         let fakeAttachInfo = new View.AttachInfo(viewRootImpl, viewRootImpl.mHandler);
         fakeAttachInfo.mRootView = this.mWindowsLayout;
@@ -90,7 +90,7 @@ export class WindowManager {
 
         if(!window.isFloating()) this.clearWindowVisible();
         let decorView = window.getDecorView();
-        this.mWindowsLayout.addView(decorView, params);
+        this.mWindowsLayout.addView(decorView, wparams);
 
         decorView.dispatchAttachedToWindow(window.mAttachInfo, 0);
         //window.mAttachInfo.mTreeObserver.dispatchOnWindowAttachedChange(true);
@@ -101,7 +101,6 @@ export class WindowManager {
         }
 
         if(window.mEnterAnimation){
-            window.mEnterAnimation.setDuration(window.mWindowAnimationDuration);
             window.mDecor.startAnimation(window.mEnterAnimation);
         }
     }
@@ -116,13 +115,16 @@ export class WindowManager {
     removeWindow(window:Window):void{
         let decor = window.getDecorView();
         if(window.mExitAnimation){
-            window.mExitAnimation.setDuration(window.mWindowAnimationDuration);
             let t = this;
             window.mExitAnimation.setAnimationListener({
                 onAnimationStart(animation:Animation):void{
-                    (<ViewGroup>decor.getParent()).removeView(decor);
-                    t.checkTopLevelWindowVisible();
-                    t.checkTopLevelWindowFocus();
+                    decor.postOnAnimation({//remove next frame to avoid draw again at this frame. (ViewGroup's DisappearingChildren)
+                        run(){
+                            (<ViewGroup>decor.getParent()).removeView(decor);
+                            t.checkTopLevelWindowVisible(!window.isFloating());
+                            t.checkTopLevelWindowFocus();
+                        }
+                    });
                 },
                 onAnimationEnd(animation:Animation):void{},
                 onAnimationRepeat(animation:Animation):void{}
@@ -140,7 +142,6 @@ export class WindowManager {
                 let window = (<android.app.Activity>decorView.getContext()).getWindow();
                 let decor = window.mDecor;
                 if(window.mHideAnimation){
-                    window.mHideAnimation.setDuration(window.mWindowAnimationDuration);
                     window.mHideAnimation.setAnimationListener({
                         onAnimationStart(animation:Animation):void{
                             decor.setVisibility(View.GONE);
@@ -162,14 +163,13 @@ export class WindowManager {
     private checkTopLevelWindowFocus(){
         //TODO top-level window should gain focus
     }
-    private checkTopLevelWindowVisible(){
+    private checkTopLevelWindowVisible(showAnim=true){
         for(let i=this.mWindowsLayout.getChildCount()-1; i>=0; i++){
             let decorView = this.mWindowsLayout.getChildAt(i);
             let window = (<android.app.Activity>decorView.getContext()).getWindow();
 
             window.mDecor.setVisibility(View.VISIBLE);
-            if(window.mShowAnimation){
-                window.mShowAnimation.setDuration(window.mWindowAnimationDuration);
+            if(showAnim && window.mShowAnimation){
                 window.mDecor.startAnimation(window.mShowAnimation);
             }
 
@@ -186,44 +186,70 @@ export module WindowManager{
      * children ara windows decor view
      */
     export class Layout extends android.widget.FrameLayout {
+        private mWindowManager:WindowManager;
+
+        constructor(context:android.content.Context, windowManager:WindowManager) {
+            super(context);
+            this.mWindowManager = windowManager;
+        }
+
+        dispatchKeyEvent(event:android.view.KeyEvent):boolean {
+            const count:number = this.getChildCount();
+            for (let i:number = count-1; i >=0; i--) {
+                let child = this.getChildAt(i);
+                let wparams = <WindowManager.LayoutParams>child.getLayoutParams();
+                if(wparams.isFocusable() && child.dispatchKeyEvent(event)){
+                    return true;
+                }
+            }
+            return super.dispatchKeyEvent(event);
+        }
+
+        protected isTransformedTouchPointInView(x:number, y:number, child:android.view.View, outLocalPoint:android.graphics.Point):boolean {
+            let wparams = <WindowManager.LayoutParams>child.getLayoutParams();
+            if(wparams.isFocusable() && wparams.isTouchable()){//handle touch to window
+                return true;
+            }
+            return super.isTransformedTouchPointInView(x, y, child, outLocalPoint);
+        }
 
         tagName():string {
-            return 'debug-layout';
+            return 'windows-layout';
         }
     }
 
 
 export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
 
-    /**
-         * X position for this window.  With the default gravity it is ignored.
-         * When using {@link Gravity#LEFT} or {@link Gravity#START} or {@link Gravity#RIGHT} or
-         * {@link Gravity#END} it provides an offset from the given edge.
-         */
-    x:number = 0;
+    ///**
+    //     * X position for this window.  With the default gravity it is ignored.
+    //     * When using {@link Gravity#LEFT} or {@link Gravity#START} or {@link Gravity#RIGHT} or
+    //     * {@link Gravity#END} it provides an offset from the given edge.
+    //     */
+    //x:number = 0;
+    //
+    ///**
+    //     * Y position for this window.  With the default gravity it is ignored.
+    //     * When using {@link Gravity#TOP} or {@link Gravity#BOTTOM} it provides
+    //     * an offset from the given edge.
+    //     */
+    //y:number = 0;
 
-    /**
-         * Y position for this window.  With the default gravity it is ignored.
-         * When using {@link Gravity#TOP} or {@link Gravity#BOTTOM} it provides
-         * an offset from the given edge.
-         */
-    y:number = 0;
-
-    /**
-         * Indicates how much of the extra space will be allocated horizontally
-         * to the view associated with these LayoutParams. Specify 0 if the view
-         * should not be stretched. Otherwise the extra pixels will be pro-rated
-         * among all views whose weight is greater than 0.
-         */
-    horizontalWeight:number = 0;
-
-    /**
-         * Indicates how much of the extra space will be allocated vertically
-         * to the view associated with these LayoutParams. Specify 0 if the view
-         * should not be stretched. Otherwise the extra pixels will be pro-rated
-         * among all views whose weight is greater than 0.
-         */
-    verticalWeight:number = 0;
+    ///**
+    //     * Indicates how much of the extra space will be allocated horizontally
+    //     * to the view associated with these LayoutParams. Specify 0 if the view
+    //     * should not be stretched. Otherwise the extra pixels will be pro-rated
+    //     * among all views whose weight is greater than 0.
+    //     */
+    //horizontalWeight:number = 0;
+    //
+    ///**
+    //     * Indicates how much of the extra space will be allocated vertically
+    //     * to the view associated with these LayoutParams. Specify 0 if the view
+    //     * should not be stretched. Otherwise the extra pixels will be pro-rated
+    //     * among all views whose weight is greater than 0.
+    //     */
+    //verticalWeight:number = 0;
 
     /**
          * The general type of window.  There are three main classes of
@@ -1219,67 +1245,67 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     //     * {@link android.R.attr#windowSoftInputMode} attribute.</p>
     //     */
     //softInputMode:number = 0;
-
-    /**
-         * Placement of window within the screen as per {@link Gravity}.  Both
-         * {@link Gravity#apply(int, int, int, android.graphics.Rect, int, int,
-         * android.graphics.Rect) Gravity.apply} and
-         * {@link Gravity#applyDisplay(int, android.graphics.Rect, android.graphics.Rect)
-         * Gravity.applyDisplay} are used during window layout, with this value
-         * given as the desired gravity.  For example you can specify
-         * {@link Gravity#DISPLAY_CLIP_HORIZONTAL Gravity.DISPLAY_CLIP_HORIZONTAL} and
-         * {@link Gravity#DISPLAY_CLIP_VERTICAL Gravity.DISPLAY_CLIP_VERTICAL} here
-         * to control the behavior of
-         * {@link Gravity#applyDisplay(int, android.graphics.Rect, android.graphics.Rect)
-         * Gravity.applyDisplay}.
-         *
-         * @see Gravity
-         */
-    gravity:number = 0;
-
-    /**
-         * The horizontal margin, as a percentage of the container's width,
-         * between the container and the widget.  See
-         * {@link Gravity#apply(int, int, int, android.graphics.Rect, int, int,
-         * android.graphics.Rect) Gravity.apply} for how this is used.  This
-         * field is added with {@link #x} to supply the <var>xAdj</var> parameter.
-         */
-    horizontalMargin:number = 0;
-
-    /**
-         * The vertical margin, as a percentage of the container's height,
-         * between the container and the widget.  See
-         * {@link Gravity#apply(int, int, int, android.graphics.Rect, int, int,
-         * android.graphics.Rect) Gravity.apply} for how this is used.  This
-         * field is added with {@link #y} to supply the <var>yAdj</var> parameter.
-         */
-    verticalMargin:number = 0;
-
-    /**
-         * The desired bitmap format.  May be one of the constants in
-         * {@link android.graphics.PixelFormat}.  Default is OPAQUE.
-         */
-    format:number = 0;
-
+    //
+    ///**
+    //     * Placement of window within the screen as per {@link Gravity}.  Both
+    //     * {@link Gravity#apply(int, int, int, android.graphics.Rect, int, int,
+    //     * android.graphics.Rect) Gravity.apply} and
+    //     * {@link Gravity#applyDisplay(int, android.graphics.Rect, android.graphics.Rect)
+    //     * Gravity.applyDisplay} are used during window layout, with this value
+    //     * given as the desired gravity.  For example you can specify
+    //     * {@link Gravity#DISPLAY_CLIP_HORIZONTAL Gravity.DISPLAY_CLIP_HORIZONTAL} and
+    //     * {@link Gravity#DISPLAY_CLIP_VERTICAL Gravity.DISPLAY_CLIP_VERTICAL} here
+    //     * to control the behavior of
+    //     * {@link Gravity#applyDisplay(int, android.graphics.Rect, android.graphics.Rect)
+    //     * Gravity.applyDisplay}.
+    //     *
+    //     * @see Gravity
+    //     */
+    //gravity:number = 0;
+    //
+    ///**
+    //     * The horizontal margin, as a percentage of the container's width,
+    //     * between the container and the widget.  See
+    //     * {@link Gravity#apply(int, int, int, android.graphics.Rect, int, int,
+    //     * android.graphics.Rect) Gravity.apply} for how this is used.  This
+    //     * field is added with {@link #x} to supply the <var>xAdj</var> parameter.
+    //     */
+    //horizontalMargin:number = 0;
+    //
+    ///**
+    //     * The vertical margin, as a percentage of the container's height,
+    //     * between the container and the widget.  See
+    //     * {@link Gravity#apply(int, int, int, android.graphics.Rect, int, int,
+    //     * android.graphics.Rect) Gravity.apply} for how this is used.  This
+    //     * field is added with {@link #y} to supply the <var>yAdj</var> parameter.
+    //     */
+    //verticalMargin:number = 0;
+    //
+    ///**
+    //     * The desired bitmap format.  May be one of the constants in
+    //     * {@link android.graphics.PixelFormat}.  Default is OPAQUE.
+    //     */
+    //format:number = 0;
+    //
     ///**
     //     * A style resource defining the animations to use for this window.
     //     * This must be a system resource; it can not be an application resource
     //     * because the window manager does not have access to applications.
     //     */
     //windowAnimations:number = 0;
-
-    /**
-         * An alpha value to apply to this entire window.
-         * An alpha of 1.0 means fully opaque and 0.0 means fully transparent
-         */
-    alpha:number = 1.0;
+    //
+    ///**
+    //     * An alpha value to apply to this entire window.
+    //     * An alpha of 1.0 means fully opaque and 0.0 means fully transparent
+    //     */
+    //alpha:number = 1.0;
 
     /**
          * When {@link #FLAG_DIM_BEHIND} is set, this is the amount of dimming
          * to apply.  Range is from 1.0 for completely opaque to 0.0 for no
          * dim.
          */
-    dimAmount:number = 1.0;
+    dimAmount:number = 0.6;
 
     ///**
     //     * Default value for {@link #screenBrightness} and {@link #buttonBrightness}
@@ -1458,7 +1484,7 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     constructor(_type=LayoutParams.TYPE_APPLICATION) {
         super(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
         this.type = _type;
-        this.format = PixelFormat.OPAQUE;
+        //this.format = PixelFormat.OPAQUE;
     }
 
     //constructor( _type:number, _flags:number) {
@@ -1563,30 +1589,30 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
             this.height = o.height;
             changes |= LayoutParams.LAYOUT_CHANGED;
         }
-        if (this.x != o.x) {
-            this.x = o.x;
-            changes |= LayoutParams.LAYOUT_CHANGED;
-        }
-        if (this.y != o.y) {
-            this.y = o.y;
-            changes |= LayoutParams.LAYOUT_CHANGED;
-        }
-        if (this.horizontalWeight != o.horizontalWeight) {
-            this.horizontalWeight = o.horizontalWeight;
-            changes |= LayoutParams.LAYOUT_CHANGED;
-        }
-        if (this.verticalWeight != o.verticalWeight) {
-            this.verticalWeight = o.verticalWeight;
-            changes |= LayoutParams.LAYOUT_CHANGED;
-        }
-        if (this.horizontalMargin != o.horizontalMargin) {
-            this.horizontalMargin = o.horizontalMargin;
-            changes |= LayoutParams.LAYOUT_CHANGED;
-        }
-        if (this.verticalMargin != o.verticalMargin) {
-            this.verticalMargin = o.verticalMargin;
-            changes |= LayoutParams.LAYOUT_CHANGED;
-        }
+        //if (this.x != o.x) {
+        //    this.x = o.x;
+        //    changes |= LayoutParams.LAYOUT_CHANGED;
+        //}
+        //if (this.y != o.y) {
+        //    this.y = o.y;
+        //    changes |= LayoutParams.LAYOUT_CHANGED;
+        //}
+        //if (this.horizontalWeight != o.horizontalWeight) {
+        //    this.horizontalWeight = o.horizontalWeight;
+        //    changes |= LayoutParams.LAYOUT_CHANGED;
+        //}
+        //if (this.verticalWeight != o.verticalWeight) {
+        //    this.verticalWeight = o.verticalWeight;
+        //    changes |= LayoutParams.LAYOUT_CHANGED;
+        //}
+        //if (this.horizontalMargin != o.horizontalMargin) {
+        //    this.horizontalMargin = o.horizontalMargin;
+        //    changes |= LayoutParams.LAYOUT_CHANGED;
+        //}
+        //if (this.verticalMargin != o.verticalMargin) {
+        //    this.verticalMargin = o.verticalMargin;
+        //    changes |= LayoutParams.LAYOUT_CHANGED;
+        //}
         if (this.type != o.type) {
             this.type = o.type;
             changes |= LayoutParams.TYPE_CHANGED;
@@ -1611,10 +1637,10 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
             this.gravity = o.gravity;
             changes |= LayoutParams.LAYOUT_CHANGED;
         }
-        if (this.format != o.format) {
-            this.format = o.format;
-            changes |= LayoutParams.FORMAT_CHANGED;
-        }
+        //if (this.format != o.format) {
+        //    this.format = o.format;
+        //    changes |= LayoutParams.FORMAT_CHANGED;
+        //}
         //if (this.windowAnimations != o.windowAnimations) {
         //    this.windowAnimations = o.windowAnimations;
         //    changes |= LayoutParams.ANIMATION_CHANGED;
@@ -1633,10 +1659,10 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
             this.mTitle = o.mTitle;
             changes |= LayoutParams.TITLE_CHANGED;
         }
-        if (this.alpha != o.alpha) {
-            this.alpha = o.alpha;
-            changes |= LayoutParams.ALPHA_CHANGED;
-        }
+        //if (this.alpha != o.alpha) {
+        //    this.alpha = o.alpha;
+        //    changes |= LayoutParams.ALPHA_CHANGED;
+        //}
         if (this.dimAmount != o.dimAmount) {
             this.dimAmount = o.dimAmount;
             changes |= LayoutParams.DIM_AMOUNT_CHANGED;
@@ -1825,7 +1851,12 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
 
     private isFocusable():boolean {
         return (this.flags & LayoutParams.FLAG_NOT_FOCUSABLE) == 0;
-
+    }
+    private isTouchable():boolean {
+        return (this.flags & LayoutParams.FLAG_NOT_TOUCHABLE) == 0;
+    }
+    private isTouchModal():boolean {
+        return (this.flags & LayoutParams.FLAG_NOT_TOUCH_MODAL) == 0;
     }
 }
 }

@@ -345,6 +345,10 @@ module android.view{
             return JSON.stringify(this);
         }
 
+        isCanceled():boolean {
+            return false;
+        }
+
         static actionToString(action:number):string {
             switch (action) {
                 case KeyEvent.ACTION_DOWN:

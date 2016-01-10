@@ -1258,7 +1258,7 @@ module android.view {
                 ;
         }
 
-        isTransformedTouchPointInView(x:number, y:number, child:View, outLocalPoint:Point):boolean {
+        protected isTransformedTouchPointInView(x:number, y:number, child:View, outLocalPoint:Point):boolean {
             let localX = x + this.mScrollX - child.mLeft;
             let localY = y + this.mScrollY - child.mTop;
 
@@ -2654,6 +2654,12 @@ module android.view {
                 }, ()=>{
                     return this._leftMarginOrig;
                 });
+                this._attrBinder.addAttr('marginStart', (value)=>{
+                    if(value==null) value = 0;
+                    this.leftMargin = value;
+                }, ()=>{
+                    return this._leftMarginOrig;
+                });
                 this._attrBinder.addAttr('marginTop', (value)=>{
                     if(value==null) value = 0;
                     this.topMargin = value;
@@ -2661,6 +2667,12 @@ module android.view {
                     return this._topMarginOrig;
                 });
                 this._attrBinder.addAttr('marginRight', (value)=>{
+                    if(value==null) value = 0;
+                    this.rightMargin = value;
+                }, ()=>{
+                    return this._rightMarginOrig;
+                });
+                this._attrBinder.addAttr('marginEnd', (value)=>{
                     if(value==null) value = 0;
                     this.rightMargin = value;
                 }, ()=>{
