@@ -65,6 +65,7 @@ import Animation = android.view.animation.Animation;
  */
 export class WindowManager {
     private mWindowsLayout:WindowManager.Layout;
+    private mActiveWindow:Window;
 
     constructor(context:Context) {
         this.mWindowsLayout = new WindowManager.Layout(context, this);
@@ -88,6 +89,7 @@ export class WindowManager {
             throw Error('can\'t addWindow, params must be WindowManager.LayoutParams : '+wparams);
         }
 
+        window.setContainer(this);
         if(!wparams.isFloating()) this.clearWindowVisible();
         let decorView = window.getDecorView();
 

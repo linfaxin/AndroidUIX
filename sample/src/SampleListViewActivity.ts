@@ -19,6 +19,7 @@ module sample.app {
 
     export class SampleListViewActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             this.setContentView(R.layout.sample_listview);
 
             let listView = <ListView>this.findViewById('listView');

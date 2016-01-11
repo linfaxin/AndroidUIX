@@ -241,6 +241,7 @@ var sample;
             _createClass(SampleBaseWidgetActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleBaseWidgetActivity.prototype), "onCreate", this).call(this);
                     var activity = this;
                     this.setContentView(R.layout.sample_base_widget);
                     var btnOpenDialog = this.findViewById('btn_open_dialog');
@@ -585,6 +586,7 @@ var sample;
             _createClass(SampleHtmlViewActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleHtmlViewActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_htmlview);
                 }
             }]);
@@ -616,6 +618,7 @@ var sample;
             _createClass(SampleImageViewActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleImageViewActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_imageview);
                 }
             }]);
@@ -647,6 +650,7 @@ var sample;
             _createClass(SampleLinearLayoutActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleLinearLayoutActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_linearlayout);
                 }
             }]);
@@ -680,6 +684,7 @@ var sample;
             _createClass(SampleListViewActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleListViewActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_listview);
                     var listView = this.findViewById('listView');
                     listView.setAdapter(new MyListAdapter());
@@ -751,6 +756,7 @@ var sample;
             _createClass(SamplePickerActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SamplePickerActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_picker);
                 }
             }]);
@@ -785,6 +791,7 @@ var sample;
             _createClass(SamplePullRefreshLoadActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SamplePullRefreshLoadActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_pullrefreshload);
                     var listView = this.findViewById('listView');
                     var adapter = new MyListAdapter();
@@ -879,6 +886,7 @@ var sample;
             _createClass(SampleRelativeLayoutActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleRelativeLayoutActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_relativelayout);
                 }
             }]);
@@ -910,6 +918,7 @@ var sample;
             _createClass(SampleTextViewActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleTextViewActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_textview);
                 }
             }]);
@@ -943,6 +952,7 @@ var sample;
             _createClass(SampleViewPagerActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleViewPagerActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_viewpager);
                     var viewPager = this.findViewById('viewPager');
                     viewPager.setAdapter(new MyPageAdapter());
@@ -1007,6 +1017,7 @@ var sample;
             _createClass(SampleViewPagerGalleryActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleViewPagerGalleryActivity.prototype), "onCreate", this).call(this);
                     this.setContentView(R.layout.sample_viewpager_gallery);
                 }
             }]);

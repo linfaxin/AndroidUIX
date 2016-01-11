@@ -11,6 +11,7 @@ module sample.app {
 
     export class SampleBaseWidgetActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             let activity = this;
             this.setContentView(R.layout.sample_base_widget);
 

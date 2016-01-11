@@ -3106,7 +3106,7 @@ declare module PageStack {
     function go(delta: number): void;
     function back(): void;
     function openPage(pageId: string, extra?: any): void;
-    function notifyPageClosed(pageId: string, pageExtra: any): boolean;
+    function notifyPageClosed(pageId: string, pageExtra?: any): boolean;
     function notifyNewPageOpened(pageId: string, extra?: any): void;
     interface StateStack {
         pageId: string;
@@ -3127,8 +3127,11 @@ declare module android.app {
         constructor(androidUI: androidui.AndroidUI);
         private initWithPageStack();
         scheduleLaunchActivity(intent: Intent, options?: android.os.Bundle): void;
-        performLaunchActivity(intent: Intent): Activity;
-        performDestroyActivity(activity: Activity): void;
+        handleLaunchActivity(intent: Intent): Activity;
+        private performLaunchActivity(intent);
+        handleResumeActivity(a: Activity): void;
+        performFinishActivity(activity: Activity): void;
+        private performDestroyActivity(activity);
     }
 }
 declare module androidui {
@@ -4227,6 +4230,7 @@ declare module android.view {
     import Animation = android.view.animation.Animation;
     class WindowManager {
         private mWindowsLayout;
+        private mActiveWindow;
         constructor(context: Context);
         getWindowsLayout(): ViewGroup;
         addWindow(window: Window): void;
@@ -4516,11 +4520,9 @@ declare module android.view {
     class Window {
         private mContext;
         private mCallback;
-        private mWindowManager;
+        private mChildWindowManager;
         private mContainer;
-        private mActiveChild;
         private mIsActive;
-        private mHasChildren;
         private mCloseOnTouchOutside;
         private mSetCloseOnTouchOutside;
         private mDestroyed;
@@ -4528,18 +4530,16 @@ declare module android.view {
         private mAttachInfo;
         private mDecor;
         private mContentParent;
-        private mTitle;
         constructor(context: Context);
         private initDecorView();
         private initAttachInfo();
         getContext(): Context;
-        setContainer(container: Window): void;
-        getContainer(): Window;
-        hasChildren(): boolean;
+        setContainer(container: WindowManager): void;
+        getContainer(): WindowManager;
         destroy(): void;
         isDestroyed(): boolean;
-        setWindowManager(wm: WindowManager): void;
-        getWindowManager(): WindowManager;
+        setChildWindowManager(wm: WindowManager): void;
+        getChildWindowManager(): WindowManager;
         setCallback(callback: Window.Callback): void;
         getCallback(): Window.Callback;
         setFloating(isFloating: boolean): void;
@@ -4593,23 +4593,104 @@ declare module android.view {
 declare module android.app {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
+    import KeyEvent = android.view.KeyEvent;
+    import Animation = android.view.animation.Animation;
+    import MotionEvent = android.view.MotionEvent;
     import Window = android.view.Window;
+    import WindowManager = android.view.WindowManager;
     import Bundle = android.os.Bundle;
     import Context = android.content.Context;
     import Intent = android.content.Intent;
-    class Activity extends Context {
-        private mWindow;
+    import Runnable = java.lang.Runnable;
+    class Activity extends Context implements Window.Callback, KeyEvent.Callback {
+        private static TAG;
+        private static DEBUG_LIFECYCLE;
+        static RESULT_CANCELED: number;
+        static RESULT_OK: number;
+        static RESULT_FIRST_USER: number;
         private mIntent;
-        onCreate(): void;
-        private performCreate();
-        setIntent(intent: Intent): void;
+        private mCalled;
+        mResumed: boolean;
+        private mStopped;
+        mFinished: boolean;
+        mStartedActivity: boolean;
+        private mDestroyed;
+        private mWindow;
+        private mWindowAdded;
+        private mVisibleFromClient;
+        mResultCode: number;
+        mResultData: Intent;
         getIntent(): Intent;
-        getWindow(): Window;
+        setIntent(newIntent: Intent): void;
+        getApplication(): android.app.Application;
         getWindowManager(): android.view.WindowManager;
-        startActivity(intent: Intent | string, options?: Bundle): void;
-        setContentView(view: View | HTMLElement | string): void;
-        addContentView(view: View, params: ViewGroup.LayoutParams): void;
+        getGlobalWindowManager(): android.view.WindowManager;
+        getWindow(): Window;
+        getCurrentFocus(): View;
+        protected onCreate(savedInstanceState?: Bundle): void;
+        performRestoreInstanceState(savedInstanceState: Bundle): void;
+        protected onRestoreInstanceState(savedInstanceState: Bundle): void;
+        protected onPostCreate(savedInstanceState: Bundle): void;
+        protected onStart(): void;
+        protected onRestart(): void;
+        protected onResume(): void;
+        protected onPostResume(): void;
+        protected onNewIntent(intent: Intent): void;
+        performSaveInstanceState(outState: Bundle): void;
+        protected onSaveInstanceState(outState: Bundle): void;
+        protected onPause(): void;
+        protected onUserLeaveHint(): void;
+        protected onStop(): void;
+        protected onDestroy(): void;
         findViewById(id: string): View;
+        setContentView(view: View | HTMLElement | string, params?: ViewGroup.LayoutParams): void;
+        addContentView(view: View, params: ViewGroup.LayoutParams): void;
+        setFinishOnTouchOutside(finish: boolean): void;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        onKeyLongPress(keyCode: number, event: KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+        onBackPressed(): void;
+        onTouchEvent(event: MotionEvent): boolean;
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        onUserInteraction(): void;
+        onWindowAttributesChanged(params: WindowManager.LayoutParams): void;
+        onContentChanged(): void;
+        onWindowFocusChanged(hasFocus: boolean): void;
+        onAttachedToWindow(): void;
+        onDetachedFromWindow(): void;
+        hasWindowFocus(): boolean;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        dispatchTouchEvent(ev: MotionEvent): boolean;
+        dispatchGenericMotionEvent(ev: MotionEvent): boolean;
+        takeKeyEvents(_get: boolean): void;
+        startActivityForResult(intent: Intent | string, requestCode: number, options?: Bundle): void;
+        startActivities(intents: Intent[], options?: Bundle): void;
+        startActivity(intent: Intent | string, options?: Bundle): void;
+        startActivityIfNeeded(intent: Intent, requestCode: number, options?: Bundle): boolean;
+        overridePendingTransition(enterAnimation: Animation, exitAnimation: Animation, resumeAnimation: Animation, hideAnimation: Animation): void;
+        setResult(resultCode: number, data?: Intent): void;
+        getCallingActivity(): string;
+        setVisible(visible: boolean): void;
+        makeVisible(): void;
+        isFinishing(): boolean;
+        isDestroyed(): boolean;
+        finish(): void;
+        protected onActivityResult(requestCode: number, resultCode: number, data: Intent): void;
+        setTitle(title: string): void;
+        getTitle(): string;
+        protected onTitleChanged(title: string, color?: number): void;
+        runOnUiThread(action: Runnable): void;
+        constructor(androidUI: androidui.AndroidUI);
+        private performCreate(icicle);
+        private performStart();
+        private performRestart();
+        private performResume();
+        private performPause();
+        private performUserLeaving();
+        private performStop();
+        private performDestroy();
+        isResumed(): boolean;
+        dispatchActivityResult(who: string, requestCode: number, resultCode: number, data: Intent): void;
     }
 }
 declare module android.app {

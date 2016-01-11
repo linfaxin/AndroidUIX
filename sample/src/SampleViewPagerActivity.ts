@@ -16,6 +16,7 @@ module sample.app {
 
     export class SampleViewPagerActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             this.setContentView(R.layout.sample_viewpager);
 
             let viewPager = <ViewPager>this.findViewById('viewPager');

@@ -8,6 +8,7 @@ module sample.app {
 
     export class SampleTextViewActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             this.setContentView(R.layout.sample_textview);
         }
     }

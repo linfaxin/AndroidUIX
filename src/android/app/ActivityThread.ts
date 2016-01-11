@@ -46,7 +46,7 @@ module android.app{
             };
             PageStack.pageOpenHandler = (pageId:string, pageExtra?:any):boolean=>{
                 let intent = new Intent(pageId);
-                let activity = this.performLaunchActivity(intent);
+                let activity = this.handleLaunchActivity(intent);
                 return activity != null;
             };
             PageStack.pageCloseHandler = (pageId:string, pageExtra?:any):boolean=>{
@@ -63,11 +63,18 @@ module android.app{
 
         scheduleLaunchActivity(intent:Intent, options?:android.os.Bundle):void {
             //TODO launch delay?
-            this.performLaunchActivity(intent);
+            this.handleLaunchActivity(intent);
             PageStack.notifyNewPageOpened(intent.activityName, intent.getExtras());
         }
 
-        performLaunchActivity(intent:Intent):Activity {
+        handleLaunchActivity(intent:Intent):Activity {
+            let a = this.performLaunchActivity(intent);
+            if(a){
+                this.handleResumeActivity(a);
+            }
+            return a;
+        }
+        private performLaunchActivity(intent:Intent):Activity {
             let activity:Activity;
             let clazz = this.activityNameClassMap.get(intent.activityName.toLowerCase()) || intent.activityName;
 
@@ -75,19 +82,50 @@ module android.app{
                 if(typeof clazz === 'string') clazz = eval(clazz);
             } catch (e) {}
             if(typeof clazz === 'function') activity = new clazz(this.androidUI);
-            if(activity instanceof Activity){
-                activity.setIntent(intent);
-                activity.performCreate();
-                this.androidUI.windowManager.addWindow(activity.getWindow());
 
+
+            if(activity instanceof Activity){
+                let savedInstanceState = null;//TODO saved state
+
+                activity.mIntent = intent;
+                activity.mStartedActivity = false;
+
+
+                activity.mCalled = false;
+                activity.performCreate(savedInstanceState);
+
+                if (!activity.mCalled) {
+                    throw new Error("Activity " + intent.activityName + " did not call through to super.onCreate()");
+                }
+
+                activity.performStart();
+                activity.performRestoreInstanceState(savedInstanceState);
+
+                activity.mCalled = false;
+                activity.onPostCreate(savedInstanceState);
+                if (!activity.mCalled) {
+                    throw new Error("Activity " + intent.activityName + " did not call through to super.onPostCreate()");
+                }
+
+                this.androidUI.windowManager.addWindow(activity.getWindow());
                 this.mLaunchedActivities.add(activity);
-                //TODO activity life callback
+
                 return <Activity>activity;
             }
             return null;
         }
 
-        performDestroyActivity(activity:Activity){
+        handleResumeActivity(a:Activity){
+            //TODO manager window visibility here from windowManager?
+            a.performResume();
+        }
+
+        performFinishActivity(activity:Activity){
+            PageStack.notifyPageClosed(activity.getIntent().activityName);
+            this.performDestroyActivity(activity);
+
+        }
+        private performDestroyActivity(activity:Activity){
             this.mLaunchedActivities.delete(activity);
             this.androidUI.windowManager.removeWindow(activity.getWindow());
             //TODO activity life callback

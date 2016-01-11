@@ -237,6 +237,7 @@ var sample;
         var R = sample.app.R;
         class SampleBaseWidgetActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 let activity = this;
                 this.setContentView(R.layout.sample_base_widget);
                 let btnOpenDialog = this.findViewById('btn_open_dialog');
@@ -456,6 +457,7 @@ var sample;
         var R = sample.app.R;
         class SampleHtmlViewActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_htmlview);
             }
         }
@@ -472,6 +474,7 @@ var sample;
         var R = sample.app.R;
         class SampleImageViewActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_imageview);
             }
         }
@@ -488,6 +491,7 @@ var sample;
         var R = sample.app.R;
         class SampleLinearLayoutActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_linearlayout);
             }
         }
@@ -506,6 +510,7 @@ var sample;
         var R = sample.app.R;
         class SampleListViewActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_listview);
                 let listView = this.findViewById('listView');
                 listView.setAdapter(new MyListAdapter());
@@ -542,6 +547,7 @@ var sample;
         var R = sample.app.R;
         class SamplePickerActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_picker);
             }
         }
@@ -561,6 +567,7 @@ var sample;
         var R = sample.app.R;
         class SamplePullRefreshLoadActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_pullrefreshload);
                 let listView = this.findViewById('listView');
                 let adapter = new MyListAdapter();
@@ -619,6 +626,7 @@ var sample;
         var R = sample.app.R;
         class SampleRelativeLayoutActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_relativelayout);
             }
         }
@@ -635,6 +643,7 @@ var sample;
         var R = sample.app.R;
         class SampleTextViewActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_textview);
             }
         }
@@ -653,6 +662,7 @@ var sample;
         var R = sample.app.R;
         class SampleViewPagerActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_viewpager);
                 let viewPager = this.findViewById('viewPager');
                 viewPager.setAdapter(new MyPageAdapter());
@@ -686,6 +696,7 @@ var sample;
         var R = sample.app.R;
         class SampleViewPagerGalleryActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_viewpager_gallery);
             }
         }

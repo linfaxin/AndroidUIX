@@ -20,6 +20,7 @@ module sample.app {
 
     export class SamplePullRefreshLoadActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             this.setContentView(R.layout.sample_pullrefreshload);
 
             let listView = <ListView>this.findViewById('listView');

@@ -177,7 +177,7 @@ module android.app {
             wp.leftMargin = wp.rightMargin = wp.topMargin = wp.bottomMargin = dm.density * 16;
             w.setWindowAnimations(android.R.anim.dialog_enter, android.R.anim.dialog_exit, null, null);
 
-            w.setWindowManager(this.mWindowManager);
+            w.setChildWindowManager(this.mWindowManager);
             w.setGravity(Gravity.CENTER);
             w.setCallback(this);
 

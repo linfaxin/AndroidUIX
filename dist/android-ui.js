@@ -14563,7 +14563,7 @@ var android;
                 };
                 PageStack.pageOpenHandler = (pageId, pageExtra) => {
                     let intent = new Intent(pageId);
-                    let activity = this.performLaunchActivity(intent);
+                    let activity = this.handleLaunchActivity(intent);
                     return activity != null;
                 };
                 PageStack.pageCloseHandler = (pageId, pageExtra) => {
@@ -14578,8 +14578,15 @@ var android;
                 PageStack.init();
             }
             scheduleLaunchActivity(intent, options) {
-                this.performLaunchActivity(intent);
+                this.handleLaunchActivity(intent);
                 PageStack.notifyNewPageOpened(intent.activityName, intent.getExtras());
+            }
+            handleLaunchActivity(intent) {
+                let a = this.performLaunchActivity(intent);
+                if (a) {
+                    this.handleResumeActivity(a);
+                }
+                return a;
             }
             performLaunchActivity(intent) {
                 let activity;
@@ -14592,13 +14599,33 @@ var android;
                 if (typeof clazz === 'function')
                     activity = new clazz(this.androidUI);
                 if (activity instanceof app.Activity) {
-                    activity.setIntent(intent);
-                    activity.performCreate();
+                    let savedInstanceState = null;
+                    activity.mIntent = intent;
+                    activity.mStartedActivity = false;
+                    activity.mCalled = false;
+                    activity.performCreate(savedInstanceState);
+                    if (!activity.mCalled) {
+                        throw new Error("Activity " + intent.activityName + " did not call through to super.onCreate()");
+                    }
+                    activity.performStart();
+                    activity.performRestoreInstanceState(savedInstanceState);
+                    activity.mCalled = false;
+                    activity.onPostCreate(savedInstanceState);
+                    if (!activity.mCalled) {
+                        throw new Error("Activity " + intent.activityName + " did not call through to super.onPostCreate()");
+                    }
                     this.androidUI.windowManager.addWindow(activity.getWindow());
                     this.mLaunchedActivities.add(activity);
                     return activity;
                 }
                 return null;
+            }
+            handleResumeActivity(a) {
+                a.performResume();
+            }
+            performFinishActivity(activity) {
+                PageStack.notifyPageClosed(activity.getIntent().activityName);
+                this.performDestroyActivity(activity);
             }
             performDestroyActivity(activity) {
                 this.mLaunchedActivities.delete(activity);
@@ -21799,6 +21826,7 @@ var android;
                 if (!(wparams instanceof WindowManager.LayoutParams)) {
                     throw Error('can\'t addWindow, params must be WindowManager.LayoutParams : ' + wparams);
                 }
+                window.setContainer(this);
                 if (!wparams.isFloating())
                     this.clearWindowVisible();
                 let decorView = window.getDecorView();
@@ -22992,7 +23020,6 @@ var android;
         class Window {
             constructor(context) {
                 this.mIsActive = false;
-                this.mHasChildren = false;
                 this.mCloseOnTouchOutside = false;
                 this.mSetCloseOnTouchOutside = false;
                 this.mWindowAttributes = new WindowManager.LayoutParams();
@@ -23017,16 +23044,9 @@ var android;
             }
             setContainer(container) {
                 this.mContainer = container;
-                if (container != null) {
-                    container.mHasChildren = true;
-                }
-                this.setWindowManager(container.getWindowManager());
             }
             getContainer() {
                 return this.mContainer;
-            }
-            hasChildren() {
-                return this.mHasChildren;
             }
             destroy() {
                 this.mDestroyed = true;
@@ -23034,7 +23054,7 @@ var android;
             isDestroyed() {
                 return this.mDestroyed;
             }
-            setWindowManager(wm) {
+            setChildWindowManager(wm) {
                 //this.mAppToken = appToken;
                 //this.mAppName = appName;
                 //this.mHardwareAccelerated = hardwareAccelerated;// || SystemProperties.getBoolean(Window.PROPERTY_HARDWARE_UI, false);
@@ -23042,17 +23062,17 @@ var android;
                 //    wm = <WindowManager> this.mContext.getSystemService(Context.WINDOW_SERVICE);
                 //}
                 //this.mWindowManager = (<WindowManagerImpl> wm).createLocalWindowManager(this);
-                if (this.mWindowManager) {
-                    this.mDecor.removeView(this.mWindowManager.getWindowsLayout());
+                if (this.mChildWindowManager) {
+                    this.mDecor.removeView(this.mChildWindowManager.getWindowsLayout());
                 }
-                this.mWindowManager = wm;
+                this.mChildWindowManager = wm;
             }
-            getWindowManager() {
-                if (!this.mWindowManager) {
-                    this.mWindowManager = new WindowManager(this.mContext);
-                    this.mDecor.addView(this.mWindowManager.getWindowsLayout(), -1, -1);
+            getChildWindowManager() {
+                if (!this.mChildWindowManager) {
+                    this.mChildWindowManager = new WindowManager(this.mContext);
+                    this.mDecor.addView(this.mChildWindowManager.getWindowsLayout(), -1, -1);
                 }
-                return this.mWindowManager;
+                return this.mChildWindowManager;
             }
             setCallback(callback) {
                 this.mCallback = callback;
@@ -23061,10 +23081,16 @@ var android;
                 return this.mCallback;
             }
             setFloating(isFloating) {
+                const attrs = this.getAttributes();
+                if (isFloating === attrs.isFloating())
+                    return;
                 if (isFloating)
-                    this.mWindowAttributes.flags |= WindowManager.LayoutParams.FLAG_FLOATING;
+                    attrs.flags |= WindowManager.LayoutParams.FLAG_FLOATING;
                 else
-                    this.mWindowAttributes.flags &= ~WindowManager.LayoutParams.FLAG_FLOATING;
+                    attrs.flags &= ~WindowManager.LayoutParams.FLAG_FLOATING;
+                if (this.mCallback != null) {
+                    this.mCallback.onWindowAttributesChanged(attrs);
+                }
             }
             isFloating() {
                 return this.mWindowAttributes.isFloating();
@@ -23092,10 +23118,14 @@ var android;
                 }
             }
             setWindowAnimations(enterAnimation, exitAnimation, resumeAnimation = this.mWindowAttributes.resumeAnimation, hideAnimation = this.mWindowAttributes.hideAnimation) {
-                this.mWindowAttributes.enterAnimation = enterAnimation;
-                this.mWindowAttributes.exitAnimation = exitAnimation;
-                this.mWindowAttributes.resumeAnimation = resumeAnimation;
-                this.mWindowAttributes.hideAnimation = hideAnimation;
+                const attrs = this.getAttributes();
+                attrs.enterAnimation = enterAnimation;
+                attrs.exitAnimation = exitAnimation;
+                attrs.resumeAnimation = resumeAnimation;
+                attrs.hideAnimation = hideAnimation;
+                if (this.mCallback != null) {
+                    this.mCallback.onWindowAttributesChanged(attrs);
+                }
             }
             addFlags(flags) {
                 this.setFlags(flags, flags);
@@ -23151,10 +23181,10 @@ var android;
             }
             makeActive() {
                 if (this.mContainer != null) {
-                    if (this.mContainer.mActiveChild != null) {
-                        this.mContainer.mActiveChild.mIsActive = false;
+                    if (this.mContainer.mActiveWindow != null) {
+                        this.mContainer.mActiveWindow.mIsActive = false;
                     }
-                    this.mContainer.mActiveChild = this;
+                    this.mContainer.mActiveWindow = this;
                 }
                 this.mIsActive = true;
                 this.onActive();
@@ -23191,7 +23221,7 @@ var android;
                 return this.mContext.getLayoutInflater();
             }
             setTitle(title) {
-                this.mTitle = title;
+                this.getAttributes().setTitle(title);
             }
             setBackgroundDrawable(drawable) {
                 if (this.mDecor != null) {
@@ -23346,62 +23376,401 @@ var android;
  * Created by linfaxin on 15/10/11.
  */
 ///<reference path="../view/Window.ts"/>
+///<reference path="../view/WindowManager.ts"/>
 ///<reference path="../content/Context.ts"/>
 ///<reference path="../view/View.ts"/>
 ///<reference path="../view/ViewGroup.ts"/>
 ///<reference path="../view/ViewRootImpl.ts"/>
+///<reference path="../view/KeyEvent.ts"/>
+///<reference path="../view/animation/Animation.ts"/>
 ///<reference path="../widget/FrameLayout.ts"/>
 ///<reference path="../view/MotionEvent.ts"/>
 ///<reference path="../view/LayoutInflater.ts"/>
 ///<reference path="../os/Bundle.ts"/>
+///<reference path="../os/Handler.ts"/>
+///<reference path="../util/Log.ts"/>
 ///<reference path="../content/Intent.ts"/>
 ///<reference path="../../androidui/AndroidUI.ts"/>
+///<reference path="../../java/lang/Runnable.ts"/>
 var android;
 (function (android) {
     var app;
     (function (app) {
         var View = android.view.View;
+        var KeyEvent = android.view.KeyEvent;
+        var MotionEvent = android.view.MotionEvent;
         var Window = android.view.Window;
+        var Log = android.util.Log;
         var Context = android.content.Context;
         var Intent = android.content.Intent;
         class Activity extends Context {
-            onCreate() {
-            }
-            performCreate() {
+            constructor(androidUI) {
+                super(androidUI);
+                this.mWindowAdded = false;
+                this.mVisibleFromClient = true;
+                this.mResultCode = Activity.RESULT_CANCELED;
+                this.mResultData = null;
                 this.mWindow = new Window(this);
                 this.mWindow.setWindowAnimations(android.R.anim.activity_open_enter_ios, android.R.anim.activity_close_exit_ios, android.R.anim.activity_close_enter_ios, android.R.anim.activity_open_exit_ios);
-                this.onCreate();
-            }
-            setIntent(intent) {
-                this.mIntent = intent;
             }
             getIntent() {
                 return this.mIntent;
             }
+            setIntent(newIntent) {
+                this.mIntent = newIntent;
+            }
+            getApplication() {
+                return this.getApplicationContext();
+            }
+            getWindowManager() {
+                return this.mWindow.getChildWindowManager();
+            }
+            getGlobalWindowManager() {
+                return this.getApplicationContext().getWindowManager();
+            }
             getWindow() {
                 return this.mWindow;
             }
-            getWindowManager() {
-                return this.mWindow.getWindowManager();
+            getCurrentFocus() {
+                return this.mWindow != null ? this.mWindow.getCurrentFocus() : null;
             }
-            startActivity(intent, options) {
-                if (typeof intent === 'string')
-                    intent = new Intent(intent);
-                this.androidUI.mActivityThread.scheduleLaunchActivity(intent, options);
+            onCreate(savedInstanceState) {
+                if (Activity.DEBUG_LIFECYCLE)
+                    Log.v(Activity.TAG, "onCreate " + this + ": " + savedInstanceState);
+                this.getApplication().dispatchActivityCreated(this, savedInstanceState);
+                this.mCalled = true;
             }
-            setContentView(view) {
+            performRestoreInstanceState(savedInstanceState) {
+                this.onRestoreInstanceState(savedInstanceState);
+            }
+            onRestoreInstanceState(savedInstanceState) {
+            }
+            onPostCreate(savedInstanceState) {
+                this.onTitleChanged(this.getTitle());
+                this.mCalled = true;
+            }
+            onStart() {
+                if (Activity.DEBUG_LIFECYCLE)
+                    Log.v(Activity.TAG, "onStart " + this);
+                this.mCalled = true;
+                this.getApplication().dispatchActivityStarted(this);
+            }
+            onRestart() {
+                this.mCalled = true;
+            }
+            onResume() {
+                if (Activity.DEBUG_LIFECYCLE)
+                    Log.v(Activity.TAG, "onResume " + this);
+                this.getApplication().dispatchActivityResumed(this);
+                this.mCalled = true;
+            }
+            onPostResume() {
+                const win = this.getWindow();
+                if (win != null)
+                    win.makeActive();
+                this.mCalled = true;
+            }
+            onNewIntent(intent) {
+            }
+            performSaveInstanceState(outState) {
+                this.onSaveInstanceState(outState);
+                if (Activity.DEBUG_LIFECYCLE)
+                    Log.v(Activity.TAG, "onSaveInstanceState " + this + ": " + outState);
+            }
+            onSaveInstanceState(outState) {
+                this.getApplication().dispatchActivitySaveInstanceState(this, outState);
+            }
+            onPause() {
+                if (Activity.DEBUG_LIFECYCLE)
+                    Log.v(Activity.TAG, "onPause " + this);
+                this.getApplication().dispatchActivityPaused(this);
+                this.mCalled = true;
+            }
+            onUserLeaveHint() {
+            }
+            onStop() {
+                if (Activity.DEBUG_LIFECYCLE)
+                    Log.v(Activity.TAG, "onStop " + this);
+                this.getApplication().dispatchActivityStopped(this);
+                this.mCalled = true;
+            }
+            onDestroy() {
+                if (Activity.DEBUG_LIFECYCLE)
+                    Log.v(Activity.TAG, "onDestroy " + this);
+                this.mCalled = true;
+                this.getApplication().dispatchActivityDestroyed(this);
+            }
+            findViewById(id) {
+                return this.getWindow().findViewById(id);
+            }
+            setContentView(view, params) {
                 if (!(view instanceof View)) {
                     view = this.getLayoutInflater().inflate(view);
                 }
-                this.mWindow.setContentView(view);
+                this.getWindow().setContentView(view, params);
             }
             addContentView(view, params) {
                 this.mWindow.addContentView(view, params);
             }
-            findViewById(id) {
-                return this.mWindow.findViewById(id);
+            setFinishOnTouchOutside(finish) {
+                this.mWindow.setCloseOnTouchOutside(finish);
+            }
+            onKeyDown(keyCode, event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    event.startTracking();
+                    return true;
+                }
+                return false;
+            }
+            onKeyLongPress(keyCode, event) {
+                return false;
+            }
+            onKeyUp(keyCode, event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK && event.isTracking() && !event.isCanceled()) {
+                    this.onBackPressed();
+                    return true;
+                }
+                return false;
+            }
+            onBackPressed() {
+                this.finish();
+            }
+            onTouchEvent(event) {
+                if (this.mWindow.shouldCloseOnTouch(this, event)) {
+                    this.finish();
+                    return true;
+                }
+                return false;
+            }
+            onGenericMotionEvent(event) {
+                return false;
+            }
+            onUserInteraction() {
+            }
+            onWindowAttributesChanged(params) {
+                let decor = this.getWindow().getDecorView();
+                if (decor != null && decor.getParent() != null) {
+                    this.getWindowManager().updateWindowLayout(this.getWindow(), params);
+                }
+            }
+            onContentChanged() {
+            }
+            onWindowFocusChanged(hasFocus) {
+            }
+            onAttachedToWindow() {
+            }
+            onDetachedFromWindow() {
+            }
+            hasWindowFocus() {
+                let w = this.getWindow();
+                if (w != null) {
+                    let d = w.getDecorView();
+                    if (d != null) {
+                        return d.hasWindowFocus();
+                    }
+                }
+                return false;
+            }
+            dispatchKeyEvent(event) {
+                this.onUserInteraction();
+                let win = this.getWindow();
+                if (win.superDispatchKeyEvent(event)) {
+                    return true;
+                }
+                let decor = win.getDecorView();
+                return event.dispatch(this, decor != null ? decor.getKeyDispatcherState() : null, this);
+            }
+            dispatchTouchEvent(ev) {
+                if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+                    this.onUserInteraction();
+                }
+                if (this.getWindow().superDispatchTouchEvent(ev)) {
+                    return true;
+                }
+                return this.onTouchEvent(ev);
+            }
+            dispatchGenericMotionEvent(ev) {
+                this.onUserInteraction();
+                if (this.getWindow().superDispatchGenericMotionEvent(ev)) {
+                    return true;
+                }
+                return this.onGenericMotionEvent(ev);
+            }
+            takeKeyEvents(_get) {
+                this.getWindow().takeKeyEvents(_get);
+            }
+            startActivityForResult(intent, requestCode, options) {
+                if (typeof intent === 'string')
+                    intent = new Intent(intent);
+                this.androidUI.mActivityThread.scheduleLaunchActivity(intent, options);
+                if (requestCode >= 0) {
+                    this.mStartedActivity = true;
+                }
+                const decor = this.mWindow != null ? this.mWindow.peekDecorView() : null;
+                if (decor != null) {
+                    decor.cancelPendingInputEvents();
+                }
+            }
+            startActivities(intents, options) {
+                for (let intent of intents) {
+                    this.startActivity(intent, options);
+                }
+            }
+            startActivity(intent, options) {
+                if (options != null) {
+                    this.startActivityForResult(intent, -1, options);
+                }
+                else {
+                    this.startActivityForResult(intent, -1);
+                }
+            }
+            startActivityIfNeeded(intent, requestCode, options) {
+                this.startActivityForResult(intent, requestCode, options);
+                return true;
+            }
+            overridePendingTransition(enterAnimation, exitAnimation, resumeAnimation, hideAnimation) {
+                if (arguments.length === 2) {
+                }
+                else {
+                }
+            }
+            setResult(resultCode, data) {
+                {
+                    this.mResultCode = resultCode;
+                    this.mResultData = data;
+                }
+            }
+            getCallingActivity() {
+                return null;
+            }
+            setVisible(visible) {
+                if (this.mVisibleFromClient != visible) {
+                    this.mVisibleFromClient = visible;
+                }
+            }
+            makeVisible() {
+                if (!this.mWindowAdded) {
+                    let wm = this.getGlobalWindowManager();
+                    wm.addWindow(this.getWindow());
+                    this.mWindowAdded = true;
+                }
+                this.getWindow().getDecorView().setVisibility(View.VISIBLE);
+            }
+            isFinishing() {
+                return this.mFinished;
+            }
+            isDestroyed() {
+                return this.mDestroyed;
+            }
+            finish() {
+                let resultCode = this.mResultCode;
+                let resultData = this.mResultData;
+                try {
+                    this.androidUI.mActivityThread.performFinishActivity(this);
+                }
+                catch (e) {
+                }
+            }
+            onActivityResult(requestCode, resultCode, data) {
+            }
+            setTitle(title) {
+                this.getWindow().setTitle(title);
+                this.onTitleChanged(title);
+            }
+            getTitle() {
+                return this.getWindow().getAttributes().getTitle();
+            }
+            onTitleChanged(title, color) {
+                const win = this.getWindow();
+                if (win != null) {
+                    win.setTitle(title);
+                }
+            }
+            runOnUiThread(action) {
+                action.run();
+            }
+            performCreate(icicle) {
+                this.onCreate(icicle);
+            }
+            performStart() {
+                this.mCalled = false;
+                this.onStart();
+                if (!this.mCalled) {
+                    throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onStart()")`);
+                }
+            }
+            performRestart() {
+                if (this.mStopped) {
+                    this.mStopped = false;
+                    this.mCalled = false;
+                    this.onRestart();
+                    if (!this.mCalled) {
+                        throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onRestart()")`);
+                    }
+                    this.performStart();
+                }
+            }
+            performResume() {
+                this.performRestart();
+                this.mCalled = false;
+                this.mResumed = true;
+                this.onResume();
+                if (!this.mCalled) {
+                    throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onResume()")`);
+                }
+                this.mCalled = false;
+                this.onPostResume();
+                if (!this.mCalled) {
+                    throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPostResume()")`);
+                }
+            }
+            performPause() {
+                this.mCalled = false;
+                this.onPause();
+                this.mResumed = false;
+                if (!this.mCalled) {
+                    throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPause()")`);
+                }
+                this.mResumed = false;
+            }
+            performUserLeaving() {
+                this.onUserInteraction();
+                this.onUserLeaveHint();
+            }
+            performStop() {
+                if (!this.mStopped) {
+                    this.mCalled = false;
+                    this.onStop();
+                    if (!this.mCalled) {
+                        throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onStop()")`);
+                    }
+                    this.mStopped = true;
+                }
+                this.mResumed = false;
+            }
+            performDestroy() {
+                this.mDestroyed = true;
+                this.mWindow.destroy();
+                this.onDestroy();
+            }
+            isResumed() {
+                return this.mResumed;
+            }
+            dispatchActivityResult(who, requestCode, resultCode, data) {
+                if (false)
+                    Log.v(Activity.TAG, "Dispatching result: who=" + who + ", reqCode=" + requestCode + ", resCode=" + resultCode + ", data=" + data);
+                if (who == null) {
+                    this.onActivityResult(requestCode, resultCode, data);
+                }
+                else {
+                }
             }
         }
+        Activity.TAG = "Activity";
+        Activity.DEBUG_LIFECYCLE = false;
+        Activity.RESULT_CANCELED = 0;
+        Activity.RESULT_OK = -1;
+        Activity.RESULT_FIRST_USER = 1;
         app.Activity = Activity;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
@@ -47766,7 +48135,7 @@ var android;
                 wp.height = wp.width = ViewGroup.LayoutParams.WRAP_CONTENT;
                 wp.leftMargin = wp.rightMargin = wp.topMargin = wp.bottomMargin = dm.density * 16;
                 w.setWindowAnimations(android.R.anim.dialog_enter, android.R.anim.dialog_exit, null, null);
-                w.setWindowManager(this.mWindowManager);
+                w.setChildWindowManager(this.mWindowManager);
                 w.setGravity(Gravity.CENTER);
                 w.setCallback(this);
                 this.mListenersHandler = new Dialog.ListenersHandler(this);

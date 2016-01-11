@@ -171,7 +171,7 @@ export class Window {
 
     private mCallback:Window.Callback;
 
-    private mWindowManager:WindowManager;
+    private mChildWindowManager:WindowManager;
 
     //private mAppToken:IBinder;
 
@@ -179,13 +179,12 @@ export class Window {
 
     //private mHardwareAccelerated:boolean;
 
-    private mContainer:Window;
+    private mContainer:WindowManager;
 
-    private mActiveChild:Window;
 
     private mIsActive:boolean = false;
-
-    private mHasChildren:boolean = false;
+    //
+    //private mHasChildren:boolean = false;
 
     private mCloseOnTouchOutside:boolean = false;
 
@@ -219,7 +218,7 @@ export class Window {
     // mDecor itself, or a child of mDecor where the contents go.
     private mContentParent:ViewGroup;
 
-    private mTitle:string;
+    //private mTitle:string;
 
     constructor(context:Context) {
         this.mContext = context;
@@ -272,17 +271,14 @@ export class Window {
      *
      * @param container The desired containing Window.
      */
-    setContainer(container:Window):void  {
+    setContainer(container:WindowManager):void  {
         this.mContainer = container;
-        if (container != null) {
-            // Embedded screens never have a title.
-            //this.mFeatures |= 1 << Window.FEATURE_NO_TITLE;
-            //this.mLocalFeatures |= 1 << Window.FEATURE_NO_TITLE;
-            container.mHasChildren = true;
-        }
-
-        //androidui add
-        this.setWindowManager(container.getWindowManager());
+        //if (container != null) {
+        //    // Embedded screens never have a title.
+        //    //this.mFeatures |= 1 << Window.FEATURE_NO_TITLE;
+        //    //this.mLocalFeatures |= 1 << Window.FEATURE_NO_TITLE;
+        //    container.mHasChildren = true;
+        //}
     }
 
     /**
@@ -291,13 +287,13 @@ export class Window {
      * @return Window The containing window, or null if this is a
      *         top-level window.
      */
-    getContainer():Window  {
+    getContainer():WindowManager  {
         return this.mContainer;
     }
 
-    hasChildren():boolean  {
-        return this.mHasChildren;
-    }
+    //hasChildren():boolean  {
+    //    return this.mHasChildren;
+    //}
 
     /** @hide */
     destroy():void  {
@@ -308,7 +304,7 @@ export class Window {
     isDestroyed():boolean  {
         return this.mDestroyed;
     }
-    setWindowManager(wm:WindowManager):void  {
+    setChildWindowManager(wm:WindowManager):void  {
         //this.mAppToken = appToken;
         //this.mAppName = appName;
         //this.mHardwareAccelerated = hardwareAccelerated;// || SystemProperties.getBoolean(Window.PROPERTY_HARDWARE_UI, false);
@@ -317,10 +313,10 @@ export class Window {
         //}
         //this.mWindowManager = (<WindowManagerImpl> wm).createLocalWindowManager(this);
 
-        if(this.mWindowManager){
-            this.mDecor.removeView(this.mWindowManager.getWindowsLayout());
+        if(this.mChildWindowManager){
+            this.mDecor.removeView(this.mChildWindowManager.getWindowsLayout());
         }
-        this.mWindowManager = wm;
+        this.mChildWindowManager = wm;
     }
 
     //adjustLayoutParamsForSubWindow(wp:WindowManager.LayoutParams):void  {
@@ -374,12 +370,12 @@ export class Window {
      *
      * @return WindowManager The ViewManager.
      */
-    getWindowManager():WindowManager  {
-        if(!this.mWindowManager){
-            this.mWindowManager = new WindowManager(this.mContext);
-            this.mDecor.addView(this.mWindowManager.getWindowsLayout(), -1, -1);
+    getChildWindowManager():WindowManager  {
+        if(!this.mChildWindowManager){
+            this.mChildWindowManager = new WindowManager(this.mContext);
+            this.mDecor.addView(this.mChildWindowManager.getWindowsLayout(), -1, -1);
         }
-        return this.mWindowManager;
+        return this.mChildWindowManager;
     }
 
     /**
@@ -417,8 +413,13 @@ export class Window {
 //takeInputQueue(callback:InputQueue.Callback):void ;
 
     setFloating(isFloating:boolean):void {
-        if(isFloating) this.mWindowAttributes.flags |= WindowManager.LayoutParams.FLAG_FLOATING;
-        else this.mWindowAttributes.flags &= ~WindowManager.LayoutParams.FLAG_FLOATING;
+        const attrs:WindowManager.LayoutParams = this.getAttributes();
+        if(isFloating === attrs.isFloating()) return;
+        if(isFloating) attrs.flags |= WindowManager.LayoutParams.FLAG_FLOATING;
+        else attrs.flags &= ~WindowManager.LayoutParams.FLAG_FLOATING;
+        if (this.mCallback != null) {
+            this.mCallback.onWindowAttributesChanged(attrs);
+        }
     }
 
     /**
@@ -516,15 +517,16 @@ export class Window {
      */
     setWindowAnimations(enterAnimation:Animation, exitAnimation:Animation,
                         resumeAnimation=this.mWindowAttributes.resumeAnimation, hideAnimation=this.mWindowAttributes.hideAnimation):void  {
-        this.mWindowAttributes.enterAnimation = enterAnimation;
-        this.mWindowAttributes.exitAnimation = exitAnimation;
-        this.mWindowAttributes.resumeAnimation = resumeAnimation;
-        this.mWindowAttributes.hideAnimation = hideAnimation;
+        const attrs:WindowManager.LayoutParams = this.getAttributes();
+        attrs.enterAnimation = enterAnimation;
+        attrs.exitAnimation = exitAnimation;
+        attrs.resumeAnimation = resumeAnimation;
+        attrs.hideAnimation = hideAnimation;
         //const attrs:WindowManager.LayoutParams = this.getAttributes();
         //attrs.windowAnimations = resId;
-        //if (this.mCallback != null) {
-        //    this.mCallback.onWindowAttributesChanged(attrs);
-        //}
+        if (this.mCallback != null) {
+            this.mCallback.onWindowAttributesChanged(attrs);
+        }
     }
 
 
@@ -733,20 +735,20 @@ export class Window {
     //    this.mLocalFeatures &= ~(this.mContainer != null ? (flag & ~this.mContainer.mFeatures) : flag);
     //}
 
-    makeActive():void  {
-        if (this.mContainer != null) {
-            if (this.mContainer.mActiveChild != null) {
-                this.mContainer.mActiveChild.mIsActive = false;
+        makeActive():void  {
+            if (this.mContainer != null) {
+                if (this.mContainer.mActiveWindow != null) {
+                    this.mContainer.mActiveWindow.mIsActive = false;
+                }
+                this.mContainer.mActiveWindow = this;
             }
-            this.mContainer.mActiveChild = this;
+            this.mIsActive = true;
+            this.onActive();
         }
-        this.mIsActive = true;
-        this.onActive();
-    }
 
-    isActive():boolean  {
-        return this.mIsActive;
-    }
+        isActive():boolean  {
+            return this.mIsActive;
+        }
 
     /**
      * Finds a view that was identified by the id attribute from the XML that
@@ -852,7 +854,7 @@ export class Window {
     }
 
     setTitle(title:string):void{
-        this.mTitle = title;
+        this.getAttributes().setTitle(title);
     }
 
 //    abstract
@@ -1080,7 +1082,7 @@ export class Window {
 //saveHierarchyState():Bundle ;
 //
 //    abstract
-//restoreHierarchyState(savedInstanceState:Bundle):void ;
+//restoreHierarchyState(savedInstanceState:Bundle):void//
 
     protected onActive():void {
     }

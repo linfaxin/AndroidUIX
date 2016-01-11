@@ -237,7 +237,7 @@ module PageStack{
     /**
      * call when app logic already close page. sync browser history here.
      */
-    export function notifyPageClosed(pageId:string, pageExtra:any):boolean{
+    export function notifyPageClosed(pageId:string, pageExtra?:any):boolean{
         if(historyLocking){
             console.error('cant notifyPageClosed when waiting history change finish');
             return;
