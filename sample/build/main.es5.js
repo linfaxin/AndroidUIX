@@ -226,6 +226,7 @@ var sample;
         var Activity = android.app.Activity;
         var AlertDialog = android.app.AlertDialog;
         var NetDrawable = androidui.image.NetDrawable;
+        var Toast = android.widget.Toast;
         var R = sample.app.R;
 
         var SampleBaseWidgetActivity = (function (_Activity2) {
@@ -240,13 +241,14 @@ var sample;
             _createClass(SampleBaseWidgetActivity, [{
                 key: "onCreate",
                 value: function onCreate() {
+                    var activity = this;
                     this.setContentView(R.layout.sample_base_widget);
                     var btnOpenDialog = this.findViewById('btn_open_dialog');
                     btnOpenDialog.setOnClickListener({
                         onClick: function onClick(view) {
                             new AlertDialog.Builder(view.getContext()).setTitle('标题').setMessage('内容内容\n*支持后退按钮关闭对话框:)').setPositiveButton(android.R.string_.ok, {
                                 onClick: function onClick(dialog, which) {
-                                    console.log('dialog click ok');
+                                    Toast.makeText(activity, '按下确定', Toast.LENGTH_SHORT).show();
                                 }
                             }).setIcon(new NetDrawable('assets/images/logo_android_1@2x.png')).setNegativeButton(android.R.string_.cancel, null).show();
                         }

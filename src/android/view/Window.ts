@@ -219,13 +219,7 @@ export class Window {
     // mDecor itself, or a child of mDecor where the contents go.
     private mContentParent:ViewGroup;
 
-    private mIsFloating = false;
     private mTitle:string;
-
-    private mExitAnimation:Animation = android.R.anim.activity_close_exit_ios;
-    private mEnterAnimation:Animation = android.R.anim.activity_open_enter_ios;
-    private mShowAnimation:Animation = android.R.anim.activity_close_enter_ios;
-    private mHideAnimation:Animation = android.R.anim.activity_open_exit_ios;
 
     constructor(context:Context) {
         this.mContext = context;
@@ -423,7 +417,8 @@ export class Window {
 //takeInputQueue(callback:InputQueue.Callback):void ;
 
     setFloating(isFloating:boolean):void {
-        this.mIsFloating = isFloating;
+        if(isFloating) this.mWindowAttributes.flags |= WindowManager.LayoutParams.FLAG_FLOATING;
+        else this.mWindowAttributes.flags &= ~WindowManager.LayoutParams.FLAG_FLOATING;
     }
 
     /**
@@ -435,7 +430,7 @@ export class Window {
      * on top of whatever is behind it.
      */
     isFloating():boolean{
-        return this.mIsFloating;
+        return this.mWindowAttributes.isFloating();
     }
 
     /**
@@ -519,11 +514,12 @@ export class Window {
     /**
      * Specify custom animations to use for the window
      */
-    setWindowAnimations(enterAnimation:Animation, exitAnimation:Animation, showAnimation=this.mShowAnimation, hideAnimation=this.mHideAnimation):void  {
-        this.mEnterAnimation = enterAnimation;
-        this.mExitAnimation = exitAnimation;
-        this.mShowAnimation = showAnimation;
-        this.mHideAnimation = hideAnimation;
+    setWindowAnimations(enterAnimation:Animation, exitAnimation:Animation,
+                        resumeAnimation=this.mWindowAttributes.resumeAnimation, hideAnimation=this.mWindowAttributes.hideAnimation):void  {
+        this.mWindowAttributes.enterAnimation = enterAnimation;
+        this.mWindowAttributes.exitAnimation = exitAnimation;
+        this.mWindowAttributes.resumeAnimation = resumeAnimation;
+        this.mWindowAttributes.hideAnimation = hideAnimation;
         //const attrs:WindowManager.LayoutParams = this.getAttributes();
         //attrs.windowAnimations = resId;
         //if (this.mCallback != null) {
@@ -828,6 +824,10 @@ export class Window {
         if (cb != null && !this.isDestroyed()) {
             cb.onContentChanged();
         }
+    }
+
+    getContentParent():ViewGroup{
+        return this.mContentParent;
     }
 
     /**
@@ -1491,8 +1491,9 @@ export interface Callback {
         protected drawFromParent(canvas:android.graphics.Canvas, parent:ViewGroup, drawingTime:number):boolean {
             //draw shadow when window enter/exit
             let windowAnimation = this.getAnimation();
-            let shadowAlpha:number = this.Window_this.getAttributes().dimAmount * 255;
-            if(windowAnimation!=null){
+            let wparams = <WindowManager.LayoutParams>this.getLayoutParams();
+            let shadowAlpha:number = wparams.dimAmount * 255;//default full shadow
+            if(windowAnimation!=null && shadowAlpha){
                 const duration:number = windowAnimation.getDuration();
                 let startTime:number = windowAnimation.getStartTime();
                 if(startTime<0) startTime = drawingTime;
@@ -1507,16 +1508,16 @@ export interface Callback {
                 }
                 const interpolatedTime:number = windowAnimation.getInterpolator().getInterpolation(normalizedTime);
 
-                if(windowAnimation === this.Window_this.mExitAnimation){
+                if(windowAnimation === wparams.exitAnimation){
                     shadowAlpha = shadowAlpha * (1-interpolatedTime);
                     parent.invalidate();
 
-                }else if(windowAnimation === this.Window_this.mEnterAnimation){
+                }else if(windowAnimation === wparams.enterAnimation){
                     shadowAlpha = shadowAlpha * interpolatedTime;
                     parent.invalidate();
                 }
             }
-            if( (windowAnimation!=null || this.Window_this.isFloating()) && shadowAlpha){
+            if( (windowAnimation!=null || wparams.isFloating()) && shadowAlpha){
                 canvas.drawColor(android.graphics.Color.argb(shadowAlpha, 0, 0, 0));
             }
 

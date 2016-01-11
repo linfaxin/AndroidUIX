@@ -456,5 +456,17 @@ module android.R{
             return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
         }
 
+        static get toast_frame(){
+            //TODO when .9.png support replace with image
+            let bg = new ColorDrawable(0xff333333);
+            bg.getIntrinsicWidth = ()=> 80 * density;
+            bg.getIntrinsicHeight = ()=> 16 * density;
+            bg.getPadding = (rect)=>{
+                rect.set(6 * density, 4 * density, 6 * density, 4 * density);
+                return true;
+            };
+            return bg;
+        }
+
     }
 }

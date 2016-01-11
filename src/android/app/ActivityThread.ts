@@ -78,7 +78,7 @@ module android.app{
             if(activity instanceof Activity){
                 activity.setIntent(intent);
                 activity.performCreate();
-                this.androidUI.windowManager.addWindow(activity.getWindow());//TODO window params
+                this.androidUI.windowManager.addWindow(activity.getWindow());
 
                 this.mLaunchedActivities.add(activity);
                 //TODO activity life callback

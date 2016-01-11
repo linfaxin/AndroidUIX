@@ -27,6 +27,7 @@
 ///<reference path="android/widget/RatingBar.ts"/>
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
+///<reference path="android/widget/Toast.ts"/>
 
 ///<reference path="android/app/AlertDialog.ts"/>
 

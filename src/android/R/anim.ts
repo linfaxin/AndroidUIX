@@ -130,5 +130,33 @@ module android.R {
             return animSet;
         }
 
+        static get fade_in():Animation {
+            let alpha = new AlphaAnimation(0, 1);
+            alpha.setDuration(500);
+            alpha.setInterpolator(R.interpolator.decelerate_quad);
+            return alpha;
+        }
+
+        static get fade_out():Animation {
+            let alpha = new AlphaAnimation(1, 0);
+            alpha.setDuration(400);
+            alpha.setInterpolator(R.interpolator.accelerate_quad);
+            return alpha;
+        }
+
+        static get toast_enter():Animation {
+            let alpha = new AlphaAnimation(0, 1);
+            alpha.setDuration(500);
+            alpha.setInterpolator(R.interpolator.decelerate_quad);
+            return alpha;
+        }
+
+        static get toast_exit():Animation {
+            let alpha = new AlphaAnimation(1, 0);
+            alpha.setDuration(500);
+            alpha.setInterpolator(R.interpolator.accelerate_quad);
+            return alpha;
+        }
+
     }
 }

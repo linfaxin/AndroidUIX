@@ -35,6 +35,9 @@ module android.app{
 
         private performCreate(){
             this.mWindow = new Window(this);
+            this.mWindow.setWindowAnimations(android.R.anim.activity_open_enter_ios, android.R.anim.activity_close_exit_ios,
+                android.R.anim.activity_close_enter_ios, android.R.anim.activity_open_exit_ios);
+
             this.onCreate();
         }
 

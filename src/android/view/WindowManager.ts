@@ -79,8 +79,8 @@ export class WindowManager {
         return this.mWindowsLayout;
     }
 
-    addWindow(window:Window, params?:ViewGroup.LayoutParams):void{
-        let wparams = <WindowManager.LayoutParams>params;
+    addWindow(window:Window):void{
+        let wparams = window.getAttributes();
         if(!wparams){
             wparams = new WindowManager.LayoutParams();
         }
@@ -88,8 +88,11 @@ export class WindowManager {
             throw Error('can\'t addWindow, params must be WindowManager.LayoutParams : '+wparams);
         }
 
-        if(!window.isFloating()) this.clearWindowVisible();
+        if(!wparams.isFloating()) this.clearWindowVisible();
         let decorView = window.getDecorView();
+
+        //TODO use type as z-index
+        let type = wparams.type;
         this.mWindowsLayout.addView(decorView, wparams);
 
         decorView.dispatchAttachedToWindow(window.mAttachInfo, 0);
@@ -100,8 +103,8 @@ export class WindowManager {
             decorView.dispatchWindowFocusChanged(true);
         }
 
-        if(window.mEnterAnimation){
-            window.mDecor.startAnimation(window.mEnterAnimation);
+        if(wparams.enterAnimation){
+            decorView.startAnimation(wparams.enterAnimation);
         }
     }
 
@@ -114,22 +117,30 @@ export class WindowManager {
 
     removeWindow(window:Window):void{
         let decor = window.getDecorView();
-        if(window.mExitAnimation){
+        if(decor.getParent() !== this.mWindowsLayout){
+            console.error('removeWindow fail, don\'t has the window');
+            return;
+        }
+        let wparams = <WindowManager.LayoutParams>decor.getLayoutParams();
+        if(wparams.exitAnimation){
             let t = this;
-            window.mExitAnimation.setAnimationListener({
+            wparams.exitAnimation.setAnimationListener({
                 onAnimationStart(animation:Animation):void{
                     decor.postOnAnimation({//remove next frame to avoid draw again at this frame. (ViewGroup's DisappearingChildren)
                         run(){
+                            let isVisible = decor.getVisibility() === View.VISIBLE;
                             (<ViewGroup>decor.getParent()).removeView(decor);
-                            t.checkTopLevelWindowVisible(!window.isFloating());
-                            t.checkTopLevelWindowFocus();
+                            if(isVisible) {
+                                t.checkTopLevelWindowVisible(!wparams.isFloating());
+                                t.checkTopLevelWindowFocus();
+                            }
                         }
                     });
                 },
                 onAnimationEnd(animation:Animation):void{},
                 onAnimationRepeat(animation:Animation):void{}
             });
-            decor.startAnimation(window.mExitAnimation);
+            decor.startAnimation(wparams.exitAnimation);
         }else{
             (<ViewGroup>decor.getParent()).removeView(decor);
         }
@@ -139,19 +150,18 @@ export class WindowManager {
         for(let i=0, count=this.mWindowsLayout.getChildCount(); i<count; i++){
             let decorView = this.mWindowsLayout.getChildAt(i);
             if(decorView.getVisibility() == View.VISIBLE){
-                let window = (<android.app.Activity>decorView.getContext()).getWindow();
-                let decor = window.mDecor;
-                if(window.mHideAnimation){
-                    window.mHideAnimation.setAnimationListener({
+                let wparams = <WindowManager.LayoutParams>decorView.getLayoutParams();
+                if(wparams.hideAnimation){
+                    wparams.hideAnimation.setAnimationListener({
                         onAnimationStart(animation:Animation):void{
-                            decor.setVisibility(View.GONE);
+                            decorView.setVisibility(View.GONE);
                         },
                         onAnimationEnd(animation:Animation):void{},
                         onAnimationRepeat(animation:Animation):void{}
                     });
-                    decor.startAnimation(window.mHideAnimation);
+                    decorView.startAnimation(wparams.hideAnimation);
                 }else{
-                    decor.setVisibility(View.GONE);
+                    decorView.setVisibility(View.GONE);
                 }
             }
         }
@@ -164,16 +174,16 @@ export class WindowManager {
         //TODO top-level window should gain focus
     }
     private checkTopLevelWindowVisible(showAnim=true){
-        for(let i=this.mWindowsLayout.getChildCount()-1; i>=0; i++){
+        for(let i=this.mWindowsLayout.getChildCount()-1; i>=0; i--){
             let decorView = this.mWindowsLayout.getChildAt(i);
-            let window = (<android.app.Activity>decorView.getContext()).getWindow();
+            let wparams = <WindowManager.LayoutParams>decorView.getLayoutParams();
 
-            window.mDecor.setVisibility(View.VISIBLE);
-            if(showAnim && window.mShowAnimation){
-                window.mDecor.startAnimation(window.mShowAnimation);
+            decorView.setVisibility(View.VISIBLE);
+            if(showAnim && wparams.resumeAnimation){
+                decorView.startAnimation(wparams.resumeAnimation);
             }
 
-            if(!window.isFloating()){
+            if(!wparams.isFloating()){
                 break;
             }
         }
@@ -221,19 +231,19 @@ export module WindowManager{
 
 export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
 
-    ///**
-    //     * X position for this window.  With the default gravity it is ignored.
-    //     * When using {@link Gravity#LEFT} or {@link Gravity#START} or {@link Gravity#RIGHT} or
-    //     * {@link Gravity#END} it provides an offset from the given edge.
-    //     */
-    //x:number = 0;
-    //
-    ///**
-    //     * Y position for this window.  With the default gravity it is ignored.
-    //     * When using {@link Gravity#TOP} or {@link Gravity#BOTTOM} it provides
-    //     * an offset from the given edge.
-    //     */
-    //y:number = 0;
+    /**
+         * X position for this window.  With the default gravity it is ignored.
+         * When using {@link Gravity#LEFT} or {@link Gravity#START} or {@link Gravity#RIGHT} or
+         * {@link Gravity#END} it provides an offset from the given edge.
+         */
+    x:number = 0;
+
+    /**
+         * Y position for this window.  With the default gravity it is ignored.
+         * When using {@link Gravity#TOP} or {@link Gravity#BOTTOM} it provides
+         * an offset from the given edge.
+         */
+    y:number = 0;
 
     ///**
     //     * Indicates how much of the extra space will be allocated horizontally
@@ -982,6 +992,12 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     //static FLAG_NEEDS_MENU_KEY:number = 0x40000000;
 
     /**
+     * is window floating
+     * @type {number}
+     */
+    static FLAG_FLOATING:number = 0x40000000;
+
+    /**
          * Various behavioral options/flags.  Default is none.
          * 
          * @see #FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
@@ -1008,6 +1024,7 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
          * @see #FLAG_SPLIT_TOUCH
          * @see #FLAG_HARDWARE_ACCELERATED
          * @see #FLAG_LOCAL_FOCUS_MODE
+         * @see #FLAG_FLOATING
          */
     flags:number = 0;
 
@@ -1293,6 +1310,11 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     //     * because the window manager does not have access to applications.
     //     */
     //windowAnimations:number = 0;
+    exitAnimation:Animation = android.R.anim.activity_close_exit;
+    enterAnimation:Animation = android.R.anim.activity_open_enter;
+    resumeAnimation:Animation = android.R.anim.activity_close_enter;
+    hideAnimation:Animation = android.R.anim.activity_open_exit;
+
     //
     ///**
     //     * An alpha value to apply to this entire window.
@@ -1589,14 +1611,14 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
             this.height = o.height;
             changes |= LayoutParams.LAYOUT_CHANGED;
         }
-        //if (this.x != o.x) {
-        //    this.x = o.x;
-        //    changes |= LayoutParams.LAYOUT_CHANGED;
-        //}
-        //if (this.y != o.y) {
-        //    this.y = o.y;
-        //    changes |= LayoutParams.LAYOUT_CHANGED;
-        //}
+        if (this.x != o.x) {
+            this.x = o.x;
+            changes |= LayoutParams.LAYOUT_CHANGED;
+        }
+        if (this.y != o.y) {
+            this.y = o.y;
+            changes |= LayoutParams.LAYOUT_CHANGED;
+        }
         //if (this.horizontalWeight != o.horizontalWeight) {
         //    this.horizontalWeight = o.horizontalWeight;
         //    changes |= LayoutParams.LAYOUT_CHANGED;
@@ -1849,6 +1871,42 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     private mTitle:string = "";
 
 
+    public get leftMargin():number {
+        if( (this.gravity & Gravity.LEFT)!=0 ) return super.leftMargin + this.x;
+        return super.leftMargin;
+    }
+
+    public get topMargin():number {
+        if( (this.gravity & Gravity.TOP)!=0 ) return super.topMargin + this.y;
+        return super.topMargin;
+    }
+
+    public get rightMargin():number {
+        if( (this.gravity & Gravity.RIGHT)!=0 ) return super.rightMargin + this.x;
+        return super.rightMargin;
+    }
+
+    public get bottomMargin():number {
+        if( (this.gravity & Gravity.BOTTOM)!=0 ) return super.bottomMargin + this.y;
+        return super.bottomMargin;
+    }
+
+    public set leftMargin(value) {
+        super.leftMargin = value;
+    }
+
+    public set topMargin(value) {
+        super.topMargin = value;
+    }
+
+    public set rightMargin(value) {
+        super.rightMargin = value;
+    }
+
+    public set bottomMargin(value) {
+        super.bottomMargin = value;
+    }
+
     private isFocusable():boolean {
         return (this.flags & LayoutParams.FLAG_NOT_FOCUSABLE) == 0;
     }
@@ -1857,6 +1915,9 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     }
     private isTouchModal():boolean {
         return (this.flags & LayoutParams.FLAG_NOT_TOUCH_MODAL) == 0;
+    }
+    private isFloating():boolean {
+        return (this.flags & LayoutParams.FLAG_FLOATING) != 0;
     }
 }
 }

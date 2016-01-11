@@ -264,7 +264,7 @@ module android.app {
             //this.mWindow.setDefaultLogo(info.logo);
             //this.mActionBar = new ActionBarImpl(this);
             //}
-            let l:WindowManager.LayoutParams = this.mWindow.getAttributes();
+            //let l:WindowManager.LayoutParams = this.mWindow.getAttributes();
             //if ((l.softInputMode & WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION) == 0) {
             //    let nl:WindowManager.LayoutParams = new WindowManager.LayoutParams();
             //    nl.copyFrom(l);
@@ -272,7 +272,7 @@ module android.app {
             //    l = nl;
             //}
             try {
-                this.mWindowManager.addWindow(this.mWindow, l);
+                this.mWindowManager.addWindow(this.mWindow);
                 this.mShowing = true;
                 this.sendShowMessage();
             } finally {

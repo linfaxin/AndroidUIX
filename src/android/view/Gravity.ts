@@ -188,7 +188,7 @@ module android.view{
             }
         }
 
-        static getAbsoluteGravity(gravity:number, layoutDirection:number):number {
+        static getAbsoluteGravity(gravity:number, layoutDirection?:number):number {
             return gravity;//no need parse.
         }
         

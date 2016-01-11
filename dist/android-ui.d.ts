@@ -142,7 +142,7 @@ declare module android.view {
         static DISPLAY_CLIP_VERTICAL: number;
         static DISPLAY_CLIP_HORIZONTAL: number;
         static apply(gravity: number, w: number, h: number, container: Rect, outRect: Rect, layoutDirection?: number): void;
-        static getAbsoluteGravity(gravity: number, layoutDirection: number): number;
+        static getAbsoluteGravity(gravity: number, layoutDirection?: number): number;
     }
 }
 declare module android.util {
@@ -974,6 +974,7 @@ declare module android.R {
         static select_dialog_item: string;
         static select_dialog_multichoice: string;
         static select_dialog_singlechoice: string;
+        static transient_notification: string;
     }
 }
 declare module android.content.res {
@@ -1859,6 +1860,7 @@ declare module android.R {
 declare module android.R {
     import Drawable = android.graphics.drawable.Drawable;
     import InsetDrawable = android.graphics.drawable.InsetDrawable;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class drawable {
         static button_background: Drawable;
@@ -1893,6 +1895,7 @@ declare module android.R {
         static popup_center_bright: InsetDrawable;
         static popup_bottom_bright: InsetDrawable;
         static popup_bottom_medium: InsetDrawable;
+        static toast_frame: ColorDrawable;
     }
 }
 declare module androidui.image {
@@ -4221,11 +4224,12 @@ declare module android.view {
     import ViewGroup = android.view.ViewGroup;
     import Window = android.view.Window;
     import Context = android.content.Context;
+    import Animation = android.view.animation.Animation;
     class WindowManager {
         private mWindowsLayout;
         constructor(context: Context);
         getWindowsLayout(): ViewGroup;
-        addWindow(window: Window, params?: ViewGroup.LayoutParams): void;
+        addWindow(window: Window): void;
         updateWindowLayout(window: Window, params: ViewGroup.LayoutParams): void;
         removeWindow(window: Window): void;
         private clearWindowVisible();
@@ -4242,6 +4246,8 @@ declare module android.view {
             tagName(): string;
         }
         class LayoutParams extends android.widget.FrameLayout.LayoutParams {
+            x: number;
+            y: number;
             type: number;
             static FIRST_APPLICATION_WINDOW: number;
             static TYPE_BASE_APPLICATION: number;
@@ -4271,7 +4277,12 @@ declare module android.view {
             static FLAG_NOT_TOUCHABLE: number;
             static FLAG_NOT_TOUCH_MODAL: number;
             static FLAG_SPLIT_TOUCH: number;
+            static FLAG_FLOATING: number;
             flags: number;
+            exitAnimation: Animation;
+            enterAnimation: Animation;
+            resumeAnimation: Animation;
+            hideAnimation: Animation;
             dimAmount: number;
             constructor(_type?: number);
             setTitle(title: string): void;
@@ -4286,9 +4297,14 @@ declare module android.view {
             static ALPHA_CHANGED: number;
             copyFrom(o: LayoutParams): number;
             private mTitle;
+            leftMargin: number;
+            topMargin: number;
+            rightMargin: number;
+            bottomMargin: number;
             private isFocusable();
             private isTouchable();
             private isTouchModal();
+            private isFloating();
         }
     }
 }
@@ -4481,6 +4497,10 @@ declare module android.R {
         static activity_open_exit_ios: Animation;
         static dialog_enter: Animation;
         static dialog_exit: Animation;
+        static fade_in: Animation;
+        static fade_out: Animation;
+        static toast_enter: Animation;
+        static toast_exit: Animation;
     }
 }
 declare module android.view {
@@ -4508,12 +4528,7 @@ declare module android.view {
         private mAttachInfo;
         private mDecor;
         private mContentParent;
-        private mIsFloating;
         private mTitle;
-        private mExitAnimation;
-        private mEnterAnimation;
-        private mShowAnimation;
-        private mHideAnimation;
         constructor(context: Context);
         private initDecorView();
         private initAttachInfo();
@@ -4532,7 +4547,7 @@ declare module android.view {
         setLayout(width: number, height: number): void;
         setGravity(gravity: number): void;
         setType(type: number): void;
-        setWindowAnimations(enterAnimation: Animation, exitAnimation: Animation, showAnimation?: Animation, hideAnimation?: Animation): void;
+        setWindowAnimations(enterAnimation: Animation, exitAnimation: Animation, resumeAnimation?: Animation, hideAnimation?: Animation): void;
         addFlags(flags: number): void;
         clearFlags(flags: number): void;
         setFlags(flags: number, mask: number): void;
@@ -4548,6 +4563,7 @@ declare module android.view {
         findViewById(id: string): View;
         setContentView(view: View, params?: ViewGroup.LayoutParams): void;
         addContentView(view: View, params: ViewGroup.LayoutParams): void;
+        getContentParent(): ViewGroup;
         getCurrentFocus(): View;
         getLayoutInflater(): LayoutInflater;
         setTitle(title: string): void;
@@ -8105,6 +8121,57 @@ declare module android.widget {
         abstract getGroupView(groupPosition: number, isExpanded: boolean, convertView: android.view.View, parent: android.view.ViewGroup): android.view.View;
         abstract getChildView(groupPosition: number, childPosition: number, isLastChild: boolean, convertView: android.view.View, parent: android.view.ViewGroup): android.view.View;
         abstract isChildSelectable(groupPosition: number, childPosition: number): boolean;
+    }
+}
+declare module android.widget {
+    import Context = android.content.Context;
+    import Handler = android.os.Handler;
+    import View = android.view.View;
+    import WindowManager = android.view.WindowManager;
+    import Window = android.view.Window;
+    import Runnable = java.lang.Runnable;
+    class Toast {
+        static TAG: string;
+        static localLOGV: boolean;
+        static LENGTH_SHORT: number;
+        static LENGTH_LONG: number;
+        mContext: Context;
+        mTN: Toast.TN;
+        mDuration: number;
+        mNextView: View;
+        private mHandler;
+        private mDelayHide;
+        constructor(context: Context);
+        show(): void;
+        cancel(): void;
+        setView(view: View): void;
+        getView(): View;
+        setDuration(duration: number): void;
+        getDuration(): number;
+        setGravity(gravity: number, xOffset: number, yOffset: number): void;
+        getGravity(): number;
+        getXOffset(): number;
+        getYOffset(): number;
+        static makeText(context: Context, text: string, duration: number): Toast;
+        setText(s: string): void;
+    }
+    module Toast {
+        class TN {
+            mShow: Runnable;
+            mHide: Runnable;
+            mHandler: Handler;
+            mGravity: number;
+            mX: number;
+            mY: number;
+            mView: View;
+            mWindow: Window;
+            mNextView: View;
+            mWM: WindowManager;
+            show(): void;
+            hide(): void;
+            handleShow(): void;
+            handleHide(): void;
+        }
     }
 }
 declare module android.content {

@@ -4027,7 +4027,8 @@ var android;
             "select_dialog": "<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the ListView to display the items.\n    Assign an ID so its state will be saved/restored.\n-->\n<view class=\"android.app.AlertController.RecycleListView\"\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"select_dialog_listview\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:cacheColorHint=\"@null\"\n    android:divider=\"@android:drawable/list_divider\"\n    android:scrollbars=\"vertical\"\n    android:overScrollMode=\"ifContentScrolls\"\n    android:textAlignment=\"viewStart\" />\n",
             "select_dialog_item": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the TextView to display individual\n    items.\n-->\n<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:ellipsize=\"marquee\"\n></TextView>\n",
             "select_dialog_multichoice": "\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_check\"\n    android:ellipsize=\"marquee\"\n></CheckedTextView>\n",
-            "select_dialog_singlechoice": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_radio\"\n    android:ellipsize=\"marquee\"\n></CheckedTextView>\n"
+            "select_dialog_singlechoice": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_radio\"\n    android:ellipsize=\"marquee\"\n></CheckedTextView>\n",
+            "transient_notification": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/* //device/apps/common/res/layout/transient_notification.xml\n**\n** Copyright 2006, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:orientation=\"vertical\"\n    android:background=\"@android:drawable/toast_frame\">\n\n    <TextView\n        android:id=\"message\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:layout_gravity=\"center_horizontal\"\n        android:textColor=\"white\"\n        android:shadowColor=\"#BB000000\"\n        android:shadowRadius=\"2.75\"\n        ></TextView>\n\n</LinearLayout>\n\n\n"
         };
         const _tempDiv = document.createElement('div');
         class layout {
@@ -4049,6 +4050,7 @@ var android;
         layout.select_dialog_item = '@android:layout/select_dialog_item';
         layout.select_dialog_multichoice = '@android:layout/select_dialog_multichoice';
         layout.select_dialog_singlechoice = '@android:layout/select_dialog_singlechoice';
+        layout.transient_notification = '@android:layout/transient_notification';
         R.layout = layout;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
@@ -8439,6 +8441,16 @@ var android;
                 bg.getIntrinsicWidth = () => 30 * density;
                 bg.getIntrinsicHeight = () => 30 * density;
                 return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
+            }
+            static get toast_frame() {
+                let bg = new ColorDrawable(0xff333333);
+                bg.getIntrinsicWidth = () => 80 * density;
+                bg.getIntrinsicHeight = () => 16 * density;
+                bg.getPadding = (rect) => {
+                    rect.set(6 * density, 4 * density, 6 * density, 4 * density);
+                    return true;
+                };
+                return bg;
             }
         }
         R.drawable = drawable;
@@ -21764,6 +21776,7 @@ var android;
 (function (android) {
     var view;
     (function (view) {
+        var Gravity = android.view.Gravity;
         var View = android.view.View;
         var ViewGroup = android.view.ViewGroup;
         class WindowManager {
@@ -21778,25 +21791,26 @@ var android;
             getWindowsLayout() {
                 return this.mWindowsLayout;
             }
-            addWindow(window, params) {
-                let wparams = params;
+            addWindow(window) {
+                let wparams = window.getAttributes();
                 if (!wparams) {
                     wparams = new WindowManager.LayoutParams();
                 }
                 if (!(wparams instanceof WindowManager.LayoutParams)) {
                     throw Error('can\'t addWindow, params must be WindowManager.LayoutParams : ' + wparams);
                 }
-                if (!window.isFloating())
+                if (!wparams.isFloating())
                     this.clearWindowVisible();
                 let decorView = window.getDecorView();
+                let type = wparams.type;
                 this.mWindowsLayout.addView(decorView, wparams);
                 decorView.dispatchAttachedToWindow(window.mAttachInfo, 0);
                 if (wparams.isFocusable()) {
                     this.clearWindowFocus();
                     decorView.dispatchWindowFocusChanged(true);
                 }
-                if (window.mEnterAnimation) {
-                    window.mDecor.startAnimation(window.mEnterAnimation);
+                if (wparams.enterAnimation) {
+                    decorView.startAnimation(wparams.enterAnimation);
                 }
             }
             updateWindowLayout(window, params) {
@@ -21807,22 +21821,30 @@ var android;
             }
             removeWindow(window) {
                 let decor = window.getDecorView();
-                if (window.mExitAnimation) {
+                if (decor.getParent() !== this.mWindowsLayout) {
+                    console.error('removeWindow fail, don\'t has the window');
+                    return;
+                }
+                let wparams = decor.getLayoutParams();
+                if (wparams.exitAnimation) {
                     let t = this;
-                    window.mExitAnimation.setAnimationListener({
+                    wparams.exitAnimation.setAnimationListener({
                         onAnimationStart(animation) {
                             decor.postOnAnimation({
                                 run() {
+                                    let isVisible = decor.getVisibility() === View.VISIBLE;
                                     decor.getParent().removeView(decor);
-                                    t.checkTopLevelWindowVisible(!window.isFloating());
-                                    t.checkTopLevelWindowFocus();
+                                    if (isVisible) {
+                                        t.checkTopLevelWindowVisible(!wparams.isFloating());
+                                        t.checkTopLevelWindowFocus();
+                                    }
                                 }
                             });
                         },
                         onAnimationEnd(animation) { },
                         onAnimationRepeat(animation) { }
                     });
-                    decor.startAnimation(window.mExitAnimation);
+                    decor.startAnimation(wparams.exitAnimation);
                 }
                 else {
                     decor.getParent().removeView(decor);
@@ -21832,20 +21854,19 @@ var android;
                 for (let i = 0, count = this.mWindowsLayout.getChildCount(); i < count; i++) {
                     let decorView = this.mWindowsLayout.getChildAt(i);
                     if (decorView.getVisibility() == View.VISIBLE) {
-                        let window = decorView.getContext().getWindow();
-                        let decor = window.mDecor;
-                        if (window.mHideAnimation) {
-                            window.mHideAnimation.setAnimationListener({
+                        let wparams = decorView.getLayoutParams();
+                        if (wparams.hideAnimation) {
+                            wparams.hideAnimation.setAnimationListener({
                                 onAnimationStart(animation) {
-                                    decor.setVisibility(View.GONE);
+                                    decorView.setVisibility(View.GONE);
                                 },
                                 onAnimationEnd(animation) { },
                                 onAnimationRepeat(animation) { }
                             });
-                            decor.startAnimation(window.mHideAnimation);
+                            decorView.startAnimation(wparams.hideAnimation);
                         }
                         else {
-                            decor.setVisibility(View.GONE);
+                            decorView.setVisibility(View.GONE);
                         }
                     }
                 }
@@ -21855,14 +21876,14 @@ var android;
             checkTopLevelWindowFocus() {
             }
             checkTopLevelWindowVisible(showAnim = true) {
-                for (let i = this.mWindowsLayout.getChildCount() - 1; i >= 0; i++) {
+                for (let i = this.mWindowsLayout.getChildCount() - 1; i >= 0; i--) {
                     let decorView = this.mWindowsLayout.getChildAt(i);
-                    let window = decorView.getContext().getWindow();
-                    window.mDecor.setVisibility(View.VISIBLE);
-                    if (showAnim && window.mShowAnimation) {
-                        window.mDecor.startAnimation(window.mShowAnimation);
+                    let wparams = decorView.getLayoutParams();
+                    decorView.setVisibility(View.VISIBLE);
+                    if (showAnim && wparams.resumeAnimation) {
+                        decorView.startAnimation(wparams.resumeAnimation);
                     }
-                    if (!window.isFloating()) {
+                    if (!wparams.isFloating()) {
                         break;
                     }
                 }
@@ -21901,8 +21922,14 @@ var android;
             class LayoutParams extends android.widget.FrameLayout.LayoutParams {
                 constructor(_type = LayoutParams.TYPE_APPLICATION) {
                     super(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+                    this.x = 0;
+                    this.y = 0;
                     this.type = 0;
                     this.flags = 0;
+                    this.exitAnimation = android.R.anim.activity_close_exit;
+                    this.enterAnimation = android.R.anim.activity_open_enter;
+                    this.resumeAnimation = android.R.anim.activity_close_enter;
+                    this.hideAnimation = android.R.anim.activity_open_exit;
                     this.dimAmount = 0.6;
                     this.mTitle = "";
                     this.type = _type;
@@ -21923,6 +21950,14 @@ var android;
                     }
                     if (this.height != o.height) {
                         this.height = o.height;
+                        changes |= LayoutParams.LAYOUT_CHANGED;
+                    }
+                    if (this.x != o.x) {
+                        this.x = o.x;
+                        changes |= LayoutParams.LAYOUT_CHANGED;
+                    }
+                    if (this.y != o.y) {
+                        this.y = o.y;
                         changes |= LayoutParams.LAYOUT_CHANGED;
                     }
                     if (this.type != o.type) {
@@ -21948,6 +21983,38 @@ var android;
                     }
                     return changes;
                 }
+                get leftMargin() {
+                    if ((this.gravity & Gravity.LEFT) != 0)
+                        return super.leftMargin + this.x;
+                    return super.leftMargin;
+                }
+                get topMargin() {
+                    if ((this.gravity & Gravity.TOP) != 0)
+                        return super.topMargin + this.y;
+                    return super.topMargin;
+                }
+                get rightMargin() {
+                    if ((this.gravity & Gravity.RIGHT) != 0)
+                        return super.rightMargin + this.x;
+                    return super.rightMargin;
+                }
+                get bottomMargin() {
+                    if ((this.gravity & Gravity.BOTTOM) != 0)
+                        return super.bottomMargin + this.y;
+                    return super.bottomMargin;
+                }
+                set leftMargin(value) {
+                    super.leftMargin = value;
+                }
+                set topMargin(value) {
+                    super.topMargin = value;
+                }
+                set rightMargin(value) {
+                    super.rightMargin = value;
+                }
+                set bottomMargin(value) {
+                    super.bottomMargin = value;
+                }
                 isFocusable() {
                     return (this.flags & LayoutParams.FLAG_NOT_FOCUSABLE) == 0;
                 }
@@ -21956,6 +22023,9 @@ var android;
                 }
                 isTouchModal() {
                     return (this.flags & LayoutParams.FLAG_NOT_TOUCH_MODAL) == 0;
+                }
+                isFloating() {
+                    return (this.flags & LayoutParams.FLAG_FLOATING) != 0;
                 }
             }
             LayoutParams.FIRST_APPLICATION_WINDOW = 1;
@@ -21986,6 +22056,7 @@ var android;
             LayoutParams.FLAG_NOT_TOUCHABLE = 0x00000010;
             LayoutParams.FLAG_NOT_TOUCH_MODAL = 0x00000020;
             LayoutParams.FLAG_SPLIT_TOUCH = 0x00800000;
+            LayoutParams.FLAG_FLOATING = 0x40000000;
             LayoutParams.LAYOUT_CHANGED = 1 << 0;
             LayoutParams.TYPE_CHANGED = 1 << 1;
             LayoutParams.FLAGS_CHANGED = 1 << 2;
@@ -22848,6 +22919,30 @@ var android;
                 animSet.addAnimation(alpha);
                 return animSet;
             }
+            static get fade_in() {
+                let alpha = new AlphaAnimation(0, 1);
+                alpha.setDuration(500);
+                alpha.setInterpolator(R.interpolator.decelerate_quad);
+                return alpha;
+            }
+            static get fade_out() {
+                let alpha = new AlphaAnimation(1, 0);
+                alpha.setDuration(400);
+                alpha.setInterpolator(R.interpolator.accelerate_quad);
+                return alpha;
+            }
+            static get toast_enter() {
+                let alpha = new AlphaAnimation(0, 1);
+                alpha.setDuration(500);
+                alpha.setInterpolator(R.interpolator.decelerate_quad);
+                return alpha;
+            }
+            static get toast_exit() {
+                let alpha = new AlphaAnimation(1, 0);
+                alpha.setDuration(500);
+                alpha.setInterpolator(R.interpolator.accelerate_quad);
+                return alpha;
+            }
         }
         R.anim = anim;
     })(R = android.R || (android.R = {}));
@@ -22901,11 +22996,6 @@ var android;
                 this.mCloseOnTouchOutside = false;
                 this.mSetCloseOnTouchOutside = false;
                 this.mWindowAttributes = new WindowManager.LayoutParams();
-                this.mIsFloating = false;
-                this.mExitAnimation = android.R.anim.activity_close_exit_ios;
-                this.mEnterAnimation = android.R.anim.activity_open_enter_ios;
-                this.mShowAnimation = android.R.anim.activity_close_enter_ios;
-                this.mHideAnimation = android.R.anim.activity_open_exit_ios;
                 this.mContext = context;
                 this.initDecorView();
                 this.initAttachInfo();
@@ -22971,10 +23061,13 @@ var android;
                 return this.mCallback;
             }
             setFloating(isFloating) {
-                this.mIsFloating = isFloating;
+                if (isFloating)
+                    this.mWindowAttributes.flags |= WindowManager.LayoutParams.FLAG_FLOATING;
+                else
+                    this.mWindowAttributes.flags &= ~WindowManager.LayoutParams.FLAG_FLOATING;
             }
             isFloating() {
-                return this.mIsFloating;
+                return this.mWindowAttributes.isFloating();
             }
             setLayout(width, height) {
                 const attrs = this.getAttributes();
@@ -22998,11 +23091,11 @@ var android;
                     this.mCallback.onWindowAttributesChanged(attrs);
                 }
             }
-            setWindowAnimations(enterAnimation, exitAnimation, showAnimation = this.mShowAnimation, hideAnimation = this.mHideAnimation) {
-                this.mEnterAnimation = enterAnimation;
-                this.mExitAnimation = exitAnimation;
-                this.mShowAnimation = showAnimation;
-                this.mHideAnimation = hideAnimation;
+            setWindowAnimations(enterAnimation, exitAnimation, resumeAnimation = this.mWindowAttributes.resumeAnimation, hideAnimation = this.mWindowAttributes.hideAnimation) {
+                this.mWindowAttributes.enterAnimation = enterAnimation;
+                this.mWindowAttributes.exitAnimation = exitAnimation;
+                this.mWindowAttributes.resumeAnimation = resumeAnimation;
+                this.mWindowAttributes.hideAnimation = hideAnimation;
             }
             addFlags(flags) {
                 this.setFlags(flags, flags);
@@ -23088,6 +23181,9 @@ var android;
                     cb.onContentChanged();
                 }
             }
+            getContentParent() {
+                return this.mContentParent;
+            }
             getCurrentFocus() {
                 return this.mDecor != null ? this.mDecor.findFocus() : null;
             }
@@ -23138,8 +23234,9 @@ var android;
             }
             drawFromParent(canvas, parent, drawingTime) {
                 let windowAnimation = this.getAnimation();
-                let shadowAlpha = this.Window_this.getAttributes().dimAmount * 255;
-                if (windowAnimation != null) {
+                let wparams = this.getLayoutParams();
+                let shadowAlpha = wparams.dimAmount * 255;
+                if (windowAnimation != null && shadowAlpha) {
                     const duration = windowAnimation.getDuration();
                     let startTime = windowAnimation.getStartTime();
                     if (startTime < 0)
@@ -23153,16 +23250,16 @@ var android;
                         normalizedTime = drawingTime < startTime ? 0.0 : 1.0;
                     }
                     const interpolatedTime = windowAnimation.getInterpolator().getInterpolation(normalizedTime);
-                    if (windowAnimation === this.Window_this.mExitAnimation) {
+                    if (windowAnimation === wparams.exitAnimation) {
                         shadowAlpha = shadowAlpha * (1 - interpolatedTime);
                         parent.invalidate();
                     }
-                    else if (windowAnimation === this.Window_this.mEnterAnimation) {
+                    else if (windowAnimation === wparams.enterAnimation) {
                         shadowAlpha = shadowAlpha * interpolatedTime;
                         parent.invalidate();
                     }
                 }
-                if ((windowAnimation != null || this.Window_this.isFloating()) && shadowAlpha) {
+                if ((windowAnimation != null || wparams.isFloating()) && shadowAlpha) {
                     canvas.drawColor(android.graphics.Color.argb(shadowAlpha, 0, 0, 0));
                 }
                 return super.drawFromParent(canvas, parent, drawingTime);
@@ -23272,6 +23369,7 @@ var android;
             }
             performCreate() {
                 this.mWindow = new Window(this);
+                this.mWindow.setWindowAnimations(android.R.anim.activity_open_enter_ios, android.R.anim.activity_close_exit_ios, android.R.anim.activity_close_enter_ios, android.R.anim.activity_open_exit_ios);
                 this.onCreate();
             }
             setIntent(intent) {
@@ -47350,6 +47448,217 @@ var android;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+///<reference path="../../android/graphics/PixelFormat.ts"/>
+///<reference path="../../android/os/Handler.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/LayoutInflater.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/WindowManager.ts"/>
+///<reference path="../../android/view/Window.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../java/lang/Runnable.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Handler = android.os.Handler;
+        var Log = android.util.Log;
+        var Gravity = android.view.Gravity;
+        var WindowManager = android.view.WindowManager;
+        var Window = android.view.Window;
+        class Toast {
+            constructor(context) {
+                this.mDuration = 0;
+                this.mHandler = new Handler();
+                this.mDelayHide = (() => {
+                    const _this = this;
+                    return {
+                        run() {
+                            _this.mTN.hide();
+                        }
+                    };
+                })();
+                this.mContext = context;
+                this.mTN = new Toast.TN();
+                this.mTN.mY = context.getResources().getDisplayMetrics().density * 64;
+                this.mTN.mGravity = Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM;
+            }
+            show() {
+                if (this.mNextView == null) {
+                    throw Error(`new RuntimeException("setView must have been called")`);
+                }
+                let tn = this.mTN;
+                tn.mNextView = this.mNextView;
+                tn.show();
+                this.mHandler.removeCallbacks(this.mDelayHide);
+                let showDuration = this.mDuration === Toast.LENGTH_LONG ? 3500 : (this.mDuration === Toast.LENGTH_SHORT ? 2000 : this.mDuration);
+                this.mHandler.postDelayed(this.mDelayHide, showDuration);
+            }
+            cancel() {
+                this.mTN.hide();
+            }
+            setView(view) {
+                this.mNextView = view;
+            }
+            getView() {
+                return this.mNextView;
+            }
+            setDuration(duration) {
+                this.mDuration = duration;
+            }
+            getDuration() {
+                return this.mDuration;
+            }
+            setGravity(gravity, xOffset, yOffset) {
+                this.mTN.mGravity = gravity;
+                this.mTN.mX = xOffset;
+                this.mTN.mY = yOffset;
+            }
+            getGravity() {
+                return this.mTN.mGravity;
+            }
+            getXOffset() {
+                return this.mTN.mX;
+            }
+            getYOffset() {
+                return this.mTN.mY;
+            }
+            static makeText(context, text, duration) {
+                let result = new Toast(context);
+                let inflate = context.getLayoutInflater();
+                let v = inflate.inflate(android.R.layout.transient_notification, null);
+                let tv = v.findViewById(android.R.id.message);
+                tv.setText(text);
+                result.mNextView = v;
+                result.mDuration = duration;
+                return result;
+            }
+            setText(s) {
+                if (this.mNextView == null) {
+                    throw Error(`new RuntimeException("This Toast was not created with Toast.makeText()")`);
+                }
+                let tv = this.mNextView.findViewById(android.R.id.message);
+                if (tv == null) {
+                    throw Error(`new RuntimeException("This Toast was not created with Toast.makeText()")`);
+                }
+                tv.setText(s);
+            }
+        }
+        Toast.TAG = "Toast";
+        Toast.localLOGV = false;
+        Toast.LENGTH_SHORT = 0;
+        Toast.LENGTH_LONG = 1;
+        widget.Toast = Toast;
+        (function (Toast) {
+            class TN {
+                constructor() {
+                    this.mShow = (() => {
+                        const _this = this;
+                        class _Inner {
+                            run() {
+                                _this.handleShow();
+                            }
+                        }
+                        return new _Inner();
+                    })();
+                    this.mHide = (() => {
+                        const _this = this;
+                        class _Inner {
+                            run() {
+                                _this.handleHide();
+                                _this.mNextView = null;
+                            }
+                        }
+                        return new _Inner();
+                    })();
+                    this.mHandler = new Handler();
+                    this.mGravity = 0;
+                    this.mX = 0;
+                    this.mY = 0;
+                }
+                show() {
+                    if (Toast.localLOGV)
+                        Log.v(Toast.TAG, "SHOW: " + this);
+                    this.mHandler.post(this.mShow);
+                }
+                hide() {
+                    if (Toast.localLOGV)
+                        Log.v(Toast.TAG, "HIDE: " + this);
+                    this.mHandler.post(this.mHide);
+                }
+                handleShow() {
+                    if (Toast.localLOGV)
+                        Log.v(Toast.TAG, "HANDLE SHOW: " + this + " mView=" + this.mView + " mNextView=" + this.mNextView);
+                    if (this.mView != this.mNextView) {
+                        this.handleHide();
+                        this.mView = this.mNextView;
+                        if (!this.mWindow) {
+                            this.mWindow = new Window(this.mView.getContext().getApplicationContext());
+                            const params = this.mWindow.getAttributes();
+                            params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                            params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+                            params.dimAmount = 0;
+                            params.type = WindowManager.LayoutParams.TYPE_TOAST;
+                            params.setTitle("Toast");
+                            params.flags =
+                                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+                            this.mWindow.setFloating(true);
+                            this.mWindow.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                            this.mWindow.setWindowAnimations(android.R.anim.toast_enter, android.R.anim.toast_exit, null, null);
+                        }
+                        const params = this.mWindow.getAttributes();
+                        this.mWindow.setContentView(this.mView);
+                        let context = this.mView.getContext().getApplicationContext();
+                        this.mWM = context.getWindowManager();
+                        const gravity = Gravity.getAbsoluteGravity(this.mGravity);
+                        params.gravity = gravity;
+                        params.x = this.mX;
+                        params.y = this.mY;
+                        if (this.mWindow.getDecorView().getParent() != null) {
+                            if (Toast.localLOGV)
+                                Log.v(Toast.TAG, "REMOVE! " + this.mView + " in " + this);
+                            this.mWM.removeWindow(this.mWindow);
+                        }
+                        if (Toast.localLOGV)
+                            Log.v(Toast.TAG, "ADD! " + this.mView + " in " + this);
+                        this.mWM.addWindow(this.mWindow);
+                    }
+                }
+                handleHide() {
+                    if (Toast.localLOGV)
+                        Log.v(Toast.TAG, "HANDLE HIDE: " + this + " mView=" + this.mView);
+                    if (this.mView != null) {
+                        if (this.mView.getParent() != null) {
+                            if (Toast.localLOGV)
+                                Log.v(Toast.TAG, "REMOVE! " + this.mView + " in " + this);
+                            this.mWM.removeWindow(this.mWindow);
+                        }
+                        this.mView = null;
+                    }
+                }
+            }
+            Toast.TN = TN;
+        })(Toast = widget.Toast || (widget.Toast = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -47483,9 +47792,8 @@ var android;
                 }
                 this.onStart();
                 this.mDecor = this.mWindow.getDecorView();
-                let l = this.mWindow.getAttributes();
                 try {
-                    this.mWindowManager.addWindow(this.mWindow, l);
+                    this.mWindowManager.addWindow(this.mWindow);
                     this.mShowing = true;
                     this.sendShowMessage();
                 }
@@ -55631,6 +55939,7 @@ var androidui;
 ///<reference path="android/widget/RatingBar.ts"/>
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
+///<reference path="android/widget/Toast.ts"/>
 ///<reference path="android/app/AlertDialog.ts"/>
 ///<reference path="android/view/animation/AlphaAnimation.ts"/>
 ///<reference path="android/view/animation/ScaleAnimation.ts"/>
