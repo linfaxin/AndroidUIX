@@ -35,6 +35,7 @@ module androidui {
             return this.mApplication.getWindowManager();
         }
         private mActivityThread:ActivityThread = new ActivityThread(this);
+        private mFinishInit:boolean;
         private _viewRootImpl:android.view.ViewRootImpl;
         private mApplication:android.app.Application;
 
@@ -56,6 +57,7 @@ module androidui {
             }
             androidUIElement[AndroidUI.BindToElementName] = this;
             this.init();
+            this.mFinishInit = true;
         }
 
 
@@ -99,7 +101,7 @@ module androidui {
                 let activityName = ele.tagName;
 
                 let intent = new Intent(activityName);
-                let activity = this.mActivityThread.performLaunchActivity(intent);
+                let activity = this.mActivityThread.handleLaunchActivity(intent);
                 if (activity) {
                     this.androidUIElement.removeChild(ele);
 
@@ -333,8 +335,10 @@ module androidui {
             document.addEventListener(eventName, ()=>{
                 if(document['hidden'] || document['webkitHidden']){
                     //hidden
+                    this.mActivityThread.scheduleApplicationHide();
                 }else{
-                    //TODO fire window visible change
+                    //show
+                    this.mActivityThread.scheduleApplicationShow();
                     this._viewRootImpl.invalidate();
                 }
             }, false);

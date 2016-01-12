@@ -1,13 +1,11 @@
 /**
  * Created by linfaxin on 15/12/30.
- * control browser history.
+ *
  */
 
 module PageStack{
     const DEBUG = false;
     const history_go = history.go;
-    let isInited = false;
-
     export var currentStack:StateStack;
 
     export var backListener:()=>boolean;
@@ -18,10 +16,6 @@ module PageStack{
     let pendingFuncLock = [];
 
     export function init(){
-        if(isInited){
-            throw Error('already init PageStack!')
-        }
-        isInited = true;
         removeLastHistoryIfFaked();
         ensureLockDo(_init);
 
@@ -168,23 +162,37 @@ module PageStack{
 
 
     let releaseLockingTimeout;
+    let requestHistoryGoWhenLocking = 0;
     function historyGo(delta:number, ensureFaked=true){
-        if(DEBUG) console.log('historyGo', delta);
-
         if(delta>=0) return;//not support forward
         if(history.length === 1) return;//no history
+
+        if(historyLocking){
+            requestHistoryGoWhenLocking += delta;
+            return;
+        }
+
+        if(DEBUG) console.log('historyGo', delta);
 
         historyLocking = true;
         const state = history.state;
         if(releaseLockingTimeout) clearTimeout(releaseLockingTimeout);
         function checkRelease(){
+            clearTimeout(releaseLockingTimeout);
             if(history.state === state){
-                clearTimeout(releaseLockingTimeout);
                 releaseLockingTimeout = setTimeout(checkRelease, 0);
             }else{
-                releaseLockingTimeout = setTimeout(()=>{
+                let continueGo = requestHistoryGoWhenLocking;
+                if(continueGo!=0){
+                    requestHistoryGoWhenLocking = 0;
                     historyLocking = false;
-                }, 10);
+                    historyGo(continueGo);
+
+                }else {
+                    releaseLockingTimeout = setTimeout(()=> {
+                        historyLocking = false;
+                    }, 10);
+                }
             }
         }
         releaseLockingTimeout = setTimeout(checkRelease, 0);
@@ -238,6 +246,7 @@ module PageStack{
      * call when app logic already close page. sync browser history here.
      */
     export function notifyPageClosed(pageId:string, pageExtra?:any):boolean{
+        if(DEBUG) console.log('notifyPageClosed', pageId);
         if(historyLocking){
             console.error('cant notifyPageClosed when waiting history change finish');
             return;
@@ -275,6 +284,7 @@ module PageStack{
      * call when app logic already open page. sync browser history here.
      */
     export function notifyNewPageOpened(pageId:string, extra?:any){
+        if(DEBUG) console.log('notifyNewPageOpened', pageId);
         let state:StateSaved = {
             pageId : pageId,
             extra : extra

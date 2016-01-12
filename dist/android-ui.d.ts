@@ -2808,7 +2808,7 @@ declare module android.view {
         draw(canvas: Canvas): void;
         protected onDraw(canvas: Canvas): void;
         protected dispatchDraw(canvas: Canvas): void;
-        private drawAnimation(parent, drawingTime, a, scalingRequired);
+        private drawAnimation(parent, drawingTime, a, scalingRequired?);
         onDrawScrollBars(canvas: Canvas): void;
         isVerticalScrollBarHidden(): boolean;
         onDrawHorizontalScrollBar(canvas: Canvas, scrollBar: Drawable, l: number, t: number, r: number, b: number): void;
@@ -3126,12 +3126,24 @@ declare module android.app {
         mLaunchedActivities: Set<Activity>;
         constructor(androidUI: androidui.AndroidUI);
         private initWithPageStack();
+        scheduleApplicationHide(): void;
+        scheduleApplicationShow(): void;
         scheduleLaunchActivity(intent: Intent, options?: android.os.Bundle): void;
-        handleLaunchActivity(intent: Intent): Activity;
+        scheduleDestroyActivity(activity: Activity, finishing?: boolean): void;
+        private handlePauseActivity(activity);
+        private performPauseActivity(activity);
+        private handleStopActivity(activity, show?);
+        private performStopActivity(activity, saveState);
+        private handleResumeActivity(a, launching);
+        private performResumeActivity(a, launching);
+        private handleLaunchActivity(intent);
         private performLaunchActivity(intent);
-        handleResumeActivity(a: Activity): void;
-        performFinishActivity(activity: Activity): void;
-        private performDestroyActivity(activity);
+        private handleDestroyActivity(activity, finishing);
+        private performDestroyActivity(activity, finishing);
+        private updateVisibility(activity, show);
+        private getVisibleToUserActivities();
+        private isRootActivity(activity);
+        private static getActivityName(activity);
     }
 }
 declare module androidui {
@@ -3142,6 +3154,7 @@ declare module androidui {
         private _canvas;
         windowManager: android.view.WindowManager;
         private mActivityThread;
+        private mFinishInit;
         private _viewRootImpl;
         private mApplication;
         private rootResourceElement;
@@ -4236,10 +4249,7 @@ declare module android.view {
         addWindow(window: Window): void;
         updateWindowLayout(window: Window, params: ViewGroup.LayoutParams): void;
         removeWindow(window: Window): void;
-        private clearWindowVisible();
         private clearWindowFocus();
-        private checkTopLevelWindowFocus();
-        private checkTopLevelWindowVisible(showAnim?);
     }
     module WindowManager {
         class Layout extends android.widget.FrameLayout {
@@ -4247,6 +4257,7 @@ declare module android.view {
             constructor(context: android.content.Context, windowManager: WindowManager);
             dispatchKeyEvent(event: android.view.KeyEvent): boolean;
             protected isTransformedTouchPointInView(x: number, y: number, child: android.view.View, outLocalPoint: android.graphics.Point): boolean;
+            onChildVisibilityChanged(child: android.view.View, oldVisibility: number, newVisibility: number): void;
             tagName(): string;
         }
         class LayoutParams extends android.widget.FrameLayout.LayoutParams {
@@ -4610,16 +4621,16 @@ declare module android.app {
         static RESULT_FIRST_USER: number;
         private mIntent;
         private mCalled;
-        mResumed: boolean;
+        private mResumed;
         private mStopped;
-        mFinished: boolean;
-        mStartedActivity: boolean;
+        private mFinished;
+        private mStartedActivity;
         private mDestroyed;
         private mWindow;
         private mWindowAdded;
         private mVisibleFromClient;
-        mResultCode: number;
-        mResultData: Intent;
+        private mResultCode;
+        private mResultData;
         getIntent(): Intent;
         setIntent(newIntent: Intent): void;
         getApplication(): android.app.Application;

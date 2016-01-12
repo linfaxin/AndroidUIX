@@ -9,6 +9,7 @@ module sample.app {
 
     export class SampleButtonActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             this.setContentView(R.layout.sample_button);
 
             let btn_click:Button = <Button>this.findViewById('btn_click');

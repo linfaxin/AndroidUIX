@@ -21,6 +21,7 @@ module sample.app {
 
     export class SampleGridViewActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             this.setContentView(R.layout.sample_gridview);
 
             let listView = <ListView>this.findViewById('gridView');

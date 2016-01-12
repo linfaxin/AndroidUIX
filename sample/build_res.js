@@ -57,7 +57,7 @@ module ${packageName}.R.image_base64 {
     var image_ts =
         `///<reference path="${SDKReferencePath}"/>
 ///<reference path="image_base64.ts"/>
-module ${packageName}.R.image {
+module ${packageName}.R {
     import NetDrawable = androidui.image.NetDrawable;
     export class image{
 ${exportImage_tsLines}

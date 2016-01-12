@@ -18,6 +18,7 @@ module sample.app {
 
     export class SampleAnimationActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             this.setContentView(R.layout.sample_animation);
 
             let rotateView = this.findViewById('rotate_repeat');

@@ -8,6 +8,7 @@ module sample.app {
 
     export class SampleDrawerLayoutActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             this.setContentView(R.layout.sample_drawerlayout);
         }
     }

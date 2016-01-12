@@ -58,26 +58,25 @@ module android.app{
 
         private mCalled:boolean;
 
-        mResumed:boolean;
+        private mResumed:boolean;
 
         private mStopped:boolean;
 
+        private mFinished:boolean;
 
-
-        mFinished:boolean;
-
-        mStartedActivity:boolean;
+        private mStartedActivity:boolean;
 
         private mDestroyed:boolean;
 
         private mWindow:Window;
 
         private mWindowAdded:boolean = false;
+
         private mVisibleFromClient:boolean = true;
 
-        mResultCode:number = Activity.RESULT_CANCELED;
+        private mResultCode:number = Activity.RESULT_CANCELED;
 
-        mResultData:Intent = null;
+        private mResultData:Intent = null;
 
         //mHandler:Handler = new Handler();
 
@@ -230,7 +229,7 @@ module android.app{
          * @see #onSaveInstanceState
          */
         protected onRestoreInstanceState(savedInstanceState:Bundle):void  {
-            //TODO restoreHierarchyState
+            //TODO restoreHierarchyState?
             //if (this.mWindow != null) {
             //    let windowState:Bundle = savedInstanceState.getBundle(Activity.WINDOW_HIERARCHY_TAG);
             //    if (windowState != null) {
@@ -1282,8 +1281,7 @@ module android.app{
             let resultCode:number = this.mResultCode;
             let resultData:Intent = this.mResultData;
             try {
-                //TODO notify result code & data
-                this.androidUI.mActivityThread.performFinishActivity(this);
+                this.androidUI.mActivityThread.scheduleDestroyActivity(this);
                 //if (resultData != null) {
                 //    resultData.prepareToLeaveProcess();
                 //}

@@ -2373,8 +2373,7 @@ module android.view {
                 }
 
                 if (this.mParent instanceof ViewGroup) {
-                    (<any>this.mParent).onChildVisibilityChanged(this,
-                        (changed & View.VISIBILITY_MASK), newVisibility);
+                    (<any>this.mParent).onChildVisibilityChanged(this, (changed & View.VISIBILITY_MASK), newVisibility);
                     (<any>this.mParent).invalidate(true);
                 } else if (this.mParent != null) {
                     this.mParent.invalidateChild(this, null);
@@ -4469,7 +4468,7 @@ module android.view {
         protected dispatchDraw(canvas:Canvas):void {
         }
 
-        private drawAnimation(parent:ViewGroup, drawingTime:number, a:Animation, scalingRequired:boolean):boolean  {
+        private drawAnimation(parent:ViewGroup, drawingTime:number, a:Animation, scalingRequired?:boolean):boolean  {
             let invalidationTransform:Transformation;
             const flags:number = parent.mGroupFlags;
             const initialized:boolean = a.isInitialized();

@@ -90,7 +90,6 @@ export class WindowManager {
         }
 
         window.setContainer(this);
-        if(!wparams.isFloating()) this.clearWindowVisible();
         let decorView = window.getDecorView();
 
         //TODO use type as z-index
@@ -105,7 +104,7 @@ export class WindowManager {
             decorView.dispatchWindowFocusChanged(true);
         }
 
-        if(wparams.enterAnimation){
+        if(window.getContext().androidUI.mFinishInit && wparams.enterAnimation){
             decorView.startAnimation(wparams.enterAnimation);
         }
     }
@@ -124,18 +123,13 @@ export class WindowManager {
             return;
         }
         let wparams = <WindowManager.LayoutParams>decor.getLayoutParams();
-        if(wparams.exitAnimation){
+        if(window.getContext().androidUI.mFinishInit && wparams.exitAnimation){
             let t = this;
             wparams.exitAnimation.setAnimationListener({
                 onAnimationStart(animation:Animation):void{
                     decor.postOnAnimation({//remove next frame to avoid draw again at this frame. (ViewGroup's DisappearingChildren)
                         run(){
-                            let isVisible = decor.getVisibility() === View.VISIBLE;
                             (<ViewGroup>decor.getParent()).removeView(decor);
-                            if(isVisible) {
-                                t.checkTopLevelWindowVisible(!wparams.isFloating());
-                                t.checkTopLevelWindowFocus();
-                            }
                         }
                     });
                 },
@@ -148,47 +142,8 @@ export class WindowManager {
         }
     }
 
-    private clearWindowVisible(){
-        for(let i=0, count=this.mWindowsLayout.getChildCount(); i<count; i++){
-            let decorView = this.mWindowsLayout.getChildAt(i);
-            if(decorView.getVisibility() == View.VISIBLE){
-                let wparams = <WindowManager.LayoutParams>decorView.getLayoutParams();
-                if(wparams.hideAnimation){
-                    wparams.hideAnimation.setAnimationListener({
-                        onAnimationStart(animation:Animation):void{
-                            decorView.setVisibility(View.GONE);
-                        },
-                        onAnimationEnd(animation:Animation):void{},
-                        onAnimationRepeat(animation:Animation):void{}
-                    });
-                    decorView.startAnimation(wparams.hideAnimation);
-                }else{
-                    decorView.setVisibility(View.GONE);
-                }
-            }
-        }
-    }
-
     private clearWindowFocus(){
         //TODO clear focus
-    }
-    private checkTopLevelWindowFocus(){
-        //TODO top-level window should gain focus
-    }
-    private checkTopLevelWindowVisible(showAnim=true){
-        for(let i=this.mWindowsLayout.getChildCount()-1; i>=0; i--){
-            let decorView = this.mWindowsLayout.getChildAt(i);
-            let wparams = <WindowManager.LayoutParams>decorView.getLayoutParams();
-
-            decorView.setVisibility(View.VISIBLE);
-            if(showAnim && wparams.resumeAnimation){
-                decorView.startAnimation(wparams.resumeAnimation);
-            }
-
-            if(!wparams.isFloating()){
-                break;
-            }
-        }
     }
 }
 
@@ -223,6 +178,22 @@ export module WindowManager{
                 return true;
             }
             return super.isTransformedTouchPointInView(x, y, child, outLocalPoint);
+        }
+
+        onChildVisibilityChanged(child:android.view.View, oldVisibility:number, newVisibility:number):void {
+            super.onChildVisibilityChanged(child, oldVisibility, newVisibility);
+
+            let wparams = <WindowManager.LayoutParams>child.getLayoutParams();
+            if(newVisibility === View.VISIBLE){
+                if(this.getContext().androidUI.mFinishInit && wparams.resumeAnimation){
+                    child.startAnimation(wparams.resumeAnimation);
+                }
+            }else{
+                if(this.getContext().androidUI.mFinishInit && wparams.hideAnimation){
+                    child.startAnimation(wparams.hideAnimation);
+                    child.drawAnimation(this, android.os.SystemClock.uptimeMillis(), wparams.hideAnimation);//init animation
+                }
+            }
         }
 
         tagName():string {

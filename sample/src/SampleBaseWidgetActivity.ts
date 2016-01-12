@@ -1,6 +1,7 @@
 
 ///<reference path="../../dist/android-ui.d.ts"/>
 ///<reference path="../gen/R/layout.ts"/>
+///<reference path="../gen/R/image.ts"/>
 
 module sample.app {
     import Activity = android.app.Activity;
@@ -26,7 +27,7 @@ module sample.app {
                                 Toast.makeText(activity, '按下确定', Toast.LENGTH_SHORT).show();
                             }
                         })
-                        .setIcon(new NetDrawable('assets/images/logo_android_1@2x.png'))
+                        .setIcon(R.image.icon_alert)
                         //.setCancelable(false)
                         .setNegativeButton(android.R.string_.cancel, null)
                         .show();

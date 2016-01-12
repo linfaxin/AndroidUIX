@@ -9,9 +9,9 @@ var sample;
             (function (image_base64) {
                 var NetImage = androidui.image.NetImage;
                 var x3 = {
-                    "sample_icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgBAMAAAAQtmoLAAAAG1BMVEUAAAA9PT09PT09PT09PT09PT09PT09PT09PT1gyl+KAAAACXRSTlMAgE05QT1HMyNi/YIlAAAA6ElEQVRYw+3TwQ2CQBRFUaOo6x/AtRILGDvADrQESrAD7VwxQ+4G/I/EhSb/bcmZGzKwiMVise9v084EXTXxoBnZ/hUwa2eBzqyaAONvYEZCAV0Pdjoo7L27DM7Wr9YKBC4yuBKQwJqAAghIgECSAIFyoYIVAQ2cCLjADwCOUgCwtFYJAA5WCwHAcrjYbQ54oBtu9pYDDtgM3w6B5iN45HMJOKDIBxNwQP7DSgIeyIkc8AAJAi4oAMkFJAi4gETyAQkCLuAuBECCgANIJAWQyAEXkEgSIEFAA0USAQvwR2Bi80EsFov98J52GzL3vLeyTQAAAABJRU5ErkJggg=="
+                    "icon_alert": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAjVBMVEUAAAAzR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR198qNTWAAAALnRSTlMAsFf6A8T2D3vpgfBPMQbbnCMKzry2bY6JdWYsFeSUSuDW0cmhXEUnHjwaqEE2puKK5AAAA39JREFUeNrt2uey2jAQBeADcjcuGNNNb5eSff/Hy49MckMGw0oreyYz/p7goEXWam10Op2OkSI5RXd3lIWeile7Q5nPBxcHLfk6Hbf0ghrNNgWadl1n9IZygy805xJt6TN34aMRG5eYvHwI25z+iDSo+xJWDXakq2dxFYZjMuAFKaxIA4/MZGdYMNyTubUj3/ghSZQVZBaKZLIlBJw1icUbGPNLsmEOQ5eM7DimMPGIyZaDb/L7Y7KndKDLz8imNTQ5Jdm1gJ41WaYe0LEg68Ih+B6K7Nv54BqGxBLPBl/Fj8mYeMYOeNI9sYxv+KXPDByBJyCWGf6oMuJQS14BPOLYp/h2JRYXHMySJvjbjFhO+GxALDs8WRJL6OMTZ0csRzxxPFv/wz7xTPDMJZbYxwcj4unjWY94Ary3oYYDhAXecpsOQBO8c6HGA+zxTtR8AErwxraFAFPUu1ILAUIHtdZtBKAzamWtBJihzhe1EmCEOqd2ApCPGseWAgxqN6EsgHgjFtRSgBKvJW0FWMn+g/IAVOClSBpAehzcWwvQx0uuOICwJxjJA8j6skwYQHwahLIA8nmJ11qAHC+p1gIc8VIsmfmUFlZgJSljSPLTaEcaDuxehn9DPJAGr+JOtfjT45J09J4WICYLT8KctJzMx5obvDQnLSpw8MvFJT1DxmyEYzS4AemPyCM9ymHcTJlWe0XadnjNUdSOnmw6IhegxozacRXNZ+S8FDUKRW0YyyZEcnPGmJotG2eka4laX5pr+fAB+GeXDM5ReQ3CP4eBM/cEJ5HpqRre8O2HIi5V4Q3fM5z0RLLH4LfcsKtyRvzgbw0V8dwMi3fAB3fDK34iG898WxpWMlWCSbHBDWNq2NT3bb00K/GPSvTaTH9HxQ6ePey9OCy2JlOWwKhwgubUfV6CW8zZOj54cv2+asy7DjClLqeeffzhRJY/56m2xNC7/d44LnMowJd4xBDni6T4scg9YnBT6BiQZdsKegKyykug6042DaCtGJE9AQxULtkSwUiakxVeH6YmiuS2CcydY5JyK0hcMvnHjDL+WHgPFHNmikytNrBh6ZIRNfVhySkkfe4S9vhRTHr2fdjlByHxHQawr5jsiUX1zmhIMg3pk8OkQoOc82xEtbzxfInm+YNpuaJ/qF0vuKZoT5H0J8FsnR/zaTSfbIYOOp1Op9P5X/0Eg/+iUtRdaggAAAAASUVORK5CYII="
                 };
-                image_base64.sample_icon = new NetImage(x3.sample_icon, 3);
+                image_base64.icon_alert = new NetImage(x3.icon_alert, 3);
             })(image_base64 = R.image_base64 || (R.image_base64 = {}));
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
@@ -24,17 +24,14 @@ var sample;
     (function (app) {
         var R;
         (function (R) {
-            var image;
-            (function (image_1) {
-                var NetDrawable = androidui.image.NetDrawable;
-                class image {
-                    static get sample_icon() { return new NetDrawable(R.image_base64.sample_icon); }
-                }
-                image_1.image = image;
-                android.content.res.Resources.buildDrawableFinder = (refString) => {
-                    return image[refString];
-                };
-            })(image = R.image || (R.image = {}));
+            var NetDrawable = androidui.image.NetDrawable;
+            class image {
+                static get icon_alert() { return new NetDrawable(R.image_base64.icon_alert); }
+            }
+            R.image = image;
+            android.content.res.Resources.buildDrawableFinder = (refString) => {
+                return image[refString];
+            };
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
@@ -56,6 +53,7 @@ var sample;
                 "sample_gridview_item": "<FrameLayout id=\"item_layout\"\n             android:layout_width=\"match_parent\"\n             android:padding=\"32dp\">\n    <TextView id=\"item_text\"\n              android:padding=\"16dp\"\n              android:layout_width=\"wrap_content\"\n              android:layout_height=\"wrap_content\"\n              android:background=\"#55000000\"\n              android:textColor=\"white\"\n              android:layout_gravity=\"center\"\n            >\n    </TextView>\n</FrameLayout>",
                 "sample_htmlview": "<ScrollView android:fillViewport=\"true\">\n    <LinearLayout\n            android:orientation=\"vertical\">\n        <HtmlView>\n            <p style=\"font-size: 24px;text-align: center\">HtmlView</p>\n        </HtmlView>\n        <HtmlView style=\"padding:0 20px;box-sizing: border-box;line-height: 20px;\">\n            <p>HtmlView使用浏览器<span style=\"color: red;font-weight: bold;\">DOM</span>渲染, 可与Android的View混用, 但因为DOM的性能差, 会影响移动端流畅度.不提倡使用</p>\n            <p>HtmlView在Canvas DOM之上, 即会盖在所有Android的View之上.</p>\n        </HtmlView>\n        <TextView android:gravity=\"center\">TextView</TextView>\n        <HtmlView style=\"overflow: visible;text-align: center;\">\n            <input style=\"font-size: 16px;text-align: center;box-shadow: 0 0 1px black;margin: 12px 0; padding: 6px;\" placeholder=\"请输入\"/>\n        </HtmlView>\n    </LinearLayout>\n</ScrollView>",
                 "sample_imageview": "<ScrollView>\n    <LinearLayout\n            android:padding=\"0 6dp\"\n            android:orientation=\"vertical\">\n        <TextView>自适应高宽:</TextView>\n        <ImageView\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:style=\"@style/imageStyle\"\n                ></ImageView>\n        <TextView>FitCenter(默认ScaleType):</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:layout_height=\"200dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:layout_width=\"match_parent\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>FitStart:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitStart\"\n                    android:layout_height=\"200dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitStart\"\n                    android:layout_width=\"match_parent\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>FitEnd:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitEnd\"\n                    android:layout_height=\"200dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitEnd\"\n                    android:layout_width=\"match_parent\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>FitXy:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitXy\"\n                    android:layout_height=\"200dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitXy\"\n                    android:layout_width=\"match_parent\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>Center:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"center\"\n                    android:layout_height=\"80dp\"\n                    android:layout_width=\"80dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"center\"\n                    android:layout_height=\"180dp\"\n                    android:layout_width=\"180dp\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>centerCrop:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerCrop\"\n                    android:layout_height=\"80dp\"\n                    android:layout_width=\"80dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerCrop\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:layout_height=\"100dp\"\n                    android:layout_width=\"60dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerCrop\"\n                    android:layout_height=\"60dp\"\n                    android:layout_width=\"100dp\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>centerInside:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerInside\"\n                    android:layout_height=\"80dp\"\n                    android:layout_width=\"80dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerInside\"\n                    android:layout_height=\"180dp\"\n                    android:layout_width=\"180dp\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n\n        <TextView>Background:</TextView>\n        <FrameLayout\n                android:style=\"@style/imageStyle\"\n                android:backgroundUri=\"assets/images/logo_android_1@2x.png\"\n                ></FrameLayout>\n\n    </LinearLayout>\n</ScrollView>",
+                "sample_life_callback": "<ScrollView>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:gravity=\"center\">\n        <Button id=\"open_activity_normal\">\n            打开普通Activity\n        </Button>\n        <Button id=\"open_activity_float\">\n            打开悬浮Activity\n        </Button>\n        <TextView id=\"console_tv\"\n                android:layout_width=\"wrap_content\">\n        </TextView>\n    </LinearLayout>\n</ScrollView>",
                 "sample_linearlayout": "<LinearLayout\n        android:gravity=\"center_vertical\"\n        android:orientation=\"vertical\">\n\n    <LinearLayout\n            android:orientation=\"vertical\">\n        <TextView\n                android:text=\"垂直线性布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"垂直线性布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n    <LinearLayout\n            android:layout_marginTop=\"12dp\"\n            android:gravity=\"center\"\n            android:orientation=\"vertical\">\n        <TextView\n                android:text=\"垂直线性布局-居中\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"垂直线性布局-居中\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n\n    <LinearLayout\n            android:layout_marginTop=\"12dp\"\n            android:orientation=\"horizontal\">\n        <TextView\n                android:text=\"水平\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"线性\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n    <LinearLayout\n            android:layout_marginTop=\"12dp\"\n            android:gravity=\"center\"\n            android:orientation=\"horizontal\">\n        <TextView\n                android:text=\"水平\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"线性\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"-居中\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n    <LinearLayout\n            android:layout_marginTop=\"12dp\"\n            android:gravity=\"right\"\n            android:orientation=\"horizontal\">\n        <TextView\n                android:text=\"水平\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"线性\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"-居右\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n\n    <TextView\n            android:layout_marginTop=\"12dp\"\n            android:gravity=\"center\"\n            android:text=\"更多用法请看官方文档\"\n            ></TextView>\n\n</LinearLayout>",
                 "sample_listview": "<FrameLayout>\n    <ListView id=\"listView\">\n    </ListView>\n    <TextView\n            android:padding=\"12dp\"\n            android:layout_gravity=\"bottom\"\n            android:layout_height=\"wrap_content\"\n            android:textColor=\"white\"\n            android:background=\"rgba(0, 0, 0, 0.7)\"\n            >\n        ListView使用Adapter机制,移出屏幕的条目可以被回收再用,因此不用担心条目太多的内存问题\n    </TextView>\n</FrameLayout>",
                 "sample_listview_item": "<FrameLayout id=\"item_layout\"\n             android:layout_width=\"match_parent\"\n             android:padding=\"32dp\">\n    <TextView id=\"item_text\"\n              android:padding=\"16dp\"\n              android:layout_width=\"wrap_content\"\n              android:layout_height=\"wrap_content\"\n              android:background=\"#55000000\"\n              android:textColor=\"white\"\n              android:layout_gravity=\"center\"\n            >\n    </TextView>\n</FrameLayout>",
@@ -92,6 +90,7 @@ var sample;
             layout.sample_gridview_item = '@layout/sample_gridview_item';
             layout.sample_htmlview = '@layout/sample_htmlview';
             layout.sample_imageview = '@layout/sample_imageview';
+            layout.sample_life_callback = '@layout/sample_life_callback';
             layout.sample_linearlayout = '@layout/sample_linearlayout';
             layout.sample_listview = '@layout/sample_listview';
             layout.sample_listview_item = '@layout/sample_listview_item';
@@ -186,6 +185,7 @@ var sample;
         var R = sample.app.R;
         class SampleAnimationActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_animation);
                 let rotateView = this.findViewById('rotate_repeat');
                 let rotateAnimation = new android.view.animation.RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
@@ -226,13 +226,13 @@ var sample;
 })(sample || (sample = {}));
 ///<reference path="../../dist/android-ui.d.ts"/>
 ///<reference path="../gen/R/layout.ts"/>
+///<reference path="../gen/R/image.ts"/>
 var sample;
 (function (sample) {
     var app;
     (function (app) {
         var Activity = android.app.Activity;
         var AlertDialog = android.app.AlertDialog;
-        var NetDrawable = androidui.image.NetDrawable;
         var Toast = android.widget.Toast;
         var R = sample.app.R;
         class SampleBaseWidgetActivity extends Activity {
@@ -251,7 +251,7 @@ var sample;
                                 Toast.makeText(activity, '按下确定', Toast.LENGTH_SHORT).show();
                             }
                         })
-                            .setIcon(new NetDrawable('assets/images/logo_android_1@2x.png'))
+                            .setIcon(R.image.icon_alert)
                             .setNegativeButton(android.R.string_.cancel, null)
                             .show();
                     }
@@ -271,6 +271,7 @@ var sample;
         var R = sample.app.R;
         class SampleButtonActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_button);
                 let btn_click = this.findViewById('btn_click');
                 btn_click.setOnClickListener({
@@ -300,6 +301,7 @@ var sample;
         var R = sample.app.R;
         class SampleDrawerLayoutActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_drawerlayout);
             }
         }
@@ -320,6 +322,7 @@ var sample;
         var R = sample.app.R;
         class SampleExpandableListViewActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 let listView = new ExpandableListView(this);
                 this.setContentView(listView);
                 listView.setExpandableAdapter(new MyListAdapter());
@@ -400,6 +403,7 @@ var sample;
         var R = sample.app.R;
         class SampleFrameLayoutActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_framelayout);
             }
         }
@@ -421,6 +425,7 @@ var sample;
         var R = sample.app.R;
         class SampleGridViewActivity extends Activity {
             onCreate() {
+                super.onCreate();
                 this.setContentView(R.layout.sample_gridview);
                 let listView = this.findViewById('gridView');
                 listView.setAdapter(new MyAdapter());
@@ -479,6 +484,96 @@ var sample;
             }
         }
         app.SampleImageViewActivity = SampleImageViewActivity;
+    })(app = sample.app || (sample.app = {}));
+})(sample || (sample = {}));
+/**
+ * Created by linfaxin on 16/1/12.
+ */
+///<reference path="../../dist/android-ui.d.ts"/>
+///<reference path="../gen/R/layout.ts"/>
+var sample;
+(function (sample) {
+    var app;
+    (function (app) {
+        var Activity = android.app.Activity;
+        var Button = android.widget.Button;
+        var Log = android.util.Log;
+        var Gravity = android.view.Gravity;
+        const TAG = 'SampleLifeCallbackActivity';
+        class SampleLifeCallbackActivity extends Activity {
+            onCreate(savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                this.setContentView(app.R.layout.sample_life_callback);
+                this.printTextView = this.findViewById('console_tv');
+                const activity = this;
+                this.findViewById('open_activity_normal').setOnClickListener({
+                    onClick(view) {
+                        activity.startActivity('sample.app.SampleLifeCallbackNormalActivity');
+                    }
+                });
+                this.findViewById('open_activity_float').setOnClickListener({
+                    onClick(view) {
+                        activity.startActivity('sample.app.SampleLifeCallbackFloatingActivity');
+                    }
+                });
+                this.print('onCreate');
+            }
+            print(message) {
+                Log.d(TAG, message);
+                this.printTextView.setText(this.printTextView.getText() + '\n' + message);
+            }
+            onStart() {
+                super.onStart();
+                this.print('onStart');
+            }
+            onRestart() {
+                super.onRestart();
+                this.print('onRestart');
+            }
+            onResume() {
+                super.onResume();
+                this.print('onResume');
+            }
+            onPause() {
+                super.onPause();
+                this.print('onPause');
+            }
+            onStop() {
+                super.onStop();
+                this.print('onStop');
+            }
+            onDestroy() {
+                super.onDestroy();
+                this.print('onDestroy');
+            }
+        }
+        app.SampleLifeCallbackActivity = SampleLifeCallbackActivity;
+        class SampleLifeCallbackNormalActivity extends Activity {
+            onCreate(savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                const activity = this;
+                let btn = new Button(this);
+                btn.setText('关闭');
+                btn.setOnClickListener({
+                    onClick(view) {
+                        activity.finish();
+                    }
+                });
+                let params = new android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.CENTER);
+                this.setContentView(btn, params);
+            }
+        }
+        app.SampleLifeCallbackNormalActivity = SampleLifeCallbackNormalActivity;
+        class SampleLifeCallbackFloatingActivity extends SampleLifeCallbackNormalActivity {
+            onCreate(savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                let density = this.getResources().getDisplayMetrics().density;
+                this.getWindow().setFloating(true);
+                this.getWindow().setLayout(200 * density, 200 * density);
+                this.getWindow().setGravity(Gravity.CENTER);
+            }
+        }
+        app.SampleLifeCallbackFloatingActivity = SampleLifeCallbackFloatingActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
 ///<reference path="../../dist/android-ui.d.ts"/>

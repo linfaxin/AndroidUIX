@@ -21,6 +21,7 @@ module sample.app {
 
     export class SampleExpandableListViewActivity extends Activity {
         onCreate():void {
+            super.onCreate();
             let listView = new ExpandableListView(this);
             this.setContentView(listView);
 
