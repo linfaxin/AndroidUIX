@@ -35,7 +35,6 @@ module androidui {
             return this.mApplication.getWindowManager();
         }
         private mActivityThread:ActivityThread = new ActivityThread(this);
-        private mFinishInit:boolean;
         private _viewRootImpl:android.view.ViewRootImpl;
         private mApplication:android.app.Application;
 
@@ -57,7 +56,6 @@ module androidui {
             }
             androidUIElement[AndroidUI.BindToElementName] = this;
             this.init();
-            this.mFinishInit = true;
         }
 
 

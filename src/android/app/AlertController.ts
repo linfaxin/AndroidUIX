@@ -17,6 +17,8 @@
 ///<reference path="../../android/app/AlertDialog.ts"/>
 ///<reference path="../../android/content/DialogInterface.ts"/>
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../../android/graphics/Color.ts"/>
 ///<reference path="../../android/os/Handler.ts"/>
 ///<reference path="../../android/os/Message.ts"/>
 ///<reference path="../../android/text/TextUtils.ts"/>
@@ -51,6 +53,8 @@ module android.app {
     import AlertDialog = android.app.AlertDialog;
     import DialogInterface = android.content.DialogInterface;
     import Drawable = android.graphics.drawable.Drawable;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
+    import Color = android.graphics.Color;
     import Handler = android.os.Handler;
     import Message = android.os.Message;
     import TextUtils = android.text.TextUtils;
@@ -224,7 +228,7 @@ module android.app {
             //if (this.mView == null || !AlertController.canTextInput(this.mView)) {
             //    this.mWindow.setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM, WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
             //}
-            let layout = this.mContext.getLayoutInflater().inflate(this.mAlertDialogLayout);
+            let layout = this.mContext.getLayoutInflater().inflate(this.mAlertDialogLayout, this.mWindow.getContentParent(), false);
             this.mWindow.setContentView(layout);
             this.setupView();
         }
@@ -549,15 +553,15 @@ module android.app {
 
         private setBackground(topPanel:LinearLayout, contentPanel:LinearLayout, customPanel:View, hasButtons:boolean, hasTitle:boolean, buttonPanel:View):void {
             /* Get all the different background required */
-            let fullDark:Drawable = R.drawable.popup_full_bright;//R.drawable.popup_full_dark;
-            let topDark:Drawable = R.drawable.popup_top_bright;//R.drawable.popup_top_dark;
-            let centerDark:Drawable = R.drawable.popup_center_bright;//R.drawable.popup_center_dark;
-            let bottomDark:Drawable = R.drawable.popup_bottom_bright;//R.drawable.popup_bottom_dark;
-            let fullBright:Drawable = R.drawable.popup_full_bright;
-            let topBright:Drawable = R.drawable.popup_top_bright;
-            let centerBright:Drawable = R.drawable.popup_center_bright;
-            let bottomBright:Drawable = R.drawable.popup_bottom_bright;
-            let bottomMedium:Drawable = R.drawable.popup_bottom_bright;//R.drawable.popup_bottom_medium;
+            let fullDark:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_full_bright;//R.drawable.popup_full_dark;
+            let topDark:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_top_bright;//R.drawable.popup_top_dark;
+            let centerDark:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_center_bright;//R.drawable.popup_center_dark;
+            let bottomDark:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_bottom_bright;//R.drawable.popup_bottom_dark;
+            let fullBright:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_full_bright;
+            let topBright:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_top_bright;
+            let centerBright:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_center_bright;
+            let bottomBright:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_bottom_bright;
+            let bottomMedium:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_bottom_bright;//R.drawable.popup_bottom_medium;
             /*
              * We now set the background of all of the sections of the alert.
              * First collect together each section that is being displayed along

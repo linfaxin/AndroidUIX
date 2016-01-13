@@ -7,6 +7,8 @@
 ///<reference path="../graphics/drawable/ColorDrawable.ts"/>
 ///<reference path="../graphics/drawable/ScrollBarDrawable.ts"/>
 ///<reference path="../graphics/drawable/InsetDrawable.ts"/>
+///<reference path="../graphics/drawable/ShadowDrawable.ts"/>
+///<reference path="../graphics/drawable/RoundRectDrawable.ts"/>
 ///<reference path="../graphics/PixelFormat.ts"/>
 ///<reference path="../graphics/Matrix.ts"/>
 ///<reference path="../graphics/Color.ts"/>
@@ -56,6 +58,8 @@ module android.view {
     import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
     import InsetDrawable = android.graphics.drawable.InsetDrawable;
+    import ShadowDrawable = android.graphics.drawable.ShadowDrawable;
+    import RoundRectDrawable = android.graphics.drawable.RoundRectDrawable;
     import PixelFormat = android.graphics.PixelFormat;
     import Matrix = android.graphics.Matrix;
     import Color = android.graphics.Color;
@@ -723,12 +727,20 @@ module android.view {
             this._mScrollY = Math.floor(value);
         }
 
+        private mPaddingLeft = 0;
+        private mPaddingRight = 0;
+        private mPaddingTop = 0;
+        private mPaddingBottom = 0;
 
-
-        mPaddingLeft = 0;
-        mPaddingRight = 0;
-        mPaddingTop = 0;
-        mPaddingBottom = 0;
+        //androidui add:
+        //clip with the cornerRadius:
+        private mCornerRadiusTopLeft = 0;
+        private mCornerRadiusTopRight = 0;
+        private mCornerRadiusBottomRight = 0;
+        private mCornerRadiusBottomLeft = 0;
+        //draw shadow with background:
+        private mShadowPaint:Paint;
+        private mShadowDrawable:Drawable;
 
         constructor(context?:Context, bindElement?:HTMLElement, defStyle=android.R.attr.viewStyle) {
             super();
@@ -933,6 +945,63 @@ module android.view {
                 let d = this.mBackground;
                 if(d instanceof NetDrawable) return d.getImage().src;
             });
+            //CornerRadius
+            a.addAttr('cornerRadius', (value)=>{
+                let [leftTop, topRight, rightBottom, bottomLeft] = a.parsePaddingMarginLTRB(value);
+                this.setCornerRadius(a.parseNumber(leftTop, 0), a.parseNumber(topRight, 0), a.parseNumber(rightBottom, 0), a.parseNumber(bottomLeft, 0));
+            }, ()=>{
+                return this.mCornerRadiusTopLeft + ' ' + this.mCornerRadiusTopRight + ' ' + this.mCornerRadiusBottomRight + ' ' + this.mCornerRadiusBottomLeft;
+            });
+            a.addAttr('cornerRadiusTopLeft', (value)=>{
+                this.setCornerRadiusTopLeft(a.parseNumber(value, this.mCornerRadiusTopLeft));
+            }, ()=>{
+                return this.mCornerRadiusTopLeft;
+            });
+            a.addAttr('cornerRadiusTopRight', (value)=>{
+                this.setCornerRadiusTopRight(a.parseNumber(value, this.mCornerRadiusTopRight));
+            }, ()=>{
+                return this.mCornerRadiusTopRight;
+            });
+            a.addAttr('cornerRadiusBottomLeft', (value)=>{
+                this.setCornerRadiusBottomLeft(a.parseNumber(value, this.mCornerRadiusBottomLeft));
+            }, ()=>{
+                return this.mCornerRadiusBottomLeft;
+            });
+            a.addAttr('cornerRadiusBottomRight', (value)=>{
+                this.setCornerRadiusBottomRight(a.parseNumber(value, this.mCornerRadiusBottomRight));
+            }, ()=>{
+                return this.mCornerRadiusBottomRight;
+            });
+            //box shadow
+            a.addAttr('viewShadowColor', (value)=>{
+                if(!this.mShadowPaint) this.mShadowPaint = new Paint();
+                this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy,
+                    a.parseColor(value, this.mShadowPaint.shadowColor));
+            }, ()=>{
+                if(this.mShadowPaint) return this.mShadowPaint.shadowColor;
+            });
+            a.addAttr('viewShadowDx', (value)=>{
+                if(!this.mShadowPaint) this.mShadowPaint = new Paint();
+                let dx = this._attrBinder.parseNumber(value, this.mShadowPaint.shadowDx);
+                this.setShadowView(this.mShadowPaint.shadowRadius, dx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
+            }, ()=>{
+                if(this.mShadowPaint) return this.mShadowPaint.shadowDx;
+            });
+            a.addAttr('viewShadowDy', (value)=>{
+                if(!this.mShadowPaint) this.mShadowPaint = new Paint();
+                let dy = a.parseNumber(value, this.mShadowPaint.shadowDy);
+                this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, dy, this.mShadowPaint.shadowColor);
+            }, ()=>{
+                if(this.mShadowPaint) return this.mShadowPaint.shadowDy;
+            });
+            a.addAttr('viewShadowRadius', (value)=>{
+                if(!this.mShadowPaint) this.mShadowPaint = new Paint();
+                let radius = this._attrBinder.parseNumber(value, this.mShadowPaint.shadowRadius);
+                this.setShadowView(radius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
+            }, ()=>{
+                if(this.mShadowPaint) return this.mShadowPaint.shadowRadius;
+            });
+
         }
         getContext():Context {
             if(this.mContext == null && this.mAttachInfo!=null){
@@ -4184,6 +4253,63 @@ module android.view {
             return (this.mClipBounds != null) ? new Rect(this.mClipBounds) : null;
         }
 
+        setCornerRadius(radiusTopLeft:number, radiusTopRight=radiusTopLeft, radiusBottomRight=radiusTopRight, radiusBottomLeft=radiusBottomRight):void {
+            this.setCornerRadiusTopLeft(radiusTopLeft);
+            this.setCornerRadiusTopRight(radiusTopRight);
+            this.setCornerRadiusBottomRight(radiusBottomRight);
+            this.setCornerRadiusBottomLeft(radiusBottomLeft);
+        }
+
+        setCornerRadiusTopLeft(value:number):void {
+            if(this.mCornerRadiusTopLeft != value){
+                this.mCornerRadiusTopLeft = value;
+                this.mShadowDrawable = null;
+                this.invalidate();
+            }
+        }
+        getCornerRadiusTopLeft():number {
+            return this.mCornerRadiusTopLeft;
+        }
+
+        setCornerRadiusTopRight(value:number):void {
+            if(this.mCornerRadiusTopRight != value){
+                this.mCornerRadiusTopRight = value;
+                this.mShadowDrawable = null;
+                this.invalidate();
+            }
+        }
+        getCornerRadiusTopRight():number {
+            return this.mCornerRadiusTopRight;
+        }
+
+        setCornerRadiusBottomRight(value:number):void {
+            if(this.mCornerRadiusBottomRight != value){
+                this.mCornerRadiusBottomRight = value;
+                this.mShadowDrawable = null;
+                this.invalidate();
+            }
+        }
+        getCornerRadiusBottomRight():number {
+            return this.mCornerRadiusBottomRight;
+        }
+
+        setCornerRadiusBottomLeft(value:number):void {
+            if(this.mCornerRadiusBottomLeft != value){
+                this.mCornerRadiusBottomLeft = value;
+                this.mShadowDrawable = null;
+                this.invalidate();
+            }
+        }
+        getCornerRadiusBottomLeft():number {
+            return this.mCornerRadiusBottomLeft;
+        }
+
+        setShadowView(radius:number, dx:number, dy:number, color:number):void {
+            if(!this.mShadowPaint) this.mShadowPaint = new Paint();
+            this.mShadowPaint.setShadowLayer(radius, dx, dy, color);
+            this.invalidate();
+        }
+
 
         getDrawingTime() {
             return this.getViewRootImpl() != null ? this.getViewRootImpl().mDrawingTime : 0;
@@ -4351,15 +4477,22 @@ module android.view {
                 this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
             }
 
+            //androidui add: draw shadow before clip
+            if(this.mShadowPaint!=null) this.drawShadow(canvas);
+
             if ((flags & ViewGroup.FLAG_CLIP_CHILDREN) == ViewGroup.FLAG_CLIP_CHILDREN &&
                 !useDisplayListProperties && cache == null) {
                 if (offsetForScroll) {
-                    canvas.clipRect(sx, sy, sx + (this.mRight - this.mLeft), sy + (this.mBottom - this.mTop));
+                    canvas.clipRect(sx, sy, sx + (this.mRight - this.mLeft), sy + (this.mBottom - this.mTop),
+                        this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomRight, this.mCornerRadiusBottomLeft);
                 } else {
+                    //androidui always false here.
                     if (!scalingRequired || cache == null) {
-                        canvas.clipRect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                        canvas.clipRect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop,
+                            this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomRight, this.mCornerRadiusBottomLeft);
                     } else {
-                        canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight());
+                        canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight(),
+                            this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomRight, this.mCornerRadiusBottomLeft);
                     }
                 }
             }
@@ -4417,6 +4550,19 @@ module android.view {
             }
 
             return more;
+        }
+
+        private drawShadow(canvas:Canvas):void {
+            let shadowPaint = this.mShadowPaint;
+            if(!shadowPaint || !shadowPaint.shadowRadius) return;
+            let color = shadowPaint.shadowColor;
+            if(!this.mShadowDrawable){
+                let drawable = new RoundRectDrawable(shadowPaint.shadowColor,
+                        this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomLeft, this.mCornerRadiusBottomRight);
+                this.mShadowDrawable = new ShadowDrawable(drawable,
+                    shadowPaint.shadowRadius, shadowPaint.shadowDx, shadowPaint.shadowDy, shadowPaint.shadowColor);
+            }
+            this.mShadowDrawable.draw(canvas);
         }
 
         draw(canvas:Canvas):void {
@@ -5082,6 +5228,7 @@ module android.view {
             }
 
             this.mBackgroundSizeChanged = true;
+            this.mShadowDrawable = null;
             this.invalidate(true);
         }
 

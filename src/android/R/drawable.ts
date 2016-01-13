@@ -12,6 +12,8 @@
 ///<reference path="../graphics/drawable/ScaleDrawable.ts"/>
 ///<reference path="../graphics/drawable/AnimationDrawable.ts"/>
 ///<reference path="../graphics/drawable/StateListDrawable.ts"/>
+///<reference path="../graphics/drawable/RoundRectDrawable.ts"/>
+///<reference path="../graphics/drawable/ShadowDrawable.ts"/>
 ///<reference path="id.ts"/>
 
 
@@ -27,6 +29,8 @@ module android.R{
     import ScaleDrawable = android.graphics.drawable.ScaleDrawable;
     import AnimationDrawable = android.graphics.drawable.AnimationDrawable;
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
+    import RoundRectDrawable = android.graphics.drawable.RoundRectDrawable;
+    import ShadowDrawable = android.graphics.drawable.ShadowDrawable;
     import Gravity = android.view.Gravity;
     window.addEventListener('AndroidUILoadFinish', ()=>{
         eval('View = android.view.View;');//real import now
@@ -384,88 +388,15 @@ module android.R{
             return stateList;
         }
 
-        static get popup_full_dark(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xe6000000);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 13 * density);
-        }
-
-        static get popup_top_dark(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xe6000000);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 0);
-        }
-
-        static get popup_center_dark(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xe6000000);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 0);
-        }
-
-        static get popup_bottom_dark(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xe6000000);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
-        }
-
-        static get popup_full_bright(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xffffffff);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 13 * density);
-        }
-
-        static get popup_top_bright(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xffffffff);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 0);
-        }
-
-        static get popup_center_bright(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xffffffff);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 0);
-        }
-
-        static get popup_bottom_bright(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xffffffff);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
-        }
-
-        static get popup_bottom_medium(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xff9a9a9a);
-            bg.getIntrinsicWidth = ()=> 30 * density;
-            bg.getIntrinsicHeight = ()=> 30 * density;
-            return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
-        }
-
         static get toast_frame(){
-            //TODO when .9.png support replace with image
-            let bg = new ColorDrawable(0xff333333);
-            bg.getIntrinsicWidth = ()=> 80 * density;
-            bg.getIntrinsicHeight = ()=> 16 * density;
+            let bg = new RoundRectDrawable(0xff333333, 2 * density,  2 * density,  2 * density,  2 * density);
+            bg.getIntrinsicHeight = ()=> 32 * density;
             bg.getPadding = (rect)=>{
-                rect.set(6 * density, 4 * density, 6 * density, 4 * density);
+                rect.set(12 * density, 6 * density, 12 * density, 6 * density);
                 return true;
             };
-            return bg;
+            let shadow = new ShadowDrawable(bg, 5 * density, 0, 2 * density, 0x44000000);
+            return new InsetDrawable(shadow, 7 * density);//more space show shadow
         }
 
     }

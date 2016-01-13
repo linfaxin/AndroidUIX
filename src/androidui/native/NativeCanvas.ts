@@ -97,7 +97,8 @@ module androidui.native {
             //TODO
         }
 
-        protected drawRoundRectImpl(rect:android.graphics.RectF, rx:number, ry:number, paint:android.graphics.Paint):void {
+        protected drawRoundRectImpl(rect:android.graphics.RectF, radiusTopLeft:number, radiusTopRight:number,
+                                    radiusBottomRight:number, radiusBottomLeft:number, paint:android.graphics.Paint):void {
             //TODO
         }
 

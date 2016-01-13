@@ -1156,17 +1156,12 @@ module android.app{
         }
 
         /**
-         * Call immediately after one of the flavors of {@link #startActivity(Intent)}
+         * Call before one of the flavors of {@link #startActivity(Intent)}
          * or {@link #finish} to specify an explicit transition animation to
          * perform next.
          */
-        overridePendingTransition(enterAnimation:Animation, exitAnimation:Animation, resumeAnimation:Animation, hideAnimation:Animation):void {
-            //TODO override the new activity's window animation
-            if(arguments.length===2){
-
-            }else{
-
-            }
+        overrideNextTransition(enterAnimation:Animation, exitAnimation:Animation, resumeAnimation:Animation, hideAnimation:Animation):void {
+            this.androidUI.mActivityThread.overrideNextWindowAnimation(enterAnimation, exitAnimation, resumeAnimation, hideAnimation);
         }
 
         /**

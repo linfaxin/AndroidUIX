@@ -9,7 +9,7 @@ module PageStack{
     export var currentStack:StateStack;
 
     export var backListener:()=>boolean;
-    export var pageOpenHandler:(pageId:string, pageExtra?:any)=>boolean;
+    export var pageOpenHandler:(pageId:string, pageExtra?:any, isRestore?:boolean)=>boolean;
     export var pageCloseHandler:(pageId:string, pageExtra?:any)=>boolean;
 
     let historyLocking = false;//wait history go complete
@@ -209,7 +209,7 @@ module PageStack{
             let copy = currentStack.stack.concat();
             copy.shift();//ignore root stack
             for(let saveState of copy){
-                firePageOpen(saveState.pageId, saveState.extra);
+                firePageOpen(saveState.pageId, saveState.extra, true);
             }
         }
     }
@@ -223,10 +223,10 @@ module PageStack{
             }
         }
     }
-    function firePageOpen(pageId:string, pageExtra?:any):boolean {
+    function firePageOpen(pageId:string, pageExtra?:any, isRestore=false):boolean {
         if(pageOpenHandler){
             try {
-                return pageOpenHandler(pageId, pageExtra);
+                return pageOpenHandler(pageId, pageExtra, isRestore);
             } catch (e) {
                 console.error(e);
             }

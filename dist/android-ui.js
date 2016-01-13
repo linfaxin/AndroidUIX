@@ -2356,10 +2356,15 @@ var android;
                     rect.set(args[0]);
                 }
                 else {
-                    let [left = 0, top = 0, right = 0, bottom = 0] = args;
-                    rect.set(left, top, right, bottom);
+                    let [left = 0, t = 0, right = 0, bottom = 0] = args;
+                    rect.set(left, t, right, bottom);
                 }
-                this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
+                if (args.length === 8) {
+                    this.clipRoundRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()), args[4], args[5], args[6], args[7]);
+                }
+                else {
+                    this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
+                }
                 this.mCurrentClip.intersect(rect);
                 let r = rect.isEmpty();
                 Canvas.recycleRect(rect);
@@ -2369,6 +2374,39 @@ var android;
                 this._mCanvasContent.beginPath();
                 this._mCanvasContent.rect(left, top, width, height);
                 this._mCanvasContent.clip();
+            }
+            clipRoundRect(r, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft) {
+                let rect = Canvas.obtainRect(r);
+                this.clipRoundRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()), radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
+                this.mCurrentClip.intersect(rect);
+                let empty = rect.isEmpty();
+                Canvas.recycleRect(rect);
+                return empty;
+            }
+            clipRoundRectImpl(left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft) {
+                this.doRoundRectPath(left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
+                this._mCanvasContent.clip();
+            }
+            doRoundRectPath(left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft) {
+                let scale1 = height / (radiusTopLeft + radiusBottomLeft);
+                let scale2 = height / (radiusTopRight + radiusBottomRight);
+                let scale3 = width / (radiusTopLeft + radiusTopRight);
+                let scale4 = width / (radiusBottomLeft + radiusBottomRight);
+                let scale = Math.min(scale1, scale2, scale3, scale4);
+                if (scale < 1) {
+                    radiusTopLeft *= scale;
+                    radiusTopRight *= scale;
+                    radiusBottomRight *= scale;
+                    radiusBottomLeft *= scale;
+                }
+                let ctx = this._mCanvasContent;
+                ctx.beginPath();
+                ctx.moveTo(left + radiusTopLeft, top);
+                ctx.arcTo(left + width, top, left + width, top + radiusTopRight, radiusTopRight);
+                ctx.arcTo(left + width, top + height, left + width - radiusBottomRight, top + height, radiusBottomRight);
+                ctx.arcTo(left, top + height, left, top + height - radiusBottomLeft, radiusBottomLeft);
+                ctx.arcTo(left, top, left + radiusTopLeft, top, radiusTopLeft);
+                ctx.closePath();
             }
             getClipBounds(bounds) {
                 if (!this.mCurrentClip)
@@ -2545,48 +2583,19 @@ var android;
                 if (!paintEmpty)
                     this.restoreImpl();
             }
-            drawRoundRect(rect, rx, ry, paint) {
+            drawRoundRect(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint) {
                 if (rect == null) {
                     throw Error(`new NullPointerException()`);
                 }
-                this.drawRoundRectImpl(rect, rx, ry, paint);
+                this.drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint);
             }
-            drawRoundRectImpl(rect, rx, ry, paint) {
+            drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint) {
                 let paintEmpty = !paint || paint.isEmpty();
                 if (!paintEmpty) {
                     this.saveImpl();
                     paint.applyToCanvas(this);
                 }
-                let ctx = this._mCanvasContent;
-                let x = rect.left;
-                let y = rect.top;
-                let h = rect.height();
-                let w = rect.width();
-                if (w < 2 * rx)
-                    rx = w / 2;
-                if (h < 2 * ry)
-                    ry = h / 2;
-                ctx.beginPath();
-                if (rx == ry) {
-                    let r = rx;
-                    ctx.moveTo(x + r, y);
-                    ctx.arcTo(x + w, y, x + w, y + h, r);
-                    ctx.arcTo(x + w, y + h, x, y + h, r);
-                    ctx.arcTo(x, y + h, x, y, r);
-                    ctx.arcTo(x, y, x + w, y, r);
-                }
-                else {
-                    ctx.moveTo(x, y + ry);
-                    ctx.lineTo(x, y + h - ry);
-                    ctx.quadraticCurveTo(x, y + h, x + rx, y + h);
-                    ctx.lineTo(x + w - rx, y + h);
-                    ctx.quadraticCurveTo(x + w, y + h, x + w, y + h - ry);
-                    ctx.lineTo(x + w, y + ry);
-                    ctx.quadraticCurveTo(x + w, y, x + w - rx, y);
-                    ctx.lineTo(x + rx, y);
-                    ctx.quadraticCurveTo(x, y, x, y + ry);
-                }
-                ctx.closePath();
+                this.doRoundRectPath(rect.left, rect.top, rect.width(), rect.height(), radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
                 this.applyFillOrStrokeToContent(paint.getStyle());
                 if (!paintEmpty)
                     this.restoreImpl();
@@ -3391,6 +3400,253 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
+/**
+ * Created by linfaxin on 16/1/13.
+ */
+///<reference path="Drawable.ts"/>
+///<reference path="../Canvas.ts"/>
+///<reference path="../Paint.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable_2) {
+            class ShadowDrawable extends drawable_2.Drawable {
+                constructor(drawable, radius, dx, dy, color) {
+                    super();
+                    this.mMutated = false;
+                    this.mState = new DrawableState(null, this);
+                    this.mState.mDrawable = drawable;
+                    this.mState.shadowDx = dx;
+                    this.mState.shadowDy = dy;
+                    this.mState.shadowRadius = radius;
+                    this.mState.shadowColor = color;
+                    if (drawable != null) {
+                        drawable.setCallback(this);
+                    }
+                }
+                setShadow(radius, dx, dy, color) {
+                    this.mState.shadowDx = dx;
+                    this.mState.shadowDy = dy;
+                    this.mState.shadowRadius = radius;
+                    this.mState.shadowColor = color;
+                }
+                drawableSizeChange(who) {
+                    const callback = this.getCallback();
+                    if (callback != null && callback.drawableSizeChange) {
+                        callback.drawableSizeChange(this);
+                    }
+                }
+                invalidateDrawable(who) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.invalidateDrawable(this);
+                    }
+                }
+                scheduleDrawable(who, what, when) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.scheduleDrawable(this, what, when);
+                    }
+                }
+                unscheduleDrawable(who, what) {
+                    const callback = this.getCallback();
+                    if (callback != null) {
+                        callback.unscheduleDrawable(this, what);
+                    }
+                }
+                draw(canvas) {
+                    if (!this.mState.shadowRadius || graphics.Color.alpha(this.mState.shadowColor) === 0) {
+                        this.mState.mDrawable.draw(canvas);
+                        return;
+                    }
+                    let saveCount = canvas.save();
+                    canvas.setShadow(this.mState.shadowRadius, this.mState.shadowDx, this.mState.shadowDy, this.mState.shadowColor);
+                    this.mState.mDrawable.draw(canvas);
+                    canvas.restoreToCount(saveCount);
+                }
+                getPadding(padding) {
+                    return this.mState.mDrawable.getPadding(padding);
+                }
+                setVisible(visible, restart) {
+                    this.mState.mDrawable.setVisible(visible, restart);
+                    return super.setVisible(visible, restart);
+                }
+                setAlpha(alpha) {
+                    this.mState.mDrawable.setAlpha(alpha);
+                }
+                getAlpha() {
+                    return this.mState.mDrawable.getAlpha();
+                }
+                getOpacity() {
+                    return graphics.PixelFormat.TRANSPARENT;
+                }
+                isStateful() {
+                    return this.mState.mDrawable.isStateful();
+                }
+                onStateChange(state) {
+                    let changed = this.mState.mDrawable.setState(state);
+                    this.onBoundsChange(this.getBounds());
+                    return changed;
+                }
+                onBoundsChange(bounds) {
+                    this.mState.mDrawable.setBounds(bounds.left, bounds.top, bounds.right, bounds.bottom);
+                }
+                getIntrinsicWidth() {
+                    return this.mState.mDrawable.getIntrinsicWidth();
+                }
+                getIntrinsicHeight() {
+                    return this.mState.mDrawable.getIntrinsicHeight();
+                }
+                getConstantState() {
+                    if (this.mState.canConstantState()) {
+                        return this.mState;
+                    }
+                    return null;
+                }
+                mutate() {
+                    if (!this.mMutated && super.mutate() == this) {
+                        this.mState.mDrawable.mutate();
+                        this.mMutated = true;
+                    }
+                    return this;
+                }
+                getDrawable() {
+                    return this.mState.mDrawable;
+                }
+            }
+            drawable_2.ShadowDrawable = ShadowDrawable;
+            class DrawableState {
+                constructor(orig, owner) {
+                    this.shadowDx = 0;
+                    this.shadowDy = 0;
+                    this.shadowRadius = 0;
+                    this.shadowColor = 0;
+                    if (orig != null) {
+                        this.mDrawable = orig.mDrawable.getConstantState().newDrawable();
+                        this.mDrawable.setCallback(owner);
+                        this.shadowDx = orig.shadowDx;
+                        this.shadowDy = orig.shadowDy;
+                        this.shadowRadius = orig.shadowRadius;
+                        this.shadowColor = orig.shadowColor;
+                    }
+                }
+                newDrawable() {
+                    let drawable = new ShadowDrawable(null, 0, 0, 0, 0);
+                    drawable.mState = new DrawableState(this, drawable);
+                    return drawable;
+                }
+                canConstantState() {
+                    if (!this.mCheckedConstantState) {
+                        this.mCanConstantState = this.mDrawable.getConstantState() != null;
+                        this.mCheckedConstantState = true;
+                    }
+                    return this.mCanConstantState;
+                }
+            }
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 15/10/29.
+ */
+///<reference path="Drawable.ts"/>
+///<reference path="../Canvas.ts"/>
+///<reference path="../Paint.ts"/>
+var android;
+(function (android) {
+    var graphics;
+    (function (graphics) {
+        var drawable;
+        (function (drawable) {
+            class RoundRectDrawable extends drawable.Drawable {
+                constructor(color, radiusTopLeft, radiusTopRight = radiusTopLeft, radiusBottomRight = radiusTopRight, radiusBottomLeft = radiusBottomRight) {
+                    super();
+                    this.mMutated = false;
+                    this.mPaint = new graphics.Paint();
+                    this.mState = new State();
+                    this.setColor(color);
+                    this.mState.mRadiusTopLeft = radiusTopLeft;
+                    this.mState.mRadiusTopRight = radiusTopRight;
+                    this.mState.mRadiusBottomRight = radiusBottomRight;
+                    this.mState.mRadiusBottomLeft = radiusBottomLeft;
+                }
+                mutate() {
+                    if (!this.mMutated && super.mutate() == this) {
+                        this.mState = new State(this.mState);
+                        this.mMutated = true;
+                    }
+                    return this;
+                }
+                draw(canvas) {
+                    if ((this.mState.mUseColor >>> 24) != 0) {
+                        this.mPaint.setColor(this.mState.mUseColor);
+                        canvas.drawRoundRect(this.getBounds(), this.mState.mRadiusTopLeft, this.mState.mRadiusTopRight, this.mState.mRadiusBottomRight, this.mState.mRadiusBottomLeft, this.mPaint);
+                    }
+                }
+                getColor() {
+                    return this.mState.mUseColor;
+                }
+                setColor(color) {
+                    if (this.mState.mBaseColor != color || this.mState.mUseColor != color) {
+                        this.invalidateSelf();
+                        this.mState.mBaseColor = this.mState.mUseColor = color;
+                    }
+                }
+                getAlpha() {
+                    return this.mState.mUseColor >>> 24;
+                }
+                setAlpha(alpha) {
+                    alpha += alpha >> 7;
+                    let baseAlpha = this.mState.mBaseColor >>> 24;
+                    let useAlpha = baseAlpha * alpha >> 8;
+                    let oldUseColor = this.mState.mUseColor;
+                    this.mState.mUseColor = (this.mState.mBaseColor << 8 >>> 8) | (useAlpha << 24);
+                    if (oldUseColor != this.mState.mUseColor) {
+                        this.invalidateSelf();
+                    }
+                }
+                getOpacity() {
+                    switch (this.mState.mUseColor >>> 24) {
+                        case 255:
+                            return graphics.PixelFormat.OPAQUE;
+                        case 0:
+                            return graphics.PixelFormat.TRANSPARENT;
+                    }
+                    return graphics.PixelFormat.TRANSLUCENT;
+                }
+                getConstantState() {
+                    return this.mState;
+                }
+            }
+            drawable.RoundRectDrawable = RoundRectDrawable;
+            class State {
+                constructor(state) {
+                    this.mBaseColor = 0;
+                    this.mUseColor = 0;
+                    this.mRadiusTopLeft = 0;
+                    this.mRadiusTopRight = 0;
+                    this.mRadiusBottomRight = 0;
+                    this.mRadiusBottomLeft = 0;
+                    if (state != null) {
+                        this.mBaseColor = state.mBaseColor;
+                        this.mUseColor = state.mUseColor;
+                        this.mRadiusTopLeft = state.mRadiusTopLeft;
+                        this.mRadiusTopRight = state.mRadiusTopRight;
+                        this.mRadiusBottomRight = state.mRadiusBottomRight;
+                        this.mRadiusBottomLeft = state.mRadiusBottomLeft;
+                    }
+                }
+                newDrawable() {
+                    let c = new RoundRectDrawable(0, 0, 0, 0, 0);
+                    c.mState = new State(this);
+                    return c;
+                }
+            }
+        })(drawable = graphics.drawable || (graphics.drawable = {}));
+    })(graphics = android.graphics || (android.graphics = {}));
+})(android || (android = {}));
 var java;
 (function (java) {
     var lang;
@@ -4022,7 +4278,7 @@ var android;
     var R;
     (function (R) {
         const _layout_data = {
-            "alert_dialog": "\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<LinearLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"parentPanel\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:layout_marginStart=\"8dip\"\n    android:layout_marginEnd=\"8dip\"\n    android:orientation=\"vertical\">\n\n    <LinearLayout android:id=\"topPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\">\n        <View android:id=\"titleDividerTop\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <LinearLayout android:id=\"title_template\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:gravity=\"center_vertical|start\"\n            android:minHeight=\"64dp\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\">\n            <ImageView android:id=\"icon\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:paddingEnd=\"8dip\"></ImageView>\n            <TextView android:id=\"alertTitle\"\n                android:maxLines=\"1\"\n                android:scrollHorizontally=\"true\"\n                android:textSize=\"22sp\"\n                android:textColor=\"#333\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:textAlignment=\"viewStart\"></TextView>\n        </LinearLayout>\n        <View android:id=\"titleDivider\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </LinearLayout>\n\n    <LinearLayout android:id=\"contentPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:orientation=\"vertical\"\n        android:minHeight=\"64dp\">\n        <ScrollView android:id=\"scrollView\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:clipToPadding=\"false\">\n            <TextView android:id=\"message\"\n                android:textSize=\"18sp\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:paddingStart=\"16dip\"\n                android:paddingEnd=\"16dip\"\n                android:paddingTop=\"8dip\"\n                android:paddingBottom=\"8dip\"></TextView>\n        </ScrollView>\n    </LinearLayout>\n\n    <FrameLayout android:id=\"customPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:minHeight=\"64dp\">\n        <FrameLayout android:id=\"custom\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\" ></FrameLayout>\n    </FrameLayout>\n\n    <LinearLayout android:id=\"buttonPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:minHeight=\"48dip\"\n        android:orientation=\"vertical\"\n        android:divider=\"@android:drawable/divider_horizontal\"\n        android:showDividers=\"beginning\"\n        android:dividerPadding=\"0dip\">\n        <LinearLayout\n            android:divider=\"@android:drawable/divider_vertical\"\n            android:showDividers=\"middle\"\n            android:dividerPadding=\"0dp\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:layoutDirection=\"locale\"\n            android:measureWithLargestChild=\"true\">\n            <Button android:id=\"button2\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"start\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button3\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"center_horizontal\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button1\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"end\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n        </LinearLayout>\n     </LinearLayout>\n</LinearLayout>\n",
+            "alert_dialog": "\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<LinearLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"parentPanel\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:viewShadowColor=\"black\"\n    android:viewShadowDy=\"3dp\"\n    android:viewShadowRadius=\"10dp\"\n    android:cornerRadius=\"4dp\"\n    android:layout_marginStart=\"8dip\"\n    android:layout_marginEnd=\"8dip\"\n    android:orientation=\"vertical\">\n\n    <LinearLayout android:id=\"topPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\">\n        <View android:id=\"titleDividerTop\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <LinearLayout android:id=\"title_template\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:gravity=\"center_vertical|start\"\n            android:minHeight=\"64dp\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\">\n            <ImageView android:id=\"icon\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:paddingEnd=\"8dip\"></ImageView>\n            <TextView android:id=\"alertTitle\"\n                android:maxLines=\"1\"\n                android:scrollHorizontally=\"true\"\n                android:textSize=\"22sp\"\n                android:textColor=\"#333\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:textAlignment=\"viewStart\"></TextView>\n        </LinearLayout>\n        <View android:id=\"titleDivider\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </LinearLayout>\n\n    <LinearLayout android:id=\"contentPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:orientation=\"vertical\"\n        android:minHeight=\"64dp\">\n        <ScrollView android:id=\"scrollView\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:clipToPadding=\"false\">\n            <TextView android:id=\"message\"\n                android:textSize=\"18sp\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:paddingStart=\"16dip\"\n                android:paddingEnd=\"16dip\"\n                android:paddingTop=\"8dip\"\n                android:paddingBottom=\"8dip\"></TextView>\n        </ScrollView>\n    </LinearLayout>\n\n    <FrameLayout android:id=\"customPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:minHeight=\"64dp\">\n        <FrameLayout android:id=\"custom\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\" ></FrameLayout>\n    </FrameLayout>\n\n    <LinearLayout android:id=\"buttonPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:minHeight=\"48dip\"\n        android:orientation=\"vertical\"\n        android:divider=\"@android:drawable/divider_horizontal\"\n        android:showDividers=\"beginning\"\n        android:dividerPadding=\"0dip\">\n        <LinearLayout\n            android:divider=\"@android:drawable/divider_vertical\"\n            android:showDividers=\"middle\"\n            android:dividerPadding=\"0dp\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:layoutDirection=\"locale\"\n            android:measureWithLargestChild=\"true\">\n            <Button android:id=\"button2\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"start\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button3\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"center_horizontal\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button1\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"end\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n        </LinearLayout>\n     </LinearLayout>\n</LinearLayout>\n",
             "alert_dialog_progress": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2011 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"wrap_content\" android:layout_height=\"match_parent\">\n        <ProgressBar android:id=\"progress\"\n            style=\"@android:attr/progressBarStyleHorizontal\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dip\"\n            android:layout_marginBottom=\"1dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_centerHorizontal=\"true\"></ProgressBar>\n        <TextView\n            android:id=\"progress_percent\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:paddingBottom=\"16dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_alignParentStart=\"true\"\n            android:layout_below=\"progress\"\n        ></TextView>\n        <TextView\n            android:id=\"progress_number\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:paddingBottom=\"16dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_alignParentEnd=\"true\"\n            android:layout_below=\"progress\"\n        ></TextView>\n</RelativeLayout>\n",
             "select_dialog": "<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the ListView to display the items.\n    Assign an ID so its state will be saved/restored.\n-->\n<view class=\"android.app.AlertController.RecycleListView\"\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"select_dialog_listview\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:cacheColorHint=\"@null\"\n    android:divider=\"@android:drawable/list_divider\"\n    android:scrollbars=\"vertical\"\n    android:overScrollMode=\"ifContentScrolls\"\n    android:textAlignment=\"viewStart\" />\n",
             "select_dialog_item": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the TextView to display individual\n    items.\n-->\n<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:ellipsize=\"marquee\"\n></TextView>\n",
@@ -6322,7 +6578,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_2) {
+        (function (drawable_3) {
             var PixelFormat = android.graphics.PixelFormat;
             var Rect = android.graphics.Rect;
             var System = java.lang.System;
@@ -6650,7 +6906,7 @@ var android;
                     return this;
                 }
             }
-            drawable_2.LayerDrawable = LayerDrawable;
+            drawable_3.LayerDrawable = LayerDrawable;
             (function (LayerDrawable) {
                 class ChildDrawable {
                     constructor() {
@@ -6743,7 +6999,7 @@ var android;
                     }
                 }
                 LayerDrawable.LayerState = LayerState;
-            })(LayerDrawable = drawable_2.LayerDrawable || (drawable_2.LayerDrawable = {}));
+            })(LayerDrawable = drawable_3.LayerDrawable || (drawable_3.LayerDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -6955,7 +7211,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_3) {
+        (function (drawable_4) {
             var Rect = android.graphics.Rect;
             var Gravity = android.view.Gravity;
             var Drawable = android.graphics.drawable.Drawable;
@@ -7077,7 +7333,7 @@ var android;
                     return this;
                 }
             }
-            drawable_3.ScaleDrawable = ScaleDrawable;
+            drawable_4.ScaleDrawable = ScaleDrawable;
             (function (ScaleDrawable) {
                 class ScaleState {
                     constructor(orig, owner) {
@@ -7106,7 +7362,7 @@ var android;
                     }
                 }
                 ScaleDrawable.ScaleState = ScaleState;
-            })(ScaleDrawable = drawable_3.ScaleDrawable || (drawable_3.ScaleDrawable = {}));
+            })(ScaleDrawable = drawable_4.ScaleDrawable || (drawable_4.ScaleDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -7950,11 +8206,11 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_4) {
+        (function (drawable_5) {
             const DEBUG = android.util.Log.DBG_StateListDrawable;
             const TAG = "StateListDrawable";
             const DEFAULT_DITHER = true;
-            class StateListDrawable extends drawable_4.DrawableContainer {
+            class StateListDrawable extends drawable_5.DrawableContainer {
                 constructor() {
                     super();
                     this.initWithState(null);
@@ -8015,8 +8271,8 @@ var android;
                     return this;
                 }
             }
-            drawable_4.StateListDrawable = StateListDrawable;
-            class StateListState extends drawable_4.DrawableContainer.DrawableContainerState {
+            drawable_5.StateListDrawable = StateListDrawable;
+            class StateListState extends drawable_5.DrawableContainer.DrawableContainerState {
                 constructor(orig, owner) {
                     super(orig, owner);
                     if (orig != null) {
@@ -8095,6 +8351,8 @@ var android;
 ///<reference path="../graphics/drawable/ScaleDrawable.ts"/>
 ///<reference path="../graphics/drawable/AnimationDrawable.ts"/>
 ///<reference path="../graphics/drawable/StateListDrawable.ts"/>
+///<reference path="../graphics/drawable/RoundRectDrawable.ts"/>
+///<reference path="../graphics/drawable/ShadowDrawable.ts"/>
 ///<reference path="id.ts"/>
 var android;
 (function (android) {
@@ -8110,6 +8368,8 @@ var android;
         var ScaleDrawable = android.graphics.drawable.ScaleDrawable;
         var AnimationDrawable = android.graphics.drawable.AnimationDrawable;
         var StateListDrawable = android.graphics.drawable.StateListDrawable;
+        var RoundRectDrawable = android.graphics.drawable.RoundRectDrawable;
+        var ShadowDrawable = android.graphics.drawable.ShadowDrawable;
         var Gravity = android.view.Gravity;
         window.addEventListener('AndroidUILoadFinish', () => {
             eval('View = android.view.View;');
@@ -8388,69 +8648,15 @@ var android;
                 stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
                 return stateList;
             }
-            static get popup_full_dark() {
-                let bg = new ColorDrawable(0xe6000000);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 13 * density);
-            }
-            static get popup_top_dark() {
-                let bg = new ColorDrawable(0xe6000000);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 0);
-            }
-            static get popup_center_dark() {
-                let bg = new ColorDrawable(0xe6000000);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 0);
-            }
-            static get popup_bottom_dark() {
-                let bg = new ColorDrawable(0xe6000000);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
-            }
-            static get popup_full_bright() {
-                let bg = new ColorDrawable(0xffffffff);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 13 * density);
-            }
-            static get popup_top_bright() {
-                let bg = new ColorDrawable(0xffffffff);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 8 * density, 10 * density, 0);
-            }
-            static get popup_center_bright() {
-                let bg = new ColorDrawable(0xffffffff);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 0);
-            }
-            static get popup_bottom_bright() {
-                let bg = new ColorDrawable(0xffffffff);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
-            }
-            static get popup_bottom_medium() {
-                let bg = new ColorDrawable(0xff9a9a9a);
-                bg.getIntrinsicWidth = () => 30 * density;
-                bg.getIntrinsicHeight = () => 30 * density;
-                return new InsetDrawable(bg, 10 * density, 0, 10 * density, 13 * density);
-            }
             static get toast_frame() {
-                let bg = new ColorDrawable(0xff333333);
-                bg.getIntrinsicWidth = () => 80 * density;
-                bg.getIntrinsicHeight = () => 16 * density;
+                let bg = new RoundRectDrawable(0xff333333, 2 * density, 2 * density, 2 * density, 2 * density);
+                bg.getIntrinsicHeight = () => 32 * density;
                 bg.getPadding = (rect) => {
-                    rect.set(6 * density, 4 * density, 6 * density, 4 * density);
+                    rect.set(12 * density, 6 * density, 12 * density, 6 * density);
                     return true;
                 };
-                return bg;
+                let shadow = new ShadowDrawable(bg, 5 * density, 0, 2 * density, 0x44000000);
+                return new InsetDrawable(shadow, 7 * density);
             }
         }
         R.drawable = drawable;
@@ -10018,6 +10224,8 @@ var android;
 ///<reference path="../graphics/drawable/ColorDrawable.ts"/>
 ///<reference path="../graphics/drawable/ScrollBarDrawable.ts"/>
 ///<reference path="../graphics/drawable/InsetDrawable.ts"/>
+///<reference path="../graphics/drawable/ShadowDrawable.ts"/>
+///<reference path="../graphics/drawable/RoundRectDrawable.ts"/>
 ///<reference path="../graphics/PixelFormat.ts"/>
 ///<reference path="../graphics/Matrix.ts"/>
 ///<reference path="../graphics/Color.ts"/>
@@ -10066,9 +10274,12 @@ var android;
         var ColorDrawable = android.graphics.drawable.ColorDrawable;
         var ScrollBarDrawable = android.graphics.drawable.ScrollBarDrawable;
         var InsetDrawable = android.graphics.drawable.InsetDrawable;
+        var ShadowDrawable = android.graphics.drawable.ShadowDrawable;
+        var RoundRectDrawable = android.graphics.drawable.RoundRectDrawable;
         var PixelFormat = android.graphics.PixelFormat;
         var Matrix = android.graphics.Matrix;
         var Color = android.graphics.Color;
+        var Paint = android.graphics.Paint;
         var StringBuilder = java.lang.StringBuilder;
         var JavaObject = java.lang.JavaObject;
         var System = java.lang.System;
@@ -10127,6 +10338,10 @@ var android;
                 this.mPaddingRight = 0;
                 this.mPaddingTop = 0;
                 this.mPaddingBottom = 0;
+                this.mCornerRadiusTopLeft = 0;
+                this.mCornerRadiusTopRight = 0;
+                this.mCornerRadiusBottomRight = 0;
+                this.mCornerRadiusBottomLeft = 0;
                 this._attrBinder = new AttrBinder(this);
                 this.mContext = context;
                 this.mTouchSlop = view_2.ViewConfiguration.get().getScaledTouchSlop();
@@ -10379,6 +10594,67 @@ var android;
                     let d = this.mBackground;
                     if (d instanceof NetDrawable)
                         return d.getImage().src;
+                });
+                a.addAttr('cornerRadius', (value) => {
+                    let [leftTop, topRight, rightBottom, bottomLeft] = a.parsePaddingMarginLTRB(value);
+                    this.setCornerRadius(a.parseNumber(leftTop, 0), a.parseNumber(topRight, 0), a.parseNumber(rightBottom, 0), a.parseNumber(bottomLeft, 0));
+                }, () => {
+                    return this.mCornerRadiusTopLeft + ' ' + this.mCornerRadiusTopRight + ' ' + this.mCornerRadiusBottomRight + ' ' + this.mCornerRadiusBottomLeft;
+                });
+                a.addAttr('cornerRadiusTopLeft', (value) => {
+                    this.setCornerRadiusTopLeft(a.parseNumber(value, this.mCornerRadiusTopLeft));
+                }, () => {
+                    return this.mCornerRadiusTopLeft;
+                });
+                a.addAttr('cornerRadiusTopRight', (value) => {
+                    this.setCornerRadiusTopRight(a.parseNumber(value, this.mCornerRadiusTopRight));
+                }, () => {
+                    return this.mCornerRadiusTopRight;
+                });
+                a.addAttr('cornerRadiusBottomLeft', (value) => {
+                    this.setCornerRadiusBottomLeft(a.parseNumber(value, this.mCornerRadiusBottomLeft));
+                }, () => {
+                    return this.mCornerRadiusBottomLeft;
+                });
+                a.addAttr('cornerRadiusBottomRight', (value) => {
+                    this.setCornerRadiusBottomRight(a.parseNumber(value, this.mCornerRadiusBottomRight));
+                }, () => {
+                    return this.mCornerRadiusBottomRight;
+                });
+                a.addAttr('viewShadowColor', (value) => {
+                    if (!this.mShadowPaint)
+                        this.mShadowPaint = new Paint();
+                    this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy, a.parseColor(value, this.mShadowPaint.shadowColor));
+                }, () => {
+                    if (this.mShadowPaint)
+                        return this.mShadowPaint.shadowColor;
+                });
+                a.addAttr('viewShadowDx', (value) => {
+                    if (!this.mShadowPaint)
+                        this.mShadowPaint = new Paint();
+                    let dx = this._attrBinder.parseNumber(value, this.mShadowPaint.shadowDx);
+                    this.setShadowView(this.mShadowPaint.shadowRadius, dx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
+                }, () => {
+                    if (this.mShadowPaint)
+                        return this.mShadowPaint.shadowDx;
+                });
+                a.addAttr('viewShadowDy', (value) => {
+                    if (!this.mShadowPaint)
+                        this.mShadowPaint = new Paint();
+                    let dy = a.parseNumber(value, this.mShadowPaint.shadowDy);
+                    this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, dy, this.mShadowPaint.shadowColor);
+                }, () => {
+                    if (this.mShadowPaint)
+                        return this.mShadowPaint.shadowDy;
+                });
+                a.addAttr('viewShadowRadius', (value) => {
+                    if (!this.mShadowPaint)
+                        this.mShadowPaint = new Paint();
+                    let radius = this._attrBinder.parseNumber(value, this.mShadowPaint.shadowRadius);
+                    this.setShadowView(radius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
+                }, () => {
+                    if (this.mShadowPaint)
+                        return this.mShadowPaint.shadowRadius;
                 });
             }
             getContext() {
@@ -12421,6 +12697,58 @@ var android;
             getClipBounds() {
                 return (this.mClipBounds != null) ? new Rect(this.mClipBounds) : null;
             }
+            setCornerRadius(radiusTopLeft, radiusTopRight = radiusTopLeft, radiusBottomRight = radiusTopRight, radiusBottomLeft = radiusBottomRight) {
+                this.setCornerRadiusTopLeft(radiusTopLeft);
+                this.setCornerRadiusTopRight(radiusTopRight);
+                this.setCornerRadiusBottomRight(radiusBottomRight);
+                this.setCornerRadiusBottomLeft(radiusBottomLeft);
+            }
+            setCornerRadiusTopLeft(value) {
+                if (this.mCornerRadiusTopLeft != value) {
+                    this.mCornerRadiusTopLeft = value;
+                    this.mShadowDrawable = null;
+                    this.invalidate();
+                }
+            }
+            getCornerRadiusTopLeft() {
+                return this.mCornerRadiusTopLeft;
+            }
+            setCornerRadiusTopRight(value) {
+                if (this.mCornerRadiusTopRight != value) {
+                    this.mCornerRadiusTopRight = value;
+                    this.mShadowDrawable = null;
+                    this.invalidate();
+                }
+            }
+            getCornerRadiusTopRight() {
+                return this.mCornerRadiusTopRight;
+            }
+            setCornerRadiusBottomRight(value) {
+                if (this.mCornerRadiusBottomRight != value) {
+                    this.mCornerRadiusBottomRight = value;
+                    this.mShadowDrawable = null;
+                    this.invalidate();
+                }
+            }
+            getCornerRadiusBottomRight() {
+                return this.mCornerRadiusBottomRight;
+            }
+            setCornerRadiusBottomLeft(value) {
+                if (this.mCornerRadiusBottomLeft != value) {
+                    this.mCornerRadiusBottomLeft = value;
+                    this.mShadowDrawable = null;
+                    this.invalidate();
+                }
+            }
+            getCornerRadiusBottomLeft() {
+                return this.mCornerRadiusBottomLeft;
+            }
+            setShadowView(radius, dx, dy, color) {
+                if (!this.mShadowPaint)
+                    this.mShadowPaint = new Paint();
+                this.mShadowPaint.setShadowLayer(radius, dx, dy, color);
+                this.invalidate();
+            }
             getDrawingTime() {
                 return this.getViewRootImpl() != null ? this.getViewRootImpl().mDrawingTime : 0;
             }
@@ -12549,17 +12877,19 @@ var android;
                     this.onSetAlpha(255);
                     this.mPrivateFlags &= ~View.PFLAG_ALPHA_SET;
                 }
+                if (this.mShadowPaint != null)
+                    this.drawShadow(canvas);
                 if ((flags & view_2.ViewGroup.FLAG_CLIP_CHILDREN) == view_2.ViewGroup.FLAG_CLIP_CHILDREN &&
                     !useDisplayListProperties && cache == null) {
                     if (offsetForScroll) {
-                        canvas.clipRect(sx, sy, sx + (this.mRight - this.mLeft), sy + (this.mBottom - this.mTop));
+                        canvas.clipRect(sx, sy, sx + (this.mRight - this.mLeft), sy + (this.mBottom - this.mTop), this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomRight, this.mCornerRadiusBottomLeft);
                     }
                     else {
                         if (!scalingRequired || cache == null) {
-                            canvas.clipRect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop);
+                            canvas.clipRect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop, this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomRight, this.mCornerRadiusBottomLeft);
                         }
                         else {
-                            canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight());
+                            canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight(), this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomRight, this.mCornerRadiusBottomLeft);
                         }
                     }
                 }
@@ -12595,6 +12925,17 @@ var android;
                     parent.finishAnimatingView(this, a);
                 }
                 return more;
+            }
+            drawShadow(canvas) {
+                let shadowPaint = this.mShadowPaint;
+                if (!shadowPaint || !shadowPaint.shadowRadius)
+                    return;
+                let color = shadowPaint.shadowColor;
+                if (!this.mShadowDrawable) {
+                    let drawable = new RoundRectDrawable(shadowPaint.shadowColor, this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomLeft, this.mCornerRadiusBottomRight);
+                    this.mShadowDrawable = new ShadowDrawable(drawable, shadowPaint.shadowRadius, shadowPaint.shadowDx, shadowPaint.shadowDy, shadowPaint.shadowColor);
+                }
+                this.mShadowDrawable.draw(canvas);
             }
             draw(canvas) {
                 if (this.mClipBounds != null) {
@@ -13039,6 +13380,7 @@ var android;
                     this.requestLayout();
                 }
                 this.mBackgroundSizeChanged = true;
+                this.mShadowDrawable = null;
                 this.invalidate(true);
             }
             computeHorizontalScrollRange() {
@@ -14412,7 +14754,7 @@ var PageStack;
             let copy = PageStack.currentStack.stack.concat();
             copy.shift();
             for (let saveState of copy) {
-                firePageOpen(saveState.pageId, saveState.extra);
+                firePageOpen(saveState.pageId, saveState.extra, true);
             }
         }
     }
@@ -14426,10 +14768,10 @@ var PageStack;
             }
         }
     }
-    function firePageOpen(pageId, pageExtra) {
+    function firePageOpen(pageId, pageExtra, isRestore = false) {
         if (PageStack.pageOpenHandler) {
             try {
-                return PageStack.pageOpenHandler(pageId, pageExtra);
+                return PageStack.pageOpenHandler(pageId, pageExtra, isRestore);
             }
             catch (e) {
                 console.error(e);
@@ -14550,6 +14892,7 @@ var PageStack;
 ///<reference path="../os/Bundle.ts"/>
 ///<reference path="../view/ViewGroup.ts"/>
 ///<reference path="../view/KeyEvent.ts"/>
+///<reference path="../view/animation/Animation.ts"/>
 ///<reference path="../../androidui/AndroidUI.ts"/>
 ///<reference path="../../androidui/util/PageStack.ts"/>
 var android;
@@ -14575,10 +14918,12 @@ var android;
                     let handleUp = this.androidUI._viewRootImpl.dispatchInputEvent(backKeyUpEvent);
                     return handleDown || handleUp;
                 };
-                PageStack.pageOpenHandler = (pageId, pageExtra) => {
+                PageStack.pageOpenHandler = (pageId, pageExtra, isRestore) => {
                     let intent = new Intent(pageId);
                     if (pageExtra)
                         intent.mExtras = new Bundle(pageExtra.mExtras);
+                    if (isRestore)
+                        this.overrideNextWindowAnimation(null, null, null, null);
                     let activity = this.handleLaunchActivity(intent);
                     return activity != null;
                 };
@@ -14592,6 +14937,40 @@ var android;
                     }
                 };
                 PageStack.init();
+            }
+            overrideNextWindowAnimation(enterAnimation, exitAnimation, resumeAnimation, hideAnimation) {
+                this.overrideEnterAnimation = enterAnimation;
+                this.overrideExitAnimation = exitAnimation;
+                this.overrideResumeAnimation = resumeAnimation;
+                this.overrideHideAnimation = hideAnimation;
+                if (this.clearOverrideAnimationTimeoutId)
+                    clearTimeout(this.clearOverrideAnimationTimeoutId);
+                this.clearOverrideAnimationTimeoutId = setTimeout(() => {
+                    this.overrideEnterAnimation = undefined;
+                    this.overrideExitAnimation = undefined;
+                    this.overrideResumeAnimation = undefined;
+                    this.overrideHideAnimation = undefined;
+                }, 0);
+            }
+            getOverrideEnterAnimation() {
+                let anim = this.overrideEnterAnimation;
+                this.overrideEnterAnimation = undefined;
+                return anim;
+            }
+            getOverrideExitAnimation() {
+                let anim = this.overrideExitAnimation;
+                this.overrideExitAnimation = undefined;
+                return anim;
+            }
+            getOverrideResumeAnimation() {
+                let anim = this.overrideResumeAnimation;
+                this.overrideResumeAnimation = undefined;
+                return anim;
+            }
+            getOverrideHideAnimation() {
+                let anim = this.overrideHideAnimation;
+                this.overrideHideAnimation = undefined;
+                return anim;
             }
             scheduleApplicationHide() {
                 let visibleActivities = this.getVisibleToUserActivities();
@@ -14804,7 +15183,6 @@ var androidui;
             }
             androidUIElement[AndroidUI.BindToElementName] = this;
             this.init();
-            this.mFinishInit = true;
         }
         get windowManager() {
             return this.mApplication.getWindowManager();
@@ -21973,9 +22351,13 @@ var android;
                     this.clearWindowFocus();
                     decorView.dispatchWindowFocusChanged(true);
                 }
-                if (window.getContext().androidUI.mFinishInit && wparams.enterAnimation) {
-                    decorView.startAnimation(wparams.enterAnimation);
+                let enterAnimation = window.getContext().androidUI.mActivityThread.getOverrideEnterAnimation();
+                if (enterAnimation === undefined)
+                    enterAnimation = wparams.enterAnimation;
+                if (enterAnimation) {
+                    decorView.startAnimation(enterAnimation);
                 }
+                this.mWindowsLayout.bindElement.style.pointerEvents = '';
             }
             updateWindowLayout(window, params) {
                 if (!(params instanceof WindowManager.LayoutParams)) {
@@ -21990,20 +22372,27 @@ var android;
                     return;
                 }
                 let wparams = decor.getLayoutParams();
-                if (window.getContext().androidUI.mFinishInit && wparams.exitAnimation) {
+                let exitAnimation = window.getContext().androidUI.mActivityThread.getOverrideExitAnimation();
+                if (exitAnimation === undefined)
+                    exitAnimation = wparams.exitAnimation;
+                if (exitAnimation) {
                     let t = this;
-                    wparams.exitAnimation.setAnimationListener({
+                    exitAnimation.setAnimationListener({
                         onAnimationStart(animation) {
                             decor.postOnAnimation({
                                 run() {
-                                    decor.getParent().removeView(decor);
+                                    let group = decor.getParent();
+                                    group.removeView(decor);
+                                    if (group.getChildCount() == 0) {
+                                        group.bindElement.style.pointerEvents = 'none';
+                                    }
                                 }
                             });
                         },
                         onAnimationEnd(animation) { },
                         onAnimationRepeat(animation) { }
                     });
-                    decor.startAnimation(wparams.exitAnimation);
+                    decor.startAnimation(exitAnimation);
                 }
                 else {
                     decor.getParent().removeView(decor);
@@ -22041,19 +22430,25 @@ var android;
                     super.onChildVisibilityChanged(child, oldVisibility, newVisibility);
                     let wparams = child.getLayoutParams();
                     if (newVisibility === View.VISIBLE) {
-                        if (this.getContext().androidUI.mFinishInit && wparams.resumeAnimation) {
-                            child.startAnimation(wparams.resumeAnimation);
+                        let resumeAnimation = child.getContext().androidUI.mActivityThread.getOverrideResumeAnimation();
+                        if (resumeAnimation === undefined)
+                            resumeAnimation = wparams.resumeAnimation;
+                        if (resumeAnimation) {
+                            child.startAnimation(resumeAnimation);
                         }
                     }
                     else {
-                        if (this.getContext().androidUI.mFinishInit && wparams.hideAnimation) {
-                            child.startAnimation(wparams.hideAnimation);
-                            child.drawAnimation(this, android.os.SystemClock.uptimeMillis(), wparams.hideAnimation);
+                        let hideAnimation = child.getContext().androidUI.mActivityThread.getOverrideHideAnimation();
+                        if (hideAnimation === undefined)
+                            hideAnimation = wparams.hideAnimation;
+                        if (hideAnimation) {
+                            child.startAnimation(hideAnimation);
+                            child.drawAnimation(this, android.os.SystemClock.uptimeMillis(), hideAnimation);
                         }
                     }
                 }
                 tagName() {
-                    return 'windows-layout';
+                    return 'windowsGroup';
                 }
             }
             WindowManager.Layout = Layout;
@@ -23392,11 +23787,13 @@ var android;
                     const interpolatedTime = windowAnimation.getInterpolator().getInterpolation(normalizedTime);
                     if (windowAnimation === wparams.exitAnimation) {
                         shadowAlpha = shadowAlpha * (1 - interpolatedTime);
-                        parent.invalidate();
+                        if (normalizedTime < 1)
+                            parent.invalidate();
                     }
                     else if (windowAnimation === wparams.enterAnimation) {
                         shadowAlpha = shadowAlpha * interpolatedTime;
-                        parent.invalidate();
+                        if (normalizedTime < 1)
+                            parent.invalidate();
                     }
                 }
                 if ((windowAnimation != null || wparams.isFloating()) && shadowAlpha) {
@@ -23738,11 +24135,8 @@ var android;
                 this.startActivityForResult(intent, requestCode, options);
                 return true;
             }
-            overridePendingTransition(enterAnimation, exitAnimation, resumeAnimation, hideAnimation) {
-                if (arguments.length === 2) {
-                }
-                else {
-                }
+            overrideNextTransition(enterAnimation, exitAnimation, resumeAnimation, hideAnimation) {
+                this.androidUI.mActivityThread.overrideNextWindowAnimation(enterAnimation, exitAnimation, resumeAnimation, hideAnimation);
             }
             setResult(resultCode, data) {
                 {
@@ -44918,7 +45312,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_5) {
+        (function (drawable_6) {
             var Rect = android.graphics.Rect;
             var Gravity = android.view.Gravity;
             var Drawable = android.graphics.drawable.Drawable;
@@ -45036,7 +45430,7 @@ var android;
             }
             ClipDrawable.HORIZONTAL = 1;
             ClipDrawable.VERTICAL = 2;
-            drawable_5.ClipDrawable = ClipDrawable;
+            drawable_6.ClipDrawable = ClipDrawable;
             (function (ClipDrawable) {
                 class ClipState {
                     constructor(orig, owner) {
@@ -45062,7 +45456,7 @@ var android;
                     }
                 }
                 ClipDrawable.ClipState = ClipState;
-            })(ClipDrawable = drawable_5.ClipDrawable || (drawable_5.ClipDrawable = {}));
+            })(ClipDrawable = drawable_6.ClipDrawable || (drawable_6.ClipDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -48024,6 +48418,7 @@ var android;
                 let inflate = context.getLayoutInflater();
                 let v = inflate.inflate(android.R.layout.transient_notification, null);
                 let tv = v.findViewById(android.R.id.message);
+                tv.setMaxWidth(260 * context.getResources().getDisplayMetrics().density);
                 tv.setText(text);
                 result.mNextView = v;
                 result.mDuration = duration;
@@ -48096,6 +48491,7 @@ var android;
                             params.dimAmount = 0;
                             params.type = WindowManager.LayoutParams.TYPE_TOAST;
                             params.setTitle("Toast");
+                            params.leftMargin = params.rightMargin = 36 * this.mView.getContext().getResources().getDisplayMetrics().density;
                             params.flags =
                                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
                             this.mWindow.setFloating(true);
@@ -48701,6 +49097,8 @@ var android;
 ///<reference path="../../android/app/AlertDialog.ts"/>
 ///<reference path="../../android/content/DialogInterface.ts"/>
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../../android/graphics/Color.ts"/>
 ///<reference path="../../android/os/Handler.ts"/>
 ///<reference path="../../android/os/Message.ts"/>
 ///<reference path="../../android/text/TextUtils.ts"/>
@@ -48735,6 +49133,8 @@ var android;
         const MATCH_PARENT = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
         var R = android.R;
         var DialogInterface = android.content.DialogInterface;
+        var ColorDrawable = android.graphics.drawable.ColorDrawable;
+        var Color = android.graphics.Color;
         var Handler = android.os.Handler;
         var Message = android.os.Message;
         var TextUtils = android.text.TextUtils;
@@ -48789,7 +49189,7 @@ var android;
                 return true;
             }
             installContent() {
-                let layout = this.mContext.getLayoutInflater().inflate(this.mAlertDialogLayout);
+                let layout = this.mContext.getLayoutInflater().inflate(this.mAlertDialogLayout, this.mWindow.getContentParent(), false);
                 this.mWindow.setContentView(layout);
                 this.setupView();
             }
@@ -49030,15 +49430,15 @@ var android;
                 }
             }
             setBackground(topPanel, contentPanel, customPanel, hasButtons, hasTitle, buttonPanel) {
-                let fullDark = R.drawable.popup_full_bright;
-                let topDark = R.drawable.popup_top_bright;
-                let centerDark = R.drawable.popup_center_bright;
-                let bottomDark = R.drawable.popup_bottom_bright;
-                let fullBright = R.drawable.popup_full_bright;
-                let topBright = R.drawable.popup_top_bright;
-                let centerBright = R.drawable.popup_center_bright;
-                let bottomBright = R.drawable.popup_bottom_bright;
-                let bottomMedium = R.drawable.popup_bottom_bright;
+                let fullDark = new ColorDrawable(Color.WHITE);
+                let topDark = new ColorDrawable(Color.WHITE);
+                let centerDark = new ColorDrawable(Color.WHITE);
+                let bottomDark = new ColorDrawable(Color.WHITE);
+                let fullBright = new ColorDrawable(Color.WHITE);
+                let topBright = new ColorDrawable(Color.WHITE);
+                let centerBright = new ColorDrawable(Color.WHITE);
+                let bottomBright = new ColorDrawable(Color.WHITE);
+                let bottomMedium = new ColorDrawable(Color.WHITE);
                 let views = new Array(4);
                 let light = new Array(4);
                 let lastView = null;
@@ -56096,7 +56496,7 @@ var androidui;
             }
             drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint) {
             }
-            drawRoundRectImpl(rect, rx, ry, paint) {
+            drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint) {
             }
             drawTextImpl(text, x, y, style) {
                 native.NativeApi.canvas.drawText(this.canvasId, text, x, y, style);

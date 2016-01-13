@@ -104,9 +104,13 @@ export class WindowManager {
             decorView.dispatchWindowFocusChanged(true);
         }
 
-        if(window.getContext().androidUI.mFinishInit && wparams.enterAnimation){
-            decorView.startAnimation(wparams.enterAnimation);
+        let enterAnimation = window.getContext().androidUI.mActivityThread.getOverrideEnterAnimation();
+        if(enterAnimation === undefined) enterAnimation = wparams.enterAnimation;
+        if(enterAnimation){
+            decorView.startAnimation(enterAnimation);
         }
+
+        this.mWindowsLayout.bindElement.style.pointerEvents = '';//child can select on debug
     }
 
     updateWindowLayout(window:Window, params:ViewGroup.LayoutParams):void{
@@ -123,23 +127,31 @@ export class WindowManager {
             return;
         }
         let wparams = <WindowManager.LayoutParams>decor.getLayoutParams();
-        if(window.getContext().androidUI.mFinishInit && wparams.exitAnimation){
+        let exitAnimation = window.getContext().androidUI.mActivityThread.getOverrideExitAnimation();
+        if(exitAnimation === undefined) exitAnimation = wparams.exitAnimation;
+        if(exitAnimation){
             let t = this;
-            wparams.exitAnimation.setAnimationListener({
+            exitAnimation.setAnimationListener({
                 onAnimationStart(animation:Animation):void{
                     decor.postOnAnimation({//remove next frame to avoid draw again at this frame. (ViewGroup's DisappearingChildren)
                         run(){
-                            (<ViewGroup>decor.getParent()).removeView(decor);
+                            let group = <ViewGroup>decor.getParent();
+                            group.removeView(decor);
+
+                            if(group.getChildCount()==0){//force can't select on debug
+                                group.bindElement.style.pointerEvents = 'none';
+                            }
                         }
                     });
                 },
                 onAnimationEnd(animation:Animation):void{},
                 onAnimationRepeat(animation:Animation):void{}
             });
-            decor.startAnimation(wparams.exitAnimation);
+            decor.startAnimation(exitAnimation);
         }else{
             (<ViewGroup>decor.getParent()).removeView(decor);
         }
+
     }
 
     private clearWindowFocus(){
@@ -185,19 +197,23 @@ export module WindowManager{
 
             let wparams = <WindowManager.LayoutParams>child.getLayoutParams();
             if(newVisibility === View.VISIBLE){
-                if(this.getContext().androidUI.mFinishInit && wparams.resumeAnimation){
-                    child.startAnimation(wparams.resumeAnimation);
+                let resumeAnimation = child.getContext().androidUI.mActivityThread.getOverrideResumeAnimation();
+                if(resumeAnimation === undefined) resumeAnimation = wparams.resumeAnimation;
+                if(resumeAnimation){
+                    child.startAnimation(resumeAnimation);
                 }
             }else{
-                if(this.getContext().androidUI.mFinishInit && wparams.hideAnimation){
-                    child.startAnimation(wparams.hideAnimation);
-                    child.drawAnimation(this, android.os.SystemClock.uptimeMillis(), wparams.hideAnimation);//init animation
+                let hideAnimation = child.getContext().androidUI.mActivityThread.getOverrideHideAnimation();
+                if(hideAnimation === undefined) hideAnimation = wparams.hideAnimation;
+                if(hideAnimation){
+                    child.startAnimation(hideAnimation);
+                    child.drawAnimation(this, android.os.SystemClock.uptimeMillis(), hideAnimation);//init animation
                 }
             }
         }
 
         tagName():string {
-            return 'windows-layout';
+            return 'windowsGroup';
         }
     }
 

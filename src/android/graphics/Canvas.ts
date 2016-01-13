@@ -200,18 +200,25 @@ module android.graphics {
 
         clipRect(rect:Rect):boolean;
         clipRect(left:number, top:number, right:number, bottom:number):boolean;
+        clipRect(left:number, top:number, right:number, bottom:number, radiusTopLeft:number, radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number):boolean;
         clipRect(...args):boolean {
             let rect = Canvas.obtainRect();
 
             if (args.length === 1) {
                 rect.set(args[0]);
 
-            } else {
-                let [left=0, top=0, right=0, bottom=0] = args;
-                rect.set(left, top, right, bottom);
+            }else {
+                let [left=0, t=0, right=0, bottom=0] = args;
+                rect.set(left, t, right, bottom);
             }
 
-            this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
+            if(args.length===8){
+                this.clipRoundRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()),
+                    args[4], args[5], args[6], args[7]);
+            }else{
+                this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
+            }
+
             this.mCurrentClip.intersect(rect);
 
             let r = rect.isEmpty();
@@ -224,6 +231,51 @@ module android.graphics {
             this._mCanvasContent.rect(left, top, width, height);
             this._mCanvasContent.clip();
         }
+
+        clipRoundRect(r:Rect, radiusTopLeft:number, radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number):boolean{
+            let rect = Canvas.obtainRect(r);
+
+            this.clipRoundRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()),
+                radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
+            this.mCurrentClip.intersect(rect);
+
+            let empty = rect.isEmpty();
+            Canvas.recycleRect(rect);
+            return empty;
+
+        }
+        protected clipRoundRectImpl(left:number, top:number, width:number, height:number, radiusTopLeft:number,
+                                    radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number):void {
+            this.doRoundRectPath(left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
+            this._mCanvasContent.clip();
+        }
+
+        private doRoundRectPath(left:number, top:number, width:number, height:number, radiusTopLeft:number,
+                                radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number):void{
+
+            let scale1 = height / (radiusTopLeft + radiusBottomLeft);
+            let scale2 = height / (radiusTopRight + radiusBottomRight);
+            let scale3 = width / (radiusTopLeft + radiusTopRight);
+            let scale4 = width / (radiusBottomLeft + radiusBottomRight);
+            let scale = Math.min(scale1, scale2, scale3, scale4);
+            if(scale<1) {
+                radiusTopLeft *= scale;
+                radiusTopRight *= scale;
+                radiusBottomRight *= scale;
+                radiusBottomLeft *= scale;
+            }
+
+            let ctx = this._mCanvasContent;
+            ctx.beginPath();
+            ctx.moveTo(left+radiusTopLeft, top);
+            ctx.arcTo(left+width, top, left+width, top+radiusTopRight, radiusTopRight);
+            ctx.arcTo(left+width, top+height, left+width-radiusBottomRight, top+height, radiusBottomRight);
+            ctx.arcTo(left, top+height, left, top+height-radiusBottomLeft, radiusBottomLeft);
+            ctx.arcTo(left, top, left+radiusTopLeft, top, radiusTopLeft);
+
+            ctx.closePath();
+        }
+
 
         getClipBounds(bounds?:Rect):Rect {
             if (!this.mCurrentClip) this.mCurrentClip = Canvas.obtainRect();
@@ -469,49 +521,23 @@ module android.graphics {
          * @param ry    The y-radius of the oval used to round the corners
          * @param paint The paint used to draw the roundRect
          */
-        drawRoundRect(rect:RectF, rx:number, ry:number, paint:Paint):void  {
+        drawRoundRect(rect:RectF, radiusTopLeft:number,
+                      radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number, paint:Paint):void {
             if (rect == null) {
                 throw Error(`new NullPointerException()`);
             }
-            this.drawRoundRectImpl(rect, rx, ry, paint);
+            this.drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint);
         }
 
-        protected drawRoundRectImpl(rect:RectF, rx:number, ry:number, paint:Paint):void  {
+        protected drawRoundRectImpl(rect:RectF, radiusTopLeft:number,
+                                    radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number, paint:Paint):void  {
             let paintEmpty = !paint || paint.isEmpty();
             if(!paintEmpty){
                 this.saveImpl();
                 paint.applyToCanvas(this);
             }
 
-            let ctx = this._mCanvasContent;
-            let x = rect.left;
-            let y = rect.top;
-            let h = rect.height();
-            let w = rect.width();
-
-            if (w < 2 * rx) rx = w / 2;
-            if (h < 2 * ry) ry = h / 2;
-
-            ctx.beginPath();
-            if(rx == ry){//may a circle
-                let r = rx;
-                ctx.moveTo(x+r, y);
-                ctx.arcTo(x+w, y,   x+w, y+h, r);
-                ctx.arcTo(x+w, y+h, x,   y+h, r);
-                ctx.arcTo(x,   y+h, x,   y,   r);
-                ctx.arcTo(x,   y,   x+w, y,   r);
-            }else{
-                ctx.moveTo(x,y+ry);
-                ctx.lineTo(x,y+h-ry);
-                ctx.quadraticCurveTo(x,y+h,x+rx,y+h);
-                ctx.lineTo(x+w-rx,y+h);
-                ctx.quadraticCurveTo(x+w,y+h,x+w,y+h-ry);
-                ctx.lineTo(x+w,y+ry);
-                ctx.quadraticCurveTo(x+w,y,x+w-rx,y);
-                ctx.lineTo(x+rx,y);
-                ctx.quadraticCurveTo(x,y,x,y+ry);
-            }
-            ctx.closePath();
+            this.doRoundRectPath(rect.left, rect.top, rect.width(), rect.height(), radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
             this.applyFillOrStrokeToContent(paint.getStyle());
 
             if(!paintEmpty) this.restoreImpl();

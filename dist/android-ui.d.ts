@@ -595,7 +595,11 @@ declare module android.graphics {
         getSaveCount(): number;
         clipRect(rect: Rect): boolean;
         clipRect(left: number, top: number, right: number, bottom: number): boolean;
+        clipRect(left: number, top: number, right: number, bottom: number, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number): boolean;
         protected clipRectImpl(left: number, top: number, width: number, height: number): void;
+        clipRoundRect(r: Rect, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number): boolean;
+        protected clipRoundRectImpl(left: number, top: number, width: number, height: number, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number): void;
+        private doRoundRectPath(left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
         getClipBounds(bounds?: Rect): Rect;
         quickReject(rect: Rect): boolean;
         quickReject(left: number, top: number, right: number, bottom: number): boolean;
@@ -613,8 +617,8 @@ declare module android.graphics {
         protected drawCircleImpl(cx: number, cy: number, radius: number, paint: Paint): void;
         drawArc(oval: RectF, startAngle: number, sweepAngle: number, useCenter: boolean, paint: Paint): void;
         protected drawArcImpl(oval: RectF, startAngle: number, sweepAngle: number, useCenter: boolean, paint: Paint): void;
-        drawRoundRect(rect: RectF, rx: number, ry: number, paint: Paint): void;
-        protected drawRoundRectImpl(rect: RectF, rx: number, ry: number, paint: Paint): void;
+        drawRoundRect(rect: RectF, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number, paint: Paint): void;
+        protected drawRoundRectImpl(rect: RectF, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number, paint: Paint): void;
         drawPath(path: Path, paint: Paint): void;
         drawText_count(text: string, index: number, count: number, x: number, y: number, paint: Paint): void;
         drawText_end(text: string, start: number, end: number, x: number, y: number, paint: Paint): void;
@@ -793,6 +797,48 @@ declare module android.graphics.drawable {
         getConstantState(): Drawable.ConstantState;
         mutate(): Drawable;
         getDrawable(): Drawable;
+    }
+}
+declare module android.graphics.drawable {
+    class ShadowDrawable extends Drawable {
+        private mState;
+        private mMutated;
+        constructor(drawable: Drawable, radius: number, dx: number, dy: number, color: number);
+        setShadow(radius: number, dx: number, dy: number, color: number): void;
+        drawableSizeChange(who: android.graphics.drawable.Drawable): any;
+        invalidateDrawable(who: android.graphics.drawable.Drawable): void;
+        scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
+        unscheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable): void;
+        draw(canvas: Canvas): void;
+        getPadding(padding: Rect): boolean;
+        setVisible(visible: boolean, restart: boolean): boolean;
+        setAlpha(alpha: number): void;
+        getAlpha(): number;
+        getOpacity(): number;
+        isStateful(): boolean;
+        protected onStateChange(state: Array<number>): boolean;
+        protected onBoundsChange(bounds: android.graphics.Rect): void;
+        getIntrinsicWidth(): number;
+        getIntrinsicHeight(): number;
+        getConstantState(): Drawable.ConstantState;
+        mutate(): Drawable;
+        getDrawable(): Drawable;
+    }
+}
+declare module android.graphics.drawable {
+    class RoundRectDrawable extends Drawable {
+        private mState;
+        private mMutated;
+        private mPaint;
+        constructor(color: number, radiusTopLeft: number, radiusTopRight?: number, radiusBottomRight?: number, radiusBottomLeft?: number);
+        mutate(): Drawable;
+        draw(canvas: Canvas): void;
+        getColor(): number;
+        setColor(color: number): void;
+        getAlpha(): number;
+        setAlpha(alpha: number): void;
+        getOpacity(): number;
+        getConstantState(): Drawable.ConstantState;
     }
 }
 declare module java.lang {
@@ -1860,7 +1906,6 @@ declare module android.R {
 declare module android.R {
     import Drawable = android.graphics.drawable.Drawable;
     import InsetDrawable = android.graphics.drawable.InsetDrawable;
-    import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class drawable {
         static button_background: Drawable;
@@ -1886,16 +1931,7 @@ declare module android.R {
         static divider_vertical: Drawable;
         static divider_horizontal: Drawable;
         static item_background: StateListDrawable;
-        static popup_full_dark: InsetDrawable;
-        static popup_top_dark: InsetDrawable;
-        static popup_center_dark: InsetDrawable;
-        static popup_bottom_dark: InsetDrawable;
-        static popup_full_bright: InsetDrawable;
-        static popup_top_bright: InsetDrawable;
-        static popup_center_bright: InsetDrawable;
-        static popup_bottom_bright: InsetDrawable;
-        static popup_bottom_medium: InsetDrawable;
-        static toast_frame: ColorDrawable;
+        static toast_frame: InsetDrawable;
     }
 }
 declare module androidui.image {
@@ -2550,10 +2586,16 @@ declare module android.view {
         private _mScrollY;
         mScrollX: number;
         mScrollY: number;
-        mPaddingLeft: number;
-        mPaddingRight: number;
-        mPaddingTop: number;
-        mPaddingBottom: number;
+        private mPaddingLeft;
+        private mPaddingRight;
+        private mPaddingTop;
+        private mPaddingBottom;
+        private mCornerRadiusTopLeft;
+        private mCornerRadiusTopRight;
+        private mCornerRadiusBottomRight;
+        private mCornerRadiusBottomLeft;
+        private mShadowPaint;
+        private mShadowDrawable;
         constructor(context?: Context, bindElement?: HTMLElement, defStyle?: any);
         protected initBindAttr(a: AttrBinder): void;
         getContext(): Context;
@@ -2803,8 +2845,19 @@ declare module android.view {
         getLayerType(): number;
         setClipBounds(clipBounds: Rect): void;
         getClipBounds(): Rect;
+        setCornerRadius(radiusTopLeft: number, radiusTopRight?: number, radiusBottomRight?: number, radiusBottomLeft?: number): void;
+        setCornerRadiusTopLeft(value: number): void;
+        getCornerRadiusTopLeft(): number;
+        setCornerRadiusTopRight(value: number): void;
+        getCornerRadiusTopRight(): number;
+        setCornerRadiusBottomRight(value: number): void;
+        getCornerRadiusBottomRight(): number;
+        setCornerRadiusBottomLeft(value: number): void;
+        getCornerRadiusBottomLeft(): number;
+        setShadowView(radius: number, dx: number, dy: number, color: number): void;
         getDrawingTime(): number;
         protected drawFromParent(canvas: Canvas, parent: ViewGroup, drawingTime: number): boolean;
+        private drawShadow(canvas);
         draw(canvas: Canvas): void;
         protected onDraw(canvas: Canvas): void;
         protected dispatchDraw(canvas: Canvas): void;
@@ -3100,7 +3153,7 @@ declare module android.view {
 declare module PageStack {
     var currentStack: StateStack;
     var backListener: () => boolean;
-    var pageOpenHandler: (pageId: string, pageExtra?: any) => boolean;
+    var pageOpenHandler: (pageId: string, pageExtra?: any, isRestore?: boolean) => boolean;
     var pageCloseHandler: (pageId: string, pageExtra?: any) => boolean;
     function init(): void;
     function go(delta: number): void;
@@ -3120,12 +3173,23 @@ declare module PageStack {
 }
 declare module android.app {
     import Intent = android.content.Intent;
+    import Animation = android.view.animation.Animation;
     class ActivityThread {
         androidUI: androidui.AndroidUI;
         activityNameClassMap: Map<string, any>;
         mLaunchedActivities: Set<Activity>;
+        overrideExitAnimation: Animation;
+        overrideEnterAnimation: Animation;
+        overrideResumeAnimation: Animation;
+        overrideHideAnimation: Animation;
         constructor(androidUI: androidui.AndroidUI);
         private initWithPageStack();
+        clearOverrideAnimationTimeoutId: any;
+        overrideNextWindowAnimation(enterAnimation: Animation, exitAnimation: Animation, resumeAnimation: Animation, hideAnimation: Animation): void;
+        getOverrideEnterAnimation(): Animation;
+        getOverrideExitAnimation(): Animation;
+        getOverrideResumeAnimation(): Animation;
+        getOverrideHideAnimation(): Animation;
         scheduleApplicationHide(): void;
         scheduleApplicationShow(): void;
         scheduleLaunchActivity(intent: Intent, options?: android.os.Bundle): void;
@@ -3154,7 +3218,6 @@ declare module androidui {
         private _canvas;
         windowManager: android.view.WindowManager;
         private mActivityThread;
-        private mFinishInit;
         private _viewRootImpl;
         private mApplication;
         private rootResourceElement;
@@ -4678,7 +4741,7 @@ declare module android.app {
         startActivities(intents: Intent[], options?: Bundle): void;
         startActivity(intent: Intent | string, options?: Bundle): void;
         startActivityIfNeeded(intent: Intent, requestCode: number, options?: Bundle): boolean;
-        overridePendingTransition(enterAnimation: Animation, exitAnimation: Animation, resumeAnimation: Animation, hideAnimation: Animation): void;
+        overrideNextTransition(enterAnimation: Animation, exitAnimation: Animation, resumeAnimation: Animation, hideAnimation: Animation): void;
         setResult(resultCode: number, data?: Intent): void;
         getCallingActivity(): string;
         setVisible(visible: boolean): void;
@@ -9669,7 +9732,7 @@ declare module androidui.native {
         protected drawOvalImpl(oval: android.graphics.RectF, paint: android.graphics.Paint): void;
         protected drawCircleImpl(cx: number, cy: number, radius: number, paint: android.graphics.Paint): void;
         protected drawArcImpl(oval: android.graphics.RectF, startAngle: number, sweepAngle: number, useCenter: boolean, paint: android.graphics.Paint): void;
-        protected drawRoundRectImpl(rect: android.graphics.RectF, rx: number, ry: number, paint: android.graphics.Paint): void;
+        protected drawRoundRectImpl(rect: android.graphics.RectF, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number, paint: android.graphics.Paint): void;
         protected drawTextImpl(text: string, x: number, y: number, style: android.graphics.Paint.Style): void;
         protected setColorImpl(color: number, style?: android.graphics.Paint.Style): void;
         protected multiplyAlphaImpl(alpha: number): void;

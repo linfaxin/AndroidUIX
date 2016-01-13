@@ -8,6 +8,7 @@
 ///<reference path="../os/Bundle.ts"/>
 ///<reference path="../view/ViewGroup.ts"/>
 ///<reference path="../view/KeyEvent.ts"/>
+///<reference path="../view/animation/Animation.ts"/>
 ///<reference path="../../androidui/AndroidUI.ts"/>
 ///<reference path="../../androidui/util/PageStack.ts"/>
 
@@ -16,6 +17,7 @@ module android.app{
     import Intent = android.content.Intent;
     import ViewGroup = android.view.ViewGroup;
     import View = android.view.View;
+    import Animation = android.view.animation.Animation;
 
 
     /**
@@ -31,6 +33,11 @@ module android.app{
         activityNameClassMap = new Map<string, any>();
         mLaunchedActivities = new Set<Activity>();
 
+        overrideExitAnimation:Animation;
+        overrideEnterAnimation:Animation;
+        overrideResumeAnimation:Animation;
+        overrideHideAnimation:Animation;//null mean no animation, undefined mean not override
+
         constructor(androidUI:androidui.AndroidUI) {
             this.androidUI = androidUI;
             this.activityNameClassMap.set('activity', android.app.Activity);
@@ -45,9 +52,10 @@ module android.app{
                 let handleUp = this.androidUI._viewRootImpl.dispatchInputEvent(backKeyUpEvent);
                 return handleDown || handleUp;
             };
-            PageStack.pageOpenHandler = (pageId:string, pageExtra?:Intent):boolean=>{
+            PageStack.pageOpenHandler = (pageId:string, pageExtra?:Intent, isRestore?:boolean):boolean=>{
                 let intent = new Intent(pageId);
                 if(pageExtra) intent.mExtras = new Bundle(pageExtra.mExtras);
+                if(isRestore) this.overrideNextWindowAnimation(null, null, null, null);
                 let activity = this.handleLaunchActivity(intent);
                 return activity != null;
             };
@@ -62,6 +70,43 @@ module android.app{
             };
             PageStack.init();
             //TODO no window animation before inited PageStack
+        }
+
+
+        clearOverrideAnimationTimeoutId;
+        overrideNextWindowAnimation(enterAnimation:Animation, exitAnimation:Animation, resumeAnimation:Animation, hideAnimation:Animation):void {
+            this.overrideEnterAnimation = enterAnimation;
+            this.overrideExitAnimation = exitAnimation;
+            this.overrideResumeAnimation = resumeAnimation;
+            this.overrideHideAnimation = hideAnimation;
+
+            if(this.clearOverrideAnimationTimeoutId) clearTimeout(this.clearOverrideAnimationTimeoutId);
+            this.clearOverrideAnimationTimeoutId = setTimeout(()=>{
+                this.overrideEnterAnimation = undefined;
+                this.overrideExitAnimation = undefined;
+                this.overrideResumeAnimation = undefined;
+                this.overrideHideAnimation = undefined;
+            }, 0);
+        }
+        getOverrideEnterAnimation():Animation {
+            let anim = this.overrideEnterAnimation;
+            this.overrideEnterAnimation = undefined;
+            return anim;
+        }
+        getOverrideExitAnimation():Animation {
+            let anim = this.overrideExitAnimation;
+            this.overrideExitAnimation = undefined;
+            return anim;
+        }
+        getOverrideResumeAnimation():Animation {
+            let anim = this.overrideResumeAnimation;
+            this.overrideResumeAnimation = undefined;
+            return anim;
+        }
+        getOverrideHideAnimation():Animation {
+            let anim = this.overrideHideAnimation;
+            this.overrideHideAnimation = undefined;
+            return anim;
         }
 
         scheduleApplicationHide():void {

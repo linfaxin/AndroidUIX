@@ -252,6 +252,7 @@ module android.widget {
             let inflate:LayoutInflater = context.getLayoutInflater();//<LayoutInflater> context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             let v:View = inflate.inflate(android.R.layout.transient_notification, null);
             let tv:TextView = <TextView> v.findViewById(android.R.id.message);
+            tv.setMaxWidth(260 * context.getResources().getDisplayMetrics().density);
             tv.setText(text);
             result.mNextView = v;
             result.mDuration = duration;
@@ -377,6 +378,7 @@ module android.widget {
                         params.dimAmount = 0;
                         params.type = WindowManager.LayoutParams.TYPE_TOAST;
                         params.setTitle("Toast");
+                        params.leftMargin = params.rightMargin = 36 * this.mView.getContext().getResources().getDisplayMetrics().density;
                         params.flags =
                             //WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
                             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
