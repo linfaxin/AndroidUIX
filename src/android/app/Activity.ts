@@ -1408,7 +1408,6 @@ module android.app{
         //    //    return false;
         //    //}
         //
-        //    //TODO notify result code & data
         //    //TODO impl navigateUp
         //    return false;
         //}

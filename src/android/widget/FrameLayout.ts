@@ -100,39 +100,39 @@ module android.widget {
         }
 
         setForeground(drawable:Drawable) {
-            //if (this.mForeground != drawable) {//TODO do when drawable ok
-            //    if (this.mForeground != null) {
-            //        this.mForeground.setCallback(null);
-            //        this.unscheduleDrawable(this.mForeground);
-            //    }
-            //
-            //    this.mForeground = drawable;
-            //    this.mForegroundPaddingLeft = 0;
-            //    this.mForegroundPaddingTop = 0;
-            //    this.mForegroundPaddingRight = 0;
-            //    this.mForegroundPaddingBottom = 0;
-            //
-            //    if (drawable != null) {
-            //        this.setWillNotDraw(false);
-            //        drawable.setCallback(this);
-            //        if (drawable.isStateful()) {
-            //            drawable.setState(this.getDrawableState());
-            //        }
-            //        if (this.mForegroundGravity == Gravity.FILL) {
-            //            let padding = new Rect();
-            //            if (drawable.getPadding(padding)) {
-            //                this.mForegroundPaddingLeft = padding.left;
-            //                this.mForegroundPaddingTop = padding.top;
-            //                this.mForegroundPaddingRight = padding.right;
-            //                this.mForegroundPaddingBottom = padding.bottom;
-            //            }
-            //        }
-            //    } else {
-            //        this.setWillNotDraw(true);
-            //    }
-            //    this.requestLayout();
-            //    this.invalidate();
-            //}
+            if (this.mForeground != drawable) {
+                if (this.mForeground != null) {
+                    this.mForeground.setCallback(null);
+                    this.unscheduleDrawable(this.mForeground);
+                }
+
+                this.mForeground = drawable;
+                this.mForegroundPaddingLeft = 0;
+                this.mForegroundPaddingTop = 0;
+                this.mForegroundPaddingRight = 0;
+                this.mForegroundPaddingBottom = 0;
+
+                if (drawable != null) {
+                    this.setWillNotDraw(false);
+                    drawable.setCallback(this);
+                    if (drawable.isStateful()) {
+                        drawable.setState(this.getDrawableState());
+                    }
+                    if (this.mForegroundGravity == Gravity.FILL) {
+                        let padding = new Rect();
+                        if (drawable.getPadding(padding)) {
+                            this.mForegroundPaddingLeft = padding.left;
+                            this.mForegroundPaddingTop = padding.top;
+                            this.mForegroundPaddingRight = padding.right;
+                            this.mForegroundPaddingBottom = padding.bottom;
+                        }
+                    }
+                } else {
+                    this.setWillNotDraw(true);
+                }
+                this.requestLayout();
+                this.invalidate();
+            }
         }
 
         getForeground():Drawable {

@@ -2524,6 +2524,7 @@ declare module android.view {
         static LAYOUT_DIRECTION_INHERIT: number;
         static LAYOUT_DIRECTION_LOCALE: number;
         mID: string;
+        private mTag;
         mPrivateFlags: number;
         private mPrivateFlags2;
         private mPrivateFlags3;
@@ -2970,6 +2971,8 @@ declare module android.view {
         findViewByPredicateInsideOut(start: View, predicate: View.Predicate<View>): View;
         setId(id: string): void;
         getId(): string;
+        getTag(): any;
+        setTag(tag: any): void;
         setIsRootNamespace(isRoot: boolean): void;
         isRootNamespace(): boolean;
         getResources(): Resources;
@@ -3047,6 +3050,7 @@ declare module android.view {
             mTmpTransformRect: Rect;
             mTmpMatrix: Matrix;
             mTmpTransformation: Transformation;
+            mTmpTransformLocation: number[];
             mScrollContainers: Set<View>;
             mViewRequestingLayout: View;
             mInvalidateChildLocation: number[];
@@ -3569,6 +3573,8 @@ declare module android.view {
         private dispatchTransformedTouchEvent(event, cancel, child, desiredPointerIdBits);
         setMotionEventSplittingEnabled(split: boolean): void;
         isMotionEventSplittingEnabled(): boolean;
+        isAnimationCacheEnabled(): boolean;
+        setAnimationCacheEnabled(enabled: boolean): void;
         isAlwaysDrawnWithCacheEnabled(): boolean;
         setAlwaysDrawnWithCacheEnabled(always: boolean): void;
         isChildrenDrawnWithCacheEnabled(): boolean;

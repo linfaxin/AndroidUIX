@@ -69,7 +69,6 @@ module android.app{
                 }
             };
             PageStack.init();
-            //TODO no window animation before inited PageStack
         }
 
 

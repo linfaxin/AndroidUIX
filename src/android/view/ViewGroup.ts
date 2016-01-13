@@ -138,37 +138,47 @@ module android.view {
         constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
             super(context, bindElement, defStyle);
             this.initViewGroup();
-            this._attrBinder.addAttr('clipChildren', (value)=>{
-                this.setClipChildren(this._attrBinder.parseBoolean(value));
+
+            const a = this._attrBinder;
+            a.addAttr('clipChildren', (value)=>{
+                this.setClipChildren(a.parseBoolean(value));
             }, ()=>{
                 return this.getClipChildren();
             });
-            this._attrBinder.addAttr('clipToPadding', (value)=>{
-                this.setClipToPadding(this._attrBinder.parseBoolean(value));
+            a.addAttr('clipToPadding', (value)=>{
+                this.setClipToPadding(a.parseBoolean(value));
             }, ()=>{
                 return this.isClipToPadding();
             });
-            //TODO attr
-            this._attrBinder.addAttr('animationCache', (value)=>{
+            a.addAttr('animationCache', (value)=>{
+                this.setAnimationCacheEnabled(a.parseBoolean(value, true));
             });
-            this._attrBinder.addAttr('persistentDrawingCache', (value)=>{
+            a.addAttr('persistentDrawingCache', (value)=>{
+                if(value == 'none') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
+                else if(value == 'animation') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
+                else if(value == 'scrolling') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
+                else if(value == 'all') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
             });
-            this._attrBinder.addAttr('addStatesFromChildren', (value)=>{
+            a.addAttr('addStatesFromChildren', (value)=>{
+                this.setAddStatesFromChildren(a.parseBoolean(value, false));
             });
-            this._attrBinder.addAttr('alwaysDrawnWithCache', (value)=>{
+            a.addAttr('alwaysDrawnWithCache', (value)=>{
+                this.setAlwaysDrawnWithCacheEnabled(a.parseBoolean(value, true));
             });
-            this._attrBinder.addAttr('layoutAnimation', (value)=>{
+            //a.addAttr('layoutAnimation', (value)=>{//TODO when layout support
+            //});
+            a.addAttr('descendantFocusability', (value)=>{
+                if(value == 'beforeDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                else if(value == 'afterDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+                else if(value == 'blocksDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
             });
-            this._attrBinder.addAttr('descendantFocusability', (value)=>{
+            a.addAttr('splitMotionEvents', (value)=>{
+                this.setMotionEventSplittingEnabled(a.parseBoolean(value, false));
             });
-            this._attrBinder.addAttr('animationCache', (value)=>{
-            });
-            this._attrBinder.addAttr('splitMotionEvents', (value)=>{
-            });
-            this._attrBinder.addAttr('animateLayoutChanges', (value)=>{
-            });
-            this._attrBinder.addAttr('layoutMode', (value)=>{
-            });
+            //a.addAttr('animateLayoutChanges', (value)=>{//TODO when layout transition support
+            //});
+            //a.addAttr('layoutMode', (value)=>{//TODO when more layout mode support
+            //});
         }
 
         private initViewGroup() {
@@ -930,7 +940,7 @@ module android.view {
 
             let handled:boolean;
             if (!child.hasIdentityMatrix()) {
-                //TODO when matrix ok
+                //TODO when Inverse matrix ok
                 //let transformedEvent = MotionEvent.obtain(event);
                 //transformedEvent.offsetLocation(offsetX, offsetY);
                 //transformedEvent.transform(child.getInverseMatrix());
@@ -1262,7 +1272,7 @@ module android.view {
             let localX = x + this.mScrollX - child.mLeft;
             let localY = y + this.mScrollY - child.mTop;
 
-            //if (! child.hasIdentityMatrix() && mAttachInfo != null) { //TODO when view transform ok
+            //if (! child.hasIdentityMatrix() && mAttachInfo != null) { //TODO when invers matrix ok
             //    final float[] localXY = mAttachInfo.mTmpTransformLocation;
             //    localXY[0] = localX;
             //    localXY[1] = localY;
@@ -1339,7 +1349,7 @@ module android.view {
                 let offsetX = this.mScrollX - child.mLeft;
                 let offsetY = this.mScrollY - child.mTop;
                 transformedEvent.offsetLocation(offsetX, offsetY);
-                //if (! child.hasIdentityMatrix()) {//TODO when view transform ok
+                //if (! child.hasIdentityMatrix()) {//TODO when view InverseMatrix ok
                 //    transformedEvent.transform(child.getInverseMatrix());
                 //}
 
@@ -1381,6 +1391,36 @@ module android.view {
          */
         isMotionEventSplittingEnabled():boolean  {
             return (this.mGroupFlags & ViewGroup.FLAG_SPLIT_MOTION_EVENTS) == ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
+        }
+
+        /**
+         * Indicates whether the children's drawing cache is used during a layout
+         * animation. By default, the drawing cache is enabled but this will prevent
+         * nested layout animations from working. To nest animations, you must disable
+         * the cache.
+         *
+         * @return true if the animation cache is enabled, false otherwise
+         *
+         * @see #setAnimationCacheEnabled(boolean)
+         * @see View#setDrawingCacheEnabled(boolean)
+         */
+        isAnimationCacheEnabled():boolean  {
+            return (this.mGroupFlags & ViewGroup.FLAG_ANIMATION_CACHE) == ViewGroup.FLAG_ANIMATION_CACHE;
+        }
+
+        /**
+         * Enables or disables the children's drawing cache during a layout animation.
+         * By default, the drawing cache is enabled but this will prevent nested
+         * layout animations from working. To nest animations, you must disable the
+         * cache.
+         *
+         * @param enabled true to enable the animation cache, false otherwise
+         *
+         * @see #isAnimationCacheEnabled()
+         * @see View#setDrawingCacheEnabled(boolean)
+         */
+        setAnimationCacheEnabled(enabled:boolean):void  {
+            this.setBooleanFlag(ViewGroup.FLAG_ANIMATION_CACHE, enabled);
         }
 
         /**
@@ -1953,9 +1993,9 @@ module android.view {
             const rect = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformRect : new Rect();
             rect.set(r);
 
-            //if (!child.hasIdentityMatrix()) {//TODO view transform
-            //    child.getMatrix().mapRect(rect);
-            //}
+            if (!child.hasIdentityMatrix()) {
+                child.getMatrix().mapRect(rect);
+            }
 
             let dx = child.mLeft - this.mScrollX;
             let dy = child.mTop - this.mScrollY;
@@ -1963,15 +2003,14 @@ module android.view {
             rect.offset(dx, dy);
 
             if (offset != null) {
-                //if (!child.hasIdentityMatrix()) {//TODO view transform
-                //    let position = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformLocation
-                //        : new Array<number>(2);
-                //    position[0] = offset.x;
-                //    position[1] = offset.y;
-                //    child.getMatrix().mapPoints(position);
-                //    offset.x = (int) (position[0] + 0.5);
-                //    offset.y = (int) (position[1] + 0.5);
-                //}
+                if (!child.hasIdentityMatrix()) {
+                    let position = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformLocation : new Array<number>(2);
+                    position[0] = offset.x;
+                    position[1] = offset.y;
+                    child.getMatrix().mapPoints(position);
+                    offset.x = Math.floor(position[0] + 0.5);
+                    offset.y = Math.floor(position[1] + 0.5);
+                }
                 offset.x += dx;
                 offset.y += dy;
             }

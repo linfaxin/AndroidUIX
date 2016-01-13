@@ -624,6 +624,7 @@ module android.view {
             }
             return null;
         }
+        private mTag:any;
         mPrivateFlags = 0;
         private mPrivateFlags2 = 0;
         private mPrivateFlags3 = 0;
@@ -809,56 +810,37 @@ module android.view {
                 if(Number.isInteger(value)) this.scrollTo(this.mScrollX, value);
             }),
             a.addAttr('alpha', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                this.setAlpha(a.parseNumber(value));
             }),
             a.addAttr('transformPivotX', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                this.setPivotX(a.parseNumber(value, 0));
             }),
             a.addAttr('transformPivotY', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                this.setPivotY(a.parseNumber(value, 0));
             }),
             a.addAttr('translationX', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                this.setTranslationX(a.parseNumber(value, 0));
             }),
             a.addAttr('translationY', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                this.setTranslationY(a.parseNumber(value, 0));
             }),
             a.addAttr('rotation', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                this.setRotation(a.parseNumber(value, 0));
             }),
             a.addAttr('rotationX', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                //TODO not support rotationX
             }),
             a.addAttr('rotationY', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                //TODO not support rotationY
             }),
             a.addAttr('scaleX', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                this.setScaleX(a.parseNumber(value, 1));
             }),
             a.addAttr('scaleY', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)) {//TODO
-                };
+                this.setScaleY(a.parseNumber(value, 1));
             }),
             a.addAttr('tag', (value)=>{
+                this.setTag(value);
             }),
             a.addAttr('id', (value)=>{
                 this.setId(value);
@@ -1128,9 +1110,7 @@ module android.view {
         offsetTopAndBottom(offset:number):void {
             if (offset != 0) {
                 this.updateMatrix();
-                const matrixIsIdentity = true;
-                //TODO when Transformation ok
-                // matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                const matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
 
                 if (matrixIsIdentity) {
 //                if (mDisplayList != null) {
@@ -1182,9 +1162,7 @@ module android.view {
         offsetLeftAndRight(offset:number) {
             if (offset != 0) {
                 this.updateMatrix();
-                const matrixIsIdentity = true;
-                //TODO when Transformation ok
-                // matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
+                const matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
 
                 if (matrixIsIdentity) {
 //                if (mDisplayList != null) {
@@ -3712,18 +3690,17 @@ module android.view {
          * @param outRect The hit rectangle of the view.
          */
         getHitRect(outRect:Rect):void  {
-            //TODO when transformation impl
-            //this.updateMatrix();
-            //const info:View.TransformationInfo = this.mTransformationInfo;
-            //if (info == null || info.mMatrixIsIdentity || this.mAttachInfo == null) {
+            this.updateMatrix();
+            const info:View.TransformationInfo = this.mTransformationInfo;
+            if (info == null || info.mMatrixIsIdentity || this.mAttachInfo == null) {
                 outRect.set(this.mLeft, this.mTop, this.mRight, this.mBottom);
-            //}
-            //else {
-            //    const tmpRect:RectF = this.mAttachInfo.mTmpTransformRect;
-            //    tmpRect.set(0, 0, this.getWidth(), this.getHeight());
-            //    info.mMatrix.mapRect(tmpRect);
-            //    outRect.set(Math.floor(tmpRect.left) + this.mLeft, Math.floor(tmpRect.top) + this.mTop, Math.floor(tmpRect.right) + this.mLeft, Math.floor(tmpRect.bottom) + this.mTop);
-            //}
+            }
+            else {
+                const tmpRect:RectF = this.mAttachInfo.mTmpTransformRect;
+                tmpRect.set(0, 0, this.getWidth(), this.getHeight());
+                info.mMatrix.mapRect(tmpRect);
+                outRect.set(Math.floor(tmpRect.left) + this.mLeft, Math.floor(tmpRect.top) + this.mTop, Math.floor(tmpRect.right) + this.mLeft, Math.floor(tmpRect.bottom) + this.mTop);
+            }
         }
         getFocusedRect(r:Rect) {
             this.getDrawingRect(r);
@@ -5867,6 +5844,12 @@ module android.view {
         getId():string {
             return this.mID;
         }
+        getTag():any  {
+            return this.mTag;
+        }
+        setTag(tag:any):void  {
+            this.mTag = tag;
+        }
         setIsRootNamespace(isRoot:boolean) {
             if (isRoot) {
                 this.mPrivateFlags |= View.PFLAG_IS_ROOT_NAMESPACE;
@@ -6368,6 +6351,7 @@ module android.view {
              * Temporary for use in transforming invalidation rect
              */
             mTmpTransformation:Transformation = new Transformation();
+            mTmpTransformLocation:number[] = new Array<number>(2);
             mScrollContainers = new Set<View>();
             //mViewScrollChanged = false;
             //mTreeObserver = new ViewTreeObserver();

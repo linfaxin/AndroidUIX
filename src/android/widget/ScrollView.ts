@@ -8,7 +8,9 @@
 ///<reference path="OverScroller.ts"/>
 ///<reference path="../view/VelocityTracker.ts"/>
 ///<reference path="../view/ViewConfiguration.ts"/>
+///<reference path="../view/FocusFinder.ts"/>
 ///<reference path="../util/Log.ts"/>
+///<reference path="../../java/util/List.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 
@@ -22,8 +24,10 @@ module android.widget {
     import Rect = android.graphics.Rect;
     import OverScroller = android.widget.OverScroller;
     import Log = android.util.Log;
+    import List = java.util.List;
     import SystemClock = android.os.SystemClock;
     import KeyEvent = android.view.KeyEvent;
+    import FocusFinder = android.view.FocusFinder;
 
     export class ScrollView extends FrameLayout {
         static ANIMATED_SCROLL_GAP = 250;
@@ -175,16 +179,15 @@ module android.widget {
             this.mTempRect.setEmpty();
 
             if (!this.canScroll()) {
-                //TODO when focus impl
-                //if (this.isFocused() && event.getKeyCode() != KeyEvent.KEYCODE_BACK) {
-                //    let currentFocused = this.findFocus();
-                //    if (currentFocused == this) currentFocused = null;
-                //    let nextFocused = FocusFinder.getInstance().findNextFocus(this,
-                //        currentFocused, View.FOCUS_DOWN);
-                //    return nextFocused != null
-                //        && nextFocused != this
-                //        && nextFocused.requestFocus(View.FOCUS_DOWN);
-                //}
+                if (this.isFocused() && event.getKeyCode() != KeyEvent.KEYCODE_BACK) {
+                    let currentFocused = this.findFocus();
+                    if (currentFocused == this) currentFocused = null;
+                    let nextFocused = FocusFinder.getInstance().findNextFocus(this,
+                        currentFocused, View.FOCUS_DOWN);
+                    return nextFocused != null
+                        && nextFocused != this
+                        && nextFocused.requestFocus(View.FOCUS_DOWN);
+                }
                 return false;
             }
 
@@ -575,8 +578,59 @@ module android.widget {
         }
 
         private findFocusableViewInBounds(topFocus:boolean, top:number, bottom:number):View {
-            //TODO when focus ok
-            return null;
+            let focusables:List<View> = this.getFocusables(View.FOCUS_FORWARD);
+            let focusCandidate:View = null;
+            /*
+             * A fully contained focusable is one where its top is below the bound's
+             * top, and its bottom is above the bound's bottom. A partially
+             * contained focusable is one where some part of it is within the
+             * bounds, but it also has some part that is not within bounds.  A fully contained
+             * focusable is preferred to a partially contained focusable.
+             */
+            let foundFullyContainedFocusable:boolean = false;
+            let count:number = focusables.size();
+            for (let i:number = 0; i < count; i++) {
+                let view:View = focusables.get(i);
+                let viewTop:number = view.getTop();
+                let viewBottom:number = view.getBottom();
+                if (top < viewBottom && viewTop < bottom) {
+                    /*
+                     * the focusable is in the target area, it is a candidate for
+                     * focusing
+                     */
+                    const viewIsFullyContained:boolean = (top < viewTop) && (viewBottom < bottom);
+                    if (focusCandidate == null) {
+                        /* No candidate, take this one */
+                        focusCandidate = view;
+                        foundFullyContainedFocusable = viewIsFullyContained;
+                    } else {
+                        const viewIsCloserToBoundary:boolean = (topFocus && viewTop < focusCandidate.getTop()) || (!topFocus && viewBottom > focusCandidate.getBottom());
+                        if (foundFullyContainedFocusable) {
+                            if (viewIsFullyContained && viewIsCloserToBoundary) {
+                                /*
+                                 * We're dealing with only fully contained views, so
+                                 * it has to be closer to the boundary to beat our
+                                 * candidate
+                                 */
+                                focusCandidate = view;
+                            }
+                        } else {
+                            if (viewIsFullyContained) {
+                                /* Any fully contained view beats a partially contained view */
+                                focusCandidate = view;
+                                foundFullyContainedFocusable = true;
+                            } else if (viewIsCloserToBoundary) {
+                                /*
+                                 * Partially contained view beats another partially
+                                 * contained view if it's closer
+                                 */
+                                focusCandidate = view;
+                            }
+                        }
+                    }
+                }
+            }
+            return focusCandidate;
         }
 
 
@@ -663,18 +717,16 @@ module android.widget {
             let currentFocused = this.findFocus();
             if (currentFocused == this) currentFocused = null;
 
-            //TODO when focus impl
-            let nextFocused = null;//FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
+            let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
 
             const maxJump = this.getMaxScrollAmount();
 
             if (nextFocused != null && this.isWithinDeltaOfScreen(nextFocused, maxJump, this.getHeight())) {
-                //TODO when focus impl
-                //nextFocused.getDrawingRect(this.mTempRect);
-                //this.offsetDescendantRectToMyCoords(nextFocused, this.mTempRect);
-                //let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(mTempRect);
-                //this.doScrollY(scrollDelta);
-                //nextFocused.requestFocus(direction);
+                nextFocused.getDrawingRect(this.mTempRect);
+                this.offsetDescendantRectToMyCoords(nextFocused, this.mTempRect);
+                let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
+                this.doScrollY(scrollDelta);
+                nextFocused.requestFocus(direction);
             } else {
                 // no new focus
                 let scrollDelta = maxJump;
@@ -702,11 +754,10 @@ module android.widget {
                 // (also, need to temporarily force FOCUS_BEFORE_DESCENDANTS so we are
                 // sure to
                 // get it)
-                //TODO when focus impl
-                //const descendantFocusability = this.getDescendantFocusability();  // save
-                //this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
-                //this.requestFocus();
-                //this.setDescendantFocusability(descendantFocusability);  // restore
+                const descendantFocusability = this.getDescendantFocusability();  // save
+                this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                this.requestFocus();
+                this.setDescendantFocusability(descendantFocusability);  // restore
             }
             return true;
         }
@@ -955,8 +1006,20 @@ module android.widget {
         }
 
         protected onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
-            //TODO when focus impl
-            return false;
+            // (ugh).
+            if (direction == View.FOCUS_FORWARD) {
+                direction = View.FOCUS_DOWN;
+            } else if (direction == View.FOCUS_BACKWARD) {
+                direction = View.FOCUS_UP;
+            }
+            const nextFocus:View = previouslyFocusedRect == null ? FocusFinder.getInstance().findNextFocus(this, null, direction) : FocusFinder.getInstance().findNextFocusFromRect(this, previouslyFocusedRect, direction);
+            if (nextFocus == null) {
+                return false;
+            }
+            if (this.isOffScreen(nextFocus)) {
+                return false;
+            }
+            return nextFocus.requestFocus(direction, previouslyFocusedRect);
         }
 
         requestChildRectangleOnScreen(child:View, rectangle:Rect, immediate:boolean):boolean {

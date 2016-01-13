@@ -10444,66 +10444,35 @@ var android;
                             this.scrollTo(this.mScrollX, value);
                     }),
                     a.addAttr('alpha', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
+                        this.setAlpha(a.parseNumber(value));
                     }),
                     a.addAttr('transformPivotX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
+                        this.setPivotX(a.parseNumber(value, 0));
                     }),
                     a.addAttr('transformPivotY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
+                        this.setPivotY(a.parseNumber(value, 0));
                     }),
                     a.addAttr('translationX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
+                        this.setTranslationX(a.parseNumber(value, 0));
                     }),
                     a.addAttr('translationY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
+                        this.setTranslationY(a.parseNumber(value, 0));
                     }),
                     a.addAttr('rotation', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
+                        this.setRotation(a.parseNumber(value, 0));
                     }),
                     a.addAttr('rotationX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
                     }),
                     a.addAttr('rotationY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
                     }),
                     a.addAttr('scaleX', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
+                        this.setScaleX(a.parseNumber(value, 1));
                     }),
                     a.addAttr('scaleY', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value)) {
-                        }
-                        ;
+                        this.setScaleY(a.parseNumber(value, 1));
                     }),
                     a.addAttr('tag', (value) => {
+                        this.setTag(value);
                     }),
                     a.addAttr('id', (value) => {
                         this.setId(value);
@@ -10770,7 +10739,7 @@ var android;
             offsetTopAndBottom(offset) {
                 if (offset != 0) {
                     this.updateMatrix();
-                    const matrixIsIdentity = true;
+                    const matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
                     if (matrixIsIdentity) {
                         const p = this.mParent;
                         if (p != null && this.mAttachInfo != null) {
@@ -10806,7 +10775,7 @@ var android;
             offsetLeftAndRight(offset) {
                 if (offset != 0) {
                     this.updateMatrix();
-                    const matrixIsIdentity = true;
+                    const matrixIsIdentity = this.mTransformationInfo == null || this.mTransformationInfo.mMatrixIsIdentity;
                     if (matrixIsIdentity) {
                         const p = this.mParent;
                         if (p != null && this.mAttachInfo != null) {
@@ -12321,7 +12290,17 @@ var android;
                 }
             }
             getHitRect(outRect) {
-                outRect.set(this.mLeft, this.mTop, this.mRight, this.mBottom);
+                this.updateMatrix();
+                const info = this.mTransformationInfo;
+                if (info == null || info.mMatrixIsIdentity || this.mAttachInfo == null) {
+                    outRect.set(this.mLeft, this.mTop, this.mRight, this.mBottom);
+                }
+                else {
+                    const tmpRect = this.mAttachInfo.mTmpTransformRect;
+                    tmpRect.set(0, 0, this.getWidth(), this.getHeight());
+                    info.mMatrix.mapRect(tmpRect);
+                    outRect.set(Math.floor(tmpRect.left) + this.mLeft, Math.floor(tmpRect.top) + this.mTop, Math.floor(tmpRect.right) + this.mLeft, Math.floor(tmpRect.bottom) + this.mTop);
+                }
             }
             getFocusedRect(r) {
                 this.getDrawingRect(r);
@@ -13875,6 +13854,12 @@ var android;
             getId() {
                 return this.mID;
             }
+            getTag() {
+                return this.mTag;
+            }
+            setTag(tag) {
+                this.mTag = tag;
+            }
             setIsRootNamespace(isRoot) {
                 if (isRoot) {
                     this.mPrivateFlags |= View.PFLAG_IS_ROOT_NAMESPACE;
@@ -14378,6 +14363,7 @@ var android;
                     this.mTmpTransformRect = new Rect();
                     this.mTmpMatrix = new Matrix();
                     this.mTmpTransformation = new Transformation();
+                    this.mTmpTransformLocation = new Array(2);
                     this.mScrollContainers = new Set();
                     this.mInvalidateChildLocation = new Array(2);
                     this.mHasWindowFocus = false;
@@ -17106,35 +17092,46 @@ var android;
                 this.mLayoutCalledWhileSuppressed = false;
                 this.mChildCountWithTransientState = 0;
                 this.initViewGroup();
-                this._attrBinder.addAttr('clipChildren', (value) => {
-                    this.setClipChildren(this._attrBinder.parseBoolean(value));
+                const a = this._attrBinder;
+                a.addAttr('clipChildren', (value) => {
+                    this.setClipChildren(a.parseBoolean(value));
                 }, () => {
                     return this.getClipChildren();
                 });
-                this._attrBinder.addAttr('clipToPadding', (value) => {
-                    this.setClipToPadding(this._attrBinder.parseBoolean(value));
+                a.addAttr('clipToPadding', (value) => {
+                    this.setClipToPadding(a.parseBoolean(value));
                 }, () => {
                     return this.isClipToPadding();
                 });
-                this._attrBinder.addAttr('animationCache', (value) => {
+                a.addAttr('animationCache', (value) => {
+                    this.setAnimationCacheEnabled(a.parseBoolean(value, true));
                 });
-                this._attrBinder.addAttr('persistentDrawingCache', (value) => {
+                a.addAttr('persistentDrawingCache', (value) => {
+                    if (value == 'none')
+                        this.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
+                    else if (value == 'animation')
+                        this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
+                    else if (value == 'scrolling')
+                        this.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
+                    else if (value == 'all')
+                        this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
                 });
-                this._attrBinder.addAttr('addStatesFromChildren', (value) => {
+                a.addAttr('addStatesFromChildren', (value) => {
+                    this.setAddStatesFromChildren(a.parseBoolean(value, false));
                 });
-                this._attrBinder.addAttr('alwaysDrawnWithCache', (value) => {
+                a.addAttr('alwaysDrawnWithCache', (value) => {
+                    this.setAlwaysDrawnWithCacheEnabled(a.parseBoolean(value, true));
                 });
-                this._attrBinder.addAttr('layoutAnimation', (value) => {
+                a.addAttr('descendantFocusability', (value) => {
+                    if (value == 'beforeDescendants')
+                        this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                    else if (value == 'afterDescendants')
+                        this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+                    else if (value == 'blocksDescendants')
+                        this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
                 });
-                this._attrBinder.addAttr('descendantFocusability', (value) => {
-                });
-                this._attrBinder.addAttr('animationCache', (value) => {
-                });
-                this._attrBinder.addAttr('splitMotionEvents', (value) => {
-                });
-                this._attrBinder.addAttr('animateLayoutChanges', (value) => {
-                });
-                this._attrBinder.addAttr('layoutMode', (value) => {
+                a.addAttr('splitMotionEvents', (value) => {
+                    this.setMotionEventSplittingEnabled(a.parseBoolean(value, false));
                 });
             }
             get mChildrenCount() {
@@ -18036,6 +18033,12 @@ var android;
             isMotionEventSplittingEnabled() {
                 return (this.mGroupFlags & ViewGroup.FLAG_SPLIT_MOTION_EVENTS) == ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
             }
+            isAnimationCacheEnabled() {
+                return (this.mGroupFlags & ViewGroup.FLAG_ANIMATION_CACHE) == ViewGroup.FLAG_ANIMATION_CACHE;
+            }
+            setAnimationCacheEnabled(enabled) {
+                this.setBooleanFlag(ViewGroup.FLAG_ANIMATION_CACHE, enabled);
+            }
             isAlwaysDrawnWithCacheEnabled() {
                 return (this.mGroupFlags & ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) == ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE;
             }
@@ -18379,10 +18382,21 @@ var android;
             getChildVisibleRect(child, r, offset) {
                 const rect = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformRect : new Rect();
                 rect.set(r);
+                if (!child.hasIdentityMatrix()) {
+                    child.getMatrix().mapRect(rect);
+                }
                 let dx = child.mLeft - this.mScrollX;
                 let dy = child.mTop - this.mScrollY;
                 rect.offset(dx, dy);
                 if (offset != null) {
+                    if (!child.hasIdentityMatrix()) {
+                        let position = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformLocation : new Array(2);
+                        position[0] = offset.x;
+                        position[1] = offset.y;
+                        child.getMatrix().mapPoints(position);
+                        offset.x = Math.floor(position[0] + 0.5);
+                        offset.y = Math.floor(position[1] + 0.5);
+                    }
                     offset.x += dx;
                     offset.y += dy;
                 }
@@ -19201,6 +19215,38 @@ var android;
                 return new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
             }
             setForeground(drawable) {
+                if (this.mForeground != drawable) {
+                    if (this.mForeground != null) {
+                        this.mForeground.setCallback(null);
+                        this.unscheduleDrawable(this.mForeground);
+                    }
+                    this.mForeground = drawable;
+                    this.mForegroundPaddingLeft = 0;
+                    this.mForegroundPaddingTop = 0;
+                    this.mForegroundPaddingRight = 0;
+                    this.mForegroundPaddingBottom = 0;
+                    if (drawable != null) {
+                        this.setWillNotDraw(false);
+                        drawable.setCallback(this);
+                        if (drawable.isStateful()) {
+                            drawable.setState(this.getDrawableState());
+                        }
+                        if (this.mForegroundGravity == Gravity.FILL) {
+                            let padding = new Rect();
+                            if (drawable.getPadding(padding)) {
+                                this.mForegroundPaddingLeft = padding.left;
+                                this.mForegroundPaddingTop = padding.top;
+                                this.mForegroundPaddingRight = padding.right;
+                                this.mForegroundPaddingBottom = padding.bottom;
+                            }
+                        }
+                    }
+                    else {
+                        this.setWillNotDraw(true);
+                    }
+                    this.requestLayout();
+                    this.invalidate();
+                }
             }
             getForeground() {
                 return this.mForeground;
@@ -25867,7 +25913,9 @@ var android;
 ///<reference path="OverScroller.ts"/>
 ///<reference path="../view/VelocityTracker.ts"/>
 ///<reference path="../view/ViewConfiguration.ts"/>
+///<reference path="../view/FocusFinder.ts"/>
 ///<reference path="../util/Log.ts"/>
+///<reference path="../../java/util/List.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 var android;
@@ -25885,6 +25933,7 @@ var android;
         var Log = android.util.Log;
         var SystemClock = android.os.SystemClock;
         var KeyEvent = android.view.KeyEvent;
+        var FocusFinder = android.view.FocusFinder;
         class ScrollView extends widget.FrameLayout {
             constructor(context, bindElement, defStyle) {
                 super(context, bindElement, defStyle);
@@ -25991,6 +26040,15 @@ var android;
             executeKeyEvent(event) {
                 this.mTempRect.setEmpty();
                 if (!this.canScroll()) {
+                    if (this.isFocused() && event.getKeyCode() != KeyEvent.KEYCODE_BACK) {
+                        let currentFocused = this.findFocus();
+                        if (currentFocused == this)
+                            currentFocused = null;
+                        let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, View.FOCUS_DOWN);
+                        return nextFocused != null
+                            && nextFocused != this
+                            && nextFocused.requestFocus(View.FOCUS_DOWN);
+                    }
                     return false;
                 }
                 let handled = false;
@@ -26297,7 +26355,40 @@ var android;
                 return scrollRange;
             }
             findFocusableViewInBounds(topFocus, top, bottom) {
-                return null;
+                let focusables = this.getFocusables(View.FOCUS_FORWARD);
+                let focusCandidate = null;
+                let foundFullyContainedFocusable = false;
+                let count = focusables.size();
+                for (let i = 0; i < count; i++) {
+                    let view = focusables.get(i);
+                    let viewTop = view.getTop();
+                    let viewBottom = view.getBottom();
+                    if (top < viewBottom && viewTop < bottom) {
+                        const viewIsFullyContained = (top < viewTop) && (viewBottom < bottom);
+                        if (focusCandidate == null) {
+                            focusCandidate = view;
+                            foundFullyContainedFocusable = viewIsFullyContained;
+                        }
+                        else {
+                            const viewIsCloserToBoundary = (topFocus && viewTop < focusCandidate.getTop()) || (!topFocus && viewBottom > focusCandidate.getBottom());
+                            if (foundFullyContainedFocusable) {
+                                if (viewIsFullyContained && viewIsCloserToBoundary) {
+                                    focusCandidate = view;
+                                }
+                            }
+                            else {
+                                if (viewIsFullyContained) {
+                                    focusCandidate = view;
+                                    foundFullyContainedFocusable = true;
+                                }
+                                else if (viewIsCloserToBoundary) {
+                                    focusCandidate = view;
+                                }
+                            }
+                        }
+                    }
+                }
+                return focusCandidate;
             }
             pageScroll(direction) {
                 let down = direction == View.FOCUS_DOWN;
@@ -26361,9 +26452,14 @@ var android;
                 let currentFocused = this.findFocus();
                 if (currentFocused == this)
                     currentFocused = null;
-                let nextFocused = null;
+                let nextFocused = FocusFinder.getInstance().findNextFocus(this, currentFocused, direction);
                 const maxJump = this.getMaxScrollAmount();
                 if (nextFocused != null && this.isWithinDeltaOfScreen(nextFocused, maxJump, this.getHeight())) {
+                    nextFocused.getDrawingRect(this.mTempRect);
+                    this.offsetDescendantRectToMyCoords(nextFocused, this.mTempRect);
+                    let scrollDelta = this.computeScrollDeltaToGetChildRectOnScreen(this.mTempRect);
+                    this.doScrollY(scrollDelta);
+                    nextFocused.requestFocus(direction);
                 }
                 else {
                     let scrollDelta = maxJump;
@@ -26385,6 +26481,10 @@ var android;
                     this.doScrollY(direction == View.FOCUS_DOWN ? scrollDelta : -scrollDelta);
                 }
                 if (currentFocused != null && currentFocused.isFocused() && this.isOffScreen(currentFocused)) {
+                    const descendantFocusability = this.getDescendantFocusability();
+                    this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                    this.requestFocus();
+                    this.setDescendantFocusability(descendantFocusability);
                 }
                 return true;
             }
@@ -26570,7 +26670,20 @@ var android;
                 super.requestChildFocus(child, focused);
             }
             onRequestFocusInDescendants(direction, previouslyFocusedRect) {
-                return false;
+                if (direction == View.FOCUS_FORWARD) {
+                    direction = View.FOCUS_DOWN;
+                }
+                else if (direction == View.FOCUS_BACKWARD) {
+                    direction = View.FOCUS_UP;
+                }
+                const nextFocus = previouslyFocusedRect == null ? FocusFinder.getInstance().findNextFocus(this, null, direction) : FocusFinder.getInstance().findNextFocusFromRect(this, previouslyFocusedRect, direction);
+                if (nextFocus == null) {
+                    return false;
+                }
+                if (this.isOffScreen(nextFocus)) {
+                    return false;
+                }
+                return nextFocus.requestFocus(direction, previouslyFocusedRect);
             }
             requestChildRectangleOnScreen(child, rectangle, immediate) {
                 rectangle.offset(child.getLeft() - child.getScrollX(), child.getTop() - child.getScrollY());

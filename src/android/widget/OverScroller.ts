@@ -212,7 +212,6 @@ module android.widget{
 
     }
 
-    //TODO improve over scroll bounce effect
     class SplineOverScroller{
         static DECELERATION_RATE = (Math.log(0.78) / Math.log(0.9));
         static INFLEXION = 0.35; // Tension lines cross at (INFLEXION, 1)
