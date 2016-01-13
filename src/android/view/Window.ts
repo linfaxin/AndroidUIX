@@ -1512,11 +1512,11 @@ export interface Callback {
 
                 if(windowAnimation === wparams.exitAnimation){
                     shadowAlpha = shadowAlpha * (1-interpolatedTime);
-                    parent.invalidate();
+                    if(normalizedTime<1) parent.invalidate();
 
                 }else if(windowAnimation === wparams.enterAnimation){
                     shadowAlpha = shadowAlpha * interpolatedTime;
-                    parent.invalidate();
+                    if(normalizedTime<1) parent.invalidate();
                 }
             }
             if( (windowAnimation!=null || wparams.isFloating()) && shadowAlpha){
