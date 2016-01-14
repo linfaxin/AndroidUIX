@@ -409,7 +409,7 @@ module android.view {
             }
         }
 
-        requestFocus(direction?:number, previouslyFocusedRect?:Rect):boolean {
+        requestFocus(direction=View.FOCUS_DOWN, previouslyFocusedRect=null):boolean {
             if (View.DBG) {
                 System.out.println(this + " ViewGroup.requestFocus direction="
                     + direction);

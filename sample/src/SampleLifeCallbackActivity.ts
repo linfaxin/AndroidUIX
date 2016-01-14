@@ -6,6 +6,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import Intent = android.content.Intent;
     import View = android.view.View;
     import TextView = android.widget.TextView;
     import Button = android.widget.Button;
@@ -55,7 +56,7 @@ module sample.app {
 
         protected onResume():void {
             super.onResume();
-            this.print('onResume');
+            this.print('onResume\n');
         }
 
         protected onPause():void {

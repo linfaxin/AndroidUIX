@@ -1,15 +1,16 @@
-<ScrollView>
-    <LinearLayout
-            android:orientation="vertical"
-            android:gravity="center">
-        <Button id="open_activity_normal">
-            打开普通Activity
-        </Button>
-        <Button id="open_activity_float">
-            打开悬浮Activity
-        </Button>
-        <TextView id="console_tv"
-                android:layout_width="wrap_content">
-        </TextView>
-    </LinearLayout>
-</ScrollView>
+<LinearLayout
+        android:orientation="vertical">
+    <Button id="open_activity_normal">
+        打开普通Activity
+    </Button>
+    <Button id="open_activity_float">
+        打开悬浮Activity
+    </Button>
+    <ScrollView>
+        <LinearLayout android:orientation="vertical">
+            <TextView id="console_tv"
+                      android:gravity="center">
+            </TextView>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

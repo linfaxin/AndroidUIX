@@ -69,6 +69,7 @@ var sample;
                 "sample_animation": "<ScrollView>\n    <LinearLayout\n            android:padding=\"0 6dp\"\n            gravity=\"center\"\n            android:orientation=\"vertical\">\n        <TextView gravity=\"center\">旋转:</TextView>\n        <ImageView\n                id=\"rotate_repeat\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"20dp 12dp\"\n                ></ImageView>\n        <TextView gravity=\"center\">平移:</TextView>\n        <ImageView\n                id=\"translate_repeat\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"12dp\"\n                ></ImageView>\n        <TextView gravity=\"center\">缩放:</TextView>\n        <ImageView\n                id=\"scale_repeat\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"12dp\"\n                ></ImageView>\n        <TextView gravity=\"center\">透明:</TextView>\n        <ImageView\n                id=\"alpha_repeat\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"12dp\"\n                ></ImageView>\n        <TextView gravity=\"center\">动画组合:</TextView>\n        <ImageView\n                id=\"anim_set\"\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:layout_width=\"56dp\"\n                android:layout_height=\"56dp\"\n                android:layout_margin=\"12dp\"\n                ></ImageView>\n    </LinearLayout>\n</ScrollView>",
                 "sample_base_widget": "<ScrollView>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:padding=\"12dp\"\n            android:gravity=\"center\">\n        <TextView android:layout_width=\"wrap_content\">\n            文本\n        </TextView>\n        <Button android:layout_width=\"wrap_content\">\n            按钮\n        </Button>\n        <ImageView android:src=\"assets/images/logo_google_3.png\">\n        </ImageView>\n        <CheckBox android:layout_width=\"wrap_content\"\n                  android:layout_marginBottom=\"12dp\">\n            复选框\n        </CheckBox>\n        <RadioGroup\n                android:gravity=\"center\"\n                android:orientation=\"HORIZONTAL\"\n                android:layout_marginBottom=\"12dp\">\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框1\n            </RadioButton>\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框2\n            </RadioButton>\n            <RadioButton android:layout_width=\"wrap_content\">\n                单选框3\n            </RadioButton>\n        </RadioGroup>\n        <Button id=\"btn_open_dialog\"\n                android:layout_width=\"wrap_content\">\n            打开对话框\n        </Button>\n\n        <ProgressBar android:layout_height=\"wrap_content\"\n                     android:layout_width=\"wrap_content\"\n                     android:layout_marginBottom=\"12dp\"></ProgressBar>\n        <ProgressBar android:layout_height=\"wrap_content\"\n                     android:layout_width=\"match_parent\"\n                     android:layout_marginBottom=\"12dp\"\n                     style=\"@android:attr/progressBarStyleHorizontal\"\n                     android:max=\"100\"\n                     android:progress=\"50\"\n                     android:secondaryProgress=\"70\"></ProgressBar>\n\n        <SeekBar android:layout_height=\"wrap_content\"\n                 android:layout_width=\"match_parent\"\n                 android:layout_marginBottom=\"12dp\"></SeekBar>\n\n        <RatingBar android:layout_height=\"wrap_content\"\n                   android:layout_width=\"wrap_content\"\n                   android:layout_marginBottom=\"12dp\"></RatingBar>\n\n    </LinearLayout>\n</ScrollView>",
                 "sample_button": "<ScrollView>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:gravity=\"center\">\n        <Button\n                android:layout_width=\"wrap_content\">\n            普通-按钮\n        </Button>\n        <Button\n                android:layout_width=\"wrap_content\"\n                android:enabled=\"false\">\n            Disable按钮\n        </Button>\n        <Button id=\"btn_click\">\n            点击没有300msDelay\n        </Button>\n        <Button id=\"btn_long_click\">\n            长按LongClick\n        </Button>\n        <Button android:layout_width=\"wrap_content\"\n                onclick=\"this.AndroidView.setText('点击:'+new Date().getTime());\">\n            也可以用onclick属性/addEventListener设置监听\n        </Button>\n\n        <Button\n                android:style=\"@style/btn_custom1\"\n                >\n            引用样式\n        </Button>\n        <Button\n                android:style=\"@style/btn_custom1\"\n                android:enabled=\"false\"\n                >\n            引用样式Disable\n        </Button>\n        <Button\n                android:padding=\"8dp\"\n                android:layout_margin=\"6dp\"\n                android:textColor=\"@color/white\"\n                android:background=\"#f00\"\n                android:state_pressed=\"@style/btn_custom1/pressed\"\n                >\n            引用状态样式\n        </Button>\n        <Button\n                android:padding=\"8dp\"\n                android:layout_margin=\"6dp\"\n                android:textColor=\"@color/white\"\n                android:background=\"#f00\"\n                android:state_pressed=\"background:#f66;\"\n                >\n            内联状态样式\n        </Button>\n    </LinearLayout>\n</ScrollView>",
+                "sample_contacte": "<LinearLayout\n        android:orientation=\"vertical\">\n    <Button id=\"open_activity_intent\">\n        传递数据到下个Activity\n    </Button>\n    <Button id=\"open_activity_result\">\n        从下个Activity接受数据\n    </Button>\n    <ScrollView>\n        <LinearLayout android:orientation=\"vertical\">\n            <TextView id=\"console_tv\"\n                      android:gravity=\"center\">\n            </TextView>\n        </LinearLayout>\n    </ScrollView>\n</LinearLayout>",
                 "sample_drawerlayout": "<android.support.v4.widget.DrawerLayout>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:gravity=\"center\"\n            android:layout_height=\"match_parent\"\n            android:layout_width=\"match_parent\">\n        <Button\n                onclick=\"this.AndroidView.getParent().getParent().openDrawer(android.view.Gravity.LEFT);\"\n                android:layout_height=\"wrap_content\"\n                android:layout_width=\"wrap_content\"\n                >打开左抽屉</Button>\n        <Button\n                onclick=\"this.AndroidView.getParent().getParent().openDrawer(android.view.Gravity.RIGHT);\"\n                android:layout_height=\"wrap_content\"\n                android:layout_width=\"wrap_content\"\n                >打开右抽屉</Button>\n    </LinearLayout>\n    <LinearLayout\n            android:layout_gravity=\"left\"\n            android:background=\"white\"\n            android:clickable=\"true\"\n            android:layout_height=\"match_parent\"\n            android:layout_width=\"220dp\">\n        <TextView\n                android:layout_height=\"match_parent\"\n                android:layout_width=\"match_parent\"\n                android:gravity=\"center\"\n                >左抽屉</TextView>\n    </LinearLayout>\n    <LinearLayout\n            android:layout_gravity=\"right\"\n            android:background=\"white\"\n            android:clickable=\"true\"\n            android:layout_height=\"match_parent\"\n            android:layout_width=\"220dp\">\n        <TextView\n                android:layout_height=\"match_parent\"\n                android:layout_width=\"match_parent\"\n                android:gravity=\"center\"\n                >右抽屉</TextView>\n    </LinearLayout>\n</android.support.v4.widget.DrawerLayout>",
                 "sample_expand_listview_item": "<FrameLayout id=\"item_child_layout\"\n             android:layout_width=\"match_parent\"\n             android:padding=\"12dp\">\n    <TextView id=\"item_child_text\"\n              android:padding=\"12dp\"\n              android:layout_width=\"wrap_content\"\n              android:layout_height=\"wrap_content\"\n              android:background=\"#55000000\"\n              android:textColor=\"white\"\n              android:layout_gravity=\"center\"\n            >\n    </TextView>\n</FrameLayout>",
                 "sample_framelayout": "<FrameLayout>\n\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"left|top\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"right|top\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"bottom|right\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"bottom|left\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"center\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"left|center_vertical\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"right|center_vertical\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"top|center_horizontal\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本\"\n            android:layout_gravity=\"bottom|center_horizontal\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n    <TextView\n            android:text=\"文本MarginBottom50\"\n            android:layout_marginBottom=\"50dp\"\n            android:layout_gravity=\"center\"\n            android:style=\"@style/textStyle\"\n            ></TextView>\n</FrameLayout>",
@@ -76,7 +77,7 @@ var sample;
                 "sample_gridview_item": "<FrameLayout id=\"item_layout\"\n             android:layout_width=\"match_parent\"\n             android:padding=\"32dp\">\n    <TextView id=\"item_text\"\n              android:padding=\"16dp\"\n              android:layout_width=\"wrap_content\"\n              android:layout_height=\"wrap_content\"\n              android:background=\"#55000000\"\n              android:textColor=\"white\"\n              android:layout_gravity=\"center\"\n            >\n    </TextView>\n</FrameLayout>",
                 "sample_htmlview": "<ScrollView android:fillViewport=\"true\">\n    <LinearLayout\n            android:orientation=\"vertical\">\n        <HtmlView>\n            <p style=\"font-size: 24px;text-align: center\">HtmlView</p>\n        </HtmlView>\n        <HtmlView style=\"padding:0 20px;box-sizing: border-box;line-height: 20px;\">\n            <p>HtmlView使用浏览器<span style=\"color: red;font-weight: bold;\">DOM</span>渲染, 可与Android的View混用, 但因为DOM的性能差, 会影响移动端流畅度.不提倡使用</p>\n            <p>HtmlView在Canvas DOM之上, 即会盖在所有Android的View之上.</p>\n        </HtmlView>\n        <TextView android:gravity=\"center\">TextView</TextView>\n        <HtmlView style=\"overflow: visible;text-align: center;\">\n            <input style=\"font-size: 16px;text-align: center;box-shadow: 0 0 1px black;margin: 12px 0; padding: 6px;\" placeholder=\"请输入\"/>\n        </HtmlView>\n    </LinearLayout>\n</ScrollView>",
                 "sample_imageview": "<ScrollView>\n    <LinearLayout\n            android:padding=\"0 6dp\"\n            android:orientation=\"vertical\">\n        <TextView>自适应高宽:</TextView>\n        <ImageView\n                android:src=\"assets/images/logo_android_1@2x.png\"\n                android:style=\"@style/imageStyle\"\n                ></ImageView>\n        <TextView>FitCenter(默认ScaleType):</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:layout_height=\"200dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:layout_width=\"match_parent\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>FitStart:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitStart\"\n                    android:layout_height=\"200dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitStart\"\n                    android:layout_width=\"match_parent\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>FitEnd:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitEnd\"\n                    android:layout_height=\"200dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitEnd\"\n                    android:layout_width=\"match_parent\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>FitXy:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitXy\"\n                    android:layout_height=\"200dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"fitXy\"\n                    android:layout_width=\"match_parent\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>Center:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"center\"\n                    android:layout_height=\"80dp\"\n                    android:layout_width=\"80dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"center\"\n                    android:layout_height=\"180dp\"\n                    android:layout_width=\"180dp\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>centerCrop:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerCrop\"\n                    android:layout_height=\"80dp\"\n                    android:layout_width=\"80dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerCrop\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:layout_height=\"100dp\"\n                    android:layout_width=\"60dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerCrop\"\n                    android:layout_height=\"60dp\"\n                    android:layout_width=\"100dp\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n        <TextView>centerInside:</TextView>\n        <LinearLayout>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerInside\"\n                    android:layout_height=\"80dp\"\n                    android:layout_width=\"80dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n            <ImageView\n                    android:src=\"assets/images/logo_android_1@2x.png\"\n                    android:scaleType=\"centerInside\"\n                    android:layout_height=\"180dp\"\n                    android:layout_width=\"180dp\"\n                    android:layout_marginLeft=\"4dp\"\n                    android:style=\"@style/imageStyle\"\n                    ></ImageView>\n        </LinearLayout>\n\n        <TextView>Background:</TextView>\n        <FrameLayout\n                android:style=\"@style/imageStyle\"\n                android:backgroundUri=\"assets/images/logo_android_1@2x.png\"\n                ></FrameLayout>\n\n    </LinearLayout>\n</ScrollView>",
-                "sample_life_callback": "<ScrollView>\n    <LinearLayout\n            android:orientation=\"vertical\"\n            android:gravity=\"center\">\n        <Button id=\"open_activity_normal\">\n            打开普通Activity\n        </Button>\n        <Button id=\"open_activity_float\">\n            打开悬浮Activity\n        </Button>\n        <TextView id=\"console_tv\"\n                android:layout_width=\"wrap_content\">\n        </TextView>\n    </LinearLayout>\n</ScrollView>",
+                "sample_life_callback": "<LinearLayout\n        android:orientation=\"vertical\">\n    <Button id=\"open_activity_normal\">\n        打开普通Activity\n    </Button>\n    <Button id=\"open_activity_float\">\n        打开悬浮Activity\n    </Button>\n    <ScrollView>\n        <LinearLayout android:orientation=\"vertical\">\n            <TextView id=\"console_tv\"\n                      android:gravity=\"center\">\n            </TextView>\n        </LinearLayout>\n    </ScrollView>\n</LinearLayout>",
                 "sample_linearlayout": "<LinearLayout\n        android:gravity=\"center_vertical\"\n        android:orientation=\"vertical\">\n\n    <LinearLayout\n            android:orientation=\"vertical\">\n        <TextView\n                android:text=\"垂直线性布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"垂直线性布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n    <LinearLayout\n            android:layout_marginTop=\"12dp\"\n            android:gravity=\"center\"\n            android:orientation=\"vertical\">\n        <TextView\n                android:text=\"垂直线性布局-居中\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"垂直线性布局-居中\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n\n    <LinearLayout\n            android:layout_marginTop=\"12dp\"\n            android:orientation=\"horizontal\">\n        <TextView\n                android:text=\"水平\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"线性\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n    <LinearLayout\n            android:layout_marginTop=\"12dp\"\n            android:gravity=\"center\"\n            android:orientation=\"horizontal\">\n        <TextView\n                android:text=\"水平\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"线性\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"-居中\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n    <LinearLayout\n            android:layout_marginTop=\"12dp\"\n            android:gravity=\"right\"\n            android:orientation=\"horizontal\">\n        <TextView\n                android:text=\"水平\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"线性\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"布局\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n        <TextView\n                android:text=\"-居右\"\n                android:style=\"@style/textStyle\"\n                ></TextView>\n\n    </LinearLayout>\n\n    <TextView\n            android:layout_marginTop=\"12dp\"\n            android:gravity=\"center\"\n            android:text=\"更多用法请看官方文档\"\n            ></TextView>\n\n</LinearLayout>",
                 "sample_listview": "<FrameLayout>\n    <ListView id=\"listView\">\n    </ListView>\n    <TextView\n            android:padding=\"12dp\"\n            android:layout_gravity=\"bottom\"\n            android:layout_height=\"wrap_content\"\n            android:textColor=\"white\"\n            android:background=\"rgba(0, 0, 0, 0.7)\"\n            >\n        ListView使用Adapter机制,移出屏幕的条目可以被回收再用,因此不用担心条目太多的内存问题\n    </TextView>\n</FrameLayout>",
                 "sample_listview_item": "<FrameLayout id=\"item_layout\"\n             android:layout_width=\"match_parent\"\n             android:padding=\"32dp\">\n    <TextView id=\"item_text\"\n              android:padding=\"16dp\"\n              android:layout_width=\"wrap_content\"\n              android:layout_height=\"wrap_content\"\n              android:background=\"#55000000\"\n              android:textColor=\"white\"\n              android:layout_gravity=\"center\"\n            >\n    </TextView>\n</FrameLayout>",
@@ -115,6 +116,7 @@ var sample;
             layout.sample_animation = '@layout/sample_animation';
             layout.sample_base_widget = '@layout/sample_base_widget';
             layout.sample_button = '@layout/sample_button';
+            layout.sample_contacte = '@layout/sample_contacte';
             layout.sample_drawerlayout = '@layout/sample_drawerlayout';
             layout.sample_expand_listview_item = '@layout/sample_expand_listview_item';
             layout.sample_framelayout = '@layout/sample_framelayout';
@@ -308,6 +310,132 @@ var sample;
         app.SampleButtonActivity = SampleButtonActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
+/**
+ * Created by linfaxin on 16/1/12.
+ */
+///<reference path="../../dist/android-ui.d.ts"/>
+///<reference path="../gen/R/layout.ts"/>
+var sample;
+(function (sample) {
+    var app;
+    (function (app) {
+        var Activity = android.app.Activity;
+        var Intent = android.content.Intent;
+        var TextView = android.widget.TextView;
+        var Button = android.widget.Button;
+        var Log = android.util.Log;
+        var Gravity = android.view.Gravity;
+        var TAG = 'SampleContacteActivity';
+
+        var SampleContacteActivity = (function (_Activity4) {
+            _inherits(SampleContacteActivity, _Activity4);
+
+            function SampleContacteActivity() {
+                _classCallCheck(this, SampleContacteActivity);
+
+                _get(Object.getPrototypeOf(SampleContacteActivity.prototype), "constructor", this).apply(this, arguments);
+            }
+
+            _createClass(SampleContacteActivity, [{
+                key: "onCreate",
+                value: function onCreate(savedInstanceState) {
+                    _get(Object.getPrototypeOf(SampleContacteActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    this.setContentView(app.R.layout.sample_contacte);
+                    this.printTextView = this.findViewById('console_tv');
+                    var activity = this;
+                    this.findViewById('open_activity_intent').setOnClickListener({
+                        onClick: function onClick(view) {
+                            var intent = new Intent('sample.app.SampleShowIntentActivity').putExtra('startTime', new Date().getTime());
+                            activity.startActivity(intent);
+                        }
+                    });
+                    this.findViewById('open_activity_result').setOnClickListener({
+                        onClick: function onClick(view) {
+                            var intent = new Intent('sample.app.SampleResultActivity');
+                            activity.startActivityForResult(intent, 1);
+                        }
+                    });
+                }
+            }, {
+                key: "print",
+                value: function print(message) {
+                    Log.d(TAG, message);
+                    this.printTextView.setText(this.printTextView.getText() + '\n' + message);
+                }
+            }, {
+                key: "onActivityResult",
+                value: function onActivityResult(requestCode, resultCode, data) {
+                    _get(Object.getPrototypeOf(SampleContacteActivity.prototype), "onActivityResult", this).call(this, requestCode, resultCode, data);
+                    if (resultCode === Activity.RESULT_OK) {
+                        if (requestCode === 1) {
+                            this.print('resultTime:' + data.getStringExtra('resultTime'));
+                        }
+                    }
+                }
+            }]);
+
+            return SampleContacteActivity;
+        })(Activity);
+
+        app.SampleContacteActivity = SampleContacteActivity;
+
+        var SampleShowIntentActivity = (function (_Activity5) {
+            _inherits(SampleShowIntentActivity, _Activity5);
+
+            function SampleShowIntentActivity() {
+                _classCallCheck(this, SampleShowIntentActivity);
+
+                _get(Object.getPrototypeOf(SampleShowIntentActivity.prototype), "constructor", this).apply(this, arguments);
+            }
+
+            _createClass(SampleShowIntentActivity, [{
+                key: "onCreate",
+                value: function onCreate(savedInstanceState) {
+                    _get(Object.getPrototypeOf(SampleShowIntentActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    var info = new TextView(this);
+                    info.setText('\n startTime： ' + this.getIntent().getStringExtra('startTime', null));
+                    this.addContentView(info, new android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
+                }
+            }]);
+
+            return SampleShowIntentActivity;
+        })(Activity);
+
+        app.SampleShowIntentActivity = SampleShowIntentActivity;
+
+        var SampleResultActivity = (function (_Activity6) {
+            _inherits(SampleResultActivity, _Activity6);
+
+            function SampleResultActivity() {
+                _classCallCheck(this, SampleResultActivity);
+
+                _get(Object.getPrototypeOf(SampleResultActivity.prototype), "constructor", this).apply(this, arguments);
+            }
+
+            _createClass(SampleResultActivity, [{
+                key: "onCreate",
+                value: function onCreate(savedInstanceState) {
+                    _get(Object.getPrototypeOf(SampleResultActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    var activity = this;
+                    var btn = new Button(this);
+                    btn.setText('关闭 & setResult');
+                    btn.setOnClickListener({
+                        onClick: function onClick(view) {
+                            activity.setResult(Activity.RESULT_OK, new Intent().putExtra('resultTime', new Date().getTime() + ''));
+                            activity.finish();
+                        }
+                    });
+                    var params = new android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.CENTER);
+                    this.setContentView(btn, params);
+                }
+            }]);
+
+            return SampleResultActivity;
+        })(Activity);
+
+        app.SampleResultActivity = SampleResultActivity;
+    })(app = sample.app || (sample.app = {}));
+})(sample || (sample = {}));
 ///<reference path="../../dist/android-ui.d.ts"/>
 ///<reference path="../gen/R/layout.ts"/>
 var sample;
@@ -317,8 +445,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SampleDrawerLayoutActivity = (function (_Activity4) {
-            _inherits(SampleDrawerLayoutActivity, _Activity4);
+        var SampleDrawerLayoutActivity = (function (_Activity7) {
+            _inherits(SampleDrawerLayoutActivity, _Activity7);
 
             function SampleDrawerLayoutActivity() {
                 _classCallCheck(this, SampleDrawerLayoutActivity);
@@ -353,8 +481,8 @@ var sample;
         var BaseExpandableListAdapter = android.widget.BaseExpandableListAdapter;
         var R = sample.app.R;
 
-        var SampleExpandableListViewActivity = (function (_Activity5) {
-            _inherits(SampleExpandableListViewActivity, _Activity5);
+        var SampleExpandableListViewActivity = (function (_Activity8) {
+            _inherits(SampleExpandableListViewActivity, _Activity8);
 
             function SampleExpandableListViewActivity() {
                 _classCallCheck(this, SampleExpandableListViewActivity);
@@ -470,8 +598,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SampleFrameLayoutActivity = (function (_Activity6) {
-            _inherits(SampleFrameLayoutActivity, _Activity6);
+        var SampleFrameLayoutActivity = (function (_Activity9) {
+            _inherits(SampleFrameLayoutActivity, _Activity9);
 
             function SampleFrameLayoutActivity() {
                 _classCallCheck(this, SampleFrameLayoutActivity);
@@ -507,8 +635,8 @@ var sample;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleGridViewActivity = (function (_Activity7) {
-            _inherits(SampleGridViewActivity, _Activity7);
+        var SampleGridViewActivity = (function (_Activity10) {
+            _inherits(SampleGridViewActivity, _Activity10);
 
             function SampleGridViewActivity() {
                 _classCallCheck(this, SampleGridViewActivity);
@@ -579,8 +707,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SampleHtmlViewActivity = (function (_Activity8) {
-            _inherits(SampleHtmlViewActivity, _Activity8);
+        var SampleHtmlViewActivity = (function (_Activity11) {
+            _inherits(SampleHtmlViewActivity, _Activity11);
 
             function SampleHtmlViewActivity() {
                 _classCallCheck(this, SampleHtmlViewActivity);
@@ -611,8 +739,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SampleImageViewActivity = (function (_Activity9) {
-            _inherits(SampleImageViewActivity, _Activity9);
+        var SampleImageViewActivity = (function (_Activity12) {
+            _inherits(SampleImageViewActivity, _Activity12);
 
             function SampleImageViewActivity() {
                 _classCallCheck(this, SampleImageViewActivity);
@@ -649,8 +777,8 @@ var sample;
         var Gravity = android.view.Gravity;
         var TAG = 'SampleLifeCallbackActivity';
 
-        var SampleLifeCallbackActivity = (function (_Activity10) {
-            _inherits(SampleLifeCallbackActivity, _Activity10);
+        var SampleLifeCallbackActivity = (function (_Activity13) {
+            _inherits(SampleLifeCallbackActivity, _Activity13);
 
             function SampleLifeCallbackActivity() {
                 _classCallCheck(this, SampleLifeCallbackActivity);
@@ -699,7 +827,7 @@ var sample;
                 key: "onResume",
                 value: function onResume() {
                     _get(Object.getPrototypeOf(SampleLifeCallbackActivity.prototype), "onResume", this).call(this);
-                    this.print('onResume');
+                    this.print('onResume\n');
                 }
             }, {
                 key: "onPause",
@@ -726,8 +854,8 @@ var sample;
 
         app.SampleLifeCallbackActivity = SampleLifeCallbackActivity;
 
-        var SampleLifeCallbackNormalActivity = (function (_Activity11) {
-            _inherits(SampleLifeCallbackNormalActivity, _Activity11);
+        var SampleLifeCallbackNormalActivity = (function (_Activity14) {
+            _inherits(SampleLifeCallbackNormalActivity, _Activity14);
 
             function SampleLifeCallbackNormalActivity() {
                 _classCallCheck(this, SampleLifeCallbackNormalActivity);
@@ -792,8 +920,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SampleLinearLayoutActivity = (function (_Activity12) {
-            _inherits(SampleLinearLayoutActivity, _Activity12);
+        var SampleLinearLayoutActivity = (function (_Activity15) {
+            _inherits(SampleLinearLayoutActivity, _Activity15);
 
             function SampleLinearLayoutActivity() {
                 _classCallCheck(this, SampleLinearLayoutActivity);
@@ -826,8 +954,8 @@ var sample;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleListViewActivity = (function (_Activity13) {
-            _inherits(SampleListViewActivity, _Activity13);
+        var SampleListViewActivity = (function (_Activity16) {
+            _inherits(SampleListViewActivity, _Activity16);
 
             function SampleListViewActivity() {
                 _classCallCheck(this, SampleListViewActivity);
@@ -898,8 +1026,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SamplePickerActivity = (function (_Activity14) {
-            _inherits(SamplePickerActivity, _Activity14);
+        var SamplePickerActivity = (function (_Activity17) {
+            _inherits(SamplePickerActivity, _Activity17);
 
             function SamplePickerActivity() {
                 _classCallCheck(this, SamplePickerActivity);
@@ -933,8 +1061,8 @@ var sample;
         var PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
         var R = sample.app.R;
 
-        var SamplePullRefreshLoadActivity = (function (_Activity15) {
-            _inherits(SamplePullRefreshLoadActivity, _Activity15);
+        var SamplePullRefreshLoadActivity = (function (_Activity18) {
+            _inherits(SamplePullRefreshLoadActivity, _Activity18);
 
             function SamplePullRefreshLoadActivity() {
                 _classCallCheck(this, SamplePullRefreshLoadActivity);
@@ -1028,8 +1156,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SampleRelativeLayoutActivity = (function (_Activity16) {
-            _inherits(SampleRelativeLayoutActivity, _Activity16);
+        var SampleRelativeLayoutActivity = (function (_Activity19) {
+            _inherits(SampleRelativeLayoutActivity, _Activity19);
 
             function SampleRelativeLayoutActivity() {
                 _classCallCheck(this, SampleRelativeLayoutActivity);
@@ -1060,8 +1188,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SampleTextViewActivity = (function (_Activity17) {
-            _inherits(SampleTextViewActivity, _Activity17);
+        var SampleTextViewActivity = (function (_Activity20) {
+            _inherits(SampleTextViewActivity, _Activity20);
 
             function SampleTextViewActivity() {
                 _classCallCheck(this, SampleTextViewActivity);
@@ -1094,8 +1222,8 @@ var sample;
         var Color = android.graphics.Color;
         var R = sample.app.R;
 
-        var SampleViewPagerActivity = (function (_Activity18) {
-            _inherits(SampleViewPagerActivity, _Activity18);
+        var SampleViewPagerActivity = (function (_Activity21) {
+            _inherits(SampleViewPagerActivity, _Activity21);
 
             function SampleViewPagerActivity() {
                 _classCallCheck(this, SampleViewPagerActivity);
@@ -1159,8 +1287,8 @@ var sample;
         var Activity = android.app.Activity;
         var R = sample.app.R;
 
-        var SampleViewPagerGalleryActivity = (function (_Activity19) {
-            _inherits(SampleViewPagerGalleryActivity, _Activity19);
+        var SampleViewPagerGalleryActivity = (function (_Activity22) {
+            _inherits(SampleViewPagerGalleryActivity, _Activity22);
 
             function SampleViewPagerGalleryActivity() {
                 _classCallCheck(this, SampleViewPagerGalleryActivity);

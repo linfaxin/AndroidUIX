@@ -10,9 +10,10 @@ module android.content{
 
     export class Intent{
         private mExtras:Bundle;
+        private mRequestCode = -1;
         private activityName:string;
 
-        constructor(activityClassOrName:string) {
+        constructor(activityClassOrName?:string) {
             this.activityName = activityClassOrName;
         }
 
@@ -31,25 +32,25 @@ module android.content{
         getDoubleExtra(name:string, defaultValue:number):number {
             return this.mExtras == null ? defaultValue : <number>this.mExtras.get(name, defaultValue);
         }
-        getStringExtra(name:string, defaultValue:string):string {
+        getStringExtra(name:string, defaultValue?:string):string {
             return this.mExtras == null ? defaultValue : <string>this.mExtras.get(name, defaultValue);
         }
-        getStringArrayExtra(name:string, defaultValue:string[]):string[] {
+        getStringArrayExtra(name:string, defaultValue?:string[]):string[] {
             return this.mExtras == null ? defaultValue : <string[]>this.mExtras.get(name, defaultValue);
         }
-        getIntegerArrayExtra(name:string, defaultValue:number[]):number[] {
+        getIntegerArrayExtra(name:string, defaultValue?:number[]):number[] {
             return this.mExtras == null ? defaultValue : <number[]>this.mExtras.get(name, defaultValue);
         }
-        getLongArrayExtra(name:string, defaultValue:number[]):number[] {
+        getLongArrayExtra(name:string, defaultValue?:number[]):number[] {
             return this.mExtras == null ? defaultValue : <number[]>this.mExtras.get(name, defaultValue);
         }
-        getFloatArrayExtra(name:string, defaultValue:number[]):number[] {
+        getFloatArrayExtra(name:string, defaultValue?:number[]):number[] {
             return this.mExtras == null ? defaultValue : <number[]>this.mExtras.get(name, defaultValue);
         }
-        getDoubleArrayExtra(name:string, defaultValue:number[]):number[] {
+        getDoubleArrayExtra(name:string, defaultValue?:number[]):number[] {
             return this.mExtras == null ? defaultValue : <number[]>this.mExtras.get(name, defaultValue);
         }
-        getBooleanArrayExtra(name:string, defaultValue:boolean[]):boolean[] {
+        getBooleanArrayExtra(name:string, defaultValue?:boolean[]):boolean[] {
             return this.mExtras == null ? defaultValue : <boolean[]>this.mExtras.get(name, defaultValue);
         }
 

@@ -854,6 +854,8 @@ export class Window {
     }
 
     setTitle(title:string):void{
+        //TODO set title to view
+        this.mDecor.bindElement.setAttribute('title', title);
         this.getAttributes().setTitle(title);
     }
 

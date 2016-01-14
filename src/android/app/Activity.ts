@@ -53,6 +53,7 @@ module android.app{
         /** Start of user-defined activity results. */
         static RESULT_FIRST_USER:number = 1;
 
+        private mCallActivity:Activity;//activity that launch the activity (will null if restore)
 
         private mIntent:Intent;
 
@@ -1012,9 +1013,9 @@ module android.app{
          */
         startActivityForResult(intent:Intent|string, requestCode:number, options?:Bundle):void  {
             if(typeof intent === 'string') intent = new Intent(<string>intent);
+            if(requestCode>=0) (<Intent>intent).mRequestCode = requestCode;
 
-            //TODO start activity for result
-            this.androidUI.mActivityThread.scheduleLaunchActivity(<Intent>intent, options);
+            this.androidUI.mActivityThread.scheduleLaunchActivity(this, <Intent>intent, options);
 
             //    let ar:Instrumentation.ActivityResult = this.mInstrumentation.execStartActivity(this, this.mMainThread.getApplicationThread(), this.mToken, this, intent, requestCode, options);
             //    if (ar != null) {
@@ -1131,7 +1132,9 @@ module android.app{
          * @see #startActivityForResult
          */
         startActivityIfNeeded(intent:Intent, requestCode:number, options?:Bundle):boolean  {
-            //TODO check have instance
+            if(this.androidUI.mActivityThread.canBackTo(intent)){
+                return false;
+            }
             this.startActivityForResult(intent, requestCode, options);
             return true;
             //let result:number = ActivityManager.START_RETURN_INTENT_TO_CALLER;
@@ -1287,18 +1290,18 @@ module android.app{
             }
         }
 
-        ///**
-        // * Force finish another activity that you had previously started with
-        // * {@link #startActivityForResult}.
-        // *
-        // * @param requestCode The request code of the activity that you had
-        // *                    given to startActivityForResult().  If there are multiple
-        // *                    activities started with this request code, they
-        // *                    will all be finished.
-        // */
-        //finishActivity(requestCode:number):void  {
-        //    //TODO not support yet
-        //}
+        /**
+         * Force finish another activity that you had previously started with
+         * {@link #startActivityForResult}.
+         *
+         * @param requestCode The request code of the activity that you had
+         *                    given to startActivityForResult().  If there are multiple
+         *                    activities started with this request code, they
+         *                    will all be finished.
+         */
+        finishActivity(requestCode:number):void  {
+            this.androidUI.mActivityThread.scheduleDestroyActivityByRequestCode(requestCode);
+        }
 
         /**
          * Called when an activity you launched exits, giving you the requestCode
@@ -1386,7 +1389,12 @@ module android.app{
          *         upIntent was delivered to it. false if an instance of the indicated activity could
          *         not be found and this activity was simply finished normally.
          */
-        //navigateUpTo(upIntent:Intent):boolean  {
+        navigateUpTo(upIntent:Intent, upToRootIfNotFound=true):boolean  {
+            if(this.androidUI.mActivityThread.scheduleBackTo(upIntent)){
+                return true;
+            }
+            if(upToRootIfNotFound) this.androidUI.mActivityThread.scheduleBackToRoot();
+            return false;
         //    //let destInfo:ComponentName = upIntent.getComponent();
         //    //if (destInfo == null) {
         //    //    destInfo = upIntent.resolveActivity(this.getPackageManager());
@@ -1408,9 +1416,8 @@ module android.app{
         //    //    return false;
         //    //}
         //
-        //    //TODO impl navigateUp
         //    return false;
-        //}
+        }
 
         constructor(androidUI:androidui.AndroidUI) {
             super(androidUI);
@@ -1577,14 +1584,14 @@ module android.app{
         dispatchActivityResult(who:string, requestCode:number, resultCode:number, data:Intent):void  {
             if (false) Log.v(Activity.TAG, "Dispatching result: who=" + who + ", reqCode=" + requestCode + ", resCode=" + resultCode + ", data=" + data);
             //this.mFragments.noteStateNotSaved();
-            if (who == null) {
+            //if (who == null) {
                 this.onActivityResult(requestCode, resultCode, data);
-            } else {
+            //} else {
                 //let frag:Fragment = this.mFragments.findFragmentByWho(who);
                 //if (frag != null) {
                 //    frag.onActivityResult(requestCode, resultCode, data);
                 //}
-            }
+            //}
         }
     }
 }

@@ -57,7 +57,7 @@ module android.app{
                 if(pageExtra) intent.mExtras = new Bundle(pageExtra.mExtras);
                 if(isRestore) this.overrideNextWindowAnimation(null, null, null, null);
                 let activity = this.handleLaunchActivity(intent);
-                return activity != null;
+                return activity && !activity.mFinished;
             };
             PageStack.pageCloseHandler = (pageId:string, pageExtra?:Intent):boolean=>{
                 for(let activity of Array.from(this.mLaunchedActivities).reverse()){
@@ -72,20 +72,11 @@ module android.app{
         }
 
 
-        clearOverrideAnimationTimeoutId;
         overrideNextWindowAnimation(enterAnimation:Animation, exitAnimation:Animation, resumeAnimation:Animation, hideAnimation:Animation):void {
             this.overrideEnterAnimation = enterAnimation;
             this.overrideExitAnimation = exitAnimation;
             this.overrideResumeAnimation = resumeAnimation;
             this.overrideHideAnimation = hideAnimation;
-
-            if(this.clearOverrideAnimationTimeoutId) clearTimeout(this.clearOverrideAnimationTimeoutId);
-            this.clearOverrideAnimationTimeoutId = setTimeout(()=>{
-                this.overrideEnterAnimation = undefined;
-                this.overrideExitAnimation = undefined;
-                this.overrideResumeAnimation = undefined;
-                this.overrideHideAnimation = undefined;
-            }, 0);
         }
         getOverrideEnterAnimation():Animation {
             let anim = this.overrideEnterAnimation;
@@ -117,29 +108,107 @@ module android.app{
         }
 
         scheduleApplicationShow():void {
-            let visibleActivities = this.getVisibleToUserActivities();
-            for(let visibleActivity of visibleActivities){
-                visibleActivity.performRestart();
-            }
-            this.handleResumeActivity(visibleActivities[visibleActivities.length - 1], false);
+            this.scheduleActivityResume();
         }
 
-        scheduleLaunchActivity(intent:Intent, options?:android.os.Bundle):void {
-            let activity = this.handleLaunchActivity(intent);
-            PageStack.notifyNewPageOpened(intent.activityName, intent);
+        activityResumeTimeout;
+        scheduleActivityResume():void {
+            if(this.activityResumeTimeout) clearTimeout(this.activityResumeTimeout);
+            this.activityResumeTimeout = setTimeout(()=>{
+                let visibleActivities = this.getVisibleToUserActivities();
+                if(visibleActivities.length==0) return;
+                for(let visibleActivity of visibleActivities){
+                    visibleActivity.performRestart();
+                }
 
+                let activity = visibleActivities.pop();
+                this.handleResumeActivity(activity, false);
+
+                //show activity behind the activity
+                if(activity.getWindow().isFloating()) {
+                    for (let visibleActivity of visibleActivities.reverse()) {
+                        if (visibleActivity.mVisibleFromClient) {
+                            visibleActivity.makeVisible();
+                            if(!visibleActivity.getWindow().isFloating()){
+                                break;
+                            }
+                        }
+                    }
+                }
+            }, 0);
+        }
+
+        scheduleLaunchActivity(callActivity:Activity, intent:Intent, options?:android.os.Bundle):void {
+            let activity = this.handleLaunchActivity(intent);
+            activity.mCallActivity = callActivity;
+            if(activity && !activity.mFinished){
+                PageStack.notifyNewPageOpened(intent.activityName, intent);
+            }
+        }
+
+        scheduleDestroyActivityByRequestCode(requestCode:number):void {
+            for(let activity of Array.from(this.mLaunchedActivities).reverse()){
+                if(activity.getIntent() && requestCode == activity.getIntent().mRequestCode){
+                    this.scheduleDestroyActivity(activity);
+                }
+            }
         }
 
         scheduleDestroyActivity(activity:Activity, finishing = true):void {
-            this.handleDestroyActivity(activity, finishing);
+            //delay destroy ensure activity call all start/resume life circel.
+            setTimeout(()=>{
+                let isCreateSuc = this.mLaunchedActivities.has(activity);//common case it's true, finish() in onCreate() will false here
 
-            //TODO notify result code & data
+                if(activity.mCallActivity && activity.getIntent() && activity.getIntent().mRequestCode>=0){
+                    activity.mCallActivity.dispatchActivityResult(null, activity.getIntent().mRequestCode, activity.mResultCode, activity.mResultData)
+                }
 
-            if(this.isRootActivity(activity)){
-                PageStack.back();
+                this.handleDestroyActivity(activity, finishing);
 
-            }else if(activity.getIntent()){
-                PageStack.notifyPageClosed(activity.getIntent().activityName);
+                if(!isCreateSuc) return;
+
+                if(this.isRootActivity(activity)){
+                    PageStack.back();
+
+                }else if(activity.getIntent()){
+                    PageStack.notifyPageClosed(activity.getIntent().activityName);
+                }
+            }, 0);
+        }
+
+        scheduleBackTo(intent:Intent):boolean {
+            let destroyList = [];
+            let findActivity = false;
+            for(let activity of Array.from(this.mLaunchedActivities).reverse()){
+                if(activity.getIntent() && activity.getIntent().activityName == intent.activityName){
+                    findActivity = true;
+                    break;
+                }
+                destroyList.push(activity);
+            }
+            if(findActivity){
+                for(let activity of destroyList){
+                    this.scheduleDestroyActivity(activity);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        canBackTo(intent:Intent):boolean {
+            for(let activity of this.mLaunchedActivities){
+                if(activity.getIntent().activityName == intent.activityName){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        scheduleBackToRoot():void {
+            let destroyList = Array.from(this.mLaunchedActivities).reverse();
+            destroyList.shift();//remove root
+            for(let activity of destroyList){
+                this.scheduleDestroyActivity(activity);
             }
         }
 
@@ -180,17 +249,22 @@ module android.app{
         }
 
 
-
         private handleResumeActivity(a:Activity, launching:boolean){
             this.performResumeActivity(a, launching);
 
             // If the window hasn't yet been added to the window manager,
             // and this guy didn't finish itself or start another activity,
             // then go ahead and add the window.
-            let willBeVisible = !a.mStartedActivity;
+            let willBeVisible = !a.mStartedActivity && !a.mFinished;
 
             if (willBeVisible && a.mVisibleFromClient) {
                 a.makeVisible();
+
+                //reset override Animation
+                this.overrideEnterAnimation = undefined;
+                this.overrideExitAnimation = undefined;
+                this.overrideResumeAnimation = undefined;
+                this.overrideHideAnimation = undefined;
             }
         }
 
@@ -209,7 +283,7 @@ module android.app{
             if(a){
                 this.handleResumeActivity(a, true);
 
-                if(visibleActivities.length>0) {
+                if(!a.mFinished && visibleActivities.length>0) {
                     //pause
                     this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
 
@@ -235,29 +309,37 @@ module android.app{
 
 
             if(activity instanceof Activity){
-                let savedInstanceState = null;//TODO saved state
+                try {
+                    let savedInstanceState = null;//TODO saved state
 
-                activity.mIntent = intent;
-                activity.mStartedActivity = false;
+                    activity.mIntent = intent;
+                    activity.mStartedActivity = false;
 
 
-                activity.mCalled = false;
-                activity.performCreate(savedInstanceState);
-                if (!activity.mCalled) {
-                    throw new Error("Activity " + intent.activityName + " did not call through to super.onCreate()");
-                }
-
-                if(!activity.mFinished) {
-                    activity.performStart();
-                    activity.performRestoreInstanceState(savedInstanceState);
                     activity.mCalled = false;
-                    activity.onPostCreate(savedInstanceState);
+                    activity.performCreate(savedInstanceState);
                     if (!activity.mCalled) {
-                        throw new Error("Activity " + intent.activityName + " did not call through to super.onPostCreate()");
+                        throw new Error("Activity " + intent.activityName + " did not call through to super.onCreate()");
                     }
+
+                    if (!activity.mFinished) {
+                        activity.performStart();
+                        activity.performRestoreInstanceState(savedInstanceState);
+                        activity.mCalled = false;
+                        activity.onPostCreate(savedInstanceState);
+                        if (!activity.mCalled) {
+                            throw new Error("Activity " + intent.activityName + " did not call through to super.onPostCreate()");
+                        }
+                    }
+                } catch (e) {
+                    //launch Activity error
+                    console.error(e);
+                    return null;
                 }
 
-                this.mLaunchedActivities.add(activity);
+                if(!activity.mFinished){
+                    this.mLaunchedActivities.add(activity);
+                }
 
                 return <Activity>activity;
             }
@@ -272,13 +354,7 @@ module android.app{
             this.androidUI.windowManager.removeWindow(activity.getWindow());
 
             if(isTopVisibleActivity){
-                visibleActivities = this.getVisibleToUserActivities();
-                if(visibleActivities.length>0) {
-                    for (let visibleActivity of visibleActivities) {
-                        visibleActivity.performRestart();
-                    }
-                    this.handleResumeActivity(visibleActivities[visibleActivities.length - 1], false);
-                }
+                this.scheduleActivityResume();
             }
         }
 

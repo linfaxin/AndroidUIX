@@ -4023,6 +4023,7 @@ var android;
         var Bundle = android.os.Bundle;
         class Intent {
             constructor(activityClassOrName) {
+                this.mRequestCode = -1;
                 this.activityName = activityClassOrName;
             }
             getBooleanExtra(name, defaultValue) {
@@ -14656,7 +14657,9 @@ var PageStack;
     }
     function go(delta) {
         if (historyLocking) {
-            console.error('cant change history when waiting history change finish');
+            ensureLockDo(() => {
+                go(delta);
+            });
             return;
         }
         var stackList = PageStack.currentStack.stack;
@@ -14696,11 +14699,13 @@ var PageStack;
     PageStack.openPage = openPage;
     let releaseLockingTimeout;
     let requestHistoryGoWhenLocking = 0;
+    let ensureFakeAfterHistoryChange = false;
     function historyGo(delta, ensureFaked = true) {
         if (delta >= 0)
             return;
         if (history.length === 1)
             return;
+        ensureFakeAfterHistoryChange = ensureFakeAfterHistoryChange || ensureFaked;
         if (historyLocking) {
             requestHistoryGoWhenLocking += delta;
             return;
@@ -14721,9 +14726,12 @@ var PageStack;
                 if (continueGo != 0) {
                     requestHistoryGoWhenLocking = 0;
                     historyLocking = false;
-                    historyGo(continueGo);
+                    historyGo(continueGo, false);
                 }
                 else {
+                    if (ensureFakeAfterHistoryChange)
+                        ensureLastHistoryFakedImpl();
+                    ensureFakeAfterHistoryChange = false;
                     releaseLockingTimeout = setTimeout(() => {
                         historyLocking = false;
                     }, 10);
@@ -14732,8 +14740,6 @@ var PageStack;
         }
         releaseLockingTimeout = setTimeout(checkRelease, 0);
         history_go.call(history, delta);
-        if (ensureFaked)
-            ensureLastHistoryFaked();
     }
     function restorePageFromStackIfNeed() {
         if (PageStack.currentStack) {
@@ -14774,18 +14780,19 @@ var PageStack;
             }
         }
     }
-    function notifyPageClosed(pageId, pageExtra) {
+    function notifyPageClosed(pageId) {
         if (DEBUG)
             console.log('notifyPageClosed', pageId);
         if (historyLocking) {
-            console.error('cant notifyPageClosed when waiting history change finish');
-            return;
+            ensureLockDo(() => {
+                notifyPageClosed(pageId);
+            });
         }
         let stackList = PageStack.currentStack.stack;
         let historyLength = stackList.length;
         for (let i = historyLength - 1; i >= 0; i--) {
             let state = stackList[i];
-            if (state.pageId === pageId) {
+            if (state.pageId == pageId) {
                 if (i === historyLength - 1) {
                     removeLastHistoryIfFaked();
                     historyGo(-1);
@@ -14795,7 +14802,7 @@ var PageStack;
                     (function (delta) {
                         removeLastHistoryIfFaked();
                         historyGo(delta);
-                        ensureLockDo(() => {
+                        ensureLockDoAtFront(() => {
                             let historyLength = stackList.length;
                             let pageStartAddIndex = historyLength + delta + 1;
                             for (let j = pageStartAddIndex; j < historyLength; j++) {
@@ -14804,9 +14811,9 @@ var PageStack;
                         });
                     })(delta);
                 }
+                return;
             }
         }
-        return true;
     }
     PageStack.notifyPageClosed = notifyPageClosed;
     function notifyNewPageOpened(pageId, extra) {
@@ -14830,13 +14837,24 @@ var PageStack;
         });
     }
     PageStack.notifyNewPageOpened = notifyNewPageOpened;
-    let execLockedTimeoutId;
     function ensureLockDo(func, runNowIfNotLock = false) {
         if (!historyLocking && runNowIfNotLock) {
             func();
             return;
         }
         pendingFuncLock.push(func);
+        _queryLockDo();
+    }
+    function ensureLockDoAtFront(func, runNowIfNotLock = false) {
+        if (!historyLocking && runNowIfNotLock) {
+            func();
+            return;
+        }
+        pendingFuncLock.splice(0, 0, func);
+        _queryLockDo();
+    }
+    let execLockedTimeoutId;
+    function _queryLockDo() {
         if (execLockedTimeoutId)
             clearTimeout(execLockedTimeoutId);
         function execLockedFunctions() {
@@ -14845,10 +14863,14 @@ var PageStack;
                 execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
             }
             else {
-                let copy = pendingFuncLock.concat();
-                pendingFuncLock = [];
-                for (let f of copy) {
+                let f;
+                while (f = pendingFuncLock.shift()) {
                     f();
+                    if (historyLocking) {
+                        clearTimeout(execLockedTimeoutId);
+                        execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
+                        break;
+                    }
                 }
             }
         }
@@ -14856,6 +14878,8 @@ var PageStack;
     }
     function removeLastHistoryIfFaked() {
         if (history.state && history.state.isFake) {
+            if (DEBUG)
+                console.log('remove Fake History');
             history.replaceState({}, null, '');
             historyGo(-1, false);
         }
@@ -14865,6 +14889,8 @@ var PageStack;
     }
     function ensureLastHistoryFakedImpl() {
         if (!history.state.isFake) {
+            if (DEBUG)
+                console.log('append Fake History');
             history.pushState({ isFake: true }, null, '');
         }
     }
@@ -14911,7 +14937,7 @@ var android;
                     if (isRestore)
                         this.overrideNextWindowAnimation(null, null, null, null);
                     let activity = this.handleLaunchActivity(intent);
-                    return activity != null;
+                    return activity && !activity.mFinished;
                 };
                 PageStack.pageCloseHandler = (pageId, pageExtra) => {
                     for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
@@ -14929,14 +14955,6 @@ var android;
                 this.overrideExitAnimation = exitAnimation;
                 this.overrideResumeAnimation = resumeAnimation;
                 this.overrideHideAnimation = hideAnimation;
-                if (this.clearOverrideAnimationTimeoutId)
-                    clearTimeout(this.clearOverrideAnimationTimeoutId);
-                this.clearOverrideAnimationTimeoutId = setTimeout(() => {
-                    this.overrideEnterAnimation = undefined;
-                    this.overrideExitAnimation = undefined;
-                    this.overrideResumeAnimation = undefined;
-                    this.overrideHideAnimation = undefined;
-                }, 0);
             }
             getOverrideEnterAnimation() {
                 let anim = this.overrideEnterAnimation;
@@ -14966,23 +14984,94 @@ var android;
                 }
             }
             scheduleApplicationShow() {
-                let visibleActivities = this.getVisibleToUserActivities();
-                for (let visibleActivity of visibleActivities) {
-                    visibleActivity.performRestart();
-                }
-                this.handleResumeActivity(visibleActivities[visibleActivities.length - 1], false);
+                this.scheduleActivityResume();
             }
-            scheduleLaunchActivity(intent, options) {
+            scheduleActivityResume() {
+                if (this.activityResumeTimeout)
+                    clearTimeout(this.activityResumeTimeout);
+                this.activityResumeTimeout = setTimeout(() => {
+                    let visibleActivities = this.getVisibleToUserActivities();
+                    if (visibleActivities.length == 0)
+                        return;
+                    for (let visibleActivity of visibleActivities) {
+                        visibleActivity.performRestart();
+                    }
+                    let activity = visibleActivities.pop();
+                    this.handleResumeActivity(activity, false);
+                    if (activity.getWindow().isFloating()) {
+                        for (let visibleActivity of visibleActivities.reverse()) {
+                            if (visibleActivity.mVisibleFromClient) {
+                                visibleActivity.makeVisible();
+                                if (!visibleActivity.getWindow().isFloating()) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }, 0);
+            }
+            scheduleLaunchActivity(callActivity, intent, options) {
                 let activity = this.handleLaunchActivity(intent);
-                PageStack.notifyNewPageOpened(intent.activityName, intent);
+                activity.mCallActivity = callActivity;
+                if (activity && !activity.mFinished) {
+                    PageStack.notifyNewPageOpened(intent.activityName, intent);
+                }
+            }
+            scheduleDestroyActivityByRequestCode(requestCode) {
+                for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
+                    if (activity.getIntent() && requestCode == activity.getIntent().mRequestCode) {
+                        this.scheduleDestroyActivity(activity);
+                    }
+                }
             }
             scheduleDestroyActivity(activity, finishing = true) {
-                this.handleDestroyActivity(activity, finishing);
-                if (this.isRootActivity(activity)) {
-                    PageStack.back();
+                setTimeout(() => {
+                    let isCreateSuc = this.mLaunchedActivities.has(activity);
+                    if (activity.mCallActivity && activity.getIntent() && activity.getIntent().mRequestCode >= 0) {
+                        activity.mCallActivity.dispatchActivityResult(null, activity.getIntent().mRequestCode, activity.mResultCode, activity.mResultData);
+                    }
+                    this.handleDestroyActivity(activity, finishing);
+                    if (!isCreateSuc)
+                        return;
+                    if (this.isRootActivity(activity)) {
+                        PageStack.back();
+                    }
+                    else if (activity.getIntent()) {
+                        PageStack.notifyPageClosed(activity.getIntent().activityName);
+                    }
+                }, 0);
+            }
+            scheduleBackTo(intent) {
+                let destroyList = [];
+                let findActivity = false;
+                for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
+                    if (activity.getIntent() && activity.getIntent().activityName == intent.activityName) {
+                        findActivity = true;
+                        break;
+                    }
+                    destroyList.push(activity);
                 }
-                else if (activity.getIntent()) {
-                    PageStack.notifyPageClosed(activity.getIntent().activityName);
+                if (findActivity) {
+                    for (let activity of destroyList) {
+                        this.scheduleDestroyActivity(activity);
+                    }
+                    return true;
+                }
+                return false;
+            }
+            canBackTo(intent) {
+                for (let activity of this.mLaunchedActivities) {
+                    if (activity.getIntent().activityName == intent.activityName) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            scheduleBackToRoot() {
+                let destroyList = Array.from(this.mLaunchedActivities).reverse();
+                destroyList.shift();
+                for (let activity of destroyList) {
+                    this.scheduleDestroyActivity(activity);
                 }
             }
             handlePauseActivity(activity) {
@@ -15011,9 +15100,13 @@ var android;
             }
             handleResumeActivity(a, launching) {
                 this.performResumeActivity(a, launching);
-                let willBeVisible = !a.mStartedActivity;
+                let willBeVisible = !a.mStartedActivity && !a.mFinished;
                 if (willBeVisible && a.mVisibleFromClient) {
                     a.makeVisible();
+                    this.overrideEnterAnimation = undefined;
+                    this.overrideExitAnimation = undefined;
+                    this.overrideResumeAnimation = undefined;
+                    this.overrideHideAnimation = undefined;
                 }
             }
             performResumeActivity(a, launching) {
@@ -15027,7 +15120,7 @@ var android;
                 let a = this.performLaunchActivity(intent);
                 if (a) {
                     this.handleResumeActivity(a, true);
-                    if (visibleActivities.length > 0) {
+                    if (!a.mFinished && visibleActivities.length > 0) {
                         this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
                         if (!a.getWindow().getAttributes().isFloating()) {
                             for (let visibleActivity of visibleActivities) {
@@ -15049,24 +15142,32 @@ var android;
                 if (typeof clazz === 'function')
                     activity = new clazz(this.androidUI);
                 if (activity instanceof app.Activity) {
-                    let savedInstanceState = null;
-                    activity.mIntent = intent;
-                    activity.mStartedActivity = false;
-                    activity.mCalled = false;
-                    activity.performCreate(savedInstanceState);
-                    if (!activity.mCalled) {
-                        throw new Error("Activity " + intent.activityName + " did not call through to super.onCreate()");
-                    }
-                    if (!activity.mFinished) {
-                        activity.performStart();
-                        activity.performRestoreInstanceState(savedInstanceState);
+                    try {
+                        let savedInstanceState = null;
+                        activity.mIntent = intent;
+                        activity.mStartedActivity = false;
                         activity.mCalled = false;
-                        activity.onPostCreate(savedInstanceState);
+                        activity.performCreate(savedInstanceState);
                         if (!activity.mCalled) {
-                            throw new Error("Activity " + intent.activityName + " did not call through to super.onPostCreate()");
+                            throw new Error("Activity " + intent.activityName + " did not call through to super.onCreate()");
+                        }
+                        if (!activity.mFinished) {
+                            activity.performStart();
+                            activity.performRestoreInstanceState(savedInstanceState);
+                            activity.mCalled = false;
+                            activity.onPostCreate(savedInstanceState);
+                            if (!activity.mCalled) {
+                                throw new Error("Activity " + intent.activityName + " did not call through to super.onPostCreate()");
+                            }
                         }
                     }
-                    this.mLaunchedActivities.add(activity);
+                    catch (e) {
+                        console.error(e);
+                        return null;
+                    }
+                    if (!activity.mFinished) {
+                        this.mLaunchedActivities.add(activity);
+                    }
                     return activity;
                 }
                 return null;
@@ -15077,13 +15178,7 @@ var android;
                 this.performDestroyActivity(activity, finishing);
                 this.androidUI.windowManager.removeWindow(activity.getWindow());
                 if (isTopVisibleActivity) {
-                    visibleActivities = this.getVisibleToUserActivities();
-                    if (visibleActivities.length > 0) {
-                        for (let visibleActivity of visibleActivities) {
-                            visibleActivity.performRestart();
-                        }
-                        this.handleResumeActivity(visibleActivities[visibleActivities.length - 1], false);
-                    }
+                    this.scheduleActivityResume();
                 }
             }
             performDestroyActivity(activity, finishing) {
@@ -17321,7 +17416,7 @@ var android;
                     super.addFocusables(views, direction, focusableMode);
                 }
             }
-            requestFocus(direction, previouslyFocusedRect) {
+            requestFocus(direction = view_5.View.FOCUS_DOWN, previouslyFocusedRect = null) {
                 if (view_5.View.DBG) {
                     System.out.println(this + " ViewGroup.requestFocus direction="
                         + direction);
@@ -22413,8 +22508,10 @@ var android;
             }
             removeWindow(window) {
                 let decor = window.getDecorView();
+                if (decor.getParent() == null)
+                    return;
                 if (decor.getParent() !== this.mWindowsLayout) {
-                    console.error('removeWindow fail, don\'t has the window');
+                    console.error('removeWindow fail, don\'t has the window, decor belong to ', decor.getParent());
                     return;
                 }
                 let wparams = decor.getLayoutParams();
@@ -23772,6 +23869,7 @@ var android;
                 return this.mContext.getLayoutInflater();
             }
             setTitle(title) {
+                this.mDecor.bindElement.setAttribute('title', title);
                 this.getAttributes().setTitle(title);
             }
             setBackgroundDrawable(drawable) {
@@ -24155,7 +24253,9 @@ var android;
             startActivityForResult(intent, requestCode, options) {
                 if (typeof intent === 'string')
                     intent = new Intent(intent);
-                this.androidUI.mActivityThread.scheduleLaunchActivity(intent, options);
+                if (requestCode >= 0)
+                    intent.mRequestCode = requestCode;
+                this.androidUI.mActivityThread.scheduleLaunchActivity(this, intent, options);
                 if (requestCode >= 0) {
                     this.mStartedActivity = true;
                 }
@@ -24178,6 +24278,9 @@ var android;
                 }
             }
             startActivityIfNeeded(intent, requestCode, options) {
+                if (this.androidUI.mActivityThread.canBackTo(intent)) {
+                    return false;
+                }
                 this.startActivityForResult(intent, requestCode, options);
                 return true;
             }
@@ -24221,6 +24324,9 @@ var android;
                 catch (e) {
                 }
             }
+            finishActivity(requestCode) {
+                this.androidUI.mActivityThread.scheduleDestroyActivityByRequestCode(requestCode);
+            }
             onActivityResult(requestCode, resultCode, data) {
             }
             setTitle(title) {
@@ -24238,6 +24344,14 @@ var android;
             }
             runOnUiThread(action) {
                 action.run();
+            }
+            navigateUpTo(upIntent, upToRootIfNotFound = true) {
+                if (this.androidUI.mActivityThread.scheduleBackTo(upIntent)) {
+                    return true;
+                }
+                if (upToRootIfNotFound)
+                    this.androidUI.mActivityThread.scheduleBackToRoot();
+                return false;
             }
             performCreate(icicle) {
                 this.onCreate(icicle);
@@ -24309,11 +24423,7 @@ var android;
             dispatchActivityResult(who, requestCode, resultCode, data) {
                 if (false)
                     Log.v(Activity.TAG, "Dispatching result: who=" + who + ", reqCode=" + requestCode + ", resCode=" + resultCode + ", data=" + data);
-                if (who == null) {
-                    this.onActivityResult(requestCode, resultCode, data);
-                }
-                else {
-                }
+                this.onActivityResult(requestCode, resultCode, data);
             }
         }
         Activity.TAG = "Activity";

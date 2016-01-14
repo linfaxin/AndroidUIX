@@ -122,8 +122,9 @@ export class WindowManager {
 
     removeWindow(window:Window):void{
         let decor = window.getDecorView();
+        if(decor.getParent()==null) return;//not add
         if(decor.getParent() !== this.mWindowsLayout){
-            console.error('removeWindow fail, don\'t has the window');
+            console.error('removeWindow fail, don\'t has the window, decor belong to ', decor.getParent());
             return;
         }
         let wparams = <WindowManager.LayoutParams>decor.getLayoutParams();

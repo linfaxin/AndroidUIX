@@ -957,20 +957,21 @@ declare module android.content {
     import Bundle = android.os.Bundle;
     class Intent {
         private mExtras;
+        private mRequestCode;
         private activityName;
-        constructor(activityClassOrName: string);
+        constructor(activityClassOrName?: string);
         getBooleanExtra(name: string, defaultValue: boolean): boolean;
         getIntExtra(name: string, defaultValue: number): number;
         getLongExtra(name: string, defaultValue: number): number;
         getFloatExtra(name: string, defaultValue: number): number;
         getDoubleExtra(name: string, defaultValue: number): number;
-        getStringExtra(name: string, defaultValue: string): string;
-        getStringArrayExtra(name: string, defaultValue: string[]): string[];
-        getIntegerArrayExtra(name: string, defaultValue: number[]): number[];
-        getLongArrayExtra(name: string, defaultValue: number[]): number[];
-        getFloatArrayExtra(name: string, defaultValue: number[]): number[];
-        getDoubleArrayExtra(name: string, defaultValue: number[]): number[];
-        getBooleanArrayExtra(name: string, defaultValue: boolean[]): boolean[];
+        getStringExtra(name: string, defaultValue?: string): string;
+        getStringArrayExtra(name: string, defaultValue?: string[]): string[];
+        getIntegerArrayExtra(name: string, defaultValue?: number[]): number[];
+        getLongArrayExtra(name: string, defaultValue?: number[]): number[];
+        getFloatArrayExtra(name: string, defaultValue?: number[]): number[];
+        getDoubleArrayExtra(name: string, defaultValue?: number[]): number[];
+        getBooleanArrayExtra(name: string, defaultValue?: boolean[]): boolean[];
         hasExtra(name: string): boolean;
         putExtra(name: string, value: any): Intent;
         getExtras(): Bundle;
@@ -3163,7 +3164,7 @@ declare module PageStack {
     function go(delta: number): void;
     function back(): void;
     function openPage(pageId: string, extra?: any): void;
-    function notifyPageClosed(pageId: string, pageExtra?: any): boolean;
+    function notifyPageClosed(pageId: string): void;
     function notifyNewPageOpened(pageId: string, extra?: any): void;
     interface StateStack {
         pageId: string;
@@ -3188,7 +3189,6 @@ declare module android.app {
         overrideHideAnimation: Animation;
         constructor(androidUI: androidui.AndroidUI);
         private initWithPageStack();
-        clearOverrideAnimationTimeoutId: any;
         overrideNextWindowAnimation(enterAnimation: Animation, exitAnimation: Animation, resumeAnimation: Animation, hideAnimation: Animation): void;
         getOverrideEnterAnimation(): Animation;
         getOverrideExitAnimation(): Animation;
@@ -3196,8 +3196,14 @@ declare module android.app {
         getOverrideHideAnimation(): Animation;
         scheduleApplicationHide(): void;
         scheduleApplicationShow(): void;
-        scheduleLaunchActivity(intent: Intent, options?: android.os.Bundle): void;
+        activityResumeTimeout: any;
+        scheduleActivityResume(): void;
+        scheduleLaunchActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
+        scheduleDestroyActivityByRequestCode(requestCode: number): void;
         scheduleDestroyActivity(activity: Activity, finishing?: boolean): void;
+        scheduleBackTo(intent: Intent): boolean;
+        canBackTo(intent: Intent): boolean;
+        scheduleBackToRoot(): void;
         private handlePauseActivity(activity);
         private performPauseActivity(activity);
         private handleStopActivity(activity, show?);
@@ -3513,7 +3519,7 @@ declare module android.view {
         findFocus(): View;
         hasFocusable(): boolean;
         addFocusables(views: ArrayList<View>, direction: number, focusableMode?: number): void;
-        requestFocus(direction?: number, previouslyFocusedRect?: Rect): boolean;
+        requestFocus(direction?: number, previouslyFocusedRect?: any): boolean;
         protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
         addView(view: View): any;
         addView(view: View, index: number): any;
@@ -4688,6 +4694,7 @@ declare module android.app {
         static RESULT_CANCELED: number;
         static RESULT_OK: number;
         static RESULT_FIRST_USER: number;
+        private mCallActivity;
         private mIntent;
         private mCalled;
         private mResumed;
@@ -4755,11 +4762,13 @@ declare module android.app {
         isFinishing(): boolean;
         isDestroyed(): boolean;
         finish(): void;
+        finishActivity(requestCode: number): void;
         protected onActivityResult(requestCode: number, resultCode: number, data: Intent): void;
         setTitle(title: string): void;
         getTitle(): string;
         protected onTitleChanged(title: string, color?: number): void;
         runOnUiThread(action: Runnable): void;
+        navigateUpTo(upIntent: Intent, upToRootIfNotFound?: boolean): boolean;
         constructor(androidUI: androidui.AndroidUI);
         private performCreate(icicle);
         private performStart();

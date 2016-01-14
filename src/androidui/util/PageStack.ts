@@ -115,7 +115,10 @@ module PageStack{
 
     export function go(delta:number){
         if(historyLocking){
-            console.error('cant change history when waiting history change finish');
+            //do delay
+            ensureLockDo(()=>{
+                go(delta);
+            });
             return;
         }
         var stackList = currentStack.stack;
@@ -163,10 +166,12 @@ module PageStack{
 
     let releaseLockingTimeout;
     let requestHistoryGoWhenLocking = 0;
+    let ensureFakeAfterHistoryChange = false;
     function historyGo(delta:number, ensureFaked=true){
         if(delta>=0) return;//not support forward
         if(history.length === 1) return;//no history
 
+        ensureFakeAfterHistoryChange = ensureFakeAfterHistoryChange || ensureFaked;
         if(historyLocking){
             requestHistoryGoWhenLocking += delta;
             return;
@@ -186,9 +191,12 @@ module PageStack{
                 if(continueGo!=0){
                     requestHistoryGoWhenLocking = 0;
                     historyLocking = false;
-                    historyGo(continueGo);
+                    historyGo(continueGo, false);
 
                 }else {
+                    //history change complete
+                    if(ensureFakeAfterHistoryChange) ensureLastHistoryFakedImpl();
+                    ensureFakeAfterHistoryChange = false;
                     releaseLockingTimeout = setTimeout(()=> {
                         historyLocking = false;
                     }, 10);
@@ -198,9 +206,6 @@ module PageStack{
         releaseLockingTimeout = setTimeout(checkRelease, 0);
 
         history_go.call(history, delta);
-
-        if(ensureFaked) ensureLastHistoryFaked();
-
     }
 
     //if page reload, but the page content will clear, should re-open pages
@@ -245,17 +250,19 @@ module PageStack{
     /**
      * call when app logic already close page. sync browser history here.
      */
-    export function notifyPageClosed(pageId:string, pageExtra?:any):boolean{
+    export function notifyPageClosed(pageId:string):void {
         if(DEBUG) console.log('notifyPageClosed', pageId);
         if(historyLocking){
-            console.error('cant notifyPageClosed when waiting history change finish');
-            return;
+            //do delay
+            ensureLockDo(()=>{
+                notifyPageClosed(pageId);
+            });
         }
         let stackList = currentStack.stack;
         let historyLength = stackList.length;
-        for(let i=historyLength-1; i>=0; i--){
+        for(let i=historyLength-1; i>=0; i--){//reverse
             let state = stackList[i];
-            if(state.pageId === pageId){//xxx should check pageExtra? may same pageId exist
+            if(state.pageId == pageId){
                 if(i === historyLength-1){//last page closed, back the history now
                     removeLastHistoryIfFaked();
                     historyGo(-1);
@@ -266,7 +273,7 @@ module PageStack{
                         //back history to the aim page first
                         historyGo(delta);
                         //then re-add other pages to history
-                        ensureLockDo(()=> {
+                        ensureLockDoAtFront(()=> {
                             let historyLength = stackList.length;
                             let pageStartAddIndex = historyLength + delta + 1;
                             for(let j = pageStartAddIndex; j<historyLength; j++){
@@ -275,9 +282,9 @@ module PageStack{
                         });
                     })(delta);
                 }
+                return;
             }
         }
-        return true;
     }
 
     /**
@@ -306,15 +313,26 @@ module PageStack{
     }
 
 
-    let execLockedTimeoutId:number;
     function ensureLockDo(func:()=>any, runNowIfNotLock=false){
         if(!historyLocking && runNowIfNotLock){
             func();
             return;
         }
-
         pendingFuncLock.push(func);
+        _queryLockDo();
+    }
 
+    function ensureLockDoAtFront(func:()=>any, runNowIfNotLock=false){
+        if(!historyLocking && runNowIfNotLock){
+            func();
+            return;
+        }
+        pendingFuncLock.splice(0, 0, func);
+        _queryLockDo();
+    }
+
+    let execLockedTimeoutId:number;
+    function _queryLockDo(){
         if(execLockedTimeoutId) clearTimeout(execLockedTimeoutId);
 
         function execLockedFunctions(){
@@ -323,10 +341,15 @@ module PageStack{
                 execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
 
             }else{
-                let copy = pendingFuncLock.concat();
-                pendingFuncLock = [];
-                for(let f of copy){
+                let f;
+                while(f = pendingFuncLock.shift()){
                     f();
+                    if(historyLocking){
+                        //case history change when call the function, all other functions will call next frame.
+                        clearTimeout(execLockedTimeoutId);
+                        execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
+                        break;
+                    }
                 }
             }
         }
@@ -336,6 +359,7 @@ module PageStack{
 
     function removeLastHistoryIfFaked(){
         if(history.state && history.state.isFake){
+            if(DEBUG) console.log('remove Fake History');
             history.replaceState({}, null, '');//make history.state.isFake = false
             historyGo(-1, false);
         }
@@ -346,6 +370,7 @@ module PageStack{
     }
     function ensureLastHistoryFakedImpl(){
         if(!history.state.isFake){
+            if(DEBUG) console.log('append Fake History');
             history.pushState({isFake:true}, null, '');
         }
     }
