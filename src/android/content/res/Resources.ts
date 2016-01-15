@@ -99,9 +99,14 @@ module android.content.res{
         }
 
         getColorStateList(refString:string):ColorStateList {
-            if(refString.startsWith('@')){
+            if(refString.startsWith('@android:color/')){
+                refString = refString.substring('@android:color/'.length);
+                return android.R.color[refString];
+
+            }else if(refString.startsWith('@')){
                 return this.getObjectRef(refString);
             }
+            //TODO app color list defined
         }
 
         /**
@@ -121,6 +126,24 @@ module android.content.res{
             }
             return attrValue;
         }
+
+        /**
+         * @param refString @array/xxx @android:array/xxx
+         */
+        getTextArray(refString:string):string[] {
+            if(!refString || !refString.startsWith('@')) return null;
+            let reference = this.getReference(refString, false);
+            if(reference instanceof HTMLElement){
+                let array = [];
+                for(let ele of Array.from(reference.children)){
+                    if(ele instanceof HTMLElement) array.push(ele.innerText);
+                }
+                return array;
+            }
+            return null;
+        }
+
+
 
         static buildLayoutFinder: (refString:string)=>HTMLElement;
         /**

@@ -378,6 +378,7 @@ module androidui {
             overflow : hidden;
             border : none;
             outline: none;
+            pointer-events: auto;
         }
         .${AndroidUI.DomClassName} resources {
             display: none;
@@ -385,6 +386,9 @@ module androidui {
         .${AndroidUI.DomClassName} Button {
             border: none;
             background: none;
+        }
+        .${AndroidUI.DomClassName} windowsgroup {
+            pointer-events: none;
         }
         .${AndroidUI.DomClassName} > canvas {
             position: absolute;

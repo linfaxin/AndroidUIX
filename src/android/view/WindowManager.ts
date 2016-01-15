@@ -103,14 +103,15 @@ export class WindowManager {
             this.clearWindowFocus();
             decorView.dispatchWindowFocusChanged(true);
         }
+        if(decorView instanceof ViewGroup){
+            decorView.setMotionEventSplittingEnabled(wparams.isSplitTouch());
+        }
 
         let enterAnimation = window.getContext().androidUI.mActivityThread.getOverrideEnterAnimation();
         if(enterAnimation === undefined) enterAnimation = wparams.enterAnimation;
         if(enterAnimation){
             decorView.startAnimation(enterAnimation);
         }
-
-        this.mWindowsLayout.bindElement.style.pointerEvents = '';//child can select on debug
     }
 
     updateWindowLayout(window:Window, params:ViewGroup.LayoutParams):void{
@@ -138,10 +139,6 @@ export class WindowManager {
                         run(){
                             let group = <ViewGroup>decor.getParent();
                             group.removeView(decor);
-
-                            if(group.getChildCount()==0){//force can't select on debug
-                                group.bindElement.style.pointerEvents = 'none';
-                            }
                         }
                     });
                 },
@@ -187,10 +184,11 @@ export module WindowManager{
 
         protected isTransformedTouchPointInView(x:number, y:number, child:android.view.View, outLocalPoint:android.graphics.Point):boolean {
             let wparams = <WindowManager.LayoutParams>child.getLayoutParams();
-            if(wparams.isFocusable() && wparams.isTouchable()){//handle touch to window
+            if(wparams.isFocusable() && wparams.isTouchable()){
+                //handle touch to window
                 return true;
             }
-            return super.isTransformedTouchPointInView(x, y, child, outLocalPoint);
+            return false;//super.isTransformedTouchPointInView(x, y, child, outLocalPoint);
         }
 
         onChildVisibilityChanged(child:android.view.View, oldVisibility:number, newVisibility:number):void {
@@ -643,9 +641,9 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     //     *  {@link #FLAG_KEEP_SCREEN_ON} and/or {@link #FLAG_SHOW_WHEN_LOCKED} */
     //static FLAG_ALLOW_LOCK_WHILE_SCREEN_ON:number = 0x00000001;
 
-    /** Window flag: everything behind this window will be dimmed.
-         *  Use {@link #dimAmount} to control the amount of dim. */
-    static FLAG_DIM_BEHIND:number = 0x00000002;
+    ///** Window flag: everything behind this window will be dimmed.
+    //     *  Use {@link #dimAmount} to control the amount of dim. */
+    //static FLAG_DIM_BEHIND:number = 0x00000002;
 
     ///** Window flag: blur everything behind this window.
     //     * @deprecated Blurring is no longer supported. */
@@ -771,15 +769,15 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     //     */
     //static FLAG_ALT_FOCUSABLE_IM:number = 0x00020000;
     //
-    ///** Window flag: if you have set {@link #FLAG_NOT_TOUCH_MODAL}, you
-    //     * can set this flag to receive a single special MotionEvent with
-    //     * the action
-    //     * {@link MotionEvent#ACTION_OUTSIDE MotionEvent.ACTION_OUTSIDE} for
-    //     * touches that occur outside of your window.  Note that you will not
-    //     * receive the full down/move/up gesture, only the location of the
-    //     * first down as an ACTION_OUTSIDE.
-    //     */
-    //static FLAG_WATCH_OUTSIDE_TOUCH:number = 0x00040000;
+    /** Window flag: if you have set {@link #FLAG_NOT_TOUCH_MODAL}, you
+         * can set this flag to receive a single special MotionEvent with
+         * the action
+         * {@link MotionEvent#ACTION_OUTSIDE MotionEvent.ACTION_OUTSIDE} for
+         * touches that occur outside of your window.  Note that you will not
+         * receive the full down/move/up gesture, only the location of the
+         * first down as an ACTION_OUTSIDE.
+         */
+    static FLAG_WATCH_OUTSIDE_TOUCH:number = 0x00040000;
     //
     ///** Window flag: special flag to let windows be shown when the screen
     //     * is locked. This will let application windows take precedence over
@@ -1317,7 +1315,7 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
          * to apply.  Range is from 1.0 for completely opaque to 0.0 for no
          * dim.
          */
-    dimAmount:number = 0.6;
+    dimAmount:number = 0;
 
     ///**
     //     * Default value for {@link #screenBrightness} and {@link #buttonBrightness}
@@ -1908,6 +1906,12 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     }
     private isFloating():boolean {
         return (this.flags & LayoutParams.FLAG_FLOATING) != 0;
+    }
+    private isSplitTouch():boolean {
+        return (this.flags & LayoutParams.FLAG_SPLIT_TOUCH) != 0;
+    }
+    private isWatchTouchOutside():boolean {
+        return (this.flags & LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH) != 0;
     }
 }
 }

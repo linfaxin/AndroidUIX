@@ -511,6 +511,10 @@ module android.graphics{
          * @return the font's interline spacing.
          */
         getFontMetricsInt(fmi:Paint.FontMetricsInt):number {
+            if(this.textSize==null){
+                console.warn('call Paint.getFontMetricsInt but textSize not init');
+                return 0;
+            }
             if(fmi==null){
                 return Math.floor((Paint.FontMetrics_Size_Descent - Paint.FontMetrics_Size_Ascent) * this.textSize);
             }
@@ -532,6 +536,10 @@ module android.graphics{
          * @return the font's recommended interline spacing.
          */
         getFontMetrics(metrics:Paint.FontMetrics):number {
+            if(this.textSize==null){
+                console.warn('call Paint.getFontMetrics but textSize not init');
+                return 0;
+            }
             if(metrics==null){
                 return (Paint.FontMetrics_Size_Descent - Paint.FontMetrics_Size_Ascent) * this.textSize;
             }

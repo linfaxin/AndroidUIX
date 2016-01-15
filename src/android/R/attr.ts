@@ -6,6 +6,7 @@
 ///<reference path="color.ts"/>
 ///<reference path="../view/Gravity.ts"/>
 ///<reference path="../view/View.ts"/>
+///<reference path="../view/animation/Animation.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Color.ts"/>
 ///<reference path="../graphics/drawable/Drawable.ts"/>
@@ -222,5 +223,49 @@ module android.R {
             }
         }
 
+
+        static get popupWindowStyle(){
+            return {
+                popupBackground : R.drawable.dropdown_background_dark,
+                popupEnterAnimation : R.anim.grow_fade_in_center,
+                popupExitAnimation : R.anim.shrink_fade_out_center,
+            }
+        }
+
+        static get listPopupWindowStyle(){
+            return {
+                popupBackground : R.drawable.menu_panel_holo_light,
+                popupEnterAnimation : R.anim.grow_fade_in_center,
+                popupExitAnimation : R.anim.shrink_fade_out_center,
+            }
+        }
+
+        static get dropDownListViewStyle(){
+            return this.listViewStyle;
+        }
+
+        static get spinnerStyle(){
+            return {
+                clickable : true,
+                spinnerMode : 'dropdown',
+                gravity : Gravity.START|Gravity.CENTER_VERTICAL,
+                disableChildrenWhenDisabled : true,
+                background : R.drawable.button_background,
+                //dropDownSelector : R.drawable.list_selector_holo_light,
+                popupBackground : R.drawable.menu_panel_holo_light,
+                dropDownVerticalOffset : '0dp',
+                dropDownHorizontalOffset : '0dp',
+                dropDownWidth : -2,//wrap_content
+                //popupPromptView : R.layout.simple_dropdown_hint,
+            }
+        }
+    }
+
+    export module attr{
+        export interface popupWindowStyleType{
+            popupBackground?:Drawable;
+            popupEnterAnimation?:android.view.animation.Animation;
+            popupExitAnimation?:android.view.animation.Animation;
+        }
     }
 }

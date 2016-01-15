@@ -1558,17 +1558,26 @@ export interface Callback {
 
         dispatchTouchEvent(ev:android.view.MotionEvent):boolean {
             let wparams = <WindowManager.LayoutParams>this.getLayoutParams();
-            //if(this.Window_this.shouldCloseOnTouch(this.getContext(), ev)){
-            //    (<WindowManager.Layout>this.getParent()).mWindowManager.removeWindow(this.Window_this);
-            //    return true;
-            //}
-            let handle = wparams.isTouchModal();
-            if(wparams.isTouchable()){
-                const cb = this.Window_this.getCallback();
-                handle = (cb != null && !this.Window_this.isDestroyed() /*&& mFeatureId < 0*/ ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev))
-                    || handle;
+
+            const cb = this.Window_this.getCallback();
+            let outside = this.Window_this.isOutOfBounds(this.getContext(), ev);
+
+            if(outside && !wparams.isTouchModal()){
+                if(wparams.isWatchTouchOutside() && ev.getAction() == android.view.MotionEvent.ACTION_DOWN){
+                    //send a outside event
+                    let action = ev.getAction();
+                    ev.setAction(android.view.MotionEvent.ACTION_OUTSIDE);
+                    if(cb != null && !this.Window_this.isDestroyed() /*&& mFeatureId < 0*/){
+                        cb.dispatchTouchEvent(ev)
+                    }else{
+                        super.dispatchTouchEvent(ev)
+                    }
+                    ev.setAction(action);
+                }
+                return false;
             }
-            return handle;
+
+            return (cb != null && !this.Window_this.isDestroyed() /*&& mFeatureId < 0*/ ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev));
         }
 
         dispatchGenericMotionEvent(ev:android.view.MotionEvent):boolean {

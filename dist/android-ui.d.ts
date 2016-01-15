@@ -1021,6 +1021,8 @@ declare module android.R {
         static select_dialog_item: string;
         static select_dialog_multichoice: string;
         static select_dialog_singlechoice: string;
+        static simple_spinner_dropdown_item: string;
+        static simple_spinner_item: string;
         static transient_notification: string;
     }
 }
@@ -1044,6 +1046,7 @@ declare module android.content.res {
         getColor(refString: string): number;
         getColorStateList(refString: string): ColorStateList;
         getString(refString: string, notFindValue?: string): string;
+        getTextArray(refString: string): string[];
         static buildLayoutFinder: (refString: string) => HTMLElement;
         getLayout(refString: string): HTMLElement;
         private static emptySelectorNode;
@@ -1130,6 +1133,7 @@ declare module android.os {
 declare module android.view {
     import Rect = android.graphics.Rect;
     class MotionEvent {
+        static INVALID_POINTER_ID: number;
         static ACTION_MASK: number;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
@@ -1414,6 +1418,8 @@ declare module androidui.attr {
         parseColor(value: string, defaultValue?: number): number;
         parseColorList(value: string): ColorStateList;
         parseNumber(value: any, defaultValue?: number, baseValue?: number): number;
+        parseString(value: any, defaultValue?: string): string;
+        parseTextArray(value: any): string[];
     }
 }
 declare module androidui.util {
@@ -1933,6 +1939,8 @@ declare module android.R {
         static divider_horizontal: Drawable;
         static item_background: StateListDrawable;
         static toast_frame: InsetDrawable;
+        static dropdown_background_dark: InsetDrawable;
+        static menu_panel_holo_light: InsetDrawable;
     }
 }
 declare module androidui.image {
@@ -2065,100 +2073,7 @@ declare module android.R {
     import ColorStateList = android.content.res.ColorStateList;
     class color {
         static textView_textColor: ColorStateList;
-    }
-}
-declare module android.R {
-    import Drawable = android.graphics.drawable.Drawable;
-    import ColorDrawable = android.graphics.drawable.ColorDrawable;
-    import StateListDrawable = android.graphics.drawable.StateListDrawable;
-    class attr {
-        static _viewStyle: any;
-        static viewStyle: any;
-        static textViewStyle: {
-            textSize: string;
-            textColor: content.res.ColorStateList;
-        };
-        static buttonStyle: any;
-        static imageButtonStyle: {
-            background: Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            gravity: number;
-        };
-        static checkboxStyle: any;
-        static radiobuttonStyle: any;
-        static checkedTextViewStyle: {
-            textAlignment: string;
-        };
-        static progressBarStyle: {
-            indeterminateOnly: boolean;
-            indeterminateDrawable: Drawable;
-            indeterminateBehavior: string;
-            indeterminateDuration: number;
-            minWidth: string;
-            maxWidth: string;
-            minHeight: string;
-            maxHeight: string;
-            mirrorForRtl: boolean;
-        };
-        static progressBarStyleHorizontal: {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            indeterminateBehavior: string;
-            indeterminateDuration: number;
-            minHeight: string;
-            maxHeight: string;
-            mirrorForRtl: boolean;
-        };
-        static progressBarStyleSmall: any;
-        static progressBarStyleLarge: any;
-        static seekBarStyle: {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            minHeight: string;
-            maxHeight: string;
-            thumb: Drawable;
-            thumbOffset: string;
-            focusable: boolean;
-            paddingLeft: string;
-            paddingRight: string;
-            mirrorForRtl: boolean;
-        };
-        static ratingBarStyle: {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            minHeight: string;
-            maxHeight: string;
-            numStars: string;
-            stepSize: string;
-            thumb: any;
-            mirrorForRtl: boolean;
-        };
-        static ratingBarStyleIndicator: any;
-        static ratingBarStyleSmall: any;
-        static gridViewStyle: {
-            listSelector: Drawable;
-            numColumns: number;
-        };
-        static listViewStyle: {
-            divider: Drawable;
-            listSelector: Drawable;
-            dividerHeight: number;
-        };
-        static expandableListViewStyle: any;
-        static numberPickerStyle: {
-            orientation: string;
-            solidColor: string;
-            selectionDivider: ColorDrawable;
-            selectionDividerHeight: string;
-            selectionDividersDistance: string;
-            internalMinWidth: string;
-            internalMaxHeight: string;
-            virtualButtonPressedDrawable: StateListDrawable;
-        };
+        static primary_text_light_disable_only: ColorStateList;
     }
 }
 declare module goog.math {
@@ -2371,6 +2286,134 @@ declare module android.view.animation {
         }
     }
 }
+declare module android.R {
+    import Drawable = android.graphics.drawable.Drawable;
+    import InsetDrawable = android.graphics.drawable.InsetDrawable;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
+    import StateListDrawable = android.graphics.drawable.StateListDrawable;
+    class attr {
+        static _viewStyle: any;
+        static viewStyle: any;
+        static textViewStyle: {
+            textSize: string;
+            textColor: content.res.ColorStateList;
+        };
+        static buttonStyle: any;
+        static imageButtonStyle: {
+            background: Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            gravity: number;
+        };
+        static checkboxStyle: any;
+        static radiobuttonStyle: any;
+        static checkedTextViewStyle: {
+            textAlignment: string;
+        };
+        static progressBarStyle: {
+            indeterminateOnly: boolean;
+            indeterminateDrawable: Drawable;
+            indeterminateBehavior: string;
+            indeterminateDuration: number;
+            minWidth: string;
+            maxWidth: string;
+            minHeight: string;
+            maxHeight: string;
+            mirrorForRtl: boolean;
+        };
+        static progressBarStyleHorizontal: {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            indeterminateBehavior: string;
+            indeterminateDuration: number;
+            minHeight: string;
+            maxHeight: string;
+            mirrorForRtl: boolean;
+        };
+        static progressBarStyleSmall: any;
+        static progressBarStyleLarge: any;
+        static seekBarStyle: {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            minHeight: string;
+            maxHeight: string;
+            thumb: Drawable;
+            thumbOffset: string;
+            focusable: boolean;
+            paddingLeft: string;
+            paddingRight: string;
+            mirrorForRtl: boolean;
+        };
+        static ratingBarStyle: {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            minHeight: string;
+            maxHeight: string;
+            numStars: string;
+            stepSize: string;
+            thumb: any;
+            mirrorForRtl: boolean;
+        };
+        static ratingBarStyleIndicator: any;
+        static ratingBarStyleSmall: any;
+        static gridViewStyle: {
+            listSelector: Drawable;
+            numColumns: number;
+        };
+        static listViewStyle: {
+            divider: Drawable;
+            listSelector: Drawable;
+            dividerHeight: number;
+        };
+        static expandableListViewStyle: any;
+        static numberPickerStyle: {
+            orientation: string;
+            solidColor: string;
+            selectionDivider: ColorDrawable;
+            selectionDividerHeight: string;
+            selectionDividersDistance: string;
+            internalMinWidth: string;
+            internalMaxHeight: string;
+            virtualButtonPressedDrawable: StateListDrawable;
+        };
+        static popupWindowStyle: {
+            popupBackground: InsetDrawable;
+            popupEnterAnimation: view.animation.Animation;
+            popupExitAnimation: view.animation.Animation;
+        };
+        static listPopupWindowStyle: {
+            popupBackground: InsetDrawable;
+            popupEnterAnimation: view.animation.Animation;
+            popupExitAnimation: view.animation.Animation;
+        };
+        static dropDownListViewStyle: {
+            divider: Drawable;
+            listSelector: Drawable;
+            dividerHeight: number;
+        };
+        static spinnerStyle: {
+            clickable: boolean;
+            spinnerMode: string;
+            gravity: number;
+            disableChildrenWhenDisabled: boolean;
+            background: Drawable;
+            popupBackground: InsetDrawable;
+            dropDownVerticalOffset: string;
+            dropDownHorizontalOffset: string;
+            dropDownWidth: number;
+        };
+    }
+    module attr {
+        interface popupWindowStyleType {
+            popupBackground?: Drawable;
+            popupEnterAnimation?: android.view.animation.Animation;
+            popupExitAnimation?: android.view.animation.Animation;
+        }
+    }
+}
 declare module android.view {
     import Drawable = android.graphics.drawable.Drawable;
     import Matrix = android.graphics.Matrix;
@@ -2524,6 +2567,23 @@ declare module android.view {
         static LAYOUT_DIRECTION_RTL: number;
         static LAYOUT_DIRECTION_INHERIT: number;
         static LAYOUT_DIRECTION_LOCALE: number;
+        static TEXT_DIRECTION_INHERIT: number;
+        static TEXT_DIRECTION_FIRST_STRONG: number;
+        static TEXT_DIRECTION_ANY_RTL: number;
+        static TEXT_DIRECTION_LTR: number;
+        static TEXT_DIRECTION_RTL: number;
+        static TEXT_DIRECTION_LOCALE: number;
+        private static TEXT_DIRECTION_DEFAULT;
+        static TEXT_DIRECTION_RESOLVED_DEFAULT: number;
+        static TEXT_ALIGNMENT_INHERIT: number;
+        static TEXT_ALIGNMENT_GRAVITY: number;
+        static TEXT_ALIGNMENT_TEXT_START: number;
+        static TEXT_ALIGNMENT_TEXT_END: number;
+        static TEXT_ALIGNMENT_CENTER: number;
+        static TEXT_ALIGNMENT_VIEW_START: number;
+        static TEXT_ALIGNMENT_VIEW_END: number;
+        private static TEXT_ALIGNMENT_DEFAULT;
+        static TEXT_ALIGNMENT_RESOLVED_DEFAULT: number;
         mID: string;
         private mTag;
         mPrivateFlags: number;
@@ -2674,6 +2734,7 @@ declare module android.view {
         protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
         getTouchables(): ArrayList<View>;
         addTouchables(views: ArrayList<View>): void;
+        requestRectangleOnScreen(rectangle: Rect, immediate?: boolean): boolean;
         onFocusLost(): void;
         resetPressedState(): void;
         isFocused(): boolean;
@@ -2787,6 +2848,10 @@ declare module android.view {
         setLayoutDirection(layoutDirection: number): void;
         getLayoutDirection(): number;
         isLayoutRtl(): boolean;
+        getTextDirection(): number;
+        setTextDirection(textDirection: number): void;
+        getTextAlignment(): number;
+        setTextAlignment(textAlignment: number): void;
         getBaseline(): number;
         isLayoutRequested(): boolean;
         getLayoutParams(): ViewGroup.LayoutParams;
@@ -2803,6 +2868,10 @@ declare module android.view {
         getFocusedRect(r: Rect): void;
         getDrawingRect(outRect: Rect): void;
         getGlobalVisibleRect(r: Rect, globalOffset?: Point): boolean;
+        getLocationOnScreen(location: number[]): void;
+        getLocationInWindow(location: number[]): void;
+        getWindowVisibleDisplayFrame(outRect: Rect): void;
+        protected isVisibleToUser(boundInView?: Rect): boolean;
         getMeasuredWidth(): number;
         getMeasuredWidthAndState(): number;
         getMeasuredHeight(): number;
@@ -3049,6 +3118,7 @@ declare module android.view {
             mHandler: Handler;
             mTmpInvalRect: Rect;
             mTmpTransformRect: Rect;
+            mPoint: Point;
             mTmpMatrix: Matrix;
             mTmpTransformation: Transformation;
             mTmpTransformLocation: number[];
@@ -4362,10 +4432,10 @@ declare module android.view {
             static TYPE_PRIORITY_PHONE: number;
             static TYPE_SYSTEM_DIALOG: number;
             static LAST_SYSTEM_WINDOW: number;
-            static FLAG_DIM_BEHIND: number;
             static FLAG_NOT_FOCUSABLE: number;
             static FLAG_NOT_TOUCHABLE: number;
             static FLAG_NOT_TOUCH_MODAL: number;
+            static FLAG_WATCH_OUTSIDE_TOUCH: number;
             static FLAG_SPLIT_TOUCH: number;
             static FLAG_FLOATING: number;
             flags: number;
@@ -4395,6 +4465,8 @@ declare module android.view {
             private isTouchable();
             private isTouchModal();
             private isFloating();
+            private isSplitTouch();
+            private isWatchTouchOutside();
         }
     }
 }
@@ -4591,6 +4663,12 @@ declare module android.R {
         static fade_out: Animation;
         static toast_enter: Animation;
         static toast_exit: Animation;
+        static grow_fade_in: Animation;
+        static grow_fade_in_center: Animation;
+        static grow_fade_in_from_bottom: Animation;
+        static shrink_fade_out: Animation;
+        static shrink_fade_out_center: Animation;
+        static shrink_fade_out_from_bottom: Animation;
     }
 }
 declare module android.view {
@@ -6395,6 +6473,9 @@ declare module android.widget {
         areAllItemsEnabled(): boolean;
         isEnabled(position: number): boolean;
     }
+    module ListAdapter {
+        function isImpl(obj: any): any;
+    }
 }
 declare module android.widget {
     import Canvas = android.graphics.Canvas;
@@ -6594,7 +6675,7 @@ declare module android.widget {
         getRightPaddingOffset(): number;
         getBottomPaddingOffset(): number;
         protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
-        private touchModeDrawsInPressedState();
+        touchModeDrawsInPressedState(): boolean;
         shouldShowSelector(): boolean;
         private drawSelector(canvas);
         setDrawSelectorOnTop(onTop: boolean): void;
@@ -6938,11 +7019,7 @@ declare module android.widget {
         private mDividerPaint;
         private mArrowScrollFocusResult;
         private mFocusSelector;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            divider: Drawable;
-            listSelector: Drawable;
-            dividerHeight: number;
-        });
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         getMaxScrollAmount(): number;
         private adjustViewsUpOrDown();
         addHeaderView(v: View, data?: any, isSelectable?: boolean): void;
@@ -7912,6 +7989,36 @@ declare module android.widget {
 declare module android.widget {
     import Canvas = android.graphics.Canvas;
     import Drawable = android.graphics.drawable.Drawable;
+    import Checkable = android.widget.Checkable;
+    import TextView = android.widget.TextView;
+    import Context = android.content.Context;
+    class CheckedTextView extends TextView implements Checkable {
+        private mChecked;
+        private mCheckMarkResource;
+        private mCheckMarkDrawable;
+        private mBasePadding;
+        private mCheckMarkWidth;
+        private mNeedRequestlayout;
+        private static CHECKED_STATE_SET;
+        constructor(context: Context, bindElement?: HTMLElement, defStyle?: {
+            textAlignment: string;
+        });
+        toggle(): void;
+        isChecked(): boolean;
+        setChecked(checked: boolean): void;
+        setCheckMarkDrawable(d: Drawable): void;
+        getCheckMarkDrawable(): Drawable;
+        setPadding(left: number, top: number, right: number, bottom: number): void;
+        private updatePadding();
+        private setBasePadding(isLayoutRtl);
+        protected onDraw(canvas: Canvas): void;
+        protected onCreateDrawableState(extraSpace: number): number[];
+        protected drawableStateChanged(): void;
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Drawable = android.graphics.drawable.Drawable;
     import KeyEvent = android.view.KeyEvent;
     import MotionEvent = android.view.MotionEvent;
     import ProgressBar = android.widget.ProgressBar;
@@ -8700,6 +8807,507 @@ declare module android.app {
             setRecycleOnMeasureEnabled(enabled: boolean): Builder;
             create(): AlertDialog;
             show(): AlertDialog;
+        }
+    }
+}
+declare module android.widget {
+    import Rect = android.graphics.Rect;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import AdapterView = android.widget.AdapterView;
+    import SpinnerAdapter = android.widget.SpinnerAdapter;
+    import Context = android.content.Context;
+    abstract class AbsSpinner extends AdapterView<SpinnerAdapter> {
+        mAdapter: SpinnerAdapter;
+        mHeightMeasureSpec: number;
+        mWidthMeasureSpec: number;
+        mSelectionLeftPadding: number;
+        mSelectionTopPadding: number;
+        mSelectionRightPadding: number;
+        mSelectionBottomPadding: number;
+        mSpinnerPadding: Rect;
+        mRecycler: AbsSpinner.RecycleBin;
+        private mDataSetObserver;
+        private mTouchFrame;
+        constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
+        private initAbsSpinner();
+        setAdapter(adapter: SpinnerAdapter): void;
+        resetList(): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        getChildHeight(child: View): number;
+        getChildWidth(child: View): number;
+        protected generateDefaultLayoutParams(): ViewGroup.LayoutParams;
+        recycleAllViews(): void;
+        setSelection(position: number, animate?: boolean): void;
+        setSelectionInt(position: number, animate: boolean): void;
+        abstract layoutSpinner(delta: number, animate: boolean): void;
+        getSelectedView(): View;
+        requestLayout(): void;
+        getAdapter(): SpinnerAdapter;
+        getCount(): number;
+        pointToPosition(x: number, y: number): number;
+    }
+    module AbsSpinner {
+        class RecycleBin {
+            _AbsSpinner_this: AbsSpinner;
+            constructor(arg: AbsSpinner);
+            private mScrapHeap;
+            put(position: number, v: View): void;
+            get(position: number): View;
+            clear(): void;
+        }
+    }
+}
+declare module android.widget {
+    import R = android.R;
+    import Context = android.content.Context;
+    import Drawable = android.graphics.drawable.Drawable;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import OnTouchListener = android.view.View.OnTouchListener;
+    import WindowManager = android.view.WindowManager;
+    import Window = android.view.Window;
+    import Animation = android.view.animation.Animation;
+    class PopupWindow implements Window.Callback {
+        static INPUT_METHOD_FROM_FOCUSABLE: number;
+        static INPUT_METHOD_NEEDED: number;
+        static INPUT_METHOD_NOT_NEEDED: number;
+        private static DEFAULT_ANCHORED_GRAVITY;
+        private mContext;
+        private mWindowManager;
+        private mIsShowing;
+        private mIsDropdown;
+        private mContentView;
+        private mPopupView;
+        private mPopupWindow;
+        private mFocusable;
+        private mInputMethodMode;
+        private mTouchable;
+        private mOutsideTouchable;
+        private mSplitTouchEnabled;
+        private mClipToScreen;
+        private mAllowScrollingAnchorParent;
+        private mNotTouchModal;
+        private mTouchInterceptor;
+        private mWidthMode;
+        private mWidth;
+        private mLastWidth;
+        private mHeightMode;
+        private mHeight;
+        private mLastHeight;
+        private mPopupWidth;
+        private mPopupHeight;
+        private mDrawingLocation;
+        private mScreenLocation;
+        private mTempRect;
+        private mBackground;
+        private mAboveAnchorBackgroundDrawable;
+        private mBelowAnchorBackgroundDrawable;
+        private mAboveAnchor;
+        private mWindowLayoutType;
+        private mOnDismissListener;
+        private mDefaultDropdownAboveEnterAnimation;
+        private mDefaultDropdownBelowEnterAnimation;
+        private mDefaultDropdownAboveExitAnimation;
+        private mDefaultDropdownBelowExitAnimation;
+        private mEnterAnimation;
+        private mExitAnimation;
+        private mAnchor;
+        private mOnScrollChangedListener;
+        private mAnchorXoff;
+        private mAnchorYoff;
+        private mAnchoredGravity;
+        private mPopupViewInitialLayoutDirectionInherited;
+        constructor(contentView: View, width?: number, height?: number, focusable?: boolean);
+        constructor(context: Context, styleAttr?: R.attr.popupWindowStyleType);
+        getBackground(): Drawable;
+        setBackgroundDrawable(background: Drawable): void;
+        getEnterAnimation(): Animation;
+        getExitAnimation(): Animation;
+        setWindowAnimation(enterAnimation: Animation, exitAnimation: Animation): void;
+        getContentView(): View;
+        setContentView(contentView: View): void;
+        setTouchInterceptor(l: OnTouchListener): void;
+        isFocusable(): boolean;
+        setFocusable(focusable: boolean): void;
+        getInputMethodMode(): number;
+        setInputMethodMode(mode: number): void;
+        isTouchable(): boolean;
+        setTouchable(touchable: boolean): void;
+        isOutsideTouchable(): boolean;
+        setOutsideTouchable(touchable: boolean): void;
+        setClipToScreenEnabled(enabled: boolean): void;
+        private setAllowScrollingAnchorParent(enabled);
+        isSplitTouchEnabled(): boolean;
+        setSplitTouchEnabled(enabled: boolean): void;
+        setWindowLayoutType(layoutType: number): void;
+        getWindowLayoutType(): number;
+        setTouchModal(touchModal: boolean): void;
+        setWindowLayoutMode(widthSpec: number, heightSpec: number): void;
+        getHeight(): number;
+        setHeight(height: number): void;
+        getWidth(): number;
+        setWidth(width: number): void;
+        isShowing(): boolean;
+        showAtLocation(parent: View, gravity: number, x: number, y: number): void;
+        showAsDropDown(anchor: View, xoff?: number, yoff?: number, gravity?: number): void;
+        private updateAboveAnchor(aboveAnchor);
+        isAboveAnchor(): boolean;
+        private preparePopup(p);
+        private invokePopup(p);
+        private setLayoutDirectionFromAnchor();
+        private createPopupLayout();
+        private computeFlags(curFlags);
+        private computeWindowEnterAnimation();
+        private computeWindowExitAnimation();
+        private findDropDownPosition(anchor, p, xoff, yoff, gravity);
+        getMaxAvailableHeight(anchor: View, yOffset?: number, ignoreBottomDecorations?: boolean): number;
+        dismiss(): void;
+        setOnDismissListener(onDismissListener: PopupWindow.OnDismissListener): void;
+        update(): void;
+        update(width: number, height: number): void;
+        update(anchor: View, width: number, height: number): void;
+        update(x: number, y: number, width: number, height: number, force?: boolean): void;
+        update(anchor: View, xoff: number, yoff: number, width: number, height: number): void;
+        private _update();
+        private _update_w_h(width, height);
+        private _update_x_y_w_h_f(x, y, width, height, force?);
+        private _update_a_w_h(anchor, width, height);
+        private _update_a_x_y_w_h(anchor, xoff, yoff, width, height);
+        private _update_all_args(anchor, updateLocation, xoff, yoff, updateDimension, width, height, gravity);
+        private unregisterForScrollChanged();
+        private registerForScrollChanged(anchor, xoff, yoff, gravity);
+        onTouchEvent(event: MotionEvent): boolean;
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        onWindowAttributesChanged(params: WindowManager.LayoutParams): void;
+        onContentChanged(): void;
+        onWindowFocusChanged(hasFocus: boolean): void;
+        onAttachedToWindow(): void;
+        onDetachedFromWindow(): void;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        dispatchTouchEvent(ev: MotionEvent): boolean;
+        dispatchGenericMotionEvent(ev: MotionEvent): boolean;
+    }
+    module PopupWindow {
+        interface OnDismissListener {
+            onDismiss(): void;
+        }
+    }
+}
+declare module android.widget {
+    class Scroller extends OverScroller {
+    }
+}
+declare module android.widget {
+    import DataSetObserver = android.database.DataSetObserver;
+    import Drawable = android.graphics.drawable.Drawable;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import OnTouchListener = android.view.View.OnTouchListener;
+    import Runnable = java.lang.Runnable;
+    import AbsListView = android.widget.AbsListView;
+    import AdapterView = android.widget.AdapterView;
+    import ListAdapter = android.widget.ListAdapter;
+    import ListView = android.widget.ListView;
+    import PopupWindow = android.widget.PopupWindow;
+    import Context = android.content.Context;
+    import Animation = android.view.animation.Animation;
+    class ListPopupWindow {
+        private static TAG;
+        private static DEBUG;
+        private static EXPAND_LIST_TIMEOUT;
+        private mContext;
+        private mPopup;
+        private mAdapter;
+        private mDropDownList;
+        private mDropDownHeight;
+        private mDropDownWidth;
+        private mDropDownHorizontalOffset;
+        private mDropDownVerticalOffset;
+        private mDropDownVerticalOffsetSet;
+        private mDropDownGravity;
+        private mDropDownAlwaysVisible;
+        private mForceIgnoreOutsideTouch;
+        mListItemExpandMaximum: number;
+        private mPromptView;
+        private mPromptPosition;
+        private mObserver;
+        private mDropDownAnchorView;
+        private mDropDownListHighlight;
+        private mItemClickListener;
+        private mItemSelectedListener;
+        private mResizePopupRunnable;
+        private mTouchInterceptor;
+        private mScrollListener;
+        private mHideSelector;
+        private mShowDropDownRunnable;
+        private mHandler;
+        private mTempRect;
+        private mModal;
+        private mLayoutDirection;
+        static POSITION_PROMPT_ABOVE: number;
+        static POSITION_PROMPT_BELOW: number;
+        static MATCH_PARENT: number;
+        static WRAP_CONTENT: number;
+        static INPUT_METHOD_FROM_FOCUSABLE: number;
+        static INPUT_METHOD_NEEDED: number;
+        static INPUT_METHOD_NOT_NEEDED: number;
+        constructor(context: Context, styleAttr?: android.R.attr.popupWindowStyleType);
+        setAdapter(adapter: ListAdapter): void;
+        setPromptPosition(position: number): void;
+        getPromptPosition(): number;
+        setModal(modal: boolean): void;
+        isModal(): boolean;
+        setForceIgnoreOutsideTouch(forceIgnoreOutsideTouch: boolean): void;
+        setDropDownAlwaysVisible(dropDownAlwaysVisible: boolean): void;
+        isDropDownAlwaysVisible(): boolean;
+        getBackground(): Drawable;
+        setBackgroundDrawable(d: Drawable): void;
+        setWindowAnimation(enterAnimation: Animation, exitAnimation: Animation): void;
+        getEnterAnimation(): Animation;
+        getExitAnimation(): Animation;
+        getAnchorView(): View;
+        setAnchorView(anchor: View): void;
+        getHorizontalOffset(): number;
+        setHorizontalOffset(offset: number): void;
+        getVerticalOffset(): number;
+        setVerticalOffset(offset: number): void;
+        setDropDownGravity(gravity: number): void;
+        getWidth(): number;
+        setWidth(width: number): void;
+        setContentWidth(width: number): void;
+        getHeight(): number;
+        setHeight(height: number): void;
+        setOnItemClickListener(clickListener: AdapterView.OnItemClickListener): void;
+        setOnItemSelectedListener(selectedListener: AdapterView.OnItemSelectedListener): void;
+        setPromptView(prompt: View): void;
+        postShow(): void;
+        show(): void;
+        dismiss(): void;
+        setOnDismissListener(listener: PopupWindow.OnDismissListener): void;
+        private removePromptView();
+        setInputMethodMode(mode: number): void;
+        getInputMethodMode(): number;
+        setSelection(position: number): void;
+        clearListSelection(): void;
+        isShowing(): boolean;
+        isInputMethodNotNeeded(): boolean;
+        performItemClick(position: number): boolean;
+        getSelectedItem(): any;
+        getSelectedItemPosition(): number;
+        getSelectedItemId(): number;
+        getSelectedView(): View;
+        getListView(): ListView;
+        setListItemExpandMax(max: number): void;
+        onKeyDown(keyCode: number, event: KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: KeyEvent): boolean;
+        onKeyPreIme(keyCode: number, event: KeyEvent): boolean;
+        createDragToOpenListener(src: View): OnTouchListener;
+        private buildDropDown();
+    }
+    module ListPopupWindow {
+        abstract class ForwardingListener implements View.OnTouchListener, View.OnAttachStateChangeListener {
+            private mScaledTouchSlop;
+            private mTapTimeout;
+            private mSrc;
+            private mDisallowIntercept;
+            private mForwarding;
+            private mActivePointerId;
+            constructor(src: View);
+            abstract getPopup(): ListPopupWindow;
+            onTouch(v: View, event: MotionEvent): boolean;
+            onViewAttachedToWindow(v: View): void;
+            onViewDetachedFromWindow(v: View): void;
+            protected onForwardingStarted(): boolean;
+            protected onForwardingStopped(): boolean;
+            private onTouchObserved(srcEvent);
+            private onTouchForwarded(srcEvent);
+        }
+        module ForwardingListener {
+            class DisallowIntercept implements Runnable {
+                _ForwardingListener_this: ForwardingListener;
+                constructor(arg: ForwardingListener);
+                run(): void;
+            }
+        }
+        class DropDownListView extends ListView {
+            private static CLICK_ANIM_DURATION;
+            private static CLICK_ANIM_ALPHA;
+            private mListSelectionHidden;
+            private mHijackFocus;
+            private mDrawsInPressedState;
+            constructor(context: Context, hijackFocus: boolean);
+            onForwardedEvent(event: MotionEvent, activePointerId: number): boolean;
+            private clickPressedItem(child, position);
+            private clearPressedItem();
+            private setPressedItem(child, position);
+            touchModeDrawsInPressedState(): boolean;
+            obtainView(position: number, isScrap: boolean[]): View;
+            isInTouchMode(): boolean;
+            hasWindowFocus(): boolean;
+            isFocused(): boolean;
+            hasFocus(): boolean;
+        }
+        class PopupDataSetObserver extends DataSetObserver {
+            _ListPopupWindow_this: ListPopupWindow;
+            constructor(arg: ListPopupWindow);
+            onChanged(): void;
+            onInvalidated(): void;
+        }
+        class ListSelectorHider implements Runnable {
+            _ListPopupWindow_this: ListPopupWindow;
+            constructor(arg: ListPopupWindow);
+            run(): void;
+        }
+        class ResizePopupRunnable implements Runnable {
+            _ListPopupWindow_this: ListPopupWindow;
+            constructor(arg: ListPopupWindow);
+            run(): void;
+        }
+        class PopupTouchInterceptor implements OnTouchListener {
+            _ListPopupWindow_this: ListPopupWindow;
+            constructor(arg: ListPopupWindow);
+            onTouch(v: View, event: MotionEvent): boolean;
+        }
+        class PopupScrollListener implements AbsListView.OnScrollListener {
+            _ListPopupWindow_this: ListPopupWindow;
+            constructor(arg: ListPopupWindow);
+            onScroll(view: AbsListView, firstVisibleItem: number, visibleItemCount: number, totalItemCount: number): void;
+            onScrollStateChanged(view: AbsListView, scrollState: number): void;
+        }
+    }
+}
+declare module android.widget {
+    import DialogInterface = android.content.DialogInterface;
+    import OnClickListener = android.content.DialogInterface.OnClickListener;
+    import DataSetObserver = android.database.DataSetObserver;
+    import Drawable = android.graphics.drawable.Drawable;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import AbsSpinner = android.widget.AbsSpinner;
+    import AdapterView = android.widget.AdapterView;
+    import ListAdapter = android.widget.ListAdapter;
+    import ListPopupWindow = android.widget.ListPopupWindow;
+    import SpinnerAdapter = android.widget.SpinnerAdapter;
+    import Context = android.content.Context;
+    import R = android.R;
+    class Spinner extends AbsSpinner implements OnClickListener {
+        private static TAG;
+        private static MAX_ITEMS_MEASURED;
+        static MODE_DIALOG: number;
+        static MODE_DROPDOWN: number;
+        private static MODE_THEME;
+        private mForwardingListener;
+        private mPopup;
+        private mTempAdapter;
+        mDropDownWidth: number;
+        private mGravity;
+        private mDisableChildrenWhenDisabled;
+        private mTempRect;
+        constructor(context: Context, bindElement?: HTMLElement, defStyle?: {
+            clickable: boolean;
+            spinnerMode: string;
+            gravity: number;
+            disableChildrenWhenDisabled: boolean;
+            background: Drawable;
+            popupBackground: graphics.drawable.InsetDrawable;
+            dropDownVerticalOffset: string;
+            dropDownHorizontalOffset: string;
+            dropDownWidth: number;
+        }, mode?: number);
+        setPopupBackgroundDrawable(background: Drawable): void;
+        getPopupBackground(): Drawable;
+        setDropDownVerticalOffset(pixels: number): void;
+        getDropDownVerticalOffset(): number;
+        setDropDownHorizontalOffset(pixels: number): void;
+        getDropDownHorizontalOffset(): number;
+        setDropDownWidth(pixels: number): void;
+        getDropDownWidth(): number;
+        setEnabled(enabled: boolean): void;
+        setGravity(gravity: number): void;
+        getGravity(): number;
+        setAdapter(adapter: SpinnerAdapter): void;
+        getBaseline(): number;
+        protected onDetachedFromWindow(): void;
+        setOnItemClickListener(l: AdapterView.OnItemClickListener): void;
+        setOnItemClickListenerInt(l: AdapterView.OnItemClickListener): void;
+        onTouchEvent(event: MotionEvent): boolean;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        layoutSpinner(delta: number, animate: boolean): void;
+        private makeView(position, addChild);
+        private setUpChild(child, addChild);
+        performClick(): boolean;
+        onClick(dialog: DialogInterface, which: number): void;
+        setPrompt(prompt: string): void;
+        getPrompt(): string;
+        measureContentWidth(adapter: SpinnerAdapter, background: Drawable): number;
+    }
+    module Spinner {
+        class DropDownAdapter implements ListAdapter, SpinnerAdapter {
+            private mAdapter;
+            private mListAdapter;
+            constructor(adapter: SpinnerAdapter);
+            getCount(): number;
+            getItem(position: number): any;
+            getItemId(position: number): number;
+            getView(position: number, convertView: View, parent: ViewGroup): View;
+            getDropDownView(position: number, convertView: View, parent: ViewGroup): View;
+            hasStableIds(): boolean;
+            registerDataSetObserver(observer: DataSetObserver): void;
+            unregisterDataSetObserver(observer: DataSetObserver): void;
+            areAllItemsEnabled(): boolean;
+            isEnabled(position: number): boolean;
+            getItemViewType(position: number): number;
+            getViewTypeCount(): number;
+            isEmpty(): boolean;
+        }
+        interface SpinnerPopup {
+            setAdapter(adapter: ListAdapter): void;
+            showPopup(textDirection: number, textAlignment: number): void;
+            dismiss(): void;
+            isShowing(): boolean;
+            setPromptText(hintText: string): void;
+            getHintText(): string;
+            setBackgroundDrawable(bg: Drawable): void;
+            setVerticalOffset(px: number): void;
+            setHorizontalOffset(px: number): void;
+            getBackground(): Drawable;
+            getVerticalOffset(): number;
+            getHorizontalOffset(): number;
+        }
+        class DialogPopup implements Spinner.SpinnerPopup, DialogInterface.OnClickListener {
+            _Spinner_this: Spinner;
+            constructor(arg: Spinner);
+            private mPopup;
+            private mListAdapter;
+            private mPrompt;
+            dismiss(): void;
+            isShowing(): boolean;
+            setAdapter(adapter: ListAdapter): void;
+            setPromptText(hintText: string): void;
+            getHintText(): string;
+            showPopup(textDirection: number, textAlignment: number): void;
+            onClick(dialog: DialogInterface, which: number): void;
+            setBackgroundDrawable(bg: Drawable): void;
+            setVerticalOffset(px: number): void;
+            setHorizontalOffset(px: number): void;
+            getBackground(): Drawable;
+            getVerticalOffset(): number;
+            getHorizontalOffset(): number;
+        }
+        class DropdownPopup extends ListPopupWindow implements Spinner.SpinnerPopup {
+            _Spinner_this: Spinner;
+            private mHintText;
+            constructor(context: Context, defStyleRes: R.attr.popupWindowStyleType, arg: Spinner);
+            setAdapter(adapter: ListAdapter): void;
+            getHintText(): string;
+            setPromptText(hintText: string): void;
+            computeContentWidth(): void;
+            showPopup(textDirection: number, textAlignment: number): void;
         }
     }
 }

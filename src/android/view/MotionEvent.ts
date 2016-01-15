@@ -38,6 +38,16 @@ module android.view {
     }
 
     export class MotionEvent {
+
+        /**
+         * An invalid pointer id.
+         *
+         * This value (-1) can be used as a placeholder to indicate that a pointer id
+         * has not been assigned or is not available.  It cannot appear as
+         * a pointer id inside a {@link MotionEvent}.
+         */
+        static INVALID_POINTER_ID:number = -1;
+
         static ACTION_MASK = 0xff;
         static ACTION_DOWN = 0;
         static ACTION_UP = 1;

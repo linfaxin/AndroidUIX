@@ -54,4 +54,9 @@ export interface ListAdapter extends Adapter {
      */
     isEnabled(position:number):boolean ;
 }
+    export module ListAdapter{
+        export function isImpl(obj){
+            return obj && obj['areAllItemsEnabled'] && obj['isEnabled'];
+        }
+    }
 }

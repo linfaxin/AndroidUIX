@@ -1159,6 +1159,10 @@ var android;
                 return this.textSize * Paint.FontMetrics_Size_Descent;
             }
             getFontMetricsInt(fmi) {
+                if (this.textSize == null) {
+                    console.warn('call Paint.getFontMetricsInt but textSize not init');
+                    return 0;
+                }
                 if (fmi == null) {
                     return Math.floor((Paint.FontMetrics_Size_Descent - Paint.FontMetrics_Size_Ascent) * this.textSize);
                 }
@@ -1170,6 +1174,10 @@ var android;
                 return fmi.descent - fmi.ascent;
             }
             getFontMetrics(metrics) {
+                if (this.textSize == null) {
+                    console.warn('call Paint.getFontMetrics but textSize not init');
+                    return 0;
+                }
                 if (metrics == null) {
                     return (Paint.FontMetrics_Size_Descent - Paint.FontMetrics_Size_Ascent) * this.textSize;
                 }
@@ -4285,6 +4293,8 @@ var android;
             "select_dialog_item": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the TextView to display individual\n    items.\n-->\n<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:ellipsize=\"marquee\"\n></TextView>\n",
             "select_dialog_multichoice": "\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_check\"\n    android:ellipsize=\"marquee\"\n></CheckedTextView>\n",
             "select_dialog_singlechoice": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_radio\"\n    android:ellipsize=\"marquee\"\n></CheckedTextView>\n",
+            "simple_spinner_dropdown_item": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/* //device/apps/common/assets/res/any/layout/simple_spinner_item.xml\n**\n** Copyright 2008, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\"); \n** you may not use this file except in compliance with the License. \n** You may obtain a copy of the License at \n**\n**     http://www.apache.org/licenses/LICENSE-2.0 \n**\n** Unless required by applicable law or agreed to in writing, software \n** distributed under the License is distributed on an \"AS IS\" BASIS, \n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. \n** See the License for the specific language governing permissions and \n** limitations under the License.\n*/\n-->\n<CheckedTextView xmlns:android=\"http://schemas.android.com/apk/res/android\" \n    android:id=\"text1\"\n\n    android:paddingStart=\"8dp\"\n    android:paddingEnd=\"8dp\"\n    android:textColor=\"@android:color/primary_text_light_disable_only\"\n\n    android:gravity=\"center_vertical\"\n    android:singleLine=\"true\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"48dp\"\n    android:ellipsize=\"marquee\"\n    android:textAlignment=\"inherit\"></CheckedTextView>\n",
+            "simple_spinner_item": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/* //device/apps/common/assets/res/any/layout/simple_spinner_item.xml\n**\n** Copyright 2006, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\"); \n** you may not use this file except in compliance with the License. \n** You may obtain a copy of the License at \n**\n**     http://www.apache.org/licenses/LICENSE-2.0 \n**\n** Unless required by applicable law or agreed to in writing, software \n** distributed under the License is distributed on an \"AS IS\" BASIS, \n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. \n** See the License for the specific language governing permissions and \n** limitations under the License.\n*/\n-->\n<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\" \n    android:id=\"text1\"\n\n    android:paddingStart=\"8dp\"\n    android:paddingEnd=\"8dp\"\n    android:textColor=\"@android:color/primary_text_light_disable_only\"\n\n    android:gravity=\"center_vertical\"\n    android:singleLine=\"true\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:ellipsize=\"marquee\"\n    android:textAlignment=\"inherit\"></TextView>\n",
             "transient_notification": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/* //device/apps/common/res/layout/transient_notification.xml\n**\n** Copyright 2006, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:orientation=\"vertical\"\n    android:background=\"@android:drawable/toast_frame\">\n\n    <TextView\n        android:id=\"message\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:layout_gravity=\"center_horizontal\"\n        android:textColor=\"white\"\n        android:shadowColor=\"#BB000000\"\n        android:shadowRadius=\"2.75\"\n        ></TextView>\n\n</LinearLayout>\n\n\n"
         };
         const _tempDiv = document.createElement('div');
@@ -4307,6 +4317,8 @@ var android;
         layout.select_dialog_item = '@android:layout/select_dialog_item';
         layout.select_dialog_multichoice = '@android:layout/select_dialog_multichoice';
         layout.select_dialog_singlechoice = '@android:layout/select_dialog_singlechoice';
+        layout.simple_spinner_dropdown_item = '@android:layout/simple_spinner_dropdown_item';
+        layout.simple_spinner_item = '@android:layout/simple_spinner_item';
         layout.transient_notification = '@android:layout/transient_notification';
         R.layout = layout;
     })(R = android.R || (android.R = {}));
@@ -4395,7 +4407,11 @@ var android;
                     return android.graphics.Color.parseColor(s);
                 }
                 getColorStateList(refString) {
-                    if (refString.startsWith('@')) {
+                    if (refString.startsWith('@android:color/')) {
+                        refString = refString.substring('@android:color/'.length);
+                        return android.R.color[refString];
+                    }
+                    else if (refString.startsWith('@')) {
                         return this.getObjectRef(refString);
                     }
                 }
@@ -4414,6 +4430,20 @@ var android;
                         attrValue = reference.innerText;
                     }
                     return attrValue;
+                }
+                getTextArray(refString) {
+                    if (!refString || !refString.startsWith('@'))
+                        return null;
+                    let reference = this.getReference(refString, false);
+                    if (reference instanceof HTMLElement) {
+                        let array = [];
+                        for (let ele of Array.from(reference.children)) {
+                            if (ele instanceof HTMLElement)
+                                array.push(ele.innerText);
+                        }
+                        return array;
+                    }
+                    return null;
                 }
                 getLayout(refString) {
                     if (!refString || !refString.trim().startsWith('@'))
@@ -4934,6 +4964,7 @@ var android;
                     + " y=" + this.getY() + "}";
             }
         }
+        MotionEvent.INVALID_POINTER_ID = -1;
         MotionEvent.ACTION_MASK = 0xff;
         MotionEvent.ACTION_DOWN = 0;
         MotionEvent.ACTION_UP = 1;
@@ -6026,6 +6057,31 @@ var androidui;
                 catch (e) {
                     return defaultValue;
                 }
+            }
+            parseString(value, defaultValue) {
+                if (typeof value === 'string') {
+                    if (value.startsWith('@')) {
+                        return Resources.getSystem().getString(value);
+                    }
+                    return value;
+                }
+                return defaultValue;
+            }
+            parseTextArray(value) {
+                value += '';
+                if (value.startsWith('@')) {
+                    return Resources.getSystem().getTextArray(value);
+                }
+                else {
+                    try {
+                        let json = JSON.parse(value);
+                        if (json instanceof Array)
+                            return json;
+                    }
+                    catch (e) {
+                    }
+                }
+                return null;
             }
         }
         attr.AttrBinder = AttrBinder;
@@ -8659,6 +8715,24 @@ var android;
                 let shadow = new ShadowDrawable(bg, 5 * density, 0, 2 * density, 0x44000000);
                 return new InsetDrawable(shadow, 7 * density);
             }
+            static get dropdown_background_dark() {
+                let bg = new RoundRectDrawable(0xff333333, 2 * density, 2 * density, 2 * density, 2 * density);
+                bg.getIntrinsicWidth = () => 36 * density;
+                bg.getIntrinsicHeight = () => 36 * density;
+                bg.getPadding = (rect) => {
+                    rect.set(12 * density, 6 * density, 12 * density, 6 * density);
+                    return true;
+                };
+                let shadow = new ShadowDrawable(bg, 3 * density, 0, 2 * density, 0x44000000);
+                return new InsetDrawable(shadow, 5 * density);
+            }
+            static get menu_panel_holo_light() {
+                let bg = new RoundRectDrawable(0xffefefef, 2 * density, 2 * density, 2 * density, 2 * density);
+                bg.getIntrinsicWidth = () => 48 * density;
+                bg.getIntrinsicHeight = () => 16 * density;
+                let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
+                return new InsetDrawable(shadow, 8 * density);
+            }
         }
         R.drawable = drawable;
     })(R = android.R || (android.R = {}));
@@ -8977,208 +9051,18 @@ var android;
                 }
                 return new DefaultStyleTextColor();
             }
+            static get primary_text_light_disable_only() {
+                let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
+                let _defaultColors = [0x80000000, 0xff000000];
+                class DefaultStyleTextColor extends ColorStateList {
+                    constructor() {
+                        super(_defaultStates, _defaultColors);
+                    }
+                }
+                return new DefaultStyleTextColor();
+            }
         }
         R.color = color;
-    })(R = android.R || (android.R = {}));
-})(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/26.
- */
-///<reference path="drawable.ts"/>
-///<reference path="image.ts"/>
-///<reference path="color.ts"/>
-///<reference path="../view/Gravity.ts"/>
-///<reference path="../view/View.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Color.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/drawable/InsetDrawable.ts"/>
-///<reference path="../graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../graphics/drawable/StateListDrawable.ts"/>
-var android;
-(function (android) {
-    var R;
-    (function (R) {
-        var Gravity = android.view.Gravity;
-        var Color = android.graphics.Color;
-        var ColorDrawable = android.graphics.drawable.ColorDrawable;
-        var StateListDrawable = android.graphics.drawable.StateListDrawable;
-        class attr {
-            static get viewStyle() {
-                return attr._viewStyle;
-            }
-            static get textViewStyle() {
-                return {
-                    textSize: '14sp',
-                    textColor: R.color.textView_textColor
-                };
-            }
-            static get buttonStyle() {
-                return Object.assign(attr.textViewStyle, {
-                    background: R.drawable.button_background,
-                    focusable: true,
-                    clickable: true,
-                    textSize: '18sp',
-                    gravity: Gravity.CENTER
-                });
-            }
-            static get imageButtonStyle() {
-                return {
-                    background: R.drawable.button_background,
-                    focusable: true,
-                    clickable: true,
-                    gravity: Gravity.CENTER
-                };
-            }
-            static get checkboxStyle() {
-                return Object.assign(this.buttonStyle, {
-                    background: null,
-                    button: R.drawable.btn_check
-                });
-            }
-            static get radiobuttonStyle() {
-                return Object.assign(this.buttonStyle, {
-                    background: null,
-                    button: R.drawable.btn_radio
-                });
-            }
-            static get checkedTextViewStyle() {
-                return {
-                    textAlignment: 'viewStart'
-                };
-            }
-            static get progressBarStyle() {
-                return {
-                    indeterminateOnly: true,
-                    indeterminateDrawable: R.drawable.progress_medium_holo,
-                    indeterminateBehavior: 'repeat',
-                    indeterminateDuration: 3500,
-                    minWidth: '48dp',
-                    maxWidth: '48dp',
-                    minHeight: '48dp',
-                    maxHeight: '48dp',
-                    mirrorForRtl: false,
-                };
-            }
-            static get progressBarStyleHorizontal() {
-                return {
-                    indeterminateOnly: false,
-                    progressDrawable: R.drawable.progress_horizontal_holo,
-                    indeterminateDrawable: R.drawable.progress_indeterminate_horizontal_holo,
-                    indeterminateBehavior: 'repeat',
-                    indeterminateDuration: 3500,
-                    minHeight: '20dp',
-                    maxHeight: '20dp',
-                    mirrorForRtl: true,
-                };
-            }
-            static get progressBarStyleSmall() {
-                return Object.assign(this.progressBarStyle, {
-                    indeterminateDrawable: R.drawable.progress_small_holo,
-                    minWidth: '16dp',
-                    maxWidth: '16dp',
-                    minHeight: '16dp',
-                    maxHeight: '16dp'
-                });
-            }
-            static get progressBarStyleLarge() {
-                return Object.assign(this.progressBarStyle, {
-                    indeterminateDrawable: R.drawable.progress_large_holo,
-                    minWidth: '76dp',
-                    maxWidth: '76dp',
-                    minHeight: '76dp',
-                    maxHeight: '76dp'
-                });
-            }
-            static get seekBarStyle() {
-                return {
-                    indeterminateOnly: false,
-                    progressDrawable: R.drawable.scrubber_progress_horizontal_holo_light,
-                    indeterminateDrawable: R.drawable.scrubber_progress_horizontal_holo_light,
-                    minHeight: '13dp',
-                    maxHeight: '13dp',
-                    thumb: R.drawable.scrubber_control_selector_holo,
-                    thumbOffset: '16dp',
-                    focusable: true,
-                    paddingLeft: '16dp',
-                    paddingRight: '16dp',
-                    mirrorForRtl: true,
-                };
-            }
-            static get ratingBarStyle() {
-                return {
-                    indeterminateOnly: false,
-                    progressDrawable: R.drawable.ratingbar_full_holo_light,
-                    indeterminateDrawable: R.drawable.ratingbar_full_holo_light,
-                    minHeight: '48dip',
-                    maxHeight: '48dip',
-                    numStars: '5',
-                    stepSize: '0.5',
-                    thumb: null,
-                    mirrorForRtl: true,
-                };
-            }
-            static get ratingBarStyleIndicator() {
-                return Object.assign(this.ratingBarStyle, {
-                    indeterminateOnly: false,
-                    progressDrawable: R.drawable.ratingbar_holo_light,
-                    indeterminateDrawable: R.drawable.ratingbar_holo_light,
-                    minHeight: '35dip',
-                    maxHeight: '35dip',
-                    thumb: null,
-                    isIndicator: true,
-                });
-            }
-            static get ratingBarStyleSmall() {
-                return Object.assign(this.ratingBarStyle, {
-                    indeterminateOnly: false,
-                    progressDrawable: R.drawable.ratingbar_small_holo_light,
-                    indeterminateDrawable: R.drawable.ratingbar_small_holo_light,
-                    minHeight: '16dip',
-                    maxHeight: '16dip',
-                    thumb: null,
-                    isIndicator: true,
-                });
-            }
-            static get gridViewStyle() {
-                return {
-                    listSelector: android.R.drawable.list_selector_background,
-                    numColumns: 1
-                };
-            }
-            static get listViewStyle() {
-                return {
-                    divider: android.R.drawable.list_divider,
-                    listSelector: android.R.drawable.list_selector_background,
-                    dividerHeight: 1
-                };
-            }
-            static get expandableListViewStyle() {
-                return Object.assign(this.listViewStyle, {
-                    childDivider: android.R.drawable.list_divider,
-                });
-            }
-            static get numberPickerStyle() {
-                return {
-                    orientation: 'vertical',
-                    solidColor: 'transparent',
-                    selectionDivider: new ColorDrawable(0xcc33b5e5),
-                    selectionDividerHeight: '2dp',
-                    selectionDividersDistance: '48dp',
-                    internalMinWidth: '64dp',
-                    internalMaxHeight: '180dp',
-                    virtualButtonPressedDrawable: (() => {
-                        let stateList = new StateListDrawable();
-                        stateList.addState([android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
-                        stateList.addState([android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
-                        stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
-                        return stateList;
-                    })(),
-                };
-            }
-        }
-        attr._viewStyle = {};
-        R.attr = attr;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 // Copyright 2009 The Closure Library Authors. All Rights Reserved.
@@ -10217,6 +10101,237 @@ var android;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
 /**
+ * Created by linfaxin on 15/11/26.
+ */
+///<reference path="drawable.ts"/>
+///<reference path="image.ts"/>
+///<reference path="color.ts"/>
+///<reference path="../view/Gravity.ts"/>
+///<reference path="../view/View.ts"/>
+///<reference path="../view/animation/Animation.ts"/>
+///<reference path="../content/res/Resources.ts"/>
+///<reference path="../graphics/Color.ts"/>
+///<reference path="../graphics/drawable/Drawable.ts"/>
+///<reference path="../graphics/drawable/InsetDrawable.ts"/>
+///<reference path="../graphics/drawable/ColorDrawable.ts"/>
+///<reference path="../graphics/drawable/StateListDrawable.ts"/>
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        var Gravity = android.view.Gravity;
+        var Color = android.graphics.Color;
+        var ColorDrawable = android.graphics.drawable.ColorDrawable;
+        var StateListDrawable = android.graphics.drawable.StateListDrawable;
+        class attr {
+            static get viewStyle() {
+                return attr._viewStyle;
+            }
+            static get textViewStyle() {
+                return {
+                    textSize: '14sp',
+                    textColor: R.color.textView_textColor
+                };
+            }
+            static get buttonStyle() {
+                return Object.assign(attr.textViewStyle, {
+                    background: R.drawable.button_background,
+                    focusable: true,
+                    clickable: true,
+                    textSize: '18sp',
+                    gravity: Gravity.CENTER
+                });
+            }
+            static get imageButtonStyle() {
+                return {
+                    background: R.drawable.button_background,
+                    focusable: true,
+                    clickable: true,
+                    gravity: Gravity.CENTER
+                };
+            }
+            static get checkboxStyle() {
+                return Object.assign(this.buttonStyle, {
+                    background: null,
+                    button: R.drawable.btn_check
+                });
+            }
+            static get radiobuttonStyle() {
+                return Object.assign(this.buttonStyle, {
+                    background: null,
+                    button: R.drawable.btn_radio
+                });
+            }
+            static get checkedTextViewStyle() {
+                return {
+                    textAlignment: 'viewStart'
+                };
+            }
+            static get progressBarStyle() {
+                return {
+                    indeterminateOnly: true,
+                    indeterminateDrawable: R.drawable.progress_medium_holo,
+                    indeterminateBehavior: 'repeat',
+                    indeterminateDuration: 3500,
+                    minWidth: '48dp',
+                    maxWidth: '48dp',
+                    minHeight: '48dp',
+                    maxHeight: '48dp',
+                    mirrorForRtl: false,
+                };
+            }
+            static get progressBarStyleHorizontal() {
+                return {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.progress_horizontal_holo,
+                    indeterminateDrawable: R.drawable.progress_indeterminate_horizontal_holo,
+                    indeterminateBehavior: 'repeat',
+                    indeterminateDuration: 3500,
+                    minHeight: '20dp',
+                    maxHeight: '20dp',
+                    mirrorForRtl: true,
+                };
+            }
+            static get progressBarStyleSmall() {
+                return Object.assign(this.progressBarStyle, {
+                    indeterminateDrawable: R.drawable.progress_small_holo,
+                    minWidth: '16dp',
+                    maxWidth: '16dp',
+                    minHeight: '16dp',
+                    maxHeight: '16dp'
+                });
+            }
+            static get progressBarStyleLarge() {
+                return Object.assign(this.progressBarStyle, {
+                    indeterminateDrawable: R.drawable.progress_large_holo,
+                    minWidth: '76dp',
+                    maxWidth: '76dp',
+                    minHeight: '76dp',
+                    maxHeight: '76dp'
+                });
+            }
+            static get seekBarStyle() {
+                return {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.scrubber_progress_horizontal_holo_light,
+                    indeterminateDrawable: R.drawable.scrubber_progress_horizontal_holo_light,
+                    minHeight: '13dp',
+                    maxHeight: '13dp',
+                    thumb: R.drawable.scrubber_control_selector_holo,
+                    thumbOffset: '16dp',
+                    focusable: true,
+                    paddingLeft: '16dp',
+                    paddingRight: '16dp',
+                    mirrorForRtl: true,
+                };
+            }
+            static get ratingBarStyle() {
+                return {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.ratingbar_full_holo_light,
+                    indeterminateDrawable: R.drawable.ratingbar_full_holo_light,
+                    minHeight: '48dip',
+                    maxHeight: '48dip',
+                    numStars: '5',
+                    stepSize: '0.5',
+                    thumb: null,
+                    mirrorForRtl: true,
+                };
+            }
+            static get ratingBarStyleIndicator() {
+                return Object.assign(this.ratingBarStyle, {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.ratingbar_holo_light,
+                    indeterminateDrawable: R.drawable.ratingbar_holo_light,
+                    minHeight: '35dip',
+                    maxHeight: '35dip',
+                    thumb: null,
+                    isIndicator: true,
+                });
+            }
+            static get ratingBarStyleSmall() {
+                return Object.assign(this.ratingBarStyle, {
+                    indeterminateOnly: false,
+                    progressDrawable: R.drawable.ratingbar_small_holo_light,
+                    indeterminateDrawable: R.drawable.ratingbar_small_holo_light,
+                    minHeight: '16dip',
+                    maxHeight: '16dip',
+                    thumb: null,
+                    isIndicator: true,
+                });
+            }
+            static get gridViewStyle() {
+                return {
+                    listSelector: android.R.drawable.list_selector_background,
+                    numColumns: 1
+                };
+            }
+            static get listViewStyle() {
+                return {
+                    divider: android.R.drawable.list_divider,
+                    listSelector: android.R.drawable.list_selector_background,
+                    dividerHeight: 1
+                };
+            }
+            static get expandableListViewStyle() {
+                return Object.assign(this.listViewStyle, {
+                    childDivider: android.R.drawable.list_divider,
+                });
+            }
+            static get numberPickerStyle() {
+                return {
+                    orientation: 'vertical',
+                    solidColor: 'transparent',
+                    selectionDivider: new ColorDrawable(0xcc33b5e5),
+                    selectionDividerHeight: '2dp',
+                    selectionDividersDistance: '48dp',
+                    internalMinWidth: '64dp',
+                    internalMaxHeight: '180dp',
+                    virtualButtonPressedDrawable: (() => {
+                        let stateList = new StateListDrawable();
+                        stateList.addState([android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
+                        stateList.addState([android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(0x44888888));
+                        stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
+                        return stateList;
+                    })(),
+                };
+            }
+            static get popupWindowStyle() {
+                return {
+                    popupBackground: R.drawable.dropdown_background_dark,
+                    popupEnterAnimation: R.anim.grow_fade_in_center,
+                    popupExitAnimation: R.anim.shrink_fade_out_center,
+                };
+            }
+            static get listPopupWindowStyle() {
+                return {
+                    popupBackground: R.drawable.menu_panel_holo_light,
+                    popupEnterAnimation: R.anim.grow_fade_in_center,
+                    popupExitAnimation: R.anim.shrink_fade_out_center,
+                };
+            }
+            static get dropDownListViewStyle() {
+                return this.listViewStyle;
+            }
+            static get spinnerStyle() {
+                return {
+                    clickable: true,
+                    spinnerMode: 'dropdown',
+                    gravity: Gravity.START | Gravity.CENTER_VERTICAL,
+                    disableChildrenWhenDisabled: true,
+                    background: R.drawable.button_background,
+                    popupBackground: R.drawable.menu_panel_holo_light,
+                    dropDownVerticalOffset: '0dp',
+                    dropDownHorizontalOffset: '0dp',
+                    dropDownWidth: -2,
+                };
+            }
+        }
+        attr._viewStyle = {};
+        R.attr = attr;
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
+/**
  * Created by linfaxin on 15/9/27.
  */
 ///<reference path="../util/SparseArray.ts"/>
@@ -10288,6 +10403,7 @@ var android;
         var Log = android.util.Log;
         var Rect = android.graphics.Rect;
         var RectF = android.graphics.RectF;
+        var Point = android.graphics.Point;
         var Canvas = android.graphics.Canvas;
         var CopyOnWriteArrayList = java.lang.util.concurrent.CopyOnWriteArrayList;
         var ArrayList = java.util.ArrayList;
@@ -11379,6 +11495,32 @@ var android;
                     views.add(this);
                 }
             }
+            requestRectangleOnScreen(rectangle, immediate = false) {
+                if (this.mParent == null) {
+                    return false;
+                }
+                let child = this;
+                let position = (this.mAttachInfo != null) ? this.mAttachInfo.mTmpTransformRect : new RectF();
+                position.set(rectangle);
+                let parent = this.mParent;
+                let scrolled = false;
+                while (parent != null) {
+                    rectangle.set(Math.floor(position.left), Math.floor(position.top), Math.floor(position.right), Math.floor(position.bottom));
+                    scrolled = parent.requestChildRectangleOnScreen(child, rectangle, immediate) || scrolled;
+                    if (!child.hasIdentityMatrix()) {
+                        child.getMatrix().mapRect(position);
+                    }
+                    position.offset(child.mLeft, child.mTop);
+                    if (!(parent instanceof View)) {
+                        break;
+                    }
+                    let parentView = parent;
+                    position.offset(-parentView.getScrollX(), -parentView.getScrollY());
+                    child = parentView;
+                    parent = child.getParent();
+                }
+                return scrolled;
+            }
             onFocusLost() {
                 this.resetPressedState();
             }
@@ -12168,6 +12310,16 @@ var android;
             isLayoutRtl() {
                 return (this.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL);
             }
+            getTextDirection() {
+                return View.TEXT_DIRECTION_LTR;
+            }
+            setTextDirection(textDirection) {
+            }
+            getTextAlignment() {
+                return View.TEXT_ALIGNMENT_DEFAULT;
+            }
+            setTextAlignment(textAlignment) {
+            }
             getBaseline() {
                 return -1;
             }
@@ -12321,6 +12473,77 @@ var android;
                         globalOffset.set(-this.mScrollX, -this.mScrollY);
                     }
                     return this.mParent == null || this.mParent.getChildVisibleRect(this, r, globalOffset);
+                }
+                return false;
+            }
+            getLocationOnScreen(location) {
+                this.getLocationInWindow(location);
+                const info = this.mAttachInfo;
+            }
+            getLocationInWindow(location) {
+                if (location == null || location.length < 2) {
+                    throw Error(`new IllegalArgumentException("location must be an array of two integers")`);
+                }
+                if (this.mAttachInfo == null) {
+                    location[0] = location[1] = 0;
+                    return;
+                }
+                let position = this.mAttachInfo.mTmpTransformLocation;
+                position[0] = position[1] = 0.0;
+                if (!this.hasIdentityMatrix()) {
+                    this.getMatrix().mapPoints(position);
+                }
+                position[0] += this.mLeft;
+                position[1] += this.mTop;
+                let viewParent = this.mParent;
+                while (viewParent instanceof View) {
+                    const view = viewParent;
+                    position[0] -= view.mScrollX;
+                    position[1] -= view.mScrollY;
+                    if (!view.hasIdentityMatrix()) {
+                        view.getMatrix().mapPoints(position);
+                    }
+                    position[0] += view.mLeft;
+                    position[1] += view.mTop;
+                    viewParent = view.mParent;
+                }
+                location[0] = Math.floor((position[0] + 0.5));
+                location[1] = Math.floor((position[1] + 0.5));
+            }
+            getWindowVisibleDisplayFrame(outRect) {
+                if (this.mAttachInfo != null) {
+                    let rootView = this.mAttachInfo.mRootView;
+                    let xy = [0, 0];
+                    rootView.getLocationOnScreen(xy);
+                    outRect.set(xy[0], xy[1], rootView.getWidth() + xy[0], rootView.getHeight() + xy[1]);
+                    return;
+                }
+                let dm = Resources.getSystem().getDisplayMetrics();
+                outRect.set(0, 0, dm.widthPixels, dm.heightPixels);
+            }
+            isVisibleToUser(boundInView = null) {
+                if (this.mAttachInfo != null) {
+                    if (this.mAttachInfo.mWindowVisibility != View.VISIBLE) {
+                        return false;
+                    }
+                    let current = this;
+                    while (current instanceof View) {
+                        let view = current;
+                        if (view.getAlpha() <= 0 || view.getTransitionAlpha() <= 0 || view.getVisibility() != View.VISIBLE) {
+                            return false;
+                        }
+                        current = view.mParent;
+                    }
+                    let visibleRect = this.mAttachInfo.mTmpInvalRect;
+                    let offset = this.mAttachInfo.mPoint;
+                    if (!this.getGlobalVisibleRect(visibleRect, offset)) {
+                        return false;
+                    }
+                    if (boundInView != null) {
+                        visibleRect.offset(-offset.x, -offset.y);
+                        return boundInView.intersect(visibleRect);
+                    }
+                    return true;
                 }
                 return false;
             }
@@ -14299,6 +14522,23 @@ var android;
         View.LAYOUT_DIRECTION_RTL = LayoutDirection.RTL;
         View.LAYOUT_DIRECTION_INHERIT = LayoutDirection.INHERIT;
         View.LAYOUT_DIRECTION_LOCALE = LayoutDirection.LOCALE;
+        View.TEXT_DIRECTION_INHERIT = 0;
+        View.TEXT_DIRECTION_FIRST_STRONG = 1;
+        View.TEXT_DIRECTION_ANY_RTL = 2;
+        View.TEXT_DIRECTION_LTR = 3;
+        View.TEXT_DIRECTION_RTL = 4;
+        View.TEXT_DIRECTION_LOCALE = 5;
+        View.TEXT_DIRECTION_DEFAULT = View.TEXT_DIRECTION_INHERIT;
+        View.TEXT_DIRECTION_RESOLVED_DEFAULT = View.TEXT_DIRECTION_FIRST_STRONG;
+        View.TEXT_ALIGNMENT_INHERIT = 0;
+        View.TEXT_ALIGNMENT_GRAVITY = 1;
+        View.TEXT_ALIGNMENT_TEXT_START = 2;
+        View.TEXT_ALIGNMENT_TEXT_END = 3;
+        View.TEXT_ALIGNMENT_CENTER = 4;
+        View.TEXT_ALIGNMENT_VIEW_START = 5;
+        View.TEXT_ALIGNMENT_VIEW_END = 6;
+        View.TEXT_ALIGNMENT_DEFAULT = View.TEXT_ALIGNMENT_GRAVITY;
+        View.TEXT_ALIGNMENT_RESOLVED_DEFAULT = View.TEXT_ALIGNMENT_GRAVITY;
         View.AndroidViewProperty = 'AndroidView';
         view_2.View = View;
         (function (View) {
@@ -14362,6 +14602,7 @@ var android;
                     this.mKeyDispatchState = new KeyEvent.DispatcherState();
                     this.mTmpInvalRect = new Rect();
                     this.mTmpTransformRect = new Rect();
+                    this.mPoint = new Point();
                     this.mTmpMatrix = new Matrix();
                     this.mTmpTransformation = new Transformation();
                     this.mTmpTransformLocation = new Array(2);
@@ -15544,6 +15785,7 @@ var androidui;
             overflow : hidden;
             border : none;
             outline: none;
+            pointer-events: auto;
         }
         .${AndroidUI.DomClassName} resources {
             display: none;
@@ -15551,6 +15793,9 @@ var androidui;
         .${AndroidUI.DomClassName} Button {
             border: none;
             background: none;
+        }
+        .${AndroidUI.DomClassName} windowsgroup {
+            pointer-events: none;
         }
         .${AndroidUI.DomClassName} > canvas {
             position: absolute;
@@ -22492,13 +22737,15 @@ var android;
                     this.clearWindowFocus();
                     decorView.dispatchWindowFocusChanged(true);
                 }
+                if (decorView instanceof ViewGroup) {
+                    decorView.setMotionEventSplittingEnabled(wparams.isSplitTouch());
+                }
                 let enterAnimation = window.getContext().androidUI.mActivityThread.getOverrideEnterAnimation();
                 if (enterAnimation === undefined)
                     enterAnimation = wparams.enterAnimation;
                 if (enterAnimation) {
                     decorView.startAnimation(enterAnimation);
                 }
-                this.mWindowsLayout.bindElement.style.pointerEvents = '';
             }
             updateWindowLayout(window, params) {
                 if (!(params instanceof WindowManager.LayoutParams)) {
@@ -22526,9 +22773,6 @@ var android;
                                 run() {
                                     let group = decor.getParent();
                                     group.removeView(decor);
-                                    if (group.getChildCount() == 0) {
-                                        group.bindElement.style.pointerEvents = 'none';
-                                    }
                                 }
                             });
                         },
@@ -22567,7 +22811,7 @@ var android;
                     if (wparams.isFocusable() && wparams.isTouchable()) {
                         return true;
                     }
-                    return super.isTransformedTouchPointInView(x, y, child, outLocalPoint);
+                    return false;
                 }
                 onChildVisibilityChanged(child, oldVisibility, newVisibility) {
                     super.onChildVisibilityChanged(child, oldVisibility, newVisibility);
@@ -22606,7 +22850,7 @@ var android;
                     this.enterAnimation = android.R.anim.activity_open_enter;
                     this.resumeAnimation = android.R.anim.activity_close_enter;
                     this.hideAnimation = android.R.anim.activity_open_exit;
-                    this.dimAmount = 0.6;
+                    this.dimAmount = 0;
                     this.mTitle = "";
                     this.type = _type;
                 }
@@ -22703,6 +22947,12 @@ var android;
                 isFloating() {
                     return (this.flags & LayoutParams.FLAG_FLOATING) != 0;
                 }
+                isSplitTouch() {
+                    return (this.flags & LayoutParams.FLAG_SPLIT_TOUCH) != 0;
+                }
+                isWatchTouchOutside() {
+                    return (this.flags & LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH) != 0;
+                }
             }
             LayoutParams.FIRST_APPLICATION_WINDOW = 1;
             LayoutParams.TYPE_BASE_APPLICATION = 1;
@@ -22727,10 +22977,10 @@ var android;
             LayoutParams.TYPE_PRIORITY_PHONE = LayoutParams.FIRST_SYSTEM_WINDOW + 7;
             LayoutParams.TYPE_SYSTEM_DIALOG = LayoutParams.FIRST_SYSTEM_WINDOW + 8;
             LayoutParams.LAST_SYSTEM_WINDOW = 2999;
-            LayoutParams.FLAG_DIM_BEHIND = 0x00000002;
             LayoutParams.FLAG_NOT_FOCUSABLE = 0x00000008;
             LayoutParams.FLAG_NOT_TOUCHABLE = 0x00000010;
             LayoutParams.FLAG_NOT_TOUCH_MODAL = 0x00000020;
+            LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH = 0x00040000;
             LayoutParams.FLAG_SPLIT_TOUCH = 0x00800000;
             LayoutParams.FLAG_FLOATING = 0x40000000;
             LayoutParams.LAYOUT_CHANGED = 1 << 0;
@@ -23619,6 +23869,78 @@ var android;
                 alpha.setInterpolator(R.interpolator.accelerate_quad);
                 return alpha;
             }
+            static get grow_fade_in() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(0, 1);
+                alpha.setDuration(150);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0);
+                scale.setDuration(220);
+                scale.setInterpolator(R.interpolator.decelerate_quint);
+                animSet.addAnimation(scale);
+                animSet.addAnimation(alpha);
+                return animSet;
+            }
+            static get grow_fade_in_center() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(0, 1);
+                alpha.setDuration(150);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
+                scale.setDuration(220);
+                scale.setInterpolator(R.interpolator.decelerate_quint);
+                animSet.addAnimation(scale);
+                animSet.addAnimation(alpha);
+                return animSet;
+            }
+            static get grow_fade_in_from_bottom() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(0, 1);
+                alpha.setDuration(150);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 1);
+                scale.setDuration(220);
+                scale.setInterpolator(R.interpolator.decelerate_quint);
+                animSet.addAnimation(scale);
+                animSet.addAnimation(alpha);
+                return animSet;
+            }
+            static get shrink_fade_out() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(1, 0);
+                alpha.setDuration(150);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0);
+                scale.setDuration(220);
+                scale.setInterpolator(R.interpolator.decelerate_quint);
+                animSet.addAnimation(scale);
+                animSet.addAnimation(alpha);
+                return animSet;
+            }
+            static get shrink_fade_out_center() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(1, 0);
+                alpha.setDuration(150);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
+                scale.setDuration(220);
+                scale.setInterpolator(R.interpolator.decelerate_quint);
+                animSet.addAnimation(scale);
+                animSet.addAnimation(alpha);
+                return animSet;
+            }
+            static get shrink_fade_out_from_bottom() {
+                let animSet = new AnimationSet();
+                let alpha = new AlphaAnimation(1, 0);
+                alpha.setDuration(150);
+                alpha.setInterpolator(R.interpolator.decelerate_cubic);
+                let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 1);
+                scale.setDuration(220);
+                scale.setInterpolator(R.interpolator.decelerate_quint);
+                animSet.addAnimation(scale);
+                animSet.addAnimation(alpha);
+                return animSet;
+            }
         }
         R.anim = anim;
     })(R = android.R || (android.R = {}));
@@ -23968,13 +24290,23 @@ var android;
             }
             dispatchTouchEvent(ev) {
                 let wparams = this.getLayoutParams();
-                let handle = wparams.isTouchModal();
-                if (wparams.isTouchable()) {
-                    const cb = this.Window_this.getCallback();
-                    handle = (cb != null && !this.Window_this.isDestroyed() ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev))
-                        || handle;
+                const cb = this.Window_this.getCallback();
+                let outside = this.Window_this.isOutOfBounds(this.getContext(), ev);
+                if (outside && !wparams.isTouchModal()) {
+                    if (wparams.isWatchTouchOutside() && ev.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                        let action = ev.getAction();
+                        ev.setAction(android.view.MotionEvent.ACTION_OUTSIDE);
+                        if (cb != null && !this.Window_this.isDestroyed()) {
+                            cb.dispatchTouchEvent(ev);
+                        }
+                        else {
+                            super.dispatchTouchEvent(ev);
+                        }
+                        ev.setAction(action);
+                    }
+                    return false;
                 }
-                return handle;
+                return (cb != null && !this.Window_this.isDestroyed() ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev));
             }
             dispatchGenericMotionEvent(ev) {
                 const cb = this.Window_this.getCallback();
@@ -24051,6 +24383,7 @@ var android;
         var KeyEvent = android.view.KeyEvent;
         var MotionEvent = android.view.MotionEvent;
         var Window = android.view.Window;
+        var WindowManager = android.view.WindowManager;
         var Log = android.util.Log;
         var Context = android.content.Context;
         var Intent = android.content.Intent;
@@ -24063,6 +24396,8 @@ var android;
                 this.mResultData = null;
                 this.mWindow = new Window(this);
                 this.mWindow.setWindowAnimations(android.R.anim.activity_open_enter_ios, android.R.anim.activity_close_exit_ios, android.R.anim.activity_close_enter_ios, android.R.anim.activity_open_exit_ios);
+                this.mWindow.setDimAmount(0.7);
+                this.mWindow.getAttributes().flags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
             }
             getIntent() {
                 return this.mIntent;
@@ -31368,6 +31703,7 @@ var android;
                 }, () => {
                     return this.mSpacingMult;
                 });
+                this.setTextSize(14);
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
                 this.bindElement.innerHTML = this.bindElement.innerHTML.trim();
@@ -34299,6 +34635,19 @@ var android;
  * limitations under the License.
  */
 ///<reference path="../../android/widget/Adapter.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var ListAdapter;
+        (function (ListAdapter) {
+            function isImpl(obj) {
+                return obj && obj['areAllItemsEnabled'] && obj['isEnabled'];
+            }
+            ListAdapter.isImpl = isImpl;
+        })(ListAdapter = widget.ListAdapter || (widget.ListAdapter = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
  *
@@ -46728,6 +47077,167 @@ var android;
  * limitations under the License.
  */
 ///<reference path="../../android/graphics/Canvas.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/widget/Checkable.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Gravity = android.view.Gravity;
+        var TextView = android.widget.TextView;
+        var View = android.view.View;
+        class CheckedTextView extends TextView {
+            constructor(context, bindElement, defStyle = android.R.attr.checkedTextViewStyle) {
+                super(context, bindElement, null);
+                this.mCheckMarkResource = 0;
+                this.mBasePadding = 0;
+                this.mCheckMarkWidth = 0;
+                this._attrBinder.addAttr('checkMark', (value) => {
+                    this.setCheckMarkDrawable(this._attrBinder.parseDrawable(value));
+                }, () => {
+                    return this.getCheckMarkDrawable();
+                });
+                this._attrBinder.addAttr('checked', (value) => {
+                    this.setChecked(this._attrBinder.parseBoolean(value, false));
+                });
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
+            }
+            toggle() {
+                this.setChecked(!this.mChecked);
+            }
+            isChecked() {
+                return this.mChecked;
+            }
+            setChecked(checked) {
+                if (this.mChecked != checked) {
+                    this.mChecked = checked;
+                    this.refreshDrawableState();
+                }
+            }
+            setCheckMarkDrawable(d) {
+                if (this.mCheckMarkDrawable != null) {
+                    this.mCheckMarkDrawable.setCallback(null);
+                    this.unscheduleDrawable(this.mCheckMarkDrawable);
+                }
+                this.mNeedRequestlayout = (d != this.mCheckMarkDrawable);
+                if (d != null) {
+                    d.setCallback(this);
+                    d.setVisible(this.getVisibility() == CheckedTextView.VISIBLE, false);
+                    d.setState(CheckedTextView.CHECKED_STATE_SET);
+                    this.setMinHeight(d.getIntrinsicHeight());
+                    this.mCheckMarkWidth = d.getIntrinsicWidth();
+                    d.setState(this.getDrawableState());
+                }
+                else {
+                    this.mCheckMarkWidth = 0;
+                }
+                this.mCheckMarkDrawable = d;
+                this.resolvePadding();
+            }
+            getCheckMarkDrawable() {
+                return this.mCheckMarkDrawable;
+            }
+            setPadding(left, top, right, bottom) {
+                super.setPadding(left, top, right, bottom);
+                this.setBasePadding(this.isLayoutRtl());
+            }
+            updatePadding() {
+                let newPadding = (this.mCheckMarkDrawable != null) ? this.mCheckMarkWidth + this.mBasePadding : this.mBasePadding;
+                if (this.isLayoutRtl()) {
+                    this.mNeedRequestlayout = (this.mPaddingLeft != newPadding) || this.mNeedRequestlayout;
+                    this.mPaddingLeft = newPadding;
+                }
+                else {
+                    this.mNeedRequestlayout = (this.mPaddingRight != newPadding) || this.mNeedRequestlayout;
+                    this.mPaddingRight = newPadding;
+                }
+                if (this.mNeedRequestlayout) {
+                    this.requestLayout();
+                    this.mNeedRequestlayout = false;
+                }
+            }
+            setBasePadding(isLayoutRtl) {
+                if (isLayoutRtl) {
+                    this.mBasePadding = this.mPaddingLeft;
+                }
+                else {
+                    this.mBasePadding = this.mPaddingRight;
+                }
+            }
+            onDraw(canvas) {
+                super.onDraw(canvas);
+                const checkMarkDrawable = this.mCheckMarkDrawable;
+                if (checkMarkDrawable != null) {
+                    const verticalGravity = this.getGravity() & Gravity.VERTICAL_GRAVITY_MASK;
+                    const height = checkMarkDrawable.getIntrinsicHeight();
+                    let y = 0;
+                    switch (verticalGravity) {
+                        case Gravity.BOTTOM:
+                            y = this.getHeight() - height;
+                            break;
+                        case Gravity.CENTER_VERTICAL:
+                            y = (this.getHeight() - height) / 2;
+                            break;
+                    }
+                    const isLayoutRtl = this.isLayoutRtl();
+                    const width = this.getWidth();
+                    const top = y;
+                    const bottom = top + height;
+                    let left;
+                    let right;
+                    if (isLayoutRtl) {
+                        left = this.mBasePadding;
+                        right = left + this.mCheckMarkWidth;
+                    }
+                    else {
+                        right = width - this.mBasePadding;
+                        left = right - this.mCheckMarkWidth;
+                    }
+                    checkMarkDrawable.setBounds(this.mScrollX + left, top, this.mScrollX + right, bottom);
+                    checkMarkDrawable.draw(canvas);
+                }
+            }
+            onCreateDrawableState(extraSpace) {
+                const drawableState = super.onCreateDrawableState(extraSpace + 1);
+                if (this.isChecked()) {
+                    CheckedTextView.mergeDrawableStates(drawableState, CheckedTextView.CHECKED_STATE_SET);
+                }
+                return drawableState;
+            }
+            drawableStateChanged() {
+                super.drawableStateChanged();
+                if (this.mCheckMarkDrawable != null) {
+                    let myDrawableState = this.getDrawableState();
+                    this.mCheckMarkDrawable.setState(myDrawableState);
+                    this.invalidate();
+                }
+            }
+        }
+        CheckedTextView.CHECKED_STATE_SET = [View.VIEW_STATE_CHECKED];
+        widget.CheckedTextView = CheckedTextView;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/Canvas.ts"/>
 ///<reference path="../../android/graphics/Rect.ts"/>
 ///<reference path="../../android/graphics/drawable/Drawable.ts"/>
 ///<reference path="../../android/view/KeyEvent.ts"/>
@@ -48833,6 +49343,7 @@ var android;
         var View = android.view.View;
         var ViewGroup = android.view.ViewGroup;
         var Window = android.view.Window;
+        var WindowManager = android.view.WindowManager;
         var WeakReference = java.lang.ref.WeakReference;
         class Dialog {
             constructor(context, cancelable, cancelListener) {
@@ -48854,6 +49365,7 @@ var android;
                 this.mWindowManager = context.getWindowManager();
                 let w = new Window(context);
                 w.setFloating(true);
+                w.setDimAmount(0.7);
                 w.setBackgroundColor(android.graphics.Color.TRANSPARENT);
                 this.mWindow = w;
                 let dm = context.getResources().getDisplayMetrics();
@@ -48861,6 +49373,7 @@ var android;
                 decor.setMinimumWidth(dm.density * 300);
                 decor.setMinimumHeight(dm.density * 20);
                 let wp = w.getAttributes();
+                wp.flags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
                 wp.height = wp.width = ViewGroup.LayoutParams.WRAP_CONTENT;
                 wp.leftMargin = wp.rightMargin = wp.topMargin = wp.bottomMargin = dm.density * 16;
                 w.setWindowAnimations(android.R.anim.dialog_enter, android.R.anim.dialog_exit, null, null);
@@ -50096,6 +50609,2445 @@ var android;
             AlertDialog.Builder = Builder;
         })(AlertDialog = app.AlertDialog || (app.AlertDialog = {}));
     })(app = android.app || (android.app = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/util/SparseArray.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
+///<reference path="../../android/widget/ArrayAdapter.ts"/>
+///<reference path="../../android/widget/Spinner.ts"/>
+///<reference path="../../android/widget/SpinnerAdapter.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var Rect = android.graphics.Rect;
+        var SparseArray = android.util.SparseArray;
+        var View = android.view.View;
+        var ViewGroup = android.view.ViewGroup;
+        var AdapterView = android.widget.AdapterView;
+        var ArrayAdapter = android.widget.ArrayAdapter;
+        class AbsSpinner extends AdapterView {
+            constructor(context, bindElement, defStyle) {
+                super(context, bindElement, null);
+                this.mHeightMeasureSpec = 0;
+                this.mWidthMeasureSpec = 0;
+                this.mSelectionLeftPadding = 0;
+                this.mSelectionTopPadding = 0;
+                this.mSelectionRightPadding = 0;
+                this.mSelectionBottomPadding = 0;
+                this.mSpinnerPadding = new Rect();
+                this.mRecycler = new AbsSpinner.RecycleBin(this);
+                this.initAbsSpinner();
+                let a = this._attrBinder;
+                a.addAttr('entries', (value) => {
+                    let entries = a.parseTextArray(value);
+                    if (entries != null) {
+                        let adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, null, entries);
+                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                        this.setAdapter(adapter);
+                    }
+                });
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
+            }
+            initAbsSpinner() {
+                this.setFocusable(true);
+                this.setWillNotDraw(false);
+            }
+            setAdapter(adapter) {
+                if (null != this.mAdapter) {
+                    this.mAdapter.unregisterDataSetObserver(this.mDataSetObserver);
+                    this.resetList();
+                }
+                this.mAdapter = adapter;
+                this.mOldSelectedPosition = AbsSpinner.INVALID_POSITION;
+                this.mOldSelectedRowId = AbsSpinner.INVALID_ROW_ID;
+                if (this.mAdapter != null) {
+                    this.mOldItemCount = this.mItemCount;
+                    this.mItemCount = this.mAdapter.getCount();
+                    this.checkFocus();
+                    this.mDataSetObserver = new AdapterView.AdapterDataSetObserver(this);
+                    this.mAdapter.registerDataSetObserver(this.mDataSetObserver);
+                    let position = this.mItemCount > 0 ? 0 : AbsSpinner.INVALID_POSITION;
+                    this.setSelectedPositionInt(position);
+                    this.setNextSelectedPositionInt(position);
+                    if (this.mItemCount == 0) {
+                        this.checkSelectionChanged();
+                    }
+                }
+                else {
+                    this.checkFocus();
+                    this.resetList();
+                    this.checkSelectionChanged();
+                }
+                this.requestLayout();
+            }
+            resetList() {
+                this.mDataChanged = false;
+                this.mNeedSync = false;
+                this.removeAllViewsInLayout();
+                this.mOldSelectedPosition = AbsSpinner.INVALID_POSITION;
+                this.mOldSelectedRowId = AbsSpinner.INVALID_ROW_ID;
+                this.setSelectedPositionInt(AbsSpinner.INVALID_POSITION);
+                this.setNextSelectedPositionInt(AbsSpinner.INVALID_POSITION);
+                this.invalidate();
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                let widthMode = AbsSpinner.MeasureSpec.getMode(widthMeasureSpec);
+                let widthSize;
+                let heightSize;
+                this.mSpinnerPadding.left = this.mPaddingLeft > this.mSelectionLeftPadding ? this.mPaddingLeft : this.mSelectionLeftPadding;
+                this.mSpinnerPadding.top = this.mPaddingTop > this.mSelectionTopPadding ? this.mPaddingTop : this.mSelectionTopPadding;
+                this.mSpinnerPadding.right = this.mPaddingRight > this.mSelectionRightPadding ? this.mPaddingRight : this.mSelectionRightPadding;
+                this.mSpinnerPadding.bottom = this.mPaddingBottom > this.mSelectionBottomPadding ? this.mPaddingBottom : this.mSelectionBottomPadding;
+                if (this.mDataChanged) {
+                    this.handleDataChanged();
+                }
+                let preferredHeight = 0;
+                let preferredWidth = 0;
+                let needsMeasuring = true;
+                let selectedPosition = this.getSelectedItemPosition();
+                if (selectedPosition >= 0 && this.mAdapter != null && selectedPosition < this.mAdapter.getCount()) {
+                    let view = this.mRecycler.get(selectedPosition);
+                    if (view == null) {
+                        view = this.mAdapter.getView(selectedPosition, null, this);
+                    }
+                    if (view != null) {
+                        this.mRecycler.put(selectedPosition, view);
+                        if (view.getLayoutParams() == null) {
+                            this.mBlockLayoutRequests = true;
+                            view.setLayoutParams(this.generateDefaultLayoutParams());
+                            this.mBlockLayoutRequests = false;
+                        }
+                        this.measureChild(view, widthMeasureSpec, heightMeasureSpec);
+                        preferredHeight = this.getChildHeight(view) + this.mSpinnerPadding.top + this.mSpinnerPadding.bottom;
+                        preferredWidth = this.getChildWidth(view) + this.mSpinnerPadding.left + this.mSpinnerPadding.right;
+                        needsMeasuring = false;
+                    }
+                }
+                if (needsMeasuring) {
+                    preferredHeight = this.mSpinnerPadding.top + this.mSpinnerPadding.bottom;
+                    if (widthMode == AbsSpinner.MeasureSpec.UNSPECIFIED) {
+                        preferredWidth = this.mSpinnerPadding.left + this.mSpinnerPadding.right;
+                    }
+                }
+                preferredHeight = Math.max(preferredHeight, this.getSuggestedMinimumHeight());
+                preferredWidth = Math.max(preferredWidth, this.getSuggestedMinimumWidth());
+                heightSize = AbsSpinner.resolveSizeAndState(preferredHeight, heightMeasureSpec, 0);
+                widthSize = AbsSpinner.resolveSizeAndState(preferredWidth, widthMeasureSpec, 0);
+                this.setMeasuredDimension(widthSize, heightSize);
+                this.mHeightMeasureSpec = heightMeasureSpec;
+                this.mWidthMeasureSpec = widthMeasureSpec;
+            }
+            getChildHeight(child) {
+                return child.getMeasuredHeight();
+            }
+            getChildWidth(child) {
+                return child.getMeasuredWidth();
+            }
+            generateDefaultLayoutParams() {
+                return new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
+            recycleAllViews() {
+                const childCount = this.getChildCount();
+                const recycleBin = this.mRecycler;
+                const position = this.mFirstPosition;
+                for (let i = 0; i < childCount; i++) {
+                    let v = this.getChildAt(i);
+                    let index = position + i;
+                    recycleBin.put(index, v);
+                }
+            }
+            setSelection(position, animate) {
+                if (arguments.length === 1) {
+                    this.setNextSelectedPositionInt(position);
+                    this.requestLayout();
+                    this.invalidate();
+                }
+                else {
+                    let shouldAnimate = animate && this.mFirstPosition <= position && position <= this.mFirstPosition + this.getChildCount() - 1;
+                    this.setSelectionInt(position, shouldAnimate);
+                }
+            }
+            setSelectionInt(position, animate) {
+                if (position != this.mOldSelectedPosition) {
+                    this.mBlockLayoutRequests = true;
+                    let delta = position - this.mSelectedPosition;
+                    this.setNextSelectedPositionInt(position);
+                    this.layoutSpinner(delta, animate);
+                    this.mBlockLayoutRequests = false;
+                }
+            }
+            getSelectedView() {
+                if (this.mItemCount > 0 && this.mSelectedPosition >= 0) {
+                    return this.getChildAt(this.mSelectedPosition - this.mFirstPosition);
+                }
+                else {
+                    return null;
+                }
+            }
+            requestLayout() {
+                if (!this.mBlockLayoutRequests) {
+                    super.requestLayout();
+                }
+            }
+            getAdapter() {
+                return this.mAdapter;
+            }
+            getCount() {
+                return this.mItemCount;
+            }
+            pointToPosition(x, y) {
+                let frame = this.mTouchFrame;
+                if (frame == null) {
+                    this.mTouchFrame = new Rect();
+                    frame = this.mTouchFrame;
+                }
+                const count = this.getChildCount();
+                for (let i = count - 1; i >= 0; i--) {
+                    let child = this.getChildAt(i);
+                    if (child.getVisibility() == View.VISIBLE) {
+                        child.getHitRect(frame);
+                        if (frame.contains(x, y)) {
+                            return this.mFirstPosition + i;
+                        }
+                    }
+                }
+                return AbsSpinner.INVALID_POSITION;
+            }
+        }
+        widget.AbsSpinner = AbsSpinner;
+        (function (AbsSpinner) {
+            class RecycleBin {
+                constructor(arg) {
+                    this.mScrapHeap = new SparseArray();
+                    this._AbsSpinner_this = arg;
+                }
+                put(position, v) {
+                    this.mScrapHeap.put(position, v);
+                }
+                get(position) {
+                    let result = this.mScrapHeap.get(position);
+                    if (result != null) {
+                        this.mScrapHeap.delete(position);
+                    }
+                    else {
+                    }
+                    return result;
+                }
+                clear() {
+                    const scrapHeap = this.mScrapHeap;
+                    const count = scrapHeap.size();
+                    for (let i = 0; i < count; i++) {
+                        const view = scrapHeap.valueAt(i);
+                        if (view != null) {
+                            this._AbsSpinner_this.removeDetachedView(view, true);
+                        }
+                    }
+                    scrapHeap.clear();
+                }
+            }
+            AbsSpinner.RecycleBin = RecycleBin;
+        })(AbsSpinner = widget.AbsSpinner || (widget.AbsSpinner = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+///<reference path="../../android/graphics/PixelFormat.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/drawable/StateListDrawable.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/view/ViewTreeObserver.ts"/>
+///<reference path="../../android/view/Window.ts"/>
+///<reference path="../../android/view/WindowManager.ts"/>
+///<reference path="../../android/view/animation/Animation.ts"/>
+///<reference path="../../java/lang/ref/WeakReference.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../android/widget/FrameLayout.ts"/>
+///<reference path="../../android/widget/Spinner.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/R/attr.ts"/>
+///<reference path="../../android/R/anim.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var R = android.R;
+        var Context = android.content.Context;
+        var Rect = android.graphics.Rect;
+        var Gravity = android.view.Gravity;
+        var KeyEvent = android.view.KeyEvent;
+        var MotionEvent = android.view.MotionEvent;
+        var View = android.view.View;
+        var ViewGroup = android.view.ViewGroup;
+        var WindowManager = android.view.WindowManager;
+        var Window = android.view.Window;
+        var WeakReference = java.lang.ref.WeakReference;
+        class PopupWindow {
+            constructor(...args) {
+                this.mInputMethodMode = PopupWindow.INPUT_METHOD_FROM_FOCUSABLE;
+                this.mTouchable = true;
+                this.mOutsideTouchable = false;
+                this.mSplitTouchEnabled = -1;
+                this.mAllowScrollingAnchorParent = true;
+                this.mDrawingLocation = [0, 0];
+                this.mScreenLocation = [0, 0];
+                this.mTempRect = new Rect();
+                this.mWindowLayoutType = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
+                this.mDefaultDropdownAboveEnterAnimation = R.anim.grow_fade_in_from_bottom;
+                this.mDefaultDropdownBelowEnterAnimation = R.anim.grow_fade_in;
+                this.mDefaultDropdownAboveExitAnimation = R.anim.shrink_fade_out_from_bottom;
+                this.mDefaultDropdownBelowExitAnimation = R.anim.shrink_fade_out;
+                this.mOnScrollChangedListener = (() => {
+                    const _this = this;
+                    class _Inner {
+                        onScrollChanged() {
+                            let anchor = _this.mAnchor != null ? _this.mAnchor.get() : null;
+                            if (anchor != null && _this.mPopupView != null) {
+                                let p = _this.mPopupView.getLayoutParams();
+                                _this.updateAboveAnchor(_this.findDropDownPosition(anchor, p, _this.mAnchorXoff, _this.mAnchorYoff, _this.mAnchoredGravity));
+                                _this.update(p.x, p.y, -1, -1, true);
+                            }
+                        }
+                    }
+                    return new _Inner();
+                })();
+                if (args[0] instanceof Context) {
+                    let context = args[0];
+                    let styleAttr = args.length == 1 ? R.attr.popupWindowStyle : args[1];
+                    this.mContext = context;
+                    this.mWindowManager = context.getWindowManager();
+                    this.mPopupWindow = new Window(context);
+                    this.mPopupWindow.setCallback(this);
+                    this.mBackground = styleAttr.popupBackground;
+                    this.mEnterAnimation = styleAttr.popupEnterAnimation;
+                    this.mExitAnimation = styleAttr.popupExitAnimation;
+                }
+                else {
+                    let [contentView = null, width = 0, height = 0, focusable = false] = args;
+                    if (contentView != null) {
+                        this.mContext = contentView.getContext();
+                        this.mWindowManager = this.mContext.getWindowManager();
+                        this.mPopupWindow = new Window(this.mContext);
+                        this.mPopupWindow.setCallback(this);
+                    }
+                    this.setContentView(contentView);
+                    this.setWidth(width);
+                    this.setHeight(height);
+                    this.setFocusable(focusable);
+                }
+            }
+            getBackground() {
+                return this.mBackground;
+            }
+            setBackgroundDrawable(background) {
+                this.mBackground = background;
+            }
+            getEnterAnimation() {
+                return this.mEnterAnimation;
+            }
+            getExitAnimation() {
+                return this.mExitAnimation;
+            }
+            setWindowAnimation(enterAnimation, exitAnimation) {
+                this.mEnterAnimation = enterAnimation;
+                this.mExitAnimation = exitAnimation;
+            }
+            getContentView() {
+                return this.mContentView;
+            }
+            setContentView(contentView) {
+                if (this.isShowing()) {
+                    return;
+                }
+                this.mContentView = contentView;
+                if (this.mContext == null && this.mContentView != null) {
+                    this.mContext = this.mContentView.getContext();
+                }
+                if (this.mWindowManager == null && this.mContentView != null) {
+                    this.mWindowManager = this.mContext.getWindowManager();
+                }
+                if (this.mPopupWindow == null && this.mContext != null) {
+                    this.mPopupWindow = new Window(this.mContext);
+                    this.mPopupWindow.setCallback(this);
+                }
+            }
+            setTouchInterceptor(l) {
+                this.mTouchInterceptor = l;
+            }
+            isFocusable() {
+                return this.mFocusable;
+            }
+            setFocusable(focusable) {
+                this.mFocusable = focusable;
+            }
+            getInputMethodMode() {
+                return this.mInputMethodMode;
+            }
+            setInputMethodMode(mode) {
+                this.mInputMethodMode = mode;
+            }
+            isTouchable() {
+                return this.mTouchable;
+            }
+            setTouchable(touchable) {
+                this.mTouchable = touchable;
+            }
+            isOutsideTouchable() {
+                return this.mOutsideTouchable;
+            }
+            setOutsideTouchable(touchable) {
+                this.mOutsideTouchable = touchable;
+            }
+            setClipToScreenEnabled(enabled) {
+                this.mClipToScreen = enabled;
+            }
+            setAllowScrollingAnchorParent(enabled) {
+                this.mAllowScrollingAnchorParent = enabled;
+            }
+            isSplitTouchEnabled() {
+                if (this.mSplitTouchEnabled < 0 && this.mContext != null) {
+                    return true;
+                }
+                return this.mSplitTouchEnabled == 1;
+            }
+            setSplitTouchEnabled(enabled) {
+                this.mSplitTouchEnabled = enabled ? 1 : 0;
+            }
+            setWindowLayoutType(layoutType) {
+                this.mWindowLayoutType = layoutType;
+            }
+            getWindowLayoutType() {
+                return this.mWindowLayoutType;
+            }
+            setTouchModal(touchModal) {
+                this.mNotTouchModal = !touchModal;
+            }
+            setWindowLayoutMode(widthSpec, heightSpec) {
+                this.mWidthMode = widthSpec;
+                this.mHeightMode = heightSpec;
+            }
+            getHeight() {
+                return this.mHeight;
+            }
+            setHeight(height) {
+                this.mHeight = height;
+            }
+            getWidth() {
+                return this.mWidth;
+            }
+            setWidth(width) {
+                this.mWidth = width;
+            }
+            isShowing() {
+                return this.mIsShowing;
+            }
+            showAtLocation(parent, gravity, x, y) {
+                if (this.isShowing() || this.mContentView == null) {
+                    return;
+                }
+                this.unregisterForScrollChanged();
+                this.mIsShowing = true;
+                this.mIsDropdown = false;
+                let p = this.createPopupLayout();
+                p.enterAnimation = this.computeWindowEnterAnimation();
+                p.exitAnimation = this.computeWindowExitAnimation();
+                this.preparePopup(p);
+                if (gravity == Gravity.NO_GRAVITY) {
+                    gravity = Gravity.TOP | Gravity.START;
+                }
+                p.gravity = gravity;
+                p.x = x;
+                p.y = y;
+                if (this.mHeightMode < 0)
+                    p.height = this.mLastHeight = this.mHeightMode;
+                if (this.mWidthMode < 0)
+                    p.width = this.mLastWidth = this.mWidthMode;
+                this.invokePopup(p);
+            }
+            showAsDropDown(anchor, xoff = 0, yoff = 0, gravity = PopupWindow.DEFAULT_ANCHORED_GRAVITY) {
+                if (this.isShowing() || this.mContentView == null) {
+                    return;
+                }
+                this.registerForScrollChanged(anchor, xoff, yoff, gravity);
+                this.mIsShowing = true;
+                this.mIsDropdown = true;
+                let p = this.createPopupLayout();
+                this.preparePopup(p);
+                this.updateAboveAnchor(this.findDropDownPosition(anchor, p, xoff, yoff, gravity));
+                if (this.mHeightMode < 0)
+                    p.height = this.mLastHeight = this.mHeightMode;
+                if (this.mWidthMode < 0)
+                    p.width = this.mLastWidth = this.mWidthMode;
+                p.enterAnimation = this.computeWindowEnterAnimation();
+                p.exitAnimation = this.computeWindowExitAnimation();
+                this.invokePopup(p);
+            }
+            updateAboveAnchor(aboveAnchor) {
+                if (aboveAnchor != this.mAboveAnchor) {
+                    this.mAboveAnchor = aboveAnchor;
+                    if (this.mBackground != null) {
+                        if (this.mAboveAnchorBackgroundDrawable != null) {
+                            if (this.mAboveAnchor) {
+                                this.mPopupView.setBackgroundDrawable(this.mAboveAnchorBackgroundDrawable);
+                            }
+                            else {
+                                this.mPopupView.setBackgroundDrawable(this.mBelowAnchorBackgroundDrawable);
+                            }
+                        }
+                        else {
+                            this.mPopupView.refreshDrawableState();
+                        }
+                    }
+                }
+            }
+            isAboveAnchor() {
+                return this.mAboveAnchor;
+            }
+            preparePopup(p) {
+                if (this.mContentView == null || this.mContext == null || this.mWindowManager == null) {
+                    throw Error(`new IllegalStateException("You must specify a valid content view by " + "calling setContentView() before attempting to show the popup.")`);
+                }
+                this.mPopupWindow.setContentView(this.mContentView);
+                this.mPopupWindow.setFloating(true);
+                this.mPopupWindow.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                this.mPopupWindow.setDimAmount(0);
+                this.mPopupView = this.mPopupWindow.getDecorView();
+                if (this.mBackground != null) {
+                    this.mPopupView.setBackground(this.mBackground);
+                }
+                this.mPopupViewInitialLayoutDirectionInherited = false;
+                this.mPopupWidth = p.width;
+                this.mPopupHeight = p.height;
+            }
+            invokePopup(p) {
+                this.setLayoutDirectionFromAnchor();
+                this.mWindowManager.addWindow(this.mPopupWindow);
+            }
+            setLayoutDirectionFromAnchor() {
+                if (this.mAnchor != null) {
+                    let anchor = this.mAnchor.get();
+                    if (anchor != null && this.mPopupViewInitialLayoutDirectionInherited) {
+                        this.mPopupView.setLayoutDirection(anchor.getLayoutDirection());
+                    }
+                }
+            }
+            createPopupLayout() {
+                let p = this.mPopupWindow.getAttributes();
+                p.gravity = Gravity.START | Gravity.TOP;
+                p.width = this.mLastWidth = this.mWidth;
+                p.height = this.mLastHeight = this.mHeight;
+                p.flags = this.computeFlags(p.flags);
+                p.type = this.mWindowLayoutType;
+                p.setTitle("PopupWindow");
+                return p;
+            }
+            computeFlags(curFlags) {
+                curFlags &= ~(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                    WindowManager.LayoutParams.FLAG_SPLIT_TOUCH);
+                if (!this.mFocusable) {
+                    curFlags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+                }
+                if (!this.mTouchable) {
+                    curFlags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+                }
+                if (this.mOutsideTouchable) {
+                    curFlags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+                }
+                if (this.isSplitTouchEnabled()) {
+                    curFlags |= WindowManager.LayoutParams.FLAG_SPLIT_TOUCH;
+                }
+                if (this.mNotTouchModal) {
+                    curFlags |= WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+                }
+                return curFlags;
+            }
+            computeWindowEnterAnimation() {
+                if (this.mEnterAnimation == null) {
+                    if (this.mIsDropdown) {
+                        return this.mAboveAnchor ? this.mDefaultDropdownAboveEnterAnimation : this.mDefaultDropdownBelowEnterAnimation;
+                    }
+                    return null;
+                }
+                return this.mEnterAnimation;
+            }
+            computeWindowExitAnimation() {
+                if (this.mExitAnimation == null) {
+                    if (this.mIsDropdown) {
+                        return this.mAboveAnchor ? this.mDefaultDropdownAboveExitAnimation : this.mDefaultDropdownBelowExitAnimation;
+                    }
+                    return null;
+                }
+                return this.mExitAnimation;
+            }
+            findDropDownPosition(anchor, p, xoff, yoff, gravity) {
+                const anchorHeight = anchor.getHeight();
+                anchor.getLocationInWindow(this.mDrawingLocation);
+                p.x = this.mDrawingLocation[0] + xoff;
+                p.y = this.mDrawingLocation[1] + anchorHeight + yoff;
+                const hgrav = Gravity.getAbsoluteGravity(gravity, anchor.getLayoutDirection()) & Gravity.HORIZONTAL_GRAVITY_MASK;
+                if (hgrav == Gravity.RIGHT) {
+                    p.x -= this.mPopupWidth - anchor.getWidth();
+                }
+                let onTop = false;
+                p.gravity = Gravity.LEFT | Gravity.TOP;
+                anchor.getLocationOnScreen(this.mScreenLocation);
+                const displayFrame = new Rect();
+                anchor.getWindowVisibleDisplayFrame(displayFrame);
+                let screenY = this.mScreenLocation[1] + anchorHeight + yoff;
+                const root = anchor.getRootView();
+                if (screenY + this.mPopupHeight > displayFrame.bottom || p.x + this.mPopupWidth - root.getWidth() > 0) {
+                    if (this.mAllowScrollingAnchorParent) {
+                        let scrollX = anchor.getScrollX();
+                        let scrollY = anchor.getScrollY();
+                        let r = new Rect(scrollX, scrollY, scrollX + this.mPopupWidth + xoff, scrollY + this.mPopupHeight + anchor.getHeight() + yoff);
+                        anchor.requestRectangleOnScreen(r, true);
+                    }
+                    anchor.getLocationInWindow(this.mDrawingLocation);
+                    p.x = this.mDrawingLocation[0] + xoff;
+                    p.y = this.mDrawingLocation[1] + anchor.getHeight() + yoff;
+                    if (hgrav == Gravity.RIGHT) {
+                        p.x -= this.mPopupWidth - anchor.getWidth();
+                    }
+                    anchor.getLocationOnScreen(this.mScreenLocation);
+                    onTop = (displayFrame.bottom - this.mScreenLocation[1] - anchor.getHeight() - yoff) < (this.mScreenLocation[1] - yoff - displayFrame.top);
+                    if (onTop) {
+                        p.gravity = Gravity.LEFT | Gravity.BOTTOM;
+                        p.y = root.getHeight() - this.mDrawingLocation[1] + yoff;
+                    }
+                    else {
+                        p.y = this.mDrawingLocation[1] + anchor.getHeight() + yoff;
+                    }
+                }
+                if (this.mClipToScreen) {
+                    const displayFrameWidth = displayFrame.right - displayFrame.left;
+                    let right = p.x + p.width;
+                    if (right > displayFrameWidth) {
+                        p.x -= right - displayFrameWidth;
+                    }
+                    if (p.x < displayFrame.left) {
+                        p.x = displayFrame.left;
+                        p.width = Math.min(p.width, displayFrameWidth);
+                    }
+                    if (onTop) {
+                        let popupTop = this.mScreenLocation[1] + yoff - this.mPopupHeight;
+                        if (popupTop < 0) {
+                            p.y += popupTop;
+                        }
+                    }
+                    else {
+                        p.y = Math.max(p.y, displayFrame.top);
+                    }
+                }
+                p.gravity |= Gravity.DISPLAY_CLIP_VERTICAL;
+                return onTop;
+            }
+            getMaxAvailableHeight(anchor, yOffset = 0, ignoreBottomDecorations = false) {
+                const displayFrame = new Rect();
+                anchor.getWindowVisibleDisplayFrame(displayFrame);
+                const anchorPos = this.mDrawingLocation;
+                anchor.getLocationOnScreen(anchorPos);
+                let bottomEdge = displayFrame.bottom;
+                if (ignoreBottomDecorations) {
+                    let res = anchor.getContext().getResources();
+                    bottomEdge = res.getDisplayMetrics().heightPixels;
+                }
+                const distanceToBottom = bottomEdge - (anchorPos[1] + anchor.getHeight()) - yOffset;
+                const distanceToTop = anchorPos[1] - displayFrame.top + yOffset;
+                let returnedHeight = Math.max(distanceToBottom, distanceToTop);
+                if (this.mBackground != null) {
+                    this.mBackground.getPadding(this.mTempRect);
+                    returnedHeight -= this.mTempRect.top + this.mTempRect.bottom;
+                }
+                return returnedHeight;
+            }
+            dismiss() {
+                if (this.isShowing() && this.mPopupView != null) {
+                    this.mIsShowing = false;
+                    this.unregisterForScrollChanged();
+                    try {
+                        this.mWindowManager.removeWindow(this.mPopupWindow);
+                    }
+                    finally {
+                        if (this.mPopupView != this.mContentView && this.mPopupView instanceof ViewGroup) {
+                            this.mPopupView.removeView(this.mContentView);
+                        }
+                        this.mPopupView = null;
+                        if (this.mOnDismissListener != null) {
+                            this.mOnDismissListener.onDismiss();
+                        }
+                    }
+                }
+            }
+            setOnDismissListener(onDismissListener) {
+                this.mOnDismissListener = onDismissListener;
+            }
+            update(...args) {
+                if (args.length == 0) {
+                    this._update();
+                }
+                else if (args.length == 2) {
+                    this._update_w_h(args[0], args[1]);
+                }
+                else if (args.length == 3) {
+                    this._update_a_w_h(args[0], args[1], args[2]);
+                }
+                else if (args.length == 4) {
+                    this._update_x_y_w_h_f(args[0], args[1], args[2], args[3]);
+                }
+                else if (args.length == 5) {
+                    if (args[0] instanceof View)
+                        this._update_a_x_y_w_h(args[0], args[1], args[2], args[3], args[4]);
+                    else
+                        this._update_x_y_w_h_f(args[0], args[1], args[2], args[3], args[4]);
+                }
+            }
+            _update() {
+                if (!this.isShowing() || this.mContentView == null) {
+                    return;
+                }
+                let p = this.mPopupView.getLayoutParams();
+                let update = false;
+                const enterAnim = this.computeWindowEnterAnimation();
+                const exitAnim = this.computeWindowExitAnimation();
+                if (enterAnim != p.enterAnimation) {
+                    p.enterAnimation = enterAnim;
+                    update = true;
+                }
+                if (exitAnim != p.exitAnimation) {
+                    p.exitAnimation = exitAnim;
+                    update = true;
+                }
+                const newFlags = this.computeFlags(p.flags);
+                if (newFlags != p.flags) {
+                    p.flags = newFlags;
+                    update = true;
+                }
+                if (update) {
+                    this.setLayoutDirectionFromAnchor();
+                    this.mWindowManager.updateWindowLayout(this.mPopupWindow, p);
+                }
+            }
+            _update_w_h(width, height) {
+                let p = this.mPopupView.getLayoutParams();
+                this.update(p.x, p.y, width, height, false);
+            }
+            _update_x_y_w_h_f(x, y, width, height, force = false) {
+                if (width != -1) {
+                    this.mLastWidth = width;
+                    this.setWidth(width);
+                }
+                if (height != -1) {
+                    this.mLastHeight = height;
+                    this.setHeight(height);
+                }
+                if (!this.isShowing() || this.mContentView == null) {
+                    return;
+                }
+                let p = this.mPopupView.getLayoutParams();
+                let update = force;
+                const finalWidth = this.mWidthMode < 0 ? this.mWidthMode : this.mLastWidth;
+                if (width != -1 && p.width != finalWidth) {
+                    p.width = this.mLastWidth = finalWidth;
+                    update = true;
+                }
+                const finalHeight = this.mHeightMode < 0 ? this.mHeightMode : this.mLastHeight;
+                if (height != -1 && p.height != finalHeight) {
+                    p.height = this.mLastHeight = finalHeight;
+                    update = true;
+                }
+                if (p.x != x) {
+                    p.x = x;
+                    update = true;
+                }
+                if (p.y != y) {
+                    p.y = y;
+                    update = true;
+                }
+                const enterAnim = this.computeWindowEnterAnimation();
+                const exitAnim = this.computeWindowExitAnimation();
+                if (enterAnim != p.enterAnimation) {
+                    p.enterAnimation = enterAnim;
+                    update = true;
+                }
+                if (exitAnim != p.exitAnimation) {
+                    p.exitAnimation = exitAnim;
+                    update = true;
+                }
+                const newFlags = this.computeFlags(p.flags);
+                if (newFlags != p.flags) {
+                    p.flags = newFlags;
+                    update = true;
+                }
+                if (update) {
+                    this.setLayoutDirectionFromAnchor();
+                    this.mWindowManager.updateWindowLayout(this.mPopupWindow, p);
+                }
+            }
+            _update_a_w_h(anchor, width, height) {
+                this._update_all_args(anchor, false, 0, 0, true, width, height, this.mAnchoredGravity);
+            }
+            _update_a_x_y_w_h(anchor, xoff, yoff, width, height) {
+                this._update_all_args(anchor, true, xoff, yoff, true, width, height, this.mAnchoredGravity);
+            }
+            _update_all_args(anchor, updateLocation, xoff, yoff, updateDimension, width, height, gravity) {
+                if (!this.isShowing() || this.mContentView == null) {
+                    return;
+                }
+                let oldAnchor = this.mAnchor;
+                const needsUpdate = updateLocation && (this.mAnchorXoff != xoff || this.mAnchorYoff != yoff);
+                if (oldAnchor == null || oldAnchor.get() != anchor || (needsUpdate && !this.mIsDropdown)) {
+                    this.registerForScrollChanged(anchor, xoff, yoff, gravity);
+                }
+                else if (needsUpdate) {
+                    this.mAnchorXoff = xoff;
+                    this.mAnchorYoff = yoff;
+                    this.mAnchoredGravity = gravity;
+                }
+                let p = this.mPopupView.getLayoutParams();
+                if (updateDimension) {
+                    if (width == -1) {
+                        width = this.mPopupWidth;
+                    }
+                    else {
+                        this.mPopupWidth = width;
+                    }
+                    if (height == -1) {
+                        height = this.mPopupHeight;
+                    }
+                    else {
+                        this.mPopupHeight = height;
+                    }
+                }
+                let x = p.x;
+                let y = p.y;
+                if (updateLocation) {
+                    this.updateAboveAnchor(this.findDropDownPosition(anchor, p, xoff, yoff, gravity));
+                }
+                else {
+                    this.updateAboveAnchor(this.findDropDownPosition(anchor, p, this.mAnchorXoff, this.mAnchorYoff, this.mAnchoredGravity));
+                }
+                this.update(p.x, p.y, width, height, x != p.x || y != p.y);
+            }
+            unregisterForScrollChanged() {
+                let anchorRef = this.mAnchor;
+                let anchor = null;
+                if (anchorRef != null) {
+                    anchor = anchorRef.get();
+                }
+                if (anchor != null) {
+                    let vto = anchor.getViewTreeObserver();
+                    vto.removeOnScrollChangedListener(this.mOnScrollChangedListener);
+                }
+                this.mAnchor = null;
+            }
+            registerForScrollChanged(anchor, xoff, yoff, gravity) {
+                this.unregisterForScrollChanged();
+                this.mAnchor = new WeakReference(anchor);
+                let vto = anchor.getViewTreeObserver();
+                if (vto != null) {
+                    vto.addOnScrollChangedListener(this.mOnScrollChangedListener);
+                }
+                this.mAnchorXoff = xoff;
+                this.mAnchorYoff = yoff;
+                this.mAnchoredGravity = gravity;
+            }
+            onTouchEvent(event) {
+                const x = Math.floor(event.getX());
+                const y = Math.floor(event.getY());
+                if ((event.getAction() == MotionEvent.ACTION_DOWN) && ((x < 0) || (x >= this.mPopupView.getWidth()) || (y < 0) || (y >= this.mPopupView.getHeight()))) {
+                    this.dismiss();
+                    return true;
+                }
+                else if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
+                    this.dismiss();
+                    return true;
+                }
+                else if (this.mPopupView) {
+                    return this.mPopupView.onTouchEvent(event);
+                }
+                return false;
+            }
+            onGenericMotionEvent(event) {
+                return false;
+            }
+            onWindowAttributesChanged(params) {
+                if (this.mPopupWindow != null) {
+                    this.mWindowManager.updateWindowLayout(this.mPopupWindow, params);
+                }
+            }
+            onContentChanged() {
+            }
+            onWindowFocusChanged(hasFocus) {
+            }
+            onAttachedToWindow() {
+            }
+            onDetachedFromWindow() {
+            }
+            dispatchKeyEvent(event) {
+                if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                    if (this.mPopupView.getKeyDispatcherState() == null) {
+                        return this.mPopupWindow.superDispatchKeyEvent(event);
+                    }
+                    if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                        let state = this.mPopupView.getKeyDispatcherState();
+                        if (state != null) {
+                            state.startTracking(event, this);
+                        }
+                        return true;
+                    }
+                    else if (event.getAction() == KeyEvent.ACTION_UP) {
+                        let state = this.mPopupView.getKeyDispatcherState();
+                        if (state != null && state.isTracking(event) && !event.isCanceled()) {
+                            this.dismiss();
+                            return true;
+                        }
+                    }
+                    return this.mPopupWindow.superDispatchKeyEvent(event);
+                }
+                else {
+                    return this.mPopupWindow.superDispatchKeyEvent(event);
+                }
+            }
+            dispatchTouchEvent(ev) {
+                if (this.mTouchInterceptor != null && this.mTouchInterceptor.onTouch(this.mPopupView, ev)) {
+                    return true;
+                }
+                if (this.mPopupWindow.superDispatchTouchEvent(ev)) {
+                    return true;
+                }
+                return this.onTouchEvent(ev);
+            }
+            dispatchGenericMotionEvent(ev) {
+                if (this.mPopupWindow.superDispatchGenericMotionEvent(ev)) {
+                    return true;
+                }
+                return this.onGenericMotionEvent(ev);
+            }
+        }
+        PopupWindow.INPUT_METHOD_FROM_FOCUSABLE = 0;
+        PopupWindow.INPUT_METHOD_NEEDED = 1;
+        PopupWindow.INPUT_METHOD_NOT_NEEDED = 2;
+        PopupWindow.DEFAULT_ANCHORED_GRAVITY = Gravity.TOP | Gravity.START;
+        widget.PopupWindow = PopupWindow;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 16/1/15.
+ */
+///<reference path="OverScroller.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        class Scroller extends widget.OverScroller {
+        }
+        widget.Scroller = Scroller;
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/os/Handler.ts"/>
+///<reference path="../../android/text/TextUtils.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/view/ViewParent.ts"/>
+///<reference path="../../android/view/animation/AccelerateDecelerateInterpolator.ts"/>
+///<reference path="../../java/lang/Integer.ts"/>
+///<reference path="../../java/lang/Runnable.ts"/>
+///<reference path="../../android/widget/AbsListView.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
+///<reference path="../../android/widget/LinearLayout.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/widget/PopupWindow.ts"/>
+///<reference path="../../android/widget/Scroller.ts"/>
+///<reference path="../../android/widget/Spinner.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+///<reference path="../../android/view/animation/Animation.ts"/>
+///<reference path="../../java/lang/Runnable.ts"/>
+///<reference path="../../android/R/attr.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var DataSetObserver = android.database.DataSetObserver;
+        var Rect = android.graphics.Rect;
+        var Handler = android.os.Handler;
+        var Log = android.util.Log;
+        var Gravity = android.view.Gravity;
+        var KeyEvent = android.view.KeyEvent;
+        var MotionEvent = android.view.MotionEvent;
+        var View = android.view.View;
+        var MeasureSpec = android.view.View.MeasureSpec;
+        var ViewConfiguration = android.view.ViewConfiguration;
+        var ViewGroup = android.view.ViewGroup;
+        var Integer = java.lang.Integer;
+        var AbsListView = android.widget.AbsListView;
+        var LinearLayout = android.widget.LinearLayout;
+        var ListView = android.widget.ListView;
+        var PopupWindow = android.widget.PopupWindow;
+        var TextView = android.widget.TextView;
+        class ListPopupWindow {
+            constructor(context, styleAttr = android.R.attr.listPopupWindowStyle) {
+                this.mDropDownHeight = ViewGroup.LayoutParams.WRAP_CONTENT;
+                this.mDropDownWidth = ViewGroup.LayoutParams.WRAP_CONTENT;
+                this.mDropDownHorizontalOffset = 0;
+                this.mDropDownVerticalOffset = 0;
+                this.mDropDownGravity = Gravity.NO_GRAVITY;
+                this.mDropDownAlwaysVisible = false;
+                this.mForceIgnoreOutsideTouch = false;
+                this.mListItemExpandMaximum = Integer.MAX_VALUE;
+                this.mPromptPosition = ListPopupWindow.POSITION_PROMPT_ABOVE;
+                this.mResizePopupRunnable = new ListPopupWindow.ResizePopupRunnable(this);
+                this.mTouchInterceptor = new ListPopupWindow.PopupTouchInterceptor(this);
+                this.mScrollListener = new ListPopupWindow.PopupScrollListener(this);
+                this.mHideSelector = new ListPopupWindow.ListSelectorHider(this);
+                this.mHandler = new Handler();
+                this.mTempRect = new Rect();
+                this.mLayoutDirection = 0;
+                this.mContext = context;
+                this.mPopup = new PopupWindow(context, styleAttr);
+                this.mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+                this.mLayoutDirection = View.LAYOUT_DIRECTION_LTR;
+            }
+            setAdapter(adapter) {
+                if (this.mObserver == null) {
+                    this.mObserver = new ListPopupWindow.PopupDataSetObserver(this);
+                }
+                else if (this.mAdapter != null) {
+                    this.mAdapter.unregisterDataSetObserver(this.mObserver);
+                }
+                this.mAdapter = adapter;
+                if (this.mAdapter != null) {
+                    adapter.registerDataSetObserver(this.mObserver);
+                }
+                if (this.mDropDownList != null) {
+                    this.mDropDownList.setAdapter(this.mAdapter);
+                }
+            }
+            setPromptPosition(position) {
+                this.mPromptPosition = position;
+            }
+            getPromptPosition() {
+                return this.mPromptPosition;
+            }
+            setModal(modal) {
+                this.mModal = true;
+                this.mPopup.setFocusable(modal);
+            }
+            isModal() {
+                return this.mModal;
+            }
+            setForceIgnoreOutsideTouch(forceIgnoreOutsideTouch) {
+                this.mForceIgnoreOutsideTouch = forceIgnoreOutsideTouch;
+            }
+            setDropDownAlwaysVisible(dropDownAlwaysVisible) {
+                this.mDropDownAlwaysVisible = dropDownAlwaysVisible;
+            }
+            isDropDownAlwaysVisible() {
+                return this.mDropDownAlwaysVisible;
+            }
+            getBackground() {
+                return this.mPopup.getBackground();
+            }
+            setBackgroundDrawable(d) {
+                this.mPopup.setBackgroundDrawable(d);
+            }
+            setWindowAnimation(enterAnimation, exitAnimation) {
+                this.mPopup.setWindowAnimation(enterAnimation, exitAnimation);
+            }
+            getEnterAnimation() {
+                return this.mPopup.mEnterAnimation;
+            }
+            getExitAnimation() {
+                return this.mPopup.mExitAnimation;
+            }
+            getAnchorView() {
+                return this.mDropDownAnchorView;
+            }
+            setAnchorView(anchor) {
+                this.mDropDownAnchorView = anchor;
+            }
+            getHorizontalOffset() {
+                return this.mDropDownHorizontalOffset;
+            }
+            setHorizontalOffset(offset) {
+                this.mDropDownHorizontalOffset = offset;
+            }
+            getVerticalOffset() {
+                if (!this.mDropDownVerticalOffsetSet) {
+                    return 0;
+                }
+                return this.mDropDownVerticalOffset;
+            }
+            setVerticalOffset(offset) {
+                this.mDropDownVerticalOffset = offset;
+                this.mDropDownVerticalOffsetSet = true;
+            }
+            setDropDownGravity(gravity) {
+                this.mDropDownGravity = gravity;
+            }
+            getWidth() {
+                return this.mDropDownWidth;
+            }
+            setWidth(width) {
+                this.mDropDownWidth = width;
+            }
+            setContentWidth(width) {
+                let popupBackground = this.mPopup.getBackground();
+                if (popupBackground != null) {
+                    popupBackground.getPadding(this.mTempRect);
+                    this.mDropDownWidth = this.mTempRect.left + this.mTempRect.right + width;
+                }
+                else {
+                    this.setWidth(width);
+                }
+            }
+            getHeight() {
+                return this.mDropDownHeight;
+            }
+            setHeight(height) {
+                this.mDropDownHeight = height;
+            }
+            setOnItemClickListener(clickListener) {
+                this.mItemClickListener = clickListener;
+            }
+            setOnItemSelectedListener(selectedListener) {
+                this.mItemSelectedListener = selectedListener;
+            }
+            setPromptView(prompt) {
+                let showing = this.isShowing();
+                if (showing) {
+                    this.removePromptView();
+                }
+                this.mPromptView = prompt;
+                if (showing) {
+                    this.show();
+                }
+            }
+            postShow() {
+                this.mHandler.post(this.mShowDropDownRunnable);
+            }
+            show() {
+                let height = this.buildDropDown();
+                let widthSpec = 0;
+                let heightSpec = 0;
+                let noInputMethod = this.isInputMethodNotNeeded();
+                this.mPopup.setAllowScrollingAnchorParent(!noInputMethod);
+                if (this.mPopup.isShowing()) {
+                    if (this.mDropDownWidth == ViewGroup.LayoutParams.MATCH_PARENT) {
+                        widthSpec = -1;
+                    }
+                    else if (this.mDropDownWidth == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                        widthSpec = this.getAnchorView().getWidth();
+                    }
+                    else {
+                        widthSpec = this.mDropDownWidth;
+                    }
+                    if (this.mDropDownHeight == ViewGroup.LayoutParams.MATCH_PARENT) {
+                        heightSpec = noInputMethod ? height : ViewGroup.LayoutParams.MATCH_PARENT;
+                        if (noInputMethod) {
+                            this.mPopup.setWindowLayoutMode(this.mDropDownWidth == ViewGroup.LayoutParams.MATCH_PARENT ? ViewGroup.LayoutParams.MATCH_PARENT : 0, 0);
+                        }
+                        else {
+                            this.mPopup.setWindowLayoutMode(this.mDropDownWidth == ViewGroup.LayoutParams.MATCH_PARENT ? ViewGroup.LayoutParams.MATCH_PARENT : 0, ViewGroup.LayoutParams.MATCH_PARENT);
+                        }
+                    }
+                    else if (this.mDropDownHeight == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                        heightSpec = height;
+                    }
+                    else {
+                        heightSpec = this.mDropDownHeight;
+                    }
+                    this.mPopup.setOutsideTouchable(!this.mForceIgnoreOutsideTouch && !this.mDropDownAlwaysVisible);
+                    this.mPopup.update(this.getAnchorView(), this.mDropDownHorizontalOffset, this.mDropDownVerticalOffset, widthSpec, heightSpec);
+                }
+                else {
+                    if (this.mDropDownWidth == ViewGroup.LayoutParams.MATCH_PARENT) {
+                        widthSpec = ViewGroup.LayoutParams.MATCH_PARENT;
+                    }
+                    else {
+                        if (this.mDropDownWidth == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                            this.mPopup.setWidth(this.getAnchorView().getWidth());
+                        }
+                        else {
+                            this.mPopup.setWidth(this.mDropDownWidth);
+                        }
+                    }
+                    if (this.mDropDownHeight == ViewGroup.LayoutParams.MATCH_PARENT) {
+                        heightSpec = ViewGroup.LayoutParams.MATCH_PARENT;
+                    }
+                    else {
+                        if (this.mDropDownHeight == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                            this.mPopup.setHeight(height);
+                        }
+                        else {
+                            this.mPopup.setHeight(this.mDropDownHeight);
+                        }
+                    }
+                    this.mPopup.setWindowLayoutMode(widthSpec, heightSpec);
+                    this.mPopup.setClipToScreenEnabled(true);
+                    this.mPopup.setOutsideTouchable(!this.mForceIgnoreOutsideTouch && !this.mDropDownAlwaysVisible);
+                    this.mPopup.setTouchInterceptor(this.mTouchInterceptor);
+                    this.mPopup.showAsDropDown(this.getAnchorView(), this.mDropDownHorizontalOffset, this.mDropDownVerticalOffset, this.mDropDownGravity);
+                    this.mDropDownList.setSelection(ListView.INVALID_POSITION);
+                    if (!this.mModal || this.mDropDownList.isInTouchMode()) {
+                        this.clearListSelection();
+                    }
+                    if (!this.mModal) {
+                        this.mHandler.post(this.mHideSelector);
+                    }
+                }
+            }
+            dismiss() {
+                this.mPopup.dismiss();
+                this.removePromptView();
+                this.mPopup.setContentView(null);
+                this.mDropDownList = null;
+                this.mHandler.removeCallbacks(this.mResizePopupRunnable);
+            }
+            setOnDismissListener(listener) {
+                this.mPopup.setOnDismissListener(listener);
+            }
+            removePromptView() {
+                if (this.mPromptView != null) {
+                    const parent = this.mPromptView.getParent();
+                    if (parent instanceof ViewGroup) {
+                        const group = parent;
+                        group.removeView(this.mPromptView);
+                    }
+                }
+            }
+            setInputMethodMode(mode) {
+                this.mPopup.setInputMethodMode(mode);
+            }
+            getInputMethodMode() {
+                return this.mPopup.getInputMethodMode();
+            }
+            setSelection(position) {
+                let list = this.mDropDownList;
+                if (this.isShowing() && list != null) {
+                    list.mListSelectionHidden = false;
+                    list.setSelection(position);
+                    if (list.getChoiceMode() != ListView.CHOICE_MODE_NONE) {
+                        list.setItemChecked(position, true);
+                    }
+                }
+            }
+            clearListSelection() {
+                const list = this.mDropDownList;
+                if (list != null) {
+                    list.mListSelectionHidden = true;
+                    list.hideSelector();
+                    list.requestLayout();
+                }
+            }
+            isShowing() {
+                return this.mPopup.isShowing();
+            }
+            isInputMethodNotNeeded() {
+                return this.mPopup.getInputMethodMode() == ListPopupWindow.INPUT_METHOD_NOT_NEEDED;
+            }
+            performItemClick(position) {
+                if (this.isShowing()) {
+                    if (this.mItemClickListener != null) {
+                        const list = this.mDropDownList;
+                        const child = list.getChildAt(position - list.getFirstVisiblePosition());
+                        const adapter = list.getAdapter();
+                        this.mItemClickListener.onItemClick(list, child, position, adapter.getItemId(position));
+                    }
+                    return true;
+                }
+                return false;
+            }
+            getSelectedItem() {
+                if (!this.isShowing()) {
+                    return null;
+                }
+                return this.mDropDownList.getSelectedItem();
+            }
+            getSelectedItemPosition() {
+                if (!this.isShowing()) {
+                    return ListView.INVALID_POSITION;
+                }
+                return this.mDropDownList.getSelectedItemPosition();
+            }
+            getSelectedItemId() {
+                if (!this.isShowing()) {
+                    return ListView.INVALID_ROW_ID;
+                }
+                return this.mDropDownList.getSelectedItemId();
+            }
+            getSelectedView() {
+                if (!this.isShowing()) {
+                    return null;
+                }
+                return this.mDropDownList.getSelectedView();
+            }
+            getListView() {
+                return this.mDropDownList;
+            }
+            setListItemExpandMax(max) {
+                this.mListItemExpandMaximum = max;
+            }
+            onKeyDown(keyCode, event) {
+                if (this.isShowing()) {
+                    if (keyCode != KeyEvent.KEYCODE_SPACE && (this.mDropDownList.getSelectedItemPosition() >= 0 || !KeyEvent.isConfirmKey(keyCode))) {
+                        let curIndex = this.mDropDownList.getSelectedItemPosition();
+                        let consumed;
+                        const below = !this.mPopup.isAboveAnchor();
+                        const adapter = this.mAdapter;
+                        let allEnabled;
+                        let firstItem = Integer.MAX_VALUE;
+                        let lastItem = Integer.MIN_VALUE;
+                        if (adapter != null) {
+                            allEnabled = adapter.areAllItemsEnabled();
+                            firstItem = allEnabled ? 0 : this.mDropDownList.lookForSelectablePosition(0, true);
+                            lastItem = allEnabled ? adapter.getCount() - 1 : this.mDropDownList.lookForSelectablePosition(adapter.getCount() - 1, false);
+                        }
+                        if ((below && keyCode == KeyEvent.KEYCODE_DPAD_UP && curIndex <= firstItem) || (!below && keyCode == KeyEvent.KEYCODE_DPAD_DOWN && curIndex >= lastItem)) {
+                            this.clearListSelection();
+                            this.mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
+                            this.show();
+                            return true;
+                        }
+                        else {
+                            this.mDropDownList.mListSelectionHidden = false;
+                        }
+                        consumed = this.mDropDownList.onKeyDown(keyCode, event);
+                        if (ListPopupWindow.DEBUG)
+                            Log.v(ListPopupWindow.TAG, "Key down: code=" + keyCode + " list consumed=" + consumed);
+                        if (consumed) {
+                            this.mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+                            this.mDropDownList.requestFocusFromTouch();
+                            this.show();
+                            switch (keyCode) {
+                                case KeyEvent.KEYCODE_ENTER:
+                                case KeyEvent.KEYCODE_DPAD_CENTER:
+                                case KeyEvent.KEYCODE_DPAD_DOWN:
+                                case KeyEvent.KEYCODE_DPAD_UP:
+                                    return true;
+                            }
+                        }
+                        else {
+                            if (below && keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                                if (curIndex == lastItem) {
+                                    return true;
+                                }
+                            }
+                            else if (!below && keyCode == KeyEvent.KEYCODE_DPAD_UP && curIndex == firstItem) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            onKeyUp(keyCode, event) {
+                if (this.isShowing() && this.mDropDownList.getSelectedItemPosition() >= 0) {
+                    let consumed = this.mDropDownList.onKeyUp(keyCode, event);
+                    if (consumed && KeyEvent.isConfirmKey(keyCode)) {
+                        this.dismiss();
+                    }
+                    return consumed;
+                }
+                return false;
+            }
+            onKeyPreIme(keyCode, event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK && this.isShowing()) {
+                    const anchorView = this.mDropDownAnchorView;
+                    if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                        let state = anchorView.getKeyDispatcherState();
+                        if (state != null) {
+                            state.startTracking(event, this);
+                        }
+                        return true;
+                    }
+                    else if (event.getAction() == KeyEvent.ACTION_UP) {
+                        let state = anchorView.getKeyDispatcherState();
+                        if (state != null) {
+                            state.handleUpEvent(event);
+                        }
+                        if (event.isTracking() && !event.isCanceled()) {
+                            this.dismiss();
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            createDragToOpenListener(src) {
+                return (() => {
+                    const _this = this;
+                    class _Inner extends ListPopupWindow.ForwardingListener {
+                        getPopup() {
+                            return _this;
+                        }
+                    }
+                    return new _Inner(src);
+                })();
+            }
+            buildDropDown() {
+                let dropDownView;
+                let otherHeights = 0;
+                if (this.mDropDownList == null) {
+                    let context = this.mContext;
+                    this.mShowDropDownRunnable = (() => {
+                        const _this = this;
+                        class _Inner {
+                            run() {
+                                let view = _this.getAnchorView();
+                                if (view != null && view.isAttachedToWindow()) {
+                                    _this.show();
+                                }
+                            }
+                        }
+                        return new _Inner();
+                    })();
+                    this.mDropDownList = new ListPopupWindow.DropDownListView(context, !this.mModal);
+                    if (this.mDropDownListHighlight != null) {
+                        this.mDropDownList.setSelector(this.mDropDownListHighlight);
+                    }
+                    this.mDropDownList.setAdapter(this.mAdapter);
+                    this.mDropDownList.setOnItemClickListener(this.mItemClickListener);
+                    this.mDropDownList.setFocusable(true);
+                    this.mDropDownList.setFocusableInTouchMode(true);
+                    this.mDropDownList.setOnItemSelectedListener((() => {
+                        const _this = this;
+                        class _Inner {
+                            onItemSelected(parent, view, position, id) {
+                                if (position != -1) {
+                                    let dropDownList = _this.mDropDownList;
+                                    if (dropDownList != null) {
+                                        dropDownList.mListSelectionHidden = false;
+                                    }
+                                }
+                            }
+                            onNothingSelected(parent) {
+                            }
+                        }
+                        return new _Inner();
+                    })());
+                    this.mDropDownList.setOnScrollListener(this.mScrollListener);
+                    if (this.mItemSelectedListener != null) {
+                        this.mDropDownList.setOnItemSelectedListener(this.mItemSelectedListener);
+                    }
+                    dropDownView = this.mDropDownList;
+                    let hintView = this.mPromptView;
+                    if (hintView != null) {
+                        let hintContainer = new LinearLayout(context);
+                        hintContainer.setOrientation(LinearLayout.VERTICAL);
+                        let hintParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1.0);
+                        switch (this.mPromptPosition) {
+                            case ListPopupWindow.POSITION_PROMPT_BELOW:
+                                hintContainer.addView(dropDownView, hintParams);
+                                hintContainer.addView(hintView);
+                                break;
+                            case ListPopupWindow.POSITION_PROMPT_ABOVE:
+                                hintContainer.addView(hintView);
+                                hintContainer.addView(dropDownView, hintParams);
+                                break;
+                            default:
+                                Log.e(ListPopupWindow.TAG, "Invalid hint position " + this.mPromptPosition);
+                                break;
+                        }
+                        let widthSpec = MeasureSpec.makeMeasureSpec(this.mDropDownWidth, MeasureSpec.AT_MOST);
+                        let heightSpec = MeasureSpec.UNSPECIFIED;
+                        hintView.measure(widthSpec, heightSpec);
+                        hintParams = hintView.getLayoutParams();
+                        otherHeights = hintView.getMeasuredHeight() + hintParams.topMargin + hintParams.bottomMargin;
+                        dropDownView = hintContainer;
+                    }
+                    this.mPopup.setContentView(dropDownView);
+                }
+                else {
+                    dropDownView = this.mPopup.getContentView();
+                    const view = this.mPromptView;
+                    if (view != null) {
+                        let hintParams = view.getLayoutParams();
+                        otherHeights = view.getMeasuredHeight() + hintParams.topMargin + hintParams.bottomMargin;
+                    }
+                }
+                let padding = 0;
+                let background = this.mPopup.getBackground();
+                if (background != null) {
+                    background.getPadding(this.mTempRect);
+                    padding = this.mTempRect.top + this.mTempRect.bottom;
+                    if (!this.mDropDownVerticalOffsetSet) {
+                        this.mDropDownVerticalOffset = -this.mTempRect.top;
+                    }
+                }
+                else {
+                    this.mTempRect.setEmpty();
+                }
+                let ignoreBottomDecorations = this.mPopup.getInputMethodMode() == PopupWindow.INPUT_METHOD_NOT_NEEDED;
+                const maxHeight = this.mPopup.getMaxAvailableHeight(this.getAnchorView(), this.mDropDownVerticalOffset, ignoreBottomDecorations);
+                if (this.mDropDownAlwaysVisible || this.mDropDownHeight == ViewGroup.LayoutParams.MATCH_PARENT) {
+                    return maxHeight + padding;
+                }
+                let childWidthSpec;
+                switch (this.mDropDownWidth) {
+                    case ViewGroup.LayoutParams.WRAP_CONTENT:
+                        childWidthSpec = MeasureSpec.makeMeasureSpec(this.mContext.getResources().getDisplayMetrics().widthPixels - (this.mTempRect.left + this.mTempRect.right), MeasureSpec.AT_MOST);
+                        break;
+                    case ViewGroup.LayoutParams.MATCH_PARENT:
+                        childWidthSpec = MeasureSpec.makeMeasureSpec(this.mContext.getResources().getDisplayMetrics().widthPixels - (this.mTempRect.left + this.mTempRect.right), MeasureSpec.EXACTLY);
+                        break;
+                    default:
+                        childWidthSpec = MeasureSpec.makeMeasureSpec(this.mDropDownWidth, MeasureSpec.EXACTLY);
+                        break;
+                }
+                const listContent = this.mDropDownList.measureHeightOfChildren(childWidthSpec, 0, ListView.NO_POSITION, maxHeight - otherHeights, -1);
+                if (listContent > 0)
+                    otherHeights += padding;
+                return listContent + otherHeights;
+            }
+        }
+        ListPopupWindow.TAG = "ListPopupWindow";
+        ListPopupWindow.DEBUG = false;
+        ListPopupWindow.EXPAND_LIST_TIMEOUT = 250;
+        ListPopupWindow.POSITION_PROMPT_ABOVE = 0;
+        ListPopupWindow.POSITION_PROMPT_BELOW = 1;
+        ListPopupWindow.MATCH_PARENT = ViewGroup.LayoutParams.MATCH_PARENT;
+        ListPopupWindow.WRAP_CONTENT = ViewGroup.LayoutParams.WRAP_CONTENT;
+        ListPopupWindow.INPUT_METHOD_FROM_FOCUSABLE = PopupWindow.INPUT_METHOD_FROM_FOCUSABLE;
+        ListPopupWindow.INPUT_METHOD_NEEDED = PopupWindow.INPUT_METHOD_NEEDED;
+        ListPopupWindow.INPUT_METHOD_NOT_NEEDED = PopupWindow.INPUT_METHOD_NOT_NEEDED;
+        widget.ListPopupWindow = ListPopupWindow;
+        (function (ListPopupWindow) {
+            class ForwardingListener {
+                constructor(src) {
+                    this.mScaledTouchSlop = 0;
+                    this.mTapTimeout = 0;
+                    this.mActivePointerId = 0;
+                    this.mSrc = src;
+                    this.mScaledTouchSlop = ViewConfiguration.get(src.getContext()).getScaledTouchSlop();
+                    this.mTapTimeout = ViewConfiguration.getTapTimeout();
+                    src.addOnAttachStateChangeListener(this);
+                }
+                onTouch(v, event) {
+                    const wasForwarding = this.mForwarding;
+                    let forwarding;
+                    if (wasForwarding) {
+                        forwarding = this.onTouchForwarded(event) || !this.onForwardingStopped();
+                    }
+                    else {
+                        forwarding = this.onTouchObserved(event) && this.onForwardingStarted();
+                    }
+                    this.mForwarding = forwarding;
+                    return forwarding || wasForwarding;
+                }
+                onViewAttachedToWindow(v) {
+                }
+                onViewDetachedFromWindow(v) {
+                    this.mForwarding = false;
+                    this.mActivePointerId = MotionEvent.INVALID_POINTER_ID;
+                    if (this.mDisallowIntercept != null) {
+                        this.mSrc.removeCallbacks(this.mDisallowIntercept);
+                    }
+                }
+                onForwardingStarted() {
+                    const popup = this.getPopup();
+                    if (popup != null && !popup.isShowing()) {
+                        popup.show();
+                    }
+                    return true;
+                }
+                onForwardingStopped() {
+                    const popup = this.getPopup();
+                    if (popup != null && popup.isShowing()) {
+                        popup.dismiss();
+                    }
+                    return true;
+                }
+                onTouchObserved(srcEvent) {
+                    const src = this.mSrc;
+                    if (!src.isEnabled()) {
+                        return false;
+                    }
+                    const actionMasked = srcEvent.getActionMasked();
+                    switch (actionMasked) {
+                        case MotionEvent.ACTION_DOWN:
+                            this.mActivePointerId = srcEvent.getPointerId(0);
+                            if (this.mDisallowIntercept == null) {
+                                this.mDisallowIntercept = new ForwardingListener.DisallowIntercept(this);
+                            }
+                            src.postDelayed(this.mDisallowIntercept, this.mTapTimeout);
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            const activePointerIndex = srcEvent.findPointerIndex(this.mActivePointerId);
+                            if (activePointerIndex >= 0) {
+                                const x = srcEvent.getX(activePointerIndex);
+                                const y = srcEvent.getY(activePointerIndex);
+                                if (!src.pointInView(x, y, this.mScaledTouchSlop)) {
+                                    if (this.mDisallowIntercept != null) {
+                                        src.removeCallbacks(this.mDisallowIntercept);
+                                    }
+                                    src.getParent().requestDisallowInterceptTouchEvent(true);
+                                    return true;
+                                }
+                            }
+                            break;
+                        case MotionEvent.ACTION_CANCEL:
+                        case MotionEvent.ACTION_UP:
+                            if (this.mDisallowIntercept != null) {
+                                src.removeCallbacks(this.mDisallowIntercept);
+                            }
+                            break;
+                    }
+                    return false;
+                }
+                onTouchForwarded(srcEvent) {
+                    return false;
+                }
+            }
+            ListPopupWindow.ForwardingListener = ForwardingListener;
+            (function (ForwardingListener) {
+                class DisallowIntercept {
+                    constructor(arg) {
+                        this._ForwardingListener_this = arg;
+                    }
+                    run() {
+                        const parent = this._ForwardingListener_this.mSrc.getParent();
+                        parent.requestDisallowInterceptTouchEvent(true);
+                    }
+                }
+                ForwardingListener.DisallowIntercept = DisallowIntercept;
+            })(ForwardingListener = ListPopupWindow.ForwardingListener || (ListPopupWindow.ForwardingListener = {}));
+            class DropDownListView extends ListView {
+                constructor(context, hijackFocus) {
+                    super(context, null, android.R.attr.dropDownListViewStyle);
+                    this.mHijackFocus = hijackFocus;
+                    this.setCacheColorHint(0);
+                }
+                onForwardedEvent(event, activePointerId) {
+                    let handledEvent = true;
+                    let clearPressedItem = false;
+                    const actionMasked = event.getActionMasked();
+                    switch (actionMasked) {
+                        case MotionEvent.ACTION_CANCEL:
+                            handledEvent = false;
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            handledEvent = false;
+                        case MotionEvent.ACTION_MOVE:
+                            const activeIndex = event.findPointerIndex(activePointerId);
+                            if (activeIndex < 0) {
+                                handledEvent = false;
+                                break;
+                            }
+                            const x = Math.floor(event.getX(activeIndex));
+                            const y = Math.floor(event.getY(activeIndex));
+                            const position = this.pointToPosition(x, y);
+                            if (position == DropDownListView.INVALID_POSITION) {
+                                clearPressedItem = true;
+                                break;
+                            }
+                            const child = this.getChildAt(position - this.getFirstVisiblePosition());
+                            this.setPressedItem(child, position);
+                            handledEvent = true;
+                            if (actionMasked == MotionEvent.ACTION_UP) {
+                                this.clickPressedItem(child, position);
+                            }
+                            break;
+                    }
+                    if (!handledEvent || clearPressedItem) {
+                        this.clearPressedItem();
+                    }
+                    return handledEvent;
+                }
+                clickPressedItem(child, position) {
+                    const id = this.getItemIdAtPosition(position);
+                    this.performItemClick(child, position, id);
+                }
+                clearPressedItem() {
+                    this.mDrawsInPressedState = false;
+                    this.setPressed(false);
+                    this.updateSelectorState();
+                }
+                setPressedItem(child, position) {
+                    this.mDrawsInPressedState = true;
+                    this.setPressed(true);
+                    this.layoutChildren();
+                    this.setSelectedPositionInt(position);
+                    this.positionSelector(position, child);
+                    this.refreshDrawableState();
+                }
+                touchModeDrawsInPressedState() {
+                    return this.mDrawsInPressedState || super.touchModeDrawsInPressedState();
+                }
+                obtainView(position, isScrap) {
+                    let view = super.obtainView(position, isScrap);
+                    if (view instanceof TextView) {
+                        view.setHorizontallyScrolling(true);
+                    }
+                    return view;
+                }
+                isInTouchMode() {
+                    return (this.mHijackFocus && this.mListSelectionHidden) || super.isInTouchMode();
+                }
+                hasWindowFocus() {
+                    return this.mHijackFocus || super.hasWindowFocus();
+                }
+                isFocused() {
+                    return this.mHijackFocus || super.isFocused();
+                }
+                hasFocus() {
+                    return this.mHijackFocus || super.hasFocus();
+                }
+            }
+            DropDownListView.CLICK_ANIM_DURATION = 150;
+            DropDownListView.CLICK_ANIM_ALPHA = 0x80;
+            ListPopupWindow.DropDownListView = DropDownListView;
+            class PopupDataSetObserver extends DataSetObserver {
+                constructor(arg) {
+                    super();
+                    this._ListPopupWindow_this = arg;
+                }
+                onChanged() {
+                    if (this._ListPopupWindow_this.isShowing()) {
+                        this._ListPopupWindow_this.show();
+                    }
+                }
+                onInvalidated() {
+                    this._ListPopupWindow_this.dismiss();
+                }
+            }
+            ListPopupWindow.PopupDataSetObserver = PopupDataSetObserver;
+            class ListSelectorHider {
+                constructor(arg) {
+                    this._ListPopupWindow_this = arg;
+                }
+                run() {
+                    this._ListPopupWindow_this.clearListSelection();
+                }
+            }
+            ListPopupWindow.ListSelectorHider = ListSelectorHider;
+            class ResizePopupRunnable {
+                constructor(arg) {
+                    this._ListPopupWindow_this = arg;
+                }
+                run() {
+                    if (this._ListPopupWindow_this.mDropDownList != null && this._ListPopupWindow_this.mDropDownList.getCount() > this._ListPopupWindow_this.mDropDownList.getChildCount() && this._ListPopupWindow_this.mDropDownList.getChildCount() <= this._ListPopupWindow_this.mListItemExpandMaximum) {
+                        this._ListPopupWindow_this.mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+                        this._ListPopupWindow_this.show();
+                    }
+                }
+            }
+            ListPopupWindow.ResizePopupRunnable = ResizePopupRunnable;
+            class PopupTouchInterceptor {
+                constructor(arg) {
+                    this._ListPopupWindow_this = arg;
+                }
+                onTouch(v, event) {
+                    const action = event.getAction();
+                    const x = Math.floor(event.getX());
+                    const y = Math.floor(event.getY());
+                    if (action == MotionEvent.ACTION_DOWN && this._ListPopupWindow_this.mPopup != null && this._ListPopupWindow_this.mPopup.isShowing() && (x >= 0 && x < this._ListPopupWindow_this.mPopup.getWidth() && y >= 0 && y < this._ListPopupWindow_this.mPopup.getHeight())) {
+                        this._ListPopupWindow_this.mHandler.postDelayed(this._ListPopupWindow_this.mResizePopupRunnable, ListPopupWindow.EXPAND_LIST_TIMEOUT);
+                    }
+                    else if (action == MotionEvent.ACTION_UP) {
+                        this._ListPopupWindow_this.mHandler.removeCallbacks(this._ListPopupWindow_this.mResizePopupRunnable);
+                    }
+                    return false;
+                }
+            }
+            ListPopupWindow.PopupTouchInterceptor = PopupTouchInterceptor;
+            class PopupScrollListener {
+                constructor(arg) {
+                    this._ListPopupWindow_this = arg;
+                }
+                onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount) {
+                }
+                onScrollStateChanged(view, scrollState) {
+                    if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL
+                        && !this._ListPopupWindow_this.isInputMethodNotNeeded() && this._ListPopupWindow_this.mPopup.getContentView() != null) {
+                        this._ListPopupWindow_this.mHandler.removeCallbacks(this._ListPopupWindow_this.mResizePopupRunnable);
+                        this._ListPopupWindow_this.mResizePopupRunnable.run();
+                    }
+                }
+            }
+            ListPopupWindow.PopupScrollListener = PopupScrollListener;
+        })(ListPopupWindow = widget.ListPopupWindow || (widget.ListPopupWindow = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/app/AlertDialog.ts"/>
+///<reference path="../../android/content/DialogInterface.ts"/>
+///<reference path="../../android/database/DataSetObserver.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/util/Log.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/MotionEvent.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/view/ViewTreeObserver.ts"/>
+///<reference path="../../android/widget/AbsSpinner.ts"/>
+///<reference path="../../android/widget/Adapter.ts"/>
+///<reference path="../../android/widget/AdapterView.ts"/>
+///<reference path="../../android/widget/ListAdapter.ts"/>
+///<reference path="../../android/widget/ListPopupWindow.ts"/>
+///<reference path="../../android/widget/ListView.ts"/>
+///<reference path="../../android/widget/PopupWindow.ts"/>
+///<reference path="../../android/widget/SpinnerAdapter.ts"/>
+///<reference path="../../android/content/Context.ts"/>
+///<reference path="../../android/R/attr.ts"/>
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var AlertDialog = android.app.AlertDialog;
+        var Rect = android.graphics.Rect;
+        var Log = android.util.Log;
+        var Gravity = android.view.Gravity;
+        var ViewGroup = android.view.ViewGroup;
+        var ForwardingListener = android.widget.ListPopupWindow.ForwardingListener;
+        var AbsSpinner = android.widget.AbsSpinner;
+        var ListAdapter = android.widget.ListAdapter;
+        var ListPopupWindow = android.widget.ListPopupWindow;
+        var ListView = android.widget.ListView;
+        var R = android.R;
+        class Spinner extends AbsSpinner {
+            constructor(context, bindElement, defStyle = R.attr.spinnerStyle, mode = Spinner.MODE_THEME) {
+                super(context, bindElement, null);
+                this.mDropDownWidth = 0;
+                this.mGravity = 0;
+                this.mTempRect = new Rect();
+                let a = this._attrBinder;
+                if (mode == Spinner.MODE_THEME) {
+                    mode = Spinner.MODE_DROPDOWN;
+                }
+                switch (mode) {
+                    case Spinner.MODE_DIALOG:
+                        {
+                            this.mPopup = new Spinner.DialogPopup(this);
+                            break;
+                        }
+                    case Spinner.MODE_DROPDOWN:
+                        {
+                            const popup = new Spinner.DropdownPopup(context, defStyle, this);
+                            a.addAttr('dropDownWidth', (value) => {
+                                this.mDropDownWidth = a.parseNumber(value, ViewGroup.LayoutParams.WRAP_CONTENT);
+                            });
+                            a.addAttr('popupBackground', (value) => {
+                                popup.setBackgroundDrawable(a.parseDrawable(value));
+                            });
+                            a.addAttr('dropDownVerticalOffset', (value) => {
+                                const verticalOffset = a.parseNumber(value, 0);
+                                if (verticalOffset != 0) {
+                                    popup.setVerticalOffset(verticalOffset);
+                                }
+                            });
+                            a.addAttr('dropDownHorizontalOffset', (value) => {
+                                const horizontalOffset = a.parseNumber(value, 0);
+                                if (horizontalOffset != 0) {
+                                    popup.setHorizontalOffset(horizontalOffset);
+                                }
+                            });
+                            this.mPopup = popup;
+                            this.mForwardingListener = (() => {
+                                const _this = this;
+                                class _Inner extends ForwardingListener {
+                                    getPopup() {
+                                        return popup;
+                                    }
+                                    onForwardingStarted() {
+                                        if (!_this.mPopup.isShowing()) {
+                                            _this.mPopup.showPopup(_this.getTextDirection(), _this.getTextAlignment());
+                                        }
+                                        return true;
+                                    }
+                                }
+                                return new _Inner(this);
+                            })();
+                            break;
+                        }
+                }
+                a.addAttr('gravity', (value) => {
+                    this.mGravity = a.parseNumber(value, Gravity.CENTER);
+                });
+                a.addAttr('prompt', (value) => {
+                    this.mGravity = a.parseNumber(value, Gravity.CENTER);
+                    this.mPopup.setPromptText(a.parseString(value));
+                });
+                a.addAttr('disableChildrenWhenDisabled', (value) => {
+                    this.mDisableChildrenWhenDisabled = a.parseBoolean(value, false);
+                });
+                if (defStyle != null)
+                    this.applyDefaultAttributes(defStyle);
+                if (this.mTempAdapter != null) {
+                    this.mPopup.setAdapter(this.mTempAdapter);
+                    this.mTempAdapter = null;
+                }
+            }
+            setPopupBackgroundDrawable(background) {
+                if (!(this.mPopup instanceof Spinner.DropdownPopup)) {
+                    Log.e(Spinner.TAG, "setPopupBackgroundDrawable: incompatible spinner mode; ignoring...");
+                    return;
+                }
+                this.mPopup.setBackgroundDrawable(background);
+            }
+            getPopupBackground() {
+                return this.mPopup.getBackground();
+            }
+            setDropDownVerticalOffset(pixels) {
+                this.mPopup.setVerticalOffset(pixels);
+            }
+            getDropDownVerticalOffset() {
+                return this.mPopup.getVerticalOffset();
+            }
+            setDropDownHorizontalOffset(pixels) {
+                this.mPopup.setHorizontalOffset(pixels);
+            }
+            getDropDownHorizontalOffset() {
+                return this.mPopup.getHorizontalOffset();
+            }
+            setDropDownWidth(pixels) {
+                if (!(this.mPopup instanceof Spinner.DropdownPopup)) {
+                    Log.e(Spinner.TAG, "Cannot set dropdown width for MODE_DIALOG, ignoring");
+                    return;
+                }
+                this.mDropDownWidth = pixels;
+            }
+            getDropDownWidth() {
+                return this.mDropDownWidth;
+            }
+            setEnabled(enabled) {
+                super.setEnabled(enabled);
+                if (this.mDisableChildrenWhenDisabled) {
+                    const count = this.getChildCount();
+                    for (let i = 0; i < count; i++) {
+                        this.getChildAt(i).setEnabled(enabled);
+                    }
+                }
+            }
+            setGravity(gravity) {
+                if (this.mGravity != gravity) {
+                    if ((gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == 0) {
+                        gravity |= Gravity.START;
+                    }
+                    this.mGravity = gravity;
+                    this.requestLayout();
+                }
+            }
+            getGravity() {
+                return this.mGravity;
+            }
+            setAdapter(adapter) {
+                super.setAdapter(adapter);
+                this.mRecycler.clear();
+                if (this.mPopup != null) {
+                    this.mPopup.setAdapter(new Spinner.DropDownAdapter(adapter));
+                }
+                else {
+                    this.mTempAdapter = new Spinner.DropDownAdapter(adapter);
+                }
+            }
+            getBaseline() {
+                let child = null;
+                if (this.getChildCount() > 0) {
+                    child = this.getChildAt(0);
+                }
+                else if (this.mAdapter != null && this.mAdapter.getCount() > 0) {
+                    child = this.makeView(0, false);
+                    this.mRecycler.put(0, child);
+                }
+                if (child != null) {
+                    const childBaseline = child.getBaseline();
+                    return childBaseline >= 0 ? child.getTop() + childBaseline : -1;
+                }
+                else {
+                    return -1;
+                }
+            }
+            onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                if (this.mPopup != null && this.mPopup.isShowing()) {
+                    this.mPopup.dismiss();
+                }
+            }
+            setOnItemClickListener(l) {
+                throw Error(`new RuntimeException("setOnItemClickListener cannot be used with a spinner.")`);
+            }
+            setOnItemClickListenerInt(l) {
+                super.setOnItemClickListener(l);
+            }
+            onTouchEvent(event) {
+                if (this.mForwardingListener != null && this.mForwardingListener.onTouch(this, event)) {
+                    return true;
+                }
+                return super.onTouchEvent(event);
+            }
+            onMeasure(widthMeasureSpec, heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                if (this.mPopup != null && Spinner.MeasureSpec.getMode(widthMeasureSpec) == Spinner.MeasureSpec.AT_MOST) {
+                    const measuredWidth = this.getMeasuredWidth();
+                    this.setMeasuredDimension(Math.min(Math.max(measuredWidth, this.measureContentWidth(this.getAdapter(), this.getBackground())), Spinner.MeasureSpec.getSize(widthMeasureSpec)), this.getMeasuredHeight());
+                }
+            }
+            onLayout(changed, l, t, r, b) {
+                super.onLayout(changed, l, t, r, b);
+                this.mInLayout = true;
+                this.layoutSpinner(0, false);
+                this.mInLayout = false;
+            }
+            layoutSpinner(delta, animate) {
+                let childrenLeft = this.mSpinnerPadding.left;
+                let childrenWidth = this.mRight - this.mLeft - this.mSpinnerPadding.left - this.mSpinnerPadding.right;
+                if (this.mDataChanged) {
+                    this.handleDataChanged();
+                }
+                if (this.mItemCount == 0) {
+                    this.resetList();
+                    return;
+                }
+                if (this.mNextSelectedPosition >= 0) {
+                    this.setSelectedPositionInt(this.mNextSelectedPosition);
+                }
+                this.recycleAllViews();
+                this.removeAllViewsInLayout();
+                this.mFirstPosition = this.mSelectedPosition;
+                if (this.mAdapter != null) {
+                    let sel = this.makeView(this.mSelectedPosition, true);
+                    let width = sel.getMeasuredWidth();
+                    let selectedOffset = childrenLeft;
+                    const layoutDirection = this.getLayoutDirection();
+                    const absoluteGravity = Gravity.getAbsoluteGravity(this.mGravity, layoutDirection);
+                    switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                        case Gravity.CENTER_HORIZONTAL:
+                            selectedOffset = childrenLeft + (childrenWidth / 2) - (width / 2);
+                            break;
+                        case Gravity.RIGHT:
+                            selectedOffset = childrenLeft + childrenWidth - width;
+                            break;
+                    }
+                    sel.offsetLeftAndRight(selectedOffset);
+                }
+                this.mRecycler.clear();
+                this.invalidate();
+                this.checkSelectionChanged();
+                this.mDataChanged = false;
+                this.mNeedSync = false;
+                this.setNextSelectedPositionInt(this.mSelectedPosition);
+            }
+            makeView(position, addChild) {
+                let child;
+                if (!this.mDataChanged) {
+                    child = this.mRecycler.get(position);
+                    if (child != null) {
+                        this.setUpChild(child, addChild);
+                        return child;
+                    }
+                }
+                child = this.mAdapter.getView(position, null, this);
+                this.setUpChild(child, addChild);
+                return child;
+            }
+            setUpChild(child, addChild) {
+                let lp = child.getLayoutParams();
+                if (lp == null) {
+                    lp = this.generateDefaultLayoutParams();
+                }
+                if (addChild) {
+                    this.addViewInLayout(child, 0, lp);
+                }
+                child.setSelected(this.hasFocus());
+                if (this.mDisableChildrenWhenDisabled) {
+                    child.setEnabled(this.isEnabled());
+                }
+                let childHeightSpec = ViewGroup.getChildMeasureSpec(this.mHeightMeasureSpec, this.mSpinnerPadding.top + this.mSpinnerPadding.bottom, lp.height);
+                let childWidthSpec = ViewGroup.getChildMeasureSpec(this.mWidthMeasureSpec, this.mSpinnerPadding.left + this.mSpinnerPadding.right, lp.width);
+                child.measure(childWidthSpec, childHeightSpec);
+                let childLeft;
+                let childRight;
+                let childTop = this.mSpinnerPadding.top + ((this.getMeasuredHeight() - this.mSpinnerPadding.bottom - this.mSpinnerPadding.top - child.getMeasuredHeight()) / 2);
+                let childBottom = childTop + child.getMeasuredHeight();
+                let width = child.getMeasuredWidth();
+                childLeft = 0;
+                childRight = childLeft + width;
+                child.layout(childLeft, childTop, childRight, childBottom);
+            }
+            performClick() {
+                let handled = super.performClick();
+                if (!handled) {
+                    handled = true;
+                    if (!this.mPopup.isShowing()) {
+                        this.mPopup.showPopup(this.getTextDirection(), this.getTextAlignment());
+                    }
+                }
+                return handled;
+            }
+            onClick(dialog, which) {
+                this.setSelection(which);
+                dialog.dismiss();
+            }
+            setPrompt(prompt) {
+                this.mPopup.setPromptText(prompt);
+            }
+            getPrompt() {
+                return this.mPopup.getHintText();
+            }
+            measureContentWidth(adapter, background) {
+                if (adapter == null) {
+                    return 0;
+                }
+                let width = 0;
+                let itemView = null;
+                let itemType = 0;
+                const widthMeasureSpec = Spinner.MeasureSpec.makeMeasureSpec(0, Spinner.MeasureSpec.UNSPECIFIED);
+                const heightMeasureSpec = Spinner.MeasureSpec.makeMeasureSpec(0, Spinner.MeasureSpec.UNSPECIFIED);
+                let start = Math.max(0, this.getSelectedItemPosition());
+                const end = Math.min(adapter.getCount(), start + Spinner.MAX_ITEMS_MEASURED);
+                const count = end - start;
+                start = Math.max(0, start - (Spinner.MAX_ITEMS_MEASURED - count));
+                for (let i = start; i < end; i++) {
+                    const positionType = adapter.getItemViewType(i);
+                    if (positionType != itemType) {
+                        itemType = positionType;
+                        itemView = null;
+                    }
+                    itemView = adapter.getView(i, itemView, this);
+                    if (itemView.getLayoutParams() == null) {
+                        itemView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    }
+                    itemView.measure(widthMeasureSpec, heightMeasureSpec);
+                    width = Math.max(width, itemView.getMeasuredWidth());
+                }
+                if (background != null) {
+                    background.getPadding(this.mTempRect);
+                    width += this.mTempRect.left + this.mTempRect.right;
+                }
+                return width;
+            }
+        }
+        Spinner.TAG = "Spinner";
+        Spinner.MAX_ITEMS_MEASURED = 15;
+        Spinner.MODE_DIALOG = 0;
+        Spinner.MODE_DROPDOWN = 1;
+        Spinner.MODE_THEME = -1;
+        widget.Spinner = Spinner;
+        (function (Spinner) {
+            class DropDownAdapter {
+                constructor(adapter) {
+                    this.mAdapter = adapter;
+                    if (ListAdapter.isImpl(adapter)) {
+                        this.mListAdapter = adapter;
+                    }
+                }
+                getCount() {
+                    return this.mAdapter == null ? 0 : this.mAdapter.getCount();
+                }
+                getItem(position) {
+                    return this.mAdapter == null ? null : this.mAdapter.getItem(position);
+                }
+                getItemId(position) {
+                    return this.mAdapter == null ? -1 : this.mAdapter.getItemId(position);
+                }
+                getView(position, convertView, parent) {
+                    return this.getDropDownView(position, convertView, parent);
+                }
+                getDropDownView(position, convertView, parent) {
+                    return (this.mAdapter == null) ? null : this.mAdapter.getDropDownView(position, convertView, parent);
+                }
+                hasStableIds() {
+                    return this.mAdapter != null && this.mAdapter.hasStableIds();
+                }
+                registerDataSetObserver(observer) {
+                    if (this.mAdapter != null) {
+                        this.mAdapter.registerDataSetObserver(observer);
+                    }
+                }
+                unregisterDataSetObserver(observer) {
+                    if (this.mAdapter != null) {
+                        this.mAdapter.unregisterDataSetObserver(observer);
+                    }
+                }
+                areAllItemsEnabled() {
+                    const adapter = this.mListAdapter;
+                    if (adapter != null) {
+                        return adapter.areAllItemsEnabled();
+                    }
+                    else {
+                        return true;
+                    }
+                }
+                isEnabled(position) {
+                    const adapter = this.mListAdapter;
+                    if (adapter != null) {
+                        return adapter.isEnabled(position);
+                    }
+                    else {
+                        return true;
+                    }
+                }
+                getItemViewType(position) {
+                    return 0;
+                }
+                getViewTypeCount() {
+                    return 1;
+                }
+                isEmpty() {
+                    return this.getCount() == 0;
+                }
+            }
+            Spinner.DropDownAdapter = DropDownAdapter;
+            class DialogPopup {
+                constructor(arg) {
+                    this._Spinner_this = arg;
+                }
+                dismiss() {
+                    this.mPopup.dismiss();
+                    this.mPopup = null;
+                }
+                isShowing() {
+                    return this.mPopup != null ? this.mPopup.isShowing() : false;
+                }
+                setAdapter(adapter) {
+                    this.mListAdapter = adapter;
+                }
+                setPromptText(hintText) {
+                    this.mPrompt = hintText;
+                }
+                getHintText() {
+                    return this.mPrompt;
+                }
+                showPopup(textDirection, textAlignment) {
+                    if (this.mListAdapter == null) {
+                        return;
+                    }
+                    let builder = new AlertDialog.Builder(this._Spinner_this.getContext());
+                    if (this.mPrompt != null) {
+                        builder.setTitle(this.mPrompt);
+                    }
+                    this.mPopup = builder.setSingleChoiceItemsWithAdapter(this.mListAdapter, this._Spinner_this.getSelectedItemPosition(), this).create();
+                    const listView = this.mPopup.getListView();
+                    listView.setTextDirection(textDirection);
+                    listView.setTextAlignment(textAlignment);
+                    this.mPopup.show();
+                }
+                onClick(dialog, which) {
+                    this._Spinner_this.setSelection(which);
+                    if (this._Spinner_this.mOnItemClickListener != null) {
+                        this._Spinner_this.performItemClick(null, which, this.mListAdapter.getItemId(which));
+                    }
+                    this.dismiss();
+                }
+                setBackgroundDrawable(bg) {
+                    Log.e(Spinner.TAG, "Cannot set popup background for MODE_DIALOG, ignoring");
+                }
+                setVerticalOffset(px) {
+                    Log.e(Spinner.TAG, "Cannot set vertical offset for MODE_DIALOG, ignoring");
+                }
+                setHorizontalOffset(px) {
+                    Log.e(Spinner.TAG, "Cannot set horizontal offset for MODE_DIALOG, ignoring");
+                }
+                getBackground() {
+                    return null;
+                }
+                getVerticalOffset() {
+                    return 0;
+                }
+                getHorizontalOffset() {
+                    return 0;
+                }
+            }
+            Spinner.DialogPopup = DialogPopup;
+            class DropdownPopup extends ListPopupWindow {
+                constructor(context, defStyleRes, arg) {
+                    super(context, defStyleRes);
+                    this._Spinner_this = arg;
+                    this.setAnchorView(this._Spinner_this);
+                    this.setModal(true);
+                    this.setPromptPosition(DropdownPopup.POSITION_PROMPT_ABOVE);
+                    this.setOnItemClickListener((() => {
+                        const _this = this;
+                        class _Inner {
+                            onItemClick(parent, v, position, id) {
+                                _this._Spinner_this.setSelection(position);
+                                if (_this._Spinner_this.mOnItemClickListener != null) {
+                                    _this._Spinner_this.performItemClick(v, position, _this.mAdapter.getItemId(position));
+                                }
+                                _this.dismiss();
+                            }
+                        }
+                        return new _Inner();
+                    })());
+                }
+                setAdapter(adapter) {
+                    super.setAdapter(adapter);
+                }
+                getHintText() {
+                    return this.mHintText;
+                }
+                setPromptText(hintText) {
+                    this.mHintText = hintText;
+                }
+                computeContentWidth() {
+                    const background = this.getBackground();
+                    let hOffset = 0;
+                    if (background != null) {
+                        background.getPadding(this._Spinner_this.mTempRect);
+                        hOffset = this._Spinner_this.isLayoutRtl() ? this._Spinner_this.mTempRect.right : -this._Spinner_this.mTempRect.left;
+                    }
+                    else {
+                        this._Spinner_this.mTempRect.left = this._Spinner_this.mTempRect.right = 0;
+                    }
+                    const spinnerPaddingLeft = this._Spinner_this.getPaddingLeft();
+                    const spinnerPaddingRight = this._Spinner_this.getPaddingRight();
+                    const spinnerWidth = this._Spinner_this.getWidth();
+                    if (this._Spinner_this.mDropDownWidth == DropdownPopup.WRAP_CONTENT) {
+                        let contentWidth = this._Spinner_this.measureContentWidth(this.mAdapter, this.getBackground());
+                        const contentWidthLimit = this._Spinner_this.mContext.getResources().getDisplayMetrics().widthPixels - this._Spinner_this.mTempRect.left - this._Spinner_this.mTempRect.right;
+                        if (contentWidth > contentWidthLimit) {
+                            contentWidth = contentWidthLimit;
+                        }
+                        this.setContentWidth(Math.max(contentWidth, spinnerWidth - spinnerPaddingLeft - spinnerPaddingRight));
+                    }
+                    else if (this._Spinner_this.mDropDownWidth == DropdownPopup.MATCH_PARENT) {
+                        this.setContentWidth(spinnerWidth - spinnerPaddingLeft - spinnerPaddingRight);
+                    }
+                    else {
+                        this.setContentWidth(this._Spinner_this.mDropDownWidth);
+                    }
+                    if (this._Spinner_this.isLayoutRtl()) {
+                        hOffset += spinnerWidth - spinnerPaddingRight - this.getWidth();
+                    }
+                    else {
+                        hOffset += spinnerPaddingLeft;
+                    }
+                    this.setHorizontalOffset(hOffset);
+                }
+                showPopup(textDirection, textAlignment) {
+                    const wasShowing = this.isShowing();
+                    this.computeContentWidth();
+                    this.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
+                    super.show();
+                    const listView = this.getListView();
+                    listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+                    listView.setTextDirection(textDirection);
+                    listView.setTextAlignment(textAlignment);
+                    this.setSelection(this._Spinner_this.getSelectedItemPosition());
+                    if (wasShowing) {
+                        return;
+                    }
+                    const vto = this._Spinner_this.getViewTreeObserver();
+                    if (vto != null) {
+                        const layoutListener = (() => {
+                            const _this = this;
+                            class _Inner {
+                                onGlobalLayout() {
+                                    if (!_this._Spinner_this.isVisibleToUser()) {
+                                        _this.dismiss();
+                                    }
+                                    else {
+                                        _this.computeContentWidth();
+                                        _this.show();
+                                    }
+                                }
+                            }
+                            return new _Inner();
+                        })();
+                        vto.addOnGlobalLayoutListener(layoutListener);
+                        this.setOnDismissListener((() => {
+                            const _this = this;
+                            class _Inner {
+                                onDismiss() {
+                                    const vto = _this._Spinner_this.getViewTreeObserver();
+                                    if (vto != null) {
+                                        vto.removeOnGlobalLayoutListener(layoutListener);
+                                    }
+                                }
+                            }
+                            return new _Inner();
+                        })());
+                    }
+                }
+            }
+            Spinner.DropdownPopup = DropdownPopup;
+        })(Spinner = widget.Spinner || (widget.Spinner = {}));
+    })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project
@@ -57037,11 +59989,14 @@ var androidui;
 ///<reference path="android/widget/CheckBox.ts"/>
 ///<reference path="android/widget/RadioButton.ts"/>
 ///<reference path="android/widget/RadioGroup.ts"/>
+///<reference path="android/widget/CheckedTextView.ts"/>
 ///<reference path="android/widget/SeekBar.ts"/>
 ///<reference path="android/widget/RatingBar.ts"/>
 ///<reference path="android/widget/ExpandableListView.ts"/>
 ///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
 ///<reference path="android/widget/Toast.ts"/>
+///<reference path="android/widget/Spinner.ts"/>
+///<reference path="android/widget/ListPopupWindow.ts"/>
 ///<reference path="android/app/AlertDialog.ts"/>
 ///<reference path="android/view/animation/AlphaAnimation.ts"/>
 ///<reference path="android/view/animation/ScaleAnimation.ts"/>

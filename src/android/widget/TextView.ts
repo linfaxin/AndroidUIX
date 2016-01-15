@@ -673,6 +673,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return this.mSpacingMult;
         });
 
+        this.setTextSize(14);//init size
         if(defStyle) this.applyDefaultAttributes(defStyle);
 
         this.bindElement.innerHTML = this.bindElement.innerHTML.trim();//trim space html

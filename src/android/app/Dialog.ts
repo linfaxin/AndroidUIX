@@ -165,6 +165,7 @@ module android.app {
             this.mWindowManager = (<android.app.Activity>context).getWindowManager();
             let w:Window = new Window(context);
             w.setFloating(true);
+            w.setDimAmount(0.7);
             w.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             this.mWindow = w;
 
@@ -173,6 +174,7 @@ module android.app {
             decor.setMinimumWidth(dm.density * 300);
             decor.setMinimumHeight(dm.density * 20);
             let wp = w.getAttributes();
+            wp.flags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
             wp.height = wp.width = ViewGroup.LayoutParams.WRAP_CONTENT;
             wp.leftMargin = wp.rightMargin = wp.topMargin = wp.bottomMargin = dm.density * 16;
             w.setWindowAnimations(android.R.anim.dialog_enter, android.R.anim.dialog_exit, null, null);

@@ -8,6 +8,8 @@ module sample.app {
     import AlertDialog = android.app.AlertDialog;
     import NetDrawable = androidui.image.NetDrawable;
     import Toast = android.widget.Toast;
+    import TextView = android.widget.TextView;
+    import PopupWindow = android.widget.PopupWindow;
     import R = sample.app.R;
 
     export class SampleBaseWidgetActivity extends Activity {
@@ -31,6 +33,18 @@ module sample.app {
                         //.setCancelable(false)
                         .setNegativeButton(android.R.string_.cancel, null)
                         .show();
+                }
+            });
+
+            let popupContent = new TextView(this);
+            popupContent.setGravity(android.view.Gravity.CENTER);
+            popupContent.setText('PopupWindow');
+            popupContent.setBackgroundColor(0xffcccccc);
+            let popWindow = new PopupWindow(popupContent, -2, 40 * this.getResources().getDisplayMetrics().density, true);
+            let btnShowPopup = this.findViewById('btn_show_popup');
+            btnShowPopup.setOnClickListener({
+                onClick(view:android.view.View){
+                    popWindow.showAsDropDown(view);
                 }
             });
         }

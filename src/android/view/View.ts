@@ -617,6 +617,115 @@ module android.view {
         static LAYOUT_DIRECTION_LOCALE:number = LayoutDirection.LOCALE;
 
 
+        /**
+         * Text direction is inherited thru {@link ViewGroup}
+         */
+        static TEXT_DIRECTION_INHERIT:number = 0;
+
+        /**
+         * Text direction is using "first strong algorithm". The first strong directional character
+         * determines the paragraph direction. If there is no strong directional character, the
+         * paragraph direction is the view's resolved layout direction.
+         */
+        static TEXT_DIRECTION_FIRST_STRONG:number = 1;
+
+        /**
+         * Text direction is using "any-RTL" algorithm. The paragraph direction is RTL if it contains
+         * any strong RTL character, otherwise it is LTR if it contains any strong LTR characters.
+         * If there are neither, the paragraph direction is the view's resolved layout direction.
+         */
+        static TEXT_DIRECTION_ANY_RTL:number = 2;
+
+        /**
+         * Text direction is forced to LTR.
+         */
+        static TEXT_DIRECTION_LTR:number = 3;
+
+        /**
+         * Text direction is forced to RTL.
+         */
+        static TEXT_DIRECTION_RTL:number = 4;
+
+        /**
+         * Text direction is coming from the system Locale.
+         */
+        static TEXT_DIRECTION_LOCALE:number = 5;
+
+        /**
+         * Default text direction is inherited
+         */
+        private static TEXT_DIRECTION_DEFAULT:number = View.TEXT_DIRECTION_INHERIT;
+
+        /**
+         * Default resolved text direction
+         * @hide
+         */
+        static TEXT_DIRECTION_RESOLVED_DEFAULT:number = View.TEXT_DIRECTION_FIRST_STRONG;
+
+
+        /*
+         * Default text alignment. The text alignment of this View is inherited from its parent.
+         * Use with {@link #setTextAlignment(int)}
+         */
+        static TEXT_ALIGNMENT_INHERIT:number = 0;
+
+        /**
+         * Default for the root view. The gravity determines the text alignment, ALIGN_NORMAL,
+         * ALIGN_CENTER, or ALIGN_OPPOSITE, which are relative to each paragraph’s text direction.
+         *
+         * Use with {@link #setTextAlignment(int)}
+         */
+        static TEXT_ALIGNMENT_GRAVITY:number = 1;
+
+        /**
+         * Align to the start of the paragraph, e.g. ALIGN_NORMAL.
+         *
+         * Use with {@link #setTextAlignment(int)}
+         */
+        static TEXT_ALIGNMENT_TEXT_START:number = 2;
+
+        /**
+         * Align to the end of the paragraph, e.g. ALIGN_OPPOSITE.
+         *
+         * Use with {@link #setTextAlignment(int)}
+         */
+        static TEXT_ALIGNMENT_TEXT_END:number = 3;
+
+        /**
+         * Center the paragraph, e.g. ALIGN_CENTER.
+         *
+         * Use with {@link #setTextAlignment(int)}
+         */
+        static TEXT_ALIGNMENT_CENTER:number = 4;
+
+        /**
+         * Align to the start of the view, which is ALIGN_LEFT if the view’s resolved
+         * layoutDirection is LTR, and ALIGN_RIGHT otherwise.
+         *
+         * Use with {@link #setTextAlignment(int)}
+         */
+        static TEXT_ALIGNMENT_VIEW_START:number = 5;
+
+        /**
+         * Align to the end of the view, which is ALIGN_RIGHT if the view’s resolved
+         * layoutDirection is LTR, and ALIGN_LEFT otherwise.
+         *
+         * Use with {@link #setTextAlignment(int)}
+         */
+        static TEXT_ALIGNMENT_VIEW_END:number = 6;
+
+        /**
+         * Default text alignment is inherited
+         */
+        private static TEXT_ALIGNMENT_DEFAULT:number = View.TEXT_ALIGNMENT_GRAVITY;
+
+        /**
+         * Default resolved text alignment
+         * @hide
+         */
+        static TEXT_ALIGNMENT_RESOLVED_DEFAULT:number = View.TEXT_ALIGNMENT_GRAVITY;
+
+
         get mID():string{
             if(this.bindElement){
                 let id = this.bindElement.id;
@@ -2507,6 +2616,47 @@ module android.view {
             }
         }
 
+        /**
+         * Request that a rectangle of this view be visible on the screen,
+         * scrolling if necessary just enough.
+         *
+         * <p>A View should call this if it maintains some notion of which part
+         * of its content is interesting.  For example, a text editing view
+         * should call this when its cursor moves.
+         *
+         * <p>When <code>immediate</code> is set to true, scrolling will not be
+         * animated.
+         *
+         * @param rectangle The rectangle.
+         * @param immediate True to forbid animated scrolling, false otherwise
+         * @return Whether any parent scrolled.
+         */
+        requestRectangleOnScreen(rectangle:Rect, immediate=false):boolean  {
+            if (this.mParent == null) {
+                return false;
+            }
+            let child:View = this;
+            let position:RectF = (this.mAttachInfo != null) ? this.mAttachInfo.mTmpTransformRect : new RectF();
+            position.set(rectangle);
+            let parent:ViewParent = this.mParent;
+            let scrolled:boolean = false;
+            while (parent != null) {
+                rectangle.set(Math.floor(position.left), Math.floor(position.top), Math.floor(position.right), Math.floor(position.bottom));
+                scrolled = parent.requestChildRectangleOnScreen(child, rectangle, immediate) || scrolled;
+                if (!child.hasIdentityMatrix()) {
+                    child.getMatrix().mapRect(position);
+                }
+                position.offset(child.mLeft, child.mTop);
+                if (!(parent instanceof View)) {
+                    break;
+                }
+                let parentView:View = <View><any>parent;
+                position.offset(-parentView.getScrollX(), -parentView.getScrollY());
+                child = parentView;
+                parent = child.getParent();
+            }
+            return scrolled;
+        }
         onFocusLost() {
             this.resetPressedState();
         }
@@ -3516,6 +3666,49 @@ module android.view {
             return (this.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL);
         }
 
+        /**
+         * Return the resolved text direction.
+         *
+         * @return the resolved text direction. Returns one of:
+         *
+         * {@link #TEXT_DIRECTION_FIRST_STRONG}
+         * {@link #TEXT_DIRECTION_ANY_RTL},
+         * {@link #TEXT_DIRECTION_LTR},
+         * {@link #TEXT_DIRECTION_RTL},
+         * {@link #TEXT_DIRECTION_LOCALE}
+         *
+         * @attr ref android.R.styleable#View_textDirection
+         */
+        getTextDirection():number  {
+            return View.TEXT_DIRECTION_LTR;
+            //(this.mPrivateFlags2 & View.PFLAG2_TEXT_DIRECTION_RESOLVED_MASK) >> View.PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT;
+        }
+        setTextDirection(textDirection:number):void  {
+            //do nothing
+        }
+
+        /**
+         * Return the resolved text alignment.
+         *
+         * @return the resolved text alignment. Returns one of:
+         *
+         * {@link #TEXT_ALIGNMENT_GRAVITY},
+         * {@link #TEXT_ALIGNMENT_CENTER},
+         * {@link #TEXT_ALIGNMENT_TEXT_START},
+         * {@link #TEXT_ALIGNMENT_TEXT_END},
+         * {@link #TEXT_ALIGNMENT_VIEW_START},
+         * {@link #TEXT_ALIGNMENT_VIEW_END}
+         *
+         * @attr ref android.R.styleable#View_textAlignment
+         */
+        getTextAlignment():number  {
+            return View.TEXT_ALIGNMENT_DEFAULT;//(this.mPrivateFlags2 & View.PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK) >> View.PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT;
+        }
+        setTextAlignment(textAlignment:number):void  {
+            //do nothing
+        }
+
+
         getBaseline():number {
             return -1;
         }
@@ -3575,6 +3768,7 @@ module android.view {
             this.mPrivateFlags |= View.PFLAG_FORCE_LAYOUT;
             this.mPrivateFlags |= View.PFLAG_INVALIDATED;
         }
+
         isLaidOut():boolean {
             return (this.mPrivateFlags3 & View.PFLAG3_IS_LAID_OUT) == View.PFLAG3_IS_LAID_OUT;
         }
@@ -3735,6 +3929,147 @@ module android.view {
                     globalOffset.set(-this.mScrollX, -this.mScrollY);
                 }
                 return this.mParent == null || this.mParent.getChildVisibleRect(this, r, globalOffset);
+            }
+            return false;
+        }
+
+        /**
+         * <p>Computes the coordinates of this view on the screen. The argument
+         * must be an array of two integers. After the method returns, the array
+         * contains the x and y location in that order.</p>
+         *
+         * @param location an array of two integers in which to hold the coordinates
+         */
+        getLocationOnScreen(location:number[]):void  {
+            this.getLocationInWindow(location);
+            const info:View.AttachInfo = this.mAttachInfo;
+            //if (info != null) {
+            //    location[0] += info.mWindowLeft;
+            //    location[1] += info.mWindowTop;
+            //}
+        }
+
+        /**
+         * <p>Computes the coordinates of this view in its window. The argument
+         * must be an array of two integers. After the method returns, the array
+         * contains the x and y location in that order.</p>
+         *
+         * @param location an array of two integers in which to hold the coordinates
+         */
+        getLocationInWindow(location:number[]):void  {
+            if (location == null || location.length < 2) {
+                throw Error(`new IllegalArgumentException("location must be an array of two integers")`);
+            }
+            if (this.mAttachInfo == null) {
+                // When the view is not attached to a window, this method does not make sense
+                location[0] = location[1] = 0;
+                return;
+            }
+            let position:number[] = this.mAttachInfo.mTmpTransformLocation;
+            position[0] = position[1] = 0.0;
+            if (!this.hasIdentityMatrix()) {
+                this.getMatrix().mapPoints(position);
+            }
+            position[0] += this.mLeft;
+            position[1] += this.mTop;
+            let viewParent:ViewParent = this.mParent;
+            while (viewParent instanceof View) {
+                const view:View = <View><any>viewParent;
+                position[0] -= view.mScrollX;
+                position[1] -= view.mScrollY;
+                if (!view.hasIdentityMatrix()) {
+                    view.getMatrix().mapPoints(position);
+                }
+                position[0] += view.mLeft;
+                position[1] += view.mTop;
+                viewParent = view.mParent;
+            }
+            //if (viewParent instanceof ViewRootImpl) {
+            //    // *cough*
+            //    const vr:ViewRootImpl = <ViewRootImpl> viewParent;
+            //    position[1] -= vr.mCurScrollY;
+            //}
+            location[0] = Math.floor((position[0] + 0.5));
+            location[1] = Math.floor((position[1] + 0.5));
+        }
+
+        /**
+         * Retrieve the overall visible display size in which the window this view is
+         * attached to has been positioned in.  This takes into account screen
+         * decorations above the window, for both cases where the window itself
+         * is being position inside of them or the window is being placed under
+         * then and covered insets are used for the window to position its content
+         * inside.  In effect, this tells you the available area where content can
+         * be placed and remain visible to users.
+         *
+         * <p>This function requires an IPC back to the window manager to retrieve
+         * the requested information, so should not be used in performance critical
+         * code like drawing.
+         *
+         * @param outRect Filled in with the visible display frame.  If the view
+         * is not attached to a window, this is simply the raw display size.
+         */
+        getWindowVisibleDisplayFrame(outRect:Rect):void  {
+            if (this.mAttachInfo != null) {
+                let rootView = this.mAttachInfo.mRootView;
+                let xy = [0, 0];
+                rootView.getLocationOnScreen(xy);
+                outRect.set(xy[0], xy[1], rootView.getWidth()+xy[0], rootView.getHeight()+xy[1]);
+                return;
+            }
+
+            // The view is not attached to a display so we don't have a context.
+            // Make a best guess about the display size.
+            let dm = Resources.getSystem().getDisplayMetrics();
+            outRect.set(0, 0, dm.widthPixels, dm.heightPixels);
+        }
+
+        /**
+         * Computes whether the given portion of this view is visible to the user.
+         * Such a view is attached, visible, all its predecessors are visible,
+         * has an alpha greater than zero, and the specified portion is not
+         * clipped entirely by its predecessors.
+         *
+         * @param boundInView the portion of the view to test; coordinates should be relative; may be
+         *                    <code>null</code>, and the entire view will be tested in this case.
+         *                    When <code>true</code> is returned by the function, the actual visible
+         *                    region will be stored in this parameter; that is, if boundInView is fully
+         *                    contained within the view, no modification will be made, otherwise regions
+         *                    outside of the visible area of the view will be clipped.
+         *
+         * @return Whether the specified portion of the view is visible on the screen.
+         *
+         * @hide
+         */
+        protected isVisibleToUser(boundInView:Rect = null):boolean  {
+            if (this.mAttachInfo != null) {
+                // Attached to invisible window means this view is not visible.
+                if (this.mAttachInfo.mWindowVisibility != View.VISIBLE) {
+                    return false;
+                }
+                // An invisible predecessor or one with alpha zero means
+                // that this view is not visible to the user.
+                let current:any = this;
+                while (current instanceof View) {
+                    let view:View = <View> current;
+                    // need to check whether we reach to ViewRootImpl on the way up.
+                    if (view.getAlpha() <= 0 || view.getTransitionAlpha() <= 0 || view.getVisibility() != View.VISIBLE) {
+                        return false;
+                    }
+                    current = view.mParent;
+                }
+                // Check if the view is entirely covered by its predecessors.
+                let visibleRect:Rect = this.mAttachInfo.mTmpInvalRect;
+                let offset:Point = this.mAttachInfo.mPoint;
+                if (!this.getGlobalVisibleRect(visibleRect, offset)) {
+                    return false;
+                }
+                // Check if the visible portion intersects the rectangle of interest.
+                if (boundInView != null) {
+                    visibleRect.offset(-offset.x, -offset.y);
+                    return boundInView.intersect(visibleRect);
+                }
+                return true;
             }
             return false;
         }
@@ -6343,6 +6678,7 @@ module android.view {
             mHandler : Handler;
             mTmpInvalRect = new Rect();
             mTmpTransformRect = new Rect();
+            mPoint:Point = new Point();
             /**
              * Temporary for use in transforming invalidation rect
              */

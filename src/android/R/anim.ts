@@ -158,5 +158,90 @@ module android.R {
             return alpha;
         }
 
+        static get grow_fade_in():Animation {
+            let animSet = new AnimationSet();
+            let alpha = new AlphaAnimation(0, 1);
+            alpha.setDuration(150);
+            alpha.setInterpolator(R.interpolator.decelerate_cubic);
+
+            let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0);
+            scale.setDuration(220);
+            scale.setInterpolator(R.interpolator.decelerate_quint);
+
+            animSet.addAnimation(scale);
+            animSet.addAnimation(alpha);
+            return animSet;
+        }
+        static get grow_fade_in_center():Animation {
+            let animSet = new AnimationSet();
+            let alpha = new AlphaAnimation(0, 1);
+            alpha.setDuration(150);
+            alpha.setInterpolator(R.interpolator.decelerate_cubic);
+
+            let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
+            scale.setDuration(220);
+            scale.setInterpolator(R.interpolator.decelerate_quint);
+
+            animSet.addAnimation(scale);
+            animSet.addAnimation(alpha);
+            return animSet;
+        }
+        static get grow_fade_in_from_bottom():Animation {
+            let animSet = new AnimationSet();
+            let alpha = new AlphaAnimation(0, 1);
+            alpha.setDuration(150);
+            alpha.setInterpolator(R.interpolator.decelerate_cubic);
+
+            let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 1);
+            scale.setDuration(220);
+            scale.setInterpolator(R.interpolator.decelerate_quint);
+
+            animSet.addAnimation(scale);
+            animSet.addAnimation(alpha);
+            return animSet;
+        }
+        static get shrink_fade_out():Animation {
+            let animSet = new AnimationSet();
+            let alpha = new AlphaAnimation(1, 0);
+            alpha.setDuration(150);
+            alpha.setInterpolator(R.interpolator.decelerate_cubic);
+
+            let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0);
+            scale.setDuration(220);
+            scale.setInterpolator(R.interpolator.decelerate_quint);
+
+            animSet.addAnimation(scale);
+            animSet.addAnimation(alpha);
+            return animSet;
+        }
+        static get shrink_fade_out_center():Animation {
+            let animSet = new AnimationSet();
+            let alpha = new AlphaAnimation(1, 0);
+            alpha.setDuration(150);
+            alpha.setInterpolator(R.interpolator.decelerate_cubic);
+
+            let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
+            scale.setDuration(220);
+            scale.setInterpolator(R.interpolator.decelerate_quint);
+
+            animSet.addAnimation(scale);
+            animSet.addAnimation(alpha);
+            return animSet;
+        }
+        static get shrink_fade_out_from_bottom():Animation {
+            let animSet = new AnimationSet();
+            let alpha = new AlphaAnimation(1, 0);
+            alpha.setDuration(150);
+            alpha.setInterpolator(R.interpolator.decelerate_cubic);
+
+            let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 1);
+            scale.setDuration(220);
+            scale.setInterpolator(R.interpolator.decelerate_quint);
+
+            animSet.addAnimation(scale);
+            animSet.addAnimation(alpha);
+            return animSet;
+        }
+
     }
 }

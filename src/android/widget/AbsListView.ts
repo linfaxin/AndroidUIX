@@ -2029,7 +2029,7 @@ module android.widget {
          * @return True if the current touch mode requires that we draw the selector in the pressed
          *         state.
          */
-        private touchModeDrawsInPressedState():boolean {
+        touchModeDrawsInPressedState():boolean {
             // FIXME use isPressed for this
             switch (this.mTouchMode) {
                 case AbsListView.TOUCH_MODE_TAP:

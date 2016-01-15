@@ -213,5 +213,30 @@ module androidui.attr {
             }
         }
 
+        parseString(value, defaultValue?:string):string{
+            if(typeof value === 'string'){
+                if(value.startsWith('@')){
+                    return Resources.getSystem().getString(value);
+                }
+                return value;
+            }
+            return defaultValue;
+        }
+
+        parseTextArray(value):string[] {
+            value += '';
+            if(value.startsWith('@')){
+                return Resources.getSystem().getTextArray(value);
+
+            }else{
+                try {
+                    let json = JSON.parse(value);
+                    if(json instanceof Array) return json;
+                } catch (e) {
+                }
+            }
+            return null;
+        }
+
     }
 }

@@ -1425,6 +1425,8 @@ module android.app{
             this.mWindow = new Window(this);
             this.mWindow.setWindowAnimations(android.R.anim.activity_open_enter_ios, android.R.anim.activity_close_exit_ios,
                 android.R.anim.activity_close_enter_ios, android.R.anim.activity_open_exit_ios);
+            this.mWindow.setDimAmount(0.7);
+            this.mWindow.getAttributes().flags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
         }
 
 
