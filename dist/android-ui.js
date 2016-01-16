@@ -15471,6 +15471,44 @@ var android;
         app.ActivityThread = ActivityThread;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        class string_ {
+            static zh() {
+                this.ok = '确定';
+                this.cancel = '取消';
+                this.crash_catch_alert = '程序发生错误, 即将重载网页:';
+                this.prll_header_state_normal = '下拉以刷新';
+                this.prll_header_state_ready = '松开马上刷新';
+                this.prll_header_state_loading = '正在刷新...';
+                this.prll_header_state_fail = '刷新失败';
+                this.prll_footer_state_normal = '点击加载更多';
+                this.prll_footer_state_loading = '正在加载...';
+                this.prll_footer_state_ready = '松开加载更多';
+                this.prll_footer_state_no_more = '加载完毕';
+                this.prll_footer_state_fail = '加载失败,点击重试';
+            }
+        }
+        string_.ok = 'OK';
+        string_.cancel = 'Cancel';
+        string_.crash_catch_alert = 'Some error happen, will refresh page:';
+        string_.prll_header_state_normal = 'Pull to refresh';
+        string_.prll_header_state_ready = 'Release to refresh';
+        string_.prll_header_state_loading = 'Loading';
+        string_.prll_header_state_fail = 'Refresh fail';
+        string_.prll_footer_state_normal = 'Load more';
+        string_.prll_footer_state_loading = 'Loading';
+        string_.prll_footer_state_ready = 'Pull to load more';
+        string_.prll_footer_state_fail = 'Click to reload';
+        string_.prll_footer_state_no_more = 'Load Finish';
+        R.string_ = string_;
+        const lang = navigator.language.split('-')[0].toLowerCase();
+        if (typeof string_[lang] === 'function')
+            string_[lang].call(string_);
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/23.
  */
@@ -15483,6 +15521,7 @@ var android;
 ///<reference path="../android/view/KeyEvent.ts"/>
 ///<reference path="../android/view/WindowManager.ts"/>
 ///<reference path="../android/app/ActivityThread.ts"/>
+///<reference path="../android/R/string.ts"/>
 ///<reference path="AndroidUIElement.ts"/>
 var androidui;
 (function (androidui) {
@@ -15530,6 +15569,7 @@ var androidui;
             this.initBrowserVisibleChange();
             this.initLaunchActivity();
             this.initAndroidUIElement();
+            this.initGlobalCrashHandle();
         }
         initApplication() {
             this.mApplication = new android.app.Application(this);
@@ -15554,6 +15594,13 @@ var androidui;
                     console.warn('load activity fail: ' + activityName);
                 }
             }
+        }
+        initGlobalCrashHandle() {
+            window.onerror = (sMsg, sUrl, sLine) => {
+                if (window.confirm(android.R.string_.crash_catch_alert + '\n' + sMsg)) {
+                    window.location.reload();
+                }
+            };
         }
         refreshWindowBound() {
             let rootViewBound = this.androidUIElement.getBoundingClientRect();
@@ -29329,42 +29376,6 @@ var android;
             Adapter.NO_SELECTION = Integer.MIN_VALUE;
         })(Adapter = widget.Adapter || (widget.Adapter = {}));
     })(widget = android.widget || (android.widget = {}));
-})(android || (android = {}));
-var android;
-(function (android) {
-    var R;
-    (function (R) {
-        class string_ {
-            static zh() {
-                this.ok = '确定';
-                this.cancel = '取消';
-                this.prll_header_state_normal = '下拉以刷新';
-                this.prll_header_state_ready = '松开马上刷新';
-                this.prll_header_state_loading = '正在刷新...';
-                this.prll_header_state_fail = '刷新失败';
-                this.prll_footer_state_normal = '点击加载更多';
-                this.prll_footer_state_loading = '正在加载...';
-                this.prll_footer_state_ready = '松开加载更多';
-                this.prll_footer_state_no_more = '加载完毕';
-                this.prll_footer_state_fail = '加载失败,点击重试';
-            }
-        }
-        string_.ok = 'OK';
-        string_.cancel = 'Cancel';
-        string_.prll_header_state_normal = 'Pull to refresh';
-        string_.prll_header_state_ready = 'Release to refresh';
-        string_.prll_header_state_loading = 'Loading';
-        string_.prll_header_state_fail = 'Refresh fail';
-        string_.prll_footer_state_normal = 'Load more';
-        string_.prll_footer_state_loading = 'Loading';
-        string_.prll_footer_state_ready = 'Pull to load more';
-        string_.prll_footer_state_fail = 'Click to reload';
-        string_.prll_footer_state_no_more = 'Load Finish';
-        R.string_ = string_;
-        const lang = navigator.language.split('-')[0].toLowerCase();
-        if (typeof string_[lang] === 'function')
-            string_[lang].call(string_);
-    })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 /*
  * Copyright (C) 2006 The Android Open Source Project

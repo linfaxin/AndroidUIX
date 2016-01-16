@@ -3290,6 +3290,23 @@ declare module android.app {
         private static getActivityName(activity);
     }
 }
+declare module android.R {
+    class string_ {
+        static ok: string;
+        static cancel: string;
+        static crash_catch_alert: string;
+        static prll_header_state_normal: string;
+        static prll_header_state_ready: string;
+        static prll_header_state_loading: string;
+        static prll_header_state_fail: string;
+        static prll_footer_state_normal: string;
+        static prll_footer_state_loading: string;
+        static prll_footer_state_ready: string;
+        static prll_footer_state_fail: string;
+        static prll_footer_state_no_more: string;
+        static zh(): void;
+    }
+}
 declare module androidui {
     class AndroidUI {
         static DomClassName: string;
@@ -3311,6 +3328,7 @@ declare module androidui {
         private init();
         private initApplication();
         private initLaunchActivity();
+        private initGlobalCrashHandle();
         private refreshWindowBound();
         private initAndroidUIElement();
         private initEvent();
@@ -5609,22 +5627,6 @@ declare module android.widget {
     module Adapter {
         var IGNORE_ITEM_VIEW_TYPE: number;
         var NO_SELECTION: number;
-    }
-}
-declare module android.R {
-    class string_ {
-        static ok: string;
-        static cancel: string;
-        static prll_header_state_normal: string;
-        static prll_header_state_ready: string;
-        static prll_header_state_loading: string;
-        static prll_header_state_fail: string;
-        static prll_footer_state_normal: string;
-        static prll_footer_state_loading: string;
-        static prll_footer_state_ready: string;
-        static prll_footer_state_fail: string;
-        static prll_footer_state_no_more: string;
-        static zh(): void;
     }
 }
 declare module android.text {

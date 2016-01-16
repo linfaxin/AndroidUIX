@@ -10,6 +10,7 @@
 ///<reference path="../android/view/KeyEvent.ts"/>
 ///<reference path="../android/view/WindowManager.ts"/>
 ///<reference path="../android/app/ActivityThread.ts"/>
+///<reference path="../android/R/string.ts"/>
 ///<reference path="AndroidUIElement.ts"/>
 
 /**
@@ -86,6 +87,8 @@ module androidui {
             this.initLaunchActivity();
 
             this.initAndroidUIElement();
+
+            this.initGlobalCrashHandle();
         }
 
         private initApplication() {
@@ -117,8 +120,15 @@ module androidui {
                     console.warn('load activity fail: ' + activityName);
                 }
             }
+        }
 
-
+        private initGlobalCrashHandle(){
+            window.onerror = (sMsg,sUrl,sLine)=>{
+                if(window.confirm(android.R.string_.crash_catch_alert+'\n'+sMsg)){
+                    //reload will clear console's log.
+                    window.location.reload();
+                }
+            }
         }
 
 
