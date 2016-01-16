@@ -15,14 +15,14 @@ module sample.app {
             let btn_click:Button = <Button>this.findViewById('btn_click');
             btn_click.setOnClickListener({
                 onClick(v:View){
-                    btn_click.setText('点击:'+new Date().getTime()+'');
+                    btn_click.setText('Click:'+new Date().getTime()+'');
                 }
             });
 
             let btn_long_click:Button = <Button>this.findViewById('btn_long_click');
             btn_long_click.setOnLongClickListener({
                 onLongClick(v:View){
-                    btn_long_click.setText('长按:'+new Date().getTime()+'');
+                    btn_long_click.setText('LongClick:'+new Date().getTime()+'');
                     return true;
                 }
             });

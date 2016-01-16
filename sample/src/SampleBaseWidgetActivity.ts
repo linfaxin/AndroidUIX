@@ -22,11 +22,11 @@ module sample.app {
             btnOpenDialog.setOnClickListener({
                 onClick(view:android.view.View){
                     new AlertDialog.Builder(view.getContext())
-                        .setTitle('标题')
-                        .setMessage('内容内容\n*支持后退按钮关闭对话框:)')
+                        .setTitle('Title')
+                        .setMessage('ContentContent')
                         .setPositiveButton(android.R.string_.ok, {
                             onClick(dialog:android.content.DialogInterface, which:number):void{
-                                Toast.makeText(activity, '按下确定', Toast.LENGTH_SHORT).show();
+                                Toast.makeText(activity, android.R.string_.ok, Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setIcon(R.image.icon_alert)

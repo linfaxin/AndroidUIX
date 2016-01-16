@@ -81,7 +81,7 @@ module sample.app {
             const activity = this;
 
             let btn = new Button(this);
-            btn.setText('关闭');
+            btn.setText(android.R.string_.close);
             btn.setOnClickListener({
                 onClick(view:View){
                     activity.finish();

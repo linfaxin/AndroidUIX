@@ -6236,6 +6236,7 @@ module android.view {
             this.bindElement = bindElement || document.createElement(this.tagName());
             this.bindElementOnClickAttr = this.bindElement.getAttribute('onclick');
             this.bindElement.removeAttribute('onclick');//remove avoid when debug layout show, will trigger click twice on safari.
+            if(this.bindElementOnClickAttr) this.setClickable(true);
 
             this.bindElement.style.position = 'absolute';
 

@@ -72,7 +72,7 @@ module sample.app {
             const activity = this;
 
             let btn = new Button(this);
-            btn.setText('关闭 & setResult');
+            btn.setText('Close & setResult');
             btn.setOnClickListener({
                 onClick(view:View){
                     activity.setResult(Activity.RESULT_OK,

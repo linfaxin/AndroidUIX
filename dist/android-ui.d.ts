@@ -3296,6 +3296,7 @@ declare module android.R {
     class string_ {
         static ok: string;
         static cancel: string;
+        static close: string;
         static crash_catch_alert: string;
         static prll_header_state_normal: string;
         static prll_header_state_ready: string;

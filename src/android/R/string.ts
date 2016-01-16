@@ -5,6 +5,7 @@ module android.R{
     export class string_{
         static ok = 'OK';
         static cancel = 'Cancel';
+        static close = 'Close';
         static crash_catch_alert = 'Some error happen, will refresh page:';
 
         static prll_header_state_normal = 'Pull to refresh';
@@ -20,6 +21,7 @@ module android.R{
         static zh(){
             this.ok = '确定';
             this.cancel = '取消';
+            this.close = '关闭';
             this.crash_catch_alert = '程序发生错误, 即将重载网页:';
 
             this.prll_header_state_normal = '下拉以刷新';

@@ -4,34 +4,33 @@
             android:gravity="center">
         <Button
                 android:layout_width="wrap_content">
-            普通-按钮
+            Button
         </Button>
         <Button
                 android:layout_width="wrap_content"
                 android:enabled="false">
-            Disable按钮
+            DisableButton
         </Button>
         <Button id="btn_click">
-            点击没有300msDelay
-        </Button>
-        <Button id="btn_long_click">
-            长按LongClick
+            ButtonClick
         </Button>
         <Button android:layout_width="wrap_content"
-                onclick="this.AndroidView.setText('点击:'+new Date().getTime());">
-            也可以用onclick属性/addEventListener设置监听
+                onclick="this.setText('Click:'+new Date().getTime());">
+            ButtonClick2
         </Button>
-
+        <Button id="btn_long_click">
+            ButtonLongClick
+        </Button>
         <Button
                 android:style="@style/btn_custom1"
                 >
-            引用样式
+            ButtonStyled
         </Button>
         <Button
                 android:style="@style/btn_custom1"
                 android:enabled="false"
                 >
-            引用样式Disable
+            ButtonStyledDisable
         </Button>
         <Button
                 android:padding="8dp"
@@ -40,7 +39,7 @@
                 android:background="#f00"
                 android:state_pressed="@style/btn_custom1/pressed"
                 >
-            引用状态样式
+            ButtonStyled2
         </Button>
         <Button
                 android:padding="8dp"
@@ -49,7 +48,7 @@
                 android:background="#f00"
                 android:state_pressed="background:#f66;"
                 >
-            内联状态样式
+            ButtonStyled3
         </Button>
     </LinearLayout>
 </ScrollView>

@@ -14472,6 +14472,8 @@ var android;
                 this.bindElement = bindElement || document.createElement(this.tagName());
                 this.bindElementOnClickAttr = this.bindElement.getAttribute('onclick');
                 this.bindElement.removeAttribute('onclick');
+                if (this.bindElementOnClickAttr)
+                    this.setClickable(true);
                 this.bindElement.style.position = 'absolute';
                 let oldBindView = this.bindElement[View.AndroidViewProperty];
                 if (oldBindView) {
@@ -15825,6 +15827,7 @@ var android;
             static zh() {
                 this.ok = '确定';
                 this.cancel = '取消';
+                this.close = '关闭';
                 this.crash_catch_alert = '程序发生错误, 即将重载网页:';
                 this.prll_header_state_normal = '下拉以刷新';
                 this.prll_header_state_ready = '松开马上刷新';
@@ -15839,6 +15842,7 @@ var android;
         }
         string_.ok = 'OK';
         string_.cancel = 'Cancel';
+        string_.close = 'Close';
         string_.crash_catch_alert = 'Some error happen, will refresh page:';
         string_.prll_header_state_normal = 'Pull to refresh';
         string_.prll_header_state_ready = 'Release to refresh';
