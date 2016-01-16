@@ -4,22 +4,31 @@ buildImage();
 buildID();
 
 function buildImage(){
-    var path = 'res/image@x3';
+    var path = 'res/image';
     var dirImageData = {};
     var files = fs.readdirSync(path);
     files.forEach(function(fileName){
         var splits = fileName.split('.');
         var name = fileName.split('.')[0];
         var fileSuffixes = splits[splits.length-1];
-        var base64 = fs.readFileSync(path+'/'+fileName, 'base64');
+        var radio = Number.parseInt(name.split('@').pop()[0]);//..@3x
+        if(Number.isInteger(radio)) name = name.substring(0, name.lastIndexOf('@'));
+        else radio = 1;
+
+        var base64Data = fs.readFileSync(path+'/'+fileName, 'base64');
+        var radioArray;
         if(fileSuffixes == 'png'){
-            dirImageData[name] = 'data:image/png;base64,' + base64;
+            radioArray = dirImageData[name] || (dirImageData[name]=[]);
+            radioArray[radio] = 'data:image/png;base64,' + base64Data;
         }else if(fileSuffixes == 'jpg'){
-            dirImageData[name] = 'data:image/jpg;base64,' + base64;
+            radioArray = dirImageData[name] || (dirImageData[name]=[]);
+            radioArray[radio] = 'data:image/jpg;base64,' + base64Data;
         }else if(fileSuffixes == 'gif'){
-            dirImageData[name] = 'data:image/gif;base64,' + base64;
+            radioArray = dirImageData[name] || (dirImageData[name]=[]);
+            radioArray[radio] = 'data:image/gif;base64,' + base64Data;
         }else if(fileSuffixes == 'webp'){
-            dirImageData[name] = 'data:image/webp;base64,' + base64;
+            radioArray = dirImageData[name] || (dirImageData[name]=[]);
+            radioArray[radio] = 'data:image/webp;base64,' + base64Data;
         }
     });
 
@@ -27,16 +36,37 @@ function buildImage(){
     var exportLines = '';
     for(var k of Object.keys(dirImageData)){
         //console.log('export:'+k);
-        exportLines += `
-    export var ${k} = new NetImage(x3.${k}, 3);`;
+        exportLines +=
+`        static get ${k}(){
+            return imageCache.${k} || (imageCache.${k}=findRatioImage(data.${k}));
+        }
+`;
     }
+
 
     var str =
         `///<reference path="../../androidui/image/NetImage.ts"/>
-module android.R.image_base64 {
+module android.R {
     import NetImage = androidui.image.NetImage;
-    var x3 = ${JSON.stringify(dirImageData, null, 8)};
-    ${exportLines}
+
+    //index=ratio, index-0 alway null, index-3 = @x3
+    var data = ${JSON.stringify(dirImageData, null, 8)};
+    var imageCache = {
+        ${Object.keys(dirImageData).join(':null,\n        ')+':null'}
+    };
+
+    function findRatioImage(array:string[]):NetImage {
+        if(array[window.devicePixelRatio]) return new NetImage(array[window.devicePixelRatio], window.devicePixelRatio);
+        for(let i=array.length; i>=0; i--){
+            if(array[i]){
+                return new NetImage(array[i], i);
+            }
+        }
+        throw Error('Not find radio image. May something error in build.')
+    }
+    export class image_base64{
+${exportLines}
+    }
 }`;
 
     fs.writeFile('android/R/image_base64.ts', str, 'utf-8');
