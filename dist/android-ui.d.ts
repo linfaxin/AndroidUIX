@@ -2880,7 +2880,7 @@ declare module android.view {
         getMeasuredHeightAndState(): number;
         getMeasuredState(): number;
         measure(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         setMeasuredDimension(measuredWidth: any, measuredHeight: any): void;
         static combineMeasuredStates(curState: any, newState: any): number;
         static resolveSize(size: any, measureSpec: any): number;

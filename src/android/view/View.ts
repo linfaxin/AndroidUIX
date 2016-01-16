@@ -4135,7 +4135,7 @@ module android.view {
             this.mMeasureCache.set(key, [this.mMeasuredWidth, this.mMeasuredHeight]); // suppress sign extension
         }
 
-        protected onMeasure(widthMeasureSpec, heightMeasureSpec):void {
+        protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void {
             this.setMeasuredDimension(View.getDefaultSize(this.getSuggestedMinimumWidth(), widthMeasureSpec),
                 View.getDefaultSize(this.getSuggestedMinimumHeight(), heightMeasureSpec));
         }

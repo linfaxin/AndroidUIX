@@ -49729,8 +49729,17 @@ var android;
                 this.mWindow = w;
                 let dm = context.getResources().getDisplayMetrics();
                 let decor = w.getDecorView();
-                decor.setMinimumWidth(dm.density * 300);
+                decor.setMinimumWidth(dm.density * 280);
                 decor.setMinimumHeight(dm.density * 20);
+                const onMeasure = decor.onMeasure;
+                decor.onMeasure = (widthMeasureSpec, heightMeasureSpec) => {
+                    onMeasure.call(decor, widthMeasureSpec, heightMeasureSpec);
+                    let width = decor.getMeasuredWidth();
+                    if (width > 320 * dm.density) {
+                        let widthSpec = View.MeasureSpec.makeMeasureSpec(360 * dm.density, View.MeasureSpec.EXACTLY);
+                        onMeasure.call(decor, widthSpec, heightMeasureSpec);
+                    }
+                };
                 let wp = w.getAttributes();
                 wp.flags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
                 wp.height = wp.width = ViewGroup.LayoutParams.WRAP_CONTENT;
