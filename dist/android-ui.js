@@ -24353,7 +24353,8 @@ var android;
                     }
                     return false;
                 }
-                return (cb != null && !this.Window_this.isDestroyed() ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev));
+                cb != null && !this.Window_this.isDestroyed() ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev);
+                return true;
             }
             dispatchGenericMotionEvent(ev) {
                 const cb = this.Window_this.getCallback();

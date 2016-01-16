@@ -1577,7 +1577,8 @@ export interface Callback {
                 return false;
             }
 
-            return (cb != null && !this.Window_this.isDestroyed() /*&& mFeatureId < 0*/ ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev));
+            cb != null && !this.Window_this.isDestroyed() /*&& mFeatureId < 0*/ ? cb.dispatchTouchEvent(ev) : super.dispatchTouchEvent(ev);
+            return true;
         }
 
         dispatchGenericMotionEvent(ev:android.view.MotionEvent):boolean {
