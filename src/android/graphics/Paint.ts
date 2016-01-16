@@ -195,6 +195,7 @@ module android.graphics{
         private mStrokeCap:Paint.Cap;
         private mStrokeJoin:Paint.Join;
         private textSize:number;
+        private textScaleX = 1;
 
         private mFlag = 0;
 
@@ -254,6 +255,7 @@ module android.graphics{
             this.mStrokeCap = paint.mStrokeCap;
             this.mStrokeJoin = paint.mStrokeJoin;
             this.textSize = paint.textSize;
+            this.textScaleX = paint.textScaleX;
             this.mFlag = paint.mFlag;
             this.hasShadow = paint.hasShadow;
             this.shadowDx = paint.shadowDx;
@@ -305,9 +307,10 @@ module android.graphics{
         }
 
         getTextScaleX():number {
-            return 1;
+            return this.textScaleX;
         }
         setTextScaleX(scaleX:number):void {
+            this.textScaleX = scaleX;
         }
 
         getColor():number{
@@ -560,7 +563,7 @@ module android.graphics{
          * @return      The width of the text
          */
         measureText(text:string, index=0, count=text.length):number  {
-            return Canvas.measureText(text.substr(index, count), this.textSize);
+            return Canvas.measureText(text.substr(index, count), this.textSize) * this.textScaleX;
         }
 
         /**
@@ -803,6 +806,10 @@ module android.graphics{
 
             if(this.textSize!=null){
                 canvas.setFontSize(this.textSize);
+            }
+
+            if(this.textScaleX!=1){
+                canvas.scale(this.textScaleX, 1);
             }
         }
     }

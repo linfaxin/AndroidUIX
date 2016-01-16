@@ -6264,7 +6264,7 @@ module android.view {
                     run:()=>{
                         rootView._syncToElementLock = false;
                         rootView._syncToElementImmediatelyLock = false
-                        this._syncBoundAndScrollToElement();
+                        rootView._syncBoundAndScrollToElement();
                     }
                 };
             }

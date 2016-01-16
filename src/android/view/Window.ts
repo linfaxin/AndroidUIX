@@ -1495,9 +1495,11 @@ export interface Callback {
         protected drawFromParent(canvas:android.graphics.Canvas, parent:ViewGroup, drawingTime:number):boolean {
             //draw shadow when window enter/exit
             let windowAnimation = this.getAnimation();
+
             let wparams = <WindowManager.LayoutParams>this.getLayoutParams();
             let shadowAlpha:number = wparams.dimAmount * 255;//default full shadow
             if(windowAnimation!=null && shadowAlpha){
+
                 const duration:number = windowAnimation.getDuration();
                 let startTime:number = windowAnimation.getStartTime();
                 if(startTime<0) startTime = drawingTime;
@@ -1506,6 +1508,7 @@ export interface Callback {
                 let normalizedTime:number;
                 if (duration != 0) {
                     normalizedTime = (<number> (drawingTime - (startTime + startOffset))) / <number> duration;
+                    normalizedTime = Math.max(Math.min(normalizedTime, 1.0), 0.0);
                 } else {
                     // time is a step-change with a zero duration
                     normalizedTime = drawingTime < startTime ? 0.0 : 1.0;
@@ -1514,11 +1517,11 @@ export interface Callback {
 
                 if(windowAnimation === wparams.exitAnimation){
                     shadowAlpha = shadowAlpha * (1-interpolatedTime);
-                    if(normalizedTime<1) parent.invalidate();
+                    if(!windowAnimation.hasEnded()) parent.invalidate();//shadow on parent (should ignore dirty draw child)
 
                 }else if(windowAnimation === wparams.enterAnimation){
                     shadowAlpha = shadowAlpha * interpolatedTime;
-                    if(normalizedTime<1) parent.invalidate();
+                    if(!windowAnimation.hasEnded()) parent.invalidate();//shadow on parent (should ignore dirty draw child)
                 }
             }
             if( (windowAnimation!=null || wparams.isFloating()) && shadowAlpha){

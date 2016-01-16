@@ -324,6 +324,7 @@ declare module android.graphics {
         private mStrokeCap;
         private mStrokeJoin;
         private textSize;
+        private textScaleX;
         private mFlag;
         hasShadow: boolean;
         shadowDx: number;
