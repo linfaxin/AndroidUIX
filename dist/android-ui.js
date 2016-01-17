@@ -49739,7 +49739,7 @@ var android;
                 decor.onMeasure = (widthMeasureSpec, heightMeasureSpec) => {
                     onMeasure.call(decor, widthMeasureSpec, heightMeasureSpec);
                     let width = decor.getMeasuredWidth();
-                    if (width > 320 * dm.density) {
+                    if (width > 360 * dm.density) {
                         let widthSpec = View.MeasureSpec.makeMeasureSpec(360 * dm.density, View.MeasureSpec.EXACTLY);
                         onMeasure.call(decor, widthSpec, heightMeasureSpec);
                     }

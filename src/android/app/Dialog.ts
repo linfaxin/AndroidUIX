@@ -177,7 +177,7 @@ module android.app {
             decor.onMeasure = (widthMeasureSpec:number, heightMeasureSpec:number)=>{
                 onMeasure.call(decor, widthMeasureSpec, heightMeasureSpec);
                 let width = decor.getMeasuredWidth();
-                if(width > 320 * dm.density){//max 360dp
+                if(width > 360 * dm.density){//max 360dp
                     let widthSpec = View.MeasureSpec.makeMeasureSpec(360 * dm.density, View.MeasureSpec.EXACTLY);
                     onMeasure.call(decor, widthSpec, heightMeasureSpec);
                 }
