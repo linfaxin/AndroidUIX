@@ -68,6 +68,19 @@
         if(navigator.userAgent.match('Android')){
             activity.findViewById('android_tip').setVisibility(android.view.View.VISIBLE);
         }
+
+        activity.onBackPressed = function(){
+            new android.app.AlertDialog.Builder(activity)
+                    .setTitle('Promt')
+                    .setIcon(sample.app.R.image.icon_alert)
+                    .setMessage('Exit confirm?')
+                    .setNegativeButton(android.R.string_.cancel, null)
+                    .setPositiveButton(android.R.string_.ok, {
+                        onClick:function(dialog, which){
+                            activity.finish();
+                        }
+                    }).show();
+        }
     }
 </script>
 </body>
