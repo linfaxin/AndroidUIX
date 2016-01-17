@@ -113,7 +113,7 @@ module PageStack{
         };
     }
 
-    export function go(delta:number){
+    export function go(delta:number, pageAlreadyClose=false){
         if(historyLocking){
             //do delay
             ensureLockDo(()=>{
@@ -122,7 +122,7 @@ module PageStack{
             return;
         }
         var stackList = currentStack.stack;
-        if(delta===-1){
+        if(delta===-1 && !pageAlreadyClose){
             if(!firePageClose(stackList[stackList.length-1].pageId, stackList[stackList.length-1].extra)){
                 //page not close, can't go back
                 return;
@@ -133,7 +133,7 @@ module PageStack{
 
         historyGo(delta);
 
-        if(delta<-1) {
+        if(delta<-1 && !pageAlreadyClose) {
             ensureLockDo(()=> {
                 //after history already change, fire close page
                 tryClosePageAfterHistoryChanged(stackList, delta);
@@ -152,8 +152,8 @@ module PageStack{
         }
     }
 
-    export function back(){
-        go(-1);
+    export function back(pageAlreadyClose=false){
+        go(-1, pageAlreadyClose);
     }
 
     export function openPage(pageId:string, extra?:any){
@@ -313,8 +313,8 @@ module PageStack{
     }
 
 
-    function ensureLockDo(func:()=>any, runNowIfNotLock=false){
-        if(!historyLocking && runNowIfNotLock){
+    function ensureLockDo(func:()=>any){
+        if(!historyLocking){
             func();
             return;
         }

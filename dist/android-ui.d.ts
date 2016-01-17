@@ -3233,8 +3233,8 @@ declare module PageStack {
     var pageOpenHandler: (pageId: string, pageExtra?: any, isRestore?: boolean) => boolean;
     var pageCloseHandler: (pageId: string, pageExtra?: any) => boolean;
     function init(): void;
-    function go(delta: number): void;
-    function back(): void;
+    function go(delta: number, pageAlreadyClose?: boolean): void;
+    function back(pageAlreadyClose?: boolean): void;
     function openPage(pageId: string, extra?: any): void;
     function notifyPageClosed(pageId: string): void;
     function notifyNewPageOpened(pageId: string, extra?: any): void;

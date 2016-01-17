@@ -182,7 +182,7 @@ module android.app{
                 if(!isCreateSuc) return;
 
                 if(isRootActivity){
-                    PageStack.back();
+                    PageStack.back(true);
 
                 }else if(activity.getIntent()){
                     PageStack.notifyPageClosed(activity.getIntent().activityName);

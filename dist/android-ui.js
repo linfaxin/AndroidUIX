@@ -15244,7 +15244,7 @@ var PageStack;
             }
         };
     }
-    function go(delta) {
+    function go(delta, pageAlreadyClose = false) {
         if (historyLocking) {
             ensureLockDo(() => {
                 go(delta);
@@ -15252,14 +15252,14 @@ var PageStack;
             return;
         }
         var stackList = PageStack.currentStack.stack;
-        if (delta === -1) {
+        if (delta === -1 && !pageAlreadyClose) {
             if (!firePageClose(stackList[stackList.length - 1].pageId, stackList[stackList.length - 1].extra)) {
                 return;
             }
         }
         removeLastHistoryIfFaked();
         historyGo(delta);
-        if (delta < -1) {
+        if (delta < -1 && !pageAlreadyClose) {
             ensureLockDo(() => {
                 tryClosePageAfterHistoryChanged(stackList, delta);
             });
@@ -15275,8 +15275,8 @@ var PageStack;
             }
         }
     }
-    function back() {
-        go(-1);
+    function back(pageAlreadyClose = false) {
+        go(-1, pageAlreadyClose);
     }
     PageStack.back = back;
     function openPage(pageId, extra) {
@@ -15426,8 +15426,8 @@ var PageStack;
         });
     }
     PageStack.notifyNewPageOpened = notifyNewPageOpened;
-    function ensureLockDo(func, runNowIfNotLock = false) {
-        if (!historyLocking && runNowIfNotLock) {
+    function ensureLockDo(func) {
+        if (!historyLocking) {
             func();
             return;
         }
@@ -15626,14 +15626,15 @@ var android;
             scheduleDestroyActivity(activity, finishing = true) {
                 setTimeout(() => {
                     let isCreateSuc = this.mLaunchedActivities.has(activity);
+                    let isRootActivity = this.isRootActivity(activity);
                     if (activity.mCallActivity && activity.getIntent() && activity.getIntent().mRequestCode >= 0) {
                         activity.mCallActivity.dispatchActivityResult(null, activity.getIntent().mRequestCode, activity.mResultCode, activity.mResultData);
                     }
                     this.handleDestroyActivity(activity, finishing);
                     if (!isCreateSuc)
                         return;
-                    if (this.isRootActivity(activity)) {
-                        PageStack.back();
+                    if (isRootActivity) {
+                        PageStack.back(true);
                     }
                     else if (activity.getIntent()) {
                         PageStack.notifyPageClosed(activity.getIntent().activityName);
@@ -24810,6 +24811,7 @@ var android;
                 this.mWindow.setWindowAnimations(android.R.anim.activity_open_enter_ios, android.R.anim.activity_close_exit_ios, android.R.anim.activity_close_enter_ios, android.R.anim.activity_open_exit_ios);
                 this.mWindow.setDimAmount(0.7);
                 this.mWindow.getAttributes().flags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+                this.mWindow.setCallback(this);
             }
             getIntent() {
                 return this.mIntent;
