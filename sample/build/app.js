@@ -910,3 +910,4 @@ var sample;
         app.SampleViewPagerGalleryActivity = SampleViewPagerGalleryActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
+//# sourceMappingURL=app.js.map

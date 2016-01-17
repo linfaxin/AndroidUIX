@@ -4,6 +4,9 @@ var packageName = args[0];
 var SDKReferencePath = args[1];
 
 var fs = require('fs');
+if(!fs.existsSync('gen')) fs.mkdirSync('gen');
+if(!fs.existsSync('gen/R'))fs.mkdirSync('gen/R');
+
 buildLayout();
 buildValues();
 buildImage();
@@ -11,6 +14,7 @@ buildID();
 
 function buildImage(){
     var path = 'res/image';
+    if(!fs.existsSync(path)) return;
     var dirImageData = {};
     var files = fs.readdirSync(path);
     files.forEach(function(fileName){
@@ -99,6 +103,7 @@ ${exportImage_tsLines}
 
 function buildLayout(){
     var path = 'res/layout';
+    if(!fs.existsSync(path)) return;
     var layoutData = {};
     var files = fs.readdirSync(path);
     files.forEach(function(fileName){
@@ -145,6 +150,7 @@ function buildLayout(){
 
 function buildValues(){
     var path = 'res/values';
+    if(!fs.existsSync(path)) return;
     var files = fs.readdirSync(path);
     var allHtml = '';
 

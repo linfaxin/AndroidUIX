@@ -2,7 +2,7 @@
   "compilerOptions": {
     "removeComments": true,
     "target":"ES6",
-    "outFile": "build/main.js",
-    "sourceMap": false
+    "outFile": "build/app.js",
+    "sourceMap": true
   }
 }

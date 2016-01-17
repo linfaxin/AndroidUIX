@@ -1348,5 +1348,6 @@ var sample;
         app.SampleViewPagerGalleryActivity = SampleViewPagerGalleryActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
+//# sourceMappingURL=app.js.map
 
-//# sourceMappingURL=main.es5.js.map
+//# sourceMappingURL=app.es5.js.map
