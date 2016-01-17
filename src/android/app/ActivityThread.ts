@@ -60,6 +60,16 @@ module android.app{
                 return activity && !activity.mFinished;
             };
             PageStack.pageCloseHandler = (pageId:string, pageExtra?:Intent):boolean=>{
+                //check is root activity
+                if(this.mLaunchedActivities.size === 1){
+                    let rootActivity = Array.from(this.mLaunchedActivities)[0];
+                    if(pageId==null || rootActivity.getIntent().activityName == pageId){
+                        this.handleDestroyActivity(rootActivity, true);
+                        return true;
+                    }
+                    return false;
+                }
+
                 for(let activity of Array.from(this.mLaunchedActivities).reverse()){
                     let intent = activity.getIntent();
                     if(intent.activityName == pageId){
@@ -101,6 +111,8 @@ module android.app{
 
         scheduleApplicationHide():void {
             let visibleActivities = this.getVisibleToUserActivities();
+            if(visibleActivities.length==0) return;
+
             this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
             for(let visibleActivity of visibleActivities){
                 this.handleStopActivity(visibleActivity, true);
@@ -158,16 +170,18 @@ module android.app{
             //delay destroy ensure activity call all start/resume life circel.
             setTimeout(()=>{
                 let isCreateSuc = this.mLaunchedActivities.has(activity);//common case it's true, finish() in onCreate() will false here
+                let isRootActivity = this.isRootActivity(activity);
 
                 if(activity.mCallActivity && activity.getIntent() && activity.getIntent().mRequestCode>=0){
                     activity.mCallActivity.dispatchActivityResult(null, activity.getIntent().mRequestCode, activity.mResultCode, activity.mResultData)
                 }
 
+
                 this.handleDestroyActivity(activity, finishing);
 
                 if(!isCreateSuc) return;
 
-                if(this.isRootActivity(activity)){
+                if(isRootActivity){
                     PageStack.back();
 
                 }else if(activity.getIntent()){
@@ -349,11 +363,14 @@ module android.app{
         private handleDestroyActivity(activity:Activity, finishing:boolean):void {
             let visibleActivities = this.getVisibleToUserActivities();
             let isTopVisibleActivity = activity == visibleActivities[visibleActivities.length - 1];
+            let isRootActivity = this.isRootActivity(activity);
 
             this.performDestroyActivity(activity, finishing);
+
+            if(isRootActivity) activity.getWindow().setWindowAnimations(null, null);//clear animation if root activity.
             this.androidUI.windowManager.removeWindow(activity.getWindow());
 
-            if(isTopVisibleActivity){
+            if(isTopVisibleActivity && !isRootActivity){
                 this.scheduleActivityResume();
             }
         }

@@ -15529,6 +15529,14 @@ var android;
                     return activity && !activity.mFinished;
                 };
                 PageStack.pageCloseHandler = (pageId, pageExtra) => {
+                    if (this.mLaunchedActivities.size === 1) {
+                        let rootActivity = Array.from(this.mLaunchedActivities)[0];
+                        if (pageId == null || rootActivity.getIntent().activityName == pageId) {
+                            this.handleDestroyActivity(rootActivity, true);
+                            return true;
+                        }
+                        return false;
+                    }
                     for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
                         let intent = activity.getIntent();
                         if (intent.activityName == pageId) {
@@ -15567,6 +15575,8 @@ var android;
             }
             scheduleApplicationHide() {
                 let visibleActivities = this.getVisibleToUserActivities();
+                if (visibleActivities.length == 0)
+                    return;
                 this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
                 for (let visibleActivity of visibleActivities) {
                     this.handleStopActivity(visibleActivity, true);
@@ -15764,9 +15774,12 @@ var android;
             handleDestroyActivity(activity, finishing) {
                 let visibleActivities = this.getVisibleToUserActivities();
                 let isTopVisibleActivity = activity == visibleActivities[visibleActivities.length - 1];
+                let isRootActivity = this.isRootActivity(activity);
                 this.performDestroyActivity(activity, finishing);
+                if (isRootActivity)
+                    activity.getWindow().setWindowAnimations(null, null);
                 this.androidUI.windowManager.removeWindow(activity.getWindow());
-                if (isTopVisibleActivity) {
+                if (isTopVisibleActivity && !isRootActivity) {
                     this.scheduleActivityResume();
                 }
             }
