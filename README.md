@@ -7,18 +7,18 @@ Build a high-performance web app with Android UI.
 
 ### Feature
 
-1. Full native app look and feel.
+1. Native app experience & performance.
 2. Render with web canvas, high-performance web app.
-3. Same api as Android, question & usage you can find on net.
+3. Same api as Android, you can find its question & usage on the internet.
 
 
-### Getting Started
+### Getting Started 
 
-Source is write by Typescript & ES6, it's suggest to write your App code by Typescript & ES6.
+Source is write by Typescript & ES6, prefer you to write your App code by Typescript & ES6.
 
-You can clone the [Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample) and get start.
+You can clone [Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample) to get a start.
  
-Read [Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample)'s [README](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample/README.md) for more information.
+Read [README](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample/README.md) of [Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample) for more information.
 
 
 ### 60fps
@@ -29,7 +29,7 @@ Read [Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample)'
 2. Android Chrome: 40-50fps
 3. Android WebView(4.4): 20-30fps
 
-You can test the [Sample App](http://linfaxin.com/AndroidUI4Web/sample/main.html) on your device.
+You can test [Sample App](http://linfaxin.com/AndroidUI4Web/sample/main.html) on your device.
 
 
 ### LICENSE
