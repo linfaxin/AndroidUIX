@@ -1,5 +1,5 @@
 # AndroidUI For Web
-[中文文档](http://linfaxin.com/AndroidUI4Web/README_cn.md)
+[中文文档](https://github.com/linfaxin/AndroidUI4Web/blob/master/README_cn.md)
 
 Build a high-performance web app with Android UI.
 [Sample App](http://linfaxin.com/AndroidUI4Web/sample/main.html)
