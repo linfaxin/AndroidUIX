@@ -14,11 +14,7 @@ Build a high-performance web app with Android UI.
 
 ### Getting Started 
 
-Source is write by Typescript & ES6, prefer you to write your App code by Typescript & ES6.
-
-You can clone [Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample) to get a start.
- 
-Read [README](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample/README.md) of [Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample) for more information.
+You can read and clone [Hello World App](https://github.com/linfaxin/AndroidUI4Web-HelloWorld) to get a start.
 
 
 ### 60fps

@@ -13,12 +13,7 @@
 
 ### 开始
 
-源码使用Typescript & ES6 书写, 建议你也使用Typescript & ES6去构建你的WebApp。
-
-参考[Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample) 来书写你的WebApp。
- 
-更多信息请查看[Sample App](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample)的[README](https://github.com/linfaxin/AndroidUI4Web/tree/master/sample/README.md)
-
+参考[Hello World App](https://github.com/linfaxin/AndroidUI4Web-HelloWorld) 来书写你的WebApp。 
 
 
 ### 60fps
