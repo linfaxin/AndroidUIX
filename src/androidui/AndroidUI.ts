@@ -99,7 +99,9 @@ module androidui {
         private initLaunchActivity(){
             //launch activity defined in 'android-ui' element
             for(let ele of Array.from(this.androidUIElement.children)){
-                let activityName = ele.tagName;
+                let tagName = ele.tagName;
+                if(tagName != 'ACTIVITY') continue;
+                let activityName = ele.getAttribute('name') || ele.getAttribute('android:name') || 'android.app.Activity';
 
                 let intent = new Intent(activityName);
                 let activity = this.mActivityThread.handleLaunchActivity(intent);
@@ -116,8 +118,6 @@ module androidui {
                         window[onCreateFunc].call(this, activity);
                     }
 
-                }else if(ele instanceof HTMLUnknownElement){
-                    console.warn('load activity fail: ' + activityName);
                 }
             }
         }

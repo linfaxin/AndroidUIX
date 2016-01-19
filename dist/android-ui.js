@@ -1,3 +1,13 @@
+/*
+ * AndroidUI4Web: https://github.com/linfaxin/AndroidUI4Web
+ * version: 0.1.1
+ * release type: Pre-release
+ * release date: 2016-01-19
+ */
+var androidui;
+(function (androidui) {
+    androidui.sdk_version = '0.1.1';
+})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/10/28.
  */
@@ -15505,10 +15515,8 @@ var android;
         var View = android.view.View;
         class ActivityThread {
             constructor(androidUI) {
-                this.activityNameClassMap = new Map();
                 this.mLaunchedActivities = new Set();
                 this.androidUI = androidUI;
-                this.activityNameClassMap.set('activity', android.app.Activity);
                 this.initWithPageStack();
             }
             initWithPageStack() {
@@ -15733,7 +15741,7 @@ var android;
             }
             performLaunchActivity(intent) {
                 let activity;
-                let clazz = this.activityNameClassMap.get(intent.activityName.toLowerCase()) || intent.activityName;
+                let clazz = intent.activityName;
                 try {
                     if (typeof clazz === 'string')
                         clazz = eval(clazz);
@@ -15941,7 +15949,10 @@ var androidui;
         }
         initLaunchActivity() {
             for (let ele of Array.from(this.androidUIElement.children)) {
-                let activityName = ele.tagName;
+                let tagName = ele.tagName;
+                if (tagName != 'ACTIVITY')
+                    continue;
+                let activityName = ele.getAttribute('name') || ele.getAttribute('android:name') || 'android.app.Activity';
                 let intent = new Intent(activityName);
                 let activity = this.mActivityThread.handleLaunchActivity(intent);
                 if (activity) {
@@ -15953,9 +15964,6 @@ var androidui;
                     if (onCreateFunc && typeof window[onCreateFunc] === "function") {
                         window[onCreateFunc].call(this, activity);
                     }
-                }
-                else if (ele instanceof HTMLUnknownElement) {
-                    console.warn('load activity fail: ' + activityName);
                 }
             }
         }
@@ -60355,9 +60363,7 @@ var androidui;
         }
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/10/6.
- */
+//use the deepest sub class as enter
 ///<reference path="android/app/Application.ts"/>
 ///<reference path="android/view/GestureDetector.ts"/>
 ///<reference path="android/widget/FrameLayout.ts"/>

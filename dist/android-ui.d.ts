@@ -1,3 +1,6 @@
+declare module androidui {
+    var sdk_version: string;
+}
 declare module java.util {
     interface List<T> {
         size(): number;
@@ -3253,7 +3256,6 @@ declare module android.app {
     import Animation = android.view.animation.Animation;
     class ActivityThread {
         androidUI: androidui.AndroidUI;
-        activityNameClassMap: Map<string, any>;
         mLaunchedActivities: Set<Activity>;
         overrideExitAnimation: Animation;
         overrideEnterAnimation: Animation;

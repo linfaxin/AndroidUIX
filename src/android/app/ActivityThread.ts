@@ -30,7 +30,6 @@ module android.app{
      */
     export class ActivityThread {
         androidUI: androidui.AndroidUI;
-        activityNameClassMap = new Map<string, any>();
         mLaunchedActivities = new Set<Activity>();
 
         overrideExitAnimation:Animation;
@@ -40,7 +39,6 @@ module android.app{
 
         constructor(androidUI:androidui.AndroidUI) {
             this.androidUI = androidUI;
-            this.activityNameClassMap.set('activity', android.app.Activity);
             this.initWithPageStack();
         }
 
@@ -314,7 +312,7 @@ module android.app{
 
         private performLaunchActivity(intent:Intent):Activity {
             let activity:Activity;
-            let clazz = this.activityNameClassMap.get(intent.activityName.toLowerCase()) || intent.activityName;
+            let clazz:any = intent.activityName;
 
             try {
                 if(typeof clazz === 'string') clazz = eval(clazz);

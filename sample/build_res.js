@@ -51,6 +51,7 @@ function buildImage(){
         }
 `;
     }
+    if(exportLines.length == 0) return;//no image
 
     var str =
         `///<reference path="${SDKReferencePath}"/>
@@ -124,7 +125,7 @@ function buildLayout(){
 
     var str =
         `///<reference path="${SDKReferencePath}"/>
-    module ${packageName}.R {
+module ${packageName}.R {
     const _layout_data = ${JSON.stringify(layoutData, null, 8)};
     const _tempDiv = document.createElement('div');
 

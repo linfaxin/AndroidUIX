@@ -5,6 +5,9 @@ packageName="sample.app";
 dReference="../../../dist/android-ui.d.ts";
 
 
+
+#== don't modify below code ==
+
 # pack resources into js. Ensure you have installed nodejs: http://www.nodejs.org
 node build_res.js $packageName $dReference
 

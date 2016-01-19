@@ -5,5 +5,5 @@ node_modules/
 .outjs
 
 
-.build.sh
-.build_sample.sh
+build.sh
+build_sample.sh
