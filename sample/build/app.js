@@ -202,12 +202,13 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var Animation = android.view.animation.Animation;
         var R = sample.app.R;
-        class SampleAnimationActivity extends Activity {
+        class SampleAnimationActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('Animation');
                 this.setContentView(R.layout.sample_animation);
                 let rotateView = this.findViewById('rotate_repeat');
                 let rotateAnimation = new android.view.animation.RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
@@ -253,15 +254,16 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var AlertDialog = android.app.AlertDialog;
         var Toast = android.widget.Toast;
         var TextView = android.widget.TextView;
         var PopupWindow = android.widget.PopupWindow;
         var R = sample.app.R;
-        class SampleBaseWidgetActivity extends Activity {
+        class SampleBaseWidgetActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('Base Widget');
                 let activity = this;
                 this.setContentView(R.layout.sample_base_widget);
                 let btnOpenDialog = this.findViewById('btn_open_dialog');
@@ -302,11 +304,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SampleButtonActivity extends Activity {
+        class SampleButtonActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('Button');
                 this.setContentView(R.layout.sample_button);
                 let btn_click = this.findViewById('btn_click');
                 btn_click.setOnClickListener({
@@ -336,15 +339,17 @@ var sample;
     var app;
     (function (app) {
         var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var Intent = android.content.Intent;
         var TextView = android.widget.TextView;
         var Button = android.widget.Button;
         var Log = android.util.Log;
         var Gravity = android.view.Gravity;
         const TAG = 'SampleContacteActivity';
-        class SampleContacteActivity extends Activity {
+        class SampleContacteActivity extends ActionBarActivity {
             onCreate(savedInstanceState) {
                 super.onCreate(savedInstanceState);
+                this.setTitle('Activity Start&Result');
                 this.setContentView(app.R.layout.sample_contacte);
                 this.printTextView = this.findViewById('console_tv');
                 const activity = this;
@@ -375,7 +380,7 @@ var sample;
             }
         }
         app.SampleContacteActivity = SampleContacteActivity;
-        class SampleShowIntentActivity extends Activity {
+        class SampleShowIntentActivity extends ActionBarActivity {
             onCreate(savedInstanceState) {
                 super.onCreate(savedInstanceState);
                 let info = new TextView(this);
@@ -384,7 +389,7 @@ var sample;
             }
         }
         app.SampleShowIntentActivity = SampleShowIntentActivity;
-        class SampleResultActivity extends Activity {
+        class SampleResultActivity extends ActionBarActivity {
             onCreate(savedInstanceState) {
                 super.onCreate(savedInstanceState);
                 const activity = this;
@@ -409,11 +414,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SampleDrawerLayoutActivity extends Activity {
+        class SampleDrawerLayoutActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('DrawerLayout');
                 this.setContentView(R.layout.sample_drawerlayout);
             }
         }
@@ -426,15 +432,16 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var TextView = android.widget.TextView;
         var View = android.view.View;
         var ExpandableListView = android.widget.ExpandableListView;
         var BaseExpandableListAdapter = android.widget.BaseExpandableListAdapter;
         var R = sample.app.R;
-        class SampleExpandableListViewActivity extends Activity {
+        class SampleExpandableListViewActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('ExpandableListView');
                 let listView = new ExpandableListView(this);
                 this.setContentView(listView);
                 listView.setExpandableAdapter(new MyListAdapter());
@@ -511,11 +518,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SampleFrameLayoutActivity extends Activity {
+        class SampleFrameLayoutActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('FrameLayout');
                 this.setContentView(R.layout.sample_framelayout);
             }
         }
@@ -531,13 +539,14 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var View = android.view.View;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
-        class SampleGridViewActivity extends Activity {
+        class SampleGridViewActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('GridView');
                 this.setContentView(R.layout.sample_gridview);
                 let listView = this.findViewById('gridView');
                 listView.setAdapter(new MyAdapter());
@@ -570,11 +579,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SampleHtmlViewActivity extends Activity {
+        class SampleHtmlViewActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('HtmlView');
                 this.setContentView(R.layout.sample_htmlview);
             }
         }
@@ -587,11 +597,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SampleImageViewActivity extends Activity {
+        class SampleImageViewActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('ImageView');
                 this.setContentView(R.layout.sample_imageview);
             }
         }
@@ -607,14 +618,15 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var Button = android.widget.Button;
         var Log = android.util.Log;
         var Gravity = android.view.Gravity;
         const TAG = 'SampleLifeCallbackActivity';
-        class SampleLifeCallbackActivity extends Activity {
+        class SampleLifeCallbackActivity extends ActionBarActivity {
             onCreate(savedInstanceState) {
                 super.onCreate(savedInstanceState);
+                this.setTitle('Activity Life Circel');
                 this.setContentView(app.R.layout.sample_life_callback);
                 this.printTextView = this.findViewById('console_tv');
                 const activity = this;
@@ -660,9 +672,10 @@ var sample;
             }
         }
         app.SampleLifeCallbackActivity = SampleLifeCallbackActivity;
-        class SampleLifeCallbackNormalActivity extends Activity {
+        class SampleLifeCallbackNormalActivity extends ActionBarActivity {
             onCreate(savedInstanceState) {
                 super.onCreate(savedInstanceState);
+                this.setTitle('Normal Activity');
                 const activity = this;
                 let btn = new Button(this);
                 btn.setText(android.R.string_.close);
@@ -679,6 +692,7 @@ var sample;
         class SampleLifeCallbackFloatingActivity extends SampleLifeCallbackNormalActivity {
             onCreate(savedInstanceState) {
                 super.onCreate(savedInstanceState);
+                this.getActionBar().hide();
                 let density = this.getResources().getDisplayMetrics().density;
                 this.getWindow().setFloating(true);
                 this.getWindow().setLayout(200 * density, 200 * density);
@@ -694,11 +708,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SampleLinearLayoutActivity extends Activity {
+        class SampleLinearLayoutActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('LinearLayout');
                 this.setContentView(R.layout.sample_linearlayout);
             }
         }
@@ -711,13 +726,14 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var View = android.view.View;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
-        class SampleListViewActivity extends Activity {
+        class SampleListViewActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('ListView');
                 this.setContentView(R.layout.sample_listview);
                 let listView = this.findViewById('listView');
                 listView.setAdapter(new MyListAdapter());
@@ -750,11 +766,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SamplePickerActivity extends Activity {
+        class SamplePickerActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('Picker');
                 this.setContentView(R.layout.sample_picker);
             }
         }
@@ -767,14 +784,15 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var View = android.view.View;
         var BaseAdapter = android.widget.BaseAdapter;
         var PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
         var R = sample.app.R;
-        class SamplePullRefreshLoadActivity extends Activity {
+        class SamplePullRefreshLoadActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('PullRefreshLoad');
                 this.setContentView(R.layout.sample_pullrefreshload);
                 let listView = this.findViewById('listView');
                 let adapter = new MyListAdapter();
@@ -829,11 +847,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SampleRelativeLayoutActivity extends Activity {
+        class SampleRelativeLayoutActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('RelatevieLayout');
                 this.setContentView(R.layout.sample_relativelayout);
             }
         }
@@ -846,11 +865,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
-        class SampleTextViewActivity extends Activity {
+        class SampleTextViewActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('TextView');
                 this.setContentView(R.layout.sample_textview);
             }
         }
@@ -863,13 +883,14 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var View = android.view.View;
         var Color = android.graphics.Color;
         var R = sample.app.R;
-        class SampleViewPagerActivity extends Activity {
+        class SampleViewPagerActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('ViewPager');
                 this.setContentView(R.layout.sample_viewpager);
                 let viewPager = this.findViewById('viewPager');
                 viewPager.setAdapter(new MyPageAdapter());
@@ -899,11 +920,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
         var R = sample.app.R;
-        class SampleViewPagerGalleryActivity extends Activity {
+        var ActionBarActivity = android.app.ActionBarActivity;
+        class SampleViewPagerGalleryActivity extends ActionBarActivity {
             onCreate() {
                 super.onCreate();
+                this.setTitle('ImageGallery&Gesture');
                 this.setContentView(R.layout.sample_viewpager_gallery);
             }
         }

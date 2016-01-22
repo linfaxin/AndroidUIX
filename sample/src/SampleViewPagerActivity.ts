@@ -4,6 +4,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import ActionBarActivity = android.app.ActionBarActivity;
     import TextView = android.widget.TextView;
     import Button = android.widget.Button;
     import View = android.view.View;
@@ -14,9 +15,10 @@ module sample.app {
     import ViewPager = android.support.v4.view.ViewPager;
     import R = sample.app.R;
 
-    export class SampleViewPagerActivity extends Activity {
+    export class SampleViewPagerActivity extends ActionBarActivity {
         onCreate():void {
             super.onCreate();
+            this.setTitle('ViewPager');
             this.setContentView(R.layout.sample_viewpager);
 
             let viewPager = <ViewPager>this.findViewById('viewPager');

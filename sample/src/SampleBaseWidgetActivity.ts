@@ -5,6 +5,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import ActionBarActivity = android.app.ActionBarActivity;
     import AlertDialog = android.app.AlertDialog;
     import NetDrawable = androidui.image.NetDrawable;
     import Toast = android.widget.Toast;
@@ -12,9 +13,11 @@ module sample.app {
     import PopupWindow = android.widget.PopupWindow;
     import R = sample.app.R;
 
-    export class SampleBaseWidgetActivity extends Activity {
+    export class SampleBaseWidgetActivity extends ActionBarActivity {
         onCreate():void {
             super.onCreate();
+            this.setTitle('Base Widget');
+
             let activity = this;
             this.setContentView(R.layout.sample_base_widget);
 

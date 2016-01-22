@@ -6,6 +6,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import ActionBarActivity = android.app.ActionBarActivity;
     import Intent = android.content.Intent;
     import View = android.view.View;
     import TextView = android.widget.TextView;
@@ -14,11 +15,12 @@ module sample.app {
     import Gravity = android.view.Gravity;
 
     const TAG = 'SampleLifeCallbackActivity';
-    export class SampleLifeCallbackActivity extends Activity {
+    export class SampleLifeCallbackActivity extends ActionBarActivity {
 
         private printTextView:TextView;
         protected onCreate(savedInstanceState:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
+            this.setTitle('Activity Life Circel');
             this.setContentView(R.layout.sample_life_callback);
 
 
@@ -75,9 +77,10 @@ module sample.app {
         }
     }
 
-    export class SampleLifeCallbackNormalActivity extends Activity{
+    export class SampleLifeCallbackNormalActivity extends ActionBarActivity{
         protected onCreate(savedInstanceState:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
+            this.setTitle('Normal Activity')
             const activity = this;
 
             let btn = new Button(this);
@@ -95,6 +98,7 @@ module sample.app {
     export class SampleLifeCallbackFloatingActivity extends SampleLifeCallbackNormalActivity{
         protected onCreate(savedInstanceState:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
+            this.getActionBar().hide();
 
             let density = this.getResources().getDisplayMetrics().density;
             this.getWindow().setFloating(true);

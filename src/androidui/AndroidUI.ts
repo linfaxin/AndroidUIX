@@ -26,7 +26,6 @@ module androidui {
     import ActivityThread = android.app.ActivityThread;
 
     export class AndroidUI {
-        static DomClassName = 'AndroidUI';
         static BindToElementName = 'AndroidUI';
 
         androidUIElement:AndroidUIElement;
@@ -38,6 +37,7 @@ module androidui {
         private mActivityThread:ActivityThread = new ActivityThread(this);
         private _viewRootImpl:android.view.ViewRootImpl;
         private mApplication:android.app.Application;
+        appName:string;
 
         private rootResourceElement:Element;
 
@@ -61,8 +61,7 @@ module androidui {
 
 
         private init() {
-            this.androidUIElement.classList.add(AndroidUI.DomClassName);
-
+            this.appName = this.androidUIElement.getAttribute('label');
             this._viewRootImpl = new android.view.ViewRootImpl();
             this._viewRootImpl.androidUIElement = this.androidUIElement;
 
@@ -378,29 +377,29 @@ module androidui {
     //init common style
     let styleElement = document.createElement('style');
     styleElement.innerHTML += `
-        .${AndroidUI.DomClassName} {
+        android-ui {
             position : relative;
             overflow : hidden;
             display : block;
             outline: none;
         }
-        .${AndroidUI.DomClassName} * {
+        android-ui * {
             overflow : hidden;
             border : none;
             outline: none;
             pointer-events: auto;
         }
-        .${AndroidUI.DomClassName} resources {
+        android-ui resources {
             display: none;
         }
-        .${AndroidUI.DomClassName} Button {
+        android-ui Button {
             border: none;
             background: none;
         }
-        .${AndroidUI.DomClassName} windowsgroup {
+        android-ui windowsgroup {
             pointer-events: none;
         }
-        .${AndroidUI.DomClassName} > canvas {
+        android-ui > canvas {
             position: absolute;
             left: 0;
             top: 0;

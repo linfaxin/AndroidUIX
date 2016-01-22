@@ -259,6 +259,13 @@ module android.R {
                 //popupPromptView : R.layout.simple_dropdown_hint,
             }
         }
+
+        static get actionBarStyle() {
+            return {
+                background : new ColorDrawable(0xff333333)
+            }
+        }
+
     }
 
     export module attr{

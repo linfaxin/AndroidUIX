@@ -4,6 +4,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import ActionBarActivity = android.app.ActionBarActivity;
     import TextView = android.widget.TextView;
     import Button = android.widget.Button;
     import View = android.view.View;
@@ -17,9 +18,10 @@ module sample.app {
     import R = sample.app.R;
 
 
-    export class SampleListViewActivity extends Activity {
+    export class SampleListViewActivity extends ActionBarActivity {
         onCreate():void {
             super.onCreate();
+            this.setTitle('ListView');
             this.setContentView(R.layout.sample_listview);
 
             let listView = <ListView>this.findViewById('listView');

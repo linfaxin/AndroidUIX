@@ -70,6 +70,38 @@ ${exportLines}
 }`;
 
     fs.writeFile('android/R/image_base64.ts', str, 'utf-8');
+
+
+    var exportImage_tsLines = '';
+    for(var k of Object.keys(dirImageData)){
+        //console.log('export:'+k);
+        exportImage_tsLines += `
+        static get ${k}(){return new NetDrawable(image_base64.${k})}`;
+    }
+    var image_ts =
+        `///<reference path="../../androidui/image/NetDrawable.ts"/>
+///<reference path="../../androidui/image/ChangeImageSizeDrawable.ts"/>
+///<reference path="image_base64.ts"/>
+module android.R {
+    import NetDrawable = androidui.image.NetDrawable;
+    import ChangeImageSizeDrawable = androidui.image.ChangeImageSizeDrawable;
+
+    const density = android.content.res.Resources.getDisplayMetrics().density;
+    export class image{
+${exportImage_tsLines}
+
+        //scale images
+        static get spinner_48_outer_holo(){ return new ChangeImageSizeDrawable(image.spinner_76_outer_holo, 48 * density, 48 * density)}
+        static get spinner_48_inner_holo(){ return new ChangeImageSizeDrawable(image.spinner_76_inner_holo, 48 * density, 48 * density)}
+        static get spinner_16_outer_holo(){ return new ChangeImageSizeDrawable(image.spinner_76_outer_holo, 16 * density, 16 * density)}
+        static get spinner_16_inner_holo(){ return new ChangeImageSizeDrawable(image.spinner_76_inner_holo, 16 * density, 16 * density)}
+
+        static get rate_star_small_off_holo_light(){ return new ChangeImageSizeDrawable(image.rate_star_big_half_holo_light, 16 * density, 16 * density)}
+        static get rate_star_small_half_holo_light(){ return new ChangeImageSizeDrawable(image.rate_star_big_off_holo_light, 16 * density, 16 * density)}
+        static get rate_star_small_on_holo_light(){ return new ChangeImageSizeDrawable(image.rate_star_big_on_holo_light, 16 * density, 16 * density)}
+    }
+}`;
+    fs.writeFile('android/R/image.ts', image_ts, 'utf-8');
 }
 
 function buildLayout(){

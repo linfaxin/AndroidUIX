@@ -474,201 +474,202 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         this.mMovement = this.getDefaultMovementMethod();
         this.mTransformation = null;
 
-        this._attrBinder.addAttr('textColorHighlight', (value)=>{
-            this.setHighlightColor(this._attrBinder.parseColor(value, this.mHighlightColor));
+        const a = this._attrBinder;
+        a.addAttr('textColorHighlight', (value)=>{
+            this.setHighlightColor(a.parseColor(value, this.mHighlightColor));
         });
-        this._attrBinder.addAttr('textColor', (value)=>{
-            let color = this._attrBinder.parseColorList(value);
+        a.addAttr('textColor', (value)=>{
+            let color = a.parseColorList(value);
             if(color) this.setTextColor(color);
         }, ()=>{
             return this.mTextColor;
         });
-        this._attrBinder.addAttr('textColorHint', (value)=>{
-            let color = this._attrBinder.parseColorList(value);
+        a.addAttr('textColorHint', (value)=>{
+            let color = a.parseColorList(value);
             if(color) this.setHintTextColor(color);
         }, ()=>{
             return this.mHintTextColor;
         });
-        this._attrBinder.addAttr('textSize', (value)=>{
-            let size = this._attrBinder.parseNumber(value, this.mTextPaint.getTextSize());
+        a.addAttr('textSize', (value)=>{
+            let size = a.parseNumber(value, this.mTextPaint.getTextSize());
             this.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
         }, ()=>{
             return this.mTextPaint.getTextSize();
         });
-        this._attrBinder.addAttr('textAllCaps', (value)=>{
-            this.setAllCaps(this._attrBinder.parseBoolean(value, true));
+        a.addAttr('textAllCaps', (value)=>{
+            this.setAllCaps(a.parseBoolean(value, true));
         });
-        this._attrBinder.addAttr('shadowColor', (value)=>{
+        a.addAttr('shadowColor', (value)=>{
             this.setShadowLayer(this.mShadowRadius, this.mShadowDx, this.mShadowDy,
-                this._attrBinder.parseColor(value, this.mTextPaint.shadowColor));
+                a.parseColor(value, this.mTextPaint.shadowColor));
         });
-        this._attrBinder.addAttr('shadowDx', (value)=>{
-            let dx = this._attrBinder.parseNumber(value, this.mShadowDx);
+        a.addAttr('shadowDx', (value)=>{
+            let dx = a.parseNumber(value, this.mShadowDx);
             this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
         });
-        this._attrBinder.addAttr('shadowDy', (value)=>{
-            let dy = this._attrBinder.parseNumber(value, this.mShadowDy);
+        a.addAttr('shadowDy', (value)=>{
+            let dy = a.parseNumber(value, this.mShadowDy);
             this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
         });
-        this._attrBinder.addAttr('shadowRadius', (value)=>{
-            let radius = this._attrBinder.parseNumber(value, this.mShadowRadius);
+        a.addAttr('shadowRadius', (value)=>{
+            let radius = a.parseNumber(value, this.mShadowRadius);
             this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
         });
 
-        this._attrBinder.addAttr('drawableLeft', (value)=>{
+        a.addAttr('drawableLeft', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = this._attrBinder.parseDrawable(value);
+            let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
         });
-        this._attrBinder.addAttr('drawableTop', (value)=>{
+        a.addAttr('drawableTop', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = this._attrBinder.parseDrawable(value);
+            let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
         });
-        this._attrBinder.addAttr('drawableRight', (value)=>{
+        a.addAttr('drawableRight', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = this._attrBinder.parseDrawable(value);
+            let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
         });
-        this._attrBinder.addAttr('drawableBottom', (value)=>{
+        a.addAttr('drawableBottom', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = this._attrBinder.parseDrawable(value);
+            let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
         });
-        this._attrBinder.addAttr('drawableLeftUri', (value)=>{
+        a.addAttr('drawableLeftUri', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = value ? new NetDrawable(value) : null;
             this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
         });
-        this._attrBinder.addAttr('drawableTopUri', (value)=>{
+        a.addAttr('drawableTopUri', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = value ? new NetDrawable(value) : null;
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
         });
-        this._attrBinder.addAttr('drawableRightUri', (value)=>{
+        a.addAttr('drawableRightUri', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = value ? new NetDrawable(value) : null;
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
         });
-        this._attrBinder.addAttr('drawableBottomUri', (value)=>{
+        a.addAttr('drawableBottomUri', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = value ? new NetDrawable(value) : null;
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
         });
-        this._attrBinder.addAttr('drawablePadding', (value)=>{
-            this.setCompoundDrawablePadding(this._attrBinder.parseNumber(value));
+        a.addAttr('drawablePadding', (value)=>{
+            this.setCompoundDrawablePadding(a.parseNumber(value));
         });
-        this._attrBinder.addAttr('maxLines', (value)=>{
+        a.addAttr('maxLines', (value)=>{
             value = Number.parseInt(value);
             if(Number.isInteger(value)) this.setMaxLines(value);
         }, ():any=>{
             return this.getMaxLines();
         });
-        this._attrBinder.addAttr('maxHeight', (value)=>{
-            this.setMaxHeight(this._attrBinder.parseNumber(value, this.getMaxHeight()));
+        a.addAttr('maxHeight', (value)=>{
+            this.setMaxHeight(a.parseNumber(value, this.getMaxHeight()));
         }, ():any=>{
             return this.getMaxHeight();
         });
-        this._attrBinder.addAttr('lines', (value)=>{
+        a.addAttr('lines', (value)=>{
             value = Number.parseInt(value);
             if(Number.isInteger(value)) this.setLines(value);
         }, ()=>{
             if(this.getMaxLines() === this.getMinLines()) return this.getMaxLines();
             return null;
         });
-        this._attrBinder.addAttr('height', (value)=>{
-            value = this._attrBinder.parseNumber(value, -1);
+        a.addAttr('height', (value)=>{
+            value = a.parseNumber(value, -1);
             if(value>=0) this.setHeight(value);
         }, ()=>{
             if(this.getMaxHeight() === this.getMinimumHeight()) return this.getMaxHeight();
             return null;
         });
-        this._attrBinder.addAttr('minLines', (value)=>{
-            this.setMinLines(this._attrBinder.parseNumber(value, this.getMinLines()));
+        a.addAttr('minLines', (value)=>{
+            this.setMinLines(a.parseNumber(value, this.getMinLines()));
         }, ()=>{
             return this.getMinLines();
         });
-        this._attrBinder.addAttr('minHeight', (value)=>{
-            this.setMinHeight(this._attrBinder.parseNumber(value, this.getMinHeight()));
+        a.addAttr('minHeight', (value)=>{
+            this.setMinHeight(a.parseNumber(value, this.getMinHeight()));
         }, ()=>{
             return this.getMinHeight();
         });
-        this._attrBinder.addAttr('maxEms', (value)=>{
-            this.setMaxEms(this._attrBinder.parseNumber(value, this.getMaxEms()));
+        a.addAttr('maxEms', (value)=>{
+            this.setMaxEms(a.parseNumber(value, this.getMaxEms()));
         }, ()=>{
             return this.getMaxEms();
         });
-        this._attrBinder.addAttr('maxWidth', (value)=>{
-            this.setMaxWidth(this._attrBinder.parseNumber(value, this.getMaxWidth()));
+        a.addAttr('maxWidth', (value)=>{
+            this.setMaxWidth(a.parseNumber(value, this.getMaxWidth()));
         }, ()=>{
             return this.getMaxWidth();
         });
-        this._attrBinder.addAttr('ems', (value)=>{
-            let ems = this._attrBinder.parseNumber(value, null);
+        a.addAttr('ems', (value)=>{
+            let ems = a.parseNumber(value, null);
             if(ems!=null) this.setEms(ems);
         }, ()=>{
             if(this.getMinEms() === this.getMaxEms()) return this.getMaxEms();
             return null;
         });
-        this._attrBinder.addAttr('width', (value)=>{
-            value = this._attrBinder.parseNumber(value, -1);
+        a.addAttr('width', (value)=>{
+            value = a.parseNumber(value, -1);
             if(value>=0) this.setWidth(value);
         }, ()=>{
             if(this.getMinWidth() === this.getMaxWidth()) return this.getMinWidth();
             return null;
         });
-        this._attrBinder.addAttr('minEms', (value)=>{
-            this.setMinEms(this._attrBinder.parseNumber(value, this.getMinEms()));
+        a.addAttr('minEms', (value)=>{
+            this.setMinEms(a.parseNumber(value, this.getMinEms()));
         }, ()=>{
             return this.getMinEms();
         });
-        this._attrBinder.addAttr('minWidth', (value)=>{
-            this.setMinWidth(this._attrBinder.parseNumber(value, this.getMinWidth()));
+        a.addAttr('minWidth', (value)=>{
+            this.setMinWidth(a.parseNumber(value, this.getMinWidth()));
         }, ()=>{
             return this.getMinWidth();
         });
-        this._attrBinder.addAttr('gravity', (value)=>{
-            this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
+        a.addAttr('gravity', (value)=>{
+            this.setGravity(a.parseGravity(value, this.mGravity));
         }, ()=>{
             return this.mGravity;
         });
-        this._attrBinder.addAttr('hint', (value)=>{
-            this.setHint(value);
+        a.addAttr('hint', (value)=>{
+            this.setHint(a.parseString(value));
         }, ()=>{
             return this.getHint();
         });
-        this._attrBinder.addAttr('text', (value)=>{
-            this.setText(value);
+        a.addAttr('text', (value)=>{
+            this.setText(a.parseString(value));
         }, ()=>{
             return this.getText();
         });
-        this._attrBinder.addAttr('scrollHorizontally', (value)=>{
-            this.setHorizontallyScrolling(this._attrBinder.parseBoolean(value, false));
+        a.addAttr('scrollHorizontally', (value)=>{
+            this.setHorizontallyScrolling(a.parseBoolean(value, false));
         });
-        this._attrBinder.addAttr('singleLine', (value)=>{
-            this.setSingleLine(this._attrBinder.parseBoolean(value, false));
+        a.addAttr('singleLine', (value)=>{
+            this.setSingleLine(a.parseBoolean(value, false));
         });
-        this._attrBinder.addAttr('ellipsize', (value)=>{
+        a.addAttr('ellipsize', (value)=>{
             let ellipsize = TextUtils.TruncateAt[(value+'').toUpperCase()];
             if(ellipsize) this.setEllipsize(ellipsize);
         });
-        this._attrBinder.addAttr('marqueeRepeatLimit', (value)=>{
-            let marqueeRepeatLimit = this._attrBinder.parseNumber(value, -1);
+        a.addAttr('marqueeRepeatLimit', (value)=>{
+            let marqueeRepeatLimit = a.parseNumber(value, -1);
             if(marqueeRepeatLimit>=0) this.setMarqueeRepeatLimit(marqueeRepeatLimit);
         });
-        this._attrBinder.addAttr('includeFontPadding', (value)=>{
-            this.setIncludeFontPadding(this._attrBinder.parseBoolean(value, false));
+        a.addAttr('includeFontPadding', (value)=>{
+            this.setIncludeFontPadding(a.parseBoolean(value, false));
         });
-        this._attrBinder.addAttr('enabled', (value)=>{
-            this.setEnabled(this._attrBinder.parseBoolean(value, this.isEnabled()));
+        a.addAttr('enabled', (value)=>{
+            this.setEnabled(a.parseBoolean(value, this.isEnabled()));
         });
-        this._attrBinder.addAttr('lineSpacingExtra', (value)=>{
-            this.setLineSpacing(this._attrBinder.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);
+        a.addAttr('lineSpacingExtra', (value)=>{
+            this.setLineSpacing(a.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);
         }, ()=>{
             return this.mSpacingAdd;
         });
-        this._attrBinder.addAttr('lineSpacingMultiplier', (value)=>{
-            this.setLineSpacing(this.mSpacingAdd, this._attrBinder.parseNumber(value, this.mSpacingMult));
+        a.addAttr('lineSpacingMultiplier', (value)=>{
+            this.setLineSpacing(this.mSpacingAdd, a.parseNumber(value, this.mSpacingMult));
         }, ()=>{
             return this.mSpacingMult;
         });

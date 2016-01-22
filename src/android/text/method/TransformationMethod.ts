@@ -44,7 +44,7 @@ export interface TransformationMethod {
 }
     export module TransformationMethod{
         export function isImpl(obj):boolean {
-            return obj['getTransformation'] && obj['onFocusChanged'];
+            return obj && obj['getTransformation'] && obj['onFocusChanged'];
         }
     }
 }

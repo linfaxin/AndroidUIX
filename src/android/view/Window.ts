@@ -225,6 +225,7 @@ export class Window {
 
         this.initDecorView();
         this.initAttachInfo();
+        this.getAttributes().setTitle(context.androidUI.appName);//default title
     }
 
     private initDecorView(){

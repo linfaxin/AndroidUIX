@@ -48,6 +48,7 @@
 
 
 ///<reference path="android/app/Activity.ts"/>
+///<reference path="android/app/ActionBarActivity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
 ///<reference path="androidui/image/NetDrawable.ts"/>
 ///<reference path="androidui/widget/HtmlView.ts"/>

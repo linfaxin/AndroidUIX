@@ -6,6 +6,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import ActionBarActivity = android.app.ActionBarActivity;
     import Intent = android.content.Intent;
     import View = android.view.View;
     import TextView = android.widget.TextView;
@@ -14,11 +15,13 @@ module sample.app {
     import Gravity = android.view.Gravity;
 
     const TAG = 'SampleContacteActivity';
-    export class SampleContacteActivity extends Activity {
+    export class SampleContacteActivity extends ActionBarActivity {
 
         private printTextView:TextView;
         protected onCreate(savedInstanceState:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
+            this.setTitle('Activity Start&Result');
+            
             this.setContentView(R.layout.sample_contacte);
 
 
@@ -56,7 +59,7 @@ module sample.app {
         }
     }
 
-    export class SampleShowIntentActivity extends Activity{
+    export class SampleShowIntentActivity extends ActionBarActivity{
         protected onCreate(savedInstanceState:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
 
@@ -66,7 +69,7 @@ module sample.app {
         }
     }
 
-    export class SampleResultActivity extends Activity{
+    export class SampleResultActivity extends ActionBarActivity{
         protected onCreate(savedInstanceState:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
             const activity = this;

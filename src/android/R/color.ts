@@ -41,5 +41,13 @@ module android.R{
             }
             return new DefaultStyleTextColor();
         }
+
+        static get white():number{
+            return Color.WHITE;
+        }
+
+        static get black():number{
+            return Color.BLACK;
+        }
     }
 }

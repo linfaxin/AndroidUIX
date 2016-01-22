@@ -4,6 +4,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import ActionBarActivity = android.app.ActionBarActivity;
     import TextView = android.widget.TextView;
     import Button = android.widget.Button;
     import View = android.view.View;
@@ -16,9 +17,10 @@ module sample.app {
     import R = sample.app.R;
 
 
-    export class SampleAnimationActivity extends Activity {
+    export class SampleAnimationActivity extends ActionBarActivity {
         onCreate():void {
             super.onCreate();
+            this.setTitle('Animation');
             this.setContentView(R.layout.sample_animation);
 
             let rotateView = this.findViewById('rotate_repeat');

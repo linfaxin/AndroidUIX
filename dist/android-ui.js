@@ -4303,9 +4303,10 @@ var android;
     var R;
     (function (R) {
         const _layout_data = {
+            "action_bar": "<merge>\n    <LinearLayout\n            id=\"action_bar_center_layout\"\n            android:layout_marginLeft=\"60dp\"\n            android:layout_marginRight=\"60dp\"\n            android:minHeight=\"48dp\"\n            android:gravity=\"center\"\n            android:orientation=\"vertical\">\n        <TextView\n                id=\"action_bar_title\"\n                android:gravity=\"center\"\n                android:drawablePadding=\"4dp\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:textColor=\"@android:color/white\"\n                android:textSize=\"18sp\"\n                ></TextView>\n        <TextView\n                id=\"action_bar_sub_title\"\n                android:visibility=\"gone\"\n                android:gravity=\"center\"\n                android:layout_marginTop=\"4dp\"\n                android:drawablePadding=\"4dp\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:textColor=\"@android:color/white\"\n                android:textSize=\"12sp\"\n                ></TextView>\n    </LinearLayout>\n    <Button\n            id=\"action_bar_left\"\n            android:visibility=\"gone\"\n            android:layout_gravity=\"left|center_vertical\"\n            android:layout_width=\"wrap_content\"\n            android:background=\"@android:drawable/item_background\"\n            android:textColor=\"@android:color/white\"\n            android:paddingLeft=\"6dp\"\n            android:paddingRight=\"6dp\"\n            android:drawablePadding=\"4dp\"\n            android:minWidth=\"32dp\"\n            android:textSize=\"17sp\"\n            android:singleLine=\"true\"\n            ></Button>\n    <Button\n            id=\"action_bar_right\"\n            android:visibility=\"gone\"\n            android:layout_gravity=\"right|center_vertical\"\n            android:layout_width=\"wrap_content\"\n            android:background=\"@android:drawable/item_background\"\n            android:textColor=\"@android:color/white\"\n            android:paddingRight=\"6dp\"\n            android:paddingRight=\"6dp\"\n            android:drawablePadding=\"4dp\"\n            android:minWidth=\"32dp\"\n            android:textSize=\"17sp\"\n            android:singleLine=\"true\"\n            ></Button>\n</merge>\n",
             "alert_dialog": "\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<LinearLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"parentPanel\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:viewShadowColor=\"black\"\n    android:viewShadowDy=\"3dp\"\n    android:viewShadowRadius=\"10dp\"\n    android:cornerRadius=\"4dp\"\n    android:layout_marginStart=\"8dip\"\n    android:layout_marginEnd=\"8dip\"\n    android:orientation=\"vertical\">\n\n    <LinearLayout android:id=\"topPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\">\n        <View android:id=\"titleDividerTop\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <LinearLayout android:id=\"title_template\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:gravity=\"center_vertical|start\"\n            android:minHeight=\"64dp\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\">\n            <ImageView android:id=\"icon\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:paddingEnd=\"8dip\"></ImageView>\n            <TextView android:id=\"alertTitle\"\n                android:maxLines=\"1\"\n                android:scrollHorizontally=\"true\"\n                android:textSize=\"22sp\"\n                android:textColor=\"#333\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:textAlignment=\"viewStart\"></TextView>\n        </LinearLayout>\n        <View android:id=\"titleDivider\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </LinearLayout>\n\n    <LinearLayout android:id=\"contentPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:orientation=\"vertical\"\n        android:minHeight=\"64dp\">\n        <ScrollView android:id=\"scrollView\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:clipToPadding=\"false\">\n            <TextView android:id=\"message\"\n                android:textSize=\"18sp\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:paddingStart=\"16dip\"\n                android:paddingEnd=\"16dip\"\n                android:paddingTop=\"8dip\"\n                android:paddingBottom=\"8dip\"></TextView>\n        </ScrollView>\n    </LinearLayout>\n\n    <FrameLayout android:id=\"customPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:minHeight=\"64dp\">\n        <FrameLayout android:id=\"custom\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\" ></FrameLayout>\n    </FrameLayout>\n\n    <LinearLayout android:id=\"buttonPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:minHeight=\"48dip\"\n        android:orientation=\"vertical\"\n        android:divider=\"@android:drawable/divider_horizontal\"\n        android:showDividers=\"beginning\"\n        android:dividerPadding=\"0dip\">\n        <LinearLayout\n            android:divider=\"@android:drawable/divider_vertical\"\n            android:showDividers=\"middle\"\n            android:dividerPadding=\"0dp\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:layoutDirection=\"locale\"\n            android:measureWithLargestChild=\"true\">\n            <Button android:id=\"button2\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"start\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button3\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"center_horizontal\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button1\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"end\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n        </LinearLayout>\n     </LinearLayout>\n</LinearLayout>\n",
             "alert_dialog_progress": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2011 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"wrap_content\" android:layout_height=\"match_parent\">\n        <ProgressBar android:id=\"progress\"\n            style=\"@android:attr/progressBarStyleHorizontal\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dip\"\n            android:layout_marginBottom=\"1dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_centerHorizontal=\"true\"></ProgressBar>\n        <TextView\n            android:id=\"progress_percent\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:paddingBottom=\"16dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_alignParentStart=\"true\"\n            android:layout_below=\"progress\"\n        ></TextView>\n        <TextView\n            android:id=\"progress_number\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:paddingBottom=\"16dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_alignParentEnd=\"true\"\n            android:layout_below=\"progress\"\n        ></TextView>\n</RelativeLayout>\n",
-            "select_dialog": "<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the ListView to display the items.\n    Assign an ID so its state will be saved/restored.\n-->\n<view class=\"android.app.AlertController.RecycleListView\"\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"select_dialog_listview\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:cacheColorHint=\"@null\"\n    android:divider=\"@android:drawable/list_divider\"\n    android:scrollbars=\"vertical\"\n    android:overScrollMode=\"ifContentScrolls\"\n    android:textAlignment=\"viewStart\" />\n",
+            "select_dialog": "<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the ListView to display the items.\n    Assign an ID so its state will be saved/restored.\n-->\n<view class=\"android.app.AlertController.RecycleListView\"\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"select_dialog_listview\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:cacheColorHint=\"@null\"\n    android:divider=\"@android:drawable/list_divider\"\n    android:scrollbars=\"vertical\"\n    android:overScrollMode=\"ifContentScrolls\"\n    android:textAlignment=\"viewStart\" ></view>\n",
             "select_dialog_item": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the TextView to display individual\n    items.\n-->\n<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:ellipsize=\"end\"\n></TextView>\n",
             "select_dialog_multichoice": "\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_check\"\n    android:ellipsize=\"end\"\n></CheckedTextView>\n",
             "select_dialog_singlechoice": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_radio\"\n    android:ellipsize=\"end\"\n></CheckedTextView>\n",
@@ -4327,6 +4328,7 @@ var android;
                 return data;
             }
         }
+        layout.action_bar = '@android:layout/action_bar';
         layout.alert_dialog = '@android:layout/alert_dialog';
         layout.alert_dialog_progress = '@android:layout/alert_dialog_progress';
         layout.select_dialog = '@android:layout/select_dialog';
@@ -4434,6 +4436,10 @@ var android;
                 getString(refString, notFindValue = refString) {
                     if (!refString || !refString.startsWith('@'))
                         return notFindValue;
+                    if (refString.startsWith('@android:string/')) {
+                        refString = refString.substring('@android:string/'.length);
+                        return android.R.string_[refString];
+                    }
                     let referenceArray = [];
                     let attrValue = refString;
                     while (attrValue && attrValue.startsWith('@')) {
@@ -8715,8 +8721,8 @@ var android;
             static get item_background() {
                 let stateList = new StateListDrawable();
                 stateList.addState([View.VIEW_STATE_FOCUSED, -View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
-                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
-                stateList.addState([-View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(Color.LTGRAY));
+                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(0x88888888));
+                stateList.addState([-View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(0x88888888));
                 stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
                 stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
                 return stateList;
@@ -8892,6 +8898,12 @@ var android;
     (function (R) {
         var NetImage = androidui.image.NetImage;
         var data = {
+            "actionbar_ic_back_white": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAzCAMAAABR9YM8AAAAclBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9eWEHEAAAAJXRSTlMA+wjy9g/JaUDVsqZONr6IFePdmHhbJBzr6c4tVEm9o5OCcF0v6lgICQAAALZJREFUOMu11EcSgzAQRFEZRBbZJjtb97+iS1PFrpuV+Nu3UphRpFq3KSNr7cLJdpCu1pVweiNKhGpOL0S3i6Me0Sb0RGSECkR3oRxRqoUCShWiMqT0E4ojQOtEaRDKGkQtpVGoGxF1lJrMUTtQmhFFi6NpRRQ7ChGpQqhUKHkVo2DZfmh6+0t0gLFvTLVgcICVBwTf9oHRCOa+cdtHhQ9m4Ru/9gATwf4crBVfdlpxnBXpE87mD+wlJVcMMSJcAAAAAElFTkSuQmCC"
+            ],
             "btn_check_off_disabled_focused_holo_light": [
                 null,
                 null,
@@ -9140,6 +9152,7 @@ var android;
             ]
         };
         var imageCache = {
+            actionbar_ic_back_white: null,
             btn_check_off_disabled_focused_holo_light: null,
             btn_check_off_disabled_holo_light: null,
             btn_check_off_focused_holo_light: null,
@@ -9193,6 +9206,9 @@ var android;
             throw Error('Not find radio image. May something error in build.');
         }
         class image_base64 {
+            static get actionbar_ic_back_white() {
+                return imageCache.actionbar_ic_back_white || (imageCache.actionbar_ic_back_white = findRatioImage(data.actionbar_ic_back_white));
+            }
             static get btn_check_off_disabled_focused_holo_light() {
                 return imageCache.btn_check_off_disabled_focused_holo_light || (imageCache.btn_check_off_disabled_focused_holo_light = findRatioImage(data.btn_check_off_disabled_focused_holo_light));
             }
@@ -9321,16 +9337,17 @@ var android;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
-///<reference path="../../androidui/image/OverrideSizeDrawable.ts"/>
+///<reference path="../../androidui/image/ChangeImageSizeDrawable.ts"/>
 ///<reference path="image_base64.ts"/>
 var android;
 (function (android) {
     var R;
     (function (R) {
         var NetDrawable = androidui.image.NetDrawable;
-        var OverrideSizeDrawable = androidui.image.ChangeImageSizeDrawable;
+        var ChangeImageSizeDrawable = androidui.image.ChangeImageSizeDrawable;
         const density = android.content.res.Resources.getDisplayMetrics().density;
         class image {
+            static get actionbar_ic_back_white() { return new NetDrawable(R.image_base64.actionbar_ic_back_white); }
             static get btn_check_off_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.btn_check_off_disabled_focused_holo_light); }
             static get btn_check_off_disabled_holo_light() { return new NetDrawable(R.image_base64.btn_check_off_disabled_holo_light); }
             static get btn_check_off_focused_holo_light() { return new NetDrawable(R.image_base64.btn_check_off_focused_holo_light); }
@@ -9351,10 +9368,10 @@ var android;
             static get btn_radio_on_focused_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_focused_holo_light); }
             static get btn_radio_on_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_holo_light); }
             static get btn_radio_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_radio_on_pressed_holo_light); }
-            static get btn_rating_star_off_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_off_pressed_holo_light); }
             static get btn_rating_star_off_normal_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_off_normal_holo_light); }
-            static get btn_rating_star_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_pressed_holo_light); }
+            static get btn_rating_star_off_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_off_pressed_holo_light); }
             static get btn_rating_star_on_normal_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_normal_holo_light); }
+            static get btn_rating_star_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_pressed_holo_light); }
             static get progressbar_indeterminate_holo1() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo1); }
             static get progressbar_indeterminate_holo2() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo2); }
             static get progressbar_indeterminate_holo3() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo3); }
@@ -9372,13 +9389,13 @@ var android;
             static get scrubber_control_pressed_holo() { return new NetDrawable(R.image_base64.scrubber_control_pressed_holo); }
             static get spinner_76_inner_holo() { return new NetDrawable(R.image_base64.spinner_76_inner_holo); }
             static get spinner_76_outer_holo() { return new NetDrawable(R.image_base64.spinner_76_outer_holo); }
-            static get spinner_48_outer_holo() { return new OverrideSizeDrawable(image.spinner_76_outer_holo, 48 * density, 48 * density); }
-            static get spinner_48_inner_holo() { return new OverrideSizeDrawable(image.spinner_76_inner_holo, 48 * density, 48 * density); }
-            static get spinner_16_outer_holo() { return new OverrideSizeDrawable(image.spinner_76_outer_holo, 16 * density, 16 * density); }
-            static get spinner_16_inner_holo() { return new OverrideSizeDrawable(image.spinner_76_inner_holo, 16 * density, 16 * density); }
-            static get rate_star_small_off_holo_light() { return new OverrideSizeDrawable(image.rate_star_big_half_holo_light, 16 * density, 16 * density); }
-            static get rate_star_small_half_holo_light() { return new OverrideSizeDrawable(image.rate_star_big_off_holo_light, 16 * density, 16 * density); }
-            static get rate_star_small_on_holo_light() { return new OverrideSizeDrawable(image.rate_star_big_on_holo_light, 16 * density, 16 * density); }
+            static get spinner_48_outer_holo() { return new ChangeImageSizeDrawable(image.spinner_76_outer_holo, 48 * density, 48 * density); }
+            static get spinner_48_inner_holo() { return new ChangeImageSizeDrawable(image.spinner_76_inner_holo, 48 * density, 48 * density); }
+            static get spinner_16_outer_holo() { return new ChangeImageSizeDrawable(image.spinner_76_outer_holo, 16 * density, 16 * density); }
+            static get spinner_16_inner_holo() { return new ChangeImageSizeDrawable(image.spinner_76_inner_holo, 16 * density, 16 * density); }
+            static get rate_star_small_off_holo_light() { return new ChangeImageSizeDrawable(image.rate_star_big_half_holo_light, 16 * density, 16 * density); }
+            static get rate_star_small_half_holo_light() { return new ChangeImageSizeDrawable(image.rate_star_big_off_holo_light, 16 * density, 16 * density); }
+            static get rate_star_small_on_holo_light() { return new ChangeImageSizeDrawable(image.rate_star_big_on_holo_light, 16 * density, 16 * density); }
         }
         R.image = image;
     })(R = android.R || (android.R = {}));
@@ -9396,6 +9413,7 @@ var android;
     var R;
     (function (R) {
         var ColorStateList = android.content.res.ColorStateList;
+        var Color = android.graphics.Color;
         class color {
             static get textView_textColor() {
                 let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
@@ -9416,6 +9434,12 @@ var android;
                     }
                 }
                 return new DefaultStyleTextColor();
+            }
+            static get white() {
+                return Color.WHITE;
+            }
+            static get black() {
+                return Color.BLACK;
             }
         }
         R.color = color;
@@ -10680,6 +10704,11 @@ var android;
                     dropDownVerticalOffset: '0dp',
                     dropDownHorizontalOffset: '0dp',
                     dropDownWidth: -2,
+                };
+            }
+            static get actionBarStyle() {
+                return {
+                    background: new ColorDrawable(0xff333333)
                 };
             }
         }
@@ -15850,6 +15879,7 @@ var android;
                 this.ok = '确定';
                 this.cancel = '取消';
                 this.close = '关闭';
+                this.back = '返回';
                 this.crash_catch_alert = '程序发生错误, 即将重载网页:';
                 this.prll_header_state_normal = '下拉以刷新';
                 this.prll_header_state_ready = '松开马上刷新';
@@ -15865,6 +15895,7 @@ var android;
         string_.ok = 'OK';
         string_.cancel = 'Cancel';
         string_.close = 'Close';
+        string_.back = 'Back';
         string_.crash_catch_alert = 'Some error happen, will refresh page:';
         string_.prll_header_state_normal = 'Pull to refresh';
         string_.prll_header_state_ready = 'Release to refresh';
@@ -15924,7 +15955,7 @@ var androidui;
             return this._windowBound;
         }
         init() {
-            this.androidUIElement.classList.add(AndroidUI.DomClassName);
+            this.appName = this.androidUIElement.getAttribute('label');
             this._viewRootImpl = new android.view.ViewRootImpl();
             this._viewRootImpl.androidUIElement = this.androidUIElement;
             this.rootResourceElement = this.androidUIElement.querySelector('resources');
@@ -16189,34 +16220,33 @@ var androidui;
             }
         }
     }
-    AndroidUI.DomClassName = 'AndroidUI';
     AndroidUI.BindToElementName = 'AndroidUI';
     androidui.AndroidUI = AndroidUI;
     let styleElement = document.createElement('style');
     styleElement.innerHTML += `
-        .${AndroidUI.DomClassName} {
+        android-ui {
             position : relative;
             overflow : hidden;
             display : block;
             outline: none;
         }
-        .${AndroidUI.DomClassName} * {
+        android-ui * {
             overflow : hidden;
             border : none;
             outline: none;
             pointer-events: auto;
         }
-        .${AndroidUI.DomClassName} resources {
+        android-ui resources {
             display: none;
         }
-        .${AndroidUI.DomClassName} Button {
+        android-ui Button {
             border: none;
             background: none;
         }
-        .${AndroidUI.DomClassName} windowsgroup {
+        android-ui windowsgroup {
             pointer-events: none;
         }
-        .${AndroidUI.DomClassName} > canvas {
+        android-ui > canvas {
             position: absolute;
             left: 0;
             top: 0;
@@ -24415,6 +24445,7 @@ var android;
                 this.mContext = context;
                 this.initDecorView();
                 this.initAttachInfo();
+                this.getAttributes().setTitle(context.androidUI.appName);
             }
             initDecorView() {
                 this.mDecor = new DecorView(this);
@@ -31477,7 +31508,7 @@ var android;
             var TransformationMethod;
             (function (TransformationMethod) {
                 function isImpl(obj) {
-                    return obj['getTransformation'] && obj['onFocusChanged'];
+                    return obj && obj['getTransformation'] && obj['onFocusChanged'];
                 }
                 TransformationMethod.isImpl = isImpl;
             })(TransformationMethod = method.TransformationMethod || (method.TransformationMethod = {}));
@@ -31880,103 +31911,104 @@ var android;
                 this.mHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
                 this.mMovement = this.getDefaultMovementMethod();
                 this.mTransformation = null;
-                this._attrBinder.addAttr('textColorHighlight', (value) => {
-                    this.setHighlightColor(this._attrBinder.parseColor(value, this.mHighlightColor));
+                const a = this._attrBinder;
+                a.addAttr('textColorHighlight', (value) => {
+                    this.setHighlightColor(a.parseColor(value, this.mHighlightColor));
                 });
-                this._attrBinder.addAttr('textColor', (value) => {
-                    let color = this._attrBinder.parseColorList(value);
+                a.addAttr('textColor', (value) => {
+                    let color = a.parseColorList(value);
                     if (color)
                         this.setTextColor(color);
                 }, () => {
                     return this.mTextColor;
                 });
-                this._attrBinder.addAttr('textColorHint', (value) => {
-                    let color = this._attrBinder.parseColorList(value);
+                a.addAttr('textColorHint', (value) => {
+                    let color = a.parseColorList(value);
                     if (color)
                         this.setHintTextColor(color);
                 }, () => {
                     return this.mHintTextColor;
                 });
-                this._attrBinder.addAttr('textSize', (value) => {
-                    let size = this._attrBinder.parseNumber(value, this.mTextPaint.getTextSize());
+                a.addAttr('textSize', (value) => {
+                    let size = a.parseNumber(value, this.mTextPaint.getTextSize());
                     this.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
                 }, () => {
                     return this.mTextPaint.getTextSize();
                 });
-                this._attrBinder.addAttr('textAllCaps', (value) => {
-                    this.setAllCaps(this._attrBinder.parseBoolean(value, true));
+                a.addAttr('textAllCaps', (value) => {
+                    this.setAllCaps(a.parseBoolean(value, true));
                 });
-                this._attrBinder.addAttr('shadowColor', (value) => {
-                    this.setShadowLayer(this.mShadowRadius, this.mShadowDx, this.mShadowDy, this._attrBinder.parseColor(value, this.mTextPaint.shadowColor));
+                a.addAttr('shadowColor', (value) => {
+                    this.setShadowLayer(this.mShadowRadius, this.mShadowDx, this.mShadowDy, a.parseColor(value, this.mTextPaint.shadowColor));
                 });
-                this._attrBinder.addAttr('shadowDx', (value) => {
-                    let dx = this._attrBinder.parseNumber(value, this.mShadowDx);
+                a.addAttr('shadowDx', (value) => {
+                    let dx = a.parseNumber(value, this.mShadowDx);
                     this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
                 });
-                this._attrBinder.addAttr('shadowDy', (value) => {
-                    let dy = this._attrBinder.parseNumber(value, this.mShadowDy);
+                a.addAttr('shadowDy', (value) => {
+                    let dy = a.parseNumber(value, this.mShadowDy);
                     this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
                 });
-                this._attrBinder.addAttr('shadowRadius', (value) => {
-                    let radius = this._attrBinder.parseNumber(value, this.mShadowRadius);
+                a.addAttr('shadowRadius', (value) => {
+                    let radius = a.parseNumber(value, this.mShadowRadius);
                     this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
                 });
-                this._attrBinder.addAttr('drawableLeft', (value) => {
+                a.addAttr('drawableLeft', (value) => {
                     let dr = this.mDrawables || {};
-                    let drawable = this._attrBinder.parseDrawable(value);
+                    let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
                 });
-                this._attrBinder.addAttr('drawableTop', (value) => {
+                a.addAttr('drawableTop', (value) => {
                     let dr = this.mDrawables || {};
-                    let drawable = this._attrBinder.parseDrawable(value);
+                    let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
                 });
-                this._attrBinder.addAttr('drawableRight', (value) => {
+                a.addAttr('drawableRight', (value) => {
                     let dr = this.mDrawables || {};
-                    let drawable = this._attrBinder.parseDrawable(value);
+                    let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
                 });
-                this._attrBinder.addAttr('drawableBottom', (value) => {
+                a.addAttr('drawableBottom', (value) => {
                     let dr = this.mDrawables || {};
-                    let drawable = this._attrBinder.parseDrawable(value);
+                    let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
                 });
-                this._attrBinder.addAttr('drawableLeftUri', (value) => {
+                a.addAttr('drawableLeftUri', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
                 });
-                this._attrBinder.addAttr('drawableTopUri', (value) => {
+                a.addAttr('drawableTopUri', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
                 });
-                this._attrBinder.addAttr('drawableRightUri', (value) => {
+                a.addAttr('drawableRightUri', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
                 });
-                this._attrBinder.addAttr('drawableBottomUri', (value) => {
+                a.addAttr('drawableBottomUri', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
                 });
-                this._attrBinder.addAttr('drawablePadding', (value) => {
-                    this.setCompoundDrawablePadding(this._attrBinder.parseNumber(value));
+                a.addAttr('drawablePadding', (value) => {
+                    this.setCompoundDrawablePadding(a.parseNumber(value));
                 });
-                this._attrBinder.addAttr('maxLines', (value) => {
+                a.addAttr('maxLines', (value) => {
                     value = Number.parseInt(value);
                     if (Number.isInteger(value))
                         this.setMaxLines(value);
                 }, () => {
                     return this.getMaxLines();
                 });
-                this._attrBinder.addAttr('maxHeight', (value) => {
-                    this.setMaxHeight(this._attrBinder.parseNumber(value, this.getMaxHeight()));
+                a.addAttr('maxHeight', (value) => {
+                    this.setMaxHeight(a.parseNumber(value, this.getMaxHeight()));
                 }, () => {
                     return this.getMaxHeight();
                 });
-                this._attrBinder.addAttr('lines', (value) => {
+                a.addAttr('lines', (value) => {
                     value = Number.parseInt(value);
                     if (Number.isInteger(value))
                         this.setLines(value);
@@ -31985,8 +32017,8 @@ var android;
                         return this.getMaxLines();
                     return null;
                 });
-                this._attrBinder.addAttr('height', (value) => {
-                    value = this._attrBinder.parseNumber(value, -1);
+                a.addAttr('height', (value) => {
+                    value = a.parseNumber(value, -1);
                     if (value >= 0)
                         this.setHeight(value);
                 }, () => {
@@ -31994,28 +32026,28 @@ var android;
                         return this.getMaxHeight();
                     return null;
                 });
-                this._attrBinder.addAttr('minLines', (value) => {
-                    this.setMinLines(this._attrBinder.parseNumber(value, this.getMinLines()));
+                a.addAttr('minLines', (value) => {
+                    this.setMinLines(a.parseNumber(value, this.getMinLines()));
                 }, () => {
                     return this.getMinLines();
                 });
-                this._attrBinder.addAttr('minHeight', (value) => {
-                    this.setMinHeight(this._attrBinder.parseNumber(value, this.getMinHeight()));
+                a.addAttr('minHeight', (value) => {
+                    this.setMinHeight(a.parseNumber(value, this.getMinHeight()));
                 }, () => {
                     return this.getMinHeight();
                 });
-                this._attrBinder.addAttr('maxEms', (value) => {
-                    this.setMaxEms(this._attrBinder.parseNumber(value, this.getMaxEms()));
+                a.addAttr('maxEms', (value) => {
+                    this.setMaxEms(a.parseNumber(value, this.getMaxEms()));
                 }, () => {
                     return this.getMaxEms();
                 });
-                this._attrBinder.addAttr('maxWidth', (value) => {
-                    this.setMaxWidth(this._attrBinder.parseNumber(value, this.getMaxWidth()));
+                a.addAttr('maxWidth', (value) => {
+                    this.setMaxWidth(a.parseNumber(value, this.getMaxWidth()));
                 }, () => {
                     return this.getMaxWidth();
                 });
-                this._attrBinder.addAttr('ems', (value) => {
-                    let ems = this._attrBinder.parseNumber(value, null);
+                a.addAttr('ems', (value) => {
+                    let ems = a.parseNumber(value, null);
                     if (ems != null)
                         this.setEms(ems);
                 }, () => {
@@ -32023,8 +32055,8 @@ var android;
                         return this.getMaxEms();
                     return null;
                 });
-                this._attrBinder.addAttr('width', (value) => {
-                    value = this._attrBinder.parseNumber(value, -1);
+                a.addAttr('width', (value) => {
+                    value = a.parseNumber(value, -1);
                     if (value >= 0)
                         this.setWidth(value);
                 }, () => {
@@ -32032,60 +32064,60 @@ var android;
                         return this.getMinWidth();
                     return null;
                 });
-                this._attrBinder.addAttr('minEms', (value) => {
-                    this.setMinEms(this._attrBinder.parseNumber(value, this.getMinEms()));
+                a.addAttr('minEms', (value) => {
+                    this.setMinEms(a.parseNumber(value, this.getMinEms()));
                 }, () => {
                     return this.getMinEms();
                 });
-                this._attrBinder.addAttr('minWidth', (value) => {
-                    this.setMinWidth(this._attrBinder.parseNumber(value, this.getMinWidth()));
+                a.addAttr('minWidth', (value) => {
+                    this.setMinWidth(a.parseNumber(value, this.getMinWidth()));
                 }, () => {
                     return this.getMinWidth();
                 });
-                this._attrBinder.addAttr('gravity', (value) => {
-                    this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
+                a.addAttr('gravity', (value) => {
+                    this.setGravity(a.parseGravity(value, this.mGravity));
                 }, () => {
                     return this.mGravity;
                 });
-                this._attrBinder.addAttr('hint', (value) => {
-                    this.setHint(value);
+                a.addAttr('hint', (value) => {
+                    this.setHint(a.parseString(value));
                 }, () => {
                     return this.getHint();
                 });
-                this._attrBinder.addAttr('text', (value) => {
-                    this.setText(value);
+                a.addAttr('text', (value) => {
+                    this.setText(a.parseString(value));
                 }, () => {
                     return this.getText();
                 });
-                this._attrBinder.addAttr('scrollHorizontally', (value) => {
-                    this.setHorizontallyScrolling(this._attrBinder.parseBoolean(value, false));
+                a.addAttr('scrollHorizontally', (value) => {
+                    this.setHorizontallyScrolling(a.parseBoolean(value, false));
                 });
-                this._attrBinder.addAttr('singleLine', (value) => {
-                    this.setSingleLine(this._attrBinder.parseBoolean(value, false));
+                a.addAttr('singleLine', (value) => {
+                    this.setSingleLine(a.parseBoolean(value, false));
                 });
-                this._attrBinder.addAttr('ellipsize', (value) => {
+                a.addAttr('ellipsize', (value) => {
                     let ellipsize = TextUtils.TruncateAt[(value + '').toUpperCase()];
                     if (ellipsize)
                         this.setEllipsize(ellipsize);
                 });
-                this._attrBinder.addAttr('marqueeRepeatLimit', (value) => {
-                    let marqueeRepeatLimit = this._attrBinder.parseNumber(value, -1);
+                a.addAttr('marqueeRepeatLimit', (value) => {
+                    let marqueeRepeatLimit = a.parseNumber(value, -1);
                     if (marqueeRepeatLimit >= 0)
                         this.setMarqueeRepeatLimit(marqueeRepeatLimit);
                 });
-                this._attrBinder.addAttr('includeFontPadding', (value) => {
-                    this.setIncludeFontPadding(this._attrBinder.parseBoolean(value, false));
+                a.addAttr('includeFontPadding', (value) => {
+                    this.setIncludeFontPadding(a.parseBoolean(value, false));
                 });
-                this._attrBinder.addAttr('enabled', (value) => {
-                    this.setEnabled(this._attrBinder.parseBoolean(value, this.isEnabled()));
+                a.addAttr('enabled', (value) => {
+                    this.setEnabled(a.parseBoolean(value, this.isEnabled()));
                 });
-                this._attrBinder.addAttr('lineSpacingExtra', (value) => {
-                    this.setLineSpacing(this._attrBinder.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);
+                a.addAttr('lineSpacingExtra', (value) => {
+                    this.setLineSpacing(a.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);
                 }, () => {
                     return this.mSpacingAdd;
                 });
-                this._attrBinder.addAttr('lineSpacingMultiplier', (value) => {
-                    this.setLineSpacing(this.mSpacingAdd, this._attrBinder.parseNumber(value, this.mSpacingMult));
+                a.addAttr('lineSpacingMultiplier', (value) => {
+                    this.setLineSpacing(this.mSpacingAdd, a.parseNumber(value, this.mSpacingMult));
                 }, () => {
                     return this.mSpacingMult;
                 });
@@ -58620,6 +58652,174 @@ var uk;
         })(senab = co.senab || (co.senab = {}));
     })(co = uk.co || (uk.co = {}));
 })(uk || (uk = {}));
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/view/Gravity.ts"/>
+///<reference path="../../android/view/View.ts"/>
+///<reference path="../../android/view/ViewGroup.ts"/>
+///<reference path="../../android/view/Window.ts"/>
+///<reference path="../../android/widget/SpinnerAdapter.ts"/>
+///<reference path="../../android/widget/FrameLayout.ts"/>
+///<reference path="../../android/widget/TextView.ts"/>
+///<reference path="../../android/app/Activity.ts"/>
+///<reference path="../../android/app/Application.ts"/>
+///<reference path="../../android/R/attr.ts"/>
+///<reference path="../../android/R/layout.ts"/>
+var android;
+(function (android) {
+    var app;
+    (function (app) {
+        var View = android.view.View;
+        var FrameLayout = android.widget.FrameLayout;
+        class ActionBar extends FrameLayout {
+            constructor(context, bindElement, defStyle = android.R.attr.actionBarStyle) {
+                super(context, bindElement, defStyle);
+                context.getLayoutInflater().inflate(android.R.layout.action_bar, this);
+                this.mCenterLayout = this.findViewById('action_bar_center_layout');
+                this.mTitleView = this.findViewById('action_bar_title');
+                this.mSubTitleView = this.findViewById('action_bar_sub_title');
+                this.mActionLeft = this.findViewById('action_bar_left');
+                this.mActionRight = this.findViewById('action_bar_right');
+            }
+            setCustomView(view, layoutParams) {
+                this.mCenterLayout.removeAllViews();
+                this.mCustomView = view;
+                if (layoutParams)
+                    this.mCenterLayout.addView(view, layoutParams);
+                else
+                    this.mCenterLayout.addView(view);
+            }
+            setIcon(icon) {
+                icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+                let drawables = this.mTitleView.getCompoundDrawables();
+                this.mTitleView.setCompoundDrawables(icon, drawables[1], drawables[2], drawables[3]);
+            }
+            setLogo(logo) {
+                this.setIcon(logo);
+            }
+            setTitle(title) {
+                this.mTitleView.setText(title);
+            }
+            setSubtitle(subtitle) {
+                this.mSubTitleView.setText(subtitle);
+                let empty = subtitle == null || subtitle.length == 0;
+                this.mSubTitleView.setVisibility(empty ? View.GONE : View.VISIBLE);
+            }
+            getCustomView() {
+                return this.mCustomView;
+            }
+            getTitle() {
+                return this.mTitleView.getText().toString();
+            }
+            getSubtitle() {
+                return this.mSubTitleView.getText().toString();
+            }
+            show() {
+                this.setVisibility(View.VISIBLE);
+            }
+            hide() {
+                this.setVisibility(View.GONE);
+            }
+            isShowing() {
+                return this.isShown();
+            }
+            setActionLeft(name, icon, listener) {
+                this.mActionLeft.setText(name);
+                this.mActionLeft.setVisibility(View.VISIBLE);
+                let drawables = this.mActionLeft.getCompoundDrawables();
+                icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+                this.mActionLeft.setCompoundDrawables(icon, drawables[1], drawables[2], drawables[3]);
+                this.mActionLeft.setOnClickListener(listener);
+            }
+            hideActionLeft() {
+                this.mActionLeft.setVisibility(View.GONE);
+            }
+            setActionRight(name, icon, listener) {
+                this.mActionRight.setText(name);
+                this.mActionRight.setVisibility(View.VISIBLE);
+                let drawables = this.mActionRight.getCompoundDrawables();
+                icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+                this.mActionRight.setCompoundDrawables(drawables[0], drawables[1], icon, drawables[3]);
+                this.mActionRight.setOnClickListener(listener);
+            }
+            hideActionRight() {
+                this.mActionRight.setVisibility(View.GONE);
+            }
+        }
+        app.ActionBar = ActionBar;
+    })(app = android.app || (android.app = {}));
+})(android || (android = {}));
+/**
+ * Created by linfaxin on 16/1/21.
+ */
+///<reference path="Activity.ts"/>
+///<reference path="ActionBar.ts"/>
+var android;
+(function (android) {
+    var app;
+    (function (app) {
+        class ActionBarActivity extends app.Activity {
+            onCreate(savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                this.initActionBar();
+            }
+            initActionBar() {
+                this.setActionBar(new app.ActionBar(this));
+                this.initDefaultBackFinish();
+            }
+            initDefaultBackFinish() {
+                if (this.androidUI.mActivityThread.mLaunchedActivities.size === 0)
+                    return;
+                const activity = this;
+                this.mActionBar.setActionLeft(android.R.string_.back, android.R.image.actionbar_ic_back_white, {
+                    onClick(view) {
+                        activity.finish();
+                    }
+                });
+            }
+            setActionBar(actionBar) {
+                const activity = this;
+                let w = this.getWindow();
+                let decorView = w.mDecor;
+                this.mActionBar = actionBar;
+                decorView.addView(actionBar, -1, -2);
+                const onMeasure = decorView.onMeasure;
+                decorView.onMeasure = (widthMeasureSpec, heightMeasureSpec) => {
+                    onMeasure.call(decorView, widthMeasureSpec, heightMeasureSpec);
+                    if (activity.mActionBar === actionBar) {
+                        let params = w.mContentParent.getLayoutParams();
+                        if (params.topMargin != actionBar.getMeasuredHeight()) {
+                            params.topMargin = actionBar.getMeasuredHeight();
+                            onMeasure.call(decorView, widthMeasureSpec, heightMeasureSpec);
+                        }
+                    }
+                };
+            }
+            getActionBar() {
+                return this.mActionBar;
+            }
+            onTitleChanged(title, color) {
+                super.onTitleChanged(title, color);
+                this.mActionBar.setTitle(title);
+            }
+        }
+        app.ActionBarActivity = ActionBarActivity;
+    })(app = android.app || (android.app = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/10/26.
  */
@@ -60402,6 +60602,7 @@ var androidui;
 ///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
 ///<reference path="lib/uk/co/senab/photoview/PhotoView.ts"/>
 ///<reference path="android/app/Activity.ts"/>
+///<reference path="android/app/ActionBarActivity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
 ///<reference path="androidui/image/NetDrawable.ts"/>
 ///<reference path="androidui/widget/HtmlView.ts"/>

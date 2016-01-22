@@ -114,6 +114,11 @@ module android.content.res{
          */
         getString(refString:string, notFindValue=refString):string {
             if(!refString || !refString.startsWith('@')) return notFindValue;
+            if(refString.startsWith('@android:string/')){
+                refString = refString.substring('@android:string/'.length);
+                return android.R.string_[refString];
+            }
+
             let referenceArray = [];
             let attrValue = refString;
             while(attrValue && attrValue.startsWith('@')){//ref value

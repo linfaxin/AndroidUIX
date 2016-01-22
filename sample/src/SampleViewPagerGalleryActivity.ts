@@ -6,9 +6,11 @@ module sample.app {
     import Activity = android.app.Activity;
     import R = sample.app.R;
 
-    export class SampleViewPagerGalleryActivity extends Activity {
+    import ActionBarActivity = android.app.ActionBarActivity;
+    export class SampleViewPagerGalleryActivity extends ActionBarActivity {
         onCreate():void {
             super.onCreate();
+            this.setTitle('ImageGallery&Gesture')
             this.setContentView(R.layout.sample_viewpager_gallery);
         }
     }

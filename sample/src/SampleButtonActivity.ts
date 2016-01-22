@@ -3,13 +3,16 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import ActionBarActivity = android.app.ActionBarActivity;
     import Button = android.widget.Button;
     import View = android.view.View;
     import R = sample.app.R;
 
-    export class SampleButtonActivity extends Activity {
+    export class SampleButtonActivity extends ActionBarActivity {
         onCreate():void {
             super.onCreate();
+            this.setTitle('Button');
+
             this.setContentView(R.layout.sample_button);
 
             let btn_click:Button = <Button>this.findViewById('btn_click');

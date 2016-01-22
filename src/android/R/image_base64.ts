@@ -4,6 +4,12 @@ module android.R {
 
     //index=ratio, index-0 alway null, index-3 = @x3
     var data = {
+        "actionbar_ic_back_white": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAzCAMAAABR9YM8AAAAclBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9eWEHEAAAAJXRSTlMA+wjy9g/JaUDVsqZONr6IFePdmHhbJBzr6c4tVEm9o5OCcF0v6lgICQAAALZJREFUOMu11EcSgzAQRFEZRBbZJjtb97+iS1PFrpuV+Nu3UphRpFq3KSNr7cLJdpCu1pVweiNKhGpOL0S3i6Me0Sb0RGSECkR3oRxRqoUCShWiMqT0E4ojQOtEaRDKGkQtpVGoGxF1lJrMUTtQmhFFi6NpRRQ7ChGpQqhUKHkVo2DZfmh6+0t0gLFvTLVgcICVBwTf9oHRCOa+cdtHhQ9m4Ru/9gATwf4crBVfdlpxnBXpE87mD+wlJVcMMSJcAAAAAElFTkSuQmCC"
+        ],
         "btn_check_off_disabled_focused_holo_light": [
                 null,
                 null,
@@ -252,6 +258,7 @@ module android.R {
         ]
 };
     var imageCache = {
+        actionbar_ic_back_white:null,
         btn_check_off_disabled_focused_holo_light:null,
         btn_check_off_disabled_holo_light:null,
         btn_check_off_focused_holo_light:null,
@@ -305,6 +312,9 @@ module android.R {
         throw Error('Not find radio image. May something error in build.')
     }
     export class image_base64{
+        static get actionbar_ic_back_white(){
+            return imageCache.actionbar_ic_back_white || (imageCache.actionbar_ic_back_white=findRatioImage(data.actionbar_ic_back_white));
+        }
         static get btn_check_off_disabled_focused_holo_light(){
             return imageCache.btn_check_off_disabled_focused_holo_light || (imageCache.btn_check_off_disabled_focused_holo_light=findRatioImage(data.btn_check_off_disabled_focused_holo_light));
         }

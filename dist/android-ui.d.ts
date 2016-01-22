@@ -1019,6 +1019,7 @@ declare module android.content {
 declare module android.R {
     class layout {
         static getLayoutData(layoutRef: string): HTMLElement;
+        static action_bar: string;
         static alert_dialog: string;
         static alert_dialog_progress: string;
         static select_dialog: string;
@@ -1977,6 +1978,7 @@ declare module androidui.image {
 }
 declare module android.R {
     class image_base64 {
+        static actionbar_ic_back_white: any;
         static btn_check_off_disabled_focused_holo_light: any;
         static btn_check_off_disabled_holo_light: any;
         static btn_check_off_focused_holo_light: any;
@@ -2022,8 +2024,9 @@ declare module android.R {
 }
 declare module android.R {
     import NetDrawable = androidui.image.NetDrawable;
-    import OverrideSizeDrawable = androidui.image.ChangeImageSizeDrawable;
+    import ChangeImageSizeDrawable = androidui.image.ChangeImageSizeDrawable;
     class image {
+        static actionbar_ic_back_white: NetDrawable;
         static btn_check_off_disabled_focused_holo_light: NetDrawable;
         static btn_check_off_disabled_holo_light: NetDrawable;
         static btn_check_off_focused_holo_light: NetDrawable;
@@ -2044,10 +2047,10 @@ declare module android.R {
         static btn_radio_on_focused_holo_light: NetDrawable;
         static btn_radio_on_holo_light: NetDrawable;
         static btn_radio_on_pressed_holo_light: NetDrawable;
-        static btn_rating_star_off_pressed_holo_light: NetDrawable;
         static btn_rating_star_off_normal_holo_light: NetDrawable;
-        static btn_rating_star_on_pressed_holo_light: NetDrawable;
+        static btn_rating_star_off_pressed_holo_light: NetDrawable;
         static btn_rating_star_on_normal_holo_light: NetDrawable;
+        static btn_rating_star_on_pressed_holo_light: NetDrawable;
         static progressbar_indeterminate_holo1: NetDrawable;
         static progressbar_indeterminate_holo2: NetDrawable;
         static progressbar_indeterminate_holo3: NetDrawable;
@@ -2065,13 +2068,13 @@ declare module android.R {
         static scrubber_control_pressed_holo: NetDrawable;
         static spinner_76_inner_holo: NetDrawable;
         static spinner_76_outer_holo: NetDrawable;
-        static spinner_48_outer_holo: OverrideSizeDrawable;
-        static spinner_48_inner_holo: OverrideSizeDrawable;
-        static spinner_16_outer_holo: OverrideSizeDrawable;
-        static spinner_16_inner_holo: OverrideSizeDrawable;
-        static rate_star_small_off_holo_light: OverrideSizeDrawable;
-        static rate_star_small_half_holo_light: OverrideSizeDrawable;
-        static rate_star_small_on_holo_light: OverrideSizeDrawable;
+        static spinner_48_outer_holo: ChangeImageSizeDrawable;
+        static spinner_48_inner_holo: ChangeImageSizeDrawable;
+        static spinner_16_outer_holo: ChangeImageSizeDrawable;
+        static spinner_16_inner_holo: ChangeImageSizeDrawable;
+        static rate_star_small_off_holo_light: ChangeImageSizeDrawable;
+        static rate_star_small_half_holo_light: ChangeImageSizeDrawable;
+        static rate_star_small_on_holo_light: ChangeImageSizeDrawable;
     }
 }
 declare module android.R {
@@ -2079,6 +2082,8 @@ declare module android.R {
     class color {
         static textView_textColor: ColorStateList;
         static primary_text_light_disable_only: ColorStateList;
+        static white: number;
+        static black: number;
     }
 }
 declare module goog.math {
@@ -2409,6 +2414,9 @@ declare module android.R {
             dropDownVerticalOffset: string;
             dropDownHorizontalOffset: string;
             dropDownWidth: number;
+        };
+        static actionBarStyle: {
+            background: ColorDrawable;
         };
     }
     module attr {
@@ -3299,6 +3307,7 @@ declare module android.R {
         static ok: string;
         static cancel: string;
         static close: string;
+        static back: string;
         static crash_catch_alert: string;
         static prll_header_state_normal: string;
         static prll_header_state_ready: string;
@@ -3314,7 +3323,6 @@ declare module android.R {
 }
 declare module androidui {
     class AndroidUI {
-        static DomClassName: string;
         static BindToElementName: string;
         androidUIElement: AndroidUIElement;
         private _canvas;
@@ -3322,6 +3330,7 @@ declare module androidui {
         private mActivityThread;
         private _viewRootImpl;
         private mApplication;
+        appName: string;
         private rootResourceElement;
         private _windowBound;
         private tempRect;
@@ -10145,6 +10154,49 @@ declare module uk.co.senab.photoview {
         setOnScaleChangeListener(onScaleChangeListener: PhotoViewAttacher.OnScaleChangeListener): void;
         protected onDetachedFromWindow(): void;
         protected onAttachedToWindow(): void;
+    }
+}
+declare module android.app {
+    import Drawable = android.graphics.drawable.Drawable;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import FrameLayout = android.widget.FrameLayout;
+    class ActionBar extends FrameLayout {
+        private mCenterLayout;
+        private mCustomView;
+        private mTitleView;
+        private mSubTitleView;
+        private mActionLeft;
+        private mActionRight;
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        setCustomView(view: View, layoutParams?: ViewGroup.MarginLayoutParams): void;
+        setIcon(icon: Drawable): void;
+        setLogo(logo: Drawable): void;
+        setTitle(title: string): void;
+        setSubtitle(subtitle: string): void;
+        getCustomView(): View;
+        getTitle(): string;
+        getSubtitle(): string;
+        show(): void;
+        hide(): void;
+        isShowing(): boolean;
+        setActionLeft(name: string, icon: Drawable, listener: View.OnClickListener): void;
+        hideActionLeft(): void;
+        setActionRight(name: string, icon: Drawable, listener: View.OnClickListener): void;
+        hideActionRight(): void;
+    }
+    module ActionBar {
+    }
+}
+declare module android.app {
+    class ActionBarActivity extends Activity {
+        private mActionBar;
+        protected onCreate(savedInstanceState?: android.os.Bundle): void;
+        private initActionBar();
+        private initDefaultBackFinish();
+        setActionBar(actionBar: ActionBar): void;
+        getActionBar(): ActionBar;
+        protected onTitleChanged(title: string, color: number): void;
     }
 }
 declare module androidui.widget {

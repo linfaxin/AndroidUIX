@@ -185,12 +185,12 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var Animation = android.view.animation.Animation;
         var R = sample.app.R;
 
-        var SampleAnimationActivity = (function (_Activity) {
-            _inherits(SampleAnimationActivity, _Activity);
+        var SampleAnimationActivity = (function (_ActionBarActivity) {
+            _inherits(SampleAnimationActivity, _ActionBarActivity);
 
             function SampleAnimationActivity() {
                 _classCallCheck(this, SampleAnimationActivity);
@@ -202,6 +202,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleAnimationActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('Animation');
                     this.setContentView(R.layout.sample_animation);
                     var rotateView = this.findViewById('rotate_repeat');
                     var rotateAnimation = new android.view.animation.RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
@@ -239,7 +240,7 @@ var sample;
             }]);
 
             return SampleAnimationActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleAnimationActivity = SampleAnimationActivity;
     })(app = sample.app || (sample.app = {}));
@@ -251,15 +252,15 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var AlertDialog = android.app.AlertDialog;
         var Toast = android.widget.Toast;
         var TextView = android.widget.TextView;
         var PopupWindow = android.widget.PopupWindow;
         var R = sample.app.R;
 
-        var SampleBaseWidgetActivity = (function (_Activity2) {
-            _inherits(SampleBaseWidgetActivity, _Activity2);
+        var SampleBaseWidgetActivity = (function (_ActionBarActivity2) {
+            _inherits(SampleBaseWidgetActivity, _ActionBarActivity2);
 
             function SampleBaseWidgetActivity() {
                 _classCallCheck(this, SampleBaseWidgetActivity);
@@ -271,6 +272,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleBaseWidgetActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('Base Widget');
                     var activity = this;
                     this.setContentView(R.layout.sample_base_widget);
                     var btnOpenDialog = this.findViewById('btn_open_dialog');
@@ -298,7 +300,7 @@ var sample;
             }]);
 
             return SampleBaseWidgetActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleBaseWidgetActivity = SampleBaseWidgetActivity;
     })(app = sample.app || (sample.app = {}));
@@ -309,11 +311,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleButtonActivity = (function (_Activity3) {
-            _inherits(SampleButtonActivity, _Activity3);
+        var SampleButtonActivity = (function (_ActionBarActivity3) {
+            _inherits(SampleButtonActivity, _ActionBarActivity3);
 
             function SampleButtonActivity() {
                 _classCallCheck(this, SampleButtonActivity);
@@ -325,6 +327,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleButtonActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('Button');
                     this.setContentView(R.layout.sample_button);
                     var btn_click = this.findViewById('btn_click');
                     btn_click.setOnClickListener({
@@ -343,7 +346,7 @@ var sample;
             }]);
 
             return SampleButtonActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleButtonActivity = SampleButtonActivity;
     })(app = sample.app || (sample.app = {}));
@@ -358,6 +361,7 @@ var sample;
     var app;
     (function (app) {
         var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var Intent = android.content.Intent;
         var TextView = android.widget.TextView;
         var Button = android.widget.Button;
@@ -365,8 +369,8 @@ var sample;
         var Gravity = android.view.Gravity;
         var TAG = 'SampleContacteActivity';
 
-        var SampleContacteActivity = (function (_Activity4) {
-            _inherits(SampleContacteActivity, _Activity4);
+        var SampleContacteActivity = (function (_ActionBarActivity4) {
+            _inherits(SampleContacteActivity, _ActionBarActivity4);
 
             function SampleContacteActivity() {
                 _classCallCheck(this, SampleContacteActivity);
@@ -378,6 +382,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate(savedInstanceState) {
                     _get(Object.getPrototypeOf(SampleContacteActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    this.setTitle('Activity Start&Result');
                     this.setContentView(app.R.layout.sample_contacte);
                     this.printTextView = this.findViewById('console_tv');
                     var activity = this;
@@ -413,12 +418,12 @@ var sample;
             }]);
 
             return SampleContacteActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleContacteActivity = SampleContacteActivity;
 
-        var SampleShowIntentActivity = (function (_Activity5) {
-            _inherits(SampleShowIntentActivity, _Activity5);
+        var SampleShowIntentActivity = (function (_ActionBarActivity5) {
+            _inherits(SampleShowIntentActivity, _ActionBarActivity5);
 
             function SampleShowIntentActivity() {
                 _classCallCheck(this, SampleShowIntentActivity);
@@ -437,12 +442,12 @@ var sample;
             }]);
 
             return SampleShowIntentActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleShowIntentActivity = SampleShowIntentActivity;
 
-        var SampleResultActivity = (function (_Activity6) {
-            _inherits(SampleResultActivity, _Activity6);
+        var SampleResultActivity = (function (_ActionBarActivity6) {
+            _inherits(SampleResultActivity, _ActionBarActivity6);
 
             function SampleResultActivity() {
                 _classCallCheck(this, SampleResultActivity);
@@ -469,7 +474,7 @@ var sample;
             }]);
 
             return SampleResultActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleResultActivity = SampleResultActivity;
     })(app = sample.app || (sample.app = {}));
@@ -480,11 +485,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleDrawerLayoutActivity = (function (_Activity7) {
-            _inherits(SampleDrawerLayoutActivity, _Activity7);
+        var SampleDrawerLayoutActivity = (function (_ActionBarActivity7) {
+            _inherits(SampleDrawerLayoutActivity, _ActionBarActivity7);
 
             function SampleDrawerLayoutActivity() {
                 _classCallCheck(this, SampleDrawerLayoutActivity);
@@ -496,12 +501,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleDrawerLayoutActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('DrawerLayout');
                     this.setContentView(R.layout.sample_drawerlayout);
                 }
             }]);
 
             return SampleDrawerLayoutActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleDrawerLayoutActivity = SampleDrawerLayoutActivity;
     })(app = sample.app || (sample.app = {}));
@@ -512,15 +518,15 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var TextView = android.widget.TextView;
         var View = android.view.View;
         var ExpandableListView = android.widget.ExpandableListView;
         var BaseExpandableListAdapter = android.widget.BaseExpandableListAdapter;
         var R = sample.app.R;
 
-        var SampleExpandableListViewActivity = (function (_Activity8) {
-            _inherits(SampleExpandableListViewActivity, _Activity8);
+        var SampleExpandableListViewActivity = (function (_ActionBarActivity8) {
+            _inherits(SampleExpandableListViewActivity, _ActionBarActivity8);
 
             function SampleExpandableListViewActivity() {
                 _classCallCheck(this, SampleExpandableListViewActivity);
@@ -532,6 +538,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleExpandableListViewActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('ExpandableListView');
                     var listView = new ExpandableListView(this);
                     this.setContentView(listView);
                     listView.setExpandableAdapter(new MyListAdapter());
@@ -540,7 +547,7 @@ var sample;
             }]);
 
             return SampleExpandableListViewActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleExpandableListViewActivity = SampleExpandableListViewActivity;
 
@@ -633,11 +640,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleFrameLayoutActivity = (function (_Activity9) {
-            _inherits(SampleFrameLayoutActivity, _Activity9);
+        var SampleFrameLayoutActivity = (function (_ActionBarActivity9) {
+            _inherits(SampleFrameLayoutActivity, _ActionBarActivity9);
 
             function SampleFrameLayoutActivity() {
                 _classCallCheck(this, SampleFrameLayoutActivity);
@@ -649,12 +656,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleFrameLayoutActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('FrameLayout');
                     this.setContentView(R.layout.sample_framelayout);
                 }
             }]);
 
             return SampleFrameLayoutActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleFrameLayoutActivity = SampleFrameLayoutActivity;
     })(app = sample.app || (sample.app = {}));
@@ -668,13 +676,13 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var View = android.view.View;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleGridViewActivity = (function (_Activity10) {
-            _inherits(SampleGridViewActivity, _Activity10);
+        var SampleGridViewActivity = (function (_ActionBarActivity10) {
+            _inherits(SampleGridViewActivity, _ActionBarActivity10);
 
             function SampleGridViewActivity() {
                 _classCallCheck(this, SampleGridViewActivity);
@@ -686,6 +694,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleGridViewActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('GridView');
                     this.setContentView(R.layout.sample_gridview);
                     var listView = this.findViewById('gridView');
                     listView.setAdapter(new MyAdapter());
@@ -693,7 +702,7 @@ var sample;
             }]);
 
             return SampleGridViewActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleGridViewActivity = SampleGridViewActivity;
 
@@ -742,11 +751,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleHtmlViewActivity = (function (_Activity11) {
-            _inherits(SampleHtmlViewActivity, _Activity11);
+        var SampleHtmlViewActivity = (function (_ActionBarActivity11) {
+            _inherits(SampleHtmlViewActivity, _ActionBarActivity11);
 
             function SampleHtmlViewActivity() {
                 _classCallCheck(this, SampleHtmlViewActivity);
@@ -758,12 +767,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleHtmlViewActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('HtmlView');
                     this.setContentView(R.layout.sample_htmlview);
                 }
             }]);
 
             return SampleHtmlViewActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleHtmlViewActivity = SampleHtmlViewActivity;
     })(app = sample.app || (sample.app = {}));
@@ -774,11 +784,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleImageViewActivity = (function (_Activity12) {
-            _inherits(SampleImageViewActivity, _Activity12);
+        var SampleImageViewActivity = (function (_ActionBarActivity12) {
+            _inherits(SampleImageViewActivity, _ActionBarActivity12);
 
             function SampleImageViewActivity() {
                 _classCallCheck(this, SampleImageViewActivity);
@@ -790,12 +800,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleImageViewActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('ImageView');
                     this.setContentView(R.layout.sample_imageview);
                 }
             }]);
 
             return SampleImageViewActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleImageViewActivity = SampleImageViewActivity;
     })(app = sample.app || (sample.app = {}));
@@ -809,14 +820,14 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var Button = android.widget.Button;
         var Log = android.util.Log;
         var Gravity = android.view.Gravity;
         var TAG = 'SampleLifeCallbackActivity';
 
-        var SampleLifeCallbackActivity = (function (_Activity13) {
-            _inherits(SampleLifeCallbackActivity, _Activity13);
+        var SampleLifeCallbackActivity = (function (_ActionBarActivity13) {
+            _inherits(SampleLifeCallbackActivity, _ActionBarActivity13);
 
             function SampleLifeCallbackActivity() {
                 _classCallCheck(this, SampleLifeCallbackActivity);
@@ -828,6 +839,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate(savedInstanceState) {
                     _get(Object.getPrototypeOf(SampleLifeCallbackActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    this.setTitle('Activity Life Circel');
                     this.setContentView(app.R.layout.sample_life_callback);
                     this.printTextView = this.findViewById('console_tv');
                     var activity = this;
@@ -888,12 +900,12 @@ var sample;
             }]);
 
             return SampleLifeCallbackActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleLifeCallbackActivity = SampleLifeCallbackActivity;
 
-        var SampleLifeCallbackNormalActivity = (function (_Activity14) {
-            _inherits(SampleLifeCallbackNormalActivity, _Activity14);
+        var SampleLifeCallbackNormalActivity = (function (_ActionBarActivity14) {
+            _inherits(SampleLifeCallbackNormalActivity, _ActionBarActivity14);
 
             function SampleLifeCallbackNormalActivity() {
                 _classCallCheck(this, SampleLifeCallbackNormalActivity);
@@ -905,6 +917,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate(savedInstanceState) {
                     _get(Object.getPrototypeOf(SampleLifeCallbackNormalActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    this.setTitle('Normal Activity');
                     var activity = this;
                     var btn = new Button(this);
                     btn.setText(android.R.string_.close);
@@ -919,7 +932,7 @@ var sample;
             }]);
 
             return SampleLifeCallbackNormalActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleLifeCallbackNormalActivity = SampleLifeCallbackNormalActivity;
 
@@ -936,6 +949,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate(savedInstanceState) {
                     _get(Object.getPrototypeOf(SampleLifeCallbackFloatingActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    this.getActionBar().hide();
                     var density = this.getResources().getDisplayMetrics().density;
                     this.getWindow().setFloating(true);
                     this.getWindow().setLayout(200 * density, 200 * density);
@@ -955,11 +969,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleLinearLayoutActivity = (function (_Activity15) {
-            _inherits(SampleLinearLayoutActivity, _Activity15);
+        var SampleLinearLayoutActivity = (function (_ActionBarActivity15) {
+            _inherits(SampleLinearLayoutActivity, _ActionBarActivity15);
 
             function SampleLinearLayoutActivity() {
                 _classCallCheck(this, SampleLinearLayoutActivity);
@@ -971,12 +985,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleLinearLayoutActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('LinearLayout');
                     this.setContentView(R.layout.sample_linearlayout);
                 }
             }]);
 
             return SampleLinearLayoutActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleLinearLayoutActivity = SampleLinearLayoutActivity;
     })(app = sample.app || (sample.app = {}));
@@ -987,13 +1002,13 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var View = android.view.View;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleListViewActivity = (function (_Activity16) {
-            _inherits(SampleListViewActivity, _Activity16);
+        var SampleListViewActivity = (function (_ActionBarActivity16) {
+            _inherits(SampleListViewActivity, _ActionBarActivity16);
 
             function SampleListViewActivity() {
                 _classCallCheck(this, SampleListViewActivity);
@@ -1005,6 +1020,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleListViewActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('ListView');
                     this.setContentView(R.layout.sample_listview);
                     var listView = this.findViewById('listView');
                     listView.setAdapter(new MyListAdapter());
@@ -1012,7 +1028,7 @@ var sample;
             }]);
 
             return SampleListViewActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleListViewActivity = SampleListViewActivity;
 
@@ -1061,11 +1077,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SamplePickerActivity = (function (_Activity17) {
-            _inherits(SamplePickerActivity, _Activity17);
+        var SamplePickerActivity = (function (_ActionBarActivity17) {
+            _inherits(SamplePickerActivity, _ActionBarActivity17);
 
             function SamplePickerActivity() {
                 _classCallCheck(this, SamplePickerActivity);
@@ -1077,12 +1093,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SamplePickerActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('Picker');
                     this.setContentView(R.layout.sample_picker);
                 }
             }]);
 
             return SamplePickerActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SamplePickerActivity = SamplePickerActivity;
     })(app = sample.app || (sample.app = {}));
@@ -1093,14 +1110,14 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var View = android.view.View;
         var BaseAdapter = android.widget.BaseAdapter;
         var PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
         var R = sample.app.R;
 
-        var SamplePullRefreshLoadActivity = (function (_Activity18) {
-            _inherits(SamplePullRefreshLoadActivity, _Activity18);
+        var SamplePullRefreshLoadActivity = (function (_ActionBarActivity18) {
+            _inherits(SamplePullRefreshLoadActivity, _ActionBarActivity18);
 
             function SamplePullRefreshLoadActivity() {
                 _classCallCheck(this, SamplePullRefreshLoadActivity);
@@ -1112,6 +1129,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SamplePullRefreshLoadActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('PullRefreshLoad');
                     this.setContentView(R.layout.sample_pullrefreshload);
                     var listView = this.findViewById('listView');
                     var adapter = new MyListAdapter();
@@ -1137,7 +1155,7 @@ var sample;
             }]);
 
             return SamplePullRefreshLoadActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SamplePullRefreshLoadActivity = SamplePullRefreshLoadActivity;
 
@@ -1191,11 +1209,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleRelativeLayoutActivity = (function (_Activity19) {
-            _inherits(SampleRelativeLayoutActivity, _Activity19);
+        var SampleRelativeLayoutActivity = (function (_ActionBarActivity19) {
+            _inherits(SampleRelativeLayoutActivity, _ActionBarActivity19);
 
             function SampleRelativeLayoutActivity() {
                 _classCallCheck(this, SampleRelativeLayoutActivity);
@@ -1207,12 +1225,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleRelativeLayoutActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('RelatevieLayout');
                     this.setContentView(R.layout.sample_relativelayout);
                 }
             }]);
 
             return SampleRelativeLayoutActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleRelativeLayoutActivity = SampleRelativeLayoutActivity;
     })(app = sample.app || (sample.app = {}));
@@ -1223,11 +1242,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleTextViewActivity = (function (_Activity20) {
-            _inherits(SampleTextViewActivity, _Activity20);
+        var SampleTextViewActivity = (function (_ActionBarActivity20) {
+            _inherits(SampleTextViewActivity, _ActionBarActivity20);
 
             function SampleTextViewActivity() {
                 _classCallCheck(this, SampleTextViewActivity);
@@ -1239,12 +1258,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleTextViewActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('TextView');
                     this.setContentView(R.layout.sample_textview);
                 }
             }]);
 
             return SampleTextViewActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleTextViewActivity = SampleTextViewActivity;
     })(app = sample.app || (sample.app = {}));
@@ -1255,13 +1275,13 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
+        var ActionBarActivity = android.app.ActionBarActivity;
         var View = android.view.View;
         var Color = android.graphics.Color;
         var R = sample.app.R;
 
-        var SampleViewPagerActivity = (function (_Activity21) {
-            _inherits(SampleViewPagerActivity, _Activity21);
+        var SampleViewPagerActivity = (function (_ActionBarActivity21) {
+            _inherits(SampleViewPagerActivity, _ActionBarActivity21);
 
             function SampleViewPagerActivity() {
                 _classCallCheck(this, SampleViewPagerActivity);
@@ -1273,6 +1293,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleViewPagerActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('ViewPager');
                     this.setContentView(R.layout.sample_viewpager);
                     var viewPager = this.findViewById('viewPager');
                     viewPager.setAdapter(new MyPageAdapter());
@@ -1280,7 +1301,7 @@ var sample;
             }]);
 
             return SampleViewPagerActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleViewPagerActivity = SampleViewPagerActivity;
 
@@ -1322,11 +1343,11 @@ var sample;
 (function (sample) {
     var app;
     (function (app) {
-        var Activity = android.app.Activity;
         var R = sample.app.R;
+        var ActionBarActivity = android.app.ActionBarActivity;
 
-        var SampleViewPagerGalleryActivity = (function (_Activity22) {
-            _inherits(SampleViewPagerGalleryActivity, _Activity22);
+        var SampleViewPagerGalleryActivity = (function (_ActionBarActivity22) {
+            _inherits(SampleViewPagerGalleryActivity, _ActionBarActivity22);
 
             function SampleViewPagerGalleryActivity() {
                 _classCallCheck(this, SampleViewPagerGalleryActivity);
@@ -1338,12 +1359,13 @@ var sample;
                 key: "onCreate",
                 value: function onCreate() {
                     _get(Object.getPrototypeOf(SampleViewPagerGalleryActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('ImageGallery&Gesture');
                     this.setContentView(R.layout.sample_viewpager_gallery);
                 }
             }]);
 
             return SampleViewPagerGalleryActivity;
-        })(Activity);
+        })(ActionBarActivity);
 
         app.SampleViewPagerGalleryActivity = SampleViewPagerGalleryActivity;
     })(app = sample.app || (sample.app = {}));

@@ -4,6 +4,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
+    import ActionBarActivity = android.app.ActionBarActivity;
     import TextView = android.widget.TextView;
     import Button = android.widget.Button;
     import View = android.view.View;
@@ -18,9 +19,10 @@ module sample.app {
     import R = sample.app.R;
 
 
-    export class SamplePullRefreshLoadActivity extends Activity {
+    export class SamplePullRefreshLoadActivity extends ActionBarActivity {
         onCreate():void {
             super.onCreate();
+            this.setTitle('PullRefreshLoad');
             this.setContentView(R.layout.sample_pullrefreshload);
 
             let listView = <ListView>this.findViewById('listView');
