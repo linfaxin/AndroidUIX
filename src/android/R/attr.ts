@@ -240,6 +240,12 @@ module android.R {
             }
         }
 
+        static get popupMenuStyle(){
+            return {
+                popupBackground : R.drawable.menu_panel_holo_dark
+            }
+        }
+
         static get dropDownListViewStyle(){
             return this.listViewStyle;
         }

@@ -47,6 +47,8 @@ module android.view{
 
         //can't listen back on browser
         static KEYCODE_BACK          = -1;
+        //can't listen menu on browser
+        static KEYCODE_MENU          = -2;
 
 
 

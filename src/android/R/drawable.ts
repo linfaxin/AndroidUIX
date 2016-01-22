@@ -57,7 +57,7 @@ module android.R{
             return new DefaultBtnBackgroundBound(shadow);
         }
         private static get btn_default_disabled_holo_light():Drawable {
-            let bg = new RoundRectDrawable(0xffcdcdcd, 1 * density,  1 * density,  1 * density,  1 * density);
+            let bg = new RoundRectDrawable(0xffebebeb, 1 * density,  1 * density,  1 * density,  1 * density);
             let shadow = new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
             return new DefaultBtnBackgroundBound(shadow);
         }
@@ -416,10 +416,14 @@ module android.R{
             let bg = new RoundRectDrawable(0xffefefef, 2 * density,  2 * density,  2 * density,  2 * density);
             bg.getIntrinsicWidth = ()=> 48 * density;
             bg.getIntrinsicHeight = ()=> 16 * density;
-            //bg.getPadding = (rect)=>{
-            //    rect.set(2 * density, 2 * density, 2 * density, 2 * density);
-            //    return true;
-            //};
+            let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
+            return new InsetDrawable(shadow, 8 * density);//more space show shadow
+        }
+
+        static get menu_panel_holo_dark(){
+            let bg = new RoundRectDrawable(0xff303030, 2 * density,  2 * density,  2 * density,  2 * density);
+            bg.getIntrinsicWidth = ()=> 48 * density;
+            bg.getIntrinsicHeight = ()=> 16 * density;
             let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
             return new InsetDrawable(shadow, 8 * density);//more space show shadow
         }

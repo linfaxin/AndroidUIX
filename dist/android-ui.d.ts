@@ -1022,6 +1022,7 @@ declare module android.R {
         static action_bar: string;
         static alert_dialog: string;
         static alert_dialog_progress: string;
+        static popup_menu_item_layout: string;
         static select_dialog: string;
         static select_dialog_item: string;
         static select_dialog_multichoice: string;
@@ -1486,6 +1487,7 @@ declare module android.view {
         static KEYCODE_MOVE_HOME: number;
         static KEYCODE_MOVE_END: number;
         static KEYCODE_BACK: number;
+        static KEYCODE_MENU: number;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
         static META_ALT_ON: number;
@@ -1951,6 +1953,7 @@ declare module android.R {
         static toast_frame: InsetDrawable;
         static dropdown_background_dark: InsetDrawable;
         static menu_panel_holo_light: InsetDrawable;
+        static menu_panel_holo_dark: InsetDrawable;
     }
 }
 declare module androidui.image {
@@ -2008,6 +2011,7 @@ declare module android.R {
         static btn_rating_star_off_pressed_holo_light: any;
         static btn_rating_star_on_normal_holo_light: any;
         static btn_rating_star_on_pressed_holo_light: any;
+        static ic_menu_moreoverflow_normal_holo_dark: any;
         static progressbar_indeterminate_holo1: any;
         static progressbar_indeterminate_holo2: any;
         static progressbar_indeterminate_holo3: any;
@@ -2056,6 +2060,7 @@ declare module android.R {
         static btn_rating_star_off_pressed_holo_light: NetDrawable;
         static btn_rating_star_on_normal_holo_light: NetDrawable;
         static btn_rating_star_on_pressed_holo_light: NetDrawable;
+        static ic_menu_moreoverflow_normal_holo_dark: NetDrawable;
         static progressbar_indeterminate_holo1: NetDrawable;
         static progressbar_indeterminate_holo2: NetDrawable;
         static progressbar_indeterminate_holo3: NetDrawable;
@@ -2087,6 +2092,7 @@ declare module android.R {
     class color {
         static textView_textColor: ColorStateList;
         static primary_text_light_disable_only: ColorStateList;
+        static primary_text_dark_disable_only: ColorStateList;
         static white: number;
         static black: number;
     }
@@ -2403,6 +2409,9 @@ declare module android.R {
             popupBackground: InsetDrawable;
             popupEnterAnimation: view.animation.Animation;
             popupExitAnimation: view.animation.Animation;
+        };
+        static popupMenuStyle: {
+            popupBackground: InsetDrawable;
         };
         static dropDownListViewStyle: {
             divider: Drawable;
@@ -9348,6 +9357,148 @@ declare module android.view.animation {
         private initializePivotPoint();
         protected applyTransformation(interpolatedTime: number, t: Transformation): void;
         initialize(width: number, height: number, parentWidth: number, parentHeight: number): void;
+    }
+}
+declare module android.view {
+    import Intent = android.content.Intent;
+    import Drawable = android.graphics.drawable.Drawable;
+    import Menu = android.view.Menu;
+    import View = android.view.View;
+    class MenuItem {
+        private mId;
+        private mGroup;
+        private mCategoryOrder;
+        private mOrdering;
+        private mTitle;
+        private mIntent;
+        private mIconDrawable;
+        private mVisible;
+        private mEnable;
+        private mClickListener;
+        private mActionView;
+        private mMenu;
+        constructor(menu: Menu, group: number, id: number, categoryOrder: number, ordering: number, title: string);
+        getItemId(): number;
+        getGroupId(): number;
+        getOrder(): number;
+        setTitle(title: string): MenuItem;
+        getTitle(): string;
+        setIcon(icon: Drawable): MenuItem;
+        getIcon(): Drawable;
+        setIntent(intent: Intent): MenuItem;
+        getIntent(): Intent;
+        setVisible(visible: boolean): MenuItem;
+        isVisible(): boolean;
+        setEnabled(enabled: boolean): MenuItem;
+        isEnabled(): boolean;
+        setOnMenuItemClickListener(menuItemClickListener: MenuItem.OnMenuItemClickListener): MenuItem;
+        setActionView(view: View): MenuItem;
+        getActionView(): View;
+        invoke(): boolean;
+    }
+    module MenuItem {
+        interface OnMenuItemClickListener {
+            onMenuItemClick(item: MenuItem): boolean;
+        }
+    }
+}
+declare module android.view {
+    import MenuItem = android.view.MenuItem;
+    import ArrayList = java.util.ArrayList;
+    import Context = android.content.Context;
+    class Menu {
+        private mItems;
+        private mVisibleItems;
+        private mCallback;
+        private mContext;
+        constructor(context: Context);
+        getContext(): Context;
+        add(title: string): MenuItem;
+        add(groupId: number, itemId: number, order: number, title: string): MenuItem;
+        private addInternal(group, id, categoryOrder, title);
+        removeItem(id: number): void;
+        removeGroup(groupId: number): void;
+        private removeItemAtInt(index, updateChildrenOnMenuViews);
+        clear(): void;
+        setGroupVisible(group: number, visible: boolean): void;
+        setGroupEnabled(group: number, enabled: boolean): void;
+        hasVisibleItems(): boolean;
+        findItem(id: number): MenuItem;
+        findItemIndex(id: number): number;
+        findGroupIndex(group: number, start?: number): number;
+        size(): number;
+        getItem(index: number): MenuItem;
+        onItemsChanged(structureChanged: boolean): void;
+        getRootMenu(): Menu;
+        setCallback(cb: Menu.Callback): void;
+        dispatchMenuItemSelected(menu: Menu, item: MenuItem): boolean;
+        getVisibleItems(): ArrayList<MenuItem>;
+    }
+    module Menu {
+        var USER_MASK: number;
+        var USER_SHIFT: number;
+        var CATEGORY_MASK: number;
+        var CATEGORY_SHIFT: number;
+        var NONE: number;
+        var FIRST: number;
+        var CATEGORY_CONTAINER: number;
+        var CATEGORY_SYSTEM: number;
+        var CATEGORY_SECONDARY: number;
+        var CATEGORY_ALTERNATIVE: number;
+        var FLAG_APPEND_TO_GROUP: number;
+        var FLAG_PERFORM_NO_CLOSE: number;
+        var FLAG_ALWAYS_PERFORM_CLOSE: number;
+        interface Callback {
+            onMenuItemSelected(menu: Menu, item: MenuItem): boolean;
+        }
+    }
+}
+declare module android.view.menu {
+    import KeyEvent = android.view.KeyEvent;
+    import MenuItem = android.view.MenuItem;
+    import Menu = android.view.Menu;
+    import View = android.view.View;
+    import ViewGroup = android.view.ViewGroup;
+    import Context = android.content.Context;
+    import ViewTreeObserver = android.view.ViewTreeObserver;
+    import AdapterView = android.widget.AdapterView;
+    import BaseAdapter = android.widget.BaseAdapter;
+    import PopupWindow = android.widget.PopupWindow;
+    class MenuPopupHelper implements AdapterView.OnItemClickListener, View.OnKeyListener, ViewTreeObserver.OnGlobalLayoutListener, PopupWindow.OnDismissListener {
+        private static TAG;
+        static ITEM_LAYOUT: string;
+        private mContext;
+        private mInflater;
+        private mPopup;
+        private mMenu;
+        private mPopupMaxWidth;
+        private mAnchorView;
+        private mTreeObserver;
+        private mAdapter;
+        private mMeasureParent;
+        constructor(context: Context, menu: Menu, anchorView?: View);
+        setAnchorView(anchor: View): void;
+        show(): void;
+        tryShow(): boolean;
+        dismiss(): void;
+        onDismiss(): void;
+        isShowing(): boolean;
+        onItemClick(parent: AdapterView<any>, view: View, position: number, id: number): void;
+        onKey(v: View, keyCode: number, event: KeyEvent): boolean;
+        private measureContentWidth(adapter);
+        onGlobalLayout(): void;
+    }
+    module MenuPopupHelper {
+        class MenuAdapter extends BaseAdapter {
+            _MenuPopupHelper_this: MenuPopupHelper;
+            private mAdapterMenu;
+            constructor(menu: Menu, arg: MenuPopupHelper);
+            getCount(): number;
+            getItem(position: number): MenuItem;
+            getItemId(position: number): number;
+            getView(position: number, convertView: View, parent: ViewGroup): View;
+            notifyDataSetChanged(): void;
+        }
     }
 }
 declare module android.support.v4.view {

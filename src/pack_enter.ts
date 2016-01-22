@@ -37,6 +37,9 @@
 ///<reference path="android/view/animation/TranslateAnimation.ts"/>
 ///<reference path="android/view/animation/AnimationSet.ts"/>
 
+///<reference path="android/view/Menu.ts"/>
+///<reference path="android/view/menu/MenuPopupHelper.ts"/>
+
 
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>

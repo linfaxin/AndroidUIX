@@ -4306,6 +4306,7 @@ var android;
             "action_bar": "<merge>\n    <LinearLayout\n            id=\"action_bar_center_layout\"\n            android:layout_marginLeft=\"60dp\"\n            android:layout_marginRight=\"60dp\"\n            android:minHeight=\"48dp\"\n            android:gravity=\"center\"\n            android:orientation=\"vertical\">\n        <TextView\n                id=\"action_bar_title\"\n                android:gravity=\"center\"\n                android:drawablePadding=\"4dp\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:textColor=\"@android:color/white\"\n                android:textSize=\"18sp\"\n                ></TextView>\n        <TextView\n                id=\"action_bar_sub_title\"\n                android:visibility=\"gone\"\n                android:gravity=\"center\"\n                android:layout_marginTop=\"4dp\"\n                android:drawablePadding=\"4dp\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:textColor=\"@android:color/white\"\n                android:textSize=\"12sp\"\n                ></TextView>\n    </LinearLayout>\n    <Button\n            id=\"action_bar_left\"\n            android:visibility=\"gone\"\n            android:layout_gravity=\"left|center_vertical\"\n            android:layout_width=\"wrap_content\"\n            android:background=\"@android:drawable/item_background\"\n            android:textColor=\"@android:color/white\"\n            android:paddingLeft=\"6dp\"\n            android:paddingRight=\"6dp\"\n            android:drawablePadding=\"4dp\"\n            android:minWidth=\"32dp\"\n            android:textSize=\"17sp\"\n            android:singleLine=\"true\"\n            ></Button>\n    <Button\n            id=\"action_bar_right\"\n            android:visibility=\"gone\"\n            android:layout_gravity=\"right|center_vertical\"\n            android:layout_width=\"wrap_content\"\n            android:background=\"@android:drawable/item_background\"\n            android:textColor=\"@android:color/white\"\n            android:paddingRight=\"6dp\"\n            android:paddingRight=\"6dp\"\n            android:drawablePadding=\"4dp\"\n            android:minWidth=\"32dp\"\n            android:textSize=\"17sp\"\n            android:singleLine=\"true\"\n            ></Button>\n</merge>\n",
             "alert_dialog": "\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<LinearLayout\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"parentPanel\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:viewShadowColor=\"black\"\n    android:viewShadowDy=\"3dp\"\n    android:viewShadowRadius=\"10dp\"\n    android:cornerRadius=\"4dp\"\n    android:layout_marginStart=\"8dip\"\n    android:layout_marginEnd=\"8dip\"\n    android:orientation=\"vertical\">\n\n    <LinearLayout android:id=\"topPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:orientation=\"vertical\">\n        <View android:id=\"titleDividerTop\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <LinearLayout android:id=\"title_template\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:gravity=\"center_vertical|start\"\n            android:minHeight=\"64dp\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\">\n            <ImageView android:id=\"icon\"\n                android:layout_width=\"wrap_content\"\n                android:layout_height=\"wrap_content\"\n                android:paddingEnd=\"8dip\"></ImageView>\n            <TextView android:id=\"alertTitle\"\n                android:maxLines=\"1\"\n                android:scrollHorizontally=\"true\"\n                android:textSize=\"22sp\"\n                android:textColor=\"#333\"\n                android:singleLine=\"true\"\n                android:ellipsize=\"end\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:textAlignment=\"viewStart\"></TextView>\n        </LinearLayout>\n        <View android:id=\"titleDivider\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"1dip\"\n            android:visibility=\"gone\"\n            android:background=\"#aaa\" ></View>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </LinearLayout>\n\n    <LinearLayout android:id=\"contentPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:orientation=\"vertical\"\n        android:minHeight=\"64dp\">\n        <ScrollView android:id=\"scrollView\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:clipToPadding=\"false\">\n            <TextView android:id=\"message\"\n                android:textSize=\"18sp\"\n                android:layout_width=\"match_parent\"\n                android:layout_height=\"wrap_content\"\n                android:paddingStart=\"16dip\"\n                android:paddingEnd=\"16dip\"\n                android:paddingTop=\"8dip\"\n                android:paddingBottom=\"8dip\"></TextView>\n        </ScrollView>\n    </LinearLayout>\n\n    <FrameLayout android:id=\"customPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:layout_weight=\"1\"\n        android:minHeight=\"64dp\">\n        <FrameLayout android:id=\"custom\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\" ></FrameLayout>\n    </FrameLayout>\n\n    <LinearLayout android:id=\"buttonPanel\"\n        android:layout_width=\"match_parent\"\n        android:layout_height=\"wrap_content\"\n        android:minHeight=\"48dip\"\n        android:orientation=\"vertical\"\n        android:divider=\"@android:drawable/divider_horizontal\"\n        android:showDividers=\"beginning\"\n        android:dividerPadding=\"0dip\">\n        <LinearLayout\n            android:divider=\"@android:drawable/divider_vertical\"\n            android:showDividers=\"middle\"\n            android:dividerPadding=\"0dp\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:orientation=\"horizontal\"\n            android:layoutDirection=\"locale\"\n            android:measureWithLargestChild=\"true\">\n            <Button android:id=\"button2\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"start\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button3\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"center_horizontal\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n            <Button android:id=\"button1\"\n                android:layout_width=\"wrap_content\"\n                android:layout_gravity=\"end\"\n                android:layout_weight=\"1\"\n                android:maxLines=\"2\"\n                android:paddingStart=\"4dp\"\n                android:paddingEnd=\"4dp\"\n                android:background=\"@android:drawable/item_background\"\n                android:textSize=\"14sp\"\n                android:minHeight=\"48dp\"\n                android:layout_height=\"wrap_content\" ></Button>\n        </LinearLayout>\n     </LinearLayout>\n</LinearLayout>\n",
             "alert_dialog_progress": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2011 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"wrap_content\" android:layout_height=\"match_parent\">\n        <ProgressBar android:id=\"progress\"\n            style=\"@android:attr/progressBarStyleHorizontal\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_marginTop=\"16dip\"\n            android:layout_marginBottom=\"1dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_centerHorizontal=\"true\"></ProgressBar>\n        <TextView\n            android:id=\"progress_percent\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:paddingBottom=\"16dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_alignParentStart=\"true\"\n            android:layout_below=\"progress\"\n        ></TextView>\n        <TextView\n            android:id=\"progress_number\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:paddingBottom=\"16dip\"\n            android:layout_marginStart=\"16dip\"\n            android:layout_marginEnd=\"16dip\"\n            android:layout_alignParentEnd=\"true\"\n            android:layout_below=\"progress\"\n        ></TextView>\n</RelativeLayout>\n",
+            "popup_menu_item_layout": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n  \n          http://www.apache.org/licenses/LICENSE-2.0\n  \n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"48dp\"\n    android:minWidth=\"196dip\"\n    android:paddingEnd=\"16dip\">\n\n    <ImageView\n        android:id=\"icon\"\n        android:visibility=\"gone\"\n        android:layout_width=\"wrap_content\"\n        android:layout_height=\"wrap_content\"\n        android:layout_gravity=\"center_vertical\"\n        android:layout_marginStart=\"8dip\"\n        android:layout_marginEnd=\"-8dip\"\n        android:layout_marginTop=\"8dip\"\n        android:layout_marginBottom=\"8dip\"\n        android:scaleType=\"centerInside\"\n        android:duplicateParentState=\"true\"></ImageView>\n    \n    <!-- The title and summary have some gap between them, and this 'group' should be centered vertically. -->\n    <RelativeLayout\n        android:layout_width=\"0dip\"\n        android:layout_weight=\"1\"\n        android:layout_height=\"wrap_content\"\n        android:layout_gravity=\"center_vertical\"\n        android:layout_marginStart=\"16dip\"\n        android:duplicateParentState=\"true\">\n        \n        <TextView \n            android:id=\"title\"\n            android:layout_width=\"match_parent\"\n            android:layout_height=\"wrap_content\"\n            android:layout_alignParentTop=\"true\"\n            android:layout_alignParentStart=\"true\"\n\n            android:textColor=\"@android:color/primary_text_dark_disable_only\"\n            android:textSize=\"18sp\"\n\n            android:singleLine=\"true\"\n            android:duplicateParentState=\"true\"\n            android:ellipsize=\"marquee\"\n            android:fadingEdge=\"horizontal\"\n            android:textAlignment=\"viewStart\" ></TextView>\n\n        <TextView\n            android:id=\"shortcut\"\n            android:visibility=\"gone\"\n            android:layout_width=\"wrap_content\"\n            android:layout_height=\"wrap_content\"\n            android:layout_below=\"title\"\n            android:layout_alignParentStart=\"true\"\n\n            android:textColor=\"@android:color/primary_text_dark_disable_only\"\n            android:textSize=\"12sp\"\n\n            android:singleLine=\"true\"\n            android:duplicateParentState=\"true\"\n            android:textAlignment=\"viewStart\" ></TextView>\n\n    </RelativeLayout>\n\n    <!-- Checkbox, and/or radio button will be inserted here. -->\n    \n</LinearLayout>\n",
             "select_dialog": "<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the ListView to display the items.\n    Assign an ID so its state will be saved/restored.\n-->\n<view class=\"android.app.AlertController.RecycleListView\"\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"select_dialog_listview\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:cacheColorHint=\"@null\"\n    android:divider=\"@android:drawable/list_divider\"\n    android:scrollbars=\"vertical\"\n    android:overScrollMode=\"ifContentScrolls\"\n    android:textAlignment=\"viewStart\" ></view>\n",
             "select_dialog_item": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!--\n/*\n** Copyright 2010, The Android Open Source Project\n**\n** Licensed under the Apache License, Version 2.0 (the \"License\");\n** you may not use this file except in compliance with the License.\n** You may obtain a copy of the License at\n**\n**     http://www.apache.org/licenses/LICENSE-2.0\n**\n** Unless required by applicable law or agreed to in writing, software\n** distributed under the License is distributed on an \"AS IS\" BASIS,\n** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n** See the License for the specific language governing permissions and\n** limitations under the License.\n*/\n-->\n\n<!--\n    This layout file is used by the AlertDialog when displaying a list of items.\n    This layout file is inflated and used as the TextView to display individual\n    items.\n-->\n<TextView xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:ellipsize=\"end\"\n></TextView>\n",
             "select_dialog_multichoice": "\n<!-- Copyright (C) 2010 The Android Open Source Project\n\n     Licensed under the Apache License, Version 2.0 (the \"License\");\n     you may not use this file except in compliance with the License.\n     You may obtain a copy of the License at\n\n          http://www.apache.org/licenses/LICENSE-2.0\n\n     Unless required by applicable law or agreed to in writing, software\n     distributed under the License is distributed on an \"AS IS\" BASIS,\n     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n     See the License for the specific language governing permissions and\n     limitations under the License.\n-->\n\n<CheckedTextView\n    android:id=\"text1\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"wrap_content\"\n    android:minHeight=\"48dp\"\n    android:textSize=\"18sp\"\n    android:gravity=\"center_vertical\"\n    android:paddingStart=\"16dip\"\n    android:paddingEnd=\"16dip\"\n    android:checkMark=\"@android:drawable/btn_check\"\n    android:ellipsize=\"end\"\n></CheckedTextView>\n",
@@ -4331,6 +4332,7 @@ var android;
         layout.action_bar = '@android:layout/action_bar';
         layout.alert_dialog = '@android:layout/alert_dialog';
         layout.alert_dialog_progress = '@android:layout/alert_dialog_progress';
+        layout.popup_menu_item_layout = '@android:layout/popup_menu_item_layout';
         layout.select_dialog = '@android:layout/select_dialog';
         layout.select_dialog_item = '@android:layout/select_dialog_item';
         layout.select_dialog_multichoice = '@android:layout/select_dialog_multichoice';
@@ -6556,6 +6558,7 @@ var android;
         KeyEvent.KEYCODE_MOVE_HOME = 36;
         KeyEvent.KEYCODE_MOVE_END = 35;
         KeyEvent.KEYCODE_BACK = -1;
+        KeyEvent.KEYCODE_MENU = -2;
         KeyEvent.ACTION_DOWN = 0;
         KeyEvent.ACTION_UP = 1;
         KeyEvent.META_ALT_ON = 0x02;
@@ -8472,7 +8475,7 @@ var android;
                 return new DefaultBtnBackgroundBound(shadow);
             }
             static get btn_default_disabled_holo_light() {
-                let bg = new RoundRectDrawable(0xffcdcdcd, 1 * density, 1 * density, 1 * density, 1 * density);
+                let bg = new RoundRectDrawable(0xffebebeb, 1 * density, 1 * density, 1 * density, 1 * density);
                 let shadow = new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
                 return new DefaultBtnBackgroundBound(shadow);
             }
@@ -8755,6 +8758,13 @@ var android;
             }
             static get menu_panel_holo_light() {
                 let bg = new RoundRectDrawable(0xffefefef, 2 * density, 2 * density, 2 * density, 2 * density);
+                bg.getIntrinsicWidth = () => 48 * density;
+                bg.getIntrinsicHeight = () => 16 * density;
+                let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
+                return new InsetDrawable(shadow, 8 * density);
+            }
+            static get menu_panel_holo_dark() {
+                let bg = new RoundRectDrawable(0xff303030, 2 * density, 2 * density, 2 * density, 2 * density);
                 bg.getIntrinsicWidth = () => 48 * density;
                 bg.getIntrinsicHeight = () => 16 * density;
                 let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
@@ -9072,6 +9082,12 @@ var android;
                 null,
                 "data:image/png;base64,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"
             ],
+            "ic_menu_moreoverflow_normal_holo_dark": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgAQMAAADYVuV7AAAABlBMVEUAAAD///+l2Z/dAAAAAnRSTlMAgJsrThgAAAAdSURBVDjLYxhhoP7/kOcgwGjoEB06o0EF44wsAABBWUMn9krmtgAAAABJRU5ErkJggg=="
+            ],
             "progressbar_indeterminate_holo1": [
                 null,
                 null,
@@ -9201,6 +9217,7 @@ var android;
             btn_rating_star_off_pressed_holo_light: null,
             btn_rating_star_on_normal_holo_light: null,
             btn_rating_star_on_pressed_holo_light: null,
+            ic_menu_moreoverflow_normal_holo_dark: null,
             progressbar_indeterminate_holo1: null,
             progressbar_indeterminate_holo2: null,
             progressbar_indeterminate_holo3: null,
@@ -9305,6 +9322,9 @@ var android;
             static get btn_rating_star_on_pressed_holo_light() {
                 return imageCache.btn_rating_star_on_pressed_holo_light || (imageCache.btn_rating_star_on_pressed_holo_light = findRatioImage(data.btn_rating_star_on_pressed_holo_light));
             }
+            static get ic_menu_moreoverflow_normal_holo_dark() {
+                return imageCache.ic_menu_moreoverflow_normal_holo_dark || (imageCache.ic_menu_moreoverflow_normal_holo_dark = findRatioImage(data.ic_menu_moreoverflow_normal_holo_dark));
+            }
             static get progressbar_indeterminate_holo1() {
                 return imageCache.progressbar_indeterminate_holo1 || (imageCache.progressbar_indeterminate_holo1 = findRatioImage(data.progressbar_indeterminate_holo1));
             }
@@ -9396,6 +9416,7 @@ var android;
             static get btn_rating_star_off_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_off_pressed_holo_light); }
             static get btn_rating_star_on_normal_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_normal_holo_light); }
             static get btn_rating_star_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_pressed_holo_light); }
+            static get ic_menu_moreoverflow_normal_holo_dark() { return new NetDrawable(R.image_base64.ic_menu_moreoverflow_normal_holo_dark); }
             static get progressbar_indeterminate_holo1() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo1); }
             static get progressbar_indeterminate_holo2() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo2); }
             static get progressbar_indeterminate_holo3() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo3); }
@@ -9452,6 +9473,16 @@ var android;
             static get primary_text_light_disable_only() {
                 let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
                 let _defaultColors = [0x80000000, 0xff000000];
+                class DefaultStyleTextColor extends ColorStateList {
+                    constructor() {
+                        super(_defaultStates, _defaultColors);
+                    }
+                }
+                return new DefaultStyleTextColor();
+            }
+            static get primary_text_dark_disable_only() {
+                let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
+                let _defaultColors = [0x80000000, 0xffffffff];
                 class DefaultStyleTextColor extends ColorStateList {
                     constructor() {
                         super(_defaultStates, _defaultColors);
@@ -10712,6 +10743,11 @@ var android;
                     popupBackground: R.drawable.menu_panel_holo_light,
                     popupEnterAnimation: R.anim.grow_fade_in_center,
                     popupExitAnimation: R.anim.shrink_fade_out_center,
+                };
+            }
+            static get popupMenuStyle() {
+                return {
+                    popupBackground: R.drawable.menu_panel_holo_dark
                 };
             }
             static get dropDownListViewStyle() {
@@ -53571,6 +53607,516 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/app/Activity.ts"/>
+///<reference path="../../android/content/Intent.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/view/Menu.ts"/>
+///<reference path="../../android/view/View.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view_7) {
+        class MenuItem {
+            constructor(menu, group, id, categoryOrder, ordering, title) {
+                this.mId = 0;
+                this.mGroup = 0;
+                this.mCategoryOrder = 0;
+                this.mOrdering = 0;
+                this.mVisible = true;
+                this.mEnable = true;
+                this.mMenu = menu;
+                this.mId = id;
+                this.mGroup = group;
+                this.mCategoryOrder = categoryOrder;
+                this.mOrdering = ordering;
+                this.mTitle = title;
+            }
+            getItemId() {
+                return this.mId;
+            }
+            getGroupId() {
+                return this.mGroup;
+            }
+            getOrder() {
+                return this.mOrdering;
+            }
+            setTitle(title) {
+                this.mTitle = title;
+                return this;
+            }
+            getTitle() {
+                return this.mTitle;
+            }
+            setIcon(icon) {
+                this.mIconDrawable = icon;
+                return this;
+            }
+            getIcon() {
+                return this.mIconDrawable;
+            }
+            setIntent(intent) {
+                this.mIntent = intent;
+                return this;
+            }
+            getIntent() {
+                return this.mIntent;
+            }
+            setVisible(visible) {
+                this.mVisible = visible;
+                return this;
+            }
+            isVisible() {
+                return this.mVisible;
+            }
+            setEnabled(enabled) {
+                this.mEnable = enabled;
+                return this;
+            }
+            isEnabled() {
+                return this.mEnable;
+            }
+            setOnMenuItemClickListener(menuItemClickListener) {
+                this.mClickListener = menuItemClickListener;
+                return this;
+            }
+            setActionView(view) {
+                this.mActionView = view;
+                return this;
+            }
+            getActionView() {
+                return this.mActionView;
+            }
+            invoke() {
+                if (this.mClickListener != null && this.mClickListener.onMenuItemClick(this)) {
+                    return true;
+                }
+                if (this.mMenu.dispatchMenuItemSelected(this.mMenu.getRootMenu(), this)) {
+                    return true;
+                }
+                if (this.mIntent != null) {
+                    try {
+                        this.mMenu.getContext().startActivity(this.mIntent);
+                        return true;
+                    }
+                    catch (e) {
+                        android.util.Log.e("MenuItem", "Can't find activity to handle intent; ignoring", e);
+                    }
+                }
+                return false;
+            }
+        }
+        view_7.MenuItem = MenuItem;
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../android/app/Activity.ts"/>
+///<reference path="../../android/view/KeyEvent.ts"/>
+///<reference path="../../android/view/MenuItem.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view) {
+        var MenuItem = android.view.MenuItem;
+        var ArrayList = java.util.ArrayList;
+        class Menu {
+            constructor(context) {
+                this.mItems = new ArrayList();
+                this.mVisibleItems = new ArrayList();
+                this.mContext = context;
+            }
+            getContext() {
+                return this.mContext;
+            }
+            add(...args) {
+                if (args.length == 1)
+                    return this.addInternal(0, 0, 0, args[0]);
+                return this.addInternal(args[0], args[1], args[2], args[3]);
+            }
+            addInternal(group, id, categoryOrder, title) {
+                const ordering = 0;
+                const item = new MenuItem(this, group, id, categoryOrder, ordering, title);
+                this.mItems.add(item);
+                return item;
+            }
+            removeItem(id) {
+                this.removeItemAtInt(this.findItemIndex(id), true);
+            }
+            removeGroup(groupId) {
+                const i = this.findGroupIndex(groupId);
+                if (i >= 0) {
+                    const maxRemovable = this.mItems.size() - i;
+                    let numRemoved = 0;
+                    while ((numRemoved++ < maxRemovable) && (this.mItems.get(i).getGroupId() == groupId)) {
+                        this.removeItemAtInt(i, false);
+                    }
+                    this.onItemsChanged(true);
+                }
+            }
+            removeItemAtInt(index, updateChildrenOnMenuViews) {
+                if ((index < 0) || (index >= this.mItems.size())) {
+                    return;
+                }
+                this.mItems.remove(index);
+                if (updateChildrenOnMenuViews) {
+                    this.onItemsChanged(true);
+                }
+            }
+            clear() {
+                this.mItems.clear();
+                this.onItemsChanged(true);
+            }
+            setGroupVisible(group, visible) {
+                const N = this.mItems.size();
+                let changedAtLeastOneItem = false;
+                for (let i = 0; i < N; i++) {
+                    let item = this.mItems.get(i);
+                    if (item.getGroupId() == group) {
+                        if (item.setVisible(visible)) {
+                            changedAtLeastOneItem = true;
+                        }
+                    }
+                }
+                if (changedAtLeastOneItem) {
+                    this.onItemsChanged(true);
+                }
+            }
+            setGroupEnabled(group, enabled) {
+                const N = this.mItems.size();
+                for (let i = 0; i < N; i++) {
+                    let item = this.mItems.get(i);
+                    if (item.getGroupId() == group) {
+                        item.setEnabled(enabled);
+                    }
+                }
+            }
+            hasVisibleItems() {
+                const size = this.size();
+                for (let i = 0; i < size; i++) {
+                    let item = this.mItems.get(i);
+                    if (item.isVisible()) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            findItem(id) {
+                const size = this.size();
+                for (let i = 0; i < size; i++) {
+                    let item = this.mItems.get(i);
+                    if (item.getItemId() == id) {
+                        return item;
+                    }
+                }
+                return null;
+            }
+            findItemIndex(id) {
+                const size = this.size();
+                for (let i = 0; i < size; i++) {
+                    let item = this.mItems.get(i);
+                    if (item.getItemId() == id) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            findGroupIndex(group, start = 0) {
+                const size = this.size();
+                if (start < 0) {
+                    start = 0;
+                }
+                for (let i = start; i < size; i++) {
+                    const item = this.mItems.get(i);
+                    if (item.getGroupId() == group) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            size() {
+                return this.mItems.size();
+            }
+            getItem(index) {
+                return this.mItems.get(index);
+            }
+            onItemsChanged(structureChanged) {
+            }
+            getRootMenu() {
+                return this;
+            }
+            setCallback(cb) {
+                this.mCallback = cb;
+            }
+            dispatchMenuItemSelected(menu, item) {
+                return this.mCallback != null && this.mCallback.onMenuItemSelected(menu, item);
+            }
+            getVisibleItems() {
+                this.mVisibleItems.clear();
+                const itemsSize = this.mItems.size();
+                let item;
+                for (let i = 0; i < itemsSize; i++) {
+                    item = this.mItems.get(i);
+                    if (item.isVisible()) {
+                        this.mVisibleItems.add(item);
+                    }
+                }
+                return this.mVisibleItems;
+            }
+        }
+        view.Menu = Menu;
+        (function (Menu) {
+            Menu.USER_MASK = 0x0000ffff;
+            Menu.USER_SHIFT = 0;
+            Menu.CATEGORY_MASK = 0xffff0000;
+            Menu.CATEGORY_SHIFT = 16;
+            Menu.NONE = 0;
+            Menu.FIRST = 1;
+            Menu.CATEGORY_CONTAINER = 0x00010000;
+            Menu.CATEGORY_SYSTEM = 0x00020000;
+            Menu.CATEGORY_SECONDARY = 0x00030000;
+            Menu.CATEGORY_ALTERNATIVE = 0x00040000;
+            Menu.FLAG_APPEND_TO_GROUP = 0x0001;
+            Menu.FLAG_PERFORM_NO_CLOSE = 0x0001;
+            Menu.FLAG_ALWAYS_PERFORM_CLOSE = 0x0002;
+        })(Menu = view.Menu || (view.Menu = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+///<reference path="../../../android/content/res/Resources.ts"/>
+///<reference path="../../../android/R/layout.ts"/>
+///<reference path="../../../android/R/attr.ts"/>
+///<reference path="../../../android/widget/ListPopupWindow.ts"/>
+///<reference path="../../../android/view/KeyEvent.ts"/>
+///<reference path="../../../android/view/LayoutInflater.ts"/>
+///<reference path="../../../android/view/Menu.ts"/>
+///<reference path="../../../android/view/MenuItem.ts"/>
+///<reference path="../../../android/view/View.ts"/>
+///<reference path="../../../android/view/ViewGroup.ts"/>
+///<reference path="../../../android/view/ViewTreeObserver.ts"/>
+///<reference path="../../../android/widget/AdapterView.ts"/>
+///<reference path="../../../android/widget/TextView.ts"/>
+///<reference path="../../../android/widget/ImageView.ts"/>
+///<reference path="../../../android/widget/BaseAdapter.ts"/>
+///<reference path="../../../android/widget/FrameLayout.ts"/>
+///<reference path="../../../android/widget/ListAdapter.ts"/>
+///<reference path="../../../android/widget/PopupWindow.ts"/>
+///<reference path="../../../java/util/ArrayList.ts"/>
+var android;
+(function (android) {
+    var view;
+    (function (view_8) {
+        var menu;
+        (function (menu_1) {
+            var R = android.R;
+            var ListPopupWindow = android.widget.ListPopupWindow;
+            var KeyEvent = android.view.KeyEvent;
+            var LayoutInflater = android.view.LayoutInflater;
+            var View = android.view.View;
+            var MeasureSpec = android.view.View.MeasureSpec;
+            var BaseAdapter = android.widget.BaseAdapter;
+            var FrameLayout = android.widget.FrameLayout;
+            var PopupWindow = android.widget.PopupWindow;
+            class MenuPopupHelper {
+                constructor(context, menu, anchorView = null) {
+                    this.mPopupMaxWidth = 0;
+                    this.mContext = context;
+                    this.mInflater = LayoutInflater.from(context);
+                    this.mMenu = menu;
+                    const res = context.getResources();
+                    this.mPopupMaxWidth = Math.max(res.getDisplayMetrics().widthPixels / 2, res.getDisplayMetrics().density * 320);
+                    this.mAnchorView = anchorView;
+                }
+                setAnchorView(anchor) {
+                    this.mAnchorView = anchor;
+                }
+                show() {
+                    if (!this.tryShow()) {
+                        throw Error(`new IllegalStateException("MenuPopupHelper cannot be used without an anchor")`);
+                    }
+                }
+                tryShow() {
+                    this.mPopup = new ListPopupWindow(this.mContext, R.attr.popupMenuStyle);
+                    this.mPopup.setOnDismissListener(this);
+                    this.mPopup.setOnItemClickListener(this);
+                    this.mAdapter = new MenuPopupHelper.MenuAdapter(this.mMenu, this);
+                    this.mPopup.setAdapter(this.mAdapter);
+                    this.mPopup.setModal(true);
+                    let anchor = this.mAnchorView;
+                    if (anchor != null) {
+                        const addGlobalListener = this.mTreeObserver == null;
+                        this.mTreeObserver = anchor.getViewTreeObserver();
+                        if (addGlobalListener) {
+                            this.mTreeObserver.addOnGlobalLayoutListener(this);
+                        }
+                        this.mPopup.setAnchorView(anchor);
+                    }
+                    else {
+                        return false;
+                    }
+                    this.mPopup.setContentWidth(Math.min(this.measureContentWidth(this.mAdapter), this.mPopupMaxWidth));
+                    this.mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+                    this.mPopup.show();
+                    this.mPopup.getListView().setOnKeyListener(this);
+                    return true;
+                }
+                dismiss() {
+                    if (this.isShowing()) {
+                        this.mPopup.dismiss();
+                    }
+                }
+                onDismiss() {
+                    this.mPopup = null;
+                    if (this.mTreeObserver != null) {
+                        if (!this.mTreeObserver.isAlive()) {
+                            this.mTreeObserver = this.mAnchorView.getViewTreeObserver();
+                        }
+                        this.mTreeObserver.removeGlobalOnLayoutListener(this);
+                        this.mTreeObserver = null;
+                    }
+                }
+                isShowing() {
+                    return this.mPopup != null && this.mPopup.isShowing();
+                }
+                onItemClick(parent, view, position, id) {
+                    let adapter = this.mAdapter;
+                    let invoked = adapter.getItem(position).invoke();
+                    if (invoked)
+                        this.mPopup.dismiss();
+                }
+                onKey(v, keyCode, event) {
+                    if (event.getAction() == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_MENU) {
+                        this.dismiss();
+                        return true;
+                    }
+                    return false;
+                }
+                measureContentWidth(adapter) {
+                    let width = 0;
+                    let itemView = null;
+                    let itemType = 0;
+                    const widthMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+                    const heightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+                    const count = adapter.getCount();
+                    for (let i = 0; i < count; i++) {
+                        const positionType = adapter.getItemViewType(i);
+                        if (positionType != itemType) {
+                            itemType = positionType;
+                            itemView = null;
+                        }
+                        if (this.mMeasureParent == null) {
+                            this.mMeasureParent = new FrameLayout(this.mContext);
+                        }
+                        itemView = adapter.getView(i, itemView, this.mMeasureParent);
+                        itemView.measure(widthMeasureSpec, heightMeasureSpec);
+                        width = Math.max(width, itemView.getMeasuredWidth());
+                    }
+                    return width;
+                }
+                onGlobalLayout() {
+                    if (this.isShowing()) {
+                        const anchor = this.mAnchorView;
+                        if (anchor == null || !anchor.isShown()) {
+                            this.dismiss();
+                        }
+                        else if (this.isShowing()) {
+                            this.mPopup.show();
+                        }
+                    }
+                }
+            }
+            MenuPopupHelper.TAG = "MenuPopupHelper";
+            MenuPopupHelper.ITEM_LAYOUT = R.layout.popup_menu_item_layout;
+            menu_1.MenuPopupHelper = MenuPopupHelper;
+            (function (MenuPopupHelper) {
+                class MenuAdapter extends BaseAdapter {
+                    constructor(menu, arg) {
+                        super();
+                        this._MenuPopupHelper_this = arg;
+                        this.mAdapterMenu = menu;
+                    }
+                    getCount() {
+                        let items = this.mAdapterMenu.getVisibleItems();
+                        return items.size();
+                    }
+                    getItem(position) {
+                        let items = this.mAdapterMenu.getVisibleItems();
+                        return items.get(position);
+                    }
+                    getItemId(position) {
+                        return position;
+                    }
+                    getView(position, convertView, parent) {
+                        if (convertView == null) {
+                            convertView = this._MenuPopupHelper_this.mInflater.inflate(MenuPopupHelper.ITEM_LAYOUT, parent, false);
+                        }
+                        let itemData = this.getItem(position);
+                        convertView.setVisibility(itemData.isVisible() ? View.VISIBLE : View.GONE);
+                        let titleView = convertView.findViewById('title');
+                        titleView.setText(itemData.getTitle());
+                        let iconView = convertView.findViewById('icon');
+                        let icon = itemData.getIcon();
+                        iconView.setImageDrawable(icon);
+                        if (icon != null) {
+                            iconView.setImageDrawable(icon);
+                            iconView.setVisibility(View.VISIBLE);
+                        }
+                        else {
+                            iconView.setVisibility(View.GONE);
+                        }
+                        convertView.setEnabled(itemData.isEnabled());
+                        return convertView;
+                    }
+                    notifyDataSetChanged() {
+                        super.notifyDataSetChanged();
+                    }
+                }
+                MenuPopupHelper.MenuAdapter = MenuAdapter;
+            })(MenuPopupHelper = menu_1.MenuPopupHelper || (menu_1.MenuPopupHelper = {}));
+        })(menu = view_8.menu || (view_8.menu = {}));
+    })(view = android.view || (android.view = {}));
+})(android || (android = {}));
 /**
  * Created by linfaxin on 15/11/5.
  */
@@ -53585,7 +54131,7 @@ var android;
         var v4;
         (function (v4) {
             var view;
-            (function (view_7) {
+            (function (view_9) {
                 var DataSetObservable = android.database.DataSetObservable;
                 class PagerAdapter {
                     constructor() {
@@ -53624,7 +54170,7 @@ var android;
                 }
                 PagerAdapter.POSITION_UNCHANGED = -1;
                 PagerAdapter.POSITION_NONE = -2;
-                view_7.PagerAdapter = PagerAdapter;
+                view_9.PagerAdapter = PagerAdapter;
             })(view = v4.view || (v4.view = {}));
         })(v4 = support.v4 || (support.v4 = {}));
     })(support = android.support || (android.support = {}));
@@ -53650,7 +54196,7 @@ var android;
         var v4;
         (function (v4) {
             var view;
-            (function (view_8) {
+            (function (view_10) {
                 var View = android.view.View;
                 var Gravity = android.view.Gravity;
                 var MeasureSpec = View.MeasureSpec;
@@ -55487,7 +56033,7 @@ var android;
                 ViewPager.SCROLL_STATE_IDLE = 0;
                 ViewPager.SCROLL_STATE_DRAGGING = 1;
                 ViewPager.SCROLL_STATE_SETTLING = 2;
-                view_8.ViewPager = ViewPager;
+                view_10.ViewPager = ViewPager;
                 (function (ViewPager) {
                     class SimpleOnPageChangeListener {
                         onPageScrolled(position, positionOffset, positionOffsetPixels) {
@@ -55515,7 +56061,7 @@ var android;
                         }
                     }
                     ViewPager.LayoutParams = LayoutParams;
-                })(ViewPager = view_8.ViewPager || (view_8.ViewPager = {}));
+                })(ViewPager = view_10.ViewPager || (view_10.ViewPager = {}));
                 class ItemInfo {
                     constructor() {
                         this.position = 0;
@@ -60620,6 +61166,8 @@ var androidui;
 ///<reference path="android/view/animation/RotateAnimation.ts"/>
 ///<reference path="android/view/animation/TranslateAnimation.ts"/>
 ///<reference path="android/view/animation/AnimationSet.ts"/>
+///<reference path="android/view/Menu.ts"/>
+///<reference path="android/view/menu/MenuPopupHelper.ts"/>
 ///<reference path="android/support/v4/view/ViewPager.ts"/>
 ///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
 ///<reference path="android/support/v4/widget/DrawerLayout.ts"/>

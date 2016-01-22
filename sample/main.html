@@ -83,7 +83,33 @@
                             activity.finish();
                         }
                     }).show();
-        }
+        };
+
+        //right menu icon
+        var menu = new android.view.Menu(activity);
+        var forkItem = menu.add('Fork me on GitHub');
+        var aboutItem = menu.add('About');
+        menu.setCallback({
+            onMenuItemSelected : function(menu, item){
+                if(item == forkItem){
+                    window.location.href = 'https://github.com/linfaxin/AndroidUI4Web';
+
+                }else if(item == aboutItem){
+                    new android.app.AlertDialog.Builder(activity)
+                            .setTitle('About')
+                            .setMessage('AndroidUI4Web is a high-performance web app framework.')
+                            .setPositiveButton(android.R.string_.ok, null)
+                            .show();
+                }
+                return true;
+            }
+        });
+        var menuPopupHelper = new android.view.menu.MenuPopupHelper(activity, menu, activity.getActionBar().mActionRight);
+        activity.getActionBar().setActionRight('', android.R.image.ic_menu_moreoverflow_normal_holo_dark, {
+            onClick : function(view){
+                menuPopupHelper.show();
+            }
+        });
     }
 </script>
 </body>

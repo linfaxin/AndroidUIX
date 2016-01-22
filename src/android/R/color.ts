@@ -42,6 +42,17 @@ module android.R{
             return new DefaultStyleTextColor();
         }
 
+        static get primary_text_dark_disable_only():ColorStateList {
+            let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
+            let _defaultColors = [0x80000000, 0xffffffff];
+            class DefaultStyleTextColor extends ColorStateList{
+                constructor() {
+                    super(_defaultStates, _defaultColors);
+                }
+            }
+            return new DefaultStyleTextColor();
+        }
+
         static get white():number{
             return Color.WHITE;
         }
