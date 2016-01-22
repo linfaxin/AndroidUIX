@@ -23,6 +23,7 @@ module sample.app.R {
                android:padding="8dp"
                android:layout_margin="6dp"
                android:textColor="@color/white"
+               android:cornerRadius="4dp"
                android:background="#f00"
                android:state_pressed="@style/btn_custom1/pressed"
                android:state_disable="@style/btn_custom1/disable">

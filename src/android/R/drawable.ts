@@ -53,27 +53,27 @@ module android.R{
 
         private static get btn_default_normal_holo_light():Drawable {
             let bg = new RoundRectDrawable(0xffd6d6d6, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x66000000);
+            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x66000000);
             return new DefaultBtnBackgroundBound(shadow);
         }
         private static get btn_default_disabled_holo_light():Drawable {
             let bg = new RoundRectDrawable(0xffebebeb, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
+            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
             return new DefaultBtnBackgroundBound(shadow);
         }
         private static get btn_default_pressed_holo_light():Drawable {
             let bg = new RoundRectDrawable(0xffa4a4a4, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x26000000);
+            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x26000000);
             return new DefaultBtnBackgroundBound(shadow);
         }
         private static get btn_default_focused_holo_light():Drawable {
             let bg = new RoundRectDrawable(0xff77abbe, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x66000000);
+            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x66000000);
             return new DefaultBtnBackgroundBound(shadow);
         }
         private static get btn_default_disabled_focused_holo_light():Drawable {
             let bg = new RoundRectDrawable(0xffe6f6fc, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
+            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
             return new DefaultBtnBackgroundBound(shadow);
         }
 

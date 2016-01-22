@@ -7,6 +7,9 @@
 
 module android.graphics.drawable{
 
+    /**
+     * Shadow is very expensive
+     */
     export class ShadowDrawable extends Drawable{
         private mState:DrawableState;
         private mMutated = false;
