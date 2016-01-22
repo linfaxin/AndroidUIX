@@ -1920,7 +1920,12 @@ declare module android.R {
     import InsetDrawable = android.graphics.drawable.InsetDrawable;
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class drawable {
-        static button_background: Drawable;
+        static btn_default: Drawable;
+        private static btn_default_normal_holo_light;
+        private static btn_default_disabled_holo_light;
+        private static btn_default_pressed_holo_light;
+        private static btn_default_focused_holo_light;
+        private static btn_default_disabled_focused_holo_light;
         static btn_check: Drawable;
         static btn_radio: Drawable;
         static progress_small_holo: Drawable;

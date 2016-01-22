@@ -41,7 +41,7 @@ module android.R {
 
         static get buttonStyle() {
             return Object.assign(attr.textViewStyle, {
-                background: drawable.button_background,
+                background: drawable.btn_default,
                 focusable: true,
                 clickable: true,
                 textSize: '18sp',
@@ -51,7 +51,7 @@ module android.R {
 
         static get imageButtonStyle() {
             return {
-                background: drawable.button_background,
+                background: drawable.btn_default,
                 focusable: true,
                 clickable: true,
                 gravity: Gravity.CENTER
@@ -250,7 +250,7 @@ module android.R {
                 spinnerMode : 'dropdown',
                 gravity : Gravity.START|Gravity.CENTER_VERTICAL,
                 disableChildrenWhenDisabled : true,
-                background : R.drawable.button_background,
+                background : R.drawable.btn_default,
                 //dropDownSelector : R.drawable.list_selector_holo_light,
                 popupBackground : R.drawable.menu_panel_holo_light,
                 dropDownVerticalOffset : '0dp',

@@ -8455,36 +8455,41 @@ var android;
         });
         const density = Resources.getDisplayMetrics().density;
         class drawable {
-            static get button_background() {
-                class DefaultButtonBackgroundDrawable extends InsetDrawable {
-                    constructor() {
-                        super(DefaultButtonBackgroundDrawable.createStateList(), 6 * density);
-                    }
-                    static createStateList() {
-                        let stateList = new StateListDrawable();
-                        stateList.addState([View.VIEW_STATE_PRESSED], new ColorDrawable(Color.GRAY));
-                        stateList.addState([View.VIEW_STATE_ACTIVATED], new ColorDrawable(Color.GRAY));
-                        stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
-                        stateList.addState([-View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
-                        stateList.addState([], new ColorDrawable(Color.LTGRAY));
-                        return stateList;
-                    }
-                    getPadding(padding) {
-                        let result = super.getPadding(padding);
-                        padding.left += 12 * density;
-                        padding.right += 12 * density;
-                        padding.top += 6 * density;
-                        padding.bottom += 6 * density;
-                        return result;
-                    }
-                    getIntrinsicWidth() {
-                        return 64 * density;
-                    }
-                    getIntrinsicHeight() {
-                        return 48 * density;
-                    }
-                }
-                return new DefaultButtonBackgroundDrawable();
+            static get btn_default() {
+                let stateList = new StateListDrawable();
+                stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], drawable.btn_default_normal_holo_light);
+                stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, -View.VIEW_STATE_ENABLED], drawable.btn_default_disabled_holo_light);
+                stateList.addState([View.VIEW_STATE_PRESSED], drawable.btn_default_pressed_holo_light);
+                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], drawable.btn_default_focused_holo_light);
+                stateList.addState([View.VIEW_STATE_ENABLED], drawable.btn_default_normal_holo_light);
+                stateList.addState([View.VIEW_STATE_FOCUSED], drawable.btn_default_disabled_focused_holo_light);
+                stateList.addState([], drawable.btn_default_disabled_holo_light);
+                return stateList;
+            }
+            static get btn_default_normal_holo_light() {
+                let bg = new RoundRectDrawable(0xffd6d6d6, 1 * density, 1 * density, 1 * density, 1 * density);
+                let shadow = new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x66000000);
+                return new DefaultBtnBackgroundBound(shadow);
+            }
+            static get btn_default_disabled_holo_light() {
+                let bg = new RoundRectDrawable(0xffcdcdcd, 1 * density, 1 * density, 1 * density, 1 * density);
+                let shadow = new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
+                return new DefaultBtnBackgroundBound(shadow);
+            }
+            static get btn_default_pressed_holo_light() {
+                let bg = new RoundRectDrawable(0xffa4a4a4, 1 * density, 1 * density, 1 * density, 1 * density);
+                let shadow = new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x26000000);
+                return new DefaultBtnBackgroundBound(shadow);
+            }
+            static get btn_default_focused_holo_light() {
+                let bg = new RoundRectDrawable(0xff77abbe, 1 * density, 1 * density, 1 * density, 1 * density);
+                let shadow = new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x66000000);
+                return new DefaultBtnBackgroundBound(shadow);
+            }
+            static get btn_default_disabled_focused_holo_light() {
+                let bg = new RoundRectDrawable(0xffe6f6fc, 1 * density, 1 * density, 1 * density, 1 * density);
+                let shadow = new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
+                return new DefaultBtnBackgroundBound(shadow);
             }
             static get btn_check() {
                 let stateList = new StateListDrawable();
@@ -8757,6 +8762,25 @@ var android;
             }
         }
         R.drawable = drawable;
+        class DefaultBtnBackgroundBound extends InsetDrawable {
+            constructor(drawable) {
+                super(drawable, 4 * density);
+            }
+            getPadding(padding) {
+                let result = super.getPadding(padding);
+                padding.left += 12 * density;
+                padding.right += 12 * density;
+                padding.top += 4 * density;
+                padding.bottom += 4 * density;
+                return result;
+            }
+            getIntrinsicWidth() {
+                return 26 * density;
+            }
+            getIntrinsicHeight() {
+                return 32 * density;
+            }
+        }
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 /**
@@ -10515,7 +10539,7 @@ var android;
             }
             static get buttonStyle() {
                 return Object.assign(attr.textViewStyle, {
-                    background: R.drawable.button_background,
+                    background: R.drawable.btn_default,
                     focusable: true,
                     clickable: true,
                     textSize: '18sp',
@@ -10524,7 +10548,7 @@ var android;
             }
             static get imageButtonStyle() {
                 return {
-                    background: R.drawable.button_background,
+                    background: R.drawable.btn_default,
                     focusable: true,
                     clickable: true,
                     gravity: Gravity.CENTER
@@ -10699,7 +10723,7 @@ var android;
                     spinnerMode: 'dropdown',
                     gravity: Gravity.START | Gravity.CENTER_VERTICAL,
                     disableChildrenWhenDisabled: true,
-                    background: R.drawable.button_background,
+                    background: R.drawable.btn_default,
                     popupBackground: R.drawable.menu_panel_holo_light,
                     dropDownVerticalOffset: '0dp',
                     dropDownHorizontalOffset: '0dp',
