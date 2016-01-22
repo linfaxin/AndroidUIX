@@ -28741,15 +28741,14 @@ var android;
                         super(width, height);
                         this.weight = weight;
                     }
-                    this._attrBinder.addAttr('gravity', (value) => {
-                        this.gravity = this._attrBinder.parseGravity(value, this.gravity);
+                    let a = this._attrBinder;
+                    a.addAttr('gravity', (value) => {
+                        this.gravity = a.parseGravity(value, this.gravity);
                     }, () => {
                         return this.gravity;
                     });
-                    this._attrBinder.addAttr('weight', (value) => {
-                        value = Number.parseInt(value);
-                        if (Number.isInteger(value))
-                            this.weight = value;
+                    a.addAttr('weight', (value) => {
+                        this.weight = a.parseNumber(value, this.weight);
                     }, () => {
                         return this.weight;
                     });
