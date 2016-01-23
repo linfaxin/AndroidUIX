@@ -24,15 +24,15 @@ module androidui.image {
         private mTmpRect2 = new Rect();
         private mNinePatchBorderInfo:NinePatchBorderInfo;
 
-        constructor(src:string|NetImage, paint?:Paint, overrideImageRatio?:number) {
-            super(src, paint, overrideImageRatio);
-            this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(this.mState.mImage.src);
-        }
+        //constructor(src:string|NetImage, paint?:Paint, overrideImageRatio?:number) {
+        //    super(src, paint, overrideImageRatio);
+        //}
 
         protected initBoundWithLoadedImage(image:NetImage){
             let imageRatio = image.getImageRatio();
             this.mImageWidth = Math.floor( (image.width-2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
             this.mImageHeight = Math.floor( (image.height-2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+            this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(this.mState.mImage.src);
         }
 
 
@@ -107,7 +107,7 @@ module androidui.image {
                     let srcHeight = NinePatchBorderInfo.getValueUnpack(typedValue);
                     let dstHeight;
                     if(isScalePart){
-                        dstHeight = srcHeight + extraHeight * srcHeight / scaleVerticalWeightSum;
+                        dstHeight = extraHeight * srcHeight / scaleVerticalWeightSum;
                         if(dstHeight <= 0) continue;
 
                     }else{
@@ -135,7 +135,7 @@ module androidui.image {
                 let srcWidth = NinePatchBorderInfo.getValueUnpack(typedValue);
                 let dstWidth;
                 if(isScalePart) {
-                    dstWidth = srcWidth + extraWidth * srcWidth / scaleHorizontalWeightSum;
+                    dstWidth = extraWidth * srcWidth / scaleHorizontalWeightSum;
 
                 } else {//static part
                     dstWidth = srcWidth * staticWidthPartScale;

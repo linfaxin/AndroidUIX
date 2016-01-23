@@ -34,9 +34,9 @@ module androidui.image{
             }
             image.addLoadListener(()=>this.onLoad(), ()=>this.onError());
 
-            if(image.isImageLoaded()) this.initBoundWithLoadedImage(image);
-
             this.mState = new State(image, paint);
+
+            if(image.isImageLoaded()) this.initBoundWithLoadedImage(image);
         }
 
         protected initBoundWithLoadedImage(image:NetImage){

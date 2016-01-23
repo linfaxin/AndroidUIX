@@ -228,7 +228,7 @@ module android.R {
 
         static get popupWindowStyle(){
             return {
-                popupBackground : R.drawable.dropdown_background_dark,
+                popupBackground : R.image.dropdown_background_dark,
                 popupEnterAnimation : R.anim.grow_fade_in_center,
                 popupExitAnimation : R.anim.shrink_fade_out_center,
             }
@@ -236,7 +236,7 @@ module android.R {
 
         static get listPopupWindowStyle(){
             return {
-                popupBackground : R.drawable.menu_panel_holo_light,
+                popupBackground : R.image.menu_panel_holo_light,
                 popupEnterAnimation : R.anim.grow_fade_in_center,
                 popupExitAnimation : R.anim.shrink_fade_out_center,
             }
@@ -244,7 +244,7 @@ module android.R {
 
         static get popupMenuStyle(){
             return {
-                popupBackground : R.drawable.menu_panel_holo_dark
+                popupBackground : R.image.menu_panel_holo_dark
             }
         }
 
@@ -260,7 +260,7 @@ module android.R {
                 disableChildrenWhenDisabled : true,
                 background : R.drawable.btn_default,
                 //dropDownSelector : R.drawable.list_selector_holo_light,
-                popupBackground : R.drawable.menu_panel_holo_light,
+                popupBackground : R.image.menu_panel_holo_light,
                 dropDownVerticalOffset : '0dp',
                 dropDownHorizontalOffset : '0dp',
                 dropDownWidth : -2,//wrap_content

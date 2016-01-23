@@ -6281,9 +6281,9 @@ var androidui;
                     image = new image_1.NetImage(src, overrideImageRatio);
                 }
                 image.addLoadListener(() => this.onLoad(), () => this.onError());
+                this.mState = new State(image, paint);
                 if (image.isImageLoaded())
                     this.initBoundWithLoadedImage(image);
-                this.mState = new State(image, paint);
             }
             initBoundWithLoadedImage(image) {
                 let imageRatio = image.getImageRatio();
@@ -8762,31 +8762,6 @@ var android;
                 let shadow = new ShadowDrawable(bg, 5 * density, 0, 2 * density, 0x44000000);
                 return new InsetDrawable(shadow, 7 * density);
             }
-            static get dropdown_background_dark() {
-                let bg = new RoundRectDrawable(0xff333333, 2 * density, 2 * density, 2 * density, 2 * density);
-                bg.getIntrinsicWidth = () => 36 * density;
-                bg.getIntrinsicHeight = () => 36 * density;
-                bg.getPadding = (rect) => {
-                    rect.set(12 * density, 6 * density, 12 * density, 6 * density);
-                    return true;
-                };
-                let shadow = new ShadowDrawable(bg, 3 * density, 0, 2 * density, 0x44000000);
-                return new InsetDrawable(shadow, 5 * density);
-            }
-            static get menu_panel_holo_light() {
-                let bg = new RoundRectDrawable(0xffefefef, 2 * density, 2 * density, 2 * density, 2 * density);
-                bg.getIntrinsicWidth = () => 48 * density;
-                bg.getIntrinsicHeight = () => 16 * density;
-                let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
-                return new InsetDrawable(shadow, 8 * density);
-            }
-            static get menu_panel_holo_dark() {
-                let bg = new RoundRectDrawable(0xff303030, 2 * density, 2 * density, 2 * density, 2 * density);
-                bg.getIntrinsicWidth = () => 48 * density;
-                bg.getIntrinsicHeight = () => 16 * density;
-                let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
-                return new InsetDrawable(shadow, 8 * density);
-            }
         }
         R.drawable = drawable;
     })(R = android.R || (android.R = {}));
@@ -8808,16 +8783,16 @@ var androidui;
         var Rect = android.graphics.Rect;
         var Color = android.graphics.Color;
         class NinePatchDrawable extends image_2.NetDrawable {
-            constructor(src, paint, overrideImageRatio) {
-                super(src, paint, overrideImageRatio);
+            constructor(...args) {
+                super(...args);
                 this.mTmpRect = new Rect();
                 this.mTmpRect2 = new Rect();
-                this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(this.mState.mImage.src);
             }
             initBoundWithLoadedImage(image) {
                 let imageRatio = image.getImageRatio();
                 this.mImageWidth = Math.floor((image.width - 2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
                 this.mImageHeight = Math.floor((image.height - 2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+                this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(this.mState.mImage.src);
             }
             onLoad() {
                 let image = this.mState.mImage;
@@ -8875,7 +8850,7 @@ var androidui;
                         let srcHeight = NinePatchBorderInfo.getValueUnpack(typedValue);
                         let dstHeight;
                         if (isScalePart) {
-                            dstHeight = srcHeight + extraHeight * srcHeight / scaleVerticalWeightSum;
+                            dstHeight = extraHeight * srcHeight / scaleVerticalWeightSum;
                             if (dstHeight <= 0)
                                 continue;
                         }
@@ -8900,7 +8875,7 @@ var androidui;
                     let srcWidth = NinePatchBorderInfo.getValueUnpack(typedValue);
                     let dstWidth;
                     if (isScalePart) {
-                        dstWidth = srcWidth + extraWidth * srcWidth / scaleHorizontalWeightSum;
+                        dstWidth = extraWidth * srcWidth / scaleHorizontalWeightSum;
                     }
                     else {
                         dstWidth = srcWidth * staticWidthPartScale;
@@ -9374,11 +9349,26 @@ var android;
                 null,
                 "data:image/png;base64,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"
             ],
+            "dropdown_background_dark": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEcAAAA2CAMAAACiEHRJAAAAflBMVEVAQEAAAABBQUEAAAAAAAATExMlJSU+Pj5BQUEAAAAAAAA4ODggICAvLy8WFhYAAAAAAAAAAAAAAAAfHx8NDQ0AAAAvLy8kJCQgICAQEBAAAAA3NzcWFhYkJCQXFxcAAAASEhIAAAAjIyMAAAAwMDAjIyMAAAAAAAAAAAAAAACu+DqjAAAAKXRSTlPmCekADkqr4e4qFcCA2KhEYwUShjwb1K5/Nge9pZ2YXUxALSTIrGZVSewvjJ0AAAC8SURBVEjH7da3EsIwEEVRr5AjJig4Z5uk//9BJNFBw+zQMLO339Ns84Lde+abPq6cs6q6rnN0avWOAD10e3zdoEFYB/hcsQQfq2YO3gmjmAXYWByFHAw55JBDDjk/dgw5f/UvcsghhxyUEyQMm3f8nofweinL8oCtCsE5LTS5Gsf+iKxXDbTWETzb9OM+nXHdpjTjwjkgi7TRywnZUkhwjoeKLUXnGOs4iEuZoQPhHQeJFvBZxTk+g+8FPAE5Rz/0d6kkJAAAAABJRU5ErkJggg=="
+            ],
             "ic_menu_moreoverflow_normal_holo_dark": [
                 null,
                 null,
                 null,
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgAQMAAADYVuV7AAAABlBMVEUAAAD///+l2Z/dAAAAAnRSTlMAgJsrThgAAAAdSURBVDjLYxhhoP7/kOcgwGjoEB06o0EF44wsAABBWUMn9krmtgAAAABJRU5ErkJggg=="
+            ],
+            "menu_panel_holo_dark": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAABCCAMAAACsNf57AAAAw1BMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsLCwVFRU0NDQgICA1NTUfHx9OTk5DQ0NEREQ8PDwwMDAAAAAsLCw4ODj/AAAqKiogICAiIiIkJCRKSkpMTExHR0dFRUVOTk46OjoxMTEiZHnYAAAAMXRSTlMABA0CJBAIChgTGyAqNlAWSWc8X3aJfI8eLidAMkU5TFtWPW9Ug3nti2Dt29rj4srKKLM+WwAAA8dJREFUaN7t2dlW2zAQBuAsTqLIK06gtmRbjhPC2oUlFFoovP9TdUZGh0SmoaeVwBf5H0D6jmacyOPOq7m0lE47s+p8eHaEHWFHeJPQX0vXQNbX+xvClp0NWbYT1ObDOiNjGdZREI3QBKjdewajHE3ESgfg7rj3ADI2GFwPJehQiCZBCRCA24fPIf8VtQoyEKEMDYICjOrtQ0IpTTCugSQYWJCENWOkEE2CrMEzQG7uGIuEPCNkNV4joEACnJMv9w9a7vX8eC0/G/ml5/OJgwhpeCZcvgi6KBiE4cm3x8drY3ncyMPD15MwHKABS6EIqgzyDEJKz66fni5s5enxjNIQz0GWokGAMyA0ObImQML1UUIJnMM6QSL60Ai9HpxB4rCrC6u5Yk4C59DrQTs0CNAHics82wSPuQn0g0aoyzAm1GVpZpuQpcylZFyXYp2AvUigDJlvm+BnUAqCHblJGI6wE1wv9WPbhNhPPRe7YTRsEhIgFJVtQlUAIWkSsBmJ66RZldsm5FWWOi7Bhnwh9GsCNqPP7RO4jw1ZE/oaAZqxyCPbhCgvoCEbhCEQCHU8IAjbBAEEz6EECEOdkDDPj6PANiGIYt9jySuEMUVC9R6ECgl0rBFGAySkBRcL24SF4EWKhMGoXYSuJLgeEma2CTMkeK4kdJuEmAf2CQGPd4TWEvqKULwPAduxfQ9lKwgt+IH+0L8piPZnbdnQ/LPuaFcWcXRzYTFXR6JxZcFsXNyOz+9utufqn3Nzc368cXHrrBN69fWV5+Xx6e33t3K7NXd/zOlxmfP6+tp7IWiXeC6CcrI3ny4PDvf39z8ZCSx0eLCczvcmZSC4dolfqemCIsBjKWblXm04BIWJwEJSsFfOBDySitDdJNQ/TvBMQDcEi3ICiPl0ulweGMhyOZ3OATApFwF0AjwP9Q+TIsio11qHpVnFo2BWThABCiOZS8CknAURr7KUOeq1Vs2aXl7uiSxFwXMhFrMSGWaC25ezhRA5L2QZiHq51whyxMGgFDHPIxEgAhgGUpYICESU8xjKwOSIo0Hoq1ETnAMgiorneRQJIQIDgWWiKM95VQAAzkANm/qKoM+aoB9S348rDgpwGEgO4byKfT+FPtBnTSt97Ij94DAvTbPM94uiiA0ElvH9LEtTjznYB5uDx1Vz7kjRwDypAIeBZJnc32MooNrcUR8A4zkAAhQ4/GUgMRJYSA6BEwqA+gzaOYNGg0SoWXxICDUYQkI1h1eD+BZ+j1CfZWoFngVKjEV9HML9JaDfsm9TKy2XlqPv1/kNylczeSvTmjMAAAAASUVORK5CYII="
+            ],
+            "menu_panel_holo_light": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAABCCAMAAACsNf57AAAA5FBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADd3d0AAADJycnMzMy6urrs7Ozu7u51dXV8fHwkJCRjY2PQ0NDb29vt7e3s7Oz39/fy8vLv7+8AAADx8fHk5OT/AAD39/f19fXm5ubr6+vo6OjHx8fKysrNzc3Pz8/R0dHT09Pz8/P5+flMDi8tAAAAOnRSTlMAAwkNFwYkEBMgHDsqNlBJGnaJfF+PZycwLUEzPk1HW1ZEb1JkgWCGaP1qY+ff3c6KiVsm+vf09OvngRpQJAAAA7pJREFUaN7t2Wl3mkAUBmBsCJEdY1qWYVUkLtnTVY1ZuqQ1////9F6QAKOx51Qm8YNvPod5zp0ZmLlyKzNhFG47M+PePDvCjrAj/JPQYJi1BHr8/ZpTKNYSirHfMUghoQg0oBh+r8YUjBKCJhTj49gHkGaNweehpFC8SMgB8F98rUHGAkERaAAOj6MbhgQRa4oEMQx0ICNH0IS8BBkgG16oLRkjQ+SFoAkoyADXo2/zu7W5/c88Pd1+HV0jAg05YVIqAgoOeH50Pp8yynx+dz7i+QM0PJdhUhU0YQrOpmOGmZ7BdDTLhkl5GrAGkvh5zDLTL6KEdSimYgJ/GQH2AtZAML+PmebBFLAOsC8oAk5DWgNTYU1QTKxDNhUFoYEEXAiiaRPWBGKbIi4HJDTKBFyLOA2WypqgWjgVsCKrhH0gNGEaFFuVWRNk1VZgKppA2F9FsGSXNcGVrZUEXIyGKNjEjVgTIpfYgmjggiwIjZwAK8HxWRN8B1ZDTmhQBMEkaqSzJuiRSkxhNUESFCL7HmuC58tEEaRVBEMyFVXWNdYETZdVxZSMZUITCLbqvgbBVW0gNKsEfDciQXa9LmtC13NlJOD7kSaIQHBeg+AAQVxNUCwghKwJIRAsZQ1BY0/QdoQdoULY1k35Bq+m7XpBlz9T9+PlsP1McfTH+hNTw8Ng+WPNVY4scqSfDMYMc3OiRzJ1ZMFUDm4Xp4+Dmw1z/0JuBqeXlYMbVybs5cfXq4vTH6vzcym/qDyW8ruUP4t8PLm8yo+vewWBPsTrWpAMO61Wr3d8eHj4vobAY457vVarM0wCTacP8TOKANvS98Ig7nda7TYgQLF5jgHQbrc6/TgIPR+2JE0o7pQG7glYDVo3OAIEVAIcdaQFFQDAUdDVYCXgfjCKOyUQMBmBxzslcR1dC4Mk7g87oKgl8KBhP06CUNMdl+Cdks8IXInQyC/3eKt0It3rhkGQJHH8oYbEcZIEQdj19MjBG2V+uW/khGqLw1QsVXYj39MAATmqIUGAAM3zI1dWLcXMWxw0AQxphwHqQADhRL6v656n1RDP03XfjxwAEKhB2l0AQUGge02CaVsqIpwIGODYND4MHzkIUC3bFOhe04xuO/IGIhTbsogKkJoCjyKWZSsIyGqQC5BA9x0zAyBQQYhaQwjB8QGQCqi+I9V9RUTW/k2bvyZIagk8KG0CSwjIO8Db2INODYjIe/HgWETaKMYifNGHBwAKtvD3CDQ8I1IHSmpL8eMQAjBb9tvUjMqEcejxuL9XNZodPDUZeAAAAABJRU5ErkJggg=="
             ],
             "progressbar_indeterminate_holo1": [
                 null,
@@ -9514,7 +9504,10 @@ var android;
             btn_rating_star_off_pressed_holo_light: null,
             btn_rating_star_on_normal_holo_light: null,
             btn_rating_star_on_pressed_holo_light: null,
+            dropdown_background_dark: null,
             ic_menu_moreoverflow_normal_holo_dark: null,
+            menu_panel_holo_dark: null,
+            menu_panel_holo_light: null,
             progressbar_indeterminate_holo1: null,
             progressbar_indeterminate_holo2: null,
             progressbar_indeterminate_holo3: null,
@@ -9634,8 +9627,17 @@ var android;
             static get btn_rating_star_on_pressed_holo_light() {
                 return imageCache.btn_rating_star_on_pressed_holo_light || (imageCache.btn_rating_star_on_pressed_holo_light = findRatioImage(data.btn_rating_star_on_pressed_holo_light));
             }
+            static get dropdown_background_dark() {
+                return imageCache.dropdown_background_dark || (imageCache.dropdown_background_dark = findRatioImage(data.dropdown_background_dark));
+            }
             static get ic_menu_moreoverflow_normal_holo_dark() {
                 return imageCache.ic_menu_moreoverflow_normal_holo_dark || (imageCache.ic_menu_moreoverflow_normal_holo_dark = findRatioImage(data.ic_menu_moreoverflow_normal_holo_dark));
+            }
+            static get menu_panel_holo_dark() {
+                return imageCache.menu_panel_holo_dark || (imageCache.menu_panel_holo_dark = findRatioImage(data.menu_panel_holo_dark));
+            }
+            static get menu_panel_holo_light() {
+                return imageCache.menu_panel_holo_light || (imageCache.menu_panel_holo_light = findRatioImage(data.menu_panel_holo_light));
             }
             static get progressbar_indeterminate_holo1() {
                 return imageCache.progressbar_indeterminate_holo1 || (imageCache.progressbar_indeterminate_holo1 = findRatioImage(data.progressbar_indeterminate_holo1));
@@ -9735,7 +9737,10 @@ var android;
             static get btn_rating_star_off_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_off_pressed_holo_light); }
             static get btn_rating_star_on_normal_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_normal_holo_light); }
             static get btn_rating_star_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_pressed_holo_light); }
+            static get dropdown_background_dark() { return new NinePatchDrawable(R.image_base64.dropdown_background_dark); }
             static get ic_menu_moreoverflow_normal_holo_dark() { return new NetDrawable(R.image_base64.ic_menu_moreoverflow_normal_holo_dark); }
+            static get menu_panel_holo_dark() { return new NinePatchDrawable(R.image_base64.menu_panel_holo_dark); }
+            static get menu_panel_holo_light() { return new NinePatchDrawable(R.image_base64.menu_panel_holo_light); }
             static get progressbar_indeterminate_holo1() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo1); }
             static get progressbar_indeterminate_holo2() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo2); }
             static get progressbar_indeterminate_holo3() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo3); }
@@ -11054,21 +11059,21 @@ var android;
             }
             static get popupWindowStyle() {
                 return {
-                    popupBackground: R.drawable.dropdown_background_dark,
+                    popupBackground: R.image.dropdown_background_dark,
                     popupEnterAnimation: R.anim.grow_fade_in_center,
                     popupExitAnimation: R.anim.shrink_fade_out_center,
                 };
             }
             static get listPopupWindowStyle() {
                 return {
-                    popupBackground: R.drawable.menu_panel_holo_light,
+                    popupBackground: R.image.menu_panel_holo_light,
                     popupEnterAnimation: R.anim.grow_fade_in_center,
                     popupExitAnimation: R.anim.shrink_fade_out_center,
                 };
             }
             static get popupMenuStyle() {
                 return {
-                    popupBackground: R.drawable.menu_panel_holo_dark
+                    popupBackground: R.image.menu_panel_holo_dark
                 };
             }
             static get dropDownListViewStyle() {
@@ -11081,7 +11086,7 @@ var android;
                     gravity: Gravity.START | Gravity.CENTER_VERTICAL,
                     disableChildrenWhenDisabled: true,
                     background: R.drawable.btn_default,
-                    popupBackground: R.drawable.menu_panel_holo_light,
+                    popupBackground: R.image.menu_panel_holo_light,
                     dropDownVerticalOffset: '0dp',
                     dropDownHorizontalOffset: '0dp',
                     dropDownWidth: -2,
@@ -14162,6 +14167,10 @@ var android;
                     if (h < 0)
                         h = this.mBackgroundHeight;
                     if (w != this.mBackgroundWidth || h != this.mBackgroundHeight) {
+                        let padding = new Rect();
+                        if (who.getPadding(padding)) {
+                            this.setPadding(padding.left, padding.top, padding.right, padding.bottom);
+                        }
                         this.mBackgroundWidth = w;
                         this.mBackgroundHeight = h;
                         this.requestLayout();

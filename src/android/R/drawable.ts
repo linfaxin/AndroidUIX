@@ -374,33 +374,5 @@ module android.R{
             return new InsetDrawable(shadow, 7 * density);//more space show shadow
         }
 
-        static get dropdown_background_dark(){
-            let bg = new RoundRectDrawable(0xff333333, 2 * density,  2 * density,  2 * density,  2 * density);
-            bg.getIntrinsicWidth = ()=> 36 * density;
-            bg.getIntrinsicHeight = ()=> 36 * density;
-            bg.getPadding = (rect)=>{
-                rect.set(12 * density, 6 * density, 12 * density, 6 * density);
-                return true;
-            };
-            let shadow = new ShadowDrawable(bg, 3 * density, 0, 2 * density, 0x44000000);
-            return new InsetDrawable(shadow, 5 * density);//more space show shadow
-        }
-
-        static get menu_panel_holo_light(){
-            let bg = new RoundRectDrawable(0xffefefef, 2 * density,  2 * density,  2 * density,  2 * density);
-            bg.getIntrinsicWidth = ()=> 48 * density;
-            bg.getIntrinsicHeight = ()=> 16 * density;
-            let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
-            return new InsetDrawable(shadow, 8 * density);//more space show shadow
-        }
-
-        static get menu_panel_holo_dark(){
-            let bg = new RoundRectDrawable(0xff303030, 2 * density,  2 * density,  2 * density,  2 * density);
-            bg.getIntrinsicWidth = ()=> 48 * density;
-            bg.getIntrinsicHeight = ()=> 16 * density;
-            let shadow = new ShadowDrawable(bg, 6 * density, 0, 2 * density, 0xaa000000);
-            return new InsetDrawable(shadow, 8 * density);//more space show shadow
-        }
-
     }
 }

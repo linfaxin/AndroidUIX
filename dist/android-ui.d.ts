@@ -1951,20 +1951,15 @@ declare module android.R {
         static divider_horizontal: Drawable;
         static item_background: StateListDrawable;
         static toast_frame: InsetDrawable;
-        static dropdown_background_dark: InsetDrawable;
-        static menu_panel_holo_light: InsetDrawable;
-        static menu_panel_holo_dark: InsetDrawable;
     }
 }
 declare module androidui.image {
-    import Paint = android.graphics.Paint;
     import Canvas = android.graphics.Canvas;
     class NinePatchDrawable extends NetDrawable {
         private static GlobalBorderInfoCache;
         private mTmpRect;
         private mTmpRect2;
         private mNinePatchBorderInfo;
-        constructor(src: string | NetImage, paint?: Paint, overrideImageRatio?: number);
         protected initBoundWithLoadedImage(image: NetImage): void;
         protected onLoad(): void;
         draw(canvas: Canvas): void;
@@ -2032,7 +2027,10 @@ declare module android.R {
         static btn_rating_star_off_pressed_holo_light: any;
         static btn_rating_star_on_normal_holo_light: any;
         static btn_rating_star_on_pressed_holo_light: any;
+        static dropdown_background_dark: any;
         static ic_menu_moreoverflow_normal_holo_dark: any;
+        static menu_panel_holo_dark: any;
+        static menu_panel_holo_light: any;
         static progressbar_indeterminate_holo1: any;
         static progressbar_indeterminate_holo2: any;
         static progressbar_indeterminate_holo3: any;
@@ -2087,7 +2085,10 @@ declare module android.R {
         static btn_rating_star_off_pressed_holo_light: NetDrawable;
         static btn_rating_star_on_normal_holo_light: NetDrawable;
         static btn_rating_star_on_pressed_holo_light: NetDrawable;
+        static dropdown_background_dark: NinePatchDrawable;
         static ic_menu_moreoverflow_normal_holo_dark: NetDrawable;
+        static menu_panel_holo_dark: NinePatchDrawable;
+        static menu_panel_holo_light: NinePatchDrawable;
         static progressbar_indeterminate_holo1: NetDrawable;
         static progressbar_indeterminate_holo2: NetDrawable;
         static progressbar_indeterminate_holo3: NetDrawable;
@@ -2336,7 +2337,6 @@ declare module android.view.animation {
 }
 declare module android.R {
     import Drawable = android.graphics.drawable.Drawable;
-    import InsetDrawable = android.graphics.drawable.InsetDrawable;
     import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class attr {
@@ -2428,17 +2428,17 @@ declare module android.R {
             virtualButtonPressedDrawable: StateListDrawable;
         };
         static popupWindowStyle: {
-            popupBackground: InsetDrawable;
+            popupBackground: androidui.image.NinePatchDrawable;
             popupEnterAnimation: view.animation.Animation;
             popupExitAnimation: view.animation.Animation;
         };
         static listPopupWindowStyle: {
-            popupBackground: InsetDrawable;
+            popupBackground: androidui.image.NinePatchDrawable;
             popupEnterAnimation: view.animation.Animation;
             popupExitAnimation: view.animation.Animation;
         };
         static popupMenuStyle: {
-            popupBackground: InsetDrawable;
+            popupBackground: androidui.image.NinePatchDrawable;
         };
         static dropDownListViewStyle: {
             divider: Drawable;
@@ -2451,7 +2451,7 @@ declare module android.R {
             gravity: number;
             disableChildrenWhenDisabled: boolean;
             background: Drawable;
-            popupBackground: InsetDrawable;
+            popupBackground: androidui.image.NinePatchDrawable;
             dropDownVerticalOffset: string;
             dropDownHorizontalOffset: string;
             dropDownWidth: number;
@@ -9270,7 +9270,7 @@ declare module android.widget {
             gravity: number;
             disableChildrenWhenDisabled: boolean;
             background: Drawable;
-            popupBackground: graphics.drawable.InsetDrawable;
+            popupBackground: androidui.image.NinePatchDrawable;
             dropDownVerticalOffset: string;
             dropDownHorizontalOffset: string;
             dropDownWidth: number;
