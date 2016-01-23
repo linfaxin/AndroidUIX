@@ -5287,6 +5287,14 @@ module android.view {
                 let h:number = who.getIntrinsicHeight();
                 if (h < 0) h = this.mBackgroundHeight;
                 if (w != this.mBackgroundWidth || h != this.mBackgroundHeight) {
+                    let padding = new Rect();
+                    //this.resetResolvedDrawables();
+                    //background.setLayoutDirection(getLayoutDirection());
+                    if (who.getPadding(padding)) {
+                        //this.resetResolvedPadding();
+                        this.setPadding(padding.left, padding.top, padding.right, padding.bottom);
+                    }
+
                     this.mBackgroundWidth = w;
                     this.mBackgroundHeight = h;
                     this.requestLayout();
