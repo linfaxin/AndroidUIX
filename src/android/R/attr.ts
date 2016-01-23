@@ -44,6 +44,8 @@ module android.R {
                 background: drawable.btn_default,
                 focusable: true,
                 clickable: true,
+                minHeight: '48dp',
+                minWidth: '64dp',
                 textSize: '18sp',
                 gravity: Gravity.CENTER
             });

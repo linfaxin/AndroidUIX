@@ -16,30 +16,31 @@ function buildImage(){
     var path = 'res/image';
     if(!fs.existsSync(path)) return;
     var dirImageData = {};
+    var ninePatchImages = [];
+
     var files = fs.readdirSync(path);
     files.forEach(function(fileName){
         var splits = fileName.split('.');
-        var name = fileName.split('.')[0];
+        var nameWithRadio = fileName.split('.')[0];
+
         var fileSuffixes = splits[splits.length-1];
+        if(fileSuffixes !== 'png' && fileSuffixes !== 'jpg' && fileSuffixes !== 'gif' && fileSuffixes !== 'webp'){
+            return;//not support
+        }
+
+        var name = nameWithRadio;
         var radio = Number.parseInt(name.split('@').pop()[0]);//..@3x
         if(Number.isInteger(radio)) name = name.substring(0, name.lastIndexOf('@'));
         else radio = 1;
 
+        if(fileName.substring(nameWithRadio.length).indexOf('.9.')===0) ninePatchImages.push(name);
+
         var base64Data = fs.readFileSync(path+'/'+fileName, 'base64');
-        var radioArray;
-        if(fileSuffixes == 'png'){
-            radioArray = dirImageData[name] || (dirImageData[name]=[]);
-            radioArray[radio] = 'data:image/png;base64,' + base64Data;
-        }else if(fileSuffixes == 'jpg'){
-            radioArray = dirImageData[name] || (dirImageData[name]=[]);
-            radioArray[radio] = 'data:image/jpg;base64,' + base64Data;
-        }else if(fileSuffixes == 'gif'){
-            radioArray = dirImageData[name] || (dirImageData[name]=[]);
-            radioArray[radio] = 'data:image/gif;base64,' + base64Data;
-        }else if(fileSuffixes == 'webp'){
-            radioArray = dirImageData[name] || (dirImageData[name]=[]);
-            radioArray[radio] = 'data:image/webp;base64,' + base64Data;
+        var radioArray = dirImageData[name] || (dirImageData[name]=[]);
+        if(radioArray[radio]){
+            throw Error('already defined a same radio image: ' + fileName);
         }
+        radioArray[radio] = `data:image/${fileSuffixes};base64,${base64Data}`;
     });
 
     var exportLines = '';
@@ -83,15 +84,21 @@ ${exportLines}
 
     var exportImage_tsLines = '';
     for(var k of Object.keys(dirImageData)){
-        //console.log('export:'+k);
-        exportImage_tsLines += `
+        if(ninePatchImages.indexOf(k)===-1){
+            exportImage_tsLines += `
         static get ${k}(){return new NetDrawable(image_base64.${k})}`;
+        }else{
+            exportImage_tsLines += `
+        static get ${k}(){return new NinePatchDrawable(image_base64.${k})}`;
+        }
     }
     var image_ts =
         `///<reference path="${SDKReferencePath}"/>
 ///<reference path="image_base64.ts"/>
 module ${packageName}.R {
     import NetDrawable = androidui.image.NetDrawable;
+    import NinePatchDrawable = androidui.image.NinePatchDrawable;
+
     export class image{
 ${exportImage_tsLines}
     }

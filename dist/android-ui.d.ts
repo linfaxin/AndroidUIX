@@ -531,13 +531,15 @@ declare module android.graphics {
     }
 }
 declare module androidui.image {
+    import Rect = android.graphics.Rect;
     class NetImage {
-        private platformImage;
+        private browserImage;
         private mSrc;
         private mImageWidth;
         private mImageHeight;
         private mOnLoads;
         private mOnErrors;
+        private mImageLoaded;
         private mOverrideImageRatio;
         constructor(src: string, overrideImageRatio?: number);
         protected init(src: string): void;
@@ -547,11 +549,13 @@ declare module androidui.image {
         width: number;
         height: number;
         getImageRatio(): number;
+        isImageLoaded(): boolean;
         private fireOnLoad();
         private fireOnError();
         addLoadListener(onload: () => void, onerror?: () => void): void;
         removeLoadListener(onload?: () => void, onerror?: () => void): void;
         recycle(): void;
+        getPixels(bound: Rect, callBack: (data: number[]) => void): void;
     }
 }
 declare module android.graphics {
@@ -1446,6 +1450,7 @@ declare module androidui.image {
         private mTileModeY;
         private mTmpTileBound;
         constructor(src: string | NetImage, paint?: Paint, overrideImageRatio?: number);
+        protected initBoundWithLoadedImage(image: NetImage): void;
         draw(canvas: Canvas): void;
         private drawTile(canvas);
         setAlpha(alpha: number): void;
@@ -1923,11 +1928,6 @@ declare module android.R {
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class drawable {
         static btn_default: Drawable;
-        private static btn_default_normal_holo_light;
-        private static btn_default_disabled_holo_light;
-        private static btn_default_pressed_holo_light;
-        private static btn_default_focused_holo_light;
-        private static btn_default_disabled_focused_holo_light;
         static btn_check: Drawable;
         static btn_radio: Drawable;
         static progress_small_holo: Drawable;
@@ -1954,6 +1954,22 @@ declare module android.R {
         static dropdown_background_dark: InsetDrawable;
         static menu_panel_holo_light: InsetDrawable;
         static menu_panel_holo_dark: InsetDrawable;
+    }
+}
+declare module androidui.image {
+    import Paint = android.graphics.Paint;
+    import Canvas = android.graphics.Canvas;
+    class NinePatchDrawable extends NetDrawable {
+        private static GlobalBorderInfoCache;
+        private mTmpRect;
+        private mTmpRect2;
+        private mNinePatchBorderInfo;
+        constructor(src: string | NetImage, paint?: Paint, overrideImageRatio?: number);
+        protected initBoundWithLoadedImage(image: NetImage): void;
+        protected onLoad(): void;
+        draw(canvas: Canvas): void;
+        private drawNinePatch(canvas);
+        getPadding(padding: android.graphics.Rect): boolean;
     }
 }
 declare module androidui.image {
@@ -1997,6 +2013,11 @@ declare module android.R {
         static btn_check_on_focused_holo_light: any;
         static btn_check_on_holo_light: any;
         static btn_check_on_pressed_holo_light: any;
+        static btn_default_disabled_focused_holo_light: any;
+        static btn_default_disabled_holo_light: any;
+        static btn_default_focused_holo_light: any;
+        static btn_default_normal_holo_light: any;
+        static btn_default_pressed_holo_light: any;
         static btn_radio_off_disabled_focused_holo_light: any;
         static btn_radio_off_disabled_holo_light: any;
         static btn_radio_off_focused_holo_light: any;
@@ -2034,6 +2055,7 @@ declare module android.R {
 declare module android.R {
     import NetDrawable = androidui.image.NetDrawable;
     import ChangeImageSizeDrawable = androidui.image.ChangeImageSizeDrawable;
+    import NinePatchDrawable = androidui.image.NinePatchDrawable;
     class image {
         static actionbar_ic_back_white: NetDrawable;
         static btn_check_off_disabled_focused_holo_light: NetDrawable;
@@ -2046,6 +2068,11 @@ declare module android.R {
         static btn_check_on_focused_holo_light: NetDrawable;
         static btn_check_on_holo_light: NetDrawable;
         static btn_check_on_pressed_holo_light: NetDrawable;
+        static btn_default_disabled_focused_holo_light: NinePatchDrawable;
+        static btn_default_disabled_holo_light: NinePatchDrawable;
+        static btn_default_focused_holo_light: NinePatchDrawable;
+        static btn_default_normal_holo_light: NinePatchDrawable;
+        static btn_default_pressed_holo_light: NinePatchDrawable;
         static btn_radio_off_disabled_focused_holo_light: NetDrawable;
         static btn_radio_off_disabled_holo_light: NetDrawable;
         static btn_radio_off_focused_holo_light: NetDrawable;
@@ -10599,11 +10626,13 @@ declare module androidui.native {
 }
 declare module androidui.native {
     import NetImage = androidui.image.NetImage;
+    import Rect = android.graphics.Rect;
     class NativeImage extends NetImage {
         imageId: number;
         protected createImage(): void;
         protected loadImage(): void;
         recycle(): void;
+        getPixels(bound: Rect, callBack: (data: number[]) => void): void;
         private static notifyLoadFinish(imageId, width, height);
         private static notifyLoadError(imageId);
     }

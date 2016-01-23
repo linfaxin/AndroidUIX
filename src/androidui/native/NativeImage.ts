@@ -2,10 +2,12 @@
  * Created by linfaxin on 15/12/14.
  */
 ///<reference path="../image/NetImage"/>
+///<reference path="../../android/graphics/Rect.ts"/>
 ///<reference path="NativeApi.ts"/>
 
 module androidui.native {
     import NetImage = androidui.image.NetImage;
+    import Rect = android.graphics.Rect;
 
     let sNextId = 0;
     const NativeImageInstances = new Map<number, NativeImage>();
@@ -26,6 +28,10 @@ module androidui.native {
         recycle(){
             NativeApi.image.recycleImage(this.imageId);
             NativeImageInstances.delete(this.imageId);
+        }
+
+        getPixels(bound:Rect, callBack:(data:number[])=>void):void {
+            //TODO native impl
         }
 
         //call from native

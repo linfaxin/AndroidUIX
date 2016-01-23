@@ -41,40 +41,14 @@ module android.R{
     export class drawable{
         static get btn_default():Drawable {
             let stateList = new StateListDrawable();
-            stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], drawable.btn_default_normal_holo_light);
-            stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, -View.VIEW_STATE_ENABLED], drawable.btn_default_disabled_holo_light);
-            stateList.addState([View.VIEW_STATE_PRESSED], drawable.btn_default_pressed_holo_light);
-            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], drawable.btn_default_focused_holo_light);
-            stateList.addState([View.VIEW_STATE_ENABLED], drawable.btn_default_normal_holo_light);
-            stateList.addState([View.VIEW_STATE_FOCUSED], drawable.btn_default_disabled_focused_holo_light);
-            stateList.addState([], drawable.btn_default_disabled_holo_light);
+            stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_default_normal_holo_light);
+            stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, -View.VIEW_STATE_ENABLED], R.image.btn_default_disabled_holo_light);
+            stateList.addState([View.VIEW_STATE_PRESSED], R.image.btn_default_pressed_holo_light);
+            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_default_focused_holo_light);
+            stateList.addState([View.VIEW_STATE_ENABLED], R.image.btn_default_normal_holo_light);
+            stateList.addState([View.VIEW_STATE_FOCUSED], R.image.btn_default_disabled_focused_holo_light);
+            stateList.addState([], R.image.btn_default_disabled_holo_light);
             return stateList;
-        }
-
-        private static get btn_default_normal_holo_light():Drawable {
-            let bg = new RoundRectDrawable(0xffd6d6d6, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x66000000);
-            return new DefaultBtnBackgroundBound(shadow);
-        }
-        private static get btn_default_disabled_holo_light():Drawable {
-            let bg = new RoundRectDrawable(0xffebebeb, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
-            return new DefaultBtnBackgroundBound(shadow);
-        }
-        private static get btn_default_pressed_holo_light():Drawable {
-            let bg = new RoundRectDrawable(0xffa4a4a4, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x26000000);
-            return new DefaultBtnBackgroundBound(shadow);
-        }
-        private static get btn_default_focused_holo_light():Drawable {
-            let bg = new RoundRectDrawable(0xff77abbe, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 1 * density, 0x66000000);
-            return new DefaultBtnBackgroundBound(shadow);
-        }
-        private static get btn_default_disabled_focused_holo_light():Drawable {
-            let bg = new RoundRectDrawable(0xffe6f6fc, 1 * density,  1 * density,  1 * density,  1 * density);
-            let shadow = bg;//new ShadowDrawable(bg, 1 * density, 0, 0, 0x26000000);
-            return new DefaultBtnBackgroundBound(shadow);
         }
 
         static get btn_check():Drawable {
@@ -428,26 +402,5 @@ module android.R{
             return new InsetDrawable(shadow, 8 * density);//more space show shadow
         }
 
-    }
-
-    class DefaultBtnBackgroundBound extends InsetDrawable {
-        constructor(drawable:Drawable) {
-            super(drawable, 4 * density);
-        }
-        getPadding(padding:android.graphics.Rect):boolean {
-            let result = super.getPadding(padding);
-            //extra padding to text
-            padding.left += 12 * density;
-            padding.right += 12 * density;
-            padding.top += 4 * density;
-            padding.bottom += 4 * density;
-            return result;
-        }
-        getIntrinsicWidth():number {
-            return 26*density;
-        }
-        getIntrinsicHeight():number {
-            return 32*density;
-        }
     }
 }

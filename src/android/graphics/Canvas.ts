@@ -319,20 +319,20 @@ module android.graphics {
         protected drawImageImpl(image:NetImage, srcRect?:Rect, dstRect?:Rect):void {
             if(!dstRect){
                 if(!srcRect){
-                    this._mCanvasContent.drawImage(image.platformImage, 0, 0);
+                    this._mCanvasContent.drawImage(image.browserImage, 0, 0);
                 }else{
-                    this._mCanvasContent.drawImage(image.platformImage,
+                    this._mCanvasContent.drawImage(image.browserImage,
                         srcRect.left, srcRect.top, srcRect.width(), srcRect.height(),
-                        0, 0, image.platformImage.width, image.platformImage.height
+                        0, 0, image.browserImage.width, image.browserImage.height
                     );
                 }
 
             }else{
                 if(dstRect.isEmpty()) return;
                 if(!srcRect){
-                    this._mCanvasContent.drawImage(image.platformImage, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                    this._mCanvasContent.drawImage(image.browserImage, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
                 }else{
-                    this._mCanvasContent.drawImage(image.platformImage,
+                    this._mCanvasContent.drawImage(image.browserImage,
                         srcRect.left, srcRect.top, srcRect.width(), srcRect.height(),
                         dstRect.left, dstRect.top, dstRect.width(), dstRect.height()
                     );

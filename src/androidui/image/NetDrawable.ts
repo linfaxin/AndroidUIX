@@ -17,11 +17,11 @@ module androidui.image{
     export class NetDrawable extends Drawable {
         private mState:State;
         private mLoadListener:NetDrawable.LoadListener;
-        private mImageWidth = -1;
-        private mImageHeight = -1;
+        private mImageWidth = 0;
+        private mImageHeight = 0;
         private mTileModeX:NetDrawable.TileMode;
         private mTileModeY:NetDrawable.TileMode;
-        private mTmpTileBound = new Rect();
+        private mTmpTileBound:Rect;
 
         constructor(src:string|NetImage, paint?:Paint, overrideImageRatio?:number){
             super();
@@ -34,11 +34,15 @@ module androidui.image{
             }
             image.addLoadListener(()=>this.onLoad(), ()=>this.onError());
 
+            if(image.isImageLoaded()) this.initBoundWithLoadedImage(image);
+
+            this.mState = new State(image, paint);
+        }
+
+        protected initBoundWithLoadedImage(image:NetImage){
             let imageRatio = image.getImageRatio();
             this.mImageWidth = Math.floor(image.width / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
             this.mImageHeight = Math.floor(image.height / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
-
-            this.mState = new State(image, paint);
         }
 
         draw(canvas:Canvas):void {
@@ -62,6 +66,7 @@ module androidui.image{
             let tileY = this.mTileModeY;
             let bound = this.getBounds();
 
+            if(this.mTmpTileBound==null) this.mTmpTileBound = new Rect();
             let tmpBound = this.mTmpTileBound;
             tmpBound.setEmpty();
 
@@ -108,9 +113,7 @@ module androidui.image{
         }
 
         protected onLoad(){
-            let imageRatio = this.mState.mImage.getImageRatio();
-            this.mImageWidth = Math.floor(this.mState.mImage.width / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
-            this.mImageHeight = Math.floor(this.mState.mImage.height / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+            this.initBoundWithLoadedImage(this.mState.mImage);
             if(this.mLoadListener) this.mLoadListener.onLoad(this);
             this.invalidateSelf();
             this.notifySizeChangeSelf();

@@ -2109,16 +2109,21 @@ var android;
 /**
  * Created by linfaxin on 15/12/11.
  */
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/Color.ts"/>
 var androidui;
 (function (androidui) {
     var image;
     (function (image) {
+        var Rect = android.graphics.Rect;
+        var Color = android.graphics.Color;
         class NetImage {
             constructor(src, overrideImageRatio) {
                 this.mImageWidth = 0;
                 this.mImageHeight = 0;
                 this.mOnLoads = new Set();
                 this.mOnErrors = new Set();
+                this.mImageLoaded = false;
                 this.init(src);
                 this.mOverrideImageRatio = overrideImageRatio;
             }
@@ -2127,16 +2132,16 @@ var androidui;
                 this.src = src;
             }
             createImage() {
-                this.platformImage = new Image();
+                this.browserImage = new Image();
             }
             loadImage() {
-                this.platformImage.src = this.mSrc;
-                this.platformImage.onload = () => {
-                    this.mImageWidth = this.platformImage.width;
-                    this.mImageHeight = this.platformImage.height;
+                this.browserImage.src = this.mSrc;
+                this.browserImage.onload = () => {
+                    this.mImageWidth = this.browserImage.width;
+                    this.mImageHeight = this.browserImage.height;
                     this.fireOnLoad();
                 };
-                this.platformImage.onerror = () => {
+                this.browserImage.onerror = () => {
                     this.mImageWidth = this.mImageHeight = 0;
                     this.fireOnError();
                 };
@@ -2158,7 +2163,7 @@ var androidui;
                 return this.mImageHeight;
             }
             getImageRatio() {
-                if (this.mOverrideImageRatio != null)
+                if (this.mOverrideImageRatio)
                     return this.mOverrideImageRatio;
                 let url = this.src;
                 if (!url)
@@ -2169,6 +2174,8 @@ var androidui;
                 if (idx > 0) {
                     url = url.substring(0, idx);
                 }
+                if (url.endsWith('.9'))
+                    url = url.substring(0, url.length - 2);
                 if (url.endsWith('@2x'))
                     return 2;
                 if (url.endsWith('@3x'))
@@ -2177,14 +2184,21 @@ var androidui;
                     return 4;
                 if (url.endsWith('@5x'))
                     return 5;
+                if (url.endsWith('@6x'))
+                    return 6;
                 return 1;
             }
+            isImageLoaded() {
+                return this.mImageLoaded;
+            }
             fireOnLoad() {
+                this.mImageLoaded = true;
                 for (let load of this.mOnLoads) {
                     load();
                 }
             }
             fireOnError() {
+                this.mImageLoaded = false;
                 for (let error of this.mOnErrors) {
                     error();
                 }
@@ -2206,6 +2220,31 @@ var androidui;
                 }
             }
             recycle() {
+            }
+            getPixels(bound, callBack) {
+                if (!callBack)
+                    return;
+                let canvasEle = document.createElement('canvas');
+                if (!bound)
+                    bound = new Rect(0, 0, this.width, this.height);
+                if (bound.isEmpty()) {
+                    callBack([]);
+                    return;
+                }
+                let w = bound.width();
+                let h = bound.height();
+                canvasEle.width = w;
+                canvasEle.height = h;
+                let canvas = canvasEle.getContext('2d');
+                canvas.drawImage(this.browserImage, bound.left, bound.top, w, h, 0, 0, w, h);
+                let data = canvas.getImageData(0, 0, w, h).data;
+                let colorData = [];
+                for (let i = 0; i < data.length; i += 4) {
+                    colorData.push(Color.rgba(data[i], data[i + 1], data[i + 2], data[i + 3]));
+                }
+                callBack(colorData);
+                canvasEle.width = 0;
+                canvasEle.height = 0;
             }
         }
         image.NetImage = NetImage;
@@ -2469,20 +2508,20 @@ var android;
             drawImageImpl(image, srcRect, dstRect) {
                 if (!dstRect) {
                     if (!srcRect) {
-                        this._mCanvasContent.drawImage(image.platformImage, 0, 0);
+                        this._mCanvasContent.drawImage(image.browserImage, 0, 0);
                     }
                     else {
-                        this._mCanvasContent.drawImage(image.platformImage, srcRect.left, srcRect.top, srcRect.width(), srcRect.height(), 0, 0, image.platformImage.width, image.platformImage.height);
+                        this._mCanvasContent.drawImage(image.browserImage, srcRect.left, srcRect.top, srcRect.width(), srcRect.height(), 0, 0, image.browserImage.width, image.browserImage.height);
                     }
                 }
                 else {
                     if (dstRect.isEmpty())
                         return;
                     if (!srcRect) {
-                        this._mCanvasContent.drawImage(image.platformImage, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                        this._mCanvasContent.drawImage(image.browserImage, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
                     }
                     else {
-                        this._mCanvasContent.drawImage(image.platformImage, srcRect.left, srcRect.top, srcRect.width(), srcRect.height(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                        this._mCanvasContent.drawImage(image.browserImage, srcRect.left, srcRect.top, srcRect.width(), srcRect.height(), dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
                     }
                 }
             }
@@ -6230,9 +6269,8 @@ var androidui;
         class NetDrawable extends Drawable {
             constructor(src, paint, overrideImageRatio) {
                 super();
-                this.mImageWidth = -1;
-                this.mImageHeight = -1;
-                this.mTmpTileBound = new Rect();
+                this.mImageWidth = 0;
+                this.mImageHeight = 0;
                 let image;
                 if (src instanceof image_1.NetImage) {
                     image = src;
@@ -6243,10 +6281,14 @@ var androidui;
                     image = new image_1.NetImage(src, overrideImageRatio);
                 }
                 image.addLoadListener(() => this.onLoad(), () => this.onError());
+                if (image.isImageLoaded())
+                    this.initBoundWithLoadedImage(image);
+                this.mState = new State(image, paint);
+            }
+            initBoundWithLoadedImage(image) {
                 let imageRatio = image.getImageRatio();
                 this.mImageWidth = Math.floor(image.width / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
                 this.mImageHeight = Math.floor(image.height / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
-                this.mState = new State(image, paint);
             }
             draw(canvas) {
                 if (!this.isImageSizeEmpty()) {
@@ -6268,6 +6310,8 @@ var androidui;
                 let tileX = this.mTileModeX;
                 let tileY = this.mTileModeY;
                 let bound = this.getBounds();
+                if (this.mTmpTileBound == null)
+                    this.mTmpTileBound = new Rect();
                 let tmpBound = this.mTmpTileBound;
                 tmpBound.setEmpty();
                 function drawColumn() {
@@ -6308,9 +6352,7 @@ var androidui;
                 return this.mImageHeight;
             }
             onLoad() {
-                let imageRatio = this.mState.mImage.getImageRatio();
-                this.mImageWidth = Math.floor(this.mState.mImage.width / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
-                this.mImageHeight = Math.floor(this.mState.mImage.height / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+                this.initBoundWithLoadedImage(this.mState.mImage);
                 if (this.mLoadListener)
                     this.mLoadListener.onLoad(this);
                 this.invalidateSelf();
@@ -8460,39 +8502,14 @@ var android;
         class drawable {
             static get btn_default() {
                 let stateList = new StateListDrawable();
-                stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], drawable.btn_default_normal_holo_light);
-                stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, -View.VIEW_STATE_ENABLED], drawable.btn_default_disabled_holo_light);
-                stateList.addState([View.VIEW_STATE_PRESSED], drawable.btn_default_pressed_holo_light);
-                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], drawable.btn_default_focused_holo_light);
-                stateList.addState([View.VIEW_STATE_ENABLED], drawable.btn_default_normal_holo_light);
-                stateList.addState([View.VIEW_STATE_FOCUSED], drawable.btn_default_disabled_focused_holo_light);
-                stateList.addState([], drawable.btn_default_disabled_holo_light);
+                stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_default_normal_holo_light);
+                stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, -View.VIEW_STATE_ENABLED], R.image.btn_default_disabled_holo_light);
+                stateList.addState([View.VIEW_STATE_PRESSED], R.image.btn_default_pressed_holo_light);
+                stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_default_focused_holo_light);
+                stateList.addState([View.VIEW_STATE_ENABLED], R.image.btn_default_normal_holo_light);
+                stateList.addState([View.VIEW_STATE_FOCUSED], R.image.btn_default_disabled_focused_holo_light);
+                stateList.addState([], R.image.btn_default_disabled_holo_light);
                 return stateList;
-            }
-            static get btn_default_normal_holo_light() {
-                let bg = new RoundRectDrawable(0xffd6d6d6, 1 * density, 1 * density, 1 * density, 1 * density);
-                let shadow = bg;
-                return new DefaultBtnBackgroundBound(shadow);
-            }
-            static get btn_default_disabled_holo_light() {
-                let bg = new RoundRectDrawable(0xffebebeb, 1 * density, 1 * density, 1 * density, 1 * density);
-                let shadow = bg;
-                return new DefaultBtnBackgroundBound(shadow);
-            }
-            static get btn_default_pressed_holo_light() {
-                let bg = new RoundRectDrawable(0xffa4a4a4, 1 * density, 1 * density, 1 * density, 1 * density);
-                let shadow = bg;
-                return new DefaultBtnBackgroundBound(shadow);
-            }
-            static get btn_default_focused_holo_light() {
-                let bg = new RoundRectDrawable(0xff77abbe, 1 * density, 1 * density, 1 * density, 1 * density);
-                let shadow = bg;
-                return new DefaultBtnBackgroundBound(shadow);
-            }
-            static get btn_default_disabled_focused_holo_light() {
-                let bg = new RoundRectDrawable(0xffe6f6fc, 1 * density, 1 * density, 1 * density, 1 * density);
-                let shadow = bg;
-                return new DefaultBtnBackgroundBound(shadow);
             }
             static get btn_check() {
                 let stateList = new StateListDrawable();
@@ -8772,27 +8789,272 @@ var android;
             }
         }
         R.drawable = drawable;
-        class DefaultBtnBackgroundBound extends InsetDrawable {
-            constructor(drawable) {
-                super(drawable, 4 * density);
-            }
-            getPadding(padding) {
-                let result = super.getPadding(padding);
-                padding.left += 12 * density;
-                padding.right += 12 * density;
-                padding.top += 4 * density;
-                padding.bottom += 4 * density;
-                return result;
-            }
-            getIntrinsicWidth() {
-                return 26 * density;
-            }
-            getIntrinsicHeight() {
-                return 32 * density;
-            }
-        }
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
+/**
+ * Created by linfaxin on 16/1/23.
+ */
+///<reference path="NetDrawable.ts"/>
+///<reference path="../../android/graphics/drawable/Drawable.ts"/>
+///<reference path="../../android/graphics/Paint.ts"/>
+///<reference path="../../android/graphics/Rect.ts"/>
+///<reference path="../../android/graphics/Color.ts"/>
+///<reference path="../../android/content/res/Resources.ts"/>
+///<reference path="NetImage.ts"/>
+var androidui;
+(function (androidui) {
+    var image;
+    (function (image_2) {
+        var Rect = android.graphics.Rect;
+        var Color = android.graphics.Color;
+        class NinePatchDrawable extends image_2.NetDrawable {
+            constructor(src, paint, overrideImageRatio) {
+                super(src, paint, overrideImageRatio);
+                this.mTmpRect = new Rect();
+                this.mTmpRect2 = new Rect();
+                this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(this.mState.mImage.src);
+            }
+            initBoundWithLoadedImage(image) {
+                let imageRatio = image.getImageRatio();
+                this.mImageWidth = Math.floor((image.width - 2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+                this.mImageHeight = Math.floor((image.height - 2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+            }
+            onLoad() {
+                let image = this.mState.mImage;
+                let ninePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(image.src);
+                if (ninePatchBorderInfo) {
+                    this.mNinePatchBorderInfo = ninePatchBorderInfo;
+                    super.onLoad();
+                    return;
+                }
+                this.mTmpRect.set(0, 1, 1, image.height - 1);
+                image.getPixels(this.mTmpRect, (leftBorder) => {
+                    this.mTmpRect.set(1, 0, image.width - 1, 1);
+                    image.getPixels(this.mTmpRect, (topBorder) => {
+                        this.mTmpRect.set(image.width - 1, 1, image.width, image.height - 1);
+                        image.getPixels(this.mTmpRect, (rightBorder) => {
+                            this.mTmpRect.set(1, image.height - 1, image.width - 1, image.height);
+                            image.getPixels(this.mTmpRect, (bottomBorder) => {
+                                ninePatchBorderInfo = new NinePatchBorderInfo(leftBorder, topBorder, rightBorder, bottomBorder);
+                                NinePatchDrawable.GlobalBorderInfoCache.set(image.src, ninePatchBorderInfo);
+                                super.onLoad();
+                            });
+                        });
+                    });
+                });
+            }
+            draw(canvas) {
+                if (!this.mNinePatchBorderInfo)
+                    return;
+                if (!this.isImageSizeEmpty()) {
+                    this.drawNinePatch(canvas);
+                }
+            }
+            drawNinePatch(canvas) {
+                let imageWidth = this.mImageWidth;
+                let imageHeight = this.mImageHeight;
+                if (imageHeight <= 0 || imageWidth <= 0)
+                    return;
+                let image = this.mState.mImage;
+                let bound = this.getBounds();
+                let staticWidthSum = this.mNinePatchBorderInfo.getHorizontalStaticLengthSum();
+                let staticHeightSum = this.mNinePatchBorderInfo.getVerticalStaticLengthSum();
+                let extraWidth = bound.width() - staticWidthSum;
+                let extraHeight = bound.height() - staticHeightSum;
+                let staticWidthPartScale = extraWidth >= 0 ? 1 : bound.width() / staticWidthSum;
+                let staticHeightPartScale = extraHeight >= 0 ? 1 : bound.height() / staticHeightSum;
+                const scaleHorizontalWeightSum = this.mNinePatchBorderInfo.getHorizontalScaleLengthSum();
+                const scaleVerticalWeightSum = this.mNinePatchBorderInfo.getVerticalScaleLengthSum();
+                const drawColumn = (srcFromX, srcToX, dstFromX, dstToX) => {
+                    const heightParts = this.mNinePatchBorderInfo.getVerticalTypedValues();
+                    let srcFromY = 1;
+                    let dstFromY = 0;
+                    for (let i = 0, size = heightParts.length; i < size; i++) {
+                        let typedValue = heightParts[i];
+                        let isScalePart = NinePatchBorderInfo.isScaleType(typedValue);
+                        let srcHeight = NinePatchBorderInfo.getValueUnpack(typedValue);
+                        let dstHeight;
+                        if (isScalePart) {
+                            dstHeight = srcHeight + extraHeight * srcHeight / scaleVerticalWeightSum;
+                            if (dstHeight <= 0)
+                                continue;
+                        }
+                        else {
+                            dstHeight = srcHeight * staticHeightPartScale;
+                        }
+                        let srcRect = this.mTmpRect;
+                        let dstRect = this.mTmpRect2;
+                        srcRect.set(srcFromX, srcFromY, srcToX, srcFromY + srcHeight);
+                        dstRect.set(dstFromX, dstFromY, dstToX, dstFromY + dstHeight);
+                        canvas.drawImage(image, srcRect, dstRect);
+                        srcFromY += srcHeight;
+                        dstFromY += dstHeight;
+                    }
+                };
+                const widthParts = this.mNinePatchBorderInfo.getHorizontalTypedValues();
+                let srcFromX = 1;
+                let dstFromX = 0;
+                for (let i = 0, size = widthParts.length; i < size; i++) {
+                    let typedValue = widthParts[i];
+                    let isScalePart = NinePatchBorderInfo.isScaleType(typedValue);
+                    let srcWidth = NinePatchBorderInfo.getValueUnpack(typedValue);
+                    let dstWidth;
+                    if (isScalePart) {
+                        dstWidth = srcWidth + extraWidth * srcWidth / scaleHorizontalWeightSum;
+                    }
+                    else {
+                        dstWidth = srcWidth * staticWidthPartScale;
+                    }
+                    if (dstWidth <= 0)
+                        continue;
+                    drawColumn(srcFromX, srcFromX + srcWidth, dstFromX, dstFromX + dstWidth);
+                    srcFromX += srcWidth;
+                    dstFromX += dstWidth;
+                }
+            }
+            getPadding(padding) {
+                let info = this.mNinePatchBorderInfo;
+                if (!info)
+                    return false;
+                padding.set(info.getPaddingLeft(), info.getPaddingTop(), info.getPaddingRight(), info.getPaddingBottom());
+                return true;
+            }
+        }
+        NinePatchDrawable.GlobalBorderInfoCache = new Map();
+        image_2.NinePatchDrawable = NinePatchDrawable;
+        class NinePatchBorderInfo {
+            constructor(leftBorder, topBorder, rightBorder, bottomBorder) {
+                //this.leftBorder = leftBorder;
+                //this.topBorder = topBorder;
+                //this.rightBorder = rightBorder;
+                //this.bottomBorder = bottomBorder;
+                this.horizontalStaticLengthSum = 0;
+                this.horizontalScaleLengthSum = 0;
+                this.verticalStaticLengthSum = 0;
+                this.verticalScaleLengthSum = 0;
+                this.paddingLeft = 0;
+                this.paddingTop = 0;
+                this.paddingRight = 0;
+                this.paddingBottom = 0;
+                this.horizontalTypedValues = [];
+                this.verticalTypedValues = [];
+                let tmpLength = 0;
+                let currentStatic = true;
+                for (let color of leftBorder) {
+                    let isScaleColor = NinePatchBorderInfo.isScaleColor(color);
+                    let typeChange = (isScaleColor && currentStatic) || (!isScaleColor && !currentStatic);
+                    if (typeChange) {
+                        let lengthValue = currentStatic ? tmpLength : -tmpLength;
+                        if (currentStatic)
+                            this.verticalStaticLengthSum += tmpLength;
+                        this.verticalTypedValues.push(lengthValue);
+                        tmpLength = 1;
+                    }
+                    else {
+                        tmpLength++;
+                    }
+                    currentStatic = !isScaleColor;
+                }
+                if (currentStatic)
+                    this.verticalStaticLengthSum += tmpLength;
+                this.verticalScaleLengthSum = leftBorder.length - this.verticalStaticLengthSum;
+                this.verticalTypedValues.push(currentStatic ? tmpLength : -tmpLength);
+                tmpLength = 0;
+                for (let color of topBorder) {
+                    let isScaleColor = NinePatchBorderInfo.isScaleColor(color);
+                    let typeChange = (isScaleColor && currentStatic) || (!isScaleColor && !currentStatic);
+                    if (typeChange) {
+                        let lengthValue = currentStatic ? tmpLength : -tmpLength;
+                        if (currentStatic)
+                            this.horizontalStaticLengthSum += tmpLength;
+                        this.horizontalTypedValues.push(lengthValue);
+                        tmpLength = 1;
+                    }
+                    else {
+                        tmpLength++;
+                    }
+                    currentStatic = !isScaleColor;
+                }
+                if (currentStatic)
+                    this.horizontalStaticLengthSum += tmpLength;
+                this.horizontalScaleLengthSum = topBorder.length - this.horizontalStaticLengthSum;
+                this.horizontalTypedValues.push(currentStatic ? tmpLength : -tmpLength);
+                tmpLength = 0;
+                if (this.horizontalTypedValues.length >= 3) {
+                    this.paddingLeft = Math.max(0, this.horizontalTypedValues[0]);
+                    this.paddingRight = Math.max(0, this.horizontalTypedValues[this.horizontalTypedValues.length - 1]);
+                }
+                if (this.verticalTypedValues.length >= 3) {
+                    this.paddingTop = Math.max(0, this.verticalTypedValues[0]);
+                    this.paddingBottom = Math.max(0, this.verticalTypedValues[this.verticalTypedValues.length - 1]);
+                }
+                for (let i = 0, length = rightBorder.length; i < length; i++) {
+                    if (NinePatchBorderInfo.isScaleColor(rightBorder[i])) {
+                        this.paddingTop = i;
+                        break;
+                    }
+                }
+                for (let i = 0, length = rightBorder.length; i < length; i++) {
+                    if (NinePatchBorderInfo.isScaleColor(rightBorder[length - 1 - i])) {
+                        this.paddingBottom = i;
+                        break;
+                    }
+                }
+                for (let i = 0, length = bottomBorder.length; i < length; i++) {
+                    if (NinePatchBorderInfo.isScaleColor(bottomBorder[i])) {
+                        this.paddingLeft = i;
+                        break;
+                    }
+                }
+                for (let i = 0, length = bottomBorder.length; i < length; i++) {
+                    if (NinePatchBorderInfo.isScaleColor(bottomBorder[length - 1 - i])) {
+                        this.paddingRight = i;
+                        break;
+                    }
+                }
+            }
+            static isScaleColor(color) {
+                return Color.alpha(color) > 200 && Color.red(color) < 50 && Color.green(color) < 50 && Color.blue(color) < 50;
+            }
+            static isScaleType(typedValue) {
+                return typedValue < 0;
+            }
+            static getValueUnpack(typedValue) {
+                return Math.abs(typedValue);
+            }
+            getHorizontalTypedValues() {
+                return this.horizontalTypedValues;
+            }
+            getHorizontalStaticLengthSum() {
+                return this.horizontalStaticLengthSum;
+            }
+            getHorizontalScaleLengthSum() {
+                return this.horizontalScaleLengthSum;
+            }
+            getVerticalTypedValues() {
+                return this.verticalTypedValues;
+            }
+            getVerticalStaticLengthSum() {
+                return this.verticalStaticLengthSum;
+            }
+            getVerticalScaleLengthSum() {
+                return this.verticalScaleLengthSum;
+            }
+            getPaddingLeft() {
+                return this.paddingLeft;
+            }
+            getPaddingTop() {
+                return this.paddingTop;
+            }
+            getPaddingRight() {
+                return this.paddingRight;
+            }
+            getPaddingBottom() {
+                return this.paddingBottom;
+            }
+        }
+    })(image = androidui.image || (androidui.image = {}));
+})(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/11/2.
  */
@@ -8997,6 +9259,36 @@ var android;
                 null,
                 null,
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAANlBMVEVPT08+Pj4+Pj5KSkpAQEAAAAA/Pz9PT08/Pz9PT09PT08/Pz9AQEBAQEBPT09PT09CQkI9PT36oQq5AAAAEXRSTlMm1MgyiACTFp4eAZeNggYHXQY8LIYAAAExSURBVGje7drBbsJAFENRtx0YJlAg//+zTaRWruQNU+NFxfMa3SOxSBZ5OGy79oGnb/Tb3t6ApSO0vuzAMhDbWDagI7h+wBXR3dARXcdAdAO1Wq1We6mdjojutK6Twtuj++lTCABbn8LDwNT/I4IPaH/bOQGc11+7PxXQfoMBGH0DOErfBPw+gVCfgNv3gYv2fcDvE7D6PtCk7wCns99XQN8mfl8Bvk3svgLsU3D7CvBpf8H3Pu0+AfYpaJ+/ngfuUpO+AejzRvomoIL0PUAF6dsABe3bgAra9wEK2vcBCtr3ARG07wMUpO8DIrCfACg0JAAKDQmAQkMCoNCQACg0ZACugAJeC/iY2F+Auc0D75NDrVar1Wqz+0/fxEf8aCB+9pA+3IifnuSPZ5LnP9e9/QXc5ydUPu9cjgAAAABJRU5ErkJggg=="
+            ],
+            "btn_default_disabled_focused_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAM1BMVEUAAAAzteUAmcwAAAAAAAAAkMAAmcwAjbwAmMsAM0UAAAAAgq4AfqgAbpMAgawAAAD/AAA0FdE+AAAAD3RSTlMAHz4TD0I5PSkZCjIyDQj2gUbVAAAAn0lEQVRYw+3ZSw6DMAxFUZq2zodP2P9qKzGqGFjYqkoC9y7gjDLJ83CoujWc0QoICHgJcN+SJJiStGjeLMGczAqYgqOkgOIBRQGDq/+Dj8MBdgFWQEBAQEBAQD9YAW8Atv8OAQEBAQE3sPkPOGAvYMvrnPwaHD3eqIA52r2YFbDkKb5NxSkXbRh/OtKX9vIyVnq7BQAC+sD1K8/Beid8AI8uHiWs1BycAAAAAElFTkSuQmCC"
+            ],
+            "btn_default_disabled_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAbFBMVEUAAACZmZl5eXl0dHQAAAAAAACHh4dsbGyWlpZbW1uNjY1kZGQjIyOWlpZwcHAAAAAAAAB4eHhubm6Li4teXl5aWlqUlJSIiIhzc3NgYGBTU1N6enqMjIyXl5eIiIiXl5eMjIwAAAAAAAD/AADhocx4AAAAInRSTlMAJ4CAJh6AgICAgIAwJxUUAnp6eHh2dGNjX15cWjIxMDADER06CAAAAMlJREFUWMPt2TkOgzAQhWHALIltMPu+Be5/x0hUUYoRQxOjvP8An1y4mRnnVNuR84t2gAAB2gAmY/1gVY8J5SeFlCErKQtKHMJmcllNTTgQYOYtLrPFywhQeC47TwAEaBu4AQQIECBAgACvgxvAPwDt/4cAAQIECPAArR/AAd4BjLleTIK5WLngKnIC7KJ2jlnvm9uoI0BdKhWxUqrUBOjrvnqyqnrtE6DxL2SIxfgr4HtBSoBOagJmJr35cQEgwHPg/tGVg/WX8AZv3Su8QPHBAAAAAABJRU5ErkJggg=="
+            ],
+            "btn_default_focused_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAS1BMVEUAAAAzteUAmcwAAAAAiLUAAAAAmcwAHigAmcwAAAAAgasAhLEAk8QAksIAa44AcpgAmcwAAAAAAAAAAAAAAAAAmcwAmcwAAAD/AAAMZPkMAAAAF3RSTlMAZsyA5mbAiYgH3NvUy8S8tm5fSz8gFpzXpUMAAACoSURBVFjD7dk5DsMwDABBR0l0+L7l/780gKsgBWGxiGV49wFTsSFZHCruFWe0AQIC5gCuvjdJ9X6V/MWa5OwigN4o8gJoNaAVQKPq/+DjcID3BCMgICAgICCgHoyANwDzn0NAQEBAwB3MfgEH1IGXvs41Gq8RwE4DdgLoqjqVqysngJNry1dSZesmAQzDM7khSIfxMI/vpMY5XPwXAAh4Erh9pXlY/wgfdZAio63fx68AAAAASUVORK5CYII="
+            ],
+            "btn_default_normal_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAflBMVEUAAACZmZkAAAB3d3eTk5MsLCzb29sAAABZWVnAwMAAAAAAAACYmJijo6OLi4sAAAAAAAA0NDRSUlLIyMhvb28WFhagoKAAAAAqKirY2NhISEjNzc0mJibDw8NfX1+5ubmzs7NBQUF+fn7R0dGRkZGioqIAAAAAAAAAAAD/AAAgdn43AAAAKHRSTlMAZhB2aLOnMIiEBAFnbWwOCqONino4FxOolZWTi4d+fXlzcW1kVSwjhumNDwAAAOlJREFUWMPt2ckOgjAUhWEFnFpoC4I4Mo/v/4ISVsakxIsaMJ5/3y9p0k3vXbxU07eYohYgQIAzAPkhP61JnfID19i9t7/sbztCt+7AgMjKOHGWpJwkLpkWVIXTeUTRKZQWlNlyRJnUgoZp0T3LNAACfA9sAAIECBAgQIDjwQbgH4Dzf4cAAQIECLAHZ/8BB/gF0P4s6AsyaAt/AIxMYVM9M9KDMvV8Qbm1bQnfS6UWVIHrnr0tIe/suoHSgiwMrscVqeM1CJkW5Cysqw2pqg4ZHxiMMyUNUlIx/tO7AIAApwLbh8YsrJ+EOyFWMqRTaWfwAAAAAElFTkSuQmCC"
+            ],
+            "btn_default_pressed_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAclBMVEUAAABmZmYAAABkZGRaWlo3NzcAAAC7u7tNTU2Xl5cAAAAAAABycnIAAAA8PDyioqJISEiJiYlXV1eGhoYAAABcXFy6urqnp6eamppPT08uLi6xsbE9PT0VFRUaGhoAAABiYmJiYmJ4eHh3d3cAAAD/AAABlB2hAAAAJHRSTlMAZg9nbowwmnd+BAFrCoSCe3ZwFxRskomAcXFoYzkyI2RjU1NCIACPAAAA10lEQVRYw+3ZyQ6DIBSF4Sp2AlFRtM520Pd/xRpXTROI1400Pf+eLyzYcO9hVePSYY8mgAABOgCKrCnOpIomE2ZeZPEtLq+EyvmAReQvpUKPVKjUkxtB+QhnjyiGd2kE/dzbUO5bQEb3WGABA4AAV4AjQIAAAQIECHA7OAL8A9D9dwgQIECAABfQ+Q84QPfBlDGyx1ILWAV0MKgsYJukjBHvl7RmUPZRlFxIJVHUSyPIdVcfidWd5kZQcD2ciA2aC8tgnEufmOTip3cBAAHuBU4fbVlYfwlvr34uoI6kYcYAAAAASUVORK5CYII="
             ],
             "btn_radio_off_disabled_focused_holo_light": [
                 null,
@@ -9203,6 +9495,11 @@ var android;
             btn_check_on_focused_holo_light: null,
             btn_check_on_holo_light: null,
             btn_check_on_pressed_holo_light: null,
+            btn_default_disabled_focused_holo_light: null,
+            btn_default_disabled_holo_light: null,
+            btn_default_focused_holo_light: null,
+            btn_default_normal_holo_light: null,
+            btn_default_pressed_holo_light: null,
             btn_radio_off_disabled_focused_holo_light: null,
             btn_radio_off_disabled_holo_light: null,
             btn_radio_off_focused_holo_light: null,
@@ -9279,6 +9576,21 @@ var android;
             }
             static get btn_check_on_pressed_holo_light() {
                 return imageCache.btn_check_on_pressed_holo_light || (imageCache.btn_check_on_pressed_holo_light = findRatioImage(data.btn_check_on_pressed_holo_light));
+            }
+            static get btn_default_disabled_focused_holo_light() {
+                return imageCache.btn_default_disabled_focused_holo_light || (imageCache.btn_default_disabled_focused_holo_light = findRatioImage(data.btn_default_disabled_focused_holo_light));
+            }
+            static get btn_default_disabled_holo_light() {
+                return imageCache.btn_default_disabled_holo_light || (imageCache.btn_default_disabled_holo_light = findRatioImage(data.btn_default_disabled_holo_light));
+            }
+            static get btn_default_focused_holo_light() {
+                return imageCache.btn_default_focused_holo_light || (imageCache.btn_default_focused_holo_light = findRatioImage(data.btn_default_focused_holo_light));
+            }
+            static get btn_default_normal_holo_light() {
+                return imageCache.btn_default_normal_holo_light || (imageCache.btn_default_normal_holo_light = findRatioImage(data.btn_default_normal_holo_light));
+            }
+            static get btn_default_pressed_holo_light() {
+                return imageCache.btn_default_pressed_holo_light || (imageCache.btn_default_pressed_holo_light = findRatioImage(data.btn_default_pressed_holo_light));
             }
             static get btn_radio_off_disabled_focused_holo_light() {
                 return imageCache.btn_radio_off_disabled_focused_holo_light || (imageCache.btn_radio_off_disabled_focused_holo_light = findRatioImage(data.btn_radio_off_disabled_focused_holo_light));
@@ -9381,6 +9693,7 @@ var android;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
+///<reference path="../../androidui/image/NinePatchDrawable.ts"/>
 ///<reference path="../../androidui/image/ChangeImageSizeDrawable.ts"/>
 ///<reference path="image_base64.ts"/>
 var android;
@@ -9389,6 +9702,7 @@ var android;
     (function (R) {
         var NetDrawable = androidui.image.NetDrawable;
         var ChangeImageSizeDrawable = androidui.image.ChangeImageSizeDrawable;
+        var NinePatchDrawable = androidui.image.NinePatchDrawable;
         const density = android.content.res.Resources.getDisplayMetrics().density;
         class image {
             static get actionbar_ic_back_white() { return new NetDrawable(R.image_base64.actionbar_ic_back_white); }
@@ -9402,6 +9716,11 @@ var android;
             static get btn_check_on_focused_holo_light() { return new NetDrawable(R.image_base64.btn_check_on_focused_holo_light); }
             static get btn_check_on_holo_light() { return new NetDrawable(R.image_base64.btn_check_on_holo_light); }
             static get btn_check_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_check_on_pressed_holo_light); }
+            static get btn_default_disabled_focused_holo_light() { return new NinePatchDrawable(R.image_base64.btn_default_disabled_focused_holo_light); }
+            static get btn_default_disabled_holo_light() { return new NinePatchDrawable(R.image_base64.btn_default_disabled_holo_light); }
+            static get btn_default_focused_holo_light() { return new NinePatchDrawable(R.image_base64.btn_default_focused_holo_light); }
+            static get btn_default_normal_holo_light() { return new NinePatchDrawable(R.image_base64.btn_default_normal_holo_light); }
+            static get btn_default_pressed_holo_light() { return new NinePatchDrawable(R.image_base64.btn_default_pressed_holo_light); }
             static get btn_radio_off_disabled_focused_holo_light() { return new NetDrawable(R.image_base64.btn_radio_off_disabled_focused_holo_light); }
             static get btn_radio_off_disabled_holo_light() { return new NetDrawable(R.image_base64.btn_radio_off_disabled_holo_light); }
             static get btn_radio_off_focused_holo_light() { return new NetDrawable(R.image_base64.btn_radio_off_focused_holo_light); }
@@ -10573,6 +10892,8 @@ var android;
                     background: R.drawable.btn_default,
                     focusable: true,
                     clickable: true,
+                    minHeight: '48dp',
+                    minWidth: '64dp',
                     textSize: '18sp',
                     gravity: Gravity.CENTER
                 });
@@ -60948,6 +61269,7 @@ var androidui;
  * Created by linfaxin on 15/12/14.
  */
 ///<reference path="../image/NetImage"/>
+///<reference path="../../android/graphics/Rect.ts"/>
 ///<reference path="NativeApi.ts"/>
 var androidui;
 (function (androidui) {
@@ -60968,6 +61290,8 @@ var androidui;
             recycle() {
                 native.NativeApi.image.recycleImage(this.imageId);
                 NativeImageInstances.delete(this.imageId);
+            }
+            getPixels(bound, callBack) {
             }
             static notifyLoadFinish(imageId, width, height) {
                 let image = NativeImageInstances.get(imageId);

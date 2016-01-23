@@ -1,9 +1,11 @@
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
+///<reference path="../../androidui/image/NinePatchDrawable.ts"/>
 ///<reference path="../../androidui/image/ChangeImageSizeDrawable.ts"/>
 ///<reference path="image_base64.ts"/>
 module android.R {
     import NetDrawable = androidui.image.NetDrawable;
     import ChangeImageSizeDrawable = androidui.image.ChangeImageSizeDrawable;
+    import NinePatchDrawable = androidui.image.NinePatchDrawable;
 
     const density = android.content.res.Resources.getDisplayMetrics().density;
     export class image{
@@ -19,6 +21,11 @@ module android.R {
         static get btn_check_on_focused_holo_light(){return new NetDrawable(image_base64.btn_check_on_focused_holo_light)}
         static get btn_check_on_holo_light(){return new NetDrawable(image_base64.btn_check_on_holo_light)}
         static get btn_check_on_pressed_holo_light(){return new NetDrawable(image_base64.btn_check_on_pressed_holo_light)}
+        static get btn_default_disabled_focused_holo_light(){return new NinePatchDrawable(image_base64.btn_default_disabled_focused_holo_light)}
+        static get btn_default_disabled_holo_light(){return new NinePatchDrawable(image_base64.btn_default_disabled_holo_light)}
+        static get btn_default_focused_holo_light(){return new NinePatchDrawable(image_base64.btn_default_focused_holo_light)}
+        static get btn_default_normal_holo_light(){return new NinePatchDrawable(image_base64.btn_default_normal_holo_light)}
+        static get btn_default_pressed_holo_light(){return new NinePatchDrawable(image_base64.btn_default_pressed_holo_light)}
         static get btn_radio_off_disabled_focused_holo_light(){return new NetDrawable(image_base64.btn_radio_off_disabled_focused_holo_light)}
         static get btn_radio_off_disabled_holo_light(){return new NetDrawable(image_base64.btn_radio_off_disabled_holo_light)}
         static get btn_radio_off_focused_holo_light(){return new NetDrawable(image_base64.btn_radio_off_focused_holo_light)}

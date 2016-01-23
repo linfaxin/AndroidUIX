@@ -70,6 +70,36 @@ module android.R {
                 null,
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAANlBMVEVPT08+Pj4+Pj5KSkpAQEAAAAA/Pz9PT08/Pz9PT09PT08/Pz9AQEBAQEBPT09PT09CQkI9PT36oQq5AAAAEXRSTlMm1MgyiACTFp4eAZeNggYHXQY8LIYAAAExSURBVGje7drBbsJAFENRtx0YJlAg//+zTaRWruQNU+NFxfMa3SOxSBZ5OGy79oGnb/Tb3t6ApSO0vuzAMhDbWDagI7h+wBXR3dARXcdAdAO1Wq1We6mdjojutK6Twtuj++lTCABbn8LDwNT/I4IPaH/bOQGc11+7PxXQfoMBGH0DOErfBPw+gVCfgNv3gYv2fcDvE7D6PtCk7wCns99XQN8mfl8Bvk3svgLsU3D7CvBpf8H3Pu0+AfYpaJ+/ngfuUpO+AejzRvomoIL0PUAF6dsABe3bgAra9wEK2vcBCtr3ARG07wMUpO8DIrCfACg0JAAKDQmAQkMCoNCQACg0ZACugAJeC/iY2F+Auc0D75NDrVar1Wqz+0/fxEf8aCB+9pA+3IifnuSPZ5LnP9e9/QXc5ydUPu9cjgAAAABJRU5ErkJggg=="
         ],
+        "btn_default_disabled_focused_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAM1BMVEUAAAAzteUAmcwAAAAAAAAAkMAAmcwAjbwAmMsAM0UAAAAAgq4AfqgAbpMAgawAAAD/AAA0FdE+AAAAD3RSTlMAHz4TD0I5PSkZCjIyDQj2gUbVAAAAn0lEQVRYw+3ZSw6DMAxFUZq2zodP2P9qKzGqGFjYqkoC9y7gjDLJ83CoujWc0QoICHgJcN+SJJiStGjeLMGczAqYgqOkgOIBRQGDq/+Dj8MBdgFWQEBAQEBAQD9YAW8Atv8OAQEBAQE3sPkPOGAvYMvrnPwaHD3eqIA52r2YFbDkKb5NxSkXbRh/OtKX9vIyVnq7BQAC+sD1K8/Beid8AI8uHiWs1BycAAAAAElFTkSuQmCC"
+        ],
+        "btn_default_disabled_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAbFBMVEUAAACZmZl5eXl0dHQAAAAAAACHh4dsbGyWlpZbW1uNjY1kZGQjIyOWlpZwcHAAAAAAAAB4eHhubm6Li4teXl5aWlqUlJSIiIhzc3NgYGBTU1N6enqMjIyXl5eIiIiXl5eMjIwAAAAAAAD/AADhocx4AAAAInRSTlMAJ4CAJh6AgICAgIAwJxUUAnp6eHh2dGNjX15cWjIxMDADER06CAAAAMlJREFUWMPt2TkOgzAQhWHALIltMPu+Be5/x0hUUYoRQxOjvP8An1y4mRnnVNuR84t2gAAB2gAmY/1gVY8J5SeFlCErKQtKHMJmcllNTTgQYOYtLrPFywhQeC47TwAEaBu4AQQIECBAgACvgxvAPwDt/4cAAQIECPAArR/AAd4BjLleTIK5WLngKnIC7KJ2jlnvm9uoI0BdKhWxUqrUBOjrvnqyqnrtE6DxL2SIxfgr4HtBSoBOagJmJr35cQEgwHPg/tGVg/WX8AZv3Su8QPHBAAAAAABJRU5ErkJggg=="
+        ],
+        "btn_default_focused_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAS1BMVEUAAAAzteUAmcwAAAAAiLUAAAAAmcwAHigAmcwAAAAAgasAhLEAk8QAksIAa44AcpgAmcwAAAAAAAAAAAAAAAAAmcwAmcwAAAD/AAAMZPkMAAAAF3RSTlMAZsyA5mbAiYgH3NvUy8S8tm5fSz8gFpzXpUMAAACoSURBVFjD7dk5DsMwDABBR0l0+L7l/780gKsgBWGxiGV49wFTsSFZHCruFWe0AQIC5gCuvjdJ9X6V/MWa5OwigN4o8gJoNaAVQKPq/+DjcID3BCMgICAgICCgHoyANwDzn0NAQEBAwB3MfgEH1IGXvs41Gq8RwE4DdgLoqjqVqysngJNry1dSZesmAQzDM7khSIfxMI/vpMY5XPwXAAh4Erh9pXlY/wgfdZAio63fx68AAAAASUVORK5CYII="
+        ],
+        "btn_default_normal_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAflBMVEUAAACZmZkAAAB3d3eTk5MsLCzb29sAAABZWVnAwMAAAAAAAACYmJijo6OLi4sAAAAAAAA0NDRSUlLIyMhvb28WFhagoKAAAAAqKirY2NhISEjNzc0mJibDw8NfX1+5ubmzs7NBQUF+fn7R0dGRkZGioqIAAAAAAAAAAAD/AAAgdn43AAAAKHRSTlMAZhB2aLOnMIiEBAFnbWwOCqONino4FxOolZWTi4d+fXlzcW1kVSwjhumNDwAAAOlJREFUWMPt2ckOgjAUhWEFnFpoC4I4Mo/v/4ISVsakxIsaMJ5/3y9p0k3vXbxU07eYohYgQIAzAPkhP61JnfID19i9t7/sbztCt+7AgMjKOHGWpJwkLpkWVIXTeUTRKZQWlNlyRJnUgoZp0T3LNAACfA9sAAIECBAgQIDjwQbgH4Dzf4cAAQIECLAHZ/8BB/gF0P4s6AsyaAt/AIxMYVM9M9KDMvV8Qbm1bQnfS6UWVIHrnr0tIe/suoHSgiwMrscVqeM1CJkW5Cysqw2pqg4ZHxiMMyUNUlIx/tO7AIAApwLbh8YsrJ+EOyFWMqRTaWfwAAAAAElFTkSuQmCC"
+        ],
+        "btn_default_pressed_holo_light": [
+                null,
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABiCAMAAADwfaQ5AAAAclBMVEUAAABmZmYAAABkZGRaWlo3NzcAAAC7u7tNTU2Xl5cAAAAAAABycnIAAAA8PDyioqJISEiJiYlXV1eGhoYAAABcXFy6urqnp6eamppPT08uLi6xsbE9PT0VFRUaGhoAAABiYmJiYmJ4eHh3d3cAAAD/AAABlB2hAAAAJHRSTlMAZg9nbowwmnd+BAFrCoSCe3ZwFxRskomAcXFoYzkyI2RjU1NCIACPAAAA10lEQVRYw+3ZyQ6DIBSF4Sp2AlFRtM520Pd/xRpXTROI1400Pf+eLyzYcO9hVePSYY8mgAABOgCKrCnOpIomE2ZeZPEtLq+EyvmAReQvpUKPVKjUkxtB+QhnjyiGd2kE/dzbUO5bQEb3WGABA4AAV4AjQIAAAQIECHA7OAL8A9D9dwgQIECAABfQ+Q84QPfBlDGyx1ILWAV0MKgsYJukjBHvl7RmUPZRlFxIJVHUSyPIdVcfidWd5kZQcD2ciA2aC8tgnEufmOTip3cBAAHuBU4fbVlYfwlvr34uoI6kYcYAAAAASUVORK5CYII="
+        ],
         "btn_radio_off_disabled_focused_holo_light": [
                 null,
                 null,
@@ -275,6 +305,11 @@ module android.R {
         btn_check_on_focused_holo_light:null,
         btn_check_on_holo_light:null,
         btn_check_on_pressed_holo_light:null,
+        btn_default_disabled_focused_holo_light:null,
+        btn_default_disabled_holo_light:null,
+        btn_default_focused_holo_light:null,
+        btn_default_normal_holo_light:null,
+        btn_default_pressed_holo_light:null,
         btn_radio_off_disabled_focused_holo_light:null,
         btn_radio_off_disabled_holo_light:null,
         btn_radio_off_focused_holo_light:null,
@@ -351,6 +386,21 @@ module android.R {
         }
         static get btn_check_on_pressed_holo_light(){
             return imageCache.btn_check_on_pressed_holo_light || (imageCache.btn_check_on_pressed_holo_light=findRatioImage(data.btn_check_on_pressed_holo_light));
+        }
+        static get btn_default_disabled_focused_holo_light(){
+            return imageCache.btn_default_disabled_focused_holo_light || (imageCache.btn_default_disabled_focused_holo_light=findRatioImage(data.btn_default_disabled_focused_holo_light));
+        }
+        static get btn_default_disabled_holo_light(){
+            return imageCache.btn_default_disabled_holo_light || (imageCache.btn_default_disabled_holo_light=findRatioImage(data.btn_default_disabled_holo_light));
+        }
+        static get btn_default_focused_holo_light(){
+            return imageCache.btn_default_focused_holo_light || (imageCache.btn_default_focused_holo_light=findRatioImage(data.btn_default_focused_holo_light));
+        }
+        static get btn_default_normal_holo_light(){
+            return imageCache.btn_default_normal_holo_light || (imageCache.btn_default_normal_holo_light=findRatioImage(data.btn_default_normal_holo_light));
+        }
+        static get btn_default_pressed_holo_light(){
+            return imageCache.btn_default_pressed_holo_light || (imageCache.btn_default_pressed_holo_light=findRatioImage(data.btn_default_pressed_holo_light));
         }
         static get btn_radio_off_disabled_focused_holo_light(){
             return imageCache.btn_radio_off_disabled_focused_holo_light || (imageCache.btn_radio_off_disabled_focused_holo_light=findRatioImage(data.btn_radio_off_disabled_focused_holo_light));
