@@ -10388,6 +10388,7 @@ declare module androidui.widget {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         onTouchEvent(event: android.view.MotionEvent): boolean;
         requestSyncBoundToElement(immediately?: boolean): void;
+        setLayerType(layerType: number): void;
         protected onAttachedToWindow(): void;
     }
 }

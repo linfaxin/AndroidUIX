@@ -32,6 +32,11 @@ module androidui.widget {
             super.requestSyncBoundToElement(immediately);
         }
 
+        setLayerType(layerType:number):void  {
+            if(layerType != View.LAYER_TYPE_NONE) return;//support only NONE TYPE
+            super.setLayerType(layerType);
+        }
+
 
         protected onAttachedToWindow():void {
             //HtmlBaseView show at debug layout

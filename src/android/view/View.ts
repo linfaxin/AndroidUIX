@@ -4846,6 +4846,11 @@ module android.view {
                 //    cachePaint = this.mLayerPaint;
                 //    cachePaint.setAlpha(Math.floor((alpha * 255)));
                 //}
+
+                //androidui add
+                canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight(),
+                    this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomRight, this.mCornerRadiusBottomLeft);
+
                 canvas.drawCanvas(cache, 0, 0);
             }
 

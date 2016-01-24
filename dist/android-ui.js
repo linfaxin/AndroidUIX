@@ -13887,6 +13887,7 @@ var android;
                             parent.mGroupFlags &= ~view_2.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
                         }
                     }
+                    canvas.clipRect(0, 0, cache.getWidth(), cache.getHeight(), this.mCornerRadiusTopLeft, this.mCornerRadiusTopRight, this.mCornerRadiusBottomRight, this.mCornerRadiusBottomLeft);
                     canvas.drawCanvas(cache, 0, 0);
                 }
                 if (restoreTo >= 0) {
@@ -59742,6 +59743,11 @@ var androidui;
             }
             requestSyncBoundToElement(immediately = true) {
                 super.requestSyncBoundToElement(immediately);
+            }
+            setLayerType(layerType) {
+                if (layerType != View.LAYER_TYPE_NONE)
+                    return;
+                super.setLayerType(layerType);
             }
             onAttachedToWindow() {
                 this.getContext().androidUI.showDebugLayout();
