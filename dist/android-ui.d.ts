@@ -9244,7 +9244,6 @@ declare module android.widget {
     import OnClickListener = android.content.DialogInterface.OnClickListener;
     import DataSetObserver = android.database.DataSetObserver;
     import Drawable = android.graphics.drawable.Drawable;
-    import MotionEvent = android.view.MotionEvent;
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import AbsSpinner = android.widget.AbsSpinner;
@@ -9260,7 +9259,6 @@ declare module android.widget {
         static MODE_DIALOG: number;
         static MODE_DROPDOWN: number;
         private static MODE_THEME;
-        private mForwardingListener;
         private mPopup;
         private mTempAdapter;
         mDropDownWidth: number;
@@ -9294,7 +9292,6 @@ declare module android.widget {
         protected onDetachedFromWindow(): void;
         setOnItemClickListener(l: AdapterView.OnItemClickListener): void;
         setOnItemClickListenerInt(l: AdapterView.OnItemClickListener): void;
-        onTouchEvent(event: MotionEvent): boolean;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
         layoutSpinner(delta: number, animate: boolean): void;

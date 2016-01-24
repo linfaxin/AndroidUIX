@@ -100,8 +100,8 @@ export class Spinner extends AbsSpinner implements OnClickListener {
      */
     private static MODE_THEME:number = -1;
 
-    /** Forwarding listener used to implement drag-to-open. */
-    private mForwardingListener:ForwardingListener;
+    ///** Forwarding listener used to implement drag-to-open. */
+    //private mForwardingListener:ForwardingListener;
 
     private mPopup:Spinner.SpinnerPopup;
 
@@ -167,22 +167,22 @@ export class Spinner extends AbsSpinner implements OnClickListener {
                         }
                     });
                     this.mPopup = popup;
-                    this.mForwardingListener = (()=>{
-                        const _this=this;
-                        class _Inner extends ForwardingListener {
-                            getPopup():ListPopupWindow  {
-                                return popup;
-                            }
-
-                            onForwardingStarted():boolean  {
-                                if (!_this.mPopup.isShowing()) {
-                                    _this.mPopup.showPopup(_this.getTextDirection(), _this.getTextAlignment());
-                                }
-                                return true;
-                            }
-                        }
-                        return new _Inner(this);
-                    })();
+                    //this.mForwardingListener = (()=>{
+                    //    const _this=this;
+                    //    class _Inner extends ForwardingListener {
+                    //        getPopup():ListPopupWindow  {
+                    //            return popup;
+                    //        }
+                    //
+                    //        onForwardingStarted():boolean  {
+                    //            if (!_this.mPopup.isShowing()) {
+                    //                _this.mPopup.showPopup(_this.getTextDirection(), _this.getTextAlignment());
+                    //            }
+                    //            return true;
+                    //        }
+                    //    }
+                    //    return new _Inner(this);
+                    //})();
                     break;
                 }
         }
@@ -432,12 +432,12 @@ export class Spinner extends AbsSpinner implements OnClickListener {
         super.setOnItemClickListener(l);
     }
 
-    onTouchEvent(event:MotionEvent):boolean  {
-        if (this.mForwardingListener != null && this.mForwardingListener.onTouch(this, event)) {
-            return true;
-        }
-        return super.onTouchEvent(event);
-    }
+    //onTouchEvent(event:MotionEvent):boolean  {
+    //    if (this.mForwardingListener != null && this.mForwardingListener.onTouch(this, event)) {
+    //        return true;
+    //    }
+    //    return super.onTouchEvent(event);
+    //}
 
     protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);

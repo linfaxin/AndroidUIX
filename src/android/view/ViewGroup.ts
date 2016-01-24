@@ -558,6 +558,8 @@ module android.view {
                 index = this.mChildrenCount;
             }
 
+            if(this.mDisappearingChildren) this.mDisappearingChildren.remove(child);//androidui add, remove disappearing child.
+
             this.addInArray(child, index);
 
             // tell our children

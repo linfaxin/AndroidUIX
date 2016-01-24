@@ -18649,6 +18649,8 @@ var android;
                 if (index < 0) {
                     index = this.mChildrenCount;
                 }
+                if (this.mDisappearingChildren)
+                    this.mDisappearingChildren.remove(child);
                 this.addInArray(child, index);
                 if (preventRequestLayout) {
                     child.assignParent(this);
@@ -53321,7 +53323,6 @@ var android;
         var Log = android.util.Log;
         var Gravity = android.view.Gravity;
         var ViewGroup = android.view.ViewGroup;
-        var ForwardingListener = android.widget.ListPopupWindow.ForwardingListener;
         var AbsSpinner = android.widget.AbsSpinner;
         var ListAdapter = android.widget.ListAdapter;
         var ListPopupWindow = android.widget.ListPopupWindow;
@@ -53365,21 +53366,6 @@ var android;
                                 }
                             });
                             this.mPopup = popup;
-                            this.mForwardingListener = (() => {
-                                const _this = this;
-                                class _Inner extends ForwardingListener {
-                                    getPopup() {
-                                        return popup;
-                                    }
-                                    onForwardingStarted() {
-                                        if (!_this.mPopup.isShowing()) {
-                                            _this.mPopup.showPopup(_this.getTextDirection(), _this.getTextAlignment());
-                                        }
-                                        return true;
-                                    }
-                                }
-                                return new _Inner(this);
-                            })();
                             break;
                         }
                 }
@@ -53491,12 +53477,6 @@ var android;
             }
             setOnItemClickListenerInt(l) {
                 super.setOnItemClickListener(l);
-            }
-            onTouchEvent(event) {
-                if (this.mForwardingListener != null && this.mForwardingListener.onTouch(this, event)) {
-                    return true;
-                }
-                return super.onTouchEvent(event);
             }
             onMeasure(widthMeasureSpec, heightMeasureSpec) {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
