@@ -611,7 +611,7 @@ declare module android.graphics {
         getClipBounds(bounds?: Rect): Rect;
         quickReject(rect: Rect): boolean;
         quickReject(left: number, top: number, right: number, bottom: number): boolean;
-        drawCanvas(canvas: Canvas, offsetX: number, offsetY: number): void;
+        drawCanvas(canvas: Canvas, offsetX?: number, offsetY?: number): void;
         protected drawCanvasImpl(canvas: Canvas, offsetX: number, offsetY: number): void;
         drawImage(image: NetImage, srcRect?: Rect, dstRect?: Rect, paint?: Paint): void;
         protected drawImageImpl(image: NetImage, srcRect?: Rect, dstRect?: Rect): void;
@@ -1957,12 +1957,15 @@ declare module androidui.image {
     import Canvas = android.graphics.Canvas;
     class NinePatchDrawable extends NetDrawable {
         private static GlobalBorderInfoCache;
+        private static DrawNinePatchWithCache;
         private mTmpRect;
         private mTmpRect2;
         private mNinePatchBorderInfo;
+        private mNinePatchDrawCache;
         protected initBoundWithLoadedImage(image: NetImage): void;
         protected onLoad(): void;
         draw(canvas: Canvas): void;
+        private getNinePatchCache();
         private drawNinePatch(canvas);
         getPadding(padding: android.graphics.Rect): boolean;
     }

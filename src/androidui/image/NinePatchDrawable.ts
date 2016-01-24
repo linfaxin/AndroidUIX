@@ -6,6 +6,7 @@
 ///<reference path="../../android/graphics/Paint.ts"/>
 ///<reference path="../../android/graphics/Rect.ts"/>
 ///<reference path="../../android/graphics/Color.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
 ///<reference path="../../android/content/res/Resources.ts"/>
 ///<reference path="NetImage.ts"/>
 
@@ -19,10 +20,12 @@ module androidui.image {
 
     export class NinePatchDrawable extends NetDrawable {
         private static GlobalBorderInfoCache = new Map<string, NinePatchBorderInfo>();
+        private static DrawNinePatchWithCache = true;
 
         private mTmpRect = new Rect();
         private mTmpRect2 = new Rect();
         private mNinePatchBorderInfo:NinePatchBorderInfo;
+        private mNinePatchDrawCache:Canvas;
 
         //constructor(src:string|NetImage, paint?:Paint, overrideImageRatio?:number) {
         //    super(src, paint, overrideImageRatio);
@@ -77,8 +80,32 @@ module androidui.image {
         draw(canvas:Canvas):void {
             if(!this.mNinePatchBorderInfo) return;
             if(!this.isImageSizeEmpty()){
-                this.drawNinePatch(canvas);
+                let cache = NinePatchDrawable.DrawNinePatchWithCache ? this.getNinePatchCache() : null;
+                if(cache){
+                    canvas.drawCanvas(cache);
+                }else{
+                    this.drawNinePatch(canvas);
+                }
             }
+        }
+
+        private getNinePatchCache():Canvas {
+            let bound = this.getBounds();
+            let width = bound.width();
+            let height = bound.height();
+            let cache = this.mNinePatchDrawCache;
+            if(cache){
+                if(cache.getWidth() === width && cache.getHeight() === height){
+                    return cache;
+                }
+                cache.recycle();
+            }
+            const cachePixelSize:number = width * height * 4;
+            const drawingCacheSize:number = android.view.ViewConfiguration.get().getScaledMaximumDrawingCacheSize();
+            if(cachePixelSize > drawingCacheSize) return null;
+            cache = this.mNinePatchDrawCache = new Canvas(bound.width(), bound.height());
+            this.drawNinePatch(cache);
+            return cache;
         }
 
         private drawNinePatch(canvas:Canvas):void {

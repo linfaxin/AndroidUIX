@@ -296,7 +296,7 @@ module android.graphics {
             }
         }
 
-        drawCanvas(canvas:Canvas, offsetX:number, offsetY:number):void {
+        drawCanvas(canvas:Canvas, offsetX=0, offsetY=0):void {
             this.drawCanvasImpl(canvas, offsetX, offsetY);
         }
 

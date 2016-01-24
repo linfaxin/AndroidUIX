@@ -2489,7 +2489,7 @@ var android;
                     return !this.mCurrentClip.intersects(left, t, right, bottom);
                 }
             }
-            drawCanvas(canvas, offsetX, offsetY) {
+            drawCanvas(canvas, offsetX = 0, offsetY = 0) {
                 this.drawCanvasImpl(canvas, offsetX, offsetY);
             }
             drawCanvasImpl(canvas, offsetX, offsetY) {
@@ -8774,6 +8774,7 @@ var android;
 ///<reference path="../../android/graphics/Paint.ts"/>
 ///<reference path="../../android/graphics/Rect.ts"/>
 ///<reference path="../../android/graphics/Color.ts"/>
+///<reference path="../../android/view/ViewConfiguration.ts"/>
 ///<reference path="../../android/content/res/Resources.ts"/>
 ///<reference path="NetImage.ts"/>
 var androidui;
@@ -8782,6 +8783,7 @@ var androidui;
     (function (image_2) {
         var Rect = android.graphics.Rect;
         var Color = android.graphics.Color;
+        var Canvas = android.graphics.Canvas;
         class NinePatchDrawable extends image_2.NetDrawable {
             constructor(...args) {
                 super(...args);
@@ -8822,8 +8824,33 @@ var androidui;
                 if (!this.mNinePatchBorderInfo)
                     return;
                 if (!this.isImageSizeEmpty()) {
-                    this.drawNinePatch(canvas);
+                    let cache = NinePatchDrawable.DrawNinePatchWithCache ? this.getNinePatchCache() : null;
+                    if (cache) {
+                        canvas.drawCanvas(cache);
+                    }
+                    else {
+                        this.drawNinePatch(canvas);
+                    }
                 }
+            }
+            getNinePatchCache() {
+                let bound = this.getBounds();
+                let width = bound.width();
+                let height = bound.height();
+                let cache = this.mNinePatchDrawCache;
+                if (cache) {
+                    if (cache.getWidth() === width && cache.getHeight() === height) {
+                        return cache;
+                    }
+                    cache.recycle();
+                }
+                const cachePixelSize = width * height * 4;
+                const drawingCacheSize = android.view.ViewConfiguration.get().getScaledMaximumDrawingCacheSize();
+                if (cachePixelSize > drawingCacheSize)
+                    return null;
+                cache = this.mNinePatchDrawCache = new Canvas(bound.width(), bound.height());
+                this.drawNinePatch(cache);
+                return cache;
             }
             drawNinePatch(canvas) {
                 let imageWidth = this.mImageWidth;
@@ -8896,6 +8923,7 @@ var androidui;
             }
         }
         NinePatchDrawable.GlobalBorderInfoCache = new Map();
+        NinePatchDrawable.DrawNinePatchWithCache = true;
         image_2.NinePatchDrawable = NinePatchDrawable;
         class NinePatchBorderInfo {
             constructor(leftBorder, topBorder, rightBorder, bottomBorder) {
