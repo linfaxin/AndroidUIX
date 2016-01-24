@@ -1419,7 +1419,7 @@ declare module androidui.attr {
         addAttr(attrName: string, onAttrChange: (newValue: any) => void, stashAttrValueWhenStateChange?: () => any): void;
         onAttrChange(attrName: string, attrValue: any, context: Context): void;
         getAttrValue(attrName: string): any;
-        private getRefObject(ref, recycel?);
+        private getRefObject(ref);
         private setRefObject(obj);
         parsePaddingMarginLTRB(value: any): string[];
         parseBoolean(value: any, defaultValue?: boolean): boolean;

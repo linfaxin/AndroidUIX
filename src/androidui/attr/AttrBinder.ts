@@ -63,29 +63,21 @@ module androidui.attr {
         }
 
 
-        private getRefObject(ref:string, recycel=true):any{
+        private getRefObject(ref:string):any{
             if(ref && ref.startsWith('@ref/')){
-                ref = ref.substring(5);
+                ref = ref.substring('@ref/'.length);
                 let index = Number.parseInt(ref);
                 if(Number.isInteger(index)){
-                    let obj = this.objectRefs[index];
-                    if(recycel) this.objectRefs[index] = null;
-                    return obj;
+                    return this.objectRefs[index];
                 }
             }
         }
 
         private setRefObject(obj:any):string{
-            let length = this.objectRefs.length;
-            for(let i = 0; i<length; i++){
-                if(this.objectRefs[i]==null){
-                    this.objectRefs[i] = obj;
-                    return '@ref/'+i;
-                }
-            }
-
+            let index = this.objectRefs.indexOf(obj);
+            if(index>=0) return '@ref/'+index;
             this.objectRefs.push(obj);
-            return '@ref/'+length;
+            return '@ref/'+(this.objectRefs.length-1);
         }
 
 

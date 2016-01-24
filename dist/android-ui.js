@@ -5970,28 +5970,21 @@ var androidui;
                 }
                 return null;
             }
-            getRefObject(ref, recycel = true) {
+            getRefObject(ref) {
                 if (ref && ref.startsWith('@ref/')) {
-                    ref = ref.substring(5);
+                    ref = ref.substring('@ref/'.length);
                     let index = Number.parseInt(ref);
                     if (Number.isInteger(index)) {
-                        let obj = this.objectRefs[index];
-                        if (recycel)
-                            this.objectRefs[index] = null;
-                        return obj;
+                        return this.objectRefs[index];
                     }
                 }
             }
             setRefObject(obj) {
-                let length = this.objectRefs.length;
-                for (let i = 0; i < length; i++) {
-                    if (this.objectRefs[i] == null) {
-                        this.objectRefs[i] = obj;
-                        return '@ref/' + i;
-                    }
-                }
+                let index = this.objectRefs.indexOf(obj);
+                if (index >= 0)
+                    return '@ref/' + index;
                 this.objectRefs.push(obj);
-                return '@ref/' + length;
+                return '@ref/' + (this.objectRefs.length - 1);
             }
             parsePaddingMarginLTRB(value) {
                 value = (value + '');
