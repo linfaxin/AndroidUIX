@@ -856,7 +856,7 @@ module android.view {
             super();
             this.mContext = context;
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
-            this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
+            this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
 
             this.initBindAttr(this._attrBinder);
 

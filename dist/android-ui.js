@@ -11261,7 +11261,7 @@ var android;
                 this._attrBinder = new AttrBinder(this);
                 this.mContext = context;
                 this.mTouchSlop = view_2.ViewConfiguration.get().getScaledTouchSlop();
-                this.setOverScrollMode(View.OVER_SCROLL_ALWAYS);
+                this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
                 this.initBindAttr(this._attrBinder);
                 this.initBindElement(bindElement);
                 if (defStyle)
