@@ -106,7 +106,7 @@ module android.R {
             alpha.setDuration(150);
             alpha.setInterpolator(R.interpolator.decelerate_cubic);
 
-            let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_PARENT, 0.5, Animation.RELATIVE_TO_PARENT, 0.5);
+            let scale = new ScaleAnimation(0.9, 1, 0.9, 1, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
             scale.setDuration(220);
             scale.setInterpolator(R.interpolator.decelerate_quint);
 
@@ -121,7 +121,7 @@ module android.R {
             alpha.setDuration(150);
             alpha.setInterpolator(R.interpolator.decelerate_cubic);
 
-            let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_PARENT, 0.5, Animation.RELATIVE_TO_PARENT, 0.5);
+            let scale = new ScaleAnimation(1, 0.9, 1, 0.9, Animation.RELATIVE_TO_SELF, 0.5, Animation.RELATIVE_TO_SELF, 0.5);
             scale.setDuration(220);
             scale.setInterpolator(R.interpolator.decelerate_quint);
 
