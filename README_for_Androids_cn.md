@@ -40,13 +40,13 @@ Android中的视图是通过Android的Canvas对象渲染的, AndroidUI4Web框架
 
 整个WebApp的开发流程与AndroidApp基本一致
 
-HTML语法布局:
+XML语法布局:
 ```html
 <FrameLayout>
     <TextView
             android:text="Hello world"
             android:gravity="center"
-    ></TextView>
+    />
 </FrameLayout>
 ```
 
@@ -115,24 +115,14 @@ res文件夹放图片,布局等资源, 在构建时会生成R文件在gen目录,
 
 ### 布局代码
 
-与Android工程一致, 布局文件存放在res/layout文件夹, 目前仅支持'.html'后缀的布局文件.
-布局代码内容与Android工程一致, 如HelloWorld工程中的activity_main.html文件:
+与Android工程一致, 布局文件存放在res/layout文件夹, 支持xml文件或者html片段.
+布局代码内容与Android工程一致, 如HelloWorld工程中的activity_main.xml文件:
 ```html
 <FrameLayout>
     <TextView
             android:text="Hello world"
             android:gravity="center"
     ></TextView>
-</FrameLayout>
-```
-
-需要注意的是目前不支持self-closing, 如上例中的TextView不能写成:
-```html
-<FrameLayout>
-    <TextView
-            android:text="Hello world"
-            android:gravity="center"
-    />
 </FrameLayout>
 ```
 
@@ -164,7 +154,7 @@ res文件夹放图片,布局等资源, 在构建时会生成R文件在gen目录,
 ### 开发效率
 
 WebStorm + TypeScript 使得代码提示和错误检查十分友好, 代码书写的效率不会低于目前Android开发.
-布局开发暂无属性提示补全和错误属性检查, 建议先在AndroidStudio里写好复制过来. 后期会以WebStorm插件方式提供支持.
+布局开发有提示补全和错误属性检查，但没有布局预览, 也可以先在AndroidStudio里写好复制过来。
 在Chrome开发台的调试和断点能力比原生开发体验更优, 界面和代码的调试都比原生Android开发更友好.
 界面调试:
 ![界面调试](http://linfaxin.com/image/androidui/debug_layout.png)
