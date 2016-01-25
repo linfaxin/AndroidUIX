@@ -102,6 +102,7 @@ export class WindowManager {
         if(wparams.isFocusable()){
             this.clearWindowFocus();
             decorView.dispatchWindowFocusChanged(true);
+            //TODO change focus to new window.
         }
         if(decorView instanceof ViewGroup){
             decorView.setMotionEventSplittingEnabled(wparams.isSplitTouch());
@@ -133,21 +134,11 @@ export class WindowManager {
         if(exitAnimation === undefined) exitAnimation = wparams.exitAnimation;
         if(exitAnimation){
             let t = this;
-            exitAnimation.setAnimationListener({
-                onAnimationStart(animation:Animation):void{
-                    decor.postOnAnimation({//remove next frame to avoid draw again at this frame. (ViewGroup's DisappearingChildren)
-                        run(){
-                            let group = <ViewGroup>decor.getParent();
-                            group.removeView(decor);
-                        }
-                    });
-                },
-                onAnimationEnd(animation:Animation):void{},
-                onAnimationRepeat(animation:Animation):void{}
-            });
             decor.startAnimation(exitAnimation);
+            decor.drawAnimation(this.mWindowsLayout, android.os.SystemClock.uptimeMillis(), exitAnimation);//init animation
+            this.mWindowsLayout.removeView(decor);
         }else{
-            (<ViewGroup>decor.getParent()).removeView(decor);
+            this.mWindowsLayout.removeView(decor);
         }
 
     }

@@ -23630,22 +23630,12 @@ var android;
                     exitAnimation = wparams.exitAnimation;
                 if (exitAnimation) {
                     let t = this;
-                    exitAnimation.setAnimationListener({
-                        onAnimationStart(animation) {
-                            decor.postOnAnimation({
-                                run() {
-                                    let group = decor.getParent();
-                                    group.removeView(decor);
-                                }
-                            });
-                        },
-                        onAnimationEnd(animation) { },
-                        onAnimationRepeat(animation) { }
-                    });
                     decor.startAnimation(exitAnimation);
+                    decor.drawAnimation(this.mWindowsLayout, android.os.SystemClock.uptimeMillis(), exitAnimation);
+                    this.mWindowsLayout.removeView(decor);
                 }
                 else {
-                    decor.getParent().removeView(decor);
+                    this.mWindowsLayout.removeView(decor);
                 }
             }
             clearWindowFocus() {
