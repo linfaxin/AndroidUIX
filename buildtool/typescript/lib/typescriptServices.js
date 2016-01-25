@@ -20535,6 +20535,10 @@ var ts;
          * @param prop The symbol for the right hand side of the property access.
          */
         function checkClassPropertyAccess(node, left, type, prop) {
+
+            //androidui modify
+            return true;
+
             var flags = getDeclarationFlagsFromSymbol(prop);
             var declaringClass = getDeclaredTypeOfSymbol(prop.parent);
             if (left.kind === 95 /* SuperKeyword */) {
