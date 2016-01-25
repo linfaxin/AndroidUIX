@@ -74,12 +74,12 @@ Note: 代码使用TypeScript书写, 风格和语法与Java相似, 就算没有�
 
 ### 准备环境
 
-1. 下载IDE: 支持Typescript的IDE或者编辑器. (推荐使用[WebStorm](https://www.jetbrains.com/webstorm/))
+1. 下载IDE: 支持Typescript的IDE或者编辑器. (推荐使用[WebStorm11](https://www.jetbrains.com/webstorm/))
 2. 安装Node.js: https://nodejs.org/ 
 3. 安装[Typescript](http://www.typescriptlang.org): npm install -g typescript
 4. 安装[Babel转码器](https://babeljs.io): npm install -g babel-cli
 5. 下载打开Hello World工程: [下载地址](https://github.com/linfaxin/AndroidUI4Web-HelloWorld/archive/master.zip)
-6. 如果使用WebStorm, 打开工程后, 需要在设置中开启TypeScript编译以获得更好代码提示和错误检查: 
+6. 如果使用WebStorm11, 打开工程后, 需要在设置中开启TypeScript编译以获得更好代码提示和错误检查: 
 Preferences -> Languages & Frameworks -> TypeScript: 1.Enable TypeScript Compiler. 2.use tsconfig.json
 
 
