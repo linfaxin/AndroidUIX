@@ -19,7 +19,7 @@ module android.R{
         static prll_footer_state_fail = 'Click to reload';
         static prll_footer_state_no_more = 'Load Finish';
 
-        static zh(){
+        private static zh(){
             this.ok = '确定';
             this.cancel = '取消';
             this.close = '关闭';

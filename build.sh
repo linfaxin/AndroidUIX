@@ -1,7 +1,5 @@
-#init node_modules, include typescript & babel
-if [ ! -d node_modules ]; then
-  npm install
-fi
+#init node_modules, include typescript & babel & build tools
+npm install
 
 
 cd src

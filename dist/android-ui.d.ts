@@ -1027,6 +1027,7 @@ declare module android.R {
         static action_bar: string;
         static alert_dialog: string;
         static alert_dialog_progress: string;
+        static id: string;
         static popup_menu_item_layout: string;
         static select_dialog: string;
         static select_dialog_item: string;
@@ -1898,30 +1899,41 @@ declare module android.graphics.drawable {
     }
 }
 declare module android.R {
-    class id {
-        static content: string;
-        static background: string;
-        static secondaryProgress: string;
-        static progress: string;
-        static contentPanel: string;
-        static topPanel: string;
-        static buttonPanel: string;
-        static customPanel: string;
-        static custom: string;
-        static titleDivider: string;
-        static titleDividerTop: string;
-        static title_template: string;
-        static icon: string;
-        static alertTitle: string;
-        static scrollView: string;
-        static message: string;
-        static button1: string;
-        static button2: string;
-        static button3: string;
-        static leftSpacer: string;
-        static rightSpacer: string;
-        static text1: string;
-    }
+    var id: {
+        "action_bar_center_layout": string;
+        "action_bar_title": string;
+        "action_bar_sub_title": string;
+        "action_bar_left": string;
+        "action_bar_right": string;
+        "parentPanel": string;
+        "topPanel": string;
+        "titleDividerTop": string;
+        "title_template": string;
+        "icon": string;
+        "alertTitle": string;
+        "titleDivider": string;
+        "contentPanel": string;
+        "scrollView": string;
+        "message": string;
+        "customPanel": string;
+        "custom": string;
+        "buttonPanel": string;
+        "button2": string;
+        "button3": string;
+        "button1": string;
+        "progress": string;
+        "progress_percent": string;
+        "progress_number": string;
+        "content": string;
+        "background": string;
+        "secondaryProgress": string;
+        "leftSpacer": string;
+        "rightSpacer": string;
+        "text1": string;
+        "title": string;
+        "shortcut": string;
+        "select_dialog_listview": string;
+    };
 }
 declare module android.R {
     import Drawable = android.graphics.drawable.Drawable;
@@ -3476,7 +3488,7 @@ declare module android.R {
         static prll_footer_state_ready: string;
         static prll_footer_state_fail: string;
         static prll_footer_state_no_more: string;
-        static zh(): void;
+        private static zh();
     }
 }
 declare module androidui {

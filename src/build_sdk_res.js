@@ -1,7 +1,8 @@
 var fs = require('fs');
+var jsdom = require('jsdom');
+
 buildLayout();
 buildImage();
-buildID();
 
 function buildImage(){
     var path = 'res/image';
@@ -112,13 +113,59 @@ ${exportImage_tsLines}
 }
 
 function buildLayout(){
+
+    var definedIds = {};
+
+    function xml2html(html){
+        var doc = jsdom.jsdom(html, {
+            parsingMode : 'xml'
+        });
+        var document = doc.defaultView.document;
+        travelElement(document.documentElement);
+        return document.documentElement.outerHTML;
+    }
+
+    function travelElement(ele){
+        if(ele){
+            //android:id="@+id/xx" ==> id="xx",
+            var id = ele.getAttribute('android:id') || ele.getAttribute('id');
+            ele.removeAttribute('android:id');
+            if(id){
+                if(id.startsWith('@+id/')) id = id.substring('@+id/'.length);
+                if(id.startsWith('@id/')) id = id.substring('@id/'.length);
+                ele.setAttribute('id', id);
+                definedIds[id] = id;
+            }
+
+            //remove xmlns & xmlns:android, no need when run
+            ele.removeAttribute('xmlns');
+            ele.removeAttribute('xmlns:android');
+
+            for(var child of Array.from(ele.children)){
+                travelElement(child);
+            }
+        }
+    }
+
+    function writeToIdFile(){
+        var str =
+            `module android.R {
+    export var id = ${JSON.stringify(definedIds, null, 8)};
+}`;
+        fs.writeFile('android/R/id.ts', str, 'utf-8');
+    }
+
+
     var path = 'res/layout';
     var layoutData = {};
     var files = fs.readdirSync(path);
     files.forEach(function(fileName){
         var splits = fileName.split('.');
-        if(splits[splits.length-1] != 'html') return;//must end with '.html'
+        var fileSuffixes = splits[splits.length-1];
+
+        if(fileSuffixes != 'html' && fileSuffixes != 'xml') return;//must end with '.html/.xml'
         var html = fs.readFileSync(path+'/'+fileName, 'utf-8');
+        html = xml2html(html);
         var name = splits[0];
         layoutData[name] = html;
     });
@@ -150,8 +197,5 @@ function buildLayout(){
 }`;
 
     fs.writeFile('android/R/layout.ts', str, 'utf-8');
-}
-
-function buildID(){
-    //TODO parse html & generate ids to 'id.ts'
+    writeToIdFile();
 }
