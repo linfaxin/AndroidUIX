@@ -1,6 +1,11 @@
 var androidui;
 (function (androidui) {
-    androidui.sdk_version = '0.2.0';
+    androidui.sdk_version_info = `
+AndroidUI4Web: https://github.com/linfaxin/AndroidUI4Web
+version: 0.2.0
+release type: Pre-release
+release date: 2016-01-25
+`;
 })(androidui || (androidui = {}));
 var java;
 (function (java) {
