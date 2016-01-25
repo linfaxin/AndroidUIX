@@ -25,16 +25,13 @@ import Canvas = android.graphics.Canvas;
 import TextPaint = android.text.TextPaint;
 import MetricAffectingSpan = android.text.style.MetricAffectingSpan;
 
-export abstract
-class ReplacementSpan extends MetricAffectingSpan {
+export abstract class ReplacementSpan extends MetricAffectingSpan {
     static type = Symbol();
     mType = ReplacementSpan.type;
 
-    abstract 
-getSize(paint:Paint, text:String, start:number, end:number, fm:Paint.FontMetricsInt):number ;
+    abstract getSize(paint:Paint, text:String, start:number, end:number, fm:Paint.FontMetricsInt):number ;
 
-    abstract 
-draw(canvas:Canvas, text:String, start:number, end:number, x:number, top:number, y:number, bottom:number, paint:Paint):void ;
+    abstract draw(canvas:Canvas, text:String, start:number, end:number, x:number, top:number, y:number, bottom:number, paint:Paint):void ;
 
     /**
      * This method does nothing, since ReplacementSpans are measured

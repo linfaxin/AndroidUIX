@@ -37,8 +37,7 @@ module android.view {
     import Animation = animation.Animation;
     import Transformation = animation.Transformation;
 
-    export abstract
-    class ViewGroup extends View implements ViewParent {
+    export abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN = 0x1;
         static FLAG_CLIP_TO_PADDING = 0x2;
         static FLAG_INVALIDATE_REQUIRED = 0x4;
@@ -1985,8 +1984,7 @@ module android.view {
             //layout animation no impl
             return false;
         }
-        protected abstract
-        onLayout(changed:boolean, l:number, t:number, r:number, b:number):void;
+        protected abstract onLayout(changed:boolean, l:number, t:number, r:number, b:number):void;
 
         getChildVisibleRect(child:View, r:Rect, offset:Point):boolean{
             // It doesn't make a whole lot of sense to call this on a view that isn't attached,

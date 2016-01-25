@@ -1204,9 +1204,7 @@ export module ViewDragHelper{
      * about the state of the parent view upon request. The callback also makes decisions
      * governing the range and draggability of child views.
      */
-export abstract
-
-class Callback {
+export abstract class Callback {
 
     /**
          * Called when the drag state changes. See the <code>STATE_*</code> constants
@@ -1355,8 +1353,7 @@ class Callback {
          * @param pointerId ID of the pointer attempting the capture
          * @return true if capture should be allowed, false otherwise
          */
-    abstract 
-tryCaptureView(child:View, pointerId:number):boolean ;
+    abstract tryCaptureView(child:View, pointerId:number):boolean ;
 
     /**
          * Restrict the motion of the dragged child view along the horizontal axis.

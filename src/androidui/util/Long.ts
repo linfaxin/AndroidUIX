@@ -134,7 +134,7 @@ module goog.math{
             // minimize the calls to the very expensive emulated div.
             var radixToPower = Long.fromNumber(Math.pow(radix, 6));
 
-            let rem = this;
+            let rem:Long = this;
             var result = '';
             while (true) {
                 var remDiv = rem.div(radixToPower);
@@ -439,7 +439,7 @@ module goog.math{
                     if (approx.equals(Long.ZERO)) {
                         return other.isNegative() ? Long.ONE : Long.NEG_ONE;
                     } else {
-                        var rem = this.subtract(other.multiply(approx));
+                        let rem = this.subtract(other.multiply(approx));
                         var result = approx.add(rem.div(other));
                         return result;
                     }
@@ -464,7 +464,7 @@ module goog.math{
             // the approximate value is less than or equal to the real value so that the
             // remainder never becomes negative.
             var res = Long.ZERO;
-            var rem = this;
+            let rem:Long = this;
             while (rem.greaterThanOrEqual(other)) {
                 // Approximate the result of division. This may be a little greater or
                 // smaller than the actual value.

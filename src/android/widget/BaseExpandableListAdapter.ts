@@ -47,9 +47,7 @@ import Long = goog.math.Long;
  * @see SimpleExpandableListAdapter
  * @see SimpleCursorTreeAdapter
  */
-export abstract
-
-class BaseExpandableListAdapter implements ExpandableListAdapter, HeterogeneousExpandableList {
+export abstract class BaseExpandableListAdapter implements ExpandableListAdapter, HeterogeneousExpandableList {
 
     private mDataSetObservable:DataSetObservable = new DataSetObservable();
 
@@ -160,35 +158,25 @@ class BaseExpandableListAdapter implements ExpandableListAdapter, HeterogeneousE
     }
 
 
-    abstract
-    getGroupCount():number;
+    abstract getGroupCount():number;
 
-    abstract
-    getChildrenCount(groupPosition:number):number;
+    abstract getChildrenCount(groupPosition:number):number;
 
-    abstract
-    getGroup(groupPosition:number):any;
+    abstract getGroup(groupPosition:number):any;
 
-    abstract
-    getChild(groupPosition:number, childPosition:number):any;
+    abstract getChild(groupPosition:number, childPosition:number):any;
 
-    abstract
-    getGroupId(groupPosition:number):number;
+    abstract getGroupId(groupPosition:number):number;
 
-    abstract
-    getChildId(groupPosition:number, childPosition:number):number;
+    abstract getChildId(groupPosition:number, childPosition:number):number;
 
-    abstract
-    hasStableIds():boolean;
+    abstract hasStableIds():boolean;
 
-    abstract
-    getGroupView(groupPosition:number, isExpanded:boolean, convertView:android.view.View, parent:android.view.ViewGroup):android.view.View;
+    abstract getGroupView(groupPosition:number, isExpanded:boolean, convertView:android.view.View, parent:android.view.ViewGroup):android.view.View;
 
-    abstract
-    getChildView(groupPosition:number, childPosition:number, isLastChild:boolean,
+    abstract getChildView(groupPosition:number, childPosition:number, isLastChild:boolean,
                  convertView:android.view.View, parent:android.view.ViewGroup):android.view.View;
 
-    abstract
-    isChildSelectable(groupPosition:number, childPosition:number):boolean;
+    abstract isChildSelectable(groupPosition:number, childPosition:number):boolean;
 }
 }

@@ -688,7 +688,8 @@ declare module android.graphics.drawable {
         invalidateSelf(): void;
         scheduleSelf(what: any, when: any): void;
         unscheduleSelf(what: any): void;
-        abstract setAlpha(alpha: number): void;
+        abstract: any;
+        setAlpha(alpha: number): void;
         getAlpha(): number;
         isStateful(): boolean;
         setState(stateSet: Array<number>): boolean;
@@ -2349,15 +2350,54 @@ declare module android.R {
             textSize: string;
             textColor: content.res.ColorStateList;
         };
-        static buttonStyle: any;
+        static buttonStyle: {
+            textSize: string;
+            textColor: content.res.ColorStateList;
+        } & {
+            background: Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            minHeight: string;
+            minWidth: string;
+            textSize: string;
+            gravity: number;
+        };
         static imageButtonStyle: {
             background: Drawable;
             focusable: boolean;
             clickable: boolean;
             gravity: number;
         };
-        static checkboxStyle: any;
-        static radiobuttonStyle: any;
+        static checkboxStyle: {
+            textSize: string;
+            textColor: content.res.ColorStateList;
+        } & {
+            background: Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            minHeight: string;
+            minWidth: string;
+            textSize: string;
+            gravity: number;
+        } & {
+            background: any;
+            button: Drawable;
+        };
+        static radiobuttonStyle: {
+            textSize: string;
+            textColor: content.res.ColorStateList;
+        } & {
+            background: Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            minHeight: string;
+            minWidth: string;
+            textSize: string;
+            gravity: number;
+        } & {
+            background: any;
+            button: Drawable;
+        };
         static checkedTextViewStyle: {
             textAlignment: string;
         };
@@ -2382,8 +2422,40 @@ declare module android.R {
             maxHeight: string;
             mirrorForRtl: boolean;
         };
-        static progressBarStyleSmall: any;
-        static progressBarStyleLarge: any;
+        static progressBarStyleSmall: {
+            indeterminateOnly: boolean;
+            indeterminateDrawable: Drawable;
+            indeterminateBehavior: string;
+            indeterminateDuration: number;
+            minWidth: string;
+            maxWidth: string;
+            minHeight: string;
+            maxHeight: string;
+            mirrorForRtl: boolean;
+        } & {
+            indeterminateDrawable: Drawable;
+            minWidth: string;
+            maxWidth: string;
+            minHeight: string;
+            maxHeight: string;
+        };
+        static progressBarStyleLarge: {
+            indeterminateOnly: boolean;
+            indeterminateDrawable: Drawable;
+            indeterminateBehavior: string;
+            indeterminateDuration: number;
+            minWidth: string;
+            maxWidth: string;
+            minHeight: string;
+            maxHeight: string;
+            mirrorForRtl: boolean;
+        } & {
+            indeterminateDrawable: Drawable;
+            minWidth: string;
+            maxWidth: string;
+            minHeight: string;
+            maxHeight: string;
+        };
         static seekBarStyle: {
             indeterminateOnly: boolean;
             progressDrawable: Drawable;
@@ -2408,8 +2480,44 @@ declare module android.R {
             thumb: any;
             mirrorForRtl: boolean;
         };
-        static ratingBarStyleIndicator: any;
-        static ratingBarStyleSmall: any;
+        static ratingBarStyleIndicator: {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            minHeight: string;
+            maxHeight: string;
+            numStars: string;
+            stepSize: string;
+            thumb: any;
+            mirrorForRtl: boolean;
+        } & {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            minHeight: string;
+            maxHeight: string;
+            thumb: any;
+            isIndicator: boolean;
+        };
+        static ratingBarStyleSmall: {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            minHeight: string;
+            maxHeight: string;
+            numStars: string;
+            stepSize: string;
+            thumb: any;
+            mirrorForRtl: boolean;
+        } & {
+            indeterminateOnly: boolean;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
+            minHeight: string;
+            maxHeight: string;
+            thumb: any;
+            isIndicator: boolean;
+        };
         static gridViewStyle: {
             listSelector: Drawable;
             numColumns: number;
@@ -2419,7 +2527,13 @@ declare module android.R {
             listSelector: Drawable;
             dividerHeight: number;
         };
-        static expandableListViewStyle: any;
+        static expandableListViewStyle: {
+            divider: Drawable;
+            listSelector: Drawable;
+            dividerHeight: number;
+        } & {
+            childDivider: Drawable;
+        };
         static numberPickerStyle: {
             orientation: string;
             solidColor: string;
@@ -3972,7 +4086,8 @@ declare module android.text.style {
     abstract class CharacterStyle {
         static type: symbol;
         mType: symbol;
-        abstract updateDrawState(tp: TextPaint): void;
+        abstract: any;
+        updateDrawState(tp: TextPaint): void;
         static wrap(cs: CharacterStyle): CharacterStyle;
         getUnderlying(): CharacterStyle;
     }
@@ -7991,13 +8106,41 @@ declare module android.widget {
 declare module android.widget {
     import CompoundButton = android.widget.CompoundButton;
     class CheckBox extends CompoundButton {
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
+            textSize: string;
+            textColor: content.res.ColorStateList;
+        } & {
+            background: graphics.drawable.Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            minHeight: string;
+            minWidth: string;
+            textSize: string;
+            gravity: number;
+        } & {
+            background: any;
+            button: graphics.drawable.Drawable;
+        });
     }
 }
 declare module android.widget {
     import CompoundButton = android.widget.CompoundButton;
     class RadioButton extends CompoundButton {
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
+            textSize: string;
+            textColor: content.res.ColorStateList;
+        } & {
+            background: graphics.drawable.Drawable;
+            focusable: boolean;
+            clickable: boolean;
+            minHeight: string;
+            minWidth: string;
+            textSize: string;
+            gravity: number;
+        } & {
+            background: any;
+            button: graphics.drawable.Drawable;
+        });
         toggle(): void;
     }
 }
@@ -8363,7 +8506,13 @@ declare module android.widget {
         private static CHILD_LAST_STATE_SET;
         private mChildDivider;
         private mIndicatorRect;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
+            divider: Drawable;
+            listSelector: Drawable;
+            dividerHeight: number;
+        } & {
+            childDivider: Drawable;
+        });
         private isRtlCompatibilityMode();
         private hasRtlSupport();
         onRtlPropertiesChanged(layoutDirection: number): void;
@@ -8900,7 +9049,8 @@ declare module android.widget {
         recycleAllViews(): void;
         setSelection(position: number, animate?: boolean): void;
         setSelectionInt(position: number, animate: boolean): void;
-        abstract layoutSpinner(delta: number, animate: boolean): void;
+        abstract: any;
+        layoutSpinner(delta: number, animate: boolean): void;
         getSelectedView(): View;
         requestLayout(): void;
         getAdapter(): SpinnerAdapter;
@@ -9968,7 +10118,7 @@ declare module android.support.v4.widget {
             onDrawerClosed(drawerView: View): void;
             onDrawerStateChanged(newState: number): void;
         }
-        abstract class SimpleDrawerListener implements DrawerLayout.DrawerListener {
+        class SimpleDrawerListener implements DrawerLayout.DrawerListener {
             onDrawerSlide(drawerView: View, slideOffset: number): void;
             onDrawerOpened(drawerView: View): void;
             onDrawerClosed(drawerView: View): void;

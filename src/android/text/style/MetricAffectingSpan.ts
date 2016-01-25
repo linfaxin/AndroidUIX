@@ -28,15 +28,11 @@ module android.text.style {
      * The classes that affect character-level text formatting in a way that
      * changes the width or height of characters extend this class.
      */
-export
-    abstract
-
-    class MetricAffectingSpan extends CharacterStyle implements UpdateLayout {
+export abstract class MetricAffectingSpan extends CharacterStyle implements UpdateLayout {
         static type = Symbol();
         mType = MetricAffectingSpan.type;
 
-        abstract
-        updateMeasureState(p:TextPaint):void ;
+        abstract updateMeasureState(p:TextPaint):void ;
 
         /**
          * Returns "this" for most MetricAffectingSpans, but for

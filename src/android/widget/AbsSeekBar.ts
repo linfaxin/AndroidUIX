@@ -33,8 +33,7 @@ import ViewConfiguration = android.view.ViewConfiguration;
 import Integer = java.lang.Integer;
 import ProgressBar = android.widget.ProgressBar;
 
-export abstract
-class AbsSeekBar extends ProgressBar {
+export abstract class AbsSeekBar extends ProgressBar {
 
     private mThumb:Drawable;
 

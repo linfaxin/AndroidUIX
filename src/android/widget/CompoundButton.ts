@@ -48,9 +48,7 @@ import TextView = android.widget.TextView;
  * android.R.styleable#View View Attributes}
  * </p>
  */
-export abstract
-
-class CompoundButton extends Button implements Checkable {
+export abstract class CompoundButton extends Button implements Checkable {
 
     private mChecked:boolean;
 

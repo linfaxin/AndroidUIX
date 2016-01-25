@@ -349,8 +349,7 @@ module androidui.widget{
             onLoadMore(prll:PullRefreshLoadLayout):void;
         }
 
-        export abstract
-        class HeaderView extends FrameLayout{
+        export abstract class HeaderView extends FrameLayout{
             private state:number = PullRefreshLoadLayout.State_Header_Normal;
             private stateBeforeReady = PullRefreshLoadLayout.State_Header_Normal;
 
@@ -375,11 +374,9 @@ module androidui.widget{
                         break;
                 }
             }
-            abstract
-            onStateChange(newState:number, oldState:number):void;
+            abstract onStateChange(newState:number, oldState:number):void;
         }
-        export abstract
-        class FooterView extends FrameLayout{
+        export abstract class FooterView extends FrameLayout{
             private state:number = PullRefreshLoadLayout.State_Footer_Normal;
             private stateBeforeReady = PullRefreshLoadLayout.State_Footer_Normal;
 
@@ -394,8 +391,7 @@ module androidui.widget{
                         break;
                 }
             }
-            abstract
-            onStateChange(newState:number, oldState:number):void;
+            abstract onStateChange(newState:number, oldState:number):void;
         }
         export class DefaultHeaderView extends HeaderView{
             textView:TextView;

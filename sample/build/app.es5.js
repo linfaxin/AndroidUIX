@@ -1,9 +1,10 @@
-///<reference path="../../../dist/android-ui.d.ts"/>
 "use strict";
 
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
@@ -32,7 +33,7 @@ var sample;
                 throw Error('Not find radio image. May something error in build.');
             }
 
-            var image_base64 = (function () {
+            var image_base64 = function () {
                 function image_base64() {
                     _classCallCheck(this, image_base64);
                 }
@@ -45,14 +46,12 @@ var sample;
                 }]);
 
                 return image_base64;
-            })();
+            }();
 
             R.image_base64 = image_base64;
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../../dist/android-ui.d.ts"/>
-///<reference path="image_base64.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -61,7 +60,7 @@ var sample;
         (function (R) {
             var NetDrawable = androidui.image.NetDrawable;
 
-            var image = (function () {
+            var image = function () {
                 function image() {
                     _classCallCheck(this, image);
                 }
@@ -74,7 +73,7 @@ var sample;
                 }]);
 
                 return image;
-            })();
+            }();
 
             R.image = image;
             android.content.res.Resources.buildDrawableFinder = function (refString) {
@@ -83,7 +82,6 @@ var sample;
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -117,7 +115,7 @@ var sample;
             };
             var _tempDiv = document.createElement('div');
 
-            var layout = (function () {
+            var layout = function () {
                 function layout() {
                     _classCallCheck(this, layout);
                 }
@@ -136,7 +134,7 @@ var sample;
                 }]);
 
                 return layout;
-            })();
+            }();
 
             layout.sample_animation = '@layout/sample_animation';
             layout.sample_base_widget = '@layout/sample_base_widget';
@@ -168,7 +166,6 @@ var sample;
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -179,8 +176,6 @@ var sample;
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -189,13 +184,13 @@ var sample;
         var Animation = android.view.animation.Animation;
         var R = sample.app.R;
 
-        var SampleAnimationActivity = (function (_ActionBarActivity) {
+        var SampleAnimationActivity = function (_ActionBarActivity) {
             _inherits(SampleAnimationActivity, _ActionBarActivity);
 
             function SampleAnimationActivity() {
                 _classCallCheck(this, SampleAnimationActivity);
 
-                _get(Object.getPrototypeOf(SampleAnimationActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleAnimationActivity).apply(this, arguments));
             }
 
             _createClass(SampleAnimationActivity, [{
@@ -240,14 +235,11 @@ var sample;
             }]);
 
             return SampleAnimationActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleAnimationActivity = SampleAnimationActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
-///<reference path="../gen/R/image.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -259,13 +251,13 @@ var sample;
         var PopupWindow = android.widget.PopupWindow;
         var R = sample.app.R;
 
-        var SampleBaseWidgetActivity = (function (_ActionBarActivity2) {
+        var SampleBaseWidgetActivity = function (_ActionBarActivity2) {
             _inherits(SampleBaseWidgetActivity, _ActionBarActivity2);
 
             function SampleBaseWidgetActivity() {
                 _classCallCheck(this, SampleBaseWidgetActivity);
 
-                _get(Object.getPrototypeOf(SampleBaseWidgetActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleBaseWidgetActivity).apply(this, arguments));
             }
 
             _createClass(SampleBaseWidgetActivity, [{
@@ -300,13 +292,11 @@ var sample;
             }]);
 
             return SampleBaseWidgetActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleBaseWidgetActivity = SampleBaseWidgetActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -314,13 +304,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleButtonActivity = (function (_ActionBarActivity3) {
+        var SampleButtonActivity = function (_ActionBarActivity3) {
             _inherits(SampleButtonActivity, _ActionBarActivity3);
 
             function SampleButtonActivity() {
                 _classCallCheck(this, SampleButtonActivity);
 
-                _get(Object.getPrototypeOf(SampleButtonActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleButtonActivity).apply(this, arguments));
             }
 
             _createClass(SampleButtonActivity, [{
@@ -346,16 +336,11 @@ var sample;
             }]);
 
             return SampleButtonActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleButtonActivity = SampleButtonActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-/**
- * Created by linfaxin on 16/1/12.
- */
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -369,13 +354,13 @@ var sample;
         var Gravity = android.view.Gravity;
         var TAG = 'SampleContacteActivity';
 
-        var SampleContacteActivity = (function (_ActionBarActivity4) {
+        var SampleContacteActivity = function (_ActionBarActivity4) {
             _inherits(SampleContacteActivity, _ActionBarActivity4);
 
             function SampleContacteActivity() {
                 _classCallCheck(this, SampleContacteActivity);
 
-                _get(Object.getPrototypeOf(SampleContacteActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleContacteActivity).apply(this, arguments));
             }
 
             _createClass(SampleContacteActivity, [{
@@ -418,17 +403,17 @@ var sample;
             }]);
 
             return SampleContacteActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleContacteActivity = SampleContacteActivity;
 
-        var SampleShowIntentActivity = (function (_ActionBarActivity5) {
+        var SampleShowIntentActivity = function (_ActionBarActivity5) {
             _inherits(SampleShowIntentActivity, _ActionBarActivity5);
 
             function SampleShowIntentActivity() {
                 _classCallCheck(this, SampleShowIntentActivity);
 
-                _get(Object.getPrototypeOf(SampleShowIntentActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleShowIntentActivity).apply(this, arguments));
             }
 
             _createClass(SampleShowIntentActivity, [{
@@ -442,17 +427,17 @@ var sample;
             }]);
 
             return SampleShowIntentActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleShowIntentActivity = SampleShowIntentActivity;
 
-        var SampleResultActivity = (function (_ActionBarActivity6) {
+        var SampleResultActivity = function (_ActionBarActivity6) {
             _inherits(SampleResultActivity, _ActionBarActivity6);
 
             function SampleResultActivity() {
                 _classCallCheck(this, SampleResultActivity);
 
-                _get(Object.getPrototypeOf(SampleResultActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleResultActivity).apply(this, arguments));
             }
 
             _createClass(SampleResultActivity, [{
@@ -474,13 +459,11 @@ var sample;
             }]);
 
             return SampleResultActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleResultActivity = SampleResultActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -488,13 +471,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleDrawerLayoutActivity = (function (_ActionBarActivity7) {
+        var SampleDrawerLayoutActivity = function (_ActionBarActivity7) {
             _inherits(SampleDrawerLayoutActivity, _ActionBarActivity7);
 
             function SampleDrawerLayoutActivity() {
                 _classCallCheck(this, SampleDrawerLayoutActivity);
 
-                _get(Object.getPrototypeOf(SampleDrawerLayoutActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleDrawerLayoutActivity).apply(this, arguments));
             }
 
             _createClass(SampleDrawerLayoutActivity, [{
@@ -507,13 +490,11 @@ var sample;
             }]);
 
             return SampleDrawerLayoutActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleDrawerLayoutActivity = SampleDrawerLayoutActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -525,13 +506,13 @@ var sample;
         var BaseExpandableListAdapter = android.widget.BaseExpandableListAdapter;
         var R = sample.app.R;
 
-        var SampleExpandableListViewActivity = (function (_ActionBarActivity8) {
+        var SampleExpandableListViewActivity = function (_ActionBarActivity8) {
             _inherits(SampleExpandableListViewActivity, _ActionBarActivity8);
 
             function SampleExpandableListViewActivity() {
                 _classCallCheck(this, SampleExpandableListViewActivity);
 
-                _get(Object.getPrototypeOf(SampleExpandableListViewActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleExpandableListViewActivity).apply(this, arguments));
             }
 
             _createClass(SampleExpandableListViewActivity, [{
@@ -547,22 +528,26 @@ var sample;
             }]);
 
             return SampleExpandableListViewActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleExpandableListViewActivity = SampleExpandableListViewActivity;
 
-        var MyListAdapter = (function (_BaseExpandableListAdapter) {
-            _inherits(MyListAdapter, _BaseExpandableListAdapter);
+        var MyListAdapter = function (_BaseExpandableListAd) {
+            _inherits(MyListAdapter, _BaseExpandableListAd);
 
             function MyListAdapter() {
+                var _Object$getPrototypeO;
+
                 _classCallCheck(this, MyListAdapter);
 
                 for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
                     args[_key] = arguments[_key];
                 }
 
-                _get(Object.getPrototypeOf(MyListAdapter.prototype), "constructor", this).apply(this, args);
-                this.data = [{ 'name': 'A', 'items': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10'] }, { 'name': 'B', 'items': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10'] }, { 'name': 'C', 'items': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'] }, { 'name': 'D', 'items': ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'] }, { 'name': 'E', 'items': ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10'] }, { 'name': 'F', 'items': ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10'] }, { 'name': 'G', 'items': ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10'] }, { 'name': 'H', 'items': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10'] }, { 'name': 'I', 'items': ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10'] }, { 'name': 'J', 'items': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'] }, { 'name': 'K', 'items': ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10'] }];
+                var _this9 = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO, [this].concat(args)));
+
+                _this9.data = [{ 'name': 'A', 'items': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10'] }, { 'name': 'B', 'items': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10'] }, { 'name': 'C', 'items': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'] }, { 'name': 'D', 'items': ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'] }, { 'name': 'E', 'items': ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10'] }, { 'name': 'F', 'items': ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10'] }, { 'name': 'G', 'items': ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10'] }, { 'name': 'H', 'items': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10'] }, { 'name': 'I', 'items': ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10'] }, { 'name': 'J', 'items': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'] }, { 'name': 'K', 'items': ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10'] }];
+                return _this9;
             }
 
             _createClass(MyListAdapter, [{
@@ -631,11 +616,9 @@ var sample;
             }]);
 
             return MyListAdapter;
-        })(BaseExpandableListAdapter);
+        }(BaseExpandableListAdapter);
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -643,13 +626,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleFrameLayoutActivity = (function (_ActionBarActivity9) {
+        var SampleFrameLayoutActivity = function (_ActionBarActivity9) {
             _inherits(SampleFrameLayoutActivity, _ActionBarActivity9);
 
             function SampleFrameLayoutActivity() {
                 _classCallCheck(this, SampleFrameLayoutActivity);
 
-                _get(Object.getPrototypeOf(SampleFrameLayoutActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleFrameLayoutActivity).apply(this, arguments));
             }
 
             _createClass(SampleFrameLayoutActivity, [{
@@ -662,16 +645,11 @@ var sample;
             }]);
 
             return SampleFrameLayoutActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleFrameLayoutActivity = SampleFrameLayoutActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-/**
- * Created by linfaxin on 15/10/26.
- */
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -681,13 +659,13 @@ var sample;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleGridViewActivity = (function (_ActionBarActivity10) {
+        var SampleGridViewActivity = function (_ActionBarActivity10) {
             _inherits(SampleGridViewActivity, _ActionBarActivity10);
 
             function SampleGridViewActivity() {
                 _classCallCheck(this, SampleGridViewActivity);
 
-                _get(Object.getPrototypeOf(SampleGridViewActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleGridViewActivity).apply(this, arguments));
             }
 
             _createClass(SampleGridViewActivity, [{
@@ -702,17 +680,17 @@ var sample;
             }]);
 
             return SampleGridViewActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleGridViewActivity = SampleGridViewActivity;
 
-        var MyAdapter = (function (_BaseAdapter) {
+        var MyAdapter = function (_BaseAdapter) {
             _inherits(MyAdapter, _BaseAdapter);
 
             function MyAdapter() {
                 _classCallCheck(this, MyAdapter);
 
-                _get(Object.getPrototypeOf(MyAdapter.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(MyAdapter).apply(this, arguments));
             }
 
             _createClass(MyAdapter, [{
@@ -742,11 +720,9 @@ var sample;
             }]);
 
             return MyAdapter;
-        })(BaseAdapter);
+        }(BaseAdapter);
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -754,13 +730,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleHtmlViewActivity = (function (_ActionBarActivity11) {
+        var SampleHtmlViewActivity = function (_ActionBarActivity11) {
             _inherits(SampleHtmlViewActivity, _ActionBarActivity11);
 
             function SampleHtmlViewActivity() {
                 _classCallCheck(this, SampleHtmlViewActivity);
 
-                _get(Object.getPrototypeOf(SampleHtmlViewActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleHtmlViewActivity).apply(this, arguments));
             }
 
             _createClass(SampleHtmlViewActivity, [{
@@ -773,13 +749,11 @@ var sample;
             }]);
 
             return SampleHtmlViewActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleHtmlViewActivity = SampleHtmlViewActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -787,13 +761,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleImageViewActivity = (function (_ActionBarActivity12) {
+        var SampleImageViewActivity = function (_ActionBarActivity12) {
             _inherits(SampleImageViewActivity, _ActionBarActivity12);
 
             function SampleImageViewActivity() {
                 _classCallCheck(this, SampleImageViewActivity);
 
-                _get(Object.getPrototypeOf(SampleImageViewActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleImageViewActivity).apply(this, arguments));
             }
 
             _createClass(SampleImageViewActivity, [{
@@ -806,16 +780,11 @@ var sample;
             }]);
 
             return SampleImageViewActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleImageViewActivity = SampleImageViewActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-/**
- * Created by linfaxin on 16/1/12.
- */
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -826,13 +795,13 @@ var sample;
         var Gravity = android.view.Gravity;
         var TAG = 'SampleLifeCallbackActivity';
 
-        var SampleLifeCallbackActivity = (function (_ActionBarActivity13) {
+        var SampleLifeCallbackActivity = function (_ActionBarActivity13) {
             _inherits(SampleLifeCallbackActivity, _ActionBarActivity13);
 
             function SampleLifeCallbackActivity() {
                 _classCallCheck(this, SampleLifeCallbackActivity);
 
-                _get(Object.getPrototypeOf(SampleLifeCallbackActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleLifeCallbackActivity).apply(this, arguments));
             }
 
             _createClass(SampleLifeCallbackActivity, [{
@@ -900,17 +869,17 @@ var sample;
             }]);
 
             return SampleLifeCallbackActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleLifeCallbackActivity = SampleLifeCallbackActivity;
 
-        var SampleLifeCallbackNormalActivity = (function (_ActionBarActivity14) {
+        var SampleLifeCallbackNormalActivity = function (_ActionBarActivity14) {
             _inherits(SampleLifeCallbackNormalActivity, _ActionBarActivity14);
 
             function SampleLifeCallbackNormalActivity() {
                 _classCallCheck(this, SampleLifeCallbackNormalActivity);
 
-                _get(Object.getPrototypeOf(SampleLifeCallbackNormalActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleLifeCallbackNormalActivity).apply(this, arguments));
             }
 
             _createClass(SampleLifeCallbackNormalActivity, [{
@@ -932,17 +901,17 @@ var sample;
             }]);
 
             return SampleLifeCallbackNormalActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleLifeCallbackNormalActivity = SampleLifeCallbackNormalActivity;
 
-        var SampleLifeCallbackFloatingActivity = (function (_SampleLifeCallbackNormalActivity) {
-            _inherits(SampleLifeCallbackFloatingActivity, _SampleLifeCallbackNormalActivity);
+        var SampleLifeCallbackFloatingActivity = function (_SampleLifeCallbackNo) {
+            _inherits(SampleLifeCallbackFloatingActivity, _SampleLifeCallbackNo);
 
             function SampleLifeCallbackFloatingActivity() {
                 _classCallCheck(this, SampleLifeCallbackFloatingActivity);
 
-                _get(Object.getPrototypeOf(SampleLifeCallbackFloatingActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleLifeCallbackFloatingActivity).apply(this, arguments));
             }
 
             _createClass(SampleLifeCallbackFloatingActivity, [{
@@ -958,13 +927,11 @@ var sample;
             }]);
 
             return SampleLifeCallbackFloatingActivity;
-        })(SampleLifeCallbackNormalActivity);
+        }(SampleLifeCallbackNormalActivity);
 
         app.SampleLifeCallbackFloatingActivity = SampleLifeCallbackFloatingActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -972,13 +939,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleLinearLayoutActivity = (function (_ActionBarActivity15) {
+        var SampleLinearLayoutActivity = function (_ActionBarActivity15) {
             _inherits(SampleLinearLayoutActivity, _ActionBarActivity15);
 
             function SampleLinearLayoutActivity() {
                 _classCallCheck(this, SampleLinearLayoutActivity);
 
-                _get(Object.getPrototypeOf(SampleLinearLayoutActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleLinearLayoutActivity).apply(this, arguments));
             }
 
             _createClass(SampleLinearLayoutActivity, [{
@@ -991,13 +958,11 @@ var sample;
             }]);
 
             return SampleLinearLayoutActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleLinearLayoutActivity = SampleLinearLayoutActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -1007,13 +972,13 @@ var sample;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleListViewActivity = (function (_ActionBarActivity16) {
+        var SampleListViewActivity = function (_ActionBarActivity16) {
             _inherits(SampleListViewActivity, _ActionBarActivity16);
 
             function SampleListViewActivity() {
                 _classCallCheck(this, SampleListViewActivity);
 
-                _get(Object.getPrototypeOf(SampleListViewActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleListViewActivity).apply(this, arguments));
             }
 
             _createClass(SampleListViewActivity, [{
@@ -1028,17 +993,17 @@ var sample;
             }]);
 
             return SampleListViewActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleListViewActivity = SampleListViewActivity;
 
-        var MyListAdapter = (function (_BaseAdapter2) {
+        var MyListAdapter = function (_BaseAdapter2) {
             _inherits(MyListAdapter, _BaseAdapter2);
 
             function MyListAdapter() {
                 _classCallCheck(this, MyListAdapter);
 
-                _get(Object.getPrototypeOf(MyListAdapter.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(MyListAdapter).apply(this, arguments));
             }
 
             _createClass(MyListAdapter, [{
@@ -1068,11 +1033,9 @@ var sample;
             }]);
 
             return MyListAdapter;
-        })(BaseAdapter);
+        }(BaseAdapter);
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -1080,13 +1043,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SamplePickerActivity = (function (_ActionBarActivity17) {
+        var SamplePickerActivity = function (_ActionBarActivity17) {
             _inherits(SamplePickerActivity, _ActionBarActivity17);
 
             function SamplePickerActivity() {
                 _classCallCheck(this, SamplePickerActivity);
 
-                _get(Object.getPrototypeOf(SamplePickerActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SamplePickerActivity).apply(this, arguments));
             }
 
             _createClass(SamplePickerActivity, [{
@@ -1099,13 +1062,11 @@ var sample;
             }]);
 
             return SamplePickerActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SamplePickerActivity = SamplePickerActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -1116,13 +1077,13 @@ var sample;
         var PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
         var R = sample.app.R;
 
-        var SamplePullRefreshLoadActivity = (function (_ActionBarActivity18) {
+        var SamplePullRefreshLoadActivity = function (_ActionBarActivity18) {
             _inherits(SamplePullRefreshLoadActivity, _ActionBarActivity18);
 
             function SamplePullRefreshLoadActivity() {
                 _classCallCheck(this, SamplePullRefreshLoadActivity);
 
-                _get(Object.getPrototypeOf(SamplePullRefreshLoadActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SamplePullRefreshLoadActivity).apply(this, arguments));
             }
 
             _createClass(SamplePullRefreshLoadActivity, [{
@@ -1155,22 +1116,26 @@ var sample;
             }]);
 
             return SamplePullRefreshLoadActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SamplePullRefreshLoadActivity = SamplePullRefreshLoadActivity;
 
-        var MyListAdapter = (function (_BaseAdapter3) {
+        var MyListAdapter = function (_BaseAdapter3) {
             _inherits(MyListAdapter, _BaseAdapter3);
 
             function MyListAdapter() {
+                var _Object$getPrototypeO2;
+
                 _classCallCheck(this, MyListAdapter);
 
                 for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                     args[_key2] = arguments[_key2];
                 }
 
-                _get(Object.getPrototypeOf(MyListAdapter.prototype), "constructor", this).apply(this, args);
-                this.data = [];
+                var _this23 = _possibleConstructorReturn(this, (_Object$getPrototypeO2 = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO2, [this].concat(args)));
+
+                _this23.data = [];
+                return _this23;
             }
 
             _createClass(MyListAdapter, [{
@@ -1200,11 +1165,9 @@ var sample;
             }]);
 
             return MyListAdapter;
-        })(BaseAdapter);
+        }(BaseAdapter);
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -1212,13 +1175,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleRelativeLayoutActivity = (function (_ActionBarActivity19) {
+        var SampleRelativeLayoutActivity = function (_ActionBarActivity19) {
             _inherits(SampleRelativeLayoutActivity, _ActionBarActivity19);
 
             function SampleRelativeLayoutActivity() {
                 _classCallCheck(this, SampleRelativeLayoutActivity);
 
-                _get(Object.getPrototypeOf(SampleRelativeLayoutActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleRelativeLayoutActivity).apply(this, arguments));
             }
 
             _createClass(SampleRelativeLayoutActivity, [{
@@ -1231,13 +1194,11 @@ var sample;
             }]);
 
             return SampleRelativeLayoutActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleRelativeLayoutActivity = SampleRelativeLayoutActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -1245,13 +1206,13 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleTextViewActivity = (function (_ActionBarActivity20) {
+        var SampleTextViewActivity = function (_ActionBarActivity20) {
             _inherits(SampleTextViewActivity, _ActionBarActivity20);
 
             function SampleTextViewActivity() {
                 _classCallCheck(this, SampleTextViewActivity);
 
-                _get(Object.getPrototypeOf(SampleTextViewActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleTextViewActivity).apply(this, arguments));
             }
 
             _createClass(SampleTextViewActivity, [{
@@ -1264,13 +1225,11 @@ var sample;
             }]);
 
             return SampleTextViewActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleTextViewActivity = SampleTextViewActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -1280,13 +1239,13 @@ var sample;
         var Color = android.graphics.Color;
         var R = sample.app.R;
 
-        var SampleViewPagerActivity = (function (_ActionBarActivity21) {
+        var SampleViewPagerActivity = function (_ActionBarActivity21) {
             _inherits(SampleViewPagerActivity, _ActionBarActivity21);
 
             function SampleViewPagerActivity() {
                 _classCallCheck(this, SampleViewPagerActivity);
 
-                _get(Object.getPrototypeOf(SampleViewPagerActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleViewPagerActivity).apply(this, arguments));
             }
 
             _createClass(SampleViewPagerActivity, [{
@@ -1301,17 +1260,17 @@ var sample;
             }]);
 
             return SampleViewPagerActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleViewPagerActivity = SampleViewPagerActivity;
 
-        var MyPageAdapter = (function (_com$jakewharton$salvage$RecyclingPagerAdapter) {
-            _inherits(MyPageAdapter, _com$jakewharton$salvage$RecyclingPagerAdapter);
+        var MyPageAdapter = function (_com$jakewharton$salv) {
+            _inherits(MyPageAdapter, _com$jakewharton$salv);
 
             function MyPageAdapter() {
                 _classCallCheck(this, MyPageAdapter);
 
-                _get(Object.getPrototypeOf(MyPageAdapter.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(MyPageAdapter).apply(this, arguments));
             }
 
             _createClass(MyPageAdapter, [{
@@ -1334,11 +1293,9 @@ var sample;
             }]);
 
             return MyPageAdapter;
-        })(com.jakewharton.salvage.RecyclingPagerAdapter);
+        }(com.jakewharton.salvage.RecyclingPagerAdapter);
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -1346,13 +1303,13 @@ var sample;
         var R = sample.app.R;
         var ActionBarActivity = android.app.ActionBarActivity;
 
-        var SampleViewPagerGalleryActivity = (function (_ActionBarActivity22) {
+        var SampleViewPagerGalleryActivity = function (_ActionBarActivity22) {
             _inherits(SampleViewPagerGalleryActivity, _ActionBarActivity22);
 
             function SampleViewPagerGalleryActivity() {
                 _classCallCheck(this, SampleViewPagerGalleryActivity);
 
-                _get(Object.getPrototypeOf(SampleViewPagerGalleryActivity.prototype), "constructor", this).apply(this, arguments);
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleViewPagerGalleryActivity).apply(this, arguments));
             }
 
             _createClass(SampleViewPagerGalleryActivity, [{
@@ -1365,7 +1322,7 @@ var sample;
             }]);
 
             return SampleViewPagerGalleryActivity;
-        })(ActionBarActivity);
+        }(ActionBarActivity);
 
         app.SampleViewPagerGalleryActivity = SampleViewPagerGalleryActivity;
     })(app = sample.app || (sample.app = {}));

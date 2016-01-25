@@ -6,8 +6,7 @@
 module android.database{
     import ArrayList = java.util.ArrayList;
 
-    export abstract
-    class Observable<T>{
+    export abstract class Observable<T>{
         mObservers = new ArrayList<T>()
         registerObserver(observer:T):void {
             if (observer == null) {

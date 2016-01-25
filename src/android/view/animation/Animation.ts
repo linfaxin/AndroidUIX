@@ -41,9 +41,7 @@ import Transformation = android.view.animation.Transformation;
  * other objects. See the {@link android.view.animation animation package
  * description file}.
  */
-export abstract
-
-class Animation {
+export abstract class Animation {
 
     /**
      * Repeat the animation indefinitely.

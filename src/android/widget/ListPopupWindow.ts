@@ -1152,9 +1152,7 @@ export module ListPopupWindow{
      *
      * @hide
      */
-export abstract
-
-class ForwardingListener implements View.OnTouchListener, View.OnAttachStateChangeListener {
+export abstract class ForwardingListener implements View.OnTouchListener, View.OnAttachStateChangeListener {
 
     /** Scaled touch slop, used for detecting movement outside bounds. */
     private mScaledTouchSlop:number = 0;
@@ -1191,8 +1189,7 @@ class ForwardingListener implements View.OnTouchListener, View.OnAttachStateChan
          *
          * @return the popup to which this listener is forwarding events
          */
-    abstract 
-getPopup():ListPopupWindow ;
+    abstract getPopup():ListPopupWindow ;
 
     onTouch(v:View, event:MotionEvent):boolean  {
         const wasForwarding:boolean = this.mForwarding;

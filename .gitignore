@@ -3,7 +3,3 @@ node_modules/
 .idea
 .DS_Store
 .outjs
-
-
-build.sh
-build_sample.sh

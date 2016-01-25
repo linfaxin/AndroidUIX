@@ -27,9 +27,7 @@ module android.text.style {
      * class.  Most extend its subclass {@link MetricAffectingSpan}, but simple
      * ones may just implement {@link UpdateAppearance}.
      */
-export
-    abstract
-    class CharacterStyle {
+export abstract class CharacterStyle {
         static type = Symbol();
         mType = CharacterStyle.type;
 

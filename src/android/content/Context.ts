@@ -15,8 +15,7 @@ module android.content {
     import Bundle = android.os.Bundle;
     import LayoutInflater = android.view.LayoutInflater;
 
-    export abstract
-    class Context {
+    export abstract class Context {
         androidUI: androidui.AndroidUI;
         private mLayoutInflater:LayoutInflater;
         private mResources:android.content.res.Resources;

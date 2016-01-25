@@ -18,10 +18,7 @@ module android.graphics.drawable {
     import StateSet = android.util.StateSet;
     import Canvas = android.graphics.Canvas;
 
-
-
-    export abstract
-    class Drawable {
+    export abstract class Drawable {
         private static ZERO_BOUNDS_RECT = new Rect();
 
         mBounds:Rect = Drawable.ZERO_BOUNDS_RECT;
@@ -33,8 +30,7 @@ module android.graphics.drawable {
         constructor() {
         }
 
-        abstract
-        draw(canvas:Canvas);
+        abstract draw(canvas:Canvas);
 
         setBounds(rect:Rect);
         setBounds(left, top, right, bottom);

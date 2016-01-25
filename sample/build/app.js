@@ -1,4 +1,3 @@
-///<reference path="../../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -36,8 +35,6 @@ var sample;
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../../dist/android-ui.d.ts"/>
-///<reference path="image_base64.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -55,7 +52,6 @@ var sample;
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -131,7 +127,6 @@ var sample;
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../../dist/android-ui.d.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -197,8 +192,6 @@ var sample;
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -248,9 +241,6 @@ var sample;
         app.SampleAnimationActivity = SampleAnimationActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
-///<reference path="../gen/R/image.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -299,8 +289,6 @@ var sample;
         app.SampleBaseWidgetActivity = SampleBaseWidgetActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -330,11 +318,6 @@ var sample;
         app.SampleButtonActivity = SampleButtonActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-/**
- * Created by linfaxin on 16/1/12.
- */
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -409,8 +392,6 @@ var sample;
         app.SampleResultActivity = SampleResultActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -427,8 +408,6 @@ var sample;
         app.SampleDrawerLayoutActivity = SampleDrawerLayoutActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -513,8 +492,6 @@ var sample;
         }
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -531,11 +508,6 @@ var sample;
         app.SampleFrameLayoutActivity = SampleFrameLayoutActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-/**
- * Created by linfaxin on 15/10/26.
- */
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -574,8 +546,6 @@ var sample;
         }
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -592,8 +562,6 @@ var sample;
         app.SampleHtmlViewActivity = SampleHtmlViewActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -610,11 +578,6 @@ var sample;
         app.SampleImageViewActivity = SampleImageViewActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-/**
- * Created by linfaxin on 16/1/12.
- */
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -703,8 +666,6 @@ var sample;
         app.SampleLifeCallbackFloatingActivity = SampleLifeCallbackFloatingActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -721,8 +682,6 @@ var sample;
         app.SampleLinearLayoutActivity = SampleLinearLayoutActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -761,8 +720,6 @@ var sample;
         }
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -779,8 +736,6 @@ var sample;
         app.SamplePickerActivity = SamplePickerActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -842,8 +797,6 @@ var sample;
         }
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -860,8 +813,6 @@ var sample;
         app.SampleRelativeLayoutActivity = SampleRelativeLayoutActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -878,8 +829,6 @@ var sample;
         app.SampleTextViewActivity = SampleTextViewActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;
@@ -915,8 +864,6 @@ var sample;
         }
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
-///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
 var sample;
 (function (sample) {
     var app;

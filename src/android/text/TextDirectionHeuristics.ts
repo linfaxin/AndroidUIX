@@ -119,10 +119,7 @@ module android.text {
          * {@link #defaultIsRtl} to handle cases where the algorithm cannot determine the
          * direction from the text alone.
          */
-    export
-        abstract
-
-        class TextDirectionHeuristicImpl implements TextDirectionHeuristic {
+    export abstract class TextDirectionHeuristicImpl implements TextDirectionHeuristic {
 
             private mAlgorithm:TextDirectionHeuristics.TextDirectionAlgorithm;
 
@@ -133,9 +130,7 @@ module android.text {
             /**
              * Return true if the default text direction is rtl.
              */
-            protected abstract
-
-            defaultIsRtl():boolean ;
+            protected abstract defaultIsRtl():boolean ;
 
             isRtl(cs:string, start:number, count:number):boolean {
                 if (cs == null || start < 0 || count < 0 || cs.length - count < start) {

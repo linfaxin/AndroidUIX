@@ -1,17 +1,7 @@
-/*
- * AndroidUI4Web: https://github.com/linfaxin/AndroidUI4Web
- * version: 0.2.0
- * release type: Pre-release
- * release date: 2016-01-25
- */
 var androidui;
 (function (androidui) {
     androidui.sdk_version = '0.2.0';
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/10/28.
- */
-///<reference path="List.ts"/>
 var java;
 (function (java) {
     var util;
@@ -134,10 +124,6 @@ var java;
         util.ArrayList = ArrayList;
     })(util = java.util || (java.util = {}));
 })(java || (java = {}));
-/**
- * Created by linfaxin on 16/1/4.
- * lite impl of Android Bundle
- */
 var android;
 (function (android) {
     var os;
@@ -210,7 +196,6 @@ var java;
         lang.StringBuilder = StringBuilder;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
-///<reference path="../../java/lang/StringBuilder.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -455,10 +440,6 @@ var android;
         graphics.Rect = Rect;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/9.
- */
-///<reference path="../graphics/Rect.ts"/>
 var android;
 (function (android) {
     var view;
@@ -643,10 +624,6 @@ var android;
         util.SparseMap = SparseMap;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/3.
- */
-///<reference path="SparseMap.ts"/>
 var android;
 (function (android) {
     var util;
@@ -785,10 +762,6 @@ var java;
         lang.System = System;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
-/**
- * Created by linfaxin on 15/10/29.
- */
-///<reference path="../../java/lang/System.ts"/>
 var android;
 (function (android) {
     var util;
@@ -1044,10 +1017,6 @@ var android;
         Color.sColorNameMap.set("transparent", Color.TRANSPARENT);
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/29.
- */
-///<reference path="Canvas.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -1490,10 +1459,6 @@ var android;
         graphics.Point = Point;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/6.
- */
-///<reference path="Rect.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -1503,27 +1468,6 @@ var android;
         graphics.RectF = RectF;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../../android/graphics/Point.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/RectF.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -2106,11 +2050,6 @@ var android;
         }
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/11.
- */
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/Color.ts"/>
 var androidui;
 (function (androidui) {
     var image;
@@ -2255,17 +2194,6 @@ var androidui;
         }
     })(image = androidui.image || (androidui.image = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/10/13.
- */
-///<reference path="../util/Pools.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="Rect.ts"/>
-///<reference path="Color.ts"/>
-///<reference path="Paint.ts"/>
-///<reference path="Path.ts"/>
-///<reference path="Matrix.ts"/>
-///<reference path="../../androidui/image/NetImage.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -2852,15 +2780,6 @@ var android;
         graphics.Canvas = Canvas;
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/3.
- */
-///<reference path="../Rect.ts"/>
-///<reference path="../PixelFormat.ts"/>
-///<reference path="../../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
-///<reference path="../../util/StateSet.ts"/>
-///<reference path="../Canvas.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -3046,12 +2965,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/29.
- */
-///<reference path="Drawable.ts"/>
-///<reference path="../Canvas.ts"/>
-///<reference path="../Paint.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -3138,11 +3051,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/30.
- */
-///<reference path="Drawable.ts"/>
-///<reference path="../Canvas.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -3310,11 +3218,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/2.
- */
-///<reference path="Drawable.ts"/>
-///<reference path="../Canvas.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -3463,12 +3366,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 16/1/13.
- */
-///<reference path="Drawable.ts"/>
-///<reference path="../Canvas.ts"/>
-///<reference path="../Paint.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -3611,12 +3508,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/29.
- */
-///<reference path="Drawable.ts"/>
-///<reference path="../Canvas.ts"/>
-///<reference path="../Paint.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -3857,12 +3748,6 @@ var android;
         util.CopyOnWriteArray = CopyOnWriteArray;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/8.
- */
-///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
-///<reference path="../util/CopyOnWriteArray.ts"/>
-///<reference path="../view/View.ts"/>
 var android;
 (function (android) {
     var view;
@@ -4009,13 +3894,6 @@ var android;
                 }
             }
             merge(observer) {
-                //if (observer.mOnWindowAttachListeners != null) {
-                //    if (this.mOnWindowAttachListeners != null) {
-                //        this.mOnWindowAttachListeners.addAll(observer.mOnWindowAttachListeners);
-                //    } else {
-                //        this.mOnWindowAttachListeners = observer.mOnWindowAttachListeners;
-                //    }
-                //}
                 if (observer.mOnGlobalLayoutListeners != null) {
                     if (this.mOnGlobalLayoutListeners != null) {
                         this.mOnGlobalLayoutListeners.addAll(observer.mOnGlobalLayoutListeners);
@@ -4074,11 +3952,6 @@ var android;
         util.DisplayMetrics = DisplayMetrics;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 16/1/4.
- * lite impl of Android Intent. Only use for startActivity
- */
-///<reference path="../os/Bundle.ts"/>
 var android;
 (function (android) {
     var content;
@@ -4176,19 +4049,6 @@ var androidui;
         util.ClassFinder = ClassFinder;
     })(util = androidui.util || (androidui.util = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/16.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/content/Context.ts"/>
-/**
- * Created by linfaxin on 16/1/3.
- *
- */
-///<reference path="../content/Context.ts"/>
-///<reference path="../../androidui/util/ClassFinder.ts"/>
-///<reference path="../../androidui/widget/HtmlDataAdapter.ts"/>
 var android;
 (function (android) {
     var view;
@@ -4303,16 +4163,6 @@ var android;
         view_1.LayoutInflater = LayoutInflater;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 16/1/4.
- * lite impl of Android Content
- */
-///<reference path="../view/WindowManager.ts"/>
-///<reference path="res/Resources.ts"/>
-///<reference path="../app/Application.ts"/>
-///<reference path="../content/Intent.ts"/>
-///<reference path="../os/Bundle.ts"/>
-///<reference path="../view/LayoutInflater.ts"/>
 var android;
 (function (android) {
     var content;
@@ -4382,13 +4232,6 @@ var android;
         R.layout = layout;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/5.
- */
-///<reference path="../../util/DisplayMetrics.ts"/>
-///<reference path="../../content/Context.ts"/>
-///<reference path="../../graphics/drawable/Drawable.ts"/>
-///<reference path="../../R/layout.ts"/>
 var android;
 (function (android) {
     var content;
@@ -4557,11 +4400,6 @@ var android;
         })(res = content.res || (content.res = {}));
     })(content = android.content || (android.content = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/5.
- */
-///<reference path="../util/SparseArray.ts"/>
-///<reference path="../content/res/Resources.ts"/>
 var android;
 (function (android) {
     var view;
@@ -4702,13 +4540,6 @@ var android;
         os.SystemClock = SystemClock;
     })(os = android.os || (android.os = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/6.
- */
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Rect.ts"/>
-///<reference path="../view/ViewConfiguration.ts"/>
-///<reference path="../os/SystemClock.ts"/>
 var android;
 (function (android) {
     var view;
@@ -5054,12 +4885,6 @@ var android;
         view.MotionEvent = MotionEvent;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/16.
- */
-///<reference path="View.ts"/>
-///<reference path="../graphics/Rect.ts"/>
-///<reference path="ViewConfiguration.ts"/>
 var android;
 (function (android) {
     var view;
@@ -5121,14 +4946,6 @@ var android;
         view.TouchDelegate = TouchDelegate;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/5.
- */
-///<reference path="Handler.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../util/Pools.ts"/>
-///<reference path="SystemClock.ts"/>
 var android;
 (function (android) {
     var os;
@@ -5226,13 +5043,6 @@ var android;
         os.Message = Message;
     })(os = android.os || (android.os = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/5.
- */
-///<reference path="Message.ts"/>
-///<reference path="Handler.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
 var android;
 (function (android) {
     var os;
@@ -5347,13 +5157,6 @@ var android;
         os.MessageQueue = MessageQueue;
     })(os = android.os || (android.os = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/5.
- */
-///<reference path="Message.ts"/>
-///<reference path="MessageQueue.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="SystemClock.ts"/>
 var android;
 (function (android) {
     var os;
@@ -5462,12 +5265,6 @@ var android;
         os.Handler = Handler;
     })(os = android.os || (android.os = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/29.
- */
-///<reference path="../../util/SparseArray.ts"/>
-///<reference path="../../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../util/StateSet.ts"/>
 var android;
 (function (android) {
     var content;
@@ -5538,11 +5335,6 @@ var android;
         })(res = content.res || (content.res = {}));
     })(content = android.content || (android.content = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/27.
- */
-///<reference path="DisplayMetrics.ts"/>
-///<reference path="../content/res/Resources.ts"/>
 var android;
 (function (android) {
     var util;
@@ -5657,10 +5449,6 @@ var android;
         util.TypedValue = TypedValue;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -5676,10 +5464,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="../../os/SystemClock.ts"/>
 var android;
 (function (android) {
     var view;
@@ -5696,21 +5480,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2013 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var android;
 (function (android) {
     var util;
@@ -5724,11 +5493,6 @@ var android;
         util.LayoutDirection = LayoutDirection;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/3.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/util/StateSet.ts"/>
 var androidui;
 (function (androidui) {
     var attr;
@@ -5795,12 +5559,6 @@ var androidui;
         attr.StateAttr = StateAttr;
     })(attr = androidui.attr || (androidui.attr = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/3.
- */
-///<reference path="StateAttr.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/util/StateSet.ts"/>
 var androidui;
 (function (androidui) {
     var attr;
@@ -5905,16 +5663,6 @@ var androidui;
         attr_1.StateAttrList = StateAttrList;
     })(attr = androidui.attr || (androidui.attr = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/26.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../../android/content/res/ColorStateList.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var androidui;
 (function (androidui) {
     var attr;
@@ -6143,11 +5891,6 @@ var androidui;
         attr.AttrBinder = AttrBinder;
     })(attr = androidui.attr || (androidui.attr = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/12/1.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/graphics/Canvas.ts"/>
 var androidui;
 (function (androidui) {
     var util;
@@ -6244,14 +5987,6 @@ var androidui;
         }
     })(util = androidui.util || (androidui.util = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/12/11.
- */
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="NetImage.ts"/>
 var androidui;
 (function (androidui) {
     var image;
@@ -6397,11 +6132,6 @@ var androidui;
         }
     })(image = androidui.image || (androidui.image = {}));
 })(androidui || (androidui = {}));
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Rect.ts"/>
-///<reference path="../view/ViewConfiguration.ts"/>
-///<reference path="../os/SystemClock.ts"/>
-///<reference path="../util/Log.ts"/>
 var android;
 (function (android) {
     var view;
@@ -6667,29 +6397,6 @@ var android;
         })(KeyEvent = view.KeyEvent || (view.KeyEvent = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/content/res/Resources.ts"/>
-///<reference path="../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../android/graphics/PixelFormat.ts"/>
-///<reference path="../../../android/graphics/Rect.ts"/>
-///<reference path="../../../android/view/View.ts"/>
-///<reference path="../../../java/lang/System.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
-///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -7120,28 +6827,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../android/graphics/Rect.ts"/>
-///<reference path="../../../android/content/res/Resources.ts"/>
-///<reference path="../../../android/util/TypedValue.ts"/>
-///<reference path="../../../android/util/Log.ts"/>
-///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -7299,30 +6984,6 @@ var java;
         lang.Float = Float;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../android/graphics/Rect.ts"/>
-///<reference path="../../../android/content/res/Resources.ts"/>
-///<reference path="../../../android/util/TypedValue.ts"/>
-///<reference path="../../../android/util/Log.ts"/>
-///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
-///<reference path="../../../android/view/Gravity.ts"/>
-///<reference path="../../../java/lang/Float.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -7483,21 +7144,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var android;
 (function (android) {
     var graphics;
@@ -7514,19 +7160,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/2.
- */
-///<reference path="Drawable.ts"/>
-///<reference path="../Canvas.ts"/>
-///<reference path="../Rect.ts"/>
-///<reference path="../PixelFormat.ts"/>
-///<reference path="../../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
-///<reference path="../../util/StateSet.ts"/>
-///<reference path="../../util/Log.ts"/>
-///<reference path="../../util/SparseArray.ts"/>
-///<reference path="../../os/SystemClock.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -8163,28 +7796,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/content/res/Resources.ts"/>
-///<reference path="../../../android/os/SystemClock.ts"/>
-///<reference path="../../../java/lang/System.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
-///<reference path="../../../android/graphics/drawable/Animatable.ts"/>
-///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../../android/graphics/drawable/DrawableContainer.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -8314,10 +7925,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/2.
- */
-///<reference path="DrawableContainer.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -8454,23 +8061,6 @@ var android;
         R.id = id;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/15.
- */
-///<reference path="../view/View.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Color.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/drawable/InsetDrawable.ts"/>
-///<reference path="../graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../graphics/drawable/LayerDrawable.ts"/>
-///<reference path="../graphics/drawable/RotateDrawable.ts"/>
-///<reference path="../graphics/drawable/ScaleDrawable.ts"/>
-///<reference path="../graphics/drawable/AnimationDrawable.ts"/>
-///<reference path="../graphics/drawable/StateListDrawable.ts"/>
-///<reference path="../graphics/drawable/RoundRectDrawable.ts"/>
-///<reference path="../graphics/drawable/ShadowDrawable.ts"/>
-///<reference path="id.ts"/>
 var android;
 (function (android) {
     var R;
@@ -8759,17 +8349,6 @@ var android;
         R.drawable = drawable;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 16/1/23.
- */
-///<reference path="NetDrawable.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/Color.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="NetImage.ts"/>
 var androidui;
 (function (androidui) {
     var image;
@@ -8920,10 +8499,6 @@ var androidui;
         image_2.NinePatchDrawable = NinePatchDrawable;
         class NinePatchBorderInfo {
             constructor(leftBorder, topBorder, rightBorder, bottomBorder) {
-                //this.leftBorder = leftBorder;
-                //this.topBorder = topBorder;
-                //this.rightBorder = rightBorder;
-                //this.bottomBorder = bottomBorder;
                 this.horizontalStaticLengthSum = 0;
                 this.horizontalScaleLengthSum = 0;
                 this.verticalStaticLengthSum = 0;
@@ -9051,14 +8626,6 @@ var androidui;
         }
     })(image = androidui.image || (androidui.image = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/2.
- */
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="NetImage.ts"/>
 var androidui;
 (function (androidui) {
     var image;
@@ -9183,7 +8750,6 @@ var androidui;
         }
     })(image = androidui.image || (androidui.image = {}));
 })(androidui || (androidui = {}));
-///<reference path="../../androidui/image/NetImage.ts"/>
 var android;
 (function (android) {
     var R;
@@ -9715,10 +9281,6 @@ var android;
         R.image_base64 = image_base64;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-///<reference path="../../androidui/image/NetDrawable.ts"/>
-///<reference path="../../androidui/image/NinePatchDrawable.ts"/>
-///<reference path="../../androidui/image/ChangeImageSizeDrawable.ts"/>
-///<reference path="image_base64.ts"/>
 var android;
 (function (android) {
     var R;
@@ -9790,14 +9352,6 @@ var android;
         R.image = image;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-///<reference path="../view/View.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../content/res/ColorStateList.ts"/>
-///<reference path="../graphics/Color.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/drawable/InsetDrawable.ts"/>
-///<reference path="../graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../graphics/drawable/StateListDrawable.ts"/>
 var android;
 (function (android) {
     var R;
@@ -9845,19 +9399,6 @@ var android;
         R.color = color;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-// Copyright 2009 The Closure Library Authors. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS-IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 var goog;
 (function (goog) {
     var math;
@@ -9994,7 +9535,6 @@ var goog;
                 }
             }
             add(other) {
-                // Divide each number into 4 chunks of 16 bits, and then sum the chunks.
                 var a48 = this.high_ >>> 16;
                 var a32 = this.high_ & 0xFFFF;
                 var a16 = this.low_ >>> 16;
@@ -10101,7 +9641,7 @@ var goog;
                             return other.isNegative() ? Long.ONE : Long.NEG_ONE;
                         }
                         else {
-                            var rem = this.subtract(other.multiply(approx));
+                            let rem = this.subtract(other.multiply(approx));
                             var result = approx.add(rem.div(other));
                             return result;
                         }
@@ -10122,7 +9662,7 @@ var goog;
                     return this.div(other.negate()).negate();
                 }
                 var res = Long.ZERO;
-                var rem = this;
+                let rem = this;
                 while (rem.greaterThanOrEqual(other)) {
                     let approx = Math.max(1, Math.floor(rem.toNumber() / other.toNumber()));
                     var log2 = Math.ceil(Math.log(approx) / Math.LN2);
@@ -10289,10 +9829,6 @@ var goog;
         math.Long = Long;
     })(math = goog.math || (goog.math = {}));
 })(goog || (goog = {}));
-/**
- * Created by linfaxin on 15/11/13.
- */
-///<reference path="../../androidui/util/Long.ts"/>
 var java;
 (function (java) {
     var lang;
@@ -10304,10 +9840,6 @@ var java;
         lang.Long = Long;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -10323,10 +9855,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -10352,24 +9880,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Matrix.ts"/>
-///<reference path="../../../java/lang/StringBuilder.ts"/>
-///<reference path="../../../android/view/animation/Animation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -10445,31 +9955,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/RectF.ts"/>
-///<reference path="../../../android/os/Handler.ts"/>
-///<reference path="../../../android/util/TypedValue.ts"/>
-///<reference path="../../../java/lang/Long.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
-///<reference path="../../../android/view/animation/AccelerateDecelerateInterpolator.ts"/>
-///<reference path="../../../android/view/animation/AnimationUtils.ts"/>
-///<reference path="../../../android/view/animation/DecelerateInterpolator.ts"/>
-///<reference path="../../../android/view/animation/Interpolator.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -10880,21 +10365,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/26.
- */
-///<reference path="drawable.ts"/>
-///<reference path="image.ts"/>
-///<reference path="color.ts"/>
-///<reference path="../view/Gravity.ts"/>
-///<reference path="../view/View.ts"/>
-///<reference path="../view/animation/Animation.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Color.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/drawable/InsetDrawable.ts"/>
-///<reference path="../graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../graphics/drawable/StateListDrawable.ts"/>
 var android;
 (function (android) {
     var R;
@@ -11123,57 +10593,6 @@ var android;
         R.attr = attr;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/9/27.
- */
-///<reference path="../util/SparseArray.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../graphics/drawable/ScrollBarDrawable.ts"/>
-///<reference path="../graphics/drawable/InsetDrawable.ts"/>
-///<reference path="../graphics/drawable/ShadowDrawable.ts"/>
-///<reference path="../graphics/drawable/RoundRectDrawable.ts"/>
-///<reference path="../graphics/PixelFormat.ts"/>
-///<reference path="../graphics/Matrix.ts"/>
-///<reference path="../graphics/Color.ts"/>
-///<reference path="../graphics/Paint.ts"/>
-///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../java/lang/Object.ts"/>
-///<reference path="../../java/lang/util/concurrent/CopyOnWriteArrayList.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="ViewRootImpl.ts"/>
-///<reference path="ViewParent.ts"/>
-///<reference path="ViewGroup.ts"/>
-///<reference path="ViewOverlay.ts"/>
-///<reference path="ViewTreeObserver.ts"/>
-///<reference path="MotionEvent.ts"/>
-///<reference path="TouchDelegate.ts"/>
-///<reference path="../os/Handler.ts"/>
-///<reference path="../os/SystemClock.ts"/>
-///<reference path="../content/Context.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../content/res/ColorStateList.ts"/>
-///<reference path="../graphics/Rect.ts"/>
-///<reference path="../graphics/RectF.ts"/>
-///<reference path="../graphics/Canvas.ts"/>
-///<reference path="../util/Pools.ts"/>
-///<reference path="../util/TypedValue.ts"/>
-///<reference path="Gravity.ts"/>
-///<reference path="../view/animation/LinearInterpolator.ts"/>
-///<reference path="../view/animation/AnimationUtils.ts"/>
-///<reference path="../../android/util/LayoutDirection.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../androidui/attr/StateAttrList.ts"/>
-///<reference path="../../androidui/attr/StateAttr.ts"/>
-///<reference path="../../androidui/attr/AttrBinder.ts"/>
-///<reference path="../../androidui/util/PerformanceAdjuster.ts"/>
-///<reference path="../../androidui/image/NetDrawable.ts"/>
-///<reference path="KeyEvent.ts"/>
-///<reference path="../R/attr.ts"/>
-///<reference path="animation/Animation.ts"/>
-///<reference path="animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -13627,10 +13046,6 @@ var android;
                     this.getFinalAlpha() >= 1;
             }
             computeOpaqueFlags() {
-                // Opaque if:
-                //   - Has a background
-                //   - Background is opaque
-                //   - Doesn't have scrollbars or scrollbars overlay
                 if (this.mBackground != null && this.mBackground.getOpacity() == PixelFormat.OPAQUE) {
                     this.mPrivateFlags |= View.PFLAG_OPAQUE_BACKGROUND;
                 }
@@ -14759,9 +14174,6 @@ var android;
                 }
             }
             onAttachedToWindow() {
-                //if ((this.mPrivateFlags & View.PFLAG_REQUEST_TRANSPARENT_REGIONS) != 0) {
-                //    this.mParent.requestTransparentRegion(this);
-                //}
                 if ((this.mPrivateFlags & View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH) != 0) {
                     this.initialAwakenScrollBars();
                     this.mPrivateFlags &= ~View.PFLAG_AWAKEN_SCROLL_BARS_ON_ATTACH;
@@ -15530,20 +14942,6 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/5.
- */
-///<reference path="View.ts"/>
-///<reference path="../graphics/Point.ts"/>
-///<reference path="../graphics/Rect.ts"/>
-/**
- * Created by linfaxin on 15/10/13.
- */
-///<reference path="../graphics/Rect.ts"/>
-///<reference path="../graphics/Canvas.ts"/>
-///<reference path="../graphics/Canvas.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../view/ViewRootImpl.ts"/>
 var android;
 (function (android) {
     var view;
@@ -15585,8 +14983,6 @@ var android;
                 return this.lockCanvasImpl(rect.left, rect.top, rect.width(), rect.height());
             }
             lockCanvasImpl(left, top, width, height) {
-                //let canvas = new Canvas(width, height);
-                //if(left!=0||top!=0) canvas.translate(-left, -top);
                 let canvas = new SurfaceLockCanvas(this.mCanvasBound.width(), this.mCanvasBound.height(), this.mCanvasElement);
                 this.mLockSaveCount = canvas.save();
                 canvas.clipRect(left, top, left + width, top + height);
@@ -15609,10 +15005,6 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/30.
- *
- */
 var PageStack;
 (function (PageStack) {
     const DEBUG = false;
@@ -15935,18 +15327,6 @@ var PageStack;
         }
     }
 })(PageStack || (PageStack = {}));
-/**
- * Created by linfaxin on 16/1/5.
- * simple impl of android ActivityThread
- */
-///<reference path="Activity.ts"/>
-///<reference path="../content/Intent.ts"/>
-///<reference path="../os/Bundle.ts"/>
-///<reference path="../view/ViewGroup.ts"/>
-///<reference path="../view/KeyEvent.ts"/>
-///<reference path="../view/animation/Animation.ts"/>
-///<reference path="../../androidui/AndroidUI.ts"/>
-///<reference path="../../androidui/util/PageStack.ts"/>
 var android;
 (function (android) {
     var app;
@@ -16127,9 +15507,6 @@ var android;
                 this.performPauseActivity(activity);
             }
             performPauseActivity(activity) {
-                //if (finished) {
-                //    activity.mFinished = true;
-                //}
                 activity.mCalled = false;
                 activity.performPause();
                 if (!activity.mCalled) {
@@ -16324,20 +15701,6 @@ var android;
             string_[lang].call(string_);
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/23.
- */
-///<reference path="../android/app/Application.ts"/>
-///<reference path="../android/view/View.ts"/>
-///<reference path="../android/view/ViewGroup.ts"/>
-///<reference path="../android/view/ViewRootImpl.ts"/>
-///<reference path="../android/widget/FrameLayout.ts"/>
-///<reference path="../android/view/MotionEvent.ts"/>
-///<reference path="../android/view/KeyEvent.ts"/>
-///<reference path="../android/view/WindowManager.ts"/>
-///<reference path="../android/app/ActivityThread.ts"/>
-///<reference path="../android/R/string.ts"/>
-///<reference path="AndroidUIElement.ts"/>
 var androidui;
 (function (androidui) {
     var MotionEvent = android.view.MotionEvent;
@@ -16666,10 +16029,6 @@ var androidui;
         `;
     document.head.appendChild(styleElement);
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 16/1/4.
- */
-///<reference path="AndroidUI.ts"/>
 var androidui;
 (function (androidui) {
     if (typeof HTMLDivElement !== 'function') {
@@ -16718,21 +16077,6 @@ var androidui;
         }
     }
 })(androidui || (androidui = {}));
-///<reference path="ViewParent.ts"/>
-///<reference path="View.ts"/>
-///<reference path="Surface.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="../os/Handler.ts"/>
-///<reference path="../os/Message.ts"/>
-///<reference path="../os/SystemClock.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../graphics/Point.ts"/>
-///<reference path="../graphics/Rect.ts"/>
-///<reference path="../graphics/Canvas.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../androidui/AndroidUIElement.ts"/>
 var android;
 (function (android) {
     var view;
@@ -17197,9 +16541,6 @@ var android;
                 }
             }
             checkContinueTraversalsNextFrame() {
-                //AndroidUI add:
-                //Because of some reason, sometime will skip a frame to traversals when scroll.
-                //Let's continuing traversales next frame.
                 const continueFrame = ViewRootImpl.DEBUG_FPS ? 60 : 5;
                 if (!this.mTraversalScheduled && this._continueTraversalesCount < continueFrame) {
                     this._continueTraversalesCount++;
@@ -17789,11 +17130,6 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/10.
- */
-///<reference path="View.ts"/>
-///<reference path="ViewGroup.ts"/>
 var android;
 (function (android) {
     var view;
@@ -18248,26 +17584,6 @@ var java;
         lang.Integer = Integer;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
-/**
- * Created by linfaxin on 15/10/5.
- */
-///<reference path="ViewOverlay.ts"/>
-///<reference path="ViewRootImpl.ts"/>
-///<reference path="View.ts"/>
-///<reference path="MotionEvent.ts"/>
-///<reference path="ViewParent.ts"/>
-///<reference path="../graphics/Canvas.ts"/>
-///<reference path="../graphics/Point.ts"/>
-///<reference path="../graphics/Matrix.ts"/>
-///<reference path="../graphics/Rect.ts"/>
-///<reference path="../graphics/RectF.ts"/>
-///<reference path="../os/SystemClock.ts"/>
-///<reference path="../util/TypedValue.ts"/>
-///<reference path="../content/Context.ts"/>
-///<reference path="FocusFinder.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="animation/Animation.ts"/>
-///<reference path="animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -20269,13 +19585,6 @@ var android;
         TouchTarget.ALL_POINTER_IDS = -1;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/6.
- */
-///<reference path="ViewGroup.ts"/>
-///<reference path="ViewRootImpl.ts"/>
-///<reference path="View.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
 var android;
 (function (android) {
     var view;
@@ -20332,16 +19641,6 @@ var android;
         })(ViewOverlay = view.ViewOverlay || (view.ViewOverlay = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/9.
- */
-///<reference path="../view/Gravity.ts"/>
-///<reference path="../view/ViewOverlay.ts"/>
-///<reference path="../view/ViewGroup.ts"/>
-///<reference path="../view/View.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/Rect.ts"/>
-///<reference path="../graphics/Canvas.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -20658,21 +19957,6 @@ var android;
         })(FrameLayout = widget.FrameLayout || (widget.FrameLayout = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var android;
 (function (android) {
     var text;
@@ -20703,10 +19987,6 @@ var android;
         })(Spanned = text.Spanned || (text.Spanned = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/5.
- */
-///<reference path="../graphics/Paint.ts"/>
 var android;
 (function (android) {
     var text;
@@ -20736,56 +20016,6 @@ var android;
         text.TextPaint = TextPaint;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/text/style/UpdateAppearance.ts"/>
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/text/style/UpdateLayout.ts"/>
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/text/TextPaint.ts"/>
-///<reference path="../../../android/text/style/MetricAffectingSpan.ts"/>
-///<reference path="../../../android/text/style/UpdateAppearance.ts"/>
 var android;
 (function (android) {
     var text;
@@ -20829,25 +20059,6 @@ var android;
         })(style = text.style || (text.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Paint.ts"/>
-///<reference path="../../../android/text/TextPaint.ts"/>
-///<reference path="../../../android/text/style/CharacterStyle.ts"/>
-///<reference path="../../../android/text/style/UpdateLayout.ts"/>
 var android;
 (function (android) {
     var text;
@@ -20887,25 +20098,6 @@ var android;
         })(style = text.style || (text.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Paint.ts"/>
-///<reference path="../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../android/text/TextPaint.ts"/>
-///<reference path="../../../android/text/style/MetricAffectingSpan.ts"/>
 var android;
 (function (android) {
     var text;
@@ -20928,21 +20120,6 @@ var android;
         })(style = text_1.style || (text_1.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var android;
 (function (android) {
     var text;
@@ -20956,43 +20133,6 @@ var android;
         })(style = text.style || (text.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Paint.ts"/>
-///<reference path="../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../android/text/Layout.ts"/>
-///<reference path="../../../android/text/TextUtils.ts"/>
-///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
-///<reference path="../../../android/text/style/WrapTogetherSpan.ts"/>
 var android;
 (function (android) {
     var text;
@@ -21039,24 +20179,6 @@ var android;
         })(style = text_2.style || (text_2.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Paint.ts"/>
-///<reference path="../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
 var android;
 (function (android) {
     var text;
@@ -21070,22 +20192,6 @@ var android;
         })(style = text_3.style || (text_3.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
 var android;
 (function (android) {
     var text;
@@ -21113,11 +20219,6 @@ var android;
         })(style = text.style || (text.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/6.
- */
-///<reference path="List.ts"/>
-///<reference path="ArrayList.ts"/>
 var java;
 (function (java) {
     var util;
@@ -21156,22 +20257,6 @@ var java;
         util.Arrays = Arrays;
     })(util = java.util || (java.util = {}));
 })(java || (java = {}));
-/*
- * Copyright (C) 2012 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/text/Spanned.ts"/>
 var android;
 (function (android) {
     var text;
@@ -21234,40 +20319,6 @@ var android;
         text.SpanSet = SpanSet;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
 var android;
 (function (android) {
     var text;
@@ -21385,33 +20436,6 @@ var android;
         TextDirectionHeuristics.LOCALE = TextDirectionHeuristics.TextDirectionHeuristicLocale.INSTANCE;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/RectF.ts"/>
-///<reference path="../../android/text/style/CharacterStyle.ts"/>
-///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
-///<reference path="../../android/text/style/ReplacementSpan.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/SpanSet.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
 var android;
 (function (android) {
     var text;
@@ -21972,58 +20996,6 @@ var android;
         text_4.TextLine = TextLine;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/Path.ts"/>
-///<reference path="../../android/text/style/LeadingMarginSpan.ts"/>
-///<reference path="../../android/text/style/LineBackgroundSpan.ts"/>
-///<reference path="../../android/text/style/ParagraphStyle.ts"/>
-///<reference path="../../android/text/style/ReplacementSpan.ts"/>
-///<reference path="../../android/text/style/TabStopSpan.ts"/>
-///<reference path="../../java/util/Arrays.ts"/>
-///<reference path="../../java/lang/Float.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../../android/text/MeasuredText.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/SpanSet.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
-///<reference path="../../android/text/TextLine.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/text/TextWatcher.ts"/>
 var android;
 (function (android) {
     var text;
@@ -23075,31 +22047,6 @@ var android;
         Layout.DIRS_ALL_RIGHT_TO_LEFT = new Layout.Directions([0, Layout.RUN_LENGTH_MASK | Layout.RUN_RTL_FLAG]);
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
-///<reference path="../../android/text/style/ReplacementSpan.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
 var android;
 (function (android) {
     var text;
@@ -23291,19 +22238,6 @@ var android;
         text_6.MeasuredText = MeasuredText;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/14.
- */
-///<reference path="Spanned.ts"/>
-///<reference path="style/ReplacementSpan.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../../android/text/MeasuredText.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
 var android;
 (function (android) {
     var text;
@@ -23535,35 +22469,6 @@ var android;
         })(TextUtils = text_7.TextUtils || (text_7.TextUtils = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/Window.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/graphics/PixelFormat.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/content/Context.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/animation/Animation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -23848,23 +22753,6 @@ var android;
         })(WindowManager = view.WindowManager || (view.WindowManager = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -23931,23 +22819,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -23981,25 +22852,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/content/res/Resources.ts"/>
-///<reference path="../../../android/util/TypedValue.ts"/>
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24070,28 +22922,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/RectF.ts"/>
-///<reference path="../../../java/util/ArrayList.ts"/>
-///<reference path="../../../java/util/List.ts"/>
-///<reference path="../../../java/lang/Long.ts"/>
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Interpolator.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24382,10 +23212,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24410,10 +23236,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24432,10 +23254,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24463,10 +23281,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24493,10 +23307,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24515,10 +23325,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/1.
- */
-///<reference path="Interpolator.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24538,19 +23344,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 16/1/10.
- */
-///<reference path="../view/animation/Interpolator"/>
-///<reference path="../view/animation/AccelerateDecelerateInterpolator"/>
-///<reference path="../view/animation/AccelerateInterpolator"/>
-///<reference path="../view/animation/AnticipateInterpolator"/>
-///<reference path="../view/animation/AnticipateOvershootInterpolator"/>
-///<reference path="../view/animation/BounceInterpolator"/>
-///<reference path="../view/animation/CycleInterpolator"/>
-///<reference path="../view/animation/DecelerateInterpolator"/>
-///<reference path="../view/animation/LinearInterpolator"/>
-///<reference path="../view/animation/OvershootInterpolator"/>
 var android;
 (function (android) {
     var R;
@@ -24582,15 +23375,6 @@ var android;
         R.interpolator = interpolator;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 16/1/10.
- */
-///<reference path="../view/animation/Animation.ts"/>
-///<reference path="../view/animation/AlphaAnimation.ts"/>
-///<reference path="../view/animation/TranslateAnimation.ts"/>
-///<reference path="../view/animation/ScaleAnimation.ts"/>
-///<reference path="../view/animation/AnimationSet.ts"/>
-///<reference path="interpolator.ts"/>
 var android;
 (function (android) {
     var R;
@@ -24798,39 +23582,6 @@ var android;
         R.anim = anim;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/WindowManager.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/graphics/PixelFormat.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/LayoutInflater.ts"/>
-///<reference path="../../android/view/Surface.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/animation/Animation.ts"/>
-///<reference path="../../android/view/animation/TranslateAnimation.ts"/>
-///<reference path="../../android/content/Context.ts"/>
-///<reference path="../../android/os/SystemClock.ts"/>
-///<reference path="../../android/R/anim.ts"/>
 var android;
 (function (android) {
     var view;
@@ -24879,13 +23630,6 @@ var android;
                 return this.mDestroyed;
             }
             setChildWindowManager(wm) {
-                //this.mAppToken = appToken;
-                //this.mAppName = appName;
-                //this.mHardwareAccelerated = hardwareAccelerated;// || SystemProperties.getBoolean(Window.PROPERTY_HARDWARE_UI, false);
-                //if (wm == null) {
-                //    wm = <WindowManager> this.mContext.getSystemService(Context.WINDOW_SERVICE);
-                //}
-                //this.mWindowManager = (<WindowManagerImpl> wm).createLocalWindowManager(this);
                 if (this.mChildWindowManager) {
                     this.mDecor.removeView(this.mChildWindowManager.getWindowsLayout());
                 }
@@ -25211,26 +23955,6 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/11.
- */
-///<reference path="../view/Window.ts"/>
-///<reference path="../view/WindowManager.ts"/>
-///<reference path="../content/Context.ts"/>
-///<reference path="../view/View.ts"/>
-///<reference path="../view/ViewGroup.ts"/>
-///<reference path="../view/ViewRootImpl.ts"/>
-///<reference path="../view/KeyEvent.ts"/>
-///<reference path="../view/animation/Animation.ts"/>
-///<reference path="../widget/FrameLayout.ts"/>
-///<reference path="../view/MotionEvent.ts"/>
-///<reference path="../view/LayoutInflater.ts"/>
-///<reference path="../os/Bundle.ts"/>
-///<reference path="../os/Handler.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="../content/Intent.ts"/>
-///<reference path="../../androidui/AndroidUI.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
 var android;
 (function (android) {
     var app;
@@ -25626,25 +24350,6 @@ var android;
         app.Activity = Activity;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../android/os/Bundle.ts"/>
-///<reference path="../../android/app/Activity.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var android;
 (function (android) {
     var app;
@@ -25742,13 +24447,6 @@ var android;
         app.Application = Application;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/17.
- */
-///<reference path="../util/Log.ts"/>
-///<reference path="../util/Pools.ts"/>
-///<reference path="MotionEvent.ts"/>
-///<reference path="KeyEvent.ts"/>
 var android;
 (function (android) {
     var view;
@@ -25995,30 +24693,6 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/os/Handler.ts"/>
-///<reference path="../../android/os/SystemClock.ts"/>
-///<reference path="../../java/lang/Float.ts"/>
-///<reference path="../../android/view/GestureDetector.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/util/TypedValue.ts"/>
 var android;
 (function (android) {
     var view;
@@ -26314,28 +24988,6 @@ var android;
         })(ScaleGestureDetector = view.ScaleGestureDetector || (view.ScaleGestureDetector = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/os/Handler.ts"/>
-///<reference path="../../android/os/Message.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/VelocityTracker.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="ScaleGestureDetector.ts"/>
 var android;
 (function (android) {
     var view;
@@ -26691,15 +25343,6 @@ var androidui;
         util.NumberChecker = NumberChecker;
     })(util = androidui.util || (androidui.util = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/10/17.
- */
-///<reference path="../view/ViewConfiguration.ts"/>
-///<reference path="../view/animation/Interpolator.ts"/>
-///<reference path="../content/res/Resources.ts"/>
-///<reference path="../os/SystemClock.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="../../androidui/util/NumberChecker.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -27205,21 +25848,6 @@ var android;
         sViscousFluidNormalize = 1 / Scroller_viscousFluid(1);
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/17.
- */
-///<reference path="../view/View.ts"/>
-///<reference path="../view/ViewGroup.ts"/>
-///<reference path="../view/MotionEvent.ts"/>
-///<reference path="FrameLayout.ts"/>
-///<reference path="OverScroller.ts"/>
-///<reference path="../view/VelocityTracker.ts"/>
-///<reference path="../view/ViewConfiguration.ts"/>
-///<reference path="../view/FocusFinder.ts"/>
-///<reference path="../util/Log.ts"/>
-///<reference path="../../java/util/List.ts"/>
-///<reference path="../os/SystemClock.ts"/>
-///<reference path="../graphics/Rect.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -27416,11 +26044,6 @@ var android;
                 super.requestDisallowInterceptTouchEvent(disallowIntercept);
             }
             onInterceptTouchEvent(ev) {
-                /*
-                 * This method JUST determines whether we want to intercept the motion.
-                 * If we return true, onMotionEvent will be called and we do the actual
-                 * scrolling there.
-                 */
                 const action = ev.getAction();
                 if ((action == MotionEvent.ACTION_MOVE) && (this.mIsBeingDragged)) {
                     return true;
@@ -28077,11 +26700,6 @@ var android;
         widget.ScrollView = ScrollView;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-///<reference path="../view/Gravity.ts"/>
-///<reference path="../view/View.ts"/>
-///<reference path="../view/ViewGroup.ts"/>
-///<reference path="../graphics/drawable/Drawable.ts"/>
-///<reference path="../graphics/Rect.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -29178,10 +27796,6 @@ var android;
         util.ArrayMap = ArrayMap;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/12/12.
- */
-///<reference path="ArrayList.ts"/>
 var java;
 (function (java) {
     var util;
@@ -29290,21 +27904,6 @@ var java;
         util.ArrayDeque = ArrayDeque;
     })(util = java.util || (java.util = {}));
 })(java || (java = {}));
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var android;
 (function (android) {
     var util;
@@ -29400,10 +27999,6 @@ var android;
         util.MathUtils = MathUtils;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/3.
- */
-///<reference path="SparseArray.ts"/>
 var android;
 (function (android) {
     var util;
@@ -29413,22 +28008,6 @@ var android;
         util.SparseBooleanArray = SparseBooleanArray;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="View.ts"/>
 var android;
 (function (android) {
     var view;
@@ -29458,22 +28037,6 @@ var android;
         view.SoundEffectConstants = SoundEffectConstants;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2012 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/util/Log.ts"/>
 var android;
 (function (android) {
     var os;
@@ -29573,21 +28136,6 @@ var android;
         os.Trace = Trace;
     })(os = android.os || (android.os = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 var android;
 (function (android) {
     var text;
@@ -29635,10 +28183,6 @@ var android;
         text.InputType = InputType;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/3.
- */
-///<reference path="SparseArray.ts"/>
 var android;
 (function (android) {
     var util;
@@ -29648,22 +28192,6 @@ var android;
         util.LongSparseArray = LongSparseArray;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/View.ts"/>
 var android;
 (function (android) {
     var view;
@@ -29680,9 +28208,6 @@ var android;
         view.HapticFeedbackConstants = HapticFeedbackConstants;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/5.
- */
 var android;
 (function (android) {
     var database;
@@ -29694,29 +28219,6 @@ var android;
         database.DataSetObserver = DataSetObserver;
     })(database = android.database || (android.database = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/os/SystemClock.ts"/>
-///<reference path="../../android/util/SparseArray.ts"/>
-///<reference path="../../android/view/SoundEffectConstants.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/lang/Long.ts"/>
-///<reference path="Adapter.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -30154,26 +28656,6 @@ var android;
         }
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="AdapterView.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -30186,32 +28668,6 @@ var android;
         })(Adapter = widget.Adapter || (widget.Adapter = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/Path.ts"/>
-///<reference path="../../android/text/style/ParagraphStyle.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
-///<reference path="../../android/text/TextLine.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
 var android;
 (function (android) {
     var text;
@@ -30430,22 +28886,6 @@ var android;
         })(BoringLayout = text_8.BoringLayout || (text_8.BoringLayout = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../java/lang/System.ts"/>
 var android;
 (function (android) {
     var text;
@@ -30643,22 +29083,6 @@ var android;
         text.PackedIntVector = PackedIntVector;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../java/lang/System.ts"/>
 var android;
 (function (android) {
     var text;
@@ -30766,23 +29190,6 @@ var android;
         text.PackedObjectVector = PackedObjectVector;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/TextWatcher.ts"/>
 var android;
 (function (android) {
     var text;
@@ -30806,27 +29213,6 @@ var android;
         })(Spannable = text.Spannable || (text.Spannable = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Paint.ts"/>
-///<reference path="../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../android/text/Layout.ts"/>
-///<reference path="../../../android/text/TextPaint.ts"/>
-///<reference path="../../../android/text/style/ParagraphStyle.ts"/>
-///<reference path="../../../android/text/style/WrapTogetherSpan.ts"/>
 var android;
 (function (android) {
     var text;
@@ -30840,36 +29226,6 @@ var android;
         })(style = text_9.style || (text_9.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/text/style/LeadingMarginSpan.ts"/>
-///<reference path="../../android/text/style/LineHeightSpan.ts"/>
-///<reference path="../../android/text/style/MetricAffectingSpan.ts"/>
-///<reference path="../../android/text/style/TabStopSpan.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/MeasuredText.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
 var android;
 (function (android) {
     var text;
@@ -31474,37 +29830,6 @@ var android;
         text_10.StaticLayout = StaticLayout;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/text/style/UpdateLayout.ts"/>
-///<reference path="../../android/text/style/WrapTogetherSpan.ts"/>
-///<reference path="../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/PackedIntVector.ts"/>
-///<reference path="../../android/text/PackedObjectVector.ts"/>
-///<reference path="../../android/text/Spannable.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/StaticLayout.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/text/TextWatcher.ts"/>
 var android;
 (function (android) {
     var text;
@@ -31869,39 +30194,6 @@ var android;
         text_11.DynamicLayout = DynamicLayout;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/text/Spannable.ts"/>
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Rect.ts"/>
-///<reference path="../../../android/view/View.ts"/>
 var android;
 (function (android) {
     var text;
@@ -31918,22 +30210,6 @@ var android;
         })(method = text.method || (text.method = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/text/method/TransformationMethod.ts"/>
 var android;
 (function (android) {
     var text;
@@ -31951,26 +30227,6 @@ var android;
         })(method = text.method || (text.method = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Rect.ts"/>
-///<reference path="../../../android/util/Log.ts"/>
-///<reference path="../../../android/view/View.ts"/>
-///<reference path="../../../android/text/method/TransformationMethod.ts"/>
-///<reference path="../../../android/text/method/TransformationMethod2.ts"/>
 var android;
 (function (android) {
     var text;
@@ -31999,46 +30255,6 @@ var android;
         })(method = text.method || (text.method = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/widget/TextView.ts"/>
-///<reference path="../../../android/view/KeyEvent.ts"/>
-///<reference path="../../../android/view/MotionEvent.ts"/>
-///<reference path="../../../android/text/Spannable.ts"/>
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Rect.ts"/>
-///<reference path="../../../android/text/Spannable.ts"/>
-///<reference path="../../../android/text/Spanned.ts"/>
-///<reference path="../../../android/text/TextUtils.ts"/>
-///<reference path="../../../android/view/View.ts"/>
-///<reference path="../../../android/text/method/TransformationMethod.ts"/>
 var android;
 (function (android) {
     var text;
@@ -32114,28 +30330,6 @@ var android;
         })(method = text.method || (text.method = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Rect.ts"/>
-///<reference path="../../../android/text/Spannable.ts"/>
-///<reference path="../../../android/text/Spanned.ts"/>
-///<reference path="../../../android/text/TextUtils.ts"/>
-///<reference path="../../../android/view/View.ts"/>
-///<reference path="../../../android/text/method/ReplacementTransformationMethod.ts"/>
-///<reference path="../../../android/text/method/TransformationMethod.ts"/>
 var android;
 (function (android) {
     var text;
@@ -32163,75 +30357,6 @@ var android;
         })(method = text.method || (text.method = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/R/attr.ts"/>
-///<reference path="../../android/R/color.ts"/>
-///<reference path="../../android/R/drawable.ts"/>
-///<reference path="../../android/R/string.ts"/>
-///<reference path="../../android/content/res/ColorStateList.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/Path.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/RectF.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/os/Handler.ts"/>
-///<reference path="../../android/os/Message.ts"/>
-///<reference path="../../android/os/SystemClock.ts"/>
-///<reference path="../../android/text/BoringLayout.ts"/>
-///<reference path="../../android/text/DynamicLayout.ts"/>
-///<reference path="../../android/text/InputType.ts"/>
-///<reference path="../../android/text/Layout.ts"/>
-///<reference path="../../android/text/SpanWatcher.ts"/>
-///<reference path="../../android/text/Spannable.ts"/>
-///<reference path="../../android/text/Spanned.ts"/>
-///<reference path="../../android/text/StaticLayout.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristic.ts"/>
-///<reference path="../../android/text/TextDirectionHeuristics.ts"/>
-///<reference path="../../android/text/TextPaint.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/text/TextWatcher.ts"/>
-///<reference path="../../android/text/method/AllCapsTransformationMethod.ts"/>
-///<reference path="../../android/text/method/MovementMethod.ts"/>
-///<reference path="../../android/text/method/SingleLineTransformationMethod.ts"/>
-///<reference path="../../android/text/method/TransformationMethod.ts"/>
-///<reference path="../../android/text/method/TransformationMethod2.ts"/>
-///<reference path="../../android/text/style/CharacterStyle.ts"/>
-///<reference path="../../android/text/style/ParagraphStyle.ts"/>
-///<reference path="../../android/text/style/UpdateAppearance.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/util/TypedValue.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/HapticFeedbackConstants.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/view/ViewRootImpl.ts"/>
-///<reference path="../../android/view/ViewTreeObserver.ts"/>
-///<reference path="../../android/view/animation/AnimationUtils.ts"/>
-///<reference path="../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../android/widget/OverScroller.ts"/>
-///<reference path="../../androidui/image/NetDrawable.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -35407,12 +33532,6 @@ var android;
         })(TextView = widget.TextView || (widget.TextView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/2.
- */
-///<reference path="TextView.ts"/>
-///<reference path="../view/View.ts"/>
-///<reference path="../R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -35425,37 +33544,6 @@ var android;
         widget.Button = Button;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/widget/Adapter.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -35469,55 +33557,6 @@ var android;
         })(ListAdapter = widget.ListAdapter || (widget.ListAdapter = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/text/InputType.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/util/LongSparseArray.ts"/>
-///<reference path="../../android/util/SparseArray.ts"/>
-///<reference path="../../android/util/SparseBooleanArray.ts"/>
-///<reference path="../../android/util/StateSet.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/HapticFeedbackConstants.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/VelocityTracker.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/ViewParent.ts"/>
-///<reference path="../../android/view/ViewTreeObserver.ts"/>
-///<reference path="../../android/view/animation/Interpolator.ts"/>
-///<reference path="../../android/view/animation/LinearInterpolator.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../java/util/List.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/Button.ts"/>
-///<reference path="../../android/widget/Checkable.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/OverScroller.ts"/>
-///<reference path="../../android/R/drawable.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -38954,48 +36993,6 @@ var android;
         })(AbsListView = widget.AbsListView || (widget.AbsListView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/WrapperListAdapter.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -39177,10 +37174,6 @@ var android;
         widget.HeaderViewListAdapter = HeaderViewListAdapter;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/5.
- */
-///<reference path="../../java/util/ArrayList.ts"/>
 var android;
 (function (android) {
     var database;
@@ -39216,12 +37209,6 @@ var android;
         database.Observable = Observable;
     })(database = android.database || (android.database = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/5.
- */
-///<reference path="Observable.ts"/>
-///<reference path="DataSetObserver.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
 var android;
 (function (android) {
     var database;
@@ -39242,47 +37229,6 @@ var android;
         database.DataSetObservable = DataSetObservable;
     })(database = android.database || (android.database = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObservable.ts"/>
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/SpinnerAdapter.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -39329,49 +37275,6 @@ var android;
         widget.BaseAdapter = BaseAdapter;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/PixelFormat.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/util/MathUtils.ts"/>
-///<reference path="../../android/util/SparseBooleanArray.ts"/>
-///<reference path="../../android/view/FocusFinder.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/SoundEffectConstants.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/ViewParent.ts"/>
-///<reference path="../../android/view/ViewRootImpl.ts"/>
-///<reference path="../../android/os/Trace.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../android/widget/AbsListView.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/Checkable.ts"/>
-///<reference path="../../android/widget/HeaderViewListAdapter.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/WrapperListAdapter.ts"/>
-///<reference path="../../android/widget/BaseAdapter.ts"/>
-///<reference path="../../android/R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -41599,42 +39502,6 @@ var android;
         })(ListView = widget.ListView || (widget.ListView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2009 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/view/FocusFinder.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/VelocityTracker.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/ViewParent.ts"/>
-///<reference path="../../android/view/animation/AnimationUtils.ts"/>
-///<reference path="../../java/util/List.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/widget/LinearLayout.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/OverScroller.ts"/>
-///<reference path="../../android/widget/ScrollView.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -42508,35 +40375,6 @@ var android;
         widget.HorizontalScrollView = HorizontalScrollView;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/util/ArrayMap.ts"/>
-///<reference path="../../java/util/ArrayDeque.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/util/Pools.ts"/>
-///<reference path="../../android/util/SparseArray.ts"/>
-///<reference path="../../android/util/SparseMap.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/widget/HorizontalScrollView.ts"/>
-///<reference path="../../android/widget/ScrollView.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -43525,32 +41363,6 @@ var android;
         })(RelativeLayout = widget.RelativeLayout || (widget.RelativeLayout = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Matrix.ts"/>
-///<reference path="../../android/graphics/RectF.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../androidui/image/NetDrawable.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -44130,12 +41942,6 @@ var android;
         })(ImageView = widget.ImageView || (widget.ImageView = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/28.
- */
-///<reference path="ImageView.ts"/>
-///<reference path="../view/View.ts"/>
-///<reference path="../R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -44148,35 +41954,6 @@ var android;
         widget.ImageButton = ImageButton;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/os/Trace.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/SoundEffectConstants.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../android/widget/AbsListView.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/Checkable.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -45572,13 +43349,6 @@ var java;
         })(Comparable = lang.Comparable || (lang.Comparable = {}));
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
-/**
- * Created by linfaxin on 15/11/28.
- */
-///<reference path="List.ts"/>
-///<reference path="ArrayList.ts"/>
-///<reference path="Comparator.ts"/>
-///<reference path="../lang/Comparable.ts"/>
 var java;
 (function (java) {
     var util;
@@ -45608,48 +43378,6 @@ var java;
         util.Collections = Collections;
     })(util = java.util || (java.util = {}));
 })(java || (java = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/res/ColorStateList.ts"/>
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Color.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/util/SparseArray.ts"/>
-///<reference path="../../android/util/TypedValue.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/VelocityTracker.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/view/animation/DecelerateInterpolator.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../java/util/Collections.ts"/>
-///<reference path="../../java/util/List.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/StringBuilder.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../android/widget/Button.ts"/>
-///<reference path="../../android/widget/ImageButton.ts"/>
-///<reference path="../../android/widget/LinearLayout.ts"/>
-///<reference path="../../android/widget/OverScroller.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/R/layout.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -46679,27 +44407,6 @@ var android;
         })(NumberPicker = widget.NumberPicker || (widget.NumberPicker = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../android/graphics/Rect.ts"/>
-///<reference path="../../../android/content/res/Resources.ts"/>
-///<reference path="../../../android/view/Gravity.ts"/>
-///<reference path="../../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../../java/lang/Runnable.ts"/>
 var android;
 (function (android) {
     var graphics;
@@ -46853,43 +44560,6 @@ var android;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Animatable.ts"/>
-///<reference path="../../android/graphics/drawable/AnimationDrawable.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/drawable/LayerDrawable.ts"/>
-///<reference path="../../android/graphics/drawable/StateListDrawable.ts"/>
-///<reference path="../../android/graphics/drawable/ClipDrawable.ts"/>
-///<reference path="../../android/util/Pools.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/animation/AlphaAnimation.ts"/>
-///<reference path="../../android/view/animation/Animation.ts"/>
-///<reference path="../../android/view/animation/AnimationUtils.ts"/>
-///<reference path="../../android/view/animation/Interpolator.ts"/>
-///<reference path="../../android/view/animation/LinearInterpolator.ts"/>
-///<reference path="../../android/view/animation/Transformation.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../android/widget/LinearLayout.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/R/id.ts"/>
-///<reference path="../../androidui/image/NetDrawable.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -47471,30 +45141,6 @@ var android;
         })(ProgressBar = widget.ProgressBar || (widget.ProgressBar = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/widget/Button.ts"/>
-///<reference path="../../android/widget/Checkable.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -47649,25 +45295,6 @@ var android;
         widget.CompoundButton = CompoundButton;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/widget/Button.ts"/>
-///<reference path="../../android/widget/CompoundButton.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -47681,25 +45308,6 @@ var android;
         widget.CheckBox = CheckBox;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/widget/Button.ts"/>
-///<reference path="../../android/widget/CheckBox.ts"/>
-///<reference path="../../android/widget/CompoundButton.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -47718,27 +45326,6 @@ var android;
         widget.RadioButton = RadioButton;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/widget/Button.ts"/>
-///<reference path="../../android/widget/CompoundButton.ts"/>
-///<reference path="../../android/widget/LinearLayout.ts"/>
-///<reference path="../../android/widget/RadioButton.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -47882,28 +45469,6 @@ var android;
         })(RadioGroup = widget.RadioGroup || (widget.RadioGroup = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/widget/Checkable.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -48043,29 +45608,6 @@ var android;
         widget.CheckedTextView = CheckedTextView;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../android/widget/ProgressBar.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -48375,23 +45917,6 @@ var android;
         widget.AbsSeekBar = AbsSeekBar;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/widget/AbsSeekBar.ts"/>
-///<reference path="../../android/widget/ProgressBar.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -48426,24 +45951,6 @@ var android;
         widget.SeekBar = SeekBar;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/widget/AbsSeekBar.ts"/>
-///<reference path="../../android/widget/ProgressBar.ts"/>
-///<reference path="../../android/widget/SeekBar.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -48575,46 +46082,6 @@ var android;
         widget.RatingBar = RatingBar;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/ExpandableListView.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../android/widget/ExpandableListView.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -48697,29 +46164,6 @@ var android;
         widget.ExpandableListPosition = ExpandableListPosition;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/ExpandableListAdapter.ts"/>
-///<reference path="../../android/widget/ExpandableListView.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -48733,37 +46177,6 @@ var android;
         })(HeterogeneousExpandableList = widget.HeterogeneousExpandableList || (widget.HeterogeneousExpandableList = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/os/SystemClock.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../java/util/Collections.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/Comparable.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/BaseAdapter.ts"/>
-///<reference path="../../android/widget/ExpandableListAdapter.ts"/>
-///<reference path="../../android/widget/ExpandableListPosition.ts"/>
-///<reference path="../../android/widget/HeterogeneousExpandableList.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -49253,37 +46666,6 @@ var android;
         })(ExpandableListConnector = widget.ExpandableListConnector || (widget.ExpandableListConnector = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/view/SoundEffectConstants.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/ExpandableListAdapter.ts"/>
-///<reference path="../../android/widget/ExpandableListConnector.ts"/>
-///<reference path="../../android/widget/ExpandableListPosition.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/ScrollView.ts"/>
-///<reference path="../../android/R/attr.ts"/>
-///<reference path="../../androidui/util/Long.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -49792,28 +47174,6 @@ var android;
         widget.ExpandableListView = ExpandableListView;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObservable.ts"/>
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/ExpandableListAdapter.ts"/>
-///<reference path="../../android/widget/HeterogeneousExpandableList.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../androidui/util/Long.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -49874,33 +47234,6 @@ var android;
         widget.BaseExpandableListAdapter = BaseExpandableListAdapter;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/content/Context.ts"/>
-///<reference path="../../android/graphics/PixelFormat.ts"/>
-///<reference path="../../android/os/Handler.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/LayoutInflater.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/WindowManager.ts"/>
-///<reference path="../../android/view/Window.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -50087,22 +47420,6 @@ var android;
         })(Toast = widget.Toast || (widget.Toast = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/view/KeyEvent.ts"/>
 var android;
 (function (android) {
     var content;
@@ -50118,40 +47435,6 @@ var android;
         })(DialogInterface = content.DialogInterface || (content.DialogInterface = {}));
     })(content = android.content || (android.content = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/DialogInterface.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/os/Bundle.ts"/>
-///<reference path="../../android/os/Handler.ts"/>
-///<reference path="../../android/os/Message.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/util/TypedValue.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/LayoutInflater.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/Window.ts"/>
-///<reference path="../../android/view/WindowManager.ts"/>
-///<reference path="../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../android/app/Activity.ts"/>
-///<reference path="../../android/app/Application.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var android;
 (function (android) {
     var app;
@@ -50485,36 +47768,6 @@ var android;
         })(Dialog = app.Dialog || (app.Dialog = {}));
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/view/LayoutInflater.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/util/ArrayList.ts"/>
-///<reference path="../../java/util/Arrays.ts"/>
-///<reference path="../../java/util/Collections.ts"/>
-///<reference path="../../java/util/Comparator.ts"/>
-///<reference path="../../java/util/List.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/BaseAdapter.ts"/>
-///<reference path="../../android/widget/ImageView.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -50645,53 +47898,6 @@ var android;
         widget.ArrayAdapter = ArrayAdapter;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/app/AlertDialog.ts"/>
-///<reference path="../../android/content/DialogInterface.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/drawable/ColorDrawable.ts"/>
-///<reference path="../../android/graphics/Color.ts"/>
-///<reference path="../../android/os/Handler.ts"/>
-///<reference path="../../android/os/Message.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/util/TypedValue.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/LayoutInflater.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/Window.ts"/>
-///<reference path="../../android/view/WindowManager.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/ArrayAdapter.ts"/>
-///<reference path="../../android/widget/Button.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/widget/ImageView.ts"/>
-///<reference path="../../android/widget/LinearLayout.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/ScrollView.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../android/app/AlertDialog.ts"/>
-///<reference path="../../android/app/Dialog.ts"/>
-///<reference path="../../android/content/Context.ts"/>
-///<reference path="../../android/R/layout.ts"/>
-///<reference path="../../android/R/id.ts"/>
 var android;
 (function (android) {
     var app;
@@ -51214,38 +48420,6 @@ var android;
         })(AlertController = app.AlertController || (app.AlertController = {}));
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/DialogInterface.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/os/Bundle.ts"/>
-///<reference path="../../android/os/Message.ts"/>
-///<reference path="../../android/util/TypedValue.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/WindowManager.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/Button.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/app/Application.ts"/>
-///<reference path="../../android/app/Dialog.ts"/>
-///<reference path="../../android/app/AlertController.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var android;
 (function (android) {
     var app;
@@ -51440,34 +48614,6 @@ var android;
         })(AlertDialog = app.AlertDialog || (app.AlertDialog = {}));
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/util/SparseArray.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/ArrayAdapter.ts"/>
-///<reference path="../../android/widget/Spinner.ts"/>
-///<reference path="../../android/widget/SpinnerAdapter.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -51703,43 +48849,6 @@ var android;
         })(AbsSpinner = widget.AbsSpinner || (widget.AbsSpinner = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/content/Context.ts"/>
-///<reference path="../../android/graphics/PixelFormat.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/graphics/drawable/StateListDrawable.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/ViewTreeObserver.ts"/>
-///<reference path="../../android/view/Window.ts"/>
-///<reference path="../../android/view/WindowManager.ts"/>
-///<reference path="../../android/view/animation/Animation.ts"/>
-///<reference path="../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/widget/Spinner.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/R/attr.ts"/>
-///<reference path="../../android/R/anim.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -52405,10 +49514,6 @@ var android;
         widget.PopupWindow = PopupWindow;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 16/1/15.
- */
-///<reference path="OverScroller.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -52418,51 +49523,6 @@ var android;
         widget.Scroller = Scroller;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/os/Handler.ts"/>
-///<reference path="../../android/text/TextUtils.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/ViewParent.ts"/>
-///<reference path="../../android/view/animation/AccelerateDecelerateInterpolator.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../android/widget/AbsListView.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/LinearLayout.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/PopupWindow.ts"/>
-///<reference path="../../android/widget/Scroller.ts"/>
-///<reference path="../../android/widget/Spinner.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/content/Context.ts"/>
-///<reference path="../../android/view/animation/Animation.ts"/>
-///<reference path="../../java/lang/Runnable.ts"/>
-///<reference path="../../android/R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -53268,42 +50328,6 @@ var android;
         })(ListPopupWindow = widget.ListPopupWindow || (widget.ListPopupWindow = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/app/AlertDialog.ts"/>
-///<reference path="../../android/content/DialogInterface.ts"/>
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/util/Log.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/ViewTreeObserver.ts"/>
-///<reference path="../../android/widget/AbsSpinner.ts"/>
-///<reference path="../../android/widget/Adapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/ListPopupWindow.ts"/>
-///<reference path="../../android/widget/ListView.ts"/>
-///<reference path="../../android/widget/PopupWindow.ts"/>
-///<reference path="../../android/widget/SpinnerAdapter.ts"/>
-///<reference path="../../android/content/Context.ts"/>
-///<reference path="../../android/R/attr.ts"/>
 var android;
 (function (android) {
     var widget;
@@ -53857,23 +50881,6 @@ var android;
         })(Spinner = widget.Spinner || (widget.Spinner = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/view/animation/Animation.ts"/>
-///<reference path="../../../android/view/animation/Transformation.ts"/>
 var android;
 (function (android) {
     var view;
@@ -53928,26 +50935,6 @@ var android;
         })(animation = view.animation || (view.animation = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/app/Activity.ts"/>
-///<reference path="../../android/content/Intent.ts"/>
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/view/Menu.ts"/>
-///<reference path="../../android/view/View.ts"/>
 var android;
 (function (android) {
     var view;
@@ -54044,24 +51031,6 @@ var android;
         view_7.MenuItem = MenuItem;
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2006 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/app/Activity.ts"/>
-///<reference path="../../android/view/KeyEvent.ts"/>
-///<reference path="../../android/view/MenuItem.ts"/>
 var android;
 (function (android) {
     var view;
@@ -54230,40 +51199,6 @@ var android;
         })(Menu = view.Menu || (view.Menu = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../android/content/res/Resources.ts"/>
-///<reference path="../../../android/R/layout.ts"/>
-///<reference path="../../../android/R/attr.ts"/>
-///<reference path="../../../android/widget/ListPopupWindow.ts"/>
-///<reference path="../../../android/view/KeyEvent.ts"/>
-///<reference path="../../../android/view/LayoutInflater.ts"/>
-///<reference path="../../../android/view/Menu.ts"/>
-///<reference path="../../../android/view/MenuItem.ts"/>
-///<reference path="../../../android/view/View.ts"/>
-///<reference path="../../../android/view/ViewGroup.ts"/>
-///<reference path="../../../android/view/ViewTreeObserver.ts"/>
-///<reference path="../../../android/widget/AdapterView.ts"/>
-///<reference path="../../../android/widget/TextView.ts"/>
-///<reference path="../../../android/widget/ImageView.ts"/>
-///<reference path="../../../android/widget/BaseAdapter.ts"/>
-///<reference path="../../../android/widget/FrameLayout.ts"/>
-///<reference path="../../../android/widget/ListAdapter.ts"/>
-///<reference path="../../../android/widget/PopupWindow.ts"/>
-///<reference path="../../../java/util/ArrayList.ts"/>
 var android;
 (function (android) {
     var view;
@@ -54438,13 +51373,6 @@ var android;
         })(menu = view_8.menu || (view_8.menu = {}));
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/5.
- */
-///<reference path="../../../database/DataSetObservable.ts"/>
-///<reference path="../../../database/Observable.ts"/>
-///<reference path="../../../database/DataSetObserver.ts"/>
-///<reference path="../../../view/ViewGroup.ts"/>
 var android;
 (function (android) {
     var support;
@@ -54496,20 +51424,6 @@ var android;
         })(v4 = support.v4 || (support.v4 = {}));
     })(support = android.support || (android.support = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/5.
- */
-///<reference path="../../../view/View.ts"/>
-///<reference path="../../../view/VelocityTracker.ts"/>
-///<reference path="../../../widget/OverScroller.ts"/>
-///<reference path="../../../view/ViewGroup.ts"/>
-///<reference path="../../../view/MotionEvent.ts"/>
-///<reference path="../../../view/animation/Interpolator.ts"/>
-///<reference path="../../../../java/util/ArrayList.ts"/>
-///<reference path="../../../database/DataSetObservable.ts"/>
-///<reference path="../../../database/Observable.ts"/>
-///<reference path="../../../database/DataSetObserver.ts"/>
-///<reference path="PagerAdapter.ts"/>
 var android;
 (function (android) {
     var support;
@@ -54881,7 +51795,6 @@ var android;
                         return ii;
                     }
                     dataSetChanged() {
-                        // This method only gets called if our observer is attached, so mAdapter is non-null.
                         const adapterCount = this.mAdapter.getCount();
                         this.mExpectedAdapterCount = adapterCount;
                         let needPopulate = this.mItems.size() < this.mOffscreenPageLimit * 2 + 1 &&
@@ -55626,11 +52539,6 @@ var android;
                     enableLayers(enable) {
                     }
                     onInterceptTouchEvent(ev) {
-                        /*
-                         * This method JUST determines whether we want to intercept the motion.
-                         * If we return true, onMotionEvent will be called and we do the actual
-                         * scrolling there.
-                         */
                         const action = ev.getAction() & MotionEvent.ACTION_MASK;
                         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
                             if (DEBUG)
@@ -56407,29 +53315,6 @@ var android;
         })(v4 = support.v4 || (support.v4 = {}));
     })(support = android.support || (android.support = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2013 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../../android/view/MotionEvent.ts"/>
-///<reference path="../../../../android/view/VelocityTracker.ts"/>
-///<reference path="../../../../android/view/View.ts"/>
-///<reference path="../../../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../../../android/view/ViewGroup.ts"/>
-///<reference path="../../../../android/widget/OverScroller.ts"/>
-///<reference path="../../../../android/view/animation/Interpolator.ts"/>
-///<reference path="../../../../java/lang/System.ts"/>
 var android;
 (function (android) {
     var support;
@@ -57190,36 +54075,6 @@ var android;
         })(v4 = support.v4 || (support.v4 = {}));
     })(support = android.support || (android.support = {}));
 })(android || (android = {}));
-/*
- * Copyright (C) 2013 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../../android/graphics/Paint.ts"/>
-///<reference path="../../../../android/graphics/PixelFormat.ts"/>
-///<reference path="../../../../android/graphics/Rect.ts"/>
-///<reference path="../../../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../../../android/os/SystemClock.ts"/>
-///<reference path="../../../../android/view/Gravity.ts"/>
-///<reference path="../../../../android/view/KeyEvent.ts"/>
-///<reference path="../../../../android/view/MotionEvent.ts"/>
-///<reference path="../../../../android/view/View.ts"/>
-///<reference path="../../../../android/view/ViewGroup.ts"/>
-///<reference path="../../../../android/view/ViewParent.ts"/>
-///<reference path="../../../../java/lang/Integer.ts"/>
-///<reference path="../../../../java/lang/Runnable.ts"/>
-///<reference path="../../../../android/support/v4/widget/ViewDragHelper.ts"/>
 var android;
 (function (android) {
     var support;
@@ -58145,13 +55000,6 @@ var android;
         })(v4 = support.v4 || (support.v4 = {}));
     })(support = android.support || (android.support = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/11/6.
- */
-///<reference path="../../../../android/view/View.ts"/>
-///<reference path="../../../../android/view/ViewGroup.ts"/>
-///<reference path="../../../../android/support/v4/view/ViewPager.ts"/>
-///<reference path="../../../../android/support/v4/view/PagerAdapter.ts"/>
 var com;
 (function (com) {
     var jakewharton;
@@ -58299,27 +55147,6 @@ var com;
         })(salvage = jakewharton.salvage || (jakewharton.salvage = {}));
     })(jakewharton = com.jakewharton || (com.jakewharton = {}));
 })(com || (com = {}));
-/*******************************************************************************
- * Copyright 2011, 2012 Chris Banes.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
-///<reference path="../../../../../android/util/Log.ts"/>
-///<reference path="../../../../../android/view/MotionEvent.ts"/>
-///<reference path="../../../../../android/view/ScaleGestureDetector.ts"/>
-///<reference path="../../../../../android/view/VelocityTracker.ts"/>
-///<reference path="../../../../../android/view/ViewConfiguration.ts"/>
-///<reference path="../../../../../java/lang/Float.ts"/>
 var uk;
 (function (uk) {
     var co;
@@ -58471,30 +55298,6 @@ var uk;
         })(senab = co.senab || (co.senab = {}));
     })(co = uk.co || (uk.co = {}));
 })(uk || (uk = {}));
-/*******************************************************************************
- * Copyright 2011, 2012 Chris Banes.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
-///<reference path="../../../../../android/graphics/Matrix.ts"/>
-///<reference path="../../../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../../../android/graphics/RectF.ts"/>
-///<reference path="../../../../../android/view/GestureDetector.ts"/>
-///<reference path="../../../../../android/view/View.ts"/>
-///<reference path="../../../../../android/widget/ImageView.ts"/>
-///<reference path="../../../../uk/co/senab/photoview/GestureDetector.ts"/>
-///<reference path="../../../../uk/co/senab/photoview/PhotoView.ts"/>
-///<reference path="../../../../uk/co/senab/photoview/PhotoViewAttacher.ts"/>
 var uk;
 (function (uk) {
     var co;
@@ -58558,40 +55361,6 @@ var uk;
         })(senab = co.senab || (co.senab = {}));
     })(co = uk.co || (uk.co = {}));
 })(uk || (uk = {}));
-/*******************************************************************************
- * Copyright 2011, 2012 Chris Banes.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
-///<reference path="../../../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../../../android/graphics/Matrix.ts"/>
-///<reference path="../../../../../android/graphics/RectF.ts"/>
-///<reference path="../../../../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../../../../android/util/Log.ts"/>
-///<reference path="../../../../../android/view/MotionEvent.ts"/>
-///<reference path="../../../../../android/view/View.ts"/>
-///<reference path="../../../../../android/view/ViewParent.ts"/>
-///<reference path="../../../../../android/view/ViewTreeObserver.ts"/>
-///<reference path="../../../../../android/view/animation/AccelerateDecelerateInterpolator.ts"/>
-///<reference path="../../../../../android/view/animation/Interpolator.ts"/>
-///<reference path="../../../../../android/widget/ImageView.ts"/>
-///<reference path="../../../../../android/widget/OverScroller.ts"/>
-///<reference path="../../../../../java/lang/ref/WeakReference.ts"/>
-///<reference path="../../../../../java/lang/Runnable.ts"/>
-///<reference path="../../../../../java/lang/System.ts"/>
-///<reference path="../../../../uk/co/senab/photoview/GestureDetector.ts"/>
-///<reference path="../../../../uk/co/senab/photoview/IPhotoView.ts"/>
-///<reference path="../../../../uk/co/senab/photoview/PhotoView.ts"/>
 var uk;
 (function (uk) {
     var co;
@@ -59347,30 +56116,6 @@ var uk;
         })(senab = co.senab || (co.senab = {}));
     })(co = uk.co || (uk.co = {}));
 })(uk || (uk = {}));
-/*******************************************************************************
- * Copyright 2011, 2012 Chris Banes.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
-///<reference path="../../../../../android/graphics/Canvas.ts"/>
-///<reference path="../../../../../android/graphics/Matrix.ts"/>
-///<reference path="../../../../../android/graphics/RectF.ts"/>
-///<reference path="../../../../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../../../../android/view/GestureDetector.ts"/>
-///<reference path="../../../../../android/view/View.ts"/>
-///<reference path="../../../../../android/widget/ImageView.ts"/>
-///<reference path="../../../../uk/co/senab/photoview/PhotoViewAttacher.ts"/>
-///<reference path="../../../../uk/co/senab/photoview/IPhotoView.ts"/>
 var uk;
 (function (uk) {
     var co;
@@ -59543,33 +56288,6 @@ var uk;
         })(senab = co.senab || (co.senab = {}));
     })(co = uk.co || (uk.co = {}));
 })(uk || (uk = {}));
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-///<reference path="../../android/graphics/drawable/Drawable.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/Window.ts"/>
-///<reference path="../../android/widget/SpinnerAdapter.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/app/Activity.ts"/>
-///<reference path="../../android/app/Application.ts"/>
-///<reference path="../../android/R/attr.ts"/>
-///<reference path="../../android/R/layout.ts"/>
 var android;
 (function (android) {
     var app;
@@ -59654,11 +56372,6 @@ var android;
         app.ActionBar = ActionBar;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 16/1/21.
- */
-///<reference path="Activity.ts"/>
-///<reference path="ActionBar.ts"/>
 var android;
 (function (android) {
     var app;
@@ -59711,14 +56424,6 @@ var android;
         app.ActionBarActivity = ActionBarActivity;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-/**
- * Created by linfaxin on 15/10/26.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/R/attr.ts"/>
-///<reference path="../../androidui/AndroidUI.ts"/>
 var androidui;
 (function (androidui) {
     var widget;
@@ -59748,18 +56453,6 @@ var androidui;
         widget.HtmlBaseView = HtmlBaseView;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/10/26.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="../../android/graphics/Color.ts"/>
-///<reference path="../../android/content/res/ColorStateList.ts"/>
-///<reference path="../../android/util/TypedValue.ts"/>
-///<reference path="../../android/R/attr.ts"/>
-///<reference path="../../androidui/AndroidUI.ts"/>
-///<reference path="HtmlBaseView.ts"/>
 var androidui;
 (function (androidui) {
     var widget;
@@ -59818,12 +56511,6 @@ var androidui;
         widget.HtmlView = HtmlView;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/7.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/widget/ImageView.ts"/>
-///<reference path="HtmlBaseView.ts"/>
 var androidui;
 (function (androidui) {
     var widget;
@@ -60137,19 +56824,6 @@ var androidui;
         widget.HtmlImageView = HtmlImageView;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/16.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/widget/AbsListView.ts"/>
-///<reference path="../../android/widget/ListAdapter.ts"/>
-///<reference path="../../android/widget/BaseAdapter.ts"/>
-///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/SpinnerAdapter.ts"/>
-///<reference path="../../android/database/DataSetObservable.ts"/>
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var androidui;
 (function (androidui) {
     var widget;
@@ -60238,16 +56912,6 @@ var androidui;
         widget.HtmlDataListAdapter = HtmlDataListAdapter;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/16.
- */
-///<reference path="../../android/database/DataSetObservable.ts"/>
-///<reference path="../../android/database/Observable.ts"/>
-///<reference path="../../android/database/DataSetObserver.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/support/v4/view/ViewPager.ts"/>
-///<reference path="../../android/support/v4/view/PagerAdapter.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var androidui;
 (function (androidui) {
     var widget;
@@ -60345,12 +57009,6 @@ var androidui;
         widget.HtmlDataPagerAdapter = HtmlDataPagerAdapter;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/16.
- */
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/widget/NumberPicker.ts"/>
-///<reference path="../../android/content/Context.ts"/>
 var androidui;
 (function (androidui) {
     var widget;
@@ -60376,15 +57034,6 @@ var androidui;
         widget.HtmlDataPickerAdapter = HtmlDataPickerAdapter;
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/view/MotionEvent.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/widget/AbsListView.ts"/>
-///<reference path="../../android/widget/ScrollView.ts"/>
-///<reference path="../../android/widget/OverScroller.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
 var androidui;
 (function (androidui) {
     var widget;
@@ -60616,22 +57265,6 @@ var androidui;
         })(OverScrollLocker = widget.OverScrollLocker || (widget.OverScrollLocker = {}));
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/11/19.
- */
-///<reference path="../../android/view/View.ts"/>
-///<reference path="../../android/view/Gravity.ts"/>
-///<reference path="../../android/view/ViewGroup.ts"/>
-///<reference path="../../android/widget/FrameLayout.ts"/>
-///<reference path="../../android/widget/AbsListView.ts"/>
-///<reference path="../../android/widget/ScrollView.ts"/>
-///<reference path="../../android/widget/OverScroller.ts"/>
-///<reference path="../../android/widget/TextView.ts"/>
-///<reference path="../../android/widget/LinearLayout.ts"/>
-///<reference path="../../android/widget/ProgressBar.ts"/>
-///<reference path="../../android/R/string.ts"/>
-///<reference path="../../java/lang/Integer.ts"/>
-///<reference path="OverScrollLocker.ts"/>
 var androidui;
 (function (androidui) {
     var widget;
@@ -61085,14 +57718,6 @@ var androidui;
         })(PullRefreshLoadLayout = widget.PullRefreshLoadLayout || (widget.PullRefreshLoadLayout = {}));
     })(widget = androidui.widget || (androidui.widget = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/12/14.
- */
-///<reference path="../../android/view/Surface.ts"/>
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="../../android/graphics/Paint.ts"/>
-///<reference path="NativeApi.ts"/>
 var androidui;
 (function (androidui) {
     var native;
@@ -61212,13 +57837,6 @@ var androidui;
         native.NativeCanvas = NativeCanvas;
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/12/14.
- */
-///<reference path="../../android/view/Surface.ts"/>
-///<reference path="../../android/content/res/Resources.ts"/>
-///<reference path="NativeCanvas.ts"/>
-///<reference path="NativeApi.ts"/>
 var androidui;
 (function (androidui) {
     var native;
@@ -61271,12 +57889,6 @@ var androidui;
         }
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/12/14.
- */
-///<reference path="../image/NetImage"/>
-///<reference path="../../android/graphics/Rect.ts"/>
-///<reference path="NativeApi.ts"/>
 var androidui;
 (function (androidui) {
     var native;
@@ -61314,14 +57926,6 @@ var androidui;
         native.NativeImage = NativeImage;
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
-/**
- * Created by linfaxin on 15/12/14.
- */
-///<reference path="../../android/view/Surface.ts"/>
-///<reference path="../../android/graphics/Canvas.ts"/>
-///<reference path="NativeSurface.ts"/>
-///<reference path="NativeCanvas.ts"/>
-///<reference path="NativeImage.ts"/>
 var androidui;
 (function (androidui) {
     var native;
@@ -61462,58 +58066,6 @@ var androidui;
         }
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
-//use the deepest sub class as enter
-///<reference path="android/app/Application.ts"/>
-///<reference path="android/view/GestureDetector.ts"/>
-///<reference path="android/widget/FrameLayout.ts"/>
-///<reference path="android/widget/ScrollView.ts"/>
-///<reference path="android/widget/LinearLayout.ts"/>
-///<reference path="android/widget/RelativeLayout.ts"/>
-///<reference path="android/widget/TextView.ts"/>
-///<reference path="android/widget/Button.ts"/>
-///<reference path="android/widget/ImageView.ts"/>
-///<reference path="android/widget/ImageButton.ts"/>
-///<reference path="android/widget/ListView.ts"/>
-///<reference path="android/widget/GridView.ts"/>
-///<reference path="android/widget/HorizontalScrollView.ts"/>
-///<reference path="android/widget/NumberPicker.ts"/>
-///<reference path="android/widget/ProgressBar.ts"/>
-///<reference path="android/widget/CheckBox.ts"/>
-///<reference path="android/widget/RadioButton.ts"/>
-///<reference path="android/widget/RadioGroup.ts"/>
-///<reference path="android/widget/CheckedTextView.ts"/>
-///<reference path="android/widget/SeekBar.ts"/>
-///<reference path="android/widget/RatingBar.ts"/>
-///<reference path="android/widget/ExpandableListView.ts"/>
-///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
-///<reference path="android/widget/Toast.ts"/>
-///<reference path="android/widget/Spinner.ts"/>
-///<reference path="android/widget/ListPopupWindow.ts"/>
-///<reference path="android/app/AlertDialog.ts"/>
-///<reference path="android/view/animation/AlphaAnimation.ts"/>
-///<reference path="android/view/animation/ScaleAnimation.ts"/>
-///<reference path="android/view/animation/RotateAnimation.ts"/>
-///<reference path="android/view/animation/TranslateAnimation.ts"/>
-///<reference path="android/view/animation/AnimationSet.ts"/>
-///<reference path="android/view/Menu.ts"/>
-///<reference path="android/view/menu/MenuPopupHelper.ts"/>
-///<reference path="android/support/v4/view/ViewPager.ts"/>
-///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
-///<reference path="android/support/v4/widget/DrawerLayout.ts"/>
-///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
-///<reference path="lib/uk/co/senab/photoview/PhotoView.ts"/>
-///<reference path="android/app/Activity.ts"/>
-///<reference path="android/app/ActionBarActivity.ts"/>
-///<reference path="androidui/AndroidUI.ts"/>
-///<reference path="androidui/image/NetDrawable.ts"/>
-///<reference path="androidui/widget/HtmlView.ts"/>
-///<reference path="androidui/widget/HtmlImageView.ts"/>
-///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
-///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
-///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
-///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
-///<reference path="androidui/util/PerformanceAdjuster.ts"/>
-///<reference path="androidui/native/NativeApi.ts"/>
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;

@@ -41,8 +41,7 @@ module androidui.widget {
             return scrollLocker;
         }
 
-        abstract
-        class BaseOverScrollLocker implements OverScrollLocker{
+        abstract class BaseOverScrollLocker implements OverScrollLocker{
             lockTop:number;
             lockBottom:number;
             isInTouch:boolean;
@@ -80,17 +79,13 @@ module androidui.widget {
                     this.springBackToLockBottom();
                 }
             }
-            abstract
-            getOverScrollY():number;
+            abstract getOverScrollY():number;
 
-            abstract
-            getScrollContentBottom():number;
+            abstract getScrollContentBottom():number;
 
-            abstract
-            springBackToLockTop():void;
+            abstract springBackToLockTop():void;
 
-            abstract
-            springBackToLockBottom():void;
+            abstract springBackToLockBottom():void;
 
         }
 

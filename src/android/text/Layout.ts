@@ -74,9 +74,7 @@ import TextWatcher = android.text.TextWatcher;
  * which will be updated as the text changes.
  * For text that will not change, use a {@link StaticLayout}.
  */
-export abstract
-
-class Layout {
+export abstract class Layout {
 
     private static NO_PARA_SPANS:ParagraphStyle[] = [];
 
@@ -532,8 +530,7 @@ class Layout {
     /**
      * Return the number of lines of text in this layout.
      */
-    abstract 
-getLineCount():number ;
+    abstract getLineCount():number ;
 
     /**
      * Return the baseline for the specified line (0&hellip;getLineCount() - 1)
@@ -561,38 +558,33 @@ getLineCount():number ;
      * If the specified line is equal to the line count, returns the
      * bottom of the last line.
      */
-    abstract 
-getLineTop(line:number):number ;
+    abstract getLineTop(line:number):number ;
 
     /**
      * Return the descent of the specified line(0&hellip;getLineCount() - 1).
      */
-    abstract 
-getLineDescent(line:number):number ;
+    abstract getLineDescent(line:number):number ;
 
     /**
      * Return the text offset of the beginning of the specified line (
      * 0&hellip;getLineCount()). If the specified line is equal to the line
      * count, returns the length of the text.
      */
-    abstract 
-getLineStart(line:number):number ;
+    abstract getLineStart(line:number):number ;
 
     /**
      * Returns the primary directionality of the paragraph containing the
      * specified line, either 1 for left-to-right lines, or -1 for right-to-left
      * lines (see {@link #DIR_LEFT_TO_RIGHT}, {@link #DIR_RIGHT_TO_LEFT}).
      */
-    abstract 
-getParagraphDirection(line:number):number ;
+    abstract getParagraphDirection(line:number):number ;
 
     /**
      * Returns whether the specified line contains one or more
      * characters that need to be handled specially, like tabs
      * or emoji.
      */
-    abstract 
-getLineContainsTab(line:number):boolean ;
+    abstract getLineContainsTab(line:number):boolean ;
 
     /**
      * Returns the directional run information for the specified line.
@@ -601,22 +593,19 @@ getLineContainsTab(line:number):boolean ;
      *
      * <p>NOTE: this is inadequate to support bidirectional text, and will change.
      */
-    abstract 
-getLineDirections(line:number):Layout.Directions ;
+    abstract getLineDirections(line:number):Layout.Directions ;
 
     /**
      * Returns the (negative) number of extra pixels of ascent padding in the
      * top line of the Layout.
      */
-    abstract 
-getTopPadding():number ;
+    abstract getTopPadding():number ;
 
     /**
      * Returns the number of extra pixels of descent padding in the
      * bottom line of the Layout.
      */
-    abstract 
-getBottomPadding():number ;
+    abstract getBottomPadding():number ;
 
     /**
      * Returns true if the character at offset and the preceding character
@@ -1530,15 +1519,13 @@ getBottomPadding():number ;
      * relative to the start of the line.  (So 0 if the beginning of the
      * line is ellipsized, not getLineStart().)
      */
-    abstract 
-getEllipsisStart(line:number):number ;
+    abstract getEllipsisStart(line:number):number ;
 
     /**
      * Returns the number of characters to be ellipsized away, or 0 if
      * no ellipsis is to take place.
      */
-    abstract 
-getEllipsisCount(line:number):number ;
+    abstract getEllipsisCount(line:number):number ;
 
 
 

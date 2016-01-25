@@ -18,8 +18,7 @@ module com.jakewharton.salvage{
      * A {@link PagerAdapter} which behaves like an {@link android.widget.Adapter} with view types and
      * view recycling.
      */
-    export abstract
-    class RecyclingPagerAdapter extends PagerAdapter{
+    export abstract class RecyclingPagerAdapter extends PagerAdapter{
         static IGNORE_ITEM_VIEW_TYPE = -1;
         private recycleBin:RecycleBin;
         constructor(){
@@ -90,7 +89,7 @@ module com.jakewharton.salvage{
             return 0;
         }
 
-        abstract
+
         /**
          * Get a View that displays the data at the specified position in the data set. You can either
          * create a View manually or inflate it from an XML layout file. When the View is inflated, the
@@ -109,7 +108,7 @@ module com.jakewharton.salvage{
          * @param parent The parent that this view will eventually be attached to
          * @return . A View corresponding to the data at the specified position.
          */
-        getView(position:number, convertView:View, parent:ViewGroup):View;
+        abstract getView(position:number, convertView:View, parent:ViewGroup):View;
 
     }
 

@@ -33,23 +33,19 @@ import TransformationMethod = android.text.method.TransformationMethod;
  * array to be replaced by the corresponding characters in the
  * {@link #getReplacement} array.
  */
-export abstract
-
-class ReplacementTransformationMethod implements TransformationMethod {
+export abstract class ReplacementTransformationMethod implements TransformationMethod {
 
     /**
      * Returns the list of characters that are to be replaced by other
      * characters when displayed.
      */
-    protected abstract 
-getOriginal():string[] ;
+    protected abstract getOriginal():string[] ;
 
     /**
      * Returns a parallel array of replacement characters for the ones
      * that are to be replaced.
      */
-    protected abstract 
-getReplacement():string[] ;
+    protected abstract getReplacement():string[] ;
 
     /**
      * Returns a CharSequence that will mirror the contents of the

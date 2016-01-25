@@ -12,7 +12,7 @@ dReference="../../../dist/android-ui.d.ts";
 node build_res.js $packageName $dReference
 
 # convert typescript into es6. Ensure you have installed typescript: http://www.typescriptlang.org/
-tsc -p ./
+../buildtool/typescript/bin/tsc -p ./
 
 # convert es6 file to es5 file. Ensure you have installed babel: https://babeljs.io/
-babel build/app.js -o build/app.es5.js -s
+../node_modules/.bin/babel build/app.js --out-file build/app.es5.js --source-maps --presets=es2015

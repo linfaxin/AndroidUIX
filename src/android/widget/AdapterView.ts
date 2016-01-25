@@ -46,9 +46,7 @@ module android.widget {
      * <a href="{@docRoot}guide/topics/ui/binding.html">Binding to Data with AdapterView</a>
      * developer guide.</p></div>
      */
-    export abstract
-
-    class AdapterView<T extends Adapter> extends ViewGroup {
+    export abstract class AdapterView<T extends Adapter> extends ViewGroup {
 
         /**
          * The item view type returned by {@link Adapter#getItemViewType(int)} when
@@ -310,8 +308,7 @@ module android.widget {
          *
          * @return The adapter used to provide this view's content.
          */
-        abstract
-        getAdapter():T ;
+        abstract getAdapter():T ;
 
         /**
          * Sets the adapter that provides the data and the views to represent the data
@@ -319,8 +316,7 @@ module android.widget {
          *
          * @param adapter The adapter to use to create this view's content.
          */
-        abstract
-        setAdapter(adapter:T):void ;
+        abstract setAdapter(adapter:T):void ;
 
         /**
          * This method is not supported and throws an UnsupportedOperationException when called.
@@ -387,8 +383,7 @@ module android.widget {
          * @return The view corresponding to the currently selected item, or null
          * if nothing is selected
          */
-        abstract
-        getSelectedView():View ;
+        abstract getSelectedView():View ;
 
         /**
          * @return The data corresponding to the currently selected item, or
@@ -469,8 +464,7 @@ module android.widget {
          *
          * @param position Index (starting at 0) of the data item to be selected.
          */
-        abstract
-        setSelection(position:number):void ;
+        abstract setSelection(position:number):void ;
 
         /**
          * Sets the view to show if the adapter is empty

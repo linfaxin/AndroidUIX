@@ -100,8 +100,7 @@ module android.widget {
      * @attr ref android.R.styleable#AbsListView_choiceMode
      */
 
-    export abstract
-    class AbsListView extends AdapterView<ListAdapter> implements ViewTreeObserver.OnGlobalLayoutListener,
+    export abstract class AbsListView extends AdapterView<ListAdapter> implements ViewTreeObserver.OnGlobalLayoutListener,
         ViewTreeObserver.OnTouchModeChangeListener {
 
         static TAG_AbsListView:string = "AbsListView";
@@ -3656,8 +3655,7 @@ module android.widget {
          *
          * @param down true if the scroll is going down, false if it is going up
          */
-        abstract
-        fillGap(down:boolean):void ;
+        abstract fillGap(down:boolean):void ;
 
         hideSelector():void {
             if (this.mSelectedPosition != AbsListView.INVALID_POSITION) {
@@ -3694,8 +3692,7 @@ module android.widget {
          * @param y Where the user touched
          * @return The position of the first (or only) item in the row containing y
          */
-        abstract
-        findMotionRow(y:number):number ;
+        abstract findMotionRow(y:number):number ;
 
         /**
          * Find the row closest to y. This row will be used as the motion row when scrolling.
@@ -3739,8 +3736,7 @@ module android.widget {
          *
          * @param position the position of the new selection
          */
-        abstract
-        setSelectionInt(position:number):void ;
+        abstract setSelectionInt(position:number):void ;
 
         /**
          * Attempt to bring the selection back if the user is switching from touch

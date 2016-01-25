@@ -1233,7 +1233,6 @@ module android.view {
     }
 
 
-    abstract
     class InputStage {
         static FLAG_FINISHED = Symbol();
         static FLAG_FINISHED_HANDLED = Symbol();

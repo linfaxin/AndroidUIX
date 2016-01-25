@@ -3008,7 +3008,7 @@ module android.view {
         }
 
         isShown():boolean {
-            let current = this;
+            let current:View = this;
             //noinspection ConstantConditions
             do {
                 if ((current.mViewFlags & View.VISIBILITY_MASK) != View.VISIBLE) {
@@ -6301,7 +6301,7 @@ module android.view {
             this._syncScrollToElement();
 
             if(this instanceof ViewGroup){
-                const group = <ViewGroup>this;
+                const group = <ViewGroup><View>this;
                 for (var i = 0 ,  count = group.getChildCount(); i<count; i++){
                     group.getChildAt(i)._syncBoundAndScrollToElement();
                 }

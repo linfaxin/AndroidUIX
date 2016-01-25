@@ -48,9 +48,7 @@ import Context = android.content.Context;
  * 
  * @attr ref android.R.styleable#AbsSpinner_entries
  */
-export abstract
-
-class AbsSpinner extends AdapterView<SpinnerAdapter> {
+export abstract class AbsSpinner extends AdapterView<SpinnerAdapter> {
 
     mAdapter:SpinnerAdapter;
 

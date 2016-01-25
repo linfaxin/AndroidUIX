@@ -14,19 +14,15 @@ module android.support.v4.view {
     import ViewGroup = android.view.ViewGroup;
     import View = android.view.View;
 
-export
-    abstract
-    class PagerAdapter {
+export abstract class PagerAdapter {
         private mObservable = new DataSetObservable();
         static POSITION_UNCHANGED = -1;
         static POSITION_NONE = -2;
 
-        abstract
-
         /**
          * Return the number of views available.
          */
-        getCount():number;
+        abstract getCount():number;
 
         /**
          * Called when a change in the shown pages is going to start being made.
@@ -95,8 +91,6 @@ export
         }
 
 
-        abstract
-
         /**
          * Determines whether a page View is associated with a specific key object
          * as returned by [.instantiateItem]. This method is
@@ -108,7 +102,7 @@ export
          * *
          * @return return true if `view` is associated with the key object object
          */
-        isViewFromObject(view:View, object:any):boolean ;
+        abstract isViewFromObject(view:View, object:any):boolean ;
 
 
         /**

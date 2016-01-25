@@ -38,9 +38,7 @@ import SpinnerAdapter = android.widget.SpinnerAdapter;
  * {@link ListAdapter} interface} and {@link Spinner} (by implementing the
  * specialized {@link SpinnerAdapter} interface.
  */
-export abstract
-
-class BaseAdapter implements ListAdapter, SpinnerAdapter {
+export abstract class BaseAdapter implements ListAdapter, SpinnerAdapter {
 
     private mDataSetObservable:DataSetObservable = new DataSetObservable();
 
@@ -99,17 +97,13 @@ class BaseAdapter implements ListAdapter, SpinnerAdapter {
 
     //abstract method impl from interface
 
-    abstract
-    getView(position:number, convertView:View, parent:ViewGroup):View ;
+    abstract getView(position:number, convertView:View, parent:ViewGroup):View ;
 
 
-    abstract
-    getCount():number ;
+    abstract getCount():number ;
 
-    abstract
-    getItem(position:number):any;
+    abstract getItem(position:number):any;
 
-    abstract
-    getItemId(position:number):number;
+    abstract getItemId(position:number):number;
 }
 }

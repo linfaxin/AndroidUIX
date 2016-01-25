@@ -1173,9 +1173,7 @@ export interface DrawerListener {
      * Stub/no-op implementations of all methods of {@link DrawerListener}.
      * Override this if you only care about a few of the available callback methods.
      */
-export abstract
-
-class SimpleDrawerListener implements DrawerLayout.DrawerListener {
+export class SimpleDrawerListener implements DrawerLayout.DrawerListener {
 
     onDrawerSlide(drawerView:View, slideOffset:number):void  {
     }
