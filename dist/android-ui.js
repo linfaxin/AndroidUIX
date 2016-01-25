@@ -1,12 +1,12 @@
 /*
  * AndroidUI4Web: https://github.com/linfaxin/AndroidUI4Web
- * version: 0.1.1
+ * version: 0.2.0
  * release type: Pre-release
- * release date: 2016-01-19
+ * release date: 2016-01-25
  */
 var androidui;
 (function (androidui) {
-    androidui.sdk_version = '0.1.1';
+    androidui.sdk_version = '0.2.0';
 })(androidui || (androidui = {}));
 /**
  * Created by linfaxin on 15/10/28.
