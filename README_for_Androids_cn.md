@@ -192,6 +192,11 @@ Android4.x系统WebView:30fps左右. 不过国内主流机型都是定制过的�
 Chrome开发台里选中对应节点后, 可以在节点的Properties里看到DOM节点的字段值, 所有Android节点的信息都在AndroidView字段里.
 
 
+### 支持
+
+加入QQ群：275850460，我将为你提供技术支持 :)
+
+
 ### 特别感谢
 
 [汤涛](https://github.com/AndroidTrending) 为框架的推广做的贡献！

@@ -28,6 +28,11 @@ Android开发者可以从[这篇文章](README_for_Androids_cn.md)快速起步�
 你也可以在自己的设备上测试[Sample App](http://linfaxin.com/AndroidUI4Web/sample/main.html)。
 
 
+### 支持
+
+加入QQ群：275850460，我将为你提供技术支持 :)
+
+
 ### LICENSE
 
 MIT.
