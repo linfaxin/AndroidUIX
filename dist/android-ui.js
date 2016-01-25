@@ -17058,7 +17058,7 @@ var android;
                 if (event.getAction() == view_3.KeyEvent.ACTION_DOWN
                     && event.isCtrlPressed()
                     && event.getRepeatCount() == 0) {
-                    if (this.ViewRootImpl_this.shouldDropInputEvent(event)) {
+                    if (this.shouldDropInputEvent(event)) {
                         return InputStage.FINISH_NOT_HANDLED;
                     }
                 }

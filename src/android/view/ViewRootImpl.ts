@@ -1374,7 +1374,7 @@ module android.view {
         }
 
         private processKeyEvent(event:KeyEvent):number {
-            let mView:View = (<any>this.ViewRootImpl_this).mView;
+            let mView:View = this.ViewRootImpl_this.mView;
             //if (event.getAction() != KeyEvent.ACTION_UP) {
             //    // If delivering a new key event, make sure the window is
             //    // now allowed to start updating.
@@ -1399,7 +1399,7 @@ module android.view {
                 //if (mView.dispatchKeyShortcutEvent(event)) {
                 //    return InputStage.FINISH_HANDLED;
                 //}
-                if ((<any>this.ViewRootImpl_this).shouldDropInputEvent(event)) {
+                if (this.shouldDropInputEvent(event)) {
                     return InputStage.FINISH_NOT_HANDLED;
                 }
             }
