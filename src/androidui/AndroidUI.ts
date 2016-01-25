@@ -61,7 +61,7 @@ module androidui {
 
 
         private init() {
-            this.appName = this.androidUIElement.getAttribute('label');
+            this.appName = document.title;
             this._viewRootImpl = new android.view.ViewRootImpl();
             this._viewRootImpl.androidUIElement = this.androidUIElement;
 
