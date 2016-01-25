@@ -1,10 +1,10 @@
 /*
  * AndroidUI4Web: https://github.com/linfaxin/AndroidUI4Web
- * version: 0.1.1
+ * version: 0.2.0
  * release type: Pre-release
- * release date: 2016-01-19
+ * release date: 2016-01-25
  */
 
 module androidui {
-    export var sdk_version = '0.1.1';
+    export var sdk_version = '0.2.0';
 }
