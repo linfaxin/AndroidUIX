@@ -126,18 +126,23 @@ module androidui.attr {
         parseDrawable(s:string):Drawable{
             if(!s) return null;
             if((<any>s) instanceof Drawable) return <Drawable><any>s;
+            s = (s + '').trim();
             if(s.startsWith('@')){
                 let refObj = this.getRefObject(s);
                 if(refObj) return refObj;
 
                 return Resources.getSystem().getDrawable(s);
 
+            }else if(s.startsWith('url(')){
+                s = s.substring('url('.length);
+                if(s.endsWith(')')) s = s.substring(0, s.length-1);
+                return new androidui.image.NetDrawable(s);
+
             }else{
                 try {
                     let color = this.parseColor(s);
                     return new ColorDrawable(color);
                 } catch (e) {
-                    console.log(e);
                 }
             }
             return null;

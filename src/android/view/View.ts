@@ -872,6 +872,7 @@ module android.view {
                 if(this.mBackground instanceof ColorDrawable){
                     return Color.toRGBAFunc((<ColorDrawable>this.mBackground).getColor());
                 }
+                //if(this.mBackground instanceof NetDrawable) return `url(${this.mBackground.getImage().src})`;
                 return this.mBackground;
             });
             a.addAttr('padding', (value)=>{
@@ -1026,15 +1027,6 @@ module android.view {
                 }else{
                     this.setLayerType(View.LAYER_TYPE_NONE);
                 }
-            });
-            a.addAttr('backgroundUri', (value)=>{
-                if(value==null) this.setBackground(null);
-                else{
-                    this.setBackground(new NetDrawable(value));
-                }
-            }, ()=>{
-                let d = this.mBackground;
-                if(d instanceof NetDrawable) return d.getImage().src;
             });
             //CornerRadius
             a.addAttr('cornerRadius', (value)=>{

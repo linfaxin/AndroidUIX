@@ -5788,11 +5788,18 @@ var androidui;
                     return null;
                 if (s instanceof Drawable)
                     return s;
+                s = (s + '').trim();
                 if (s.startsWith('@')) {
                     let refObj = this.getRefObject(s);
                     if (refObj)
                         return refObj;
                     return Resources.getSystem().getDrawable(s);
+                }
+                else if (s.startsWith('url(')) {
+                    s = s.substring('url('.length);
+                    if (s.endsWith(')'))
+                        s = s.substring(0, s.length - 1);
+                    return new androidui.image.NetDrawable(s);
                 }
                 else {
                     try {
@@ -5800,7 +5807,6 @@ var androidui;
                         return new ColorDrawable(color);
                     }
                     catch (e) {
-                        console.log(e);
                     }
                 }
                 return null;
@@ -10642,7 +10648,6 @@ var android;
         var AnimationUtils = android.view.animation.AnimationUtils;
         var StateAttrList = androidui.attr.StateAttrList;
         var AttrBinder = androidui.attr.AttrBinder;
-        var NetDrawable = androidui.image.NetDrawable;
         var KeyEvent = android.view.KeyEvent;
         var Animation = view_2.animation.Animation;
         var Transformation = view_2.animation.Transformation;
@@ -10898,17 +10903,6 @@ var android;
                             this.setLayerType(View.LAYER_TYPE_NONE);
                         }
                     });
-                a.addAttr('backgroundUri', (value) => {
-                    if (value == null)
-                        this.setBackground(null);
-                    else {
-                        this.setBackground(new NetDrawable(value));
-                    }
-                }, () => {
-                    let d = this.mBackground;
-                    if (d instanceof NetDrawable)
-                        return d.getImage().src;
-                });
                 a.addAttr('cornerRadius', (value) => {
                     let [leftTop, topRight, rightBottom, bottomLeft] = a.parsePaddingMarginLTRB(value);
                     this.setCornerRadius(a.parseNumber(leftTop, 0), a.parseNumber(topRight, 0), a.parseNumber(rightBottom, 0), a.parseNumber(bottomLeft, 0));
@@ -30409,7 +30403,6 @@ var android;
         var ArrayList = java.util.ArrayList;
         var Integer = java.lang.Integer;
         var System = java.lang.System;
-        var NetDrawable = androidui.image.NetDrawable;
         class TextView extends View {
             constructor(context, bindElement, defStyle = android.R.attr.textViewStyle) {
                 super(context, bindElement, null);
@@ -30516,26 +30509,6 @@ var android;
                 a.addAttr('drawableBottom', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = a.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
-                });
-                a.addAttr('drawableLeftUri', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = value ? new NetDrawable(value) : null;
-                    this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
-                });
-                a.addAttr('drawableTopUri', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = value ? new NetDrawable(value) : null;
-                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
-                });
-                a.addAttr('drawableRightUri', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = value ? new NetDrawable(value) : null;
-                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
-                });
-                a.addAttr('drawableBottomUri', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = value ? new NetDrawable(value) : null;
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
                 });
                 a.addAttr('drawablePadding', (value) => {
@@ -41411,46 +41384,51 @@ var android;
                 this.mBaselineAlignBottom = false;
                 this.mAdjustViewBoundsCompat = false;
                 this.initImageView();
-                this._attrBinder.addAttr('src', (value) => {
-                    this.setImageURI(value);
+                const a = this._attrBinder;
+                a.addAttr('src', (value) => {
+                    let d = a.parseDrawable(value);
+                    if (d)
+                        this.setImageDrawable(d);
+                    else
+                        this.setImageURI(value);
                 }, () => {
-                    return this.mUri;
+                    return this.mDrawable;
                 });
-                this._attrBinder.addAttr('baselineAlignBottom', (value) => {
-                    this.setBaselineAlignBottom(this._attrBinder.parseBoolean(value, this.mBaselineAlignBottom));
+                a.addAttr('baselineAlignBottom', (value) => {
+                    this.setBaselineAlignBottom(a.parseBoolean(value, this.mBaselineAlignBottom));
                 });
-                this._attrBinder.addAttr('baseline', (value) => {
-                    this.setBaseline(this._attrBinder.parseNumber(value, this.mBaseline));
+                a.addAttr('baseline', (value) => {
+                    this.setBaseline(a.parseNumber(value, this.mBaseline));
                 }, () => {
                     return this.mBaseline;
                 });
-                this._attrBinder.addAttr('adjustViewBounds', (value) => {
-                    this.setAdjustViewBounds(this._attrBinder.parseBoolean(value, false));
+                a.addAttr('adjustViewBounds', (value) => {
+                    this.setAdjustViewBounds(a.parseBoolean(value, false));
                 });
-                this._attrBinder.addAttr('maxWidth', (value) => {
+                a.addAttr('maxWidth', (value) => {
                     let baseValue = this.getParent() instanceof View ? this.getParent().getWidth() : 0;
-                    this.setMaxWidth(this._attrBinder.parseNumber(value, this.mMaxWidth, baseValue));
+                    this.setMaxWidth(a.parseNumber(value, this.mMaxWidth, baseValue));
                 }, () => {
                     return this.mMaxWidth;
                 });
-                this._attrBinder.addAttr('maxHeight', (value) => {
+                a.addAttr('maxHeight', (value) => {
                     let baseValue = this.getParent() instanceof View ? this.getParent().getHeight() : 0;
-                    this.setMaxHeight(this._attrBinder.parseNumber(value, this.mMaxHeight, baseValue));
+                    this.setMaxHeight(a.parseNumber(value, this.mMaxHeight, baseValue));
                 }, () => {
                     return this.mMaxHeight;
                 });
-                this._attrBinder.addAttr('scaleType', (value) => {
+                a.addAttr('scaleType', (value) => {
                     this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
                 }, () => {
                     return this.mScaleType.toString();
                 });
-                this._attrBinder.addAttr('drawableAlpha', (value) => {
-                    this.setAlpha(this._attrBinder.parseNumber(value, this.mAlpha));
+                a.addAttr('drawableAlpha', (value) => {
+                    this.setAlpha(a.parseNumber(value, this.mAlpha));
                 }, () => {
                     return this.mAlpha;
                 });
-                this._attrBinder.addAttr('cropToPadding', (value) => {
-                    this.setCropToPadding(this._attrBinder.parseBoolean(value, false));
+                a.addAttr('cropToPadding', (value) => {
+                    this.setCropToPadding(a.parseBoolean(value, false));
                 });
             }
             initImageView() {

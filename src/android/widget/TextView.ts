@@ -536,26 +536,6 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
         });
-        a.addAttr('drawableLeftUri', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = value ? new NetDrawable(value) : null;
-            this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
-        });
-        a.addAttr('drawableTopUri', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = value ? new NetDrawable(value) : null;
-            this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
-        });
-        a.addAttr('drawableRightUri', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = value ? new NetDrawable(value) : null;
-            this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
-        });
-        a.addAttr('drawableBottomUri', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = value ? new NetDrawable(value) : null;
-            this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
-        });
         a.addAttr('drawablePadding', (value)=>{
             this.setCompoundDrawablePadding(a.parseNumber(value));
         });

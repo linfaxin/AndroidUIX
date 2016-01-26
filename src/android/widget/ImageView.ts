@@ -119,46 +119,49 @@ export class ImageView extends View {
         super(context, bindElement, defStyle);
         this.initImageView();
 
-        this._attrBinder.addAttr('src', (value)=>{
-            this.setImageURI(value);
+        const a = this._attrBinder;
+        a.addAttr('src', (value)=>{
+            let d = a.parseDrawable(value);
+            if(d) this.setImageDrawable(d);
+            else this.setImageURI(value);
         }, ()=>{
-            return this.mUri;
+            return this.mDrawable;
         });
-        this._attrBinder.addAttr('baselineAlignBottom', (value)=>{
-            this.setBaselineAlignBottom(this._attrBinder.parseBoolean(value, this.mBaselineAlignBottom));
+        a.addAttr('baselineAlignBottom', (value)=>{
+            this.setBaselineAlignBottom(a.parseBoolean(value, this.mBaselineAlignBottom));
         });
-        this._attrBinder.addAttr('baseline', (value)=>{
-            this.setBaseline(this._attrBinder.parseNumber(value, this.mBaseline));
+        a.addAttr('baseline', (value)=>{
+            this.setBaseline(a.parseNumber(value, this.mBaseline));
         }, ()=>{
             return this.mBaseline;
         });
-        this._attrBinder.addAttr('adjustViewBounds', (value)=>{
-            this.setAdjustViewBounds(this._attrBinder.parseBoolean(value, false));
+        a.addAttr('adjustViewBounds', (value)=>{
+            this.setAdjustViewBounds(a.parseBoolean(value, false));
         });
-        this._attrBinder.addAttr('maxWidth', (value)=>{
+        a.addAttr('maxWidth', (value)=>{
             let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getWidth() : 0;
-            this.setMaxWidth(this._attrBinder.parseNumber(value, this.mMaxWidth, baseValue));
+            this.setMaxWidth(a.parseNumber(value, this.mMaxWidth, baseValue));
         }, ()=>{
             return this.mMaxWidth;
         });
-        this._attrBinder.addAttr('maxHeight', (value)=>{
+        a.addAttr('maxHeight', (value)=>{
             let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getHeight() : 0;
-            this.setMaxHeight(this._attrBinder.parseNumber(value, this.mMaxHeight, baseValue));
+            this.setMaxHeight(a.parseNumber(value, this.mMaxHeight, baseValue));
         }, ()=>{
             return this.mMaxHeight;
         });
-        this._attrBinder.addAttr('scaleType', (value)=>{
+        a.addAttr('scaleType', (value)=>{
             this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
         }, ()=>{
             return this.mScaleType.toString();
         });
-        this._attrBinder.addAttr('drawableAlpha', (value)=>{
-            this.setAlpha(this._attrBinder.parseNumber(value, this.mAlpha));
+        a.addAttr('drawableAlpha', (value)=>{
+            this.setAlpha(a.parseNumber(value, this.mAlpha));
         }, ()=>{
             return this.mAlpha;
         });
-        this._attrBinder.addAttr('cropToPadding', (value)=>{
-            this.setCropToPadding(this._attrBinder.parseBoolean(value, false));
+        a.addAttr('cropToPadding', (value)=>{
+            this.setCropToPadding(a.parseBoolean(value, false));
         });
 
         //let a:TypedArray = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.ImageView, defStyle, 0);

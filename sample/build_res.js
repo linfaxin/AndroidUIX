@@ -113,13 +113,19 @@ ${exportImage_tsLines}
 function buildLayout(){
     var definedIds = {};
 
-    function xml2html(html){
+    function xml2html(html, isXML){
         var doc = jsdom.jsdom(html, {
-            parsingMode : 'xml'
+            parsingMode : isXML ? 'xml' : 'html'
         });
-        var document = doc.defaultView.document;
-        travelElement(document.documentElement);
-        return document.documentElement.outerHTML;
+        if(isXML){
+            var document = doc.defaultView.document;
+            travelElement(document.documentElement);
+            return document.documentElement.outerHTML;
+        }else{
+            var body = doc.defaultView.document.body;
+            travelElement(body);
+            return body.innerHTML;
+        }
     }
 
     function travelElement(ele){
@@ -164,7 +170,7 @@ module ${packageName}.R {
 
         if(fileSuffixes != 'html' && fileSuffixes != 'xml') return;//must end with '.html/.xml'
         var html = fs.readFileSync(path+'/'+fileName, 'utf-8');
-        html = xml2html(html);
+        html = xml2html(html, fileSuffixes == 'xml');
         var name = splits[0];
         layoutData[name] = html;
     });
