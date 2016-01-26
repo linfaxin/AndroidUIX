@@ -39,7 +39,7 @@ module androidui.widget{
         }
 
         private registerHtmlDataObserver(){
-            if(!MutationObserver) return;
+            if(!window['MutationObserver']) return;
             const adapter = this;
             function callBack(arr: MutationRecord[], observer: MutationObserver){
                 adapter.notifyDataSetChanged();
