@@ -15046,7 +15046,6 @@ var PageStack;
     let historyLocking = false;
     let pendingFuncLock = [];
     function init() {
-        restorePageFromStackIfNeed();
         removeLastHistoryIfFaked();
         ensureLockDo(_init);
         history.go = function (delta) {
@@ -15062,8 +15061,12 @@ var PageStack;
     PageStack.init = init;
     function _init() {
         PageStack.currentStack = history.state;
-        if (!PageStack.currentStack) {
-            PageStack.currentStack = {
+        if (PageStack.currentStack && !PageStack.currentStack.isRoot) {
+            console.log('already has history.state when _init PageState, restore page');
+            restorePageFromStackIfNeed();
+        }
+        else {
+            PageStack.currentStack = PageStack.currentStack || {
                 pageId: '',
                 isRoot: true,
                 stack: [{ pageId: null }]
@@ -15208,9 +15211,8 @@ var PageStack;
         history_go.call(history, delta);
     }
     function restorePageFromStackIfNeed() {
-        if (history.state && !history.state.isRoot) {
-            console.log('already has history.state when _init PageState, restore page');
-            let copy = history.state.stack.concat();
+        if (PageStack.currentStack) {
+            let copy = PageStack.currentStack.stack.concat();
             copy.shift();
             for (let saveState of copy) {
                 firePageOpen(saveState.pageId, saveState.extra, true);

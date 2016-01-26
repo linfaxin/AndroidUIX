@@ -16,9 +16,8 @@ module PageStack{
     let pendingFuncLock = [];
 
     export function init(){
-        restorePageFromStackIfNeed();
         removeLastHistoryIfFaked();
-        ensureLockDo(_init);
+        ensureLockDo(_init);//FIXME restore page no delay
 
         //override history go/back/forward
         history.go = function(delta:number){
@@ -34,8 +33,12 @@ module PageStack{
 
     function _init(){
         currentStack = history.state;
-        if(!currentStack){
-            currentStack = {
+        if(currentStack && !currentStack.isRoot){
+            console.log('already has history.state when _init PageState, restore page');
+            restorePageFromStackIfNeed();
+
+        }else{
+            currentStack = currentStack || {
                     pageId: '',
                     isRoot: true,
                     stack: [{pageId: null}]
@@ -211,9 +214,8 @@ module PageStack{
 
     //if page reload, but the page content will clear, should re-open pages
     function restorePageFromStackIfNeed(){
-        if(history.state && !history.state.isRoot){
-            console.log('already has history.state when _init PageState, restore page');
-            let copy = history.state.stack.concat();
+        if(currentStack){
+            let copy = currentStack.stack.concat();
             copy.shift();//ignore root stack
             for(let saveState of copy){
                 firePageOpen(saveState.pageId, saveState.extra, true);
