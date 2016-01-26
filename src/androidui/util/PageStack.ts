@@ -50,6 +50,11 @@ module PageStack{
         }
         ensureLastHistoryFaked();
 
+        //init delay, because safari will trigger a 'onpopstate' when js load finish.
+        setTimeout(initOnpopstate, 0);
+    }
+
+    function initOnpopstate(){
         //_init onpopstate, deal when user press back / modify location hash
         window.onpopstate = (ev:PopStateEvent)=>{
             let stack = <StateStack>ev.state;
@@ -109,7 +114,6 @@ module PageStack{
                     }
                 }
             }
-
         };
     }
 

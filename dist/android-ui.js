@@ -15053,6 +15053,9 @@ var PageStack;
             history.replaceState(PageStack.currentStack, null, '#');
         }
         ensureLastHistoryFaked();
+        setTimeout(initOnpopstate, 0);
+    }
+    function initOnpopstate() {
         window.onpopstate = (ev) => {
             let stack = ev.state;
             if (historyLocking) {
