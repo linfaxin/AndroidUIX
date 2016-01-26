@@ -39,7 +39,6 @@ module android.app{
 
         constructor(androidUI:androidui.AndroidUI) {
             this.androidUI = androidUI;
-            this.initWithPageStack();
         }
 
         private initWithPageStack(){
@@ -87,24 +86,16 @@ module android.app{
             this.overrideHideAnimation = hideAnimation;
         }
         getOverrideEnterAnimation():Animation {
-            let anim = this.overrideEnterAnimation;
-            this.overrideEnterAnimation = undefined;
-            return anim;
+            return this.overrideEnterAnimation;
         }
         getOverrideExitAnimation():Animation {
-            let anim = this.overrideExitAnimation;
-            this.overrideExitAnimation = undefined;
-            return anim;
+            return this.overrideExitAnimation;
         }
         getOverrideResumeAnimation():Animation {
-            let anim = this.overrideResumeAnimation;
-            this.overrideResumeAnimation = undefined;
-            return anim;
+            return this.overrideResumeAnimation;
         }
         getOverrideHideAnimation():Animation {
-            let anim = this.overrideHideAnimation;
-            this.overrideHideAnimation = undefined;
-            return anim;
+            return this.overrideHideAnimation;
         }
 
         scheduleApplicationHide():void {

@@ -15046,6 +15046,7 @@ var PageStack;
     let historyLocking = false;
     let pendingFuncLock = [];
     function init() {
+        restorePageFromStackIfNeed();
         removeLastHistoryIfFaked();
         ensureLockDo(_init);
         history.go = function (delta) {
@@ -15061,12 +15062,8 @@ var PageStack;
     PageStack.init = init;
     function _init() {
         PageStack.currentStack = history.state;
-        if (PageStack.currentStack && !PageStack.currentStack.isRoot) {
-            console.log('already has history.state when _init PageState, restore page');
-            restorePageFromStackIfNeed();
-        }
-        else {
-            PageStack.currentStack = PageStack.currentStack || {
+        if (!PageStack.currentStack) {
+            PageStack.currentStack = {
                 pageId: '',
                 isRoot: true,
                 stack: [{ pageId: null }]
@@ -15211,8 +15208,9 @@ var PageStack;
         history_go.call(history, delta);
     }
     function restorePageFromStackIfNeed() {
-        if (PageStack.currentStack) {
-            let copy = PageStack.currentStack.stack.concat();
+        if (history.state && !history.state.isRoot) {
+            console.log('already has history.state when _init PageState, restore page');
+            let copy = history.state.stack.concat();
             copy.shift();
             for (let saveState of copy) {
                 firePageOpen(saveState.pageId, saveState.extra, true);
@@ -15360,7 +15358,11 @@ var PageStack;
         if (!history.state.isFake) {
             if (DEBUG)
                 console.log('append Fake History');
-            history.pushState({ isFake: true }, null, '');
+            history.pushState({
+                isFake: true,
+                isRoot: PageStack.currentStack.isRoot,
+                stack: PageStack.currentStack.stack,
+            }, null, '');
         }
     }
 })(PageStack || (PageStack = {}));
@@ -15375,7 +15377,6 @@ var android;
             constructor(androidUI) {
                 this.mLaunchedActivities = new Set();
                 this.androidUI = androidUI;
-                this.initWithPageStack();
             }
             initWithPageStack() {
                 let backKeyDownEvent = android.view.KeyEvent.obtain(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_BACK);
@@ -15420,24 +15421,16 @@ var android;
                 this.overrideHideAnimation = hideAnimation;
             }
             getOverrideEnterAnimation() {
-                let anim = this.overrideEnterAnimation;
-                this.overrideEnterAnimation = undefined;
-                return anim;
+                return this.overrideEnterAnimation;
             }
             getOverrideExitAnimation() {
-                let anim = this.overrideExitAnimation;
-                this.overrideExitAnimation = undefined;
-                return anim;
+                return this.overrideExitAnimation;
             }
             getOverrideResumeAnimation() {
-                let anim = this.overrideResumeAnimation;
-                this.overrideResumeAnimation = undefined;
-                return anim;
+                return this.overrideResumeAnimation;
             }
             getOverrideHideAnimation() {
-                let anim = this.overrideHideAnimation;
-                this.overrideHideAnimation = undefined;
-                return anim;
+                return this.overrideHideAnimation;
             }
             scheduleApplicationHide() {
                 let visibleActivities = this.getVisibleToUserActivities();
@@ -15747,7 +15740,6 @@ var androidui;
     class AndroidUI {
         constructor(androidUIElement) {
             this._canvas = document.createElement("canvas");
-            this.mActivityThread = new ActivityThread(this);
             this._windowBound = new android.graphics.Rect();
             this.tempRect = new android.graphics.Rect();
             this.touchEvent = new MotionEvent();
@@ -15791,12 +15783,14 @@ var androidui;
             this.mApplication.onCreate();
         }
         initLaunchActivity() {
+            this.mActivityThread = new ActivityThread(this);
             for (let ele of Array.from(this.androidUIElement.children)) {
                 let tagName = ele.tagName;
                 if (tagName != 'ACTIVITY')
                     continue;
                 let activityName = ele.getAttribute('name') || ele.getAttribute('android:name') || 'android.app.Activity';
                 let intent = new Intent(activityName);
+                this.mActivityThread.overrideNextWindowAnimation(null, null, null, null);
                 let activity = this.mActivityThread.handleLaunchActivity(intent);
                 if (activity) {
                     this.androidUIElement.removeChild(ele);
@@ -15809,6 +15803,7 @@ var androidui;
                     }
                 }
             }
+            this.mActivityThread.initWithPageStack();
         }
         initGlobalCrashHandle() {
             window.onerror = (sMsg, sUrl, sLine) => {

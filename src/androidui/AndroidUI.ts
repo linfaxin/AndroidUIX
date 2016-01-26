@@ -34,7 +34,7 @@ module androidui {
         get windowManager(){
             return this.mApplication.getWindowManager();
         }
-        private mActivityThread:ActivityThread = new ActivityThread(this);
+        private mActivityThread:ActivityThread;
         private _viewRootImpl:android.view.ViewRootImpl;
         private mApplication:android.app.Application;
         appName:string;
@@ -95,6 +95,8 @@ module androidui {
         }
 
         private initLaunchActivity(){
+            this.mActivityThread = new ActivityThread(this);
+
             //launch activity defined in 'android-ui' element
             for(let ele of Array.from(this.androidUIElement.children)){
                 let tagName = ele.tagName;
@@ -102,6 +104,7 @@ module androidui {
                 let activityName = ele.getAttribute('name') || ele.getAttribute('android:name') || 'android.app.Activity';
 
                 let intent = new Intent(activityName);
+                this.mActivityThread.overrideNextWindowAnimation(null, null, null, null);
                 let activity = this.mActivityThread.handleLaunchActivity(intent);
                 if (activity) {
                     this.androidUIElement.removeChild(ele);
@@ -118,6 +121,8 @@ module androidui {
 
                 }
             }
+
+            this.mActivityThread.initWithPageStack();//restore activity here.
         }
 
         private initGlobalCrashHandle(){

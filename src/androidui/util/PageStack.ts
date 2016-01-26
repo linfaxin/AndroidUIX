@@ -16,6 +16,7 @@ module PageStack{
     let pendingFuncLock = [];
 
     export function init(){
+        restorePageFromStackIfNeed();
         removeLastHistoryIfFaked();
         ensureLockDo(_init);
 
@@ -33,12 +34,8 @@ module PageStack{
 
     function _init(){
         currentStack = history.state;
-        if(currentStack && !currentStack.isRoot){
-            console.log('already has history.state when _init PageState, restore page');
-            restorePageFromStackIfNeed();
-
-        }else{
-            currentStack = currentStack || {
+        if(!currentStack){
+            currentStack = {
                     pageId: '',
                     isRoot: true,
                     stack: [{pageId: null}]
@@ -214,8 +211,9 @@ module PageStack{
 
     //if page reload, but the page content will clear, should re-open pages
     function restorePageFromStackIfNeed(){
-        if(currentStack){
-            let copy = currentStack.stack.concat();
+        if(history.state && !history.state.isRoot){
+            console.log('already has history.state when _init PageState, restore page');
+            let copy = history.state.stack.concat();
             copy.shift();//ignore root stack
             for(let saveState of copy){
                 firePageOpen(saveState.pageId, saveState.extra, true);
@@ -375,7 +373,11 @@ module PageStack{
     function ensureLastHistoryFakedImpl(){
         if(!history.state.isFake){
             if(DEBUG) console.log('append Fake History');
-            history.pushState({isFake:true}, null, '');
+            history.pushState({
+                isFake: true,
+                isRoot: currentStack.isRoot,
+                stack: currentStack.stack,
+            }, null, '');
         }
     }
 
