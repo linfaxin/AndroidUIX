@@ -3392,6 +3392,7 @@ declare module android.view {
     import Canvas = android.graphics.Canvas;
     import ViewRootImpl = android.view.ViewRootImpl;
     class Surface {
+        static DrawToCacheFirstMode: boolean;
         private mCanvasElement;
         private viewRoot;
         private mLockedRect;

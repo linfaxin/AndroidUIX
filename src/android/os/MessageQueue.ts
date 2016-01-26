@@ -117,12 +117,12 @@ module android.os {
                 }
             }
             //dispatch normal messages first.
-            for(let msg of normalMessages){
-                MessageQueue.dispatchMessage(msg);
+            for(let i = 0, length=normalMessages.length; i<length; i++){
+                MessageQueue.dispatchMessage(normalMessages[i]);
             }
             //then dispatch traversal messages
-            for(let msg of traversalMessages){
-                MessageQueue.dispatchMessage(msg);
+            for(let i = 0, length=traversalMessages.length; i<length; i++){
+                MessageQueue.dispatchMessage(traversalMessages[i]);
             }
 
             if(MessageQueue.messages.size>0) requestAnimationFrame(MessageQueue.loop);

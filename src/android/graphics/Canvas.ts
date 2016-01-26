@@ -212,11 +212,12 @@ module android.graphics {
                 rect.set(left, t, right, bottom);
             }
 
-            if(args.length===8){
+            if(args.length === 4 || (!args[4] && !args[5] && !args[6] && !args[7])){
+                this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
+
+            }else if(args.length===8 && (args[4]!=0 || args[5]!= 0 || args[6]!=0 || args[7]!=0)){
                 this.clipRoundRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()),
                     args[4], args[5], args[6], args[7]);
-            }else{
-                this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
             }
 
             this.mCurrentClip.intersect(rect);

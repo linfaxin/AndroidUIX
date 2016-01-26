@@ -14,6 +14,7 @@ module android.view{
 
 
     export class Surface{
+        static DrawToCacheFirstMode = false;
         private mCanvasElement:HTMLCanvasElement;
         private viewRoot:ViewRootImpl;
         private mLockedRect:Rect = new Rect();
@@ -57,21 +58,26 @@ module android.view{
                 let fullHeight = this.mCanvasBound.height();
                 rect.set(0, 0, fullWidth, fullHeight);
             }
+            if(rect.isEmpty()) return null;//may canvas bound not ready.
 
             return this.lockCanvasImpl(rect.left, rect.top, rect.width(), rect.height());
         }
 
         protected lockCanvasImpl(left:number, top:number, width:number, height:number):Canvas {
-            //let canvas = new Canvas(width, height);
-            //if(left!=0||top!=0) canvas.translate(-left, -top);
+            let canvas:Canvas;
+            if(Surface.DrawToCacheFirstMode) {
+                canvas = new Canvas(width, height);
+                if (left != 0 || top != 0) canvas.translate(-left, -top);
 
-            //let mCanvasContent = this.mCanvasElement.getContext('2d');
-            //mCanvasContent.clearRect(left, top, width, height);
+                let mCanvasContent = this.mCanvasElement.getContext('2d');
+                mCanvasContent.clearRect(left, top, width, height);
 
-            let canvas = new SurfaceLockCanvas(this.mCanvasBound.width(), this.mCanvasBound.height(), this.mCanvasElement);
-            this.mLockSaveCount = canvas.save();
-            canvas.clipRect(left, top, left+width, top+height);
-            canvas.clearColor();
+            }else {
+                canvas = new SurfaceLockCanvas(this.mCanvasBound.width(), this.mCanvasBound.height(), this.mCanvasElement);
+                this.mLockSaveCount = canvas.save();
+                canvas.clipRect(left, top, left + width, top + height);
+                canvas.clearColor();
+            }
             return canvas;
         }
 
@@ -80,11 +86,15 @@ module android.view{
          * @param canvas
          */
         unlockCanvasAndPost(canvas:Canvas):void {
-            canvas.restoreToCount(this.mLockSaveCount);
+            if(Surface.DrawToCacheFirstMode) {
+                let mCanvasContent:CanvasRenderingContext2D = this.mCanvasElement.getContext('2d');
+                if(canvas.mCanvasElement) mCanvasContent.drawImage(canvas.mCanvasElement, this.mLockedRect.left, this.mLockedRect.top);
+                canvas.recycle();
 
-            //let mCanvasContent:CanvasRenderingContext2D = this.mCanvasElement.getContext('2d');
-            //if(canvas.mCanvasElement) mCanvasContent.drawImage(canvas.mCanvasElement, this.mLockedRect.left, this.mLockedRect.top);
-            //canvas.recycle();
+            }else{
+                canvas.restoreToCount(this.mLockSaveCount);
+            }
+
         }
     }
 

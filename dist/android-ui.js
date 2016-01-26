@@ -2355,11 +2355,11 @@ var android;
                     let [left = 0, t = 0, right = 0, bottom = 0] = args;
                     rect.set(left, t, right, bottom);
                 }
-                if (args.length === 8) {
-                    this.clipRoundRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()), args[4], args[5], args[6], args[7]);
-                }
-                else {
+                if (args.length === 4 || (!args[4] && !args[5] && !args[6] && !args[7])) {
                     this.clipRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()));
+                }
+                else if (args.length === 8 && (args[4] != 0 || args[5] != 0 || args[6] != 0 || args[7] != 0)) {
+                    this.clipRoundRectImpl(Math.floor(rect.left), Math.floor(rect.top), Math.ceil(rect.width()), Math.ceil(rect.height()), args[4], args[5], args[6], args[7]);
                 }
                 this.mCurrentClip.intersect(rect);
                 let r = rect.isEmpty();
@@ -5140,11 +5140,11 @@ var android;
                             normalMessages.push(msg);
                     }
                 }
-                for (let msg of normalMessages) {
-                    MessageQueue.dispatchMessage(msg);
+                for (let i = 0, length = normalMessages.length; i < length; i++) {
+                    MessageQueue.dispatchMessage(normalMessages[i]);
                 }
-                for (let msg of traversalMessages) {
-                    MessageQueue.dispatchMessage(msg);
+                for (let i = 0, length = traversalMessages.length; i < length; i++) {
+                    MessageQueue.dispatchMessage(traversalMessages[i]);
                 }
                 if (MessageQueue.messages.size > 0)
                     requestAnimationFrame(MessageQueue.loop);
@@ -14993,19 +14993,40 @@ var android;
                     let fullHeight = this.mCanvasBound.height();
                     rect.set(0, 0, fullWidth, fullHeight);
                 }
+                if (rect.isEmpty())
+                    return null;
                 return this.lockCanvasImpl(rect.left, rect.top, rect.width(), rect.height());
             }
             lockCanvasImpl(left, top, width, height) {
-                let canvas = new SurfaceLockCanvas(this.mCanvasBound.width(), this.mCanvasBound.height(), this.mCanvasElement);
-                this.mLockSaveCount = canvas.save();
-                canvas.clipRect(left, top, left + width, top + height);
-                canvas.clearColor();
+                let canvas;
+                if (Surface.DrawToCacheFirstMode) {
+                    canvas = new Canvas(width, height);
+                    if (left != 0 || top != 0)
+                        canvas.translate(-left, -top);
+                    let mCanvasContent = this.mCanvasElement.getContext('2d');
+                    mCanvasContent.clearRect(left, top, width, height);
+                }
+                else {
+                    canvas = new SurfaceLockCanvas(this.mCanvasBound.width(), this.mCanvasBound.height(), this.mCanvasElement);
+                    this.mLockSaveCount = canvas.save();
+                    canvas.clipRect(left, top, left + width, top + height);
+                    canvas.clearColor();
+                }
                 return canvas;
             }
             unlockCanvasAndPost(canvas) {
-                canvas.restoreToCount(this.mLockSaveCount);
+                if (Surface.DrawToCacheFirstMode) {
+                    let mCanvasContent = this.mCanvasElement.getContext('2d');
+                    if (canvas.mCanvasElement)
+                        mCanvasContent.drawImage(canvas.mCanvasElement, this.mLockedRect.left, this.mLockedRect.top);
+                    canvas.recycle();
+                }
+                else {
+                    canvas.restoreToCount(this.mLockSaveCount);
+                }
             }
         }
+        Surface.DrawToCacheFirstMode = false;
         view.Surface = Surface;
         class SurfaceLockCanvas extends Canvas {
             constructor(width, height, canvasElement) {
@@ -15754,6 +15775,7 @@ var androidui;
                 this.androidUIElement.removeChild(this.rootResourceElement);
             else
                 this.rootResourceElement = document.createElement('resources');
+            this.initAndroidUIElement();
             this.initApplication();
             this.androidUIElement.appendChild(this._canvas);
             this.initEvent();
@@ -15762,7 +15784,6 @@ var androidui;
             this._viewRootImpl.initSurface(this._canvas);
             this.initBrowserVisibleChange();
             this.initLaunchActivity();
-            this.initAndroidUIElement();
             this.initGlobalCrashHandle();
         }
         initApplication() {
@@ -16538,6 +16559,8 @@ var android;
                 let canvas;
                 try {
                     canvas = this.mSurface.lockCanvas(this.mDirty);
+                    if (!canvas)
+                        return;
                 }
                 catch (e) {
                     return;

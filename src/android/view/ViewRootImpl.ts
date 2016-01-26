@@ -674,6 +674,7 @@ module android.view {
             let canvas;
             try {
                 canvas = this.mSurface.lockCanvas(this.mDirty);
+                if(!canvas) return;//not ready
             } catch (e) {
                 //native surface not ready. wait ready callback
                 return;

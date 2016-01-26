@@ -69,10 +69,11 @@ module androidui {
             if(this.rootResourceElement) this.androidUIElement.removeChild(this.rootResourceElement)
             else this.rootResourceElement = document.createElement('resources')
 
+            this.initAndroidUIElement();
+
             this.initApplication();
 
             this.androidUIElement.appendChild(this._canvas);
-
 
             this.initEvent();
 
@@ -84,8 +85,6 @@ module androidui {
             this.initBrowserVisibleChange();
 
             this.initLaunchActivity();
-
-            this.initAndroidUIElement();
 
             this.initGlobalCrashHandle();
         }
