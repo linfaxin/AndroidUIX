@@ -20,6 +20,7 @@ module androidui.widget{
         onInflateAdapter(bindElement:HTMLElement, context?:Context, parent?:android.view.ViewGroup):void {
             this.bindElementData = bindElement;
             if(parent instanceof NumberPicker){
+                if(!MutationObserver) return;
                 const callBack = (arr: MutationRecord[], observer: MutationObserver)=>{
                     const values = [];
                     for(let child of Array.from(this.bindElementData.children)){

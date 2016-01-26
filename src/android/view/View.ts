@@ -6392,6 +6392,7 @@ module android.view {
         }
 
         private _initAttrObserver(){
+            if(!MutationObserver) return;
             if(!this._AttrObserver) this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
             else this._AttrObserver.disconnect();
             this._AttrObserver.observe(this.bindElement, {attributes : true, attributeOldValue : true});
