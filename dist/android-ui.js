@@ -14472,7 +14472,7 @@ var android;
                     bind.classList.remove('_activated');
             }
             _initAttrObserver() {
-                if (!MutationObserver)
+                if (!window['MutationObserver'])
                     return;
                 if (!this._AttrObserver)
                     this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
@@ -56840,7 +56840,7 @@ var androidui;
                 this.registerHtmlDataObserver();
             }
             registerHtmlDataObserver() {
-                if (!MutationObserver)
+                if (!window['MutationObserver'])
                     return;
                 const adapter = this;
                 function callBack(arr, observer) {
@@ -56929,7 +56929,7 @@ var androidui;
                 this.registerHtmlDataObserver();
             }
             registerHtmlDataObserver() {
-                if (!MutationObserver)
+                if (!window['MutationObserver'])
                     return;
                 const adapter = this;
                 function callBack(arr, observer) {
@@ -57019,7 +57019,7 @@ var androidui;
             onInflateAdapter(bindElement, context, parent) {
                 this.bindElementData = bindElement;
                 if (parent instanceof NumberPicker) {
-                    if (!MutationObserver)
+                    if (!window['MutationObserver'])
                         return;
                     const callBack = (arr, observer) => {
                         const values = [];
