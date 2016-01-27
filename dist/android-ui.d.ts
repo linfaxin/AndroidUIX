@@ -3410,6 +3410,7 @@ declare module android.view {
     }
 }
 declare module PageStack {
+    var DEBUG: boolean;
     var currentStack: StateStack;
     var backListener: () => boolean;
     var pageOpenHandler: (pageId: string, pageExtra?: any, isRestore?: boolean) => boolean;

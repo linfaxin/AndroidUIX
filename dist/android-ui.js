@@ -15041,7 +15041,7 @@ var android;
 })(android || (android = {}));
 var PageStack;
 (function (PageStack) {
-    const DEBUG = false;
+    PageStack.DEBUG = false;
     const history_go = history.go;
     let historyLocking = false;
     let pendingFuncLock = [];
@@ -15074,55 +15074,64 @@ var PageStack;
             history.replaceState(PageStack.currentStack, null, '#');
         }
         ensureLastHistoryFaked();
-        setTimeout(initOnpopstate, 0);
+        if (/^loaded|^complete|^interactive/.test(document.readyState)) {
+            setTimeout(initOnpopstate, 0);
+        }
+        else {
+            document.addEventListener('load', () => {
+                setTimeout(initOnpopstate, 0);
+            });
+        }
     }
-    function initOnpopstate() {
-        window.onpopstate = (ev) => {
-            let stack = ev.state;
-            if (historyLocking) {
-                PageStack.currentStack = stack;
-                return;
-            }
-            if (DEBUG)
-                console.log('onpopstate', stack);
-            if (!stack) {
-                let pageId = location.hash;
-                if (pageId[0] === '#')
-                    pageId = pageId.substring(1);
-                historyGo(-2, false);
-                if (firePageOpen(pageId, null)) {
-                    notifyNewPageOpened(pageId);
-                }
-                else {
-                    ensureLastHistoryFaked();
-                }
-            }
-            else if (PageStack.currentStack.stack.length != stack.stack.length) {
-                let delta = stack.stack.length - PageStack.currentStack.stack.length;
-                if (delta >= 0) {
-                    console.warn('something error! stack: ', stack, 'last stack: ', PageStack.currentStack);
-                    return;
-                }
-                var stackList = PageStack.currentStack.stack;
-                PageStack.currentStack = stack;
-                tryClosePageAfterHistoryChanged(stackList, delta);
+    let onpopstateListener = function (ev) {
+        let stack = ev.state;
+        if (historyLocking) {
+            PageStack.currentStack = stack;
+            return;
+        }
+        if (PageStack.DEBUG)
+            console.log('onpopstate', stack);
+        if (!stack) {
+            let pageId = location.hash;
+            if (pageId[0] === '#')
+                pageId = pageId.substring(1);
+            historyGo(-2, false);
+            if (firePageOpen(pageId, null)) {
+                notifyNewPageOpened(pageId);
             }
             else {
-                PageStack.currentStack = stack;
-                if (fireBackPressed()) {
-                    ensureLastHistoryFaked();
+                ensureLastHistoryFaked();
+            }
+        }
+        else if (PageStack.currentStack.stack.length != stack.stack.length) {
+            let delta = stack.stack.length - PageStack.currentStack.stack.length;
+            if (delta >= 0) {
+                console.warn('something error! stack: ', stack, 'last stack: ', PageStack.currentStack);
+                return;
+            }
+            var stackList = PageStack.currentStack.stack;
+            PageStack.currentStack = stack;
+            tryClosePageAfterHistoryChanged(stackList, delta);
+        }
+        else {
+            PageStack.currentStack = stack;
+            if (fireBackPressed()) {
+                ensureLastHistoryFaked();
+            }
+            else {
+                var stackList = PageStack.currentStack.stack;
+                if (firePageClose(stackList[stackList.length - 1].pageId, stackList[stackList.length - 1].extra)) {
+                    historyGo(-1);
                 }
                 else {
-                    var stackList = PageStack.currentStack.stack;
-                    if (firePageClose(stackList[stackList.length - 1].pageId, stackList[stackList.length - 1].extra)) {
-                        historyGo(-1);
-                    }
-                    else {
-                        ensureLastHistoryFaked();
-                    }
+                    ensureLastHistoryFaked();
                 }
             }
-        };
+        }
+    };
+    function initOnpopstate() {
+        window.removeEventListener('popstate', onpopstateListener);
+        window.addEventListener('popstate', onpopstateListener);
     }
     function go(delta, pageAlreadyClose = false) {
         if (historyLocking) {
@@ -15179,7 +15188,7 @@ var PageStack;
             requestHistoryGoWhenLocking += delta;
             return;
         }
-        if (DEBUG)
+        if (PageStack.DEBUG)
             console.log('historyGo', delta);
         historyLocking = true;
         const state = history.state;
@@ -15250,7 +15259,7 @@ var PageStack;
         }
     }
     function notifyPageClosed(pageId) {
-        if (DEBUG)
+        if (PageStack.DEBUG)
             console.log('notifyPageClosed', pageId);
         if (historyLocking) {
             ensureLockDo(() => {
@@ -15286,7 +15295,7 @@ var PageStack;
     }
     PageStack.notifyPageClosed = notifyPageClosed;
     function notifyNewPageOpened(pageId, extra) {
-        if (DEBUG)
+        if (PageStack.DEBUG)
             console.log('notifyNewPageOpened', pageId);
         let state = {
             pageId: pageId,
@@ -15347,7 +15356,7 @@ var PageStack;
     }
     function removeLastHistoryIfFaked() {
         if (history.state && history.state.isFake) {
-            if (DEBUG)
+            if (PageStack.DEBUG)
                 console.log('remove Fake History');
             history.replaceState({}, null, '');
             historyGo(-1, false);
@@ -15358,7 +15367,7 @@ var PageStack;
     }
     function ensureLastHistoryFakedImpl() {
         if (!history.state.isFake) {
-            if (DEBUG)
+            if (PageStack.DEBUG)
                 console.log('append Fake History');
             history.pushState({
                 isFake: true,
@@ -16027,6 +16036,7 @@ var androidui;
             if (this.windowManager.getWindowsLayout().bindElement.parentNode === null) {
                 this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
             }
+            PageStack.DEBUG = true;
         }
     }
     AndroidUI.BindToElementName = 'AndroidUI';

@@ -4,7 +4,7 @@
  */
 
 module PageStack{
-    const DEBUG = false;
+    export var DEBUG = false;
     const history_go = history.go;
     export var currentStack:StateStack;
 
@@ -50,72 +50,81 @@ module PageStack{
         }
         ensureLastHistoryFaked();
 
-        //init delay, because safari will trigger a 'onpopstate' when js load finish.
-        setTimeout(initOnpopstate, 0);
+        //init delay, because safari will trigger a 'onpopstate' when page load finish.
+        if(/^loaded|^complete|^interactive/.test(document.readyState)){//already loaded
+            setTimeout(initOnpopstate, 0);
+        }else{
+            document.addEventListener('load', ()=>{
+                setTimeout(initOnpopstate, 0);
+            });
+        }
     }
 
-    function initOnpopstate(){
-        //_init onpopstate, deal when user press back / modify location hash
-        window.onpopstate = (ev:PopStateEvent)=>{
-            let stack = <StateStack>ev.state;
+    //_init onpopstate, deal when user press back / modify location hash
+    let onpopstateListener = function(ev:PopStateEvent){
+        let stack = <StateStack>ev.state;
 
-            if(historyLocking){
-                //historyGo method will callback to here, do nothing only remember stack
-                currentStack = stack;
+        if(historyLocking){
+            //historyGo method will callback to here, do nothing only remember stack
+            currentStack = stack;
+            return;
+        }
+
+        if(DEBUG) console.log('onpopstate', stack);
+
+        if(!stack){
+            //no state, user modified the hash.
+
+            let pageId = location.hash;
+            if(pageId[0]==='#') pageId = pageId.substring(1);
+
+            //back the changed hash page & fake page
+            historyGo(-2, false);
+            if(firePageOpen(pageId, null)){
+                notifyNewPageOpened(pageId);
+
+            }else{
+                ensureLastHistoryFaked();
+            }
+
+        }else if(currentStack.stack.length!=stack.stack.length){
+            //will happen when back multi page (long click back button on pc chrome)
+            let delta = stack.stack.length - currentStack.stack.length;
+            if(delta>=0){
+                console.warn('something error! stack: ', stack, 'last stack: ', currentStack);
                 return;
             }
 
-            if(DEBUG) console.log('onpopstate', stack);
+            var stackList = currentStack.stack;
+            currentStack = stack;
+            //history already change, try close the pages
+            tryClosePageAfterHistoryChanged(stackList, delta);
 
-            if(!stack){
-                //no state, user modified the hash.
+        }else{
+            currentStack = stack;
 
-                let pageId = location.hash;
-                if(pageId[0]==='#') pageId = pageId.substring(1);
-
-                //back the changed hash page & fake page
-                historyGo(-2, false);
-                if(firePageOpen(pageId, null)){
-                    notifyNewPageOpened(pageId);
-
-                }else{
-                    ensureLastHistoryFaked();
-                }
-
-            }else if(currentStack.stack.length!=stack.stack.length){
-                //will happen when back multi page (long click back button on pc chrome)
-                let delta = stack.stack.length - currentStack.stack.length;
-                if(delta>=0){
-                    console.warn('something error! stack: ', stack, 'last stack: ', currentStack);
-                    return;
-                }
-
-                var stackList = currentStack.stack;
-                currentStack = stack;
-                //history already change, try close the pages
-                tryClosePageAfterHistoryChanged(stackList, delta);
+            //user press back button.
+            if(fireBackPressed()){
+                //user handle the back press.
+                ensureLastHistoryFaked();
 
             }else{
-                currentStack = stack;
-
-                //user press back button.
-                if(fireBackPressed()){
-                    //user handle the back press.
-                    ensureLastHistoryFaked();
+                var stackList = currentStack.stack;
+                if(firePageClose(stackList[stackList.length-1].pageId, stackList[stackList.length-1].extra)){
+                    //should go back real.
+                    historyGo(-1);
 
                 }else{
-                    var stackList = currentStack.stack;
-                    if(firePageClose(stackList[stackList.length-1].pageId, stackList[stackList.length-1].extra)){
-                        //should go back real.
-                        historyGo(-1);
-
-                    }else{
-                        ensureLastHistoryFaked();
-                    }
+                    ensureLastHistoryFaked();
                 }
             }
-        };
+        }
+    };
+    function initOnpopstate(){
+        window.removeEventListener('popstate', onpopstateListener);
+        window.addEventListener('popstate', onpopstateListener);
     }
+
 
     export function go(delta:number, pageAlreadyClose=false){
         if(historyLocking){
