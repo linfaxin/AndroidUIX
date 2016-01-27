@@ -15074,14 +15074,11 @@ var PageStack;
             history.replaceState(PageStack.currentStack, null, '#');
         }
         ensureLastHistoryFaked();
-        if (/^loaded|^complete|^interactive/.test(document.readyState)) {
+        initOnpopstate();
+        window.addEventListener('load', () => {
+            window.removeEventListener('popstate', onpopstateListener);
             setTimeout(initOnpopstate, 0);
-        }
-        else {
-            document.addEventListener('load', () => {
-                setTimeout(initOnpopstate, 0);
-            });
-        }
+        });
     }
     let onpopstateListener = function (ev) {
         let stack = ev.state;
