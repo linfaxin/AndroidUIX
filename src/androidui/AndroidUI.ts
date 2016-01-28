@@ -375,7 +375,6 @@ module androidui {
             if(this.windowManager.getWindowsLayout().bindElement.parentNode === null){
                 this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
             }
-            PageStack.DEBUG = true;
         }
     }
 

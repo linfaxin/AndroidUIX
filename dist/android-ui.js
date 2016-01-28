@@ -10698,6 +10698,7 @@ var android;
                 this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
                 this.initBindAttr(this._attrBinder);
                 this.initBindElement(bindElement);
+                this.setLayerType(View.LAYER_TYPE_SOFTWARE);
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
             }
@@ -16033,7 +16034,6 @@ var androidui;
             if (this.windowManager.getWindowsLayout().bindElement.parentNode === null) {
                 this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
             }
-            PageStack.DEBUG = true;
         }
     }
     AndroidUI.BindToElementName = 'AndroidUI';
@@ -16078,14 +16078,8 @@ var androidui;
         HTMLDivElement = _HTMLDivElement;
     }
     class AndroidUIElement extends HTMLDivElement {
-        performCreate() {
-            this.AndroidUI = new androidui.AndroidUI(this);
-            let debugAttr = this.getAttribute('debug');
-            if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
-                this.AndroidUI.showDebugLayout();
-        }
         createdCallback() {
-            $domReady(() => this.performCreate());
+            $domReady(() => initElement(this));
         }
         attachedCallback() {
         }
@@ -16098,6 +16092,12 @@ var androidui;
         }
     }
     androidui.AndroidUIElement = AndroidUIElement;
+    function initElement(ele) {
+        ele.AndroidUI = new androidui.AndroidUI(this);
+        let debugAttr = ele.getAttribute('debug');
+        if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
+            ele.AndroidUI.showDebugLayout();
+    }
     if (typeof document['registerElement'] === "function") {
         document.registerElement("android-ui", AndroidUIElement);
     }
@@ -16105,7 +16105,7 @@ var androidui;
         $domReady(() => {
             let eles = document.getElementsByTagName('android-ui');
             for (let ele of Array.from(eles)) {
-                ele.AndroidUI = new androidui.AndroidUI(ele);
+                initElement(ele);
             }
         });
     }

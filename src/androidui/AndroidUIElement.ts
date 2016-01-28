@@ -18,15 +18,8 @@ module androidui{
     export class AndroidUIElement extends HTMLDivElement{
         AndroidUI:AndroidUI;
 
-        private performCreate(){
-            this.AndroidUI = new AndroidUI(this);
-
-            let debugAttr = this.getAttribute('debug');
-            if(debugAttr!=null && debugAttr!='0' && debugAttr!='false') this.AndroidUI.showDebugLayout();
-        }
-
         createdCallback():void{
-            $domReady( ()=>this.performCreate() );
+            $domReady(()=>initElement(this));
         }
 
         attachedCallback():void {
@@ -42,13 +35,19 @@ module androidui{
         }
     }
 
+    function initElement(ele:AndroidUIElement){
+        ele.AndroidUI = new AndroidUI(this);
+        let debugAttr = ele.getAttribute('debug');
+        if(debugAttr!=null && debugAttr!='0' && debugAttr!='false') ele.AndroidUI.showDebugLayout();
+    }
+
     if(typeof document['registerElement'] === "function"){
         (<any>document).registerElement("android-ui", AndroidUIElement);
     }else{
         $domReady(()=>{
             let eles = document.getElementsByTagName('android-ui');
             for(let ele of Array.from(eles)){
-                (<AndroidUIElement>ele).AndroidUI = new AndroidUI(<AndroidUIElement>ele);
+                initElement(<AndroidUIElement>ele);
             }
         });
     }

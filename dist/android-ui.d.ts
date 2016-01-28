@@ -3531,7 +3531,6 @@ declare module androidui {
 declare module androidui {
     class AndroidUIElement extends HTMLDivElement {
         AndroidUI: AndroidUI;
-        private performCreate();
         createdCallback(): void;
         attachedCallback(): void;
         detachedCallback(): void;
