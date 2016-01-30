@@ -283,7 +283,7 @@ declare module android.graphics {
         static rgb(red: number, green: number, blue: number): number;
         static argb(alpha: number, red: number, green: number, blue: number): number;
         static rgba(red: number, green: number, blue: number, alpha: number): number;
-        static parseColor(colorString: string): number;
+        static parseColor(colorString: string, defaultColor?: number): number;
         static toARGBHex(color: number): string;
         static toRGBAFunc(color: number): string;
         static getHtmlColor(color: string): number;
@@ -2360,10 +2360,12 @@ declare module android.R {
         static viewStyle: any;
         static textViewStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
         };
         static buttonStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
         } & {
             background: Drawable;
@@ -2382,6 +2384,7 @@ declare module android.R {
         };
         static checkboxStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
         } & {
             background: Drawable;
@@ -2397,6 +2400,7 @@ declare module android.R {
         };
         static radiobuttonStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
         } & {
             background: Drawable;
@@ -8121,6 +8125,7 @@ declare module android.widget {
     class CheckBox extends CompoundButton {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
         } & {
             background: graphics.drawable.Drawable;
@@ -8141,6 +8146,7 @@ declare module android.widget {
     class RadioButton extends CompoundButton {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
         } & {
             background: graphics.drawable.Drawable;

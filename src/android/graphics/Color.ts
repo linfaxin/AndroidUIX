@@ -90,7 +90,7 @@ module android.graphics{
          * 'aqua', 'fuschia', 'lime', 'maroon', 'navy', 'olive', 'purple',
          * 'silver', 'teal'
          */
-        static parseColor(colorString:string):number {
+        static parseColor(colorString:string, defaultColor?:number):number {
             if (colorString.charAt(0) == '#') {
                 // Use a long to avoid rollovers on #ffXXXXXX
                 let color = parseInt(colorString.substring(1), 16);
@@ -98,15 +98,29 @@ module android.graphics{
                     // Set the alpha value
                     color |= 0x00000000ff000000;
                 } else if (colorString.length != 9) {
+                    if(defaultColor!=null) return defaultColor;
                     throw new Error("Unknown color");
                 }
                 return color;
+
+            } else if (colorString.startsWith('rgb(')) {
+                colorString = colorString.substring(colorString.indexOf('(')+1, colorString.lastIndexOf(')'));
+                let parts = colorString.split(',');
+                return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
+
+            } else if (colorString.startsWith('rgba(')) {
+                colorString = colorString.substring(colorString.indexOf('(')+1, colorString.lastIndexOf(')'));
+                let parts = colorString.split(',');
+                return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
+                    Number.parseInt(parts[2]), Number.parseFloat(parts[3]) * 255);
+
             } else {
                 let color = Color.sColorNameMap.get(colorString.toLowerCase());
                 if (color != null) {
                     return color;
                 }
             }
+            if(defaultColor!=null) return defaultColor;
             throw new Error("Unknown color");
         }
 

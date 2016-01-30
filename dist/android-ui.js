@@ -939,16 +939,28 @@ var android;
             static rgba(red, green, blue, alpha) {
                 return (alpha << 24) | (red << 16) | (green << 8) | blue;
             }
-            static parseColor(colorString) {
+            static parseColor(colorString, defaultColor) {
                 if (colorString.charAt(0) == '#') {
                     let color = parseInt(colorString.substring(1), 16);
                     if (colorString.length == 7) {
                         color |= 0x00000000ff000000;
                     }
                     else if (colorString.length != 9) {
+                        if (defaultColor != null)
+                            return defaultColor;
                         throw new Error("Unknown color");
                     }
                     return color;
+                }
+                else if (colorString.startsWith('rgb(')) {
+                    colorString = colorString.substring(colorString.indexOf('(') + 1, colorString.lastIndexOf(')'));
+                    let parts = colorString.split(',');
+                    return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
+                }
+                else if (colorString.startsWith('rgba(')) {
+                    colorString = colorString.substring(colorString.indexOf('(') + 1, colorString.lastIndexOf(')'));
+                    let parts = colorString.split(',');
+                    return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseFloat(parts[3]) * 255);
                 }
                 else {
                     let color = Color.sColorNameMap.get(colorString.toLowerCase());
@@ -956,6 +968,8 @@ var android;
                         return color;
                     }
                 }
+                if (defaultColor != null)
+                    return defaultColor;
                 throw new Error("Unknown color");
             }
             static toARGBHex(color) {
@@ -2669,7 +2683,7 @@ var android;
                 return fontParts[fontParts.length - 1];
             }
             setColor(color, style) {
-                if (typeof color === 'number') {
+                if (color != null) {
                     this.setColorImpl(color, style);
                 }
             }
@@ -2677,15 +2691,23 @@ var android;
                 let colorS = Color.toRGBAFunc(color);
                 switch (style) {
                     case graphics.Paint.Style.STROKE:
-                        this._mCanvasContent.strokeStyle = colorS;
+                        if (Color.parseColor(this._mCanvasContent.strokeStyle + '', 0) != color) {
+                            this._mCanvasContent.strokeStyle = colorS;
+                        }
                         break;
                     case graphics.Paint.Style.FILL:
-                        this._mCanvasContent.fillStyle = colorS;
+                        if (Color.parseColor(this._mCanvasContent.fillStyle + '', 0) != color) {
+                            this._mCanvasContent.fillStyle = colorS;
+                        }
                         break;
                     default:
                     case graphics.Paint.Style.FILL_AND_STROKE:
-                        this._mCanvasContent.fillStyle = colorS;
-                        this._mCanvasContent.strokeStyle = colorS;
+                        if (Color.parseColor(this._mCanvasContent.fillStyle + '', 0) != color) {
+                            this._mCanvasContent.fillStyle = colorS;
+                        }
+                        if (Color.parseColor(this._mCanvasContent.strokeStyle + '', 0) != color) {
+                            this._mCanvasContent.strokeStyle = colorS;
+                        }
                         break;
                 }
             }
@@ -2745,23 +2767,17 @@ var android;
                 this._mCanvasContent.shadowColor = Color.toRGBAFunc(color);
             }
             setFontSize(size) {
-                if (typeof size === 'number') {
+                if (size != null) {
                     this.setFontSizeImpl(size);
                 }
             }
             setFontSizeImpl(size) {
-                const fontStyles = [];
-                if (size != null) {
-                    fontStyles.push(size + 'px');
-                }
-                if (fontStyles.length > 0) {
-                    let cFont = this._mCanvasContent.font;
-                    let fontParts = cFont.split(' ');
-                    fontStyles.push(fontParts[fontParts.length - 1]);
-                    let font = fontStyles.join(' ');
-                    if (font != cFont)
-                        this._mCanvasContent.font = font;
-                }
+                let cFont = this._mCanvasContent.font;
+                let fontParts = cFont.split(' ');
+                if (Number.parseFloat(fontParts[fontParts.length - 2]) == size)
+                    return;
+                fontParts[fontParts.length - 2] = size + 'px';
+                this._mCanvasContent.font = fontParts.join(' ');
             }
             setFont(fontName) {
                 if (fontName != null) {
@@ -5821,17 +5837,7 @@ var androidui;
                 if (Number.isInteger(color))
                     return color;
                 try {
-                    if (value.startsWith('rgb(')) {
-                        value = value.substring(value.indexOf('(') + 1, value.lastIndexOf(')'));
-                        let parts = value.split(',');
-                        return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
-                    }
-                    else if (value.startsWith('rgba(')) {
-                        value = value.substring(value.indexOf('(') + 1, value.lastIndexOf(')'));
-                        let parts = value.split(',');
-                        return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]), Number.parseFloat(parts[3]) * 255);
-                    }
-                    else if (value.startsWith('@')) {
+                    if (value.startsWith('@')) {
                         return Resources.getSystem().getColor(value);
                     }
                     else {
@@ -10408,6 +10414,7 @@ var android;
             static get textViewStyle() {
                 return {
                     textSize: '14sp',
+                    layerType: 'software',
                     textColor: R.color.textView_textColor
                 };
             }

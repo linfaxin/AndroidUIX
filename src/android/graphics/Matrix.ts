@@ -921,11 +921,17 @@ export class Matrix {
      * Reset a matrix to the identity
      */
     private static reset(mtx:number[]):void  {
-        for (let i:number = 0, k:number = 0; i < 3; i++) {
-            for (let j:number = 0; j < 3; j++, k++) {
-                mtx[k] = ((i == j) ? 1 : 0);
-            }
-        }
+        mtx[0] = 1;
+        mtx[1] = 0;
+        mtx[2] = 0;
+
+        mtx[3] = 0;
+        mtx[4] = 1;
+        mtx[5] = 0;
+
+        mtx[6] = 0;
+        mtx[7] = 0;
+        mtx[8] = 1;
     }
 
     private static kIdentity_Mask:number = 0;

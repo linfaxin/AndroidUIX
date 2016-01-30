@@ -741,7 +741,7 @@ module android.graphics {
 
 
         setColor(color:number, style?:Paint.Style):void {
-            if(typeof color === 'number'){
+            if(color != null){
                 this.setColorImpl(color, style);
             }
         }
@@ -750,15 +750,23 @@ module android.graphics {
             let colorS = Color.toRGBAFunc(color);
             switch (style){
                 case Paint.Style.STROKE:
-                    this._mCanvasContent.strokeStyle = colorS;
+                    if(Color.parseColor(this._mCanvasContent.strokeStyle+'', 0)!=color){
+                        this._mCanvasContent.strokeStyle = colorS;
+                    }
                     break;
                 case Paint.Style.FILL:
-                    this._mCanvasContent.fillStyle = colorS;
+                    if(Color.parseColor(this._mCanvasContent.fillStyle+'', 0)!=color){
+                        this._mCanvasContent.fillStyle = colorS;
+                    }
                     break;
                 default :
                 case Paint.Style.FILL_AND_STROKE:
-                    this._mCanvasContent.fillStyle = colorS;
-                    this._mCanvasContent.strokeStyle = colorS;
+                    if(Color.parseColor(this._mCanvasContent.fillStyle+'', 0)!=color){
+                        this._mCanvasContent.fillStyle = colorS;
+                    }
+                    if(Color.parseColor(this._mCanvasContent.strokeStyle+'', 0)!=color){
+                        this._mCanvasContent.strokeStyle = colorS;
+                    }
                     break;
             }
         }
@@ -835,24 +843,17 @@ module android.graphics {
         }
 
         setFontSize(size:number):void {
-            if(typeof size === 'number'){
+            if(size != null){
                 this.setFontSizeImpl(size);
             }
         }
 
         protected setFontSizeImpl(size:number):void {
-            //font
-            const fontStyles = [];
-            if (size != null) {
-                fontStyles.push(size + 'px');
-            }
-            if (fontStyles.length > 0) {
-                let cFont = this._mCanvasContent.font;
-                let fontParts = cFont.split(' ');
-                fontStyles.push(fontParts[fontParts.length - 1]);//font family
-                let font = fontStyles.join(' ');
-                if(font!=cFont) this._mCanvasContent.font = font;
-            }
+            let cFont = this._mCanvasContent.font;
+            let fontParts = cFont.split(' ');
+            if(Number.parseFloat(fontParts[fontParts.length-2]) == size) return;
+            fontParts[fontParts.length-2] = size + 'px';
+            this._mCanvasContent.font = fontParts.join(' ');
         }
 
         setFont(fontName:string):void {

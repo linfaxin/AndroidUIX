@@ -152,18 +152,7 @@ module androidui.attr {
             if(Number.isInteger(color)) return color;
 
             try {
-                if (value.startsWith('rgb(')) {
-                    value = value.substring(value.indexOf('(')+1, value.lastIndexOf(')'));
-                    let parts = value.split(',');
-                    return Color.rgb(Number.parseInt(parts[0]), Number.parseInt(parts[1]), Number.parseInt(parts[2]));
-
-                } else if (value.startsWith('rgba(')) {
-                    value = value.substring(value.indexOf('(')+1, value.lastIndexOf(')'));
-                    let parts = value.split(',');
-                    return Color.rgba(Number.parseInt(parts[0]), Number.parseInt(parts[1]),
-                        Number.parseInt(parts[2]), Number.parseFloat(parts[3]) * 255);
-
-                } else if(value.startsWith('@')) {
+                if(value.startsWith('@')) {
                     return Resources.getSystem().getColor(value);
 
                 } else {
