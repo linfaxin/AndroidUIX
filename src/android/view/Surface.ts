@@ -34,7 +34,7 @@ module android.view{
         }
 
         isValid():boolean {
-            return true;//web canvas always true
+            return true;//always true
         }
 
         notifyBoundChange(){
@@ -48,14 +48,16 @@ module android.view{
         }
 
         /**
-         * create a off-screen canvas to draw
+         * lock a canvas to draw
          */
         lockCanvas(dirty:Rect):Canvas{
+            let fullWidth = this.mCanvasBound.width();
+            let fullHeight = this.mCanvasBound.height();
+            if(!this.mSupportDirtyDraw) dirty.set(0, 0, fullWidth, fullHeight);
+
             let rect:Rect = this.mLockedRect;
             rect.set(Math.floor(dirty.left), Math.floor(dirty.top), Math.ceil(dirty.right), Math.ceil(dirty.bottom));
             if(dirty.isEmpty()){
-                let fullWidth = this.mCanvasBound.width();
-                let fullHeight = this.mCanvasBound.height();
                 rect.set(0, 0, fullWidth, fullHeight);
             }
             if(rect.isEmpty()) return null;//may canvas bound not ready.

@@ -2470,13 +2470,14 @@ var android;
                         this.saveImpl();
                         paint.applyToCanvas(this);
                     }
-                    this.drawRectImpl(left, top, right - left, bottom - top, paint);
+                    let style = paint ? paint.getStyle() : graphics.Paint.Style.FILL;
+                    this.drawRectImpl(left, top, right - left, bottom - top, style);
                     if (!paintEmpty)
                         this.restoreImpl();
                 }
             }
-            drawRectImpl(left, top, width, height, paint) {
-                switch (paint.getStyle()) {
+            drawRectImpl(left, top, width, height, style) {
+                switch (style) {
                     case graphics.Paint.Style.STROKE:
                         this._mCanvasContent.strokeRect(left, top, width, height);
                         break;
@@ -2509,14 +2510,17 @@ var android;
                 if (oval == null) {
                     throw Error(`new NullPointerException()`);
                 }
-                this.drawOvalImpl(oval, paint);
-            }
-            drawOvalImpl(oval, paint) {
                 let paintEmpty = !paint || paint.isEmpty();
                 if (!paintEmpty) {
                     this.saveImpl();
                     paint.applyToCanvas(this);
                 }
+                let style = paint ? paint.getStyle() : graphics.Paint.Style.FILL;
+                this.drawOvalImpl(oval, style);
+                if (!paintEmpty)
+                    this.restoreImpl();
+            }
+            drawOvalImpl(oval, style) {
                 let ctx = this._mCanvasContent;
                 ctx.beginPath();
                 let cx = oval.centerX();
@@ -2528,38 +2532,40 @@ var android;
                 ctx.scale(rx, ry);
                 ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
                 ctx.restore();
-                this.applyFillOrStrokeToContent(paint.getStyle());
-                if (!paintEmpty)
-                    this.restoreImpl();
+                this.applyFillOrStrokeToContent(style);
             }
             drawCircle(cx, cy, radius, paint) {
-                this.drawCircleImpl(cx, cy, radius, paint);
-            }
-            drawCircleImpl(cx, cy, radius, paint) {
                 let paintEmpty = !paint || paint.isEmpty();
                 if (!paintEmpty) {
                     this.saveImpl();
                     paint.applyToCanvas(this);
                 }
+                let style = paint ? paint.getStyle() : graphics.Paint.Style.FILL;
+                this.drawCircleImpl(cx, cy, radius, style);
+                if (!paintEmpty)
+                    this.restoreImpl();
+            }
+            drawCircleImpl(cx, cy, radius, style) {
                 let ctx = this._mCanvasContent;
                 ctx.beginPath();
                 ctx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
-                this.applyFillOrStrokeToContent(paint.getStyle());
-                if (!paintEmpty)
-                    this.restoreImpl();
+                this.applyFillOrStrokeToContent(style);
             }
             drawArc(oval, startAngle, sweepAngle, useCenter, paint) {
                 if (oval == null) {
                     throw Error(`new NullPointerException()`);
                 }
-                this.drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint);
-            }
-            drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint) {
                 let paintEmpty = !paint || paint.isEmpty();
                 if (!paintEmpty) {
                     this.saveImpl();
                     paint.applyToCanvas(this);
                 }
+                let style = paint ? paint.getStyle() : graphics.Paint.Style.FILL;
+                this.drawArcImpl(oval, startAngle, sweepAngle, useCenter, style);
+                if (!paintEmpty)
+                    this.restoreImpl();
+            }
+            drawArcImpl(oval, startAngle, sweepAngle, useCenter, style) {
                 let ctx = this._mCanvasContent;
                 ctx.save();
                 ctx.beginPath();
@@ -2575,26 +2581,25 @@ var android;
                     ctx.closePath();
                 }
                 ctx.restore();
-                this.applyFillOrStrokeToContent(paint.getStyle());
-                if (!paintEmpty)
-                    this.restoreImpl();
+                this.applyFillOrStrokeToContent(style);
             }
             drawRoundRect(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint) {
                 if (rect == null) {
                     throw Error(`new NullPointerException()`);
                 }
-                this.drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint);
-            }
-            drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint) {
                 let paintEmpty = !paint || paint.isEmpty();
                 if (!paintEmpty) {
                     this.saveImpl();
                     paint.applyToCanvas(this);
                 }
-                this.doRoundRectPath(rect.left, rect.top, rect.width(), rect.height(), radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
-                this.applyFillOrStrokeToContent(paint.getStyle());
+                let style = paint ? paint.getStyle() : graphics.Paint.Style.FILL;
+                this.drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style);
                 if (!paintEmpty)
                     this.restoreImpl();
+            }
+            drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style) {
+                this.doRoundRectPath(rect.left, rect.top, rect.width(), rect.height(), radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
+                this.applyFillOrStrokeToContent(style);
             }
             drawPath(path, paint) {
             }
@@ -14987,11 +14992,13 @@ var android;
                 this.mCanvasBound.set(clientRect.left * density, clientRect.top * density, clientRect.right * density, clientRect.bottom * density);
             }
             lockCanvas(dirty) {
+                let fullWidth = this.mCanvasBound.width();
+                let fullHeight = this.mCanvasBound.height();
+                if (!this.mSupportDirtyDraw)
+                    dirty.set(0, 0, fullWidth, fullHeight);
                 let rect = this.mLockedRect;
                 rect.set(Math.floor(dirty.left), Math.floor(dirty.top), Math.ceil(dirty.right), Math.ceil(dirty.bottom));
                 if (dirty.isEmpty()) {
-                    let fullWidth = this.mCanvasBound.width();
-                    let fullHeight = this.mCanvasBound.height();
                     rect.set(0, 0, fullWidth, fullHeight);
                 }
                 if (rect.isEmpty())
@@ -16093,7 +16100,7 @@ var androidui;
     }
     androidui.AndroidUIElement = AndroidUIElement;
     function initElement(ele) {
-        ele.AndroidUI = new androidui.AndroidUI(this);
+        ele.AndroidUI = new androidui.AndroidUI(ele);
         let debugAttr = ele.getAttribute('debug');
         if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
             ele.AndroidUI.showDebugLayout();
@@ -16527,7 +16534,7 @@ var android;
                 }
             }
             performDraw() {
-                let fullRedrawNeeded = this.mFullRedrawNeeded || !this.mSurface.mSupportDirtyDraw;
+                let fullRedrawNeeded = this.mFullRedrawNeeded;
                 this.mFullRedrawNeeded = false;
                 this.mIsDrawing = true;
                 try {
@@ -16574,11 +16581,12 @@ var android;
                 this.mDrawingTime = SystemClock.uptimeMillis();
                 this.mView.mPrivateFlags |= View.PFLAG_DRAWN;
                 this.mSetIgnoreDirtyState = false;
-                this.mView.draw(canvas);
+                if (!this.mSurface['lastRenderCanvas'])
+                    this.mView.draw(canvas);
                 if (!this.mSetIgnoreDirtyState) {
                     this.mIgnoreDirtyState = false;
                 }
-                this.mSurface.unlockCanvasAndPost(canvas);
+                this.mSurface.unlockCanvasAndPost(this.mSurface['lastRenderCanvas'] || canvas);
                 if (ViewRootImpl.LOCAL_LOGV) {
                     Log.v(ViewRootImpl.TAG, "Surface unlockCanvasAndPost");
                 }
@@ -57811,16 +57819,16 @@ var androidui;
                     throw Error('image should be NativeImage');
                 }
             }
-            drawRectImpl(left, top, width, height, paint) {
+            drawRectImpl(left, top, width, height, style) {
                 native.NativeApi.canvas.drawRect(this.canvasId, left, top, width, height);
             }
-            drawOvalImpl(oval, paint) {
+            drawOvalImpl(oval, style) {
             }
-            drawCircleImpl(cx, cy, radius, paint) {
+            drawCircleImpl(cx, cy, radius, style) {
             }
-            drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint) {
+            drawArcImpl(oval, startAngle, sweepAngle, useCenter, style) {
             }
-            drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint) {
+            drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style) {
             }
             drawTextImpl(text, x, y, style) {
                 native.NativeApi.canvas.drawText(this.canvasId, text, x, y, style);

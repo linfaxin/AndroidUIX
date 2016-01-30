@@ -629,7 +629,7 @@ module android.view {
         }
 
         private performDraw() {
-            let fullRedrawNeeded = this.mFullRedrawNeeded || !this.mSurface.mSupportDirtyDraw;
+            let fullRedrawNeeded = this.mFullRedrawNeeded;
             this.mFullRedrawNeeded = false;
             this.mIsDrawing = true;
             try {
@@ -688,7 +688,7 @@ module android.view {
 
             this.mSetIgnoreDirtyState = false;
 
-            this.mView.draw(canvas);
+            if(!this.mSurface['lastRenderCanvas']) this.mView.draw(canvas);
 
 
             if (!this.mSetIgnoreDirtyState) {
@@ -696,7 +696,7 @@ module android.view {
                 this.mIgnoreDirtyState = false;
             }
 
-            this.mSurface.unlockCanvasAndPost(canvas);
+            this.mSurface.unlockCanvasAndPost(this.mSurface['lastRenderCanvas'] || canvas);
 
             if (ViewRootImpl.LOCAL_LOGV) {
                 Log.v(ViewRootImpl.TAG, "Surface unlockCanvasAndPost");

@@ -30,6 +30,7 @@ import Rect = android.graphics.Rect;
 import RectF = android.graphics.RectF;
 /**
  * The Matrix class holds a 3x3 matrix for transforming coordinates.
+ * FIXME recycle Array or share Array: new Array<number>(9)
  */
 export class Matrix {
 

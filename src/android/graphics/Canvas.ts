@@ -18,14 +18,14 @@ module android.graphics {
     import NetImage = androidui.image.NetImage;
 
     export class Canvas {
-        private mCanvasElement:HTMLCanvasElement;
+        protected mCanvasElement:HTMLCanvasElement;
         private mWidth = 0;
         private mHeight = 0;
         private _mCanvasContent:CanvasRenderingContext2D;
         private _saveCount = 0;
-        private mCurrentClip:Rect;
+        protected mCurrentClip:Rect;
         private mClipStateMap = new Map<number, Rect>();
-        private static TempMatrixValue = new Array<number>(9);
+        protected static TempMatrixValue = new Array<number>(9);
 
 
         /**
@@ -354,13 +354,14 @@ module android.graphics {
                     this.saveImpl();
                     paint.applyToCanvas(this);
                 }
-                this.drawRectImpl(left, top, right-left, bottom-top, paint);
+                let style = paint ? paint.getStyle() : Paint.Style.FILL;
+                this.drawRectImpl(left, top, right-left, bottom-top, style);
                 if(!paintEmpty) this.restoreImpl();
             }
         }
 
-        protected drawRectImpl(left:number, top:number, width:number, height:number, paint:Paint){
-            switch (paint.getStyle()){
+        protected drawRectImpl(left:number, top:number, width:number, height:number, style:Paint.Style){
+            switch (style){
                 case Paint.Style.STROKE:
                     this._mCanvasContent.strokeRect(left, top, width, height);
                     break;
@@ -401,16 +402,17 @@ module android.graphics {
             if (oval == null) {
                 throw Error(`new NullPointerException()`);
             }
-            this.drawOvalImpl(oval, paint);
-        }
-
-        protected drawOvalImpl(oval:RectF, paint:Paint):void {
             let paintEmpty = !paint || paint.isEmpty();
             if(!paintEmpty){
                 this.saveImpl();
                 paint.applyToCanvas(this);
             }
+            let style = paint ? paint.getStyle() : Paint.Style.FILL;
+            this.drawOvalImpl(oval, style);
+            if(!paintEmpty) this.restoreImpl();
+        }
 
+        protected drawOvalImpl(oval:RectF, style:Paint.Style):void {
             let ctx = this._mCanvasContent;
             ctx.beginPath();
             let cx = oval.centerX();
@@ -422,9 +424,7 @@ module android.graphics {
             ctx.scale(rx, ry);
             ctx.arc(1, 1, 1, 0, 2 * Math.PI, false);
             ctx.restore();
-            this.applyFillOrStrokeToContent(paint.getStyle());
-
-            if(!paintEmpty) this.restoreImpl();
+            this.applyFillOrStrokeToContent(style);
         }
 
 
@@ -439,22 +439,22 @@ module android.graphics {
          * @param paint  The paint used to draw the circle
          */
         drawCircle(cx:number, cy:number, radius:number, paint:Paint):void  {
-            this.drawCircleImpl(cx, cy, radius, paint);
-        }
-
-        protected drawCircleImpl(cx:number, cy:number, radius:number, paint:Paint):void  {
             let paintEmpty = !paint || paint.isEmpty();
             if(!paintEmpty){
                 this.saveImpl();
                 paint.applyToCanvas(this);
             }
+            let style = paint ? paint.getStyle() : Paint.Style.FILL;
+            this.drawCircleImpl(cx, cy, radius, style);
+            if(!paintEmpty) this.restoreImpl();
+        }
 
+        protected drawCircleImpl(cx:number, cy:number, radius:number, style:Paint.Style):void  {
             let ctx = this._mCanvasContent;
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
-            this.applyFillOrStrokeToContent(paint.getStyle());
+            this.applyFillOrStrokeToContent(style);
 
-            if(!paintEmpty) this.restoreImpl();
         }
 
         /**
@@ -484,15 +484,17 @@ module android.graphics {
             if (oval == null) {
                 throw Error(`new NullPointerException()`);
             }
-            this.drawArcImpl(oval, startAngle, sweepAngle, useCenter, paint);
-        }
-
-        protected drawArcImpl(oval:RectF, startAngle:number, sweepAngle:number, useCenter:boolean, paint:Paint):void  {
             let paintEmpty = !paint || paint.isEmpty();
             if(!paintEmpty){
                 this.saveImpl();
                 paint.applyToCanvas(this);
             }
+            let style = paint ? paint.getStyle() : Paint.Style.FILL;
+            this.drawArcImpl(oval, startAngle, sweepAngle, useCenter, style);
+            if(!paintEmpty) this.restoreImpl();
+        }
+
+        protected drawArcImpl(oval:RectF, startAngle:number, sweepAngle:number, useCenter:boolean, style:Paint.Style):void  {
             let ctx = this._mCanvasContent;
             ctx.save();
             ctx.beginPath();
@@ -509,8 +511,7 @@ module android.graphics {
                 ctx.closePath();
             }
             ctx.restore();
-            this.applyFillOrStrokeToContent(paint.getStyle());
-            if(!paintEmpty) this.restoreImpl();
+            this.applyFillOrStrokeToContent(style);
         }
 
         /**
@@ -527,21 +528,20 @@ module android.graphics {
             if (rect == null) {
                 throw Error(`new NullPointerException()`);
             }
-            this.drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, paint);
-        }
-
-        protected drawRoundRectImpl(rect:RectF, radiusTopLeft:number,
-                                    radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number, paint:Paint):void  {
             let paintEmpty = !paint || paint.isEmpty();
             if(!paintEmpty){
                 this.saveImpl();
                 paint.applyToCanvas(this);
             }
-
-            this.doRoundRectPath(rect.left, rect.top, rect.width(), rect.height(), radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
-            this.applyFillOrStrokeToContent(paint.getStyle());
-
+            let style = paint ? paint.getStyle() : Paint.Style.FILL;
+            this.drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style);
             if(!paintEmpty) this.restoreImpl();
+        }
+
+        protected drawRoundRectImpl(rect:RectF, radiusTopLeft:number,
+                                    radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number, style:Paint.Style):void  {
+            this.doRoundRectPath(rect.left, rect.top, rect.width(), rect.height(), radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
+            this.applyFillOrStrokeToContent(style);
         }
 
 

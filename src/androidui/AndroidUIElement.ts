@@ -36,7 +36,7 @@ module androidui{
     }
 
     function initElement(ele:AndroidUIElement){
-        ele.AndroidUI = new AndroidUI(this);
+        ele.AndroidUI = new AndroidUI(ele);
         let debugAttr = ele.getAttribute('debug');
         if(debugAttr!=null && debugAttr!='0' && debugAttr!='false') ele.AndroidUI.showDebugLayout();
     }
