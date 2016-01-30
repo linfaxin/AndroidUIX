@@ -2,9 +2,9 @@ var androidui;
 (function (androidui) {
     androidui.sdk_version_info = `
 AndroidUI4Web: https://github.com/linfaxin/AndroidUI4Web
-version: 0.2.0
+version: 0.2.1
 release type: Pre-release
-release date: 2016-01-25
+release date: 2016-01-31
 `;
 })(androidui || (androidui = {}));
 var java;
@@ -1909,11 +1909,15 @@ var android;
                 return tmp;
             }
             static reset(mtx) {
-                for (let i = 0, k = 0; i < 3; i++) {
-                    for (let j = 0; j < 3; j++, k++) {
-                        mtx[k] = ((i == j) ? 1 : 0);
-                    }
-                }
+                mtx[0] = 1;
+                mtx[1] = 0;
+                mtx[2] = 0;
+                mtx[3] = 0;
+                mtx[4] = 1;
+                mtx[5] = 0;
+                mtx[6] = 0;
+                mtx[7] = 0;
+                mtx[8] = 1;
             }
             computeTypeMask() {
                 let mask = 0;
