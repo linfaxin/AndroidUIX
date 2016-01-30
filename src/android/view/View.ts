@@ -862,8 +862,6 @@ module android.view {
 
             this.initBindElement(bindElement);
 
-            this.setLayerType(View.LAYER_TYPE_SOFTWARE);
-
             if(defStyle) this.applyDefaultAttributes(defStyle);
         }
 

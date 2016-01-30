@@ -10703,7 +10703,6 @@ var android;
                 this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
                 this.initBindAttr(this._attrBinder);
                 this.initBindElement(bindElement);
-                this.setLayerType(View.LAYER_TYPE_SOFTWARE);
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
             }
