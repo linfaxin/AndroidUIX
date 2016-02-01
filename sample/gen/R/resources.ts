@@ -48,6 +48,12 @@ module sample.app.R {
                android:layout_height="wrap_content"
         ></android-style>
 
+<android-style id="editStyle"
+               android:textColor="#333"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+        ></android-style>
+
 <android-style id="imageStyle"
                android:background="#eee"
                android:layout_width="wrap_content"

@@ -171,6 +171,7 @@ module androidui.attr {
         parseColorList(value:string):ColorStateList{
             if(!value) return null;
             if((<any>value) instanceof ColorStateList) return <ColorStateList><any>value;
+            if(typeof value == 'number') return ColorStateList.valueOf(<number><any>value);
             if(value.startsWith('@')){
                 let refObj = this.getRefObject(value);
                 if(refObj) return refObj;

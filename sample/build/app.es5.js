@@ -104,6 +104,7 @@ var sample;
                 "sample_button": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:gravity=\"center\">\n        <button android:layout_width=\"wrap_content\">\n            Button\n        </button>\n        <button android:layout_width=\"wrap_content\" android:enabled=\"false\">\n            DisableButton\n        </button>\n        <button id=\"btn_click\">\n            ButtonClick\n        </button>\n        <button android:layout_width=\"wrap_content\" onclick=\"this.setText('Click:'+new Date().getTime());\">\n            ButtonClick2\n        </button>\n        <button id=\"btn_long_click\">\n            ButtonLongClick\n        </button>\n        <button android:style=\"@style/btn_custom1\">\n            ButtonStyled\n        </button>\n        <button android:style=\"@style/btn_custom1\" android:enabled=\"false\">\n            ButtonStyledDisable\n        </button>\n        <button android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textcolor=\"@color/white\" android:background=\"#f00\" android:state_pressed=\"@style/btn_custom1/pressed\">\n            ButtonStyled2\n        </button>\n        <button android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textcolor=\"@color/white\" android:background=\"#f00\" android:state_pressed=\"background:#f66;\">\n            ButtonStyled3\n        </button>\n    </linearlayout>\n</scrollview>",
                 "sample_contacte": "<linearlayout android:orientation=\"vertical\">\n    <button id=\"open_activity_intent\">\n        startActivity with intent\n    </button>\n    <button id=\"open_activity_result\">\n        startActivity with result\n    </button>\n    <scrollview>\n        <linearlayout android:orientation=\"vertical\">\n            <textview id=\"console_tv\" android:gravity=\"center\">\n            </textview>\n        </linearlayout>\n    </scrollview>\n</linearlayout>",
                 "sample_drawerlayout": "<android.support.v4.widget.drawerlayout>\n    <linearlayout android:orientation=\"vertical\" android:gravity=\"center\" android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n        <button onclick=\"this.getParent().getParent().openDrawer(android.view.Gravity.LEFT);\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\">Open left drawer</button>\n        <button onclick=\"this.getParent().getParent().openDrawer(android.view.Gravity.RIGHT);\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\">Open right drawer</button>\n    </linearlayout>\n    <linearlayout android:layout_gravity=\"left\" android:background=\"white\" android:clickable=\"true\" android:layout_height=\"match_parent\" android:layout_width=\"220dp\">\n        <textview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:gravity=\"center\">Left drawer</textview>\n    </linearlayout>\n    <linearlayout android:layout_gravity=\"right\" android:background=\"white\" android:clickable=\"true\" android:layout_height=\"match_parent\" android:layout_width=\"220dp\">\n        <textview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:gravity=\"center\">Right drawer</textview>\n    </linearlayout>\n</android.support.v4.widget.drawerlayout>",
+                "sample_edittext": "<scrollview>\n    <linearlayout android:orientation=\"vertical\">\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Place Input\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textUri\" android:inputtype=\"textUri\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textEmailAddress\" android:inputtype=\"textEmailAddress\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textPassword\" android:inputtype=\"textPassword\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textVisiblePassword\" android:inputtype=\"textVisiblePassword\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: number\" android:inputtype=\"number\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: numberPassword\" android:inputtype=\"numberPassword\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: phone\" android:inputtype=\"phone\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:maxlines=\"2\" android:padding=\"10dp\" android:text=\"maxLines=2\nmaxLines=2\nmaxLines=2\nmaxLines=2\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:minlines=\"2\" android:layout_width=\"match_parent\" android:gravity=\"center\" android:text=\"minLines=2\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:text=\"static height\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:gravity=\"center\" android:drawablepadding=\"12dp\" android:drawableleft=\"url(assets/images/logo_android_1@2x.png)\" android:drawabletop=\"url(assets/images/logo_android_1@2x.png)\" android:drawableright=\"url(assets/images/logo_android_1@2x.png)\" android:drawablebottom=\"url(assets/images/logo_android_1@2x.png)\" android:text=\"Image around EditText\" android:style=\"@style/editStyle\"></edittext>\n    </linearlayout>\n</scrollview>",
                 "sample_expand_listview_item": "<framelayout id=\"item_child_layout\" android:layout_width=\"match_parent\" android:padding=\"12dp\">\n    <textview id=\"item_child_text\" android:padding=\"12dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textcolor=\"white\" android:layout_gravity=\"center\">\n    </textview>\n</framelayout>",
                 "sample_framelayout": "<framelayout>\n\n    <textview android:text=\"Text\" android:layout_gravity=\"left|top\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"right|top\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|right\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|left\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"center\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"left|center_vertical\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"right|center_vertical\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"top|center_horizontal\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|center_horizontal\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text MarginBottom50\" android:layout_marginbottom=\"50dp\" android:layout_gravity=\"center\" android:style=\"@style/textStyle\"></textview>\n</framelayout>",
                 "sample_gridview": "<framelayout>\n    <gridview id=\"gridView\" android:numcolumns=\"2\">\n    </gridview>\n</framelayout>",
@@ -151,6 +152,7 @@ var sample;
             layout.sample_button = '@layout/sample_button';
             layout.sample_contacte = '@layout/sample_contacte';
             layout.sample_drawerlayout = '@layout/sample_drawerlayout';
+            layout.sample_edittext = '@layout/sample_edittext';
             layout.sample_expand_listview_item = '@layout/sample_expand_listview_item';
             layout.sample_framelayout = '@layout/sample_framelayout';
             layout.sample_gridview = '@layout/sample_gridview';
@@ -182,7 +184,7 @@ var sample;
     (function (app) {
         var R;
         (function (R) {
-            android.content.res.Resources.buildResourcesElement.innerHTML = "\n<!-- color.html -->\n<android-color id=\"white\">white</android-color>\n<android-color id=\"light_gray\">#999</android-color>\n<android-color id=\"red\">#fb3b00</android-color>\n<android-color id=\"red_press\">#8A2000</android-color>\n<android-color id=\"green\">#5fcf53</android-color>\n<android-color id=\"green_press\">#45963C</android-color>\n\n\n<!-- styles.html -->\n<android-style id=\"page_text\"\n               android:padding=\"12dp\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n               android:background=\"#55000000\"\n               android:textColor=\"white\"\n               android:layout_gravity=\"center\"></android-style>\n\n<android-style id=\"btn_custom1\"\n               android:padding=\"8dp\"\n               android:layout_margin=\"6dp\"\n               android:textColor=\"@color/white\"\n               android:cornerRadius=\"4dp\"\n               android:background=\"#f00\"\n               android:state_pressed=\"@style/btn_custom1/pressed\"\n               android:state_disable=\"@style/btn_custom1/disable\">\n    <android-style id=\"pressed\"\n                   android:background=\"#f66\">\n    </android-style>\n    <android-style id=\"disable\"\n                   android:textColor=\"@color/light_gray\"\n                   android:background=\"#faa\">\n    </android-style>\n</android-style>\n<android-style id=\"line_spit\"\n               android:layout_height=\"4dp\"\n               android:layout_width=\"match_parent\"\n        ></android-style>\n<android-style id=\"textStyle\"\n               android:textSize=\"12sp\"\n               android:padding=\"8dp\"\n               android:textColor=\"#333\"\n               android:background=\"#eee\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n        ></android-style>\n\n<android-style id=\"imageStyle\"\n               android:background=\"#eee\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n               android:layout_marginBottom=\"12dp\"\n        ></android-style>\n\n";
+            android.content.res.Resources.buildResourcesElement.innerHTML = "\n<!-- color.html -->\n<android-color id=\"white\">white</android-color>\n<android-color id=\"light_gray\">#999</android-color>\n<android-color id=\"red\">#fb3b00</android-color>\n<android-color id=\"red_press\">#8A2000</android-color>\n<android-color id=\"green\">#5fcf53</android-color>\n<android-color id=\"green_press\">#45963C</android-color>\n\n\n<!-- styles.html -->\n<android-style id=\"page_text\"\n               android:padding=\"12dp\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n               android:background=\"#55000000\"\n               android:textColor=\"white\"\n               android:layout_gravity=\"center\"></android-style>\n\n<android-style id=\"btn_custom1\"\n               android:padding=\"8dp\"\n               android:layout_margin=\"6dp\"\n               android:textColor=\"@color/white\"\n               android:cornerRadius=\"4dp\"\n               android:background=\"#f00\"\n               android:state_pressed=\"@style/btn_custom1/pressed\"\n               android:state_disable=\"@style/btn_custom1/disable\">\n    <android-style id=\"pressed\"\n                   android:background=\"#f66\">\n    </android-style>\n    <android-style id=\"disable\"\n                   android:textColor=\"@color/light_gray\"\n                   android:background=\"#faa\">\n    </android-style>\n</android-style>\n<android-style id=\"line_spit\"\n               android:layout_height=\"4dp\"\n               android:layout_width=\"match_parent\"\n        ></android-style>\n<android-style id=\"textStyle\"\n               android:textSize=\"12sp\"\n               android:padding=\"8dp\"\n               android:textColor=\"#333\"\n               android:background=\"#eee\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n        ></android-style>\n\n<android-style id=\"editStyle\"\n               android:textColor=\"#333\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n        ></android-style>\n\n<android-style id=\"imageStyle\"\n               android:background=\"#eee\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n               android:layout_marginBottom=\"12dp\"\n        ></android-style>\n\n";
         })(R = app.R || (app.R = {}));
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
@@ -510,14 +512,45 @@ var sample;
     var app;
     (function (app) {
         var ActionBarActivity = android.app.ActionBarActivity;
+        var R = sample.app.R;
+
+        var SampleEditTextActivity = function (_ActionBarActivity8) {
+            _inherits(SampleEditTextActivity, _ActionBarActivity8);
+
+            function SampleEditTextActivity() {
+                _classCallCheck(this, SampleEditTextActivity);
+
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(SampleEditTextActivity).apply(this, arguments));
+            }
+
+            _createClass(SampleEditTextActivity, [{
+                key: "onCreate",
+                value: function onCreate() {
+                    _get(Object.getPrototypeOf(SampleEditTextActivity.prototype), "onCreate", this).call(this);
+                    this.setTitle('EditText');
+                    this.setContentView(R.layout.sample_edittext);
+                }
+            }]);
+
+            return SampleEditTextActivity;
+        }(ActionBarActivity);
+
+        app.SampleEditTextActivity = SampleEditTextActivity;
+    })(app = sample.app || (sample.app = {}));
+})(sample || (sample = {}));
+var sample;
+(function (sample) {
+    var app;
+    (function (app) {
+        var ActionBarActivity = android.app.ActionBarActivity;
         var TextView = android.widget.TextView;
         var View = android.view.View;
         var ExpandableListView = android.widget.ExpandableListView;
         var BaseExpandableListAdapter = android.widget.BaseExpandableListAdapter;
         var R = sample.app.R;
 
-        var SampleExpandableListViewActivity = function (_ActionBarActivity8) {
-            _inherits(SampleExpandableListViewActivity, _ActionBarActivity8);
+        var SampleExpandableListViewActivity = function (_ActionBarActivity9) {
+            _inherits(SampleExpandableListViewActivity, _ActionBarActivity9);
 
             function SampleExpandableListViewActivity() {
                 _classCallCheck(this, SampleExpandableListViewActivity);
@@ -554,10 +587,10 @@ var sample;
                     args[_key] = arguments[_key];
                 }
 
-                var _this9 = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO, [this].concat(args)));
+                var _this10 = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO, [this].concat(args)));
 
-                _this9.data = [{ 'name': 'A', 'items': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10'] }, { 'name': 'B', 'items': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10'] }, { 'name': 'C', 'items': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'] }, { 'name': 'D', 'items': ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'] }, { 'name': 'E', 'items': ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10'] }, { 'name': 'F', 'items': ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10'] }, { 'name': 'G', 'items': ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10'] }, { 'name': 'H', 'items': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10'] }, { 'name': 'I', 'items': ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10'] }, { 'name': 'J', 'items': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'] }, { 'name': 'K', 'items': ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10'] }];
-                return _this9;
+                _this10.data = [{ 'name': 'A', 'items': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10'] }, { 'name': 'B', 'items': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10'] }, { 'name': 'C', 'items': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'] }, { 'name': 'D', 'items': ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'] }, { 'name': 'E', 'items': ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10'] }, { 'name': 'F', 'items': ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10'] }, { 'name': 'G', 'items': ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10'] }, { 'name': 'H', 'items': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10'] }, { 'name': 'I', 'items': ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10'] }, { 'name': 'J', 'items': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'] }, { 'name': 'K', 'items': ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10'] }];
+                return _this10;
             }
 
             _createClass(MyListAdapter, [{
@@ -636,8 +669,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleFrameLayoutActivity = function (_ActionBarActivity9) {
-            _inherits(SampleFrameLayoutActivity, _ActionBarActivity9);
+        var SampleFrameLayoutActivity = function (_ActionBarActivity10) {
+            _inherits(SampleFrameLayoutActivity, _ActionBarActivity10);
 
             function SampleFrameLayoutActivity() {
                 _classCallCheck(this, SampleFrameLayoutActivity);
@@ -669,8 +702,8 @@ var sample;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleGridViewActivity = function (_ActionBarActivity10) {
-            _inherits(SampleGridViewActivity, _ActionBarActivity10);
+        var SampleGridViewActivity = function (_ActionBarActivity11) {
+            _inherits(SampleGridViewActivity, _ActionBarActivity11);
 
             function SampleGridViewActivity() {
                 _classCallCheck(this, SampleGridViewActivity);
@@ -740,8 +773,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleHtmlViewActivity = function (_ActionBarActivity11) {
-            _inherits(SampleHtmlViewActivity, _ActionBarActivity11);
+        var SampleHtmlViewActivity = function (_ActionBarActivity12) {
+            _inherits(SampleHtmlViewActivity, _ActionBarActivity12);
 
             function SampleHtmlViewActivity() {
                 _classCallCheck(this, SampleHtmlViewActivity);
@@ -771,8 +804,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleImageViewActivity = function (_ActionBarActivity12) {
-            _inherits(SampleImageViewActivity, _ActionBarActivity12);
+        var SampleImageViewActivity = function (_ActionBarActivity13) {
+            _inherits(SampleImageViewActivity, _ActionBarActivity13);
 
             function SampleImageViewActivity() {
                 _classCallCheck(this, SampleImageViewActivity);
@@ -805,8 +838,8 @@ var sample;
         var Gravity = android.view.Gravity;
         var TAG = 'SampleLifeCallbackActivity';
 
-        var SampleLifeCallbackActivity = function (_ActionBarActivity13) {
-            _inherits(SampleLifeCallbackActivity, _ActionBarActivity13);
+        var SampleLifeCallbackActivity = function (_ActionBarActivity14) {
+            _inherits(SampleLifeCallbackActivity, _ActionBarActivity14);
 
             function SampleLifeCallbackActivity() {
                 _classCallCheck(this, SampleLifeCallbackActivity);
@@ -883,8 +916,8 @@ var sample;
 
         app.SampleLifeCallbackActivity = SampleLifeCallbackActivity;
 
-        var SampleLifeCallbackNormalActivity = function (_ActionBarActivity14) {
-            _inherits(SampleLifeCallbackNormalActivity, _ActionBarActivity14);
+        var SampleLifeCallbackNormalActivity = function (_ActionBarActivity15) {
+            _inherits(SampleLifeCallbackNormalActivity, _ActionBarActivity15);
 
             function SampleLifeCallbackNormalActivity() {
                 _classCallCheck(this, SampleLifeCallbackNormalActivity);
@@ -949,8 +982,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleLinearLayoutActivity = function (_ActionBarActivity15) {
-            _inherits(SampleLinearLayoutActivity, _ActionBarActivity15);
+        var SampleLinearLayoutActivity = function (_ActionBarActivity16) {
+            _inherits(SampleLinearLayoutActivity, _ActionBarActivity16);
 
             function SampleLinearLayoutActivity() {
                 _classCallCheck(this, SampleLinearLayoutActivity);
@@ -982,8 +1015,8 @@ var sample;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleListViewActivity = function (_ActionBarActivity16) {
-            _inherits(SampleListViewActivity, _ActionBarActivity16);
+        var SampleListViewActivity = function (_ActionBarActivity17) {
+            _inherits(SampleListViewActivity, _ActionBarActivity17);
 
             function SampleListViewActivity() {
                 _classCallCheck(this, SampleListViewActivity);
@@ -1053,8 +1086,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SamplePickerActivity = function (_ActionBarActivity17) {
-            _inherits(SamplePickerActivity, _ActionBarActivity17);
+        var SamplePickerActivity = function (_ActionBarActivity18) {
+            _inherits(SamplePickerActivity, _ActionBarActivity18);
 
             function SamplePickerActivity() {
                 _classCallCheck(this, SamplePickerActivity);
@@ -1087,8 +1120,8 @@ var sample;
         var PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
         var R = sample.app.R;
 
-        var SamplePullRefreshLoadActivity = function (_ActionBarActivity18) {
-            _inherits(SamplePullRefreshLoadActivity, _ActionBarActivity18);
+        var SamplePullRefreshLoadActivity = function (_ActionBarActivity19) {
+            _inherits(SamplePullRefreshLoadActivity, _ActionBarActivity19);
 
             function SamplePullRefreshLoadActivity() {
                 _classCallCheck(this, SamplePullRefreshLoadActivity);
@@ -1142,10 +1175,10 @@ var sample;
                     args[_key2] = arguments[_key2];
                 }
 
-                var _this23 = _possibleConstructorReturn(this, (_Object$getPrototypeO2 = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO2, [this].concat(args)));
+                var _this24 = _possibleConstructorReturn(this, (_Object$getPrototypeO2 = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO2, [this].concat(args)));
 
-                _this23.data = [];
-                return _this23;
+                _this24.data = [];
+                return _this24;
             }
 
             _createClass(MyListAdapter, [{
@@ -1185,8 +1218,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleRelativeLayoutActivity = function (_ActionBarActivity19) {
-            _inherits(SampleRelativeLayoutActivity, _ActionBarActivity19);
+        var SampleRelativeLayoutActivity = function (_ActionBarActivity20) {
+            _inherits(SampleRelativeLayoutActivity, _ActionBarActivity20);
 
             function SampleRelativeLayoutActivity() {
                 _classCallCheck(this, SampleRelativeLayoutActivity);
@@ -1216,8 +1249,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleTextViewActivity = function (_ActionBarActivity20) {
-            _inherits(SampleTextViewActivity, _ActionBarActivity20);
+        var SampleTextViewActivity = function (_ActionBarActivity21) {
+            _inherits(SampleTextViewActivity, _ActionBarActivity21);
 
             function SampleTextViewActivity() {
                 _classCallCheck(this, SampleTextViewActivity);
@@ -1249,8 +1282,8 @@ var sample;
         var Color = android.graphics.Color;
         var R = sample.app.R;
 
-        var SampleViewPagerActivity = function (_ActionBarActivity21) {
-            _inherits(SampleViewPagerActivity, _ActionBarActivity21);
+        var SampleViewPagerActivity = function (_ActionBarActivity22) {
+            _inherits(SampleViewPagerActivity, _ActionBarActivity22);
 
             function SampleViewPagerActivity() {
                 _classCallCheck(this, SampleViewPagerActivity);
@@ -1313,8 +1346,8 @@ var sample;
         var R = sample.app.R;
         var ActionBarActivity = android.app.ActionBarActivity;
 
-        var SampleViewPagerGalleryActivity = function (_ActionBarActivity22) {
-            _inherits(SampleViewPagerGalleryActivity, _ActionBarActivity22);
+        var SampleViewPagerGalleryActivity = function (_ActionBarActivity23) {
+            _inherits(SampleViewPagerGalleryActivity, _ActionBarActivity23);
 
             function SampleViewPagerGalleryActivity() {
                 _classCallCheck(this, SampleViewPagerGalleryActivity);

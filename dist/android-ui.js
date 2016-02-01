@@ -5089,6 +5089,7 @@ var android;
                 return window.setTimeout(callback, 1000 / 60);
             };
         }
+        window.requestAnimationFrame = requestAnimationFrame;
         class MessageQueue {
             static getMessages(h, args, object) {
                 let msgs = [];
@@ -5862,6 +5863,8 @@ var androidui;
                     return null;
                 if (value instanceof ColorStateList)
                     return value;
+                if (typeof value == 'number')
+                    return ColorStateList.valueOf(value);
                 if (value.startsWith('@')) {
                     let refObj = this.getRefObject(value);
                     if (refObj)
@@ -8132,6 +8135,12 @@ var android;
                 stateList.addState([], R.image.btn_default_disabled_holo_light);
                 return stateList;
             }
+            static get editbox_background() {
+                let stateList = new StateListDrawable();
+                stateList.addState([View.VIEW_STATE_FOCUSED], R.image.editbox_background_focus_yellow);
+                stateList.addState([], R.image.editbox_background_normal);
+                return stateList;
+            }
             static get btn_check() {
                 let stateList = new StateListDrawable();
                 stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_holo_light);
@@ -8979,6 +8988,16 @@ var android;
                 null,
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEcAAAA2CAMAAACiEHRJAAAAflBMVEVAQEAAAABBQUEAAAAAAAATExMlJSU+Pj5BQUEAAAAAAAA4ODggICAvLy8WFhYAAAAAAAAAAAAAAAAfHx8NDQ0AAAAvLy8kJCQgICAQEBAAAAA3NzcWFhYkJCQXFxcAAAASEhIAAAAjIyMAAAAwMDAjIyMAAAAAAAAAAAAAAACu+DqjAAAAKXRSTlPmCekADkqr4e4qFcCA2KhEYwUShjwb1K5/Nge9pZ2YXUxALSTIrGZVSewvjJ0AAAC8SURBVEjH7da3EsIwEEVRr5AjJig4Z5uk//9BJNFBw+zQMLO339Ns84Lde+abPq6cs6q6rnN0avWOAD10e3zdoEFYB/hcsQQfq2YO3gmjmAXYWByFHAw55JBDDjk/dgw5f/UvcsghhxyUEyQMm3f8nofweinL8oCtCsE5LTS5Gsf+iKxXDbTWETzb9OM+nXHdpjTjwjkgi7TRywnZUkhwjoeKLUXnGOs4iEuZoQPhHQeJFvBZxTk+g+8FPAE5Rz/0d6kkJAAAAABJRU5ErkJggg=="
             ],
+            "editbox_background_focus_yellow": [
+                null,
+                null,
+                "data:image/png;base64,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"
+            ],
+            "editbox_background_normal": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGoAAAA3CAMAAADT7y+MAAAA0lBMVEUAAAAAAACzs7Oenp7+/v6xsbGmpqYAAAAAAAAAAAAAAAAAAAD9/f36+vqvr6/+/v6Xl5fw8PBUVFTs7OypqampqamEhIQdHR3c3Nzz8/Pd3d3x8fHu7u7S0tLHx8fa2tqenp6+vr6ampqioqKgoKCBgYGSkpIAAAA3NzdSUlIAAAD39/fr6+v39/f09PTo6Ojb29vX19fk5OTf39+srKycnJympqaSkpKMjIyUlJSPj48sLCxoaGhqamoAAAD///8AAAD8/Pzz8/Pm5ub39/fl5eUurhQ7AAAAP3RSTlMAEX19/nZzGAIGCQ34/nT7avwk+GpiTCvn2tfTy7i1qX53cXBjRkMlJB8V+Ozi39/MzLezgXl4aV5ZSSgjIhntDpQOAAABGklEQVRYw+3Yx27CQBCAYTtskm3ujd5DgPTeszGB93+lHIwi2cvFYofT/C/waS4jzVi7+tk3C8PqR7mwDSc43QWxMPWfhg2DDRt+GjKqj/Tx0m9ufo22afbHmTYYO3++i4KV4YKo/ZixihT6t9HayQ3nrIP2OCyPxc96QU6U8Ui+6qW8RInXS0eB5NxMxRYpVqPtA0mKXLh2AW2p5SRXQDkV6vSEKKDy4yqloCJIIYUUUkghhRRSSNWkvg9HLScKKs8tU8JXUMl/qki8XREFknediMp9dS8VTA/vvETRr7gLYslO/Emrt/CoKz3TkCc7o4xpF/58OmhJw1JrEM851f8Wi1niHhnNTWaLYiYNM/+NYdTCsBpBfqT/AK7giup/9WGpAAAAAElFTkSuQmCC"
+            ],
             "ic_menu_moreoverflow_normal_holo_dark": [
                 null,
                 null,
@@ -9130,6 +9149,8 @@ var android;
             btn_rating_star_on_normal_holo_light: null,
             btn_rating_star_on_pressed_holo_light: null,
             dropdown_background_dark: null,
+            editbox_background_focus_yellow: null,
+            editbox_background_normal: null,
             ic_menu_moreoverflow_normal_holo_dark: null,
             menu_panel_holo_dark: null,
             menu_panel_holo_light: null,
@@ -9255,6 +9276,12 @@ var android;
             static get dropdown_background_dark() {
                 return imageCache.dropdown_background_dark || (imageCache.dropdown_background_dark = findRatioImage(data.dropdown_background_dark));
             }
+            static get editbox_background_focus_yellow() {
+                return imageCache.editbox_background_focus_yellow || (imageCache.editbox_background_focus_yellow = findRatioImage(data.editbox_background_focus_yellow));
+            }
+            static get editbox_background_normal() {
+                return imageCache.editbox_background_normal || (imageCache.editbox_background_normal = findRatioImage(data.editbox_background_normal));
+            }
             static get ic_menu_moreoverflow_normal_holo_dark() {
                 return imageCache.ic_menu_moreoverflow_normal_holo_dark || (imageCache.ic_menu_moreoverflow_normal_holo_dark = findRatioImage(data.ic_menu_moreoverflow_normal_holo_dark));
             }
@@ -9359,6 +9386,8 @@ var android;
             static get btn_rating_star_on_normal_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_normal_holo_light); }
             static get btn_rating_star_on_pressed_holo_light() { return new NetDrawable(R.image_base64.btn_rating_star_on_pressed_holo_light); }
             static get dropdown_background_dark() { return new NinePatchDrawable(R.image_base64.dropdown_background_dark); }
+            static get editbox_background_focus_yellow() { return new NinePatchDrawable(R.image_base64.editbox_background_focus_yellow); }
+            static get editbox_background_normal() { return new NinePatchDrawable(R.image_base64.editbox_background_normal); }
             static get ic_menu_moreoverflow_normal_holo_dark() { return new NetDrawable(R.image_base64.ic_menu_moreoverflow_normal_holo_dark); }
             static get menu_panel_holo_dark() { return new NinePatchDrawable(R.image_base64.menu_panel_holo_dark); }
             static get menu_panel_holo_light() { return new NinePatchDrawable(R.image_base64.menu_panel_holo_light); }
@@ -10419,7 +10448,8 @@ var android;
                 return {
                     textSize: '14sp',
                     layerType: 'software',
-                    textColor: R.color.textView_textColor
+                    textColor: R.color.textView_textColor,
+                    textColorHint: 0xff808080
                 };
             }
             static get buttonStyle() {
@@ -10431,6 +10461,16 @@ var android;
                     minWidth: '64dp',
                     textSize: '18sp',
                     gravity: Gravity.CENTER
+                });
+            }
+            static get editTextStyle() {
+                return Object.assign(attr.textViewStyle, {
+                    background: R.drawable.editbox_background,
+                    focusable: true,
+                    focusableInTouchMode: true,
+                    clickable: true,
+                    textSize: '18sp',
+                    gravity: Gravity.CENTER_VERTICAL
                 });
             }
             static get imageButtonStyle() {
@@ -14403,49 +14443,33 @@ var android;
                 rootView.postDelayed(rootView._syncToElementRun, 1000);
             }
             _syncBoundAndScrollToElement() {
-                this._syncBoundToElement();
-                this._syncScrollToElement();
-                if (this instanceof view_2.ViewGroup) {
-                    const group = this;
-                    for (var i = 0, count = group.getChildCount(); i < count; i++) {
-                        group.getChildAt(i)._syncBoundAndScrollToElement();
-                    }
-                }
-            }
-            _syncBoundToElement() {
                 const left = this.mLeft;
                 const top = this.mTop;
                 const width = this.getWidth();
                 const height = this.getHeight();
+                const parent = this.getParent();
+                const pScrollX = parent instanceof View ? parent.mScrollX : 0;
+                const pScrollY = parent instanceof View ? parent.mScrollY : 0;
                 if (left !== this._lastSyncLeft || top !== this._lastSyncTop
-                    || width !== this._lastSyncWidth || height !== this._lastSyncHeight) {
+                    || width !== this._lastSyncWidth || height !== this._lastSyncHeight
+                    || pScrollX !== this._lastSyncScrollX || pScrollY !== this._lastSyncScrollY) {
                     this._lastSyncLeft = left;
                     this._lastSyncTop = top;
                     this._lastSyncWidth = width;
                     this._lastSyncHeight = height;
+                    this._lastSyncScrollX = pScrollX;
+                    this._lastSyncScrollY = pScrollY;
                     const density = this.getResources().getDisplayMetrics().density;
                     let bind = this.bindElement;
-                    bind.style.transform = bind.style.webkitTransform = `translate(${left / density}px, ${top / density}px)`;
+                    bind.style.left = (left - pScrollX) / density + 'px';
+                    bind.style.top = (top - pScrollY) / density + 'px';
                     bind.style.width = width / density + 'px';
                     bind.style.height = height / density + 'px';
                 }
-            }
-            _syncScrollToElement() {
-                let sx = this.mScrollX;
-                let sy = this.mScrollY;
-                if (this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
-                    this._lastSyncScrollX = sx;
-                    this._lastSyncScrollY = sy;
-                    if (this instanceof view_2.ViewGroup) {
-                        let group = this;
-                        for (let i = 0, count = group.getChildCount(); i < count; i++) {
-                            let child = group.getChildAt(i);
-                            let item = child.bindElement;
-                            const density = this.getResources().getDisplayMetrics().density;
-                            let tx = (child.mLeft - sx) / density;
-                            let ty = (child.mTop - sy) / density;
-                            item.style.transform = item.style.webkitTransform = `translate(${tx}px, ${ty}px)`;
-                        }
+                if (this instanceof view_2.ViewGroup) {
+                    const group = this;
+                    for (var i = 0, count = group.getChildCount(); i < count; i++) {
+                        group.getChildAt(i)._syncBoundAndScrollToElement();
                     }
                 }
             }
@@ -28201,47 +28225,19 @@ var android;
 (function (android) {
     var text;
     (function (text) {
-        class InputType {
-        }
-        InputType.TYPE_MASK_CLASS = 0x0000000f;
-        InputType.TYPE_MASK_VARIATION = 0x00000ff0;
-        InputType.TYPE_MASK_FLAGS = 0x00fff000;
-        InputType.TYPE_NULL = 0x00000000;
-        InputType.TYPE_CLASS_TEXT = 0x00000001;
-        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS = 0x00001000;
-        InputType.TYPE_TEXT_FLAG_CAP_WORDS = 0x00002000;
-        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES = 0x00004000;
-        InputType.TYPE_TEXT_FLAG_AUTO_CORRECT = 0x00008000;
-        InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE = 0x00010000;
-        InputType.TYPE_TEXT_FLAG_MULTI_LINE = 0x00020000;
-        InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE = 0x00040000;
-        InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS = 0x00080000;
-        InputType.TYPE_TEXT_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_TEXT_VARIATION_URI = 0x00000010;
-        InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
-        InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT = 0x00000030;
-        InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE = 0x00000040;
-        InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE = 0x00000050;
-        InputType.TYPE_TEXT_VARIATION_PERSON_NAME = 0x00000060;
-        InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS = 0x00000070;
-        InputType.TYPE_TEXT_VARIATION_PASSWORD = 0x00000080;
-        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD = 0x00000090;
-        InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT = 0x000000a0;
-        InputType.TYPE_TEXT_VARIATION_FILTER = 0x000000b0;
-        InputType.TYPE_TEXT_VARIATION_PHONETIC = 0x000000c0;
-        InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS = 0x000000d0;
-        InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD = 0x000000e0;
-        InputType.TYPE_CLASS_NUMBER = 0x00000002;
-        InputType.TYPE_NUMBER_FLAG_SIGNED = 0x00001000;
-        InputType.TYPE_NUMBER_FLAG_DECIMAL = 0x00002000;
-        InputType.TYPE_NUMBER_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_NUMBER_VARIATION_PASSWORD = 0x00000010;
-        InputType.TYPE_CLASS_PHONE = 0x00000003;
-        InputType.TYPE_CLASS_DATETIME = 0x00000004;
-        InputType.TYPE_DATETIME_VARIATION_NORMAL = 0x00000000;
-        InputType.TYPE_DATETIME_VARIATION_DATE = 0x00000010;
-        InputType.TYPE_DATETIME_VARIATION_TIME = 0x00000020;
-        text.InputType = InputType;
+        (function (InputType) {
+            InputType[InputType["TYPE_NULL"] = 0] = "TYPE_NULL";
+            InputType[InputType["TYPE_CLASS_TEXT"] = 1] = "TYPE_CLASS_TEXT";
+            InputType[InputType["TYPE_CLASS_URI"] = 2] = "TYPE_CLASS_URI";
+            InputType[InputType["TYPE_CLASS_EMAIL_ADDRESS"] = 3] = "TYPE_CLASS_EMAIL_ADDRESS";
+            InputType[InputType["TYPE_CLASS_NUMBER"] = 4] = "TYPE_CLASS_NUMBER";
+            InputType[InputType["TYPE_CLASS_PHONE"] = 5] = "TYPE_CLASS_PHONE";
+            InputType[InputType["TYPE_PASSWORD"] = 6] = "TYPE_PASSWORD";
+            InputType[InputType["TYPE_TEXT_PASSWORD"] = 7] = "TYPE_TEXT_PASSWORD";
+            InputType[InputType["TYPE_TEXT_VISIBLE_PASSWORD"] = 8] = "TYPE_TEXT_VISIBLE_PASSWORD";
+            InputType[InputType["TYPE_NUMBER_PASSWORD"] = 9] = "TYPE_NUMBER_PASSWORD";
+        })(text.InputType || (text.InputType = {}));
+        var InputType = text.InputType;
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 var android;
@@ -30426,6 +30422,7 @@ var android;
         var Paint = android.graphics.Paint;
         var Path = android.graphics.Path;
         var Rect = android.graphics.Rect;
+        var Color = android.graphics.Color;
         var RectF = android.graphics.RectF;
         var Handler = android.os.Handler;
         var BoringLayout = android.text.BoringLayout;
@@ -30456,6 +30453,7 @@ var android;
         class TextView extends View {
             constructor(context, bindElement, defStyle = android.R.attr.textViewStyle) {
                 super(context, bindElement, null);
+                this.mTextColor = ColorStateList.valueOf(Color.BLACK);
                 this.mCurTextColor = 0;
                 this.mCurHintTextColor = 0;
                 this.mSpannableFactory = Spannable.Factory.getInstance();
@@ -30654,8 +30652,6 @@ var android;
                 });
                 a.addAttr('text', (value) => {
                     this.setText(a.parseString(value));
-                }, () => {
-                    return this.getText();
                 });
                 a.addAttr('scrollHorizontally', (value) => {
                     this.setHorizontallyScrolling(a.parseBoolean(value, false));
@@ -41401,6 +41397,371 @@ var android;
                 DependencyGraph.Node = Node;
             })(DependencyGraph = RelativeLayout.DependencyGraph || (RelativeLayout.DependencyGraph = {}));
         })(RelativeLayout = widget.RelativeLayout || (widget.RelativeLayout = {}));
+    })(widget = android.widget || (android.widget = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
+    var text;
+    (function (text) {
+        var method;
+        (function (method) {
+            class PasswordTransformationMethod extends method.SingleLineTransformationMethod {
+                getTransformation(source, v) {
+                    let transform = super.getTransformation(source, v);
+                    if (transform)
+                        transform = new Array(transform.length + 1).join('•');
+                    return transform;
+                }
+                static getInstance() {
+                    if (PasswordTransformationMethod.instance != null)
+                        return PasswordTransformationMethod.instance;
+                    PasswordTransformationMethod.instance = new PasswordTransformationMethod();
+                    return PasswordTransformationMethod.instance;
+                }
+            }
+            method.PasswordTransformationMethod = PasswordTransformationMethod;
+        })(method = text.method || (text.method = {}));
+    })(text = android.text || (android.text = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
+    var widget;
+    (function (widget) {
+        var TextUtils = android.text.TextUtils;
+        var TextView = android.widget.TextView;
+        var View = android.view.View;
+        var Gravity = android.view.Gravity;
+        var Color = android.graphics.Color;
+        var Canvas = android.graphics.Canvas;
+        var Integer = java.lang.Integer;
+        var InputType = android.text.InputType;
+        var PasswordTransformationMethod = android.text.method.PasswordTransformationMethod;
+        class EditText extends TextView {
+            constructor(context, bindElement, defStyle = android.R.attr.editTextStyle) {
+                super(context, bindElement, null);
+                this.mInputType = InputType.TYPE_NULL;
+                this.mForceDisableDraw = false;
+                let a = this._attrBinder;
+                a.addAttr('inputType', (value) => {
+                    switch (value + '') {
+                        case 'none':
+                            this.setInputType(InputType.TYPE_NULL);
+                            break;
+                        case 'text':
+                            this.setInputType(InputType.TYPE_CLASS_TEXT);
+                            break;
+                        case 'textUri':
+                            this.setInputType(InputType.TYPE_CLASS_URI);
+                            break;
+                        case 'textEmailAddress':
+                            this.setInputType(InputType.TYPE_CLASS_EMAIL_ADDRESS);
+                            break;
+                        case 'textPassword':
+                            this.setInputType(InputType.TYPE_TEXT_PASSWORD);
+                            break;
+                        case 'textVisiblePassword':
+                            this.setInputType(InputType.TYPE_TEXT_VISIBLE_PASSWORD);
+                            break;
+                        case 'number':
+                        case 'numberSigned':
+                        case 'numberDecimal':
+                            this.setInputType(InputType.TYPE_CLASS_NUMBER);
+                            break;
+                        case 'numberPassword':
+                            this.setInputType(InputType.TYPE_NUMBER_PASSWORD);
+                            break;
+                        case 'phone':
+                            this.setInputType(InputType.TYPE_CLASS_PHONE);
+                            break;
+                    }
+                });
+                if (defStyle)
+                    this.applyDefaultAttributes(defStyle);
+            }
+            initBindElement(bindElement) {
+                super.initBindElement(bindElement);
+                this.switchToMultilineInputElement();
+            }
+            onInputValueChange() {
+                let text = this.inputElement.value;
+                if (!text || text.length == 0) {
+                    this.setForceDisableDrawText(false);
+                }
+                else {
+                    this.setForceDisableDrawText(true);
+                }
+                this.setText(text);
+            }
+            switchToSingleLineInputElement() {
+                if (!this.mSingleLineInputElement) {
+                    this.mSingleLineInputElement = document.createElement('input');
+                    this.mSingleLineInputElement.style.position = 'absolute';
+                    this.mSingleLineInputElement.style.overflow = 'scroll';
+                    this.mSingleLineInputElement.style.background = 'transparent';
+                    this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
+                    this.mSingleLineInputElement.oninput = () => this.onInputValueChange();
+                }
+                if (this.inputElement === this.mSingleLineInputElement)
+                    return;
+                if (this.inputElement && this.inputElement.parentElement) {
+                    this.bindElement.removeChild(this.inputElement);
+                    this.bindElement.appendChild(this.mSingleLineInputElement);
+                }
+                this.inputElement = this.mSingleLineInputElement;
+            }
+            switchToMultilineInputElement() {
+                if (!this.mMultilineInputElement) {
+                    this.mMultilineInputElement = document.createElement('textarea');
+                    this.mMultilineInputElement.style.position = 'absolute';
+                    this.mMultilineInputElement.style['resize'] = 'none';
+                    this.mMultilineInputElement.style.overflow = 'scroll';
+                    this.mMultilineInputElement.style.background = 'transparent';
+                    this.mMultilineInputElement.style.padding = '4px 0 0 0';
+                    this.mMultilineInputElement.style.boxSizing = 'border-box';
+                    this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
+                    this.mMultilineInputElement.oninput = () => this.onInputValueChange();
+                }
+                if (this.inputElement === this.mMultilineInputElement)
+                    return;
+                if (this.inputElement && this.inputElement.parentElement) {
+                    this.bindElement.removeChild(this.inputElement);
+                    this.bindElement.appendChild(this.mMultilineInputElement);
+                }
+                this.inputElement = this.mMultilineInputElement;
+            }
+            onFocusChanged(focused, direction, previouslyFocusedRect) {
+                super.onFocusChanged(focused, direction, previouslyFocusedRect);
+                if (focused) {
+                    if (!this.isInputElementShowed()) {
+                        this.inputElement.value = this.getText().toString();
+                        this.bindElement.appendChild(this.inputElement);
+                        this.inputElement.focus();
+                        if (this.getText().length > 0) {
+                            this.setForceDisableDrawText(true);
+                        }
+                        this.syncTextBoundInfoToInputElement();
+                    }
+                }
+                else {
+                    this.bindElement.removeChild(this.inputElement);
+                    this.setForceDisableDrawText(false);
+                }
+            }
+            isInputElementShowed() {
+                return this.inputElement.parentElement != null;
+            }
+            setForceDisableDrawText(disable) {
+                if (this.mForceDisableDraw == disable)
+                    return;
+                this.mForceDisableDraw = disable;
+                if (disable) {
+                    this.mTextPaint.setAlpha(0);
+                }
+                else {
+                    this.mTextPaint.setAlpha(255);
+                }
+                this.invalidate();
+            }
+            updateTextColors() {
+                super.updateTextColors();
+                if (this.isInputElementShowed()) {
+                    this.syncTextBoundInfoToInputElement();
+                }
+            }
+            onTouchEvent(event) {
+                if (this.isInputElementShowed()) {
+                    event[android.view.ViewRootImpl.ContinueEventToDom] = true;
+                    if (this.inputElement.scrollHeight > this.inputElement.offsetHeight || this.inputElement.scrollWidth > this.inputElement.offsetWidth) {
+                        this.getParent().requestDisallowInterceptTouchEvent(true);
+                    }
+                }
+                return super.onTouchEvent(event) || true;
+            }
+            filterKeyCode(keyCode) {
+                if (keyCode == android.view.KeyEvent.KEYCODE_ENTER && this.isSingleLine()) {
+                    return true;
+                }
+                return false;
+            }
+            checkFilterKeyEventToDom(event) {
+                if (this.isInputElementShowed()) {
+                    if (this.filterKeyCode(event.getKeyCode())) {
+                        event[android.view.ViewRootImpl.ContinueEventToDom] = false;
+                    }
+                    else {
+                        event[android.view.ViewRootImpl.ContinueEventToDom] = true;
+                    }
+                }
+            }
+            onKeyDown(keyCode, event) {
+                this.checkFilterKeyEventToDom(event);
+                return super.onKeyDown(keyCode, event) || true;
+            }
+            onKeyUp(keyCode, event) {
+                this.checkFilterKeyEventToDom(event);
+                return super.onKeyUp(keyCode, event) || true;
+            }
+            requestSyncBoundToElement(immediately = true) {
+                super.requestSyncBoundToElement(immediately);
+            }
+            setLayerType(layerType) {
+                if (layerType != View.LAYER_TYPE_NONE)
+                    return;
+                super.setLayerType(layerType);
+            }
+            setRawTextSize(size) {
+                super.setRawTextSize(size);
+                if (this.isInputElementShowed()) {
+                    this.syncTextBoundInfoToInputElement();
+                }
+            }
+            onTextChanged(text, start, lengthBefore, lengthAfter) {
+                if (this.isInputElementShowed()) {
+                    this.syncTextBoundInfoToInputElement();
+                }
+            }
+            onLayout(changed, left, top, right, bottom) {
+                super.onLayout(changed, left, top, right, bottom);
+                if (this.isInputElementShowed()) {
+                    this.syncTextBoundInfoToInputElement();
+                }
+            }
+            setGravity(gravity) {
+                super.setGravity(gravity);
+                if (this.isInputElementShowed()) {
+                    this.syncTextBoundInfoToInputElement();
+                }
+            }
+            setInputType(type) {
+                this.mInputType = type;
+                switch (type) {
+                    case InputType.TYPE_NULL:
+                        this.switchToMultilineInputElement();
+                        this.setSingleLine(false);
+                        break;
+                    case InputType.TYPE_CLASS_TEXT:
+                        this.switchToMultilineInputElement();
+                        this.setSingleLine(false);
+                        break;
+                    case InputType.TYPE_CLASS_URI:
+                        this.switchToSingleLineInputElement();
+                        this.inputElement.setAttribute('type', 'url');
+                        this.setSingleLine(true);
+                        break;
+                    case InputType.TYPE_CLASS_EMAIL_ADDRESS:
+                        this.switchToSingleLineInputElement();
+                        this.inputElement.setAttribute('type', 'email');
+                        this.setSingleLine(true);
+                        break;
+                    case InputType.TYPE_CLASS_NUMBER:
+                        this.switchToSingleLineInputElement();
+                        this.inputElement.setAttribute('type', 'number');
+                        this.setSingleLine(true);
+                        break;
+                    case InputType.TYPE_CLASS_PHONE:
+                        this.switchToSingleLineInputElement();
+                        this.inputElement.setAttribute('type', 'tel');
+                        this.setSingleLine(true);
+                        break;
+                    case InputType.TYPE_TEXT_PASSWORD:
+                        this.switchToSingleLineInputElement();
+                        this.inputElement.setAttribute('type', 'password');
+                        this.setSingleLine(true);
+                        this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        break;
+                    case InputType.TYPE_TEXT_VISIBLE_PASSWORD:
+                        this.switchToSingleLineInputElement();
+                        this.inputElement.setAttribute('type', 'email');
+                        this.setSingleLine(true);
+                        break;
+                    case InputType.TYPE_NUMBER_PASSWORD:
+                        this.switchToSingleLineInputElement();
+                        this.inputElement.setAttribute('type', 'number');
+                        this.setSingleLine(true);
+                        this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        break;
+                }
+            }
+            getInputType() {
+                return this.mInputType;
+            }
+            syncTextBoundInfoToInputElement() {
+                let left = this.getLeft();
+                let top = this.getTop();
+                let right = this.getRight();
+                let bottom = this.getBottom();
+                const density = this.getResources().getDisplayMetrics().density;
+                let maxHeight = this.getMaxHeight();
+                if (maxHeight <= 0 || maxHeight >= Integer.MAX_VALUE) {
+                    let maxLine = this.getMaxLines();
+                    if (maxLine > 0 && maxLine < Integer.MAX_VALUE) {
+                        maxHeight = maxLine * this.getLineHeight();
+                    }
+                }
+                let textHeight = bottom - top - this.getCompoundPaddingTop() - this.getCompoundPaddingBottom();
+                if (maxHeight <= 0 || maxHeight > textHeight) {
+                    maxHeight = textHeight;
+                }
+                let layout = this.mLayout;
+                if (this.mHint != null && this.mText.length == 0) {
+                    layout = this.mHintLayout;
+                }
+                let height = layout ? Math.min(layout.getLineTop(layout.getLineCount()), maxHeight) : maxHeight;
+                this.inputElement.style.height = height / density + 1 + 'px';
+                this.inputElement.style.top = '';
+                this.inputElement.style.bottom = '';
+                this.inputElement.style.transform = this.inputElement.style.webkitTransform = '';
+                let gravity = this.getGravity();
+                switch (gravity & Gravity.VERTICAL_GRAVITY_MASK) {
+                    case Gravity.TOP:
+                        this.inputElement.style.top = this.getCompoundPaddingTop() / density + 'px';
+                        break;
+                    case Gravity.BOTTOM:
+                        this.inputElement.style.bottom = this.getCompoundPaddingBottom() / density + 'px';
+                        break;
+                    default:
+                        this.inputElement.style.top = '50%';
+                        this.inputElement.style.transform = this.inputElement.style.webkitTransform = 'translate(0, -50%)';
+                        break;
+                }
+                switch (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                    case Gravity.LEFT:
+                        this.inputElement.style.textAlign = 'left';
+                        break;
+                    case Gravity.RIGHT:
+                        this.inputElement.style.textAlign = 'right';
+                        break;
+                    default:
+                        this.inputElement.style.textAlign = 'center';
+                        break;
+                }
+                this.inputElement.style.left = this.getCompoundPaddingLeft() / density + 'px';
+                this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + 1 + 'px';
+                this.inputElement.style.lineHeight = this.getLineHeight() / density + 'px';
+                if (this.getHorizontallyScrolling()) {
+                    this.inputElement.style.whiteSpace = 'nowrap';
+                }
+                else {
+                    this.inputElement.style.whiteSpace = '';
+                }
+                let text = this.getText().toString();
+                if (text != this.inputElement.value)
+                    this.inputElement.value = text;
+                this.inputElement.style.fontSize = this.getTextSize() / density + 'px';
+                this.inputElement.style.color = Color.toRGBAFunc(this.getCurrentTextColor());
+            }
+            onAttachedToWindow() {
+                this.getContext().androidUI.showDebugLayout();
+                return super.onAttachedToWindow();
+            }
+            setEllipsize(ellipsis) {
+                if (ellipsis == TextUtils.TruncateAt.MARQUEE) {
+                    throw Error(`new IllegalArgumentException("EditText cannot use the ellipsize mode " + "TextUtils.TruncateAt.MARQUEE")`);
+                }
+                super.setEllipsize(ellipsis);
+            }
+        }
+        widget.EditText = EditText;
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
 var android;

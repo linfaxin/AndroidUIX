@@ -36,7 +36,8 @@ module android.R {
             return {
                 textSize: '14sp',
                 layerType: 'software',
-                textColor: color.textView_textColor
+                textColor: color.textView_textColor,
+                textColorHint: 0xff808080
             };
         }
 
@@ -51,6 +52,19 @@ module android.R {
                 gravity: Gravity.CENTER
             });
         }
+
+
+        static get editTextStyle() {
+            return Object.assign(attr.textViewStyle, {
+                background: drawable.editbox_background,
+                focusable: true,
+                focusableInTouchMode: true,
+                clickable: true,
+                textSize: '18sp',
+                gravity: Gravity.CENTER_VERTICAL
+            });
+        }
+
 
         static get imageButtonStyle() {
             return {

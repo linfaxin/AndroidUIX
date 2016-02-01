@@ -1941,6 +1941,7 @@ declare module android.R {
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class drawable {
         static btn_default: Drawable;
+        static editbox_background: Drawable;
         static btn_check: Drawable;
         static btn_radio: Drawable;
         static progress_small_holo: Drawable;
@@ -2044,6 +2045,8 @@ declare module android.R {
         static btn_rating_star_on_normal_holo_light: any;
         static btn_rating_star_on_pressed_holo_light: any;
         static dropdown_background_dark: any;
+        static editbox_background_focus_yellow: any;
+        static editbox_background_normal: any;
         static ic_menu_moreoverflow_normal_holo_dark: any;
         static menu_panel_holo_dark: any;
         static menu_panel_holo_light: any;
@@ -2102,6 +2105,8 @@ declare module android.R {
         static btn_rating_star_on_normal_holo_light: NetDrawable;
         static btn_rating_star_on_pressed_holo_light: NetDrawable;
         static dropdown_background_dark: NinePatchDrawable;
+        static editbox_background_focus_yellow: NinePatchDrawable;
+        static editbox_background_normal: NinePatchDrawable;
         static ic_menu_moreoverflow_normal_holo_dark: NetDrawable;
         static menu_panel_holo_dark: NinePatchDrawable;
         static menu_panel_holo_light: NinePatchDrawable;
@@ -2362,17 +2367,32 @@ declare module android.R {
             textSize: string;
             layerType: string;
             textColor: content.res.ColorStateList;
+            textColorHint: number;
         };
         static buttonStyle: {
             textSize: string;
             layerType: string;
             textColor: content.res.ColorStateList;
+            textColorHint: number;
         } & {
             background: Drawable;
             focusable: boolean;
             clickable: boolean;
             minHeight: string;
             minWidth: string;
+            textSize: string;
+            gravity: number;
+        };
+        static editTextStyle: {
+            textSize: string;
+            layerType: string;
+            textColor: content.res.ColorStateList;
+            textColorHint: number;
+        } & {
+            background: Drawable;
+            focusable: boolean;
+            focusableInTouchMode: boolean;
+            clickable: boolean;
             textSize: string;
             gravity: number;
         };
@@ -2386,6 +2406,7 @@ declare module android.R {
             textSize: string;
             layerType: string;
             textColor: content.res.ColorStateList;
+            textColorHint: number;
         } & {
             background: Drawable;
             focusable: boolean;
@@ -2402,6 +2423,7 @@ declare module android.R {
             textSize: string;
             layerType: string;
             textColor: content.res.ColorStateList;
+            textColorHint: number;
         } & {
             background: Drawable;
             focusable: boolean;
@@ -3246,15 +3268,13 @@ declare module android.view {
         private _syncToElementImmediatelyLock;
         private _syncToElementRun;
         requestSyncBoundToElement(immediately?: boolean): void;
-        protected _syncBoundAndScrollToElement(): void;
         private _lastSyncLeft;
         private _lastSyncTop;
         private _lastSyncWidth;
         private _lastSyncHeight;
-        protected _syncBoundToElement(): void;
         private _lastSyncScrollX;
         private _lastSyncScrollY;
-        protected _syncScrollToElement(): void;
+        protected _syncBoundAndScrollToElement(): void;
         syncVisibleToElement(): void;
         syncDrawStateToElement(): void;
         private _initAttrObserver();
@@ -5631,45 +5651,17 @@ declare module android.os {
     }
 }
 declare module android.text {
-    class InputType {
-        static TYPE_MASK_CLASS: number;
-        static TYPE_MASK_VARIATION: number;
-        static TYPE_MASK_FLAGS: number;
-        static TYPE_NULL: number;
-        static TYPE_CLASS_TEXT: number;
-        static TYPE_TEXT_FLAG_CAP_CHARACTERS: number;
-        static TYPE_TEXT_FLAG_CAP_WORDS: number;
-        static TYPE_TEXT_FLAG_CAP_SENTENCES: number;
-        static TYPE_TEXT_FLAG_AUTO_CORRECT: number;
-        static TYPE_TEXT_FLAG_AUTO_COMPLETE: number;
-        static TYPE_TEXT_FLAG_MULTI_LINE: number;
-        static TYPE_TEXT_FLAG_IME_MULTI_LINE: number;
-        static TYPE_TEXT_FLAG_NO_SUGGESTIONS: number;
-        static TYPE_TEXT_VARIATION_NORMAL: number;
-        static TYPE_TEXT_VARIATION_URI: number;
-        static TYPE_TEXT_VARIATION_EMAIL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_EMAIL_SUBJECT: number;
-        static TYPE_TEXT_VARIATION_SHORT_MESSAGE: number;
-        static TYPE_TEXT_VARIATION_LONG_MESSAGE: number;
-        static TYPE_TEXT_VARIATION_PERSON_NAME: number;
-        static TYPE_TEXT_VARIATION_POSTAL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_PASSWORD: number;
-        static TYPE_TEXT_VARIATION_VISIBLE_PASSWORD: number;
-        static TYPE_TEXT_VARIATION_WEB_EDIT_TEXT: number;
-        static TYPE_TEXT_VARIATION_FILTER: number;
-        static TYPE_TEXT_VARIATION_PHONETIC: number;
-        static TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS: number;
-        static TYPE_TEXT_VARIATION_WEB_PASSWORD: number;
-        static TYPE_CLASS_NUMBER: number;
-        static TYPE_NUMBER_FLAG_SIGNED: number;
-        static TYPE_NUMBER_FLAG_DECIMAL: number;
-        static TYPE_NUMBER_VARIATION_NORMAL: number;
-        static TYPE_NUMBER_VARIATION_PASSWORD: number;
-        static TYPE_CLASS_PHONE: number;
-        static TYPE_CLASS_DATETIME: number;
-        static TYPE_DATETIME_VARIATION_NORMAL: number;
-        static TYPE_DATETIME_VARIATION_DATE: number;
-        static TYPE_DATETIME_VARIATION_TIME: number;
+    enum InputType {
+        TYPE_NULL = 0,
+        TYPE_CLASS_TEXT = 1,
+        TYPE_CLASS_URI = 2,
+        TYPE_CLASS_EMAIL_ADDRESS = 3,
+        TYPE_CLASS_NUMBER = 4,
+        TYPE_CLASS_PHONE = 5,
+        TYPE_PASSWORD = 6,
+        TYPE_TEXT_PASSWORD = 7,
+        TYPE_TEXT_VISIBLE_PASSWORD = 8,
+        TYPE_NUMBER_PASSWORD = 9,
     }
 }
 declare module android.util {
@@ -6329,7 +6321,7 @@ declare module android.widget {
         getTextSize(): number;
         setTextSize(size: number): void;
         setTextSize(unit: string, size: number): void;
-        private setRawTextSize(size);
+        protected setRawTextSize(size: number): void;
         getTextScaleX(): number;
         setTextScaleX(size: number): void;
         getTypeface(): any;
@@ -6382,7 +6374,7 @@ declare module android.widget {
         setLineSpacing(add: number, mult: number): void;
         getLineSpacingMultiplier(): number;
         getLineSpacingExtra(): number;
-        private updateTextColors();
+        protected updateTextColors(): void;
         protected drawableStateChanged(): void;
         removeMisspelledSpans(spannable: Spannable): void;
         setFreezesText(freezesText: boolean): void;
@@ -7546,6 +7538,50 @@ declare module android.widget {
         }
     }
 }
+declare module android.text.method {
+    class PasswordTransformationMethod extends SingleLineTransformationMethod {
+        private static instance;
+        getTransformation(source: String, v: android.view.View): String;
+        static getInstance(): PasswordTransformationMethod;
+    }
+}
+declare module android.widget {
+    import TextUtils = android.text.TextUtils;
+    import TextView = android.widget.TextView;
+    import Context = android.content.Context;
+    class EditText extends TextView {
+        private inputElement;
+        private mSingleLineInputElement;
+        private mMultilineInputElement;
+        private mInputType;
+        private mForceDisableDraw;
+        constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
+        protected initBindElement(bindElement: HTMLElement): void;
+        protected onInputValueChange(): void;
+        private switchToSingleLineInputElement();
+        private switchToMultilineInputElement();
+        protected onFocusChanged(focused: boolean, direction: number, previouslyFocusedRect: android.graphics.Rect): void;
+        isInputElementShowed(): boolean;
+        private setForceDisableDrawText(disable);
+        protected updateTextColors(): void;
+        onTouchEvent(event: android.view.MotionEvent): boolean;
+        private filterKeyCode(keyCode);
+        private checkFilterKeyEventToDom(event);
+        onKeyDown(keyCode: number, event: android.view.KeyEvent): boolean;
+        onKeyUp(keyCode: number, event: android.view.KeyEvent): boolean;
+        requestSyncBoundToElement(immediately?: boolean): void;
+        setLayerType(layerType: number): void;
+        protected setRawTextSize(size: number): void;
+        protected onTextChanged(text: String, start: number, lengthBefore: number, lengthAfter: number): void;
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+        setGravity(gravity: number): void;
+        setInputType(type: number): void;
+        getInputType(): number;
+        private syncTextBoundInfoToInputElement();
+        protected onAttachedToWindow(): void;
+        setEllipsize(ellipsis: TextUtils.TruncateAt): void;
+    }
+}
 declare module android.widget {
     import Canvas = android.graphics.Canvas;
     import Matrix = android.graphics.Matrix;
@@ -8127,6 +8163,7 @@ declare module android.widget {
             textSize: string;
             layerType: string;
             textColor: content.res.ColorStateList;
+            textColorHint: number;
         } & {
             background: graphics.drawable.Drawable;
             focusable: boolean;
@@ -8148,6 +8185,7 @@ declare module android.widget {
             textSize: string;
             layerType: string;
             textColor: content.res.ColorStateList;
+            textColorHint: number;
         } & {
             background: graphics.drawable.Drawable;
             focusable: boolean;

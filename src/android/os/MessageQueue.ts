@@ -21,6 +21,7 @@ module android.os {
             return window.setTimeout(callback, 1000 / 60);
         };
     }
+    window.requestAnimationFrame = requestAnimationFrame;
 
     export class MessageQueue {
 

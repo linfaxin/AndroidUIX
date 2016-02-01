@@ -9,6 +9,7 @@
 ///<reference path="android/widget/RelativeLayout.ts"/>
 ///<reference path="android/widget/TextView.ts"/>
 ///<reference path="android/widget/Button.ts"/>
+///<reference path="android/widget/EditText.ts"/>
 ///<reference path="android/widget/ImageView.ts"/>
 ///<reference path="android/widget/ImageButton.ts"/>
 ///<reference path="android/widget/ListView.ts"/>

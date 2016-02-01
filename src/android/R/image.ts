@@ -41,6 +41,8 @@ module android.R {
         static get btn_rating_star_on_normal_holo_light(){return new NetDrawable(image_base64.btn_rating_star_on_normal_holo_light)}
         static get btn_rating_star_on_pressed_holo_light(){return new NetDrawable(image_base64.btn_rating_star_on_pressed_holo_light)}
         static get dropdown_background_dark(){return new NinePatchDrawable(image_base64.dropdown_background_dark)}
+        static get editbox_background_focus_yellow(){return new NinePatchDrawable(image_base64.editbox_background_focus_yellow)}
+        static get editbox_background_normal(){return new NinePatchDrawable(image_base64.editbox_background_normal)}
         static get ic_menu_moreoverflow_normal_holo_dark(){return new NetDrawable(image_base64.ic_menu_moreoverflow_normal_holo_dark)}
         static get menu_panel_holo_dark(){return new NinePatchDrawable(image_base64.menu_panel_holo_dark)}
         static get menu_panel_holo_light(){return new NinePatchDrawable(image_base64.menu_panel_holo_light)}

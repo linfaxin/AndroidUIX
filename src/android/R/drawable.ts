@@ -51,6 +51,13 @@ module android.R{
             return stateList;
         }
 
+        static get editbox_background():Drawable {
+            let stateList = new StateListDrawable();
+            stateList.addState([View.VIEW_STATE_FOCUSED], R.image.editbox_background_focus_yellow);
+            stateList.addState([], R.image.editbox_background_normal);
+            return stateList;
+        }
+
         static get btn_check():Drawable {
             let stateList = new StateListDrawable();
             //Enabled states

@@ -189,6 +189,16 @@ module android.R {
                 null,
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEcAAAA2CAMAAACiEHRJAAAAflBMVEVAQEAAAABBQUEAAAAAAAATExMlJSU+Pj5BQUEAAAAAAAA4ODggICAvLy8WFhYAAAAAAAAAAAAAAAAfHx8NDQ0AAAAvLy8kJCQgICAQEBAAAAA3NzcWFhYkJCQXFxcAAAASEhIAAAAjIyMAAAAwMDAjIyMAAAAAAAAAAAAAAACu+DqjAAAAKXRSTlPmCekADkqr4e4qFcCA2KhEYwUShjwb1K5/Nge9pZ2YXUxALSTIrGZVSewvjJ0AAAC8SURBVEjH7da3EsIwEEVRr5AjJig4Z5uk//9BJNFBw+zQMLO339Ns84Lde+abPq6cs6q6rnN0avWOAD10e3zdoEFYB/hcsQQfq2YO3gmjmAXYWByFHAw55JBDDjk/dgw5f/UvcsghhxyUEyQMm3f8nofweinL8oCtCsE5LTS5Gsf+iKxXDbTWETzb9OM+nXHdpjTjwjkgi7TRywnZUkhwjoeKLUXnGOs4iEuZoQPhHQeJFvBZxTk+g+8FPAE5Rz/0d6kkJAAAAABJRU5ErkJggg=="
         ],
+        "editbox_background_focus_yellow": [
+                null,
+                null,
+                "data:image/png;base64,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"
+        ],
+        "editbox_background_normal": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGoAAAA3CAMAAADT7y+MAAAA0lBMVEUAAAAAAACzs7Oenp7+/v6xsbGmpqYAAAAAAAAAAAAAAAAAAAD9/f36+vqvr6/+/v6Xl5fw8PBUVFTs7OypqampqamEhIQdHR3c3Nzz8/Pd3d3x8fHu7u7S0tLHx8fa2tqenp6+vr6ampqioqKgoKCBgYGSkpIAAAA3NzdSUlIAAAD39/fr6+v39/f09PTo6Ojb29vX19fk5OTf39+srKycnJympqaSkpKMjIyUlJSPj48sLCxoaGhqamoAAAD///8AAAD8/Pzz8/Pm5ub39/fl5eUurhQ7AAAAP3RSTlMAEX19/nZzGAIGCQ34/nT7avwk+GpiTCvn2tfTy7i1qX53cXBjRkMlJB8V+Ozi39/MzLezgXl4aV5ZSSgjIhntDpQOAAABGklEQVRYw+3Yx27CQBCAYTtskm3ujd5DgPTeszGB93+lHIwi2cvFYofT/C/waS4jzVi7+tk3C8PqR7mwDSc43QWxMPWfhg2DDRt+GjKqj/Tx0m9ufo22afbHmTYYO3++i4KV4YKo/ZixihT6t9HayQ3nrIP2OCyPxc96QU6U8Ui+6qW8RInXS0eB5NxMxRYpVqPtA0mKXLh2AW2p5SRXQDkV6vSEKKDy4yqloCJIIYUUUkghhRRSSNWkvg9HLScKKs8tU8JXUMl/qki8XREFknediMp9dS8VTA/vvETRr7gLYslO/Emrt/CoKz3TkCc7o4xpF/58OmhJw1JrEM851f8Wi1niHhnNTWaLYiYNM/+NYdTCsBpBfqT/AK7giup/9WGpAAAAAElFTkSuQmCC"
+        ],
         "ic_menu_moreoverflow_normal_holo_dark": [
                 null,
                 null,
@@ -340,6 +350,8 @@ module android.R {
         btn_rating_star_on_normal_holo_light:null,
         btn_rating_star_on_pressed_holo_light:null,
         dropdown_background_dark:null,
+        editbox_background_focus_yellow:null,
+        editbox_background_normal:null,
         ic_menu_moreoverflow_normal_holo_dark:null,
         menu_panel_holo_dark:null,
         menu_panel_holo_light:null,
@@ -464,6 +476,12 @@ module android.R {
         }
         static get dropdown_background_dark(){
             return imageCache.dropdown_background_dark || (imageCache.dropdown_background_dark=findRatioImage(data.dropdown_background_dark));
+        }
+        static get editbox_background_focus_yellow(){
+            return imageCache.editbox_background_focus_yellow || (imageCache.editbox_background_focus_yellow=findRatioImage(data.editbox_background_focus_yellow));
+        }
+        static get editbox_background_normal(){
+            return imageCache.editbox_background_normal || (imageCache.editbox_background_normal=findRatioImage(data.editbox_background_normal));
         }
         static get ic_menu_moreoverflow_normal_holo_dark(){
             return imageCache.ic_menu_moreoverflow_normal_holo_dark || (imageCache.ic_menu_moreoverflow_normal_holo_dark=findRatioImage(data.ic_menu_moreoverflow_normal_holo_dark));

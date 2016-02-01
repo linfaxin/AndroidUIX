@@ -77,6 +77,7 @@ import Canvas = android.graphics.Canvas;
 import Paint = android.graphics.Paint;
 import Path = android.graphics.Path;
 import Rect = android.graphics.Rect;
+import Color = android.graphics.Color;
 import RectF = android.graphics.RectF;
 import Drawable = android.graphics.drawable.Drawable;
 import Handler = android.os.Handler;
@@ -269,7 +270,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     // System wide time for last cut or copy action.
     static LAST_CUT_OR_COPY_TIME:number = 0;
 
-    private mTextColor:ColorStateList;
+    private mTextColor:ColorStateList = ColorStateList.valueOf(Color.BLACK);
 
     private mHintTextColor:ColorStateList;
 
@@ -620,9 +621,11 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         });
         a.addAttr('text', (value)=>{
             this.setText(a.parseString(value));
-        }, ()=>{
-            return this.getText();
-        });
+        }
+        //    , ()=>{
+        //    return this.getText();//FIXME when state attr refactoring ok
+        //}
+        );
         a.addAttr('scrollHorizontally', (value)=>{
             this.setHorizontallyScrolling(a.parseBoolean(value, false));
         });
@@ -1757,7 +1760,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         this.setRawTextSize(TypedValue.applyDimension(unit, size, this.getResources().getDisplayMetrics()));
     }
 
-    private setRawTextSize(size:number):void  {
+    protected setRawTextSize(size:number):void  {
         if (size != this.mTextPaint.getTextSize()) {
             this.mTextPaint.setTextSize(size);
             if (this.mLayout != null) {
@@ -2553,7 +2556,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     //    (<Editable> this.mText).append(text, start, end);
     //}
 
-    private updateTextColors():void  {
+    protected updateTextColors():void  {
         let inval:boolean = false;
         let color:number = this.mTextColor.getColorForState(this.getDrawableState(), 0);
         if (color != this.mCurTextColor) {

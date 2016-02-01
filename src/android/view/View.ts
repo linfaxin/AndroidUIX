@@ -6288,9 +6288,46 @@ module android.view {
             rootView.postDelayed(rootView._syncToElementRun, 1000);
         }
 
+        private _lastSyncLeft:number;
+        private _lastSyncTop:number;
+        private _lastSyncWidth:number;
+        private _lastSyncHeight:number;
+        private _lastSyncScrollX:number;
+        private _lastSyncScrollY:number;
         protected _syncBoundAndScrollToElement():void {
-            this._syncBoundToElement();
-            this._syncScrollToElement();
+            //bound
+            const left = this.mLeft;
+            const top = this.mTop;
+            const width = this.getWidth();
+            const height = this.getHeight();
+            const parent = this.getParent();
+            const pScrollX = parent instanceof View ? (<View><any>parent).mScrollX : 0;
+            const pScrollY = parent instanceof View ? (<View><any>parent).mScrollY : 0;
+
+            if(left !== this._lastSyncLeft || top !== this._lastSyncTop
+                || width !== this._lastSyncWidth || height !== this._lastSyncHeight
+                || pScrollX !== this._lastSyncScrollX || pScrollY !== this._lastSyncScrollY) {
+                this._lastSyncLeft = left;
+                this._lastSyncTop = top;
+                this._lastSyncWidth = width;
+                this._lastSyncHeight = height;
+                this._lastSyncScrollX = pScrollX;
+                this._lastSyncScrollY = pScrollY;
+
+
+                const density = this.getResources().getDisplayMetrics().density;
+                let bind = this.bindElement;
+
+                //bind.style.transform = bind.style.webkitTransform = `translate3d(${left}px, ${top}px, 0px)`;
+                //bind.style.transform = bind.style.webkitTransform = `translate(${left/density}px, ${top/density}px)`;
+                bind.style.left = (left-pScrollX)/density + 'px';
+                bind.style.top = (top-pScrollY)/density + 'px';
+
+                bind.style.width = width / density + 'px';
+                bind.style.height = height / density + 'px';
+            }
+
+            //this._syncScrollToElement();
 
             if(this instanceof ViewGroup){
                 const group = <ViewGroup><View>this;
@@ -6300,62 +6337,31 @@ module android.view {
             }
         }
 
-        private _lastSyncLeft:number;
-        private _lastSyncTop:number;
-        private _lastSyncWidth:number;
-        private _lastSyncHeight:number;
-        protected _syncBoundToElement() {
-            //bound
-            const left = this.mLeft;
-            const top = this.mTop;
-            const width = this.getWidth();
-            const height = this.getHeight();
-            if(left !== this._lastSyncLeft || top !== this._lastSyncTop
-                || width !== this._lastSyncWidth || height !== this._lastSyncHeight) {
-                this._lastSyncLeft = left;
-                this._lastSyncTop = top;
-                this._lastSyncWidth = width;
-                this._lastSyncHeight = height;
-
-
-                const density = this.getResources().getDisplayMetrics().density;
-                let bind = this.bindElement;
-
-                //bind.style.transform = bind.style.webkitTransform = `translate3d(${left}px, ${top}px, 0px)`;
-                bind.style.transform = bind.style.webkitTransform = `translate(${left/density}px, ${top/density}px)`;
-
-                bind.style.width = width / density + 'px';
-                bind.style.height = height / density + 'px';
-            }
-        }
-
-        private _lastSyncScrollX:number;
-        private _lastSyncScrollY:number;
-        protected _syncScrollToElement() {
-            //scroll
-            let sx = this.mScrollX;
-            let sy = this.mScrollY;
-
-            if(this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
-                this._lastSyncScrollX = sx;
-                this._lastSyncScrollY = sy;
-
-                if (this instanceof ViewGroup) {
-                    let group = <ViewGroup><any>this;
-                    for (let i = 0, count = group.getChildCount(); i < count; i++) {
-                        let child = group.getChildAt(i);
-                        let item = child.bindElement;
-
-                        const density = this.getResources().getDisplayMetrics().density;
-                        let tx = (child.mLeft - sx) / density;
-                        let ty = (child.mTop - sy) / density;
-
-                        //item.style.transform = item.style.webkitTransform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px)`;
-                        item.style.transform = item.style.webkitTransform = `translate(${tx}px, ${ty}px)`;
-                    }
-                }
-            }
-        }
+        //protected _syncScrollToElement() {
+        //    //scroll
+        //    let sx = this.mScrollX;
+        //    let sy = this.mScrollY;
+        //
+        //    if(this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
+        //        this._lastSyncScrollX = sx;
+        //        this._lastSyncScrollY = sy;
+        //
+        //        if (this instanceof ViewGroup) {
+        //            let group = <ViewGroup><any>this;
+        //            for (let i = 0, count = group.getChildCount(); i < count; i++) {
+        //                let child = group.getChildAt(i);
+        //                let item = child.bindElement;
+        //
+        //                const density = this.getResources().getDisplayMetrics().density;
+        //                let tx = (child.mLeft - sx) / density;
+        //                let ty = (child.mTop - sy) / density;
+        //
+        //                //item.style.transform = item.style.webkitTransform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px)`;
+        //                item.style.transform = item.style.webkitTransform = `translate(${tx}px, ${ty}px)`;
+        //            }
+        //        }
+        //    }
+        //}
 
         syncVisibleToElement(){
             let visibility = this.getVisibility();
