@@ -165,7 +165,7 @@ module android.view {
 
 
             this.mTouchingPointers = Array.from(e.touches);
-            if(baseAction === MotionEvent.ACTION_UP){//add the touch end to touching list
+            if(baseAction === MotionEvent.ACTION_UP || baseAction === MotionEvent.ACTION_CANCEL){//add the touch end to touching list
                 this.mTouchingPointers.splice(actionIndex, 0, activeTouch);
             }
 
