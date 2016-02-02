@@ -1489,14 +1489,100 @@ declare module android.view {
         static KEYCODE_TAB: number;
         static KEYCODE_SPACE: number;
         static KEYCODE_ESCAPE: number;
+        static KEYCODE_Backspace: number;
         static KEYCODE_PAGE_UP: number;
         static KEYCODE_PAGE_DOWN: number;
         static KEYCODE_MOVE_HOME: number;
         static KEYCODE_MOVE_END: number;
+        static KEYCODE_Digit0: number;
+        static KEYCODE_Digit1: number;
+        static KEYCODE_Digit2: number;
+        static KEYCODE_Digit3: number;
+        static KEYCODE_Digit4: number;
+        static KEYCODE_Digit5: number;
+        static KEYCODE_Digit6: number;
+        static KEYCODE_Digit7: number;
+        static KEYCODE_Digit8: number;
+        static KEYCODE_Digit9: number;
+        static KEYCODE_Key_a: number;
+        static KEYCODE_Key_b: number;
+        static KEYCODE_Key_c: number;
+        static KEYCODE_Key_d: number;
+        static KEYCODE_Key_e: number;
+        static KEYCODE_Key_f: number;
+        static KEYCODE_Key_g: number;
+        static KEYCODE_Key_h: number;
+        static KEYCODE_Key_i: number;
+        static KEYCODE_Key_j: number;
+        static KEYCODE_Key_k: number;
+        static KEYCODE_Key_l: number;
+        static KEYCODE_Key_m: number;
+        static KEYCODE_Key_n: number;
+        static KEYCODE_Key_o: number;
+        static KEYCODE_Key_p: number;
+        static KEYCODE_Key_q: number;
+        static KEYCODE_Key_r: number;
+        static KEYCODE_Key_s: number;
+        static KEYCODE_Key_t: number;
+        static KEYCODE_Key_u: number;
+        static KEYCODE_Key_v: number;
+        static KEYCODE_Key_w: number;
+        static KEYCODE_Key_x: number;
+        static KEYCODE_Key_y: number;
+        static KEYCODE_Key_z: number;
+        static KEYCODE_KeyA: number;
+        static KEYCODE_KeyB: number;
+        static KEYCODE_KeyC: number;
+        static KEYCODE_KeyD: number;
+        static KEYCODE_KeyE: number;
+        static KEYCODE_KeyF: number;
+        static KEYCODE_KeyG: number;
+        static KEYCODE_KeyH: number;
+        static KEYCODE_KeyI: number;
+        static KEYCODE_KeyJ: number;
+        static KEYCODE_KeyK: number;
+        static KEYCODE_KeyL: number;
+        static KEYCODE_KeyM: number;
+        static KEYCODE_KeyN: number;
+        static KEYCODE_KeyO: number;
+        static KEYCODE_KeyP: number;
+        static KEYCODE_KeyQ: number;
+        static KEYCODE_KeyR: number;
+        static KEYCODE_KeyS: number;
+        static KEYCODE_KeyT: number;
+        static KEYCODE_KeyU: number;
+        static KEYCODE_KeyV: number;
+        static KEYCODE_KeyW: number;
+        static KEYCODE_KeyX: number;
+        static KEYCODE_KeyY: number;
+        static KEYCODE_KeyZ: number;
+        static KEYCODE_Semicolon: number;
+        static KEYCODE_Comma: number;
+        static KEYCODE_Period: number;
+        static KEYCODE_Slash: number;
+        static KEYCODE_Quotation: number;
+        static KEYCODE_LeftBracket: number;
+        static KEYCODE_Backslash: number;
+        static KEYCODE_RightBracket: number;
+        static KEYCODE_Minus: number;
+        static KEYCODE_Equal: number;
+        static KEYCODE_Right_Parenthesis: number;
+        static KEYCODE_Exclamation: number;
+        static KEYCODE_AT: number;
+        static KEYCODE_Sharp: number;
+        static KEYCODE_Dollar: number;
+        static KEYCODE_Percent: number;
+        static KEYCODE_Power: number;
+        static KEYCODE_And: number;
+        static KEYCODE_Asterisk: number;
+        static KEYCODE_Left_Parenthesis: number;
+        static KEYCODE_Underline: number;
+        static KEYCODE_Add: number;
         static KEYCODE_BACK: number;
         static KEYCODE_MENU: number;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
+        static META_MASK_SHIFT: number;
         static META_ALT_ON: number;
         static META_SHIFT_ON: number;
         static META_CTRL_ON: number;
@@ -1529,6 +1615,7 @@ declare module android.view {
         isTracking(): boolean;
         isLongPress(): boolean;
         getKeyCode(): number;
+        getKeyCodeWithMask(): number;
         getRepeatCount(): number;
         getDownTime(): number;
         getEventTime(): number;
@@ -5662,6 +5749,17 @@ declare module android.text {
         TYPE_TEXT_PASSWORD = 7,
         TYPE_TEXT_VISIBLE_PASSWORD = 8,
         TYPE_NUMBER_PASSWORD = 9,
+        TYPE_NUMBER_SIGNED = 10,
+        TYPE_NUMBER_DECIMAL = 11,
+    }
+    module InputType {
+        class LimitCode {
+            static TYPE_CLASS_NUMBER: number[];
+            static TYPE_CLASS_PHONE: number[];
+            static TYPE_NUMBER_PASSWORD: number[];
+            static TYPE_NUMBER_SIGNED: number[];
+            static TYPE_NUMBER_DECIMAL: number[];
+        }
     }
 }
 declare module android.util {
@@ -7555,6 +7653,7 @@ declare module android.widget {
         private mMultilineInputElement;
         private mInputType;
         private mForceDisableDraw;
+        private mMaxLength;
         constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
         protected initBindElement(bindElement: HTMLElement): void;
         protected onInputValueChange(): void;
@@ -7565,12 +7664,11 @@ declare module android.widget {
         private setForceDisableDrawText(disable);
         protected updateTextColors(): void;
         onTouchEvent(event: android.view.MotionEvent): boolean;
-        private filterKeyCode(keyCode);
+        private filterKeyCode(event);
         private checkFilterKeyEventToDom(event);
         onKeyDown(keyCode: number, event: android.view.KeyEvent): boolean;
         onKeyUp(keyCode: number, event: android.view.KeyEvent): boolean;
         requestSyncBoundToElement(immediately?: boolean): void;
-        setLayerType(layerType: number): void;
         protected setRawTextSize(size: number): void;
         protected onTextChanged(text: String, start: number, lengthBefore: number, lengthAfter: number): void;
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
@@ -10595,7 +10693,6 @@ declare module androidui.widget {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         onTouchEvent(event: android.view.MotionEvent): boolean;
         requestSyncBoundToElement(immediately?: boolean): void;
-        setLayerType(layerType: number): void;
         protected onAttachedToWindow(): void;
     }
 }

@@ -4653,7 +4653,7 @@ var android;
                         break;
                 }
                 this.mTouchingPointers = Array.from(e.touches);
-                if (baseAction === MotionEvent.ACTION_UP) {
+                if (baseAction === MotionEvent.ACTION_UP || baseAction === MotionEvent.ACTION_CANCEL) {
                     this.mTouchingPointers.splice(actionIndex, 0, activeTouch);
                 }
                 if (this.mTouchingPointers.length > 1) {
@@ -6241,6 +6241,16 @@ var android;
             getKeyCode() {
                 return this.mKeyCode;
             }
+            getKeyCodeWithMask() {
+                let mask = 0;
+                if (this.isShiftPressed())
+                    mask |= KeyEvent.META_SHIFT_ON;
+                if (this.isAltPressed())
+                    mask |= KeyEvent.META_ALT_ON;
+                if (this.isCtrlPressed())
+                    mask |= KeyEvent.META_CTRL_ON;
+                return this.mKeyCode & (mask << KeyEvent.META_MASK_SHIFT);
+            }
             getRepeatCount() {
                 let downArray = this._downingKeyEventMap.get(this.mKeyCode);
                 return downArray ? downArray.length - 1 : 0;
@@ -6349,14 +6359,100 @@ var android;
         KeyEvent.KEYCODE_TAB = 9;
         KeyEvent.KEYCODE_SPACE = 32;
         KeyEvent.KEYCODE_ESCAPE = 27;
+        KeyEvent.KEYCODE_Backspace = 8;
         KeyEvent.KEYCODE_PAGE_UP = 33;
         KeyEvent.KEYCODE_PAGE_DOWN = 34;
         KeyEvent.KEYCODE_MOVE_HOME = 36;
         KeyEvent.KEYCODE_MOVE_END = 35;
+        KeyEvent.KEYCODE_Digit0 = 48;
+        KeyEvent.KEYCODE_Digit1 = 49;
+        KeyEvent.KEYCODE_Digit2 = 50;
+        KeyEvent.KEYCODE_Digit3 = 51;
+        KeyEvent.KEYCODE_Digit4 = 52;
+        KeyEvent.KEYCODE_Digit5 = 53;
+        KeyEvent.KEYCODE_Digit6 = 54;
+        KeyEvent.KEYCODE_Digit7 = 55;
+        KeyEvent.KEYCODE_Digit8 = 56;
+        KeyEvent.KEYCODE_Digit9 = 57;
+        KeyEvent.KEYCODE_Key_a = 65;
+        KeyEvent.KEYCODE_Key_b = 66;
+        KeyEvent.KEYCODE_Key_c = 67;
+        KeyEvent.KEYCODE_Key_d = 68;
+        KeyEvent.KEYCODE_Key_e = 69;
+        KeyEvent.KEYCODE_Key_f = 70;
+        KeyEvent.KEYCODE_Key_g = 71;
+        KeyEvent.KEYCODE_Key_h = 72;
+        KeyEvent.KEYCODE_Key_i = 73;
+        KeyEvent.KEYCODE_Key_j = 74;
+        KeyEvent.KEYCODE_Key_k = 75;
+        KeyEvent.KEYCODE_Key_l = 76;
+        KeyEvent.KEYCODE_Key_m = 77;
+        KeyEvent.KEYCODE_Key_n = 78;
+        KeyEvent.KEYCODE_Key_o = 79;
+        KeyEvent.KEYCODE_Key_p = 80;
+        KeyEvent.KEYCODE_Key_q = 81;
+        KeyEvent.KEYCODE_Key_r = 82;
+        KeyEvent.KEYCODE_Key_s = 83;
+        KeyEvent.KEYCODE_Key_t = 84;
+        KeyEvent.KEYCODE_Key_u = 85;
+        KeyEvent.KEYCODE_Key_v = 86;
+        KeyEvent.KEYCODE_Key_w = 87;
+        KeyEvent.KEYCODE_Key_x = 88;
+        KeyEvent.KEYCODE_Key_y = 89;
+        KeyEvent.KEYCODE_Key_z = 90;
+        KeyEvent.KEYCODE_KeyA = 65 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyB = 66 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyC = 67 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyD = 68 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyE = 69 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyF = 70 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyG = 71 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyH = 72 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyI = 73 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyJ = 74 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyK = 75 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyL = 76 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyM = 77 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyN = 78 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyO = 79 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyP = 80 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyQ = 81 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyR = 82 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyS = 83 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyT = 84 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyU = 85 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyV = 86 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyW = 87 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyX = 88 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyY = 89 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_KeyZ = 90 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Semicolon = 186;
+        KeyEvent.KEYCODE_Comma = 188;
+        KeyEvent.KEYCODE_Period = 190;
+        KeyEvent.KEYCODE_Slash = 191;
+        KeyEvent.KEYCODE_Quotation = 192;
+        KeyEvent.KEYCODE_LeftBracket = 219;
+        KeyEvent.KEYCODE_Backslash = 220;
+        KeyEvent.KEYCODE_RightBracket = 221;
+        KeyEvent.KEYCODE_Minus = 189;
+        KeyEvent.KEYCODE_Equal = 187;
+        KeyEvent.KEYCODE_Right_Parenthesis = KeyEvent.KEYCODE_Digit0 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Exclamation = KeyEvent.KEYCODE_Digit1 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_AT = KeyEvent.KEYCODE_Digit2 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Sharp = KeyEvent.KEYCODE_Digit3 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Dollar = KeyEvent.KEYCODE_Digit4 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Percent = KeyEvent.KEYCODE_Digit5 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Power = KeyEvent.KEYCODE_Digit6 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_And = KeyEvent.KEYCODE_Digit7 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Asterisk = KeyEvent.KEYCODE_Digit8 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Left_Parenthesis = KeyEvent.KEYCODE_Digit9 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Underline = KeyEvent.KEYCODE_Minus & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
+        KeyEvent.KEYCODE_Add = KeyEvent.KEYCODE_Equal & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);
         KeyEvent.KEYCODE_BACK = -1;
         KeyEvent.KEYCODE_MENU = -2;
         KeyEvent.ACTION_DOWN = 0;
         KeyEvent.ACTION_UP = 1;
+        KeyEvent.META_MASK_SHIFT = 16;
         KeyEvent.META_ALT_ON = 0x02;
         KeyEvent.META_SHIFT_ON = 0x1;
         KeyEvent.META_CTRL_ON = 0x1000;
@@ -16006,6 +16102,7 @@ var androidui;
         }
         initKeyEvent() {
             this.androidUIElement.addEventListener('keydown', (e) => {
+                console.log('keydown', e);
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_DOWN);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
                     e.stopPropagation();
@@ -16014,6 +16111,7 @@ var androidui;
                 }
             }, true);
             this.androidUIElement.addEventListener('keyup', (e) => {
+                console.log('keyup', e);
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_UP);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
                     e.stopPropagation();
@@ -28225,6 +28323,7 @@ var android;
 (function (android) {
     var text;
     (function (text) {
+        var KeyEvent = android.view.KeyEvent;
         (function (InputType) {
             InputType[InputType["TYPE_NULL"] = 0] = "TYPE_NULL";
             InputType[InputType["TYPE_CLASS_TEXT"] = 1] = "TYPE_CLASS_TEXT";
@@ -28236,8 +28335,90 @@ var android;
             InputType[InputType["TYPE_TEXT_PASSWORD"] = 7] = "TYPE_TEXT_PASSWORD";
             InputType[InputType["TYPE_TEXT_VISIBLE_PASSWORD"] = 8] = "TYPE_TEXT_VISIBLE_PASSWORD";
             InputType[InputType["TYPE_NUMBER_PASSWORD"] = 9] = "TYPE_NUMBER_PASSWORD";
+            InputType[InputType["TYPE_NUMBER_SIGNED"] = 10] = "TYPE_NUMBER_SIGNED";
+            InputType[InputType["TYPE_NUMBER_DECIMAL"] = 11] = "TYPE_NUMBER_DECIMAL";
         })(text.InputType || (text.InputType = {}));
         var InputType = text.InputType;
+        var InputType;
+        (function (InputType) {
+            class LimitCode {
+            }
+            LimitCode.TYPE_CLASS_NUMBER = [
+                KeyEvent.KEYCODE_Digit0,
+                KeyEvent.KEYCODE_Digit1,
+                KeyEvent.KEYCODE_Digit2,
+                KeyEvent.KEYCODE_Digit3,
+                KeyEvent.KEYCODE_Digit4,
+                KeyEvent.KEYCODE_Digit5,
+                KeyEvent.KEYCODE_Digit6,
+                KeyEvent.KEYCODE_Digit7,
+                KeyEvent.KEYCODE_Digit8,
+                KeyEvent.KEYCODE_Digit9,
+            ];
+            LimitCode.TYPE_CLASS_PHONE = [
+                KeyEvent.KEYCODE_Sharp,
+                KeyEvent.KEYCODE_Semicolon,
+                KeyEvent.KEYCODE_Asterisk,
+                KeyEvent.KEYCODE_Left_Parenthesis,
+                KeyEvent.KEYCODE_Right_Parenthesis,
+                KeyEvent.KEYCODE_Slash,
+                KeyEvent.KEYCODE_KeyN,
+                KeyEvent.KEYCODE_Period,
+                KeyEvent.KEYCODE_SPACE,
+                KeyEvent.KEYCODE_Add,
+                KeyEvent.KEYCODE_Minus,
+                KeyEvent.KEYCODE_Period,
+                KeyEvent.KEYCODE_Digit0,
+                KeyEvent.KEYCODE_Digit1,
+                KeyEvent.KEYCODE_Digit2,
+                KeyEvent.KEYCODE_Digit3,
+                KeyEvent.KEYCODE_Digit4,
+                KeyEvent.KEYCODE_Digit5,
+                KeyEvent.KEYCODE_Digit6,
+                KeyEvent.KEYCODE_Digit7,
+                KeyEvent.KEYCODE_Digit8,
+                KeyEvent.KEYCODE_Digit9,
+            ];
+            LimitCode.TYPE_NUMBER_PASSWORD = [
+                KeyEvent.KEYCODE_Digit0,
+                KeyEvent.KEYCODE_Digit1,
+                KeyEvent.KEYCODE_Digit2,
+                KeyEvent.KEYCODE_Digit3,
+                KeyEvent.KEYCODE_Digit4,
+                KeyEvent.KEYCODE_Digit5,
+                KeyEvent.KEYCODE_Digit6,
+                KeyEvent.KEYCODE_Digit7,
+                KeyEvent.KEYCODE_Digit8,
+                KeyEvent.KEYCODE_Digit9,
+            ];
+            LimitCode.TYPE_NUMBER_SIGNED = [
+                KeyEvent.KEYCODE_Minus,
+                KeyEvent.KEYCODE_Digit0,
+                KeyEvent.KEYCODE_Digit1,
+                KeyEvent.KEYCODE_Digit2,
+                KeyEvent.KEYCODE_Digit3,
+                KeyEvent.KEYCODE_Digit4,
+                KeyEvent.KEYCODE_Digit5,
+                KeyEvent.KEYCODE_Digit6,
+                KeyEvent.KEYCODE_Digit7,
+                KeyEvent.KEYCODE_Digit8,
+                KeyEvent.KEYCODE_Digit9,
+            ];
+            LimitCode.TYPE_NUMBER_DECIMAL = [
+                KeyEvent.KEYCODE_Period,
+                KeyEvent.KEYCODE_Digit0,
+                KeyEvent.KEYCODE_Digit1,
+                KeyEvent.KEYCODE_Digit2,
+                KeyEvent.KEYCODE_Digit3,
+                KeyEvent.KEYCODE_Digit4,
+                KeyEvent.KEYCODE_Digit5,
+                KeyEvent.KEYCODE_Digit6,
+                KeyEvent.KEYCODE_Digit7,
+                KeyEvent.KEYCODE_Digit8,
+                KeyEvent.KEYCODE_Digit9,
+            ];
+            InputType.LimitCode = LimitCode;
+        })(InputType = text.InputType || (text.InputType = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
 var android;
@@ -41429,7 +41610,6 @@ var android;
     (function (widget) {
         var TextUtils = android.text.TextUtils;
         var TextView = android.widget.TextView;
-        var View = android.view.View;
         var Gravity = android.view.Gravity;
         var Color = android.graphics.Color;
         var Canvas = android.graphics.Canvas;
@@ -41441,6 +41621,7 @@ var android;
                 super(context, bindElement, null);
                 this.mInputType = InputType.TYPE_NULL;
                 this.mForceDisableDraw = false;
+                this.mMaxLength = Integer.MAX_VALUE;
                 let a = this._attrBinder;
                 a.addAttr('inputType', (value) => {
                     switch (value + '') {
@@ -41475,6 +41656,9 @@ var android;
                             break;
                     }
                 });
+                a.addAttr('maxLength', (value) => {
+                    this.mMaxLength = a.parseNumber(value, this.mMaxLength);
+                });
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
             }
@@ -41484,6 +41668,7 @@ var android;
             }
             onInputValueChange() {
                 let text = this.inputElement.value;
+                document.createRange();
                 if (!text || text.length == 0) {
                     this.setForceDisableDrawText(false);
                 }
@@ -41496,7 +41681,6 @@ var android;
                 if (!this.mSingleLineInputElement) {
                     this.mSingleLineInputElement = document.createElement('input');
                     this.mSingleLineInputElement.style.position = 'absolute';
-                    this.mSingleLineInputElement.style.overflow = 'scroll';
                     this.mSingleLineInputElement.style.background = 'transparent';
                     this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
                     this.mSingleLineInputElement.oninput = () => this.onInputValueChange();
@@ -41514,9 +41698,7 @@ var android;
                     this.mMultilineInputElement = document.createElement('textarea');
                     this.mMultilineInputElement.style.position = 'absolute';
                     this.mMultilineInputElement.style['resize'] = 'none';
-                    this.mMultilineInputElement.style.overflow = 'scroll';
                     this.mMultilineInputElement.style.background = 'transparent';
-                    this.mMultilineInputElement.style.padding = '4px 0 0 0';
                     this.mMultilineInputElement.style.boxSizing = 'border-box';
                     this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
                     this.mMultilineInputElement.oninput = () => this.onInputValueChange();
@@ -41577,15 +41759,39 @@ var android;
                 }
                 return super.onTouchEvent(event) || true;
             }
-            filterKeyCode(keyCode) {
+            filterKeyCode(event) {
+                let keyCode = event.getKeyCode();
+                if (keyCode == android.view.KeyEvent.KEYCODE_Backspace) {
+                    return false;
+                }
                 if (keyCode == android.view.KeyEvent.KEYCODE_ENTER && this.isSingleLine()) {
                     return true;
+                }
+                if (event.mIsTypingKey) {
+                    if (this.getText().length >= this.mMaxLength) {
+                        return true;
+                    }
+                    keyCode = event.getKeyCodeWithMask();
+                    switch (this.mInputType) {
+                        case InputType.TYPE_NUMBER_SIGNED:
+                            if (keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0)
+                                return true;
+                            return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
+                        case InputType.TYPE_NUMBER_DECIMAL:
+                            return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
+                        case InputType.TYPE_CLASS_NUMBER:
+                            return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
+                        case InputType.TYPE_NUMBER_PASSWORD:
+                            return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
+                        case InputType.TYPE_CLASS_PHONE:
+                            return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+                    }
                 }
                 return false;
             }
             checkFilterKeyEventToDom(event) {
                 if (this.isInputElementShowed()) {
-                    if (this.filterKeyCode(event.getKeyCode())) {
+                    if (this.filterKeyCode(event)) {
                         event[android.view.ViewRootImpl.ContinueEventToDom] = false;
                     }
                     else {
@@ -41603,11 +41809,6 @@ var android;
             }
             requestSyncBoundToElement(immediately = true) {
                 super.requestSyncBoundToElement(immediately);
-            }
-            setLayerType(layerType) {
-                if (layerType != View.LAYER_TYPE_NONE)
-                    return;
-                super.setLayerType(layerType);
             }
             setRawTextSize(size) {
                 super.setRawTextSize(size);
@@ -41634,6 +41835,8 @@ var android;
             }
             setInputType(type) {
                 this.mInputType = type;
+                this.inputElement.style['webkitTextSecurity'] = '';
+                this.setTransformationMethod(null);
                 switch (type) {
                     case InputType.TYPE_NULL:
                         this.switchToMultilineInputElement();
@@ -41653,10 +41856,19 @@ var android;
                         this.inputElement.setAttribute('type', 'email');
                         this.setSingleLine(true);
                         break;
+                    case InputType.TYPE_NUMBER_SIGNED:
+                    case InputType.TYPE_NUMBER_DECIMAL:
                     case InputType.TYPE_CLASS_NUMBER:
                         this.switchToSingleLineInputElement();
                         this.inputElement.setAttribute('type', 'number');
                         this.setSingleLine(true);
+                        break;
+                    case InputType.TYPE_NUMBER_PASSWORD:
+                        this.switchToSingleLineInputElement();
+                        this.inputElement.setAttribute('type', 'number');
+                        this.inputElement.style['webkitTextSecurity'] = 'disc';
+                        this.setSingleLine(true);
+                        this.setTransformationMethod(PasswordTransformationMethod.getInstance());
                         break;
                     case InputType.TYPE_CLASS_PHONE:
                         this.switchToSingleLineInputElement();
@@ -41673,12 +41885,6 @@ var android;
                         this.switchToSingleLineInputElement();
                         this.inputElement.setAttribute('type', 'email');
                         this.setSingleLine(true);
-                        break;
-                    case InputType.TYPE_NUMBER_PASSWORD:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'number');
-                        this.setSingleLine(true);
-                        this.setTransformationMethod(PasswordTransformationMethod.getInstance());
                         break;
                 }
             }
@@ -41749,6 +41955,9 @@ var android;
                     this.inputElement.value = text;
                 this.inputElement.style.fontSize = this.getTextSize() / density + 'px';
                 this.inputElement.style.color = Color.toRGBAFunc(this.getCurrentTextColor());
+                if (this.inputElement == this.mMultilineInputElement) {
+                    this.mMultilineInputElement.style.padding = (this.getTextSize() / density / 5).toFixed(1) + 'px 0 0 0';
+                }
             }
             onAttachedToWindow() {
                 this.getContext().androidUI.showDebugLayout();
@@ -56845,11 +57054,6 @@ var androidui;
             }
             requestSyncBoundToElement(immediately = true) {
                 super.requestSyncBoundToElement(immediately);
-            }
-            setLayerType(layerType) {
-                if (layerType != View.LAYER_TYPE_NONE)
-                    return;
-                super.setLayerType(layerType);
             }
             onAttachedToWindow() {
                 this.getContext().androidUI.showDebugLayout();

@@ -57,6 +57,7 @@ export class EditText extends TextView {
 
     private mInputType = InputType.TYPE_NULL;
     private mForceDisableDraw = false;
+    private mMaxLength = Integer.MAX_VALUE;
 
     constructor(context:Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.editTextStyle) {
         super(context, bindElement, null);
@@ -95,6 +96,9 @@ export class EditText extends TextView {
                     break;
             }
         });
+        a.addAttr('maxLength', (value)=>{
+            this.mMaxLength = a.parseNumber(value, this.mMaxLength);
+        });
 
         if(defStyle) this.applyDefaultAttributes(defStyle);
     }
@@ -107,6 +111,7 @@ export class EditText extends TextView {
 
     protected onInputValueChange(){
         let text = this.inputElement.value;//innerText;
+        document.createRange();
         if (!text || text.length == 0) {
             this.setForceDisableDrawText(false);
         } else {
@@ -118,7 +123,7 @@ export class EditText extends TextView {
         if(!this.mSingleLineInputElement){
             this.mSingleLineInputElement = document.createElement('input');
             this.mSingleLineInputElement.style.position = 'absolute';
-            this.mSingleLineInputElement.style.overflow = 'scroll';
+            //this.mSingleLineInputElement.style.overflow = 'scroll';
             this.mSingleLineInputElement.style.background = 'transparent';
             this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
             this.mSingleLineInputElement.oninput = ()=>this.onInputValueChange();
@@ -135,12 +140,11 @@ export class EditText extends TextView {
             this.mMultilineInputElement = document.createElement('textarea');
             this.mMultilineInputElement.style.position = 'absolute';
             this.mMultilineInputElement.style['resize'] = 'none';
-            this.mMultilineInputElement.style.overflow = 'scroll';
+            //this.mMultilineInputElement.style.overflow = 'scroll';
             this.mMultilineInputElement.style.background = 'transparent';
-            this.mMultilineInputElement.style.padding = '4px 0 0 0';//text baseline adjust //FIXME relate font size
             this.mMultilineInputElement.style.boxSizing = 'border-box';
             this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
-            //TODO hide element if touch out edittext
+            //TODO hide element if touch outside edittext
             //this.mMultilineInputElement.onblur = ()=>{
             //    this.bindElement.removeChild(this.inputElement);
             //    this.setForceDisableDrawText(false);
@@ -213,16 +217,39 @@ export class EditText extends TextView {
         return super.onTouchEvent(event) || true;
     }
 
-    private filterKeyCode(keyCode:number):boolean {
+    private filterKeyCode(event:android.view.KeyEvent):boolean {
+        let keyCode = event.getKeyCode();
+        if(keyCode == android.view.KeyEvent.KEYCODE_Backspace){
+            return false;
+        }
         if(keyCode == android.view.KeyEvent.KEYCODE_ENTER && this.isSingleLine()){
             return true;
         }
-        //TODO number / tel / email / url / ... filter
+        if(event.mIsTypingKey) {
+            if(this.getText().length >= this.mMaxLength){
+                return true;
+            }
+            keyCode = event.getKeyCodeWithMask();
+            switch (this.mInputType) {
+                case InputType.TYPE_NUMBER_SIGNED:
+                    if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length>0) return true;
+                    return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
+                case InputType.TYPE_NUMBER_DECIMAL:
+                    return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
+                case InputType.TYPE_CLASS_NUMBER:
+                    return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
+                case InputType.TYPE_NUMBER_PASSWORD:
+                    return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
+                case InputType.TYPE_CLASS_PHONE:
+                    return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+            }
+        }
         return false;
     }
+
     private checkFilterKeyEventToDom(event:android.view.KeyEvent):void {
         if(this.isInputElementShowed()){
-            if(this.filterKeyCode(event.getKeyCode())){
+            if(this.filterKeyCode(event)){
                 event[android.view.ViewRootImpl.ContinueEventToDom] = false;
             }else{
                 event[android.view.ViewRootImpl.ContinueEventToDom] = true;
@@ -243,11 +270,6 @@ export class EditText extends TextView {
     //default sync bound immediately
     requestSyncBoundToElement(immediately = true):void {
         super.requestSyncBoundToElement(immediately);
-    }
-
-    setLayerType(layerType:number):void  {
-        if(layerType != View.LAYER_TYPE_NONE) return;//support only NONE TYPE
-        super.setLayerType(layerType);
     }
 
 
@@ -296,6 +318,8 @@ export class EditText extends TextView {
      */
     setInputType(type:number):void  {
         this.mInputType = type;
+        this.inputElement.style['webkitTextSecurity'] = '';
+        this.setTransformationMethod(null);
         switch (type){
             case InputType.TYPE_NULL:
                 this.switchToMultilineInputElement();
@@ -315,10 +339,20 @@ export class EditText extends TextView {
                 this.inputElement.setAttribute('type', 'email');
                 this.setSingleLine(true);
                 break;
+            case InputType.TYPE_NUMBER_SIGNED:
+            case InputType.TYPE_NUMBER_DECIMAL:
             case InputType.TYPE_CLASS_NUMBER:
                 this.switchToSingleLineInputElement();
                 this.inputElement.setAttribute('type', 'number');
                 this.setSingleLine(true);
+                break;
+            case InputType.TYPE_NUMBER_PASSWORD:
+                this.switchToSingleLineInputElement();
+                this.inputElement.setAttribute('type', 'number');
+                this.inputElement.style['webkitTextSecurity'] = 'disc';
+                this.setSingleLine(true);
+                //TODO hide input
+                this.setTransformationMethod(PasswordTransformationMethod.getInstance());
                 break;
             case InputType.TYPE_CLASS_PHONE:
                 this.switchToSingleLineInputElement();
@@ -333,16 +367,8 @@ export class EditText extends TextView {
                 break;
             case InputType.TYPE_TEXT_VISIBLE_PASSWORD:
                 this.switchToSingleLineInputElement();
-                this.inputElement.setAttribute('type', 'email');
+                this.inputElement.setAttribute('type', 'email');//use email type as visible password
                 this.setSingleLine(true);
-                //this.setTransformationMethod(PasswordTransformationMethod.getInstance());
-                break;
-            case InputType.TYPE_NUMBER_PASSWORD:
-                this.switchToSingleLineInputElement();
-                this.inputElement.setAttribute('type', 'number');
-                this.setSingleLine(true);
-                //TODO hide input
-                this.setTransformationMethod(PasswordTransformationMethod.getInstance());
                 break;
         }
     }
@@ -427,6 +453,10 @@ export class EditText extends TextView {
         if(text!=this.inputElement.value) this.inputElement.value = text;
         this.inputElement.style.fontSize = this.getTextSize() / density + 'px';
         this.inputElement.style.color = Color.toRGBAFunc(this.getCurrentTextColor());
+
+        if(this.inputElement == this.mMultilineInputElement){
+            this.mMultilineInputElement.style.padding = (this.getTextSize()/density/5).toFixed(1) + 'px 0 0 0';//textarea baseline adjust
+        }
     }
 
     protected onAttachedToWindow():void {
@@ -485,15 +515,5 @@ export class EditText extends TextView {
         }
         super.setEllipsize(ellipsis);
     }
-
-    //onInitializeAccessibilityEvent(event:AccessibilityEvent):void  {
-    //    super.onInitializeAccessibilityEvent(event);
-    //    event.setClassName(EditText.class.getName());
-    //}
-    //
-    //onInitializeAccessibilityNodeInfo(info:AccessibilityNodeInfo):void  {
-    //    super.onInitializeAccessibilityNodeInfo(info);
-    //    info.setClassName(EditText.class.getName());
-    //}
 }
 }

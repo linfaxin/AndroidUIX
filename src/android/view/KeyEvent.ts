@@ -40,10 +40,101 @@ module android.view{
         static KEYCODE_SPACE           = 32;
         /** Key code constant: Escape key. */
         static KEYCODE_ESCAPE          = 27;
+        static KEYCODE_Backspace          = 8;
         static KEYCODE_PAGE_UP          = 33;
         static KEYCODE_PAGE_DOWN          = 34;
         static KEYCODE_MOVE_HOME          = 36;
         static KEYCODE_MOVE_END          = 35;
+
+
+        static KEYCODE_Digit0          = 48;//'0'
+        static KEYCODE_Digit1          = 49;//'1'
+        static KEYCODE_Digit2          = 50;//'2'
+        static KEYCODE_Digit3          = 51;//'3'
+        static KEYCODE_Digit4          = 52;//'4'
+        static KEYCODE_Digit5          = 53;//'5'
+        static KEYCODE_Digit6          = 54;//'6'
+        static KEYCODE_Digit7          = 55;//'7'
+        static KEYCODE_Digit8          = 56;//'8'
+        static KEYCODE_Digit9          = 57;//'9'
+
+        static KEYCODE_Key_a            = 65;//'a'
+        static KEYCODE_Key_b            = 66;//'b'
+        static KEYCODE_Key_c            = 67;//'c'
+        static KEYCODE_Key_d            = 68;//'d'
+        static KEYCODE_Key_e            = 69;//'e'
+        static KEYCODE_Key_f            = 70;//'f'
+        static KEYCODE_Key_g            = 71;//'g'
+        static KEYCODE_Key_h            = 72;//'h'
+        static KEYCODE_Key_i            = 73;//'i'
+        static KEYCODE_Key_j            = 74;//'j'
+        static KEYCODE_Key_k            = 75;//'k'
+        static KEYCODE_Key_l            = 76;//'l'
+        static KEYCODE_Key_m            = 77;//'m'
+        static KEYCODE_Key_n            = 78;//'n'
+        static KEYCODE_Key_o            = 79;//'o'
+        static KEYCODE_Key_p            = 80;//'p'
+        static KEYCODE_Key_q            = 81;//'q'
+        static KEYCODE_Key_r            = 82;//'r'
+        static KEYCODE_Key_s            = 83;//'s'
+        static KEYCODE_Key_t            = 84;//'t'
+        static KEYCODE_Key_u            = 85;//'u'
+        static KEYCODE_Key_v            = 86;//'v'
+        static KEYCODE_Key_w            = 87;//'w'
+        static KEYCODE_Key_x            = 88;//'x'
+        static KEYCODE_Key_y            = 89;//'y'
+        static KEYCODE_Key_z            = 90;//'z'
+        static KEYCODE_KeyA            = 65 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'A'
+        static KEYCODE_KeyB            = 66 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'B'
+        static KEYCODE_KeyC            = 67 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'C'
+        static KEYCODE_KeyD            = 68 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'D'
+        static KEYCODE_KeyE            = 69 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'E'
+        static KEYCODE_KeyF            = 70 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'F'
+        static KEYCODE_KeyG            = 71 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'G'
+        static KEYCODE_KeyH            = 72 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'H'
+        static KEYCODE_KeyI            = 73 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'I'
+        static KEYCODE_KeyJ            = 74 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'J'
+        static KEYCODE_KeyK            = 75 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'K'
+        static KEYCODE_KeyL            = 76 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'L'
+        static KEYCODE_KeyM            = 77 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'M'
+        static KEYCODE_KeyN            = 78 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'N'
+        static KEYCODE_KeyO            = 79 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'O'
+        static KEYCODE_KeyP            = 80 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'P'
+        static KEYCODE_KeyQ            = 81 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'Q'
+        static KEYCODE_KeyR            = 82 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'R'
+        static KEYCODE_KeyS            = 83 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'S'
+        static KEYCODE_KeyT            = 84 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'T'
+        static KEYCODE_KeyU            = 85 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'U'
+        static KEYCODE_KeyV            = 86 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'V'
+        static KEYCODE_KeyW            = 87 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'W'
+        static KEYCODE_KeyX            = 88 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'X'
+        static KEYCODE_KeyY            = 89 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'Y'
+        static KEYCODE_KeyZ            = 90 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'Z'
+
+        static KEYCODE_Semicolon       = 186;//';'
+        static KEYCODE_Comma           = 188;//','
+        static KEYCODE_Period          = 190;//'.'
+        static KEYCODE_Slash           = 191;//'/'
+        static KEYCODE_Quotation       = 192;//'''
+        static KEYCODE_LeftBracket     = 219;//'['
+        static KEYCODE_Backslash       = 220;//'\'
+        static KEYCODE_RightBracket    = 221;//']'
+        static KEYCODE_Minus           = 189;//'-'
+        static KEYCODE_Equal           = 187;//'='
+
+        static KEYCODE_Right_Parenthesis= KeyEvent.KEYCODE_Digit0 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//')'(shift + '0')
+        static KEYCODE_Exclamation      = KeyEvent.KEYCODE_Digit1 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'!'(shift + '1')
+        static KEYCODE_AT               = KeyEvent.KEYCODE_Digit2 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'@'(shift + '2')
+        static KEYCODE_Sharp            = KeyEvent.KEYCODE_Digit3 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'#'(shift + '3')
+        static KEYCODE_Dollar           = KeyEvent.KEYCODE_Digit4 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'$'(shift + '4')
+        static KEYCODE_Percent          = KeyEvent.KEYCODE_Digit5 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'%'(shift + '5')
+        static KEYCODE_Power            = KeyEvent.KEYCODE_Digit6 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'^'(shift + '6')
+        static KEYCODE_And              = KeyEvent.KEYCODE_Digit7 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'&'(shift + '7')
+        static KEYCODE_Asterisk         = KeyEvent.KEYCODE_Digit8 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'*'(shift + '8')
+        static KEYCODE_Left_Parenthesis = KeyEvent.KEYCODE_Digit9 & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'('(shift + '9')
+        static KEYCODE_Underline        = KeyEvent.KEYCODE_Minus & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'_'(shift + '－')
+        static KEYCODE_Add              = KeyEvent.KEYCODE_Equal & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'+'(shift + '=')
+
 
         //can't listen back on browser
         static KEYCODE_BACK          = -1;
@@ -73,6 +164,7 @@ module android.view{
         //static ACTION_MULTIPLE         = 2;
 
 
+        static META_MASK_SHIFT:number = 16;
         static META_ALT_ON:number = 0x02;
         static META_SHIFT_ON:number = 0x1;
         static META_CTRL_ON:number = 0x1000;
@@ -217,6 +309,14 @@ module android.view{
 
         getKeyCode():number {
             return this.mKeyCode;
+        }
+
+        getKeyCodeWithMask():number {
+            let mask = 0;
+            if(this.isShiftPressed()) mask |= KeyEvent.META_SHIFT_ON;
+            if(this.isAltPressed()) mask |= KeyEvent.META_ALT_ON;
+            if(this.isCtrlPressed()) mask |= KeyEvent.META_CTRL_ON;
+            return this.mKeyCode & (mask << KeyEvent.META_MASK_SHIFT);
         }
 
         /**
