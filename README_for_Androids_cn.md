@@ -132,6 +132,7 @@ res文件夹放图片,布局等资源, 在构建时会生成R文件在gen目录,
 ```bash
 ./build.sh 
 ```
+(Windows系统是build.bat脚本)
 
 
 ### TypeScript代码
@@ -149,7 +150,7 @@ res文件夹放图片,布局等资源, 在构建时会生成R文件在gen目录,
 ```bash
 ./build.sh 
 ```
-然后刷新浏览器看到最新结果.
+然后刷新浏览器看到最新结果. (Windows系统是build.bat脚本)
 
 ### 开发效率
 
