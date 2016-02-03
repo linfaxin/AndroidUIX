@@ -123,6 +123,8 @@ export class EditText extends TextView {
         if(!this.mSingleLineInputElement){
             this.mSingleLineInputElement = document.createElement('input');
             this.mSingleLineInputElement.style.position = 'absolute';
+            this.mSingleLineInputElement.style['webkitAppearance'] = 'none';
+            this.mSingleLineInputElement.style.borderRadius = '0';
             //this.mSingleLineInputElement.style.overflow = 'scroll';
             this.mSingleLineInputElement.style.background = 'transparent';
             this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
@@ -139,7 +141,9 @@ export class EditText extends TextView {
         if(!this.mMultilineInputElement) {
             this.mMultilineInputElement = document.createElement('textarea');
             this.mMultilineInputElement.style.position = 'absolute';
+            this.mMultilineInputElement.style['webkitAppearance'] = 'none';
             this.mMultilineInputElement.style['resize'] = 'none';
+            this.mMultilineInputElement.style.borderRadius = '0';
             //this.mMultilineInputElement.style.overflow = 'scroll';
             this.mMultilineInputElement.style.background = 'transparent';
             this.mMultilineInputElement.style.boxSizing = 'border-box';
@@ -443,7 +447,7 @@ export class EditText extends TextView {
         this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + 1 + 'px';
         this.inputElement.style.lineHeight = this.getLineHeight()/density + 'px';
 
-        if(this.getHorizontallyScrolling()){
+        if(this.getLineCount() == 1){
             this.inputElement.style.whiteSpace = 'nowrap';
         }else{
             this.inputElement.style.whiteSpace = '';
@@ -455,7 +459,9 @@ export class EditText extends TextView {
         this.inputElement.style.color = Color.toRGBAFunc(this.getCurrentTextColor());
 
         if(this.inputElement == this.mMultilineInputElement){
-            this.mMultilineInputElement.style.padding = (this.getTextSize()/density/5).toFixed(1) + 'px 0 0 0';//textarea baseline adjust
+            this.inputElement.style.padding = (this.getTextSize()/density/5).toFixed(1) + 'px 0px 0px 0px';//textarea baseline adjust
+        }else{
+            this.inputElement.style.padding = '0px';
         }
     }
 

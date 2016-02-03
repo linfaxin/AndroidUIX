@@ -16102,7 +16102,6 @@ var androidui;
         }
         initKeyEvent() {
             this.androidUIElement.addEventListener('keydown', (e) => {
-                console.log('keydown', e);
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_DOWN);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
                     e.stopPropagation();
@@ -16111,7 +16110,6 @@ var androidui;
                 }
             }, true);
             this.androidUIElement.addEventListener('keyup', (e) => {
-                console.log('keyup', e);
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_UP);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
                     e.stopPropagation();
@@ -41681,6 +41679,8 @@ var android;
                 if (!this.mSingleLineInputElement) {
                     this.mSingleLineInputElement = document.createElement('input');
                     this.mSingleLineInputElement.style.position = 'absolute';
+                    this.mSingleLineInputElement.style['webkitAppearance'] = 'none';
+                    this.mSingleLineInputElement.style.borderRadius = '0';
                     this.mSingleLineInputElement.style.background = 'transparent';
                     this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
                     this.mSingleLineInputElement.oninput = () => this.onInputValueChange();
@@ -41697,7 +41697,9 @@ var android;
                 if (!this.mMultilineInputElement) {
                     this.mMultilineInputElement = document.createElement('textarea');
                     this.mMultilineInputElement.style.position = 'absolute';
+                    this.mMultilineInputElement.style['webkitAppearance'] = 'none';
                     this.mMultilineInputElement.style['resize'] = 'none';
+                    this.mMultilineInputElement.style.borderRadius = '0';
                     this.mMultilineInputElement.style.background = 'transparent';
                     this.mMultilineInputElement.style.boxSizing = 'border-box';
                     this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
@@ -41944,7 +41946,7 @@ var android;
                 this.inputElement.style.left = this.getCompoundPaddingLeft() / density + 'px';
                 this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + 1 + 'px';
                 this.inputElement.style.lineHeight = this.getLineHeight() / density + 'px';
-                if (this.getHorizontallyScrolling()) {
+                if (this.getLineCount() == 1) {
                     this.inputElement.style.whiteSpace = 'nowrap';
                 }
                 else {
@@ -41956,7 +41958,10 @@ var android;
                 this.inputElement.style.fontSize = this.getTextSize() / density + 'px';
                 this.inputElement.style.color = Color.toRGBAFunc(this.getCurrentTextColor());
                 if (this.inputElement == this.mMultilineInputElement) {
-                    this.mMultilineInputElement.style.padding = (this.getTextSize() / density / 5).toFixed(1) + 'px 0 0 0';
+                    this.inputElement.style.padding = (this.getTextSize() / density / 5).toFixed(1) + 'px 0px 0px 0px';
+                }
+                else {
+                    this.inputElement.style.padding = '0px';
                 }
             }
             onAttachedToWindow() {
