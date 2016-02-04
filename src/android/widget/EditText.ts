@@ -22,6 +22,7 @@
 ///<reference path="../../android/view/Gravity.ts"/>
 ///<reference path="../../android/text/InputType.ts"/>
 ///<reference path="../../android/text/method/PasswordTransformationMethod.ts"/>
+///<reference path="../../androidui/util/Platform.ts"/>
 
 module android.widget {
 import Spannable = android.text.Spannable;
@@ -35,6 +36,7 @@ import Canvas = android.graphics.Canvas;
 import Integer = java.lang.Integer;
 import InputType = android.text.InputType;
 import PasswordTransformationMethod = android.text.method.PasswordTransformationMethod;
+import Platform = androidui.util.Platform;
 
 
 /**
@@ -442,9 +444,10 @@ export class EditText extends TextView {
                 break;
         }
 
-        this.inputElement.style.left = this.getCompoundPaddingLeft() / density + 'px';
+        const isIOS = Platform.isIOS;
+        this.inputElement.style.left = this.getCompoundPaddingLeft() / density - (isIOS?2:0) + 'px';
         //this.inputElement.style.right = this.getCompoundPaddingRight() / density + 'px';
-        this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + 1 + 'px';
+        this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + (isIOS?3:1) + 'px';
         this.inputElement.style.lineHeight = this.getLineHeight()/density + 'px';
 
         if(this.getLineCount() == 1){

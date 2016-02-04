@@ -41602,6 +41602,18 @@ var android;
         })(method = text.method || (text.method = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
+var androidui;
+(function (androidui) {
+    var util;
+    (function (util) {
+        class Platform {
+        }
+        Platform.isIOS = navigator.userAgent.match(/(iPhone|iPad|iPod|ios)/i) ? true : false;
+        Platform.isAndroid = navigator.userAgent.match('Android') ? true : false;
+        Platform.isWeChat = navigator.userAgent.match(/MicroMessenger/i) ? true : false;
+        util.Platform = Platform;
+    })(util = androidui.util || (androidui.util = {}));
+})(androidui || (androidui = {}));
 var android;
 (function (android) {
     var widget;
@@ -41614,6 +41626,7 @@ var android;
         var Integer = java.lang.Integer;
         var InputType = android.text.InputType;
         var PasswordTransformationMethod = android.text.method.PasswordTransformationMethod;
+        var Platform = androidui.util.Platform;
         class EditText extends TextView {
             constructor(context, bindElement, defStyle = android.R.attr.editTextStyle) {
                 super(context, bindElement, null);
@@ -41943,8 +41956,9 @@ var android;
                         this.inputElement.style.textAlign = 'center';
                         break;
                 }
-                this.inputElement.style.left = this.getCompoundPaddingLeft() / density + 'px';
-                this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + 1 + 'px';
+                const isIOS = Platform.isIOS;
+                this.inputElement.style.left = this.getCompoundPaddingLeft() / density - (isIOS ? 2 : 0) + 'px';
+                this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + (isIOS ? 3 : 1) + 'px';
                 this.inputElement.style.lineHeight = this.getLineHeight() / density + 'px';
                 if (this.getLineCount() == 1) {
                     this.inputElement.style.whiteSpace = 'nowrap';

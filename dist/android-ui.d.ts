@@ -7643,6 +7643,13 @@ declare module android.text.method {
         static getInstance(): PasswordTransformationMethod;
     }
 }
+declare module androidui.util {
+    class Platform {
+        static isIOS: boolean;
+        static isAndroid: boolean;
+        static isWeChat: boolean;
+    }
+}
 declare module android.widget {
     import TextUtils = android.text.TextUtils;
     import TextView = android.widget.TextView;
