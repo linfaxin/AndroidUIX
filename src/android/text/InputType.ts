@@ -32,6 +32,7 @@ module android.text {
                 KeyEvent.KEYCODE_Digit9,
             ];
             static TYPE_CLASS_PHONE = [
+                KeyEvent.KEYCODE_Comma,
                 KeyEvent.KEYCODE_Sharp,
                 KeyEvent.KEYCODE_Semicolon,
                 KeyEvent.KEYCODE_Asterisk,

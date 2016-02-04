@@ -225,7 +225,7 @@ export class EditText extends TextView {
 
     private filterKeyCode(event:android.view.KeyEvent):boolean {
         let keyCode = event.getKeyCode();
-        if(keyCode == android.view.KeyEvent.KEYCODE_Backspace){
+        if(keyCode == android.view.KeyEvent.KEYCODE_Backspace || keyCode == android.view.KeyEvent.KEYCODE_Del){
             return false;
         }
         if(keyCode == android.view.KeyEvent.KEYCODE_ENTER && this.isSingleLine()){
@@ -235,7 +235,6 @@ export class EditText extends TextView {
             if(this.getText().length >= this.mMaxLength){
                 return true;
             }
-            keyCode = event.getKeyCodeWithMask();
             switch (this.mInputType) {
                 case InputType.TYPE_NUMBER_SIGNED:
                     if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length>0) return true;

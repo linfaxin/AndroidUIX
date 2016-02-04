@@ -1557,6 +1557,10 @@ declare module android.view {
         static KEYCODE_KeyY: number;
         static KEYCODE_KeyZ: number;
         static KEYCODE_Semicolon: number;
+        static KEYCODE_LessThan: number;
+        static KEYCODE_Equal: number;
+        static KEYCODE_MoreThan: number;
+        static KEYCODE_Question: number;
         static KEYCODE_Comma: number;
         static KEYCODE_Period: number;
         static KEYCODE_Slash: number;
@@ -1565,9 +1569,16 @@ declare module android.view {
         static KEYCODE_Backslash: number;
         static KEYCODE_RightBracket: number;
         static KEYCODE_Minus: number;
-        static KEYCODE_Equal: number;
-        static KEYCODE_Right_Parenthesis: number;
+        static KEYCODE_Colon: number;
+        static KEYCODE_Double_Quotation: number;
+        static KEYCODE_Backquote: number;
+        static KEYCODE_Tilde: number;
+        static KEYCODE_Left_Brace: number;
+        static KEYCODE_Or: number;
+        static KEYCODE_Right_Brace: number;
+        static KEYCODE_Del: number;
         static KEYCODE_Exclamation: number;
+        static KEYCODE_Right_Parenthesis: number;
         static KEYCODE_AT: number;
         static KEYCODE_Sharp: number;
         static KEYCODE_Dollar: number;
@@ -1615,7 +1626,6 @@ declare module android.view {
         isTracking(): boolean;
         isLongPress(): boolean;
         getKeyCode(): number;
-        getKeyCodeWithMask(): number;
         getRepeatCount(): number;
         getDownTime(): number;
         getEventTime(): number;
