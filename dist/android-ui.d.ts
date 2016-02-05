@@ -7676,6 +7676,9 @@ declare module android.widget {
         protected onInputValueChange(): void;
         private switchToSingleLineInputElement();
         private switchToMultilineInputElement();
+        private tryShowInputElement();
+        performClick(event: android.view.MotionEvent): boolean;
+        private tryDismissInputElement();
         protected onFocusChanged(focused: boolean, direction: number, previouslyFocusedRect: android.graphics.Rect): void;
         isInputElementShowed(): boolean;
         private setForceDisableDrawText(disable);

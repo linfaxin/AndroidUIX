@@ -181,8 +181,9 @@ module androidui {
                 this.touchAvailable = true;
                 this.refreshWindowBound();
 
-                console.log(e);
-                this.androidUIElement.focus();
+                if(e.target!=document.activeElement || !this.androidUIElement.contains(<HTMLElement>document.activeElement)){
+                    this.androidUIElement.focus();
+                }
 
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
@@ -192,6 +193,7 @@ module androidui {
                 }
 
             }, true);
+
             this.androidUIElement.addEventListener('touchmove', (e)=> {
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_MOVE, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){

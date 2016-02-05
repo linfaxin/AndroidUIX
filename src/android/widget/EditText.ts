@@ -127,9 +127,19 @@ export class EditText extends TextView {
             this.mSingleLineInputElement.style.position = 'absolute';
             this.mSingleLineInputElement.style['webkitAppearance'] = 'none';
             this.mSingleLineInputElement.style.borderRadius = '0';
-            //this.mSingleLineInputElement.style.overflow = 'scroll';
+            this.mSingleLineInputElement.style.overflow = 'auto';
             this.mSingleLineInputElement.style.background = 'transparent';
             this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
+            this.mSingleLineInputElement.onblur = ()=>{
+                this.mSingleLineInputElement.style.opacity = '0';
+                this.setForceDisableDrawText(false);
+            }
+            this.mSingleLineInputElement.onfocus = ()=>{
+                this.mSingleLineInputElement.style.opacity = '1';
+                if(this.getText().length>0){
+                    this.setForceDisableDrawText(true);
+                }
+            }
             this.mSingleLineInputElement.oninput = ()=>this.onInputValueChange();
         }
         if(this.inputElement === this.mSingleLineInputElement) return;
@@ -146,18 +156,20 @@ export class EditText extends TextView {
             this.mMultilineInputElement.style['webkitAppearance'] = 'none';
             this.mMultilineInputElement.style['resize'] = 'none';
             this.mMultilineInputElement.style.borderRadius = '0';
-            //this.mMultilineInputElement.style.overflow = 'scroll';
+            this.mMultilineInputElement.style.overflow = 'auto';
             this.mMultilineInputElement.style.background = 'transparent';
             this.mMultilineInputElement.style.boxSizing = 'border-box';
             this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
-            //TODO hide element if touch outside edittext
-            //this.mMultilineInputElement.onblur = ()=>{
-            //    this.bindElement.removeChild(this.inputElement);
-            //    this.setForceDisableDrawText(false);
-            //}
-            //this.mMultilineInputElement.onfocus = ()=>{
-            //    this.setForceDisableDrawText(true);
-            //}
+            this.mMultilineInputElement.onblur = ()=>{
+                this.mMultilineInputElement.style.opacity = '0';
+                this.setForceDisableDrawText(false);
+            }
+            this.mMultilineInputElement.onfocus = ()=>{
+                this.mMultilineInputElement.style.opacity = '1';
+                if(this.getText().length>0){
+                    this.setForceDisableDrawText(true);
+                }
+            }
             this.mMultilineInputElement.oninput = ()=>this.onInputValueChange();
         }
         if(this.inputElement === this.mMultilineInputElement) return;
@@ -167,23 +179,39 @@ export class EditText extends TextView {
         }
         this.inputElement = this.mMultilineInputElement;
     }
+    private tryShowInputElement(){
+        if(!this.isInputElementShowed()){
+            this.inputElement.value = this.getText().toString();
+            this.bindElement.appendChild(this.inputElement);
+            this.inputElement.focus();
+            if(this.getText().length>0){
+                this.setForceDisableDrawText(true);
+            }
+            this.syncTextBoundInfoToInputElement();
+            //TODO make cursor position friendly : move to first / move to touch position
+        }
+    }
+
+
+    performClick(event:android.view.MotionEvent):boolean {
+        this.tryShowInputElement();
+        return super.performClick(event);
+    }
+
+    private tryDismissInputElement(){
+        try {
+            if (this.inputElement.parentNode) this.bindElement.removeChild(this.inputElement);
+        } catch (e) {
+        }
+        this.setForceDisableDrawText(false);
+    }
 
     protected onFocusChanged(focused:boolean, direction:number, previouslyFocusedRect:android.graphics.Rect):void {
         super.onFocusChanged(focused, direction, previouslyFocusedRect);
         if(focused){
-            if(!this.isInputElementShowed()){
-                this.inputElement.value = this.getText().toString();
-                this.bindElement.appendChild(this.inputElement);
-                this.inputElement.focus();
-                if(this.getText().length>0){
-                    this.setForceDisableDrawText(true);
-                }
-                this.syncTextBoundInfoToInputElement();
-                //TODO make cursor position friendly : move to first / move to touch position
-            }
+            this.tryShowInputElement();
         }else{
-            this.bindElement.removeChild(this.inputElement);
-            this.setForceDisableDrawText(false);
+            this.tryDismissInputElement();
         }
     }
 
@@ -272,8 +300,10 @@ export class EditText extends TextView {
         return super.onKeyUp(keyCode, event) || true;
     }
 
-    //default sync bound immediately
-    requestSyncBoundToElement(immediately = true):void {
+    requestSyncBoundToElement(immediately = false):void {
+        if(this.inputElement.parentNode && this.inputElement.style.opacity != '0'){
+            immediately = true;
+        }
         super.requestSyncBoundToElement(immediately);
     }
 
@@ -444,9 +474,9 @@ export class EditText extends TextView {
         }
 
         const isIOS = Platform.isIOS;
-        this.inputElement.style.left = this.getCompoundPaddingLeft() / density - (isIOS?2:0) + 'px';
+        this.inputElement.style.left = this.getCompoundPaddingLeft() / density - (isIOS?3:0) + 'px';
         //this.inputElement.style.right = this.getCompoundPaddingRight() / density + 'px';
-        this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + (isIOS?3:1) + 'px';
+        this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + (isIOS?6:1) + 'px';
         this.inputElement.style.lineHeight = this.getLineHeight()/density + 'px';
 
         if(this.getLineCount() == 1){

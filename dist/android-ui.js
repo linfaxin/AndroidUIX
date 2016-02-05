@@ -16009,8 +16009,9 @@ var androidui;
             this.androidUIElement.addEventListener('touchstart', (e) => {
                 this.touchAvailable = true;
                 this.refreshWindowBound();
-                console.log(e);
-                this.androidUIElement.focus();
+                if (e.target != document.activeElement || !this.androidUIElement.contains(document.activeElement)) {
+                    this.androidUIElement.focus();
+                }
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
                     e.stopPropagation();
@@ -41717,8 +41718,19 @@ var android;
                     this.mSingleLineInputElement.style.position = 'absolute';
                     this.mSingleLineInputElement.style['webkitAppearance'] = 'none';
                     this.mSingleLineInputElement.style.borderRadius = '0';
+                    this.mSingleLineInputElement.style.overflow = 'auto';
                     this.mSingleLineInputElement.style.background = 'transparent';
                     this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
+                    this.mSingleLineInputElement.onblur = () => {
+                        this.mSingleLineInputElement.style.opacity = '0';
+                        this.setForceDisableDrawText(false);
+                    };
+                    this.mSingleLineInputElement.onfocus = () => {
+                        this.mSingleLineInputElement.style.opacity = '1';
+                        if (this.getText().length > 0) {
+                            this.setForceDisableDrawText(true);
+                        }
+                    };
                     this.mSingleLineInputElement.oninput = () => this.onInputValueChange();
                 }
                 if (this.inputElement === this.mSingleLineInputElement)
@@ -41736,9 +41748,20 @@ var android;
                     this.mMultilineInputElement.style['webkitAppearance'] = 'none';
                     this.mMultilineInputElement.style['resize'] = 'none';
                     this.mMultilineInputElement.style.borderRadius = '0';
+                    this.mMultilineInputElement.style.overflow = 'auto';
                     this.mMultilineInputElement.style.background = 'transparent';
                     this.mMultilineInputElement.style.boxSizing = 'border-box';
                     this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
+                    this.mMultilineInputElement.onblur = () => {
+                        this.mMultilineInputElement.style.opacity = '0';
+                        this.setForceDisableDrawText(false);
+                    };
+                    this.mMultilineInputElement.onfocus = () => {
+                        this.mMultilineInputElement.style.opacity = '1';
+                        if (this.getText().length > 0) {
+                            this.setForceDisableDrawText(true);
+                        }
+                    };
                     this.mMultilineInputElement.oninput = () => this.onInputValueChange();
                 }
                 if (this.inputElement === this.mMultilineInputElement)
@@ -41749,22 +41772,37 @@ var android;
                 }
                 this.inputElement = this.mMultilineInputElement;
             }
+            tryShowInputElement() {
+                if (!this.isInputElementShowed()) {
+                    this.inputElement.value = this.getText().toString();
+                    this.bindElement.appendChild(this.inputElement);
+                    this.inputElement.focus();
+                    if (this.getText().length > 0) {
+                        this.setForceDisableDrawText(true);
+                    }
+                    this.syncTextBoundInfoToInputElement();
+                }
+            }
+            performClick(event) {
+                this.tryShowInputElement();
+                return super.performClick(event);
+            }
+            tryDismissInputElement() {
+                try {
+                    if (this.inputElement.parentNode)
+                        this.bindElement.removeChild(this.inputElement);
+                }
+                catch (e) {
+                }
+                this.setForceDisableDrawText(false);
+            }
             onFocusChanged(focused, direction, previouslyFocusedRect) {
                 super.onFocusChanged(focused, direction, previouslyFocusedRect);
                 if (focused) {
-                    if (!this.isInputElementShowed()) {
-                        this.inputElement.value = this.getText().toString();
-                        this.bindElement.appendChild(this.inputElement);
-                        this.inputElement.focus();
-                        if (this.getText().length > 0) {
-                            this.setForceDisableDrawText(true);
-                        }
-                        this.syncTextBoundInfoToInputElement();
-                    }
+                    this.tryShowInputElement();
                 }
                 else {
-                    this.bindElement.removeChild(this.inputElement);
-                    this.setForceDisableDrawText(false);
+                    this.tryDismissInputElement();
                 }
             }
             isInputElementShowed() {
@@ -41844,7 +41882,10 @@ var android;
                 this.checkFilterKeyEventToDom(event);
                 return super.onKeyUp(keyCode, event) || true;
             }
-            requestSyncBoundToElement(immediately = true) {
+            requestSyncBoundToElement(immediately = false) {
+                if (this.inputElement.parentNode && this.inputElement.style.opacity != '0') {
+                    immediately = true;
+                }
                 super.requestSyncBoundToElement(immediately);
             }
             setRawTextSize(size) {
@@ -41979,8 +42020,8 @@ var android;
                         break;
                 }
                 const isIOS = Platform.isIOS;
-                this.inputElement.style.left = this.getCompoundPaddingLeft() / density - (isIOS ? 2 : 0) + 'px';
-                this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + (isIOS ? 3 : 1) + 'px';
+                this.inputElement.style.left = this.getCompoundPaddingLeft() / density - (isIOS ? 3 : 0) + 'px';
+                this.inputElement.style.width = (right - left - this.getCompoundPaddingRight() - this.getCompoundPaddingLeft()) / density + (isIOS ? 6 : 1) + 'px';
                 this.inputElement.style.lineHeight = this.getLineHeight() / density + 'px';
                 if (this.getLineCount() == 1) {
                     this.inputElement.style.whiteSpace = 'nowrap';
