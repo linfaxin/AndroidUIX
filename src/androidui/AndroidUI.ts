@@ -139,11 +139,19 @@ module androidui {
          * @returns {boolean} is bound change
          */
         private refreshWindowBound():boolean {
-            let rootViewBound = this.androidUIElement.getBoundingClientRect();//get viewRoot bound on touch start
-            let boundLeft = rootViewBound.left;
-            let boundTop = rootViewBound.top;
-            let boundRight = rootViewBound.right;
-            let boundBottom = rootViewBound.bottom;
+
+            let boundLeft = this.androidUIElement.offsetLeft;
+            let boundTop = this.androidUIElement.offsetTop;
+
+            let parent = this.androidUIElement.parentElement;
+            if(parent){
+                boundLeft += parent.offsetLeft;
+                boundTop += parent.offsetTop;
+                parent = parent.parentElement;
+            }
+            let boundRight = boundLeft + this.androidUIElement.offsetWidth;
+            let boundBottom = boundTop + this.androidUIElement.offsetHeight;
+
             if(this._windowBound && this._windowBound.left == boundLeft && this._windowBound.top == boundTop
                 && this._windowBound.right == boundRight && this._windowBound.bottom == boundBottom){
                 return false;
@@ -173,6 +181,7 @@ module androidui {
                 this.touchAvailable = true;
                 this.refreshWindowBound();
 
+                console.log(e);
                 this.androidUIElement.focus();
 
                 this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this._windowBound);

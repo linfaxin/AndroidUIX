@@ -11,6 +11,9 @@ module android.view {
     import Rect = android.graphics.Rect;
     import ViewConfiguration = android.view.ViewConfiguration;
 
+
+    const tempBound = new Rect();
+
     interface TouchEvent extends UIEvent {
         touches: TouchList;
         targetTouches: TouchList;
@@ -196,14 +199,14 @@ module android.view {
                 this.mDownTime = now;
             }
             this.mEventTime = now;
+            const density = android.content.res.Resources.getSystem().getDisplayMetrics().density;
             this.mXOffset = this.mYOffset = 0;
 
             //set edge flag
             let edgeFlag = 0;
-            let unScaledX = activeTouch.clientX;
-            let unScaledY = activeTouch.clientY;
+            let unScaledX = activeTouch.pageX;
+            let unScaledY = activeTouch.pageY;
             let edgeSlop = ViewConfiguration.EDGE_SLOP;
-            let tempBound = new Rect();
 
             tempBound.set(windowBound);
             tempBound.right = tempBound.left + edgeSlop;
@@ -300,12 +303,12 @@ module android.view {
 
         getX(pointerIndex = 0):number {
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            return (this.mTouchingPointers[pointerIndex].clientX) * density + this.mXOffset;
+            return (this.mTouchingPointers[pointerIndex].pageX) * density + this.mXOffset;
         }
 
         getY(pointerIndex = 0):number {
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            return (this.mTouchingPointers[pointerIndex].clientY) * density + this.mYOffset;
+            return (this.mTouchingPointers[pointerIndex].pageY) * density + this.mYOffset;
         }
 
         getPointerCount():number {
@@ -328,12 +331,12 @@ module android.view {
 
         getRawX():number {
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            return (this.mTouchingPointers[0].clientX) * density;
+            return (this.mTouchingPointers[0].pageX) * density;
         }
 
         getRawY():number {
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            return (this.mTouchingPointers[0].clientY) * density;
+            return (this.mTouchingPointers[0].pageY) * density;
         }
 
         getHistorySize(id=this.mActivePointerId):number {
@@ -344,13 +347,13 @@ module android.view {
         getHistoricalX(pointerIndex:number, pos:number):number {
             let density = android.content.res.Resources.getDisplayMetrics().density;
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-            return (moveHistory[pos].clientX) * density + this.mXOffset;
+            return (moveHistory[pos].pageX) * density + this.mXOffset;
         }
 
         getHistoricalY(pointerIndex:number, pos:number):number {
             let density = android.content.res.Resources.getDisplayMetrics().density;
             let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-            return (moveHistory[pos].clientY) * density + this.mYOffset;
+            return (moveHistory[pos].pageY) * density + this.mYOffset;
         }
 
         getHistoricalEventTime(pos:number):number;

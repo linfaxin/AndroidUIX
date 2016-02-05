@@ -1340,7 +1340,7 @@ module android.view {
             }
 
             // Offset the window bound
-            event.offsetLocation(this.ViewRootImpl_this.mWinFrame.left, this.ViewRootImpl_this.mWinFrame.top);
+            event.offsetLocation(-this.ViewRootImpl_this.mWinFrame.left, -this.ViewRootImpl_this.mWinFrame.top);
 
 
             // Offset the scroll position.

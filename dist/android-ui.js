@@ -4578,6 +4578,7 @@ var android;
     (function (view) {
         var Rect = android.graphics.Rect;
         var ViewConfiguration = android.view.ViewConfiguration;
+        const tempBound = new Rect();
         class MotionEvent {
             constructor() {
                 this.mAction = 0;
@@ -4674,12 +4675,12 @@ var android;
                     this.mDownTime = now;
                 }
                 this.mEventTime = now;
+                const density = android.content.res.Resources.getSystem().getDisplayMetrics().density;
                 this.mXOffset = this.mYOffset = 0;
                 let edgeFlag = 0;
-                let unScaledX = activeTouch.clientX;
-                let unScaledY = activeTouch.clientY;
+                let unScaledX = activeTouch.pageX;
+                let unScaledY = activeTouch.pageY;
                 let edgeSlop = ViewConfiguration.EDGE_SLOP;
-                let tempBound = new Rect();
                 tempBound.set(windowBound);
                 tempBound.right = tempBound.left + edgeSlop;
                 if (tempBound.contains(unScaledX, unScaledY)) {
@@ -4741,11 +4742,11 @@ var android;
             }
             getX(pointerIndex = 0) {
                 let density = android.content.res.Resources.getDisplayMetrics().density;
-                return (this.mTouchingPointers[pointerIndex].clientX) * density + this.mXOffset;
+                return (this.mTouchingPointers[pointerIndex].pageX) * density + this.mXOffset;
             }
             getY(pointerIndex = 0) {
                 let density = android.content.res.Resources.getDisplayMetrics().density;
-                return (this.mTouchingPointers[pointerIndex].clientY) * density + this.mYOffset;
+                return (this.mTouchingPointers[pointerIndex].pageY) * density + this.mYOffset;
             }
             getPointerCount() {
                 return this.mTouchingPointers.length;
@@ -4763,11 +4764,11 @@ var android;
             }
             getRawX() {
                 let density = android.content.res.Resources.getDisplayMetrics().density;
-                return (this.mTouchingPointers[0].clientX) * density;
+                return (this.mTouchingPointers[0].pageX) * density;
             }
             getRawY() {
                 let density = android.content.res.Resources.getDisplayMetrics().density;
-                return (this.mTouchingPointers[0].clientY) * density;
+                return (this.mTouchingPointers[0].pageY) * density;
             }
             getHistorySize(id = this.mActivePointerId) {
                 let moveHistory = MotionEvent.TouchMoveRecord.get(id);
@@ -4776,12 +4777,12 @@ var android;
             getHistoricalX(pointerIndex, pos) {
                 let density = android.content.res.Resources.getDisplayMetrics().density;
                 let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-                return (moveHistory[pos].clientX) * density + this.mXOffset;
+                return (moveHistory[pos].pageX) * density + this.mXOffset;
             }
             getHistoricalY(pointerIndex, pos) {
                 let density = android.content.res.Resources.getDisplayMetrics().density;
                 let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
-                return (moveHistory[pos].clientY) * density + this.mYOffset;
+                return (moveHistory[pos].pageY) * density + this.mYOffset;
             }
             getHistoricalEventTime(...args) {
                 let pos, activePointerId;
@@ -15974,11 +15975,16 @@ var androidui;
             };
         }
         refreshWindowBound() {
-            let rootViewBound = this.androidUIElement.getBoundingClientRect();
-            let boundLeft = rootViewBound.left;
-            let boundTop = rootViewBound.top;
-            let boundRight = rootViewBound.right;
-            let boundBottom = rootViewBound.bottom;
+            let boundLeft = this.androidUIElement.offsetLeft;
+            let boundTop = this.androidUIElement.offsetTop;
+            let parent = this.androidUIElement.parentElement;
+            if (parent) {
+                boundLeft += parent.offsetLeft;
+                boundTop += parent.offsetTop;
+                parent = parent.parentElement;
+            }
+            let boundRight = boundLeft + this.androidUIElement.offsetWidth;
+            let boundBottom = boundTop + this.androidUIElement.offsetHeight;
             if (this._windowBound && this._windowBound.left == boundLeft && this._windowBound.top == boundTop
                 && this._windowBound.right == boundRight && this._windowBound.bottom == boundBottom) {
                 return false;
@@ -16003,6 +16009,7 @@ var androidui;
             this.androidUIElement.addEventListener('touchstart', (e) => {
                 this.touchAvailable = true;
                 this.refreshWindowBound();
+                console.log(e);
                 this.androidUIElement.focus();
                 this.touchEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
@@ -16117,7 +16124,6 @@ var androidui;
         }
         initKeyEvent() {
             this.androidUIElement.addEventListener('keydown', (e) => {
-                console.dir(e);
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_DOWN);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
                     e.stopPropagation();
@@ -17220,7 +17226,7 @@ var android;
                 if (action == view_3.MotionEvent.ACTION_DOWN || action == view_3.MotionEvent.ACTION_SCROLL) {
                     this.ViewRootImpl_this.ensureTouchMode(true);
                 }
-                event.offsetLocation(this.ViewRootImpl_this.mWinFrame.left, this.ViewRootImpl_this.mWinFrame.top);
+                event.offsetLocation(-this.ViewRootImpl_this.mWinFrame.left, -this.ViewRootImpl_this.mWinFrame.top);
                 return InputStage.FORWARD;
             }
         }
