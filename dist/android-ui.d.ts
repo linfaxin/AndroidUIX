@@ -7712,7 +7712,8 @@ declare module android.widget {
         private setForceDisableDrawText(disable);
         protected updateTextColors(): void;
         onTouchEvent(event: android.view.MotionEvent): boolean;
-        private filterKeyCode(event);
+        private filterKeyEvent(event);
+        private filterKeyCode(keyCode);
         private checkFilterKeyEventToDom(event);
         onKeyDown(keyCode: number, event: android.view.KeyEvent): boolean;
         onKeyUp(keyCode: number, event: android.view.KeyEvent): boolean;

@@ -113,7 +113,18 @@ export class EditText extends TextView {
 
     protected onInputValueChange(){
         let text = this.inputElement.value;//innerText;
-        document.createRange();
+        let filterText = '';
+        for(let i = 0, length = text.length; i<length; i++){
+            let c = text.codePointAt(i);
+            if(!this.filterKeyCode(c) && filterText.length < this.mMaxLength){
+                filterText += text[i];
+            }
+        }
+        if(text != filterText){
+            text = filterText;
+            this.inputElement.value = text;
+        }
+
         if (!text || text.length == 0) {
             this.setForceDisableDrawText(false);
         } else {
@@ -251,38 +262,44 @@ export class EditText extends TextView {
         return super.onTouchEvent(event) || true;
     }
 
-    private filterKeyCode(event:android.view.KeyEvent):boolean {
+    private filterKeyEvent(event:android.view.KeyEvent):boolean {
         let keyCode = event.getKeyCode();
-        if(keyCode == android.view.KeyEvent.KEYCODE_Backspace || keyCode == android.view.KeyEvent.KEYCODE_Del){
+        if(keyCode == android.view.KeyEvent.KEYCODE_Backspace || keyCode == android.view.KeyEvent.KEYCODE_Del
+            || event.isCtrlPressed() || event.isAltPressed() || event.isMetaPressed()){
             return false;
         }
         if(keyCode == android.view.KeyEvent.KEYCODE_ENTER && this.isSingleLine()){
             return true;
         }
         if(event.mIsTypingKey) {
-            if(this.getText().length >= this.mMaxLength){
+            if(this.getText().length >= this.mMaxLength) {
                 return true;
             }
-            switch (this.mInputType) {
-                case InputType.TYPE_NUMBER_SIGNED:
-                    if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length>0) return true;
-                    return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
-                case InputType.TYPE_NUMBER_DECIMAL:
-                    return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
-                case InputType.TYPE_CLASS_NUMBER:
-                    return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
-                case InputType.TYPE_NUMBER_PASSWORD:
-                    return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
-                case InputType.TYPE_CLASS_PHONE:
-                    return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
-            }
+            return this.filterKeyCode(keyCode);
+        }
+        return false;
+    }
+
+    private filterKeyCode(keyCode:number):boolean {
+        switch (this.mInputType) {
+            case InputType.TYPE_NUMBER_SIGNED:
+                if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length>0) return true;
+                return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
+            case InputType.TYPE_NUMBER_DECIMAL:
+                return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
+            case InputType.TYPE_CLASS_NUMBER:
+                return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
+            case InputType.TYPE_NUMBER_PASSWORD:
+                return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
+            case InputType.TYPE_CLASS_PHONE:
+                return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
         }
         return false;
     }
 
     private checkFilterKeyEventToDom(event:android.view.KeyEvent):void {
         if(this.isInputElementShowed()){
-            if(this.filterKeyCode(event)){
+            if(this.filterKeyEvent(event)){
                 event[android.view.ViewRootImpl.ContinueEventToDom] = false;
             }else{
                 event[android.view.ViewRootImpl.ContinueEventToDom] = true;
