@@ -1612,7 +1612,16 @@ declare module android.view {
                 221: number;
             };
             shift: {
+                186: number;
                 187: number;
+                188: number;
+                189: number;
+                190: number;
+                191: number;
+                192: number;
+                219: number;
+                220: number;
+                221: number;
             };
             ctrl: {};
             alt: {};

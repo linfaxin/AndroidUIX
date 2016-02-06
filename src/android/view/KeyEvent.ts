@@ -158,18 +158,29 @@ module android.view{
         static KEYCODE_CHANGE_ANDROID_CHROME = {
             noMeta : {
                 186: KeyEvent.KEYCODE_Semicolon,//';'
+                187: KeyEvent.KEYCODE_Equal,//'='
                 188: KeyEvent.KEYCODE_Comma,//','
+                189: KeyEvent.KEYCODE_Minus,//'-'
                 190: KeyEvent.KEYCODE_Period,//'.'
                 191: KeyEvent.KEYCODE_Slash,//'/'
                 192: KeyEvent.KEYCODE_Quotation,//'''
+                //192: KeyEvent.KEYCODE_Backquote,//'`'
                 219: KeyEvent.KEYCODE_LeftBracket,//'['
                 220: KeyEvent.KEYCODE_Backslash,//'\'
                 221: KeyEvent.KEYCODE_RightBracket,//']'
-                189: KeyEvent.KEYCODE_Minus,//'-'
-                187: KeyEvent.KEYCODE_Equal,//'='
             },
             shift : {
+                186: KeyEvent.KEYCODE_Colon,//':'
                 187: KeyEvent.KEYCODE_Add,//'+'
+                188: KeyEvent.KEYCODE_LessThan,//'<'
+                189: KeyEvent.KEYCODE_Underline,//'_'
+                190: KeyEvent.KEYCODE_MoreThan,//'>'
+                191: KeyEvent.KEYCODE_Question,//'?'
+                192: KeyEvent.KEYCODE_Double_Quotation,//'"'
+                //192: KeyEvent.KEYCODE_Tilde,//'~'
+                219: KeyEvent.KEYCODE_Left_Brace,//'{'
+                220: KeyEvent.KEYCODE_Or,//'|'
+                221: KeyEvent.KEYCODE_Right_Brace,//'}'
             },
             ctrl : {},
             alt : {}
