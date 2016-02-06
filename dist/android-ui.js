@@ -6164,12 +6164,25 @@ var androidui;
         }
     })(image = androidui.image || (androidui.image = {}));
 })(androidui || (androidui = {}));
+var androidui;
+(function (androidui) {
+    var util;
+    (function (util) {
+        class Platform {
+        }
+        Platform.isIOS = navigator.userAgent.match(/(iPhone|iPad|iPod|ios)/i) ? true : false;
+        Platform.isAndroid = navigator.userAgent.match('Android') ? true : false;
+        Platform.isWeChat = navigator.userAgent.match(/MicroMessenger/i) ? true : false;
+        util.Platform = Platform;
+    })(util = androidui.util || (androidui.util = {}));
+})(androidui || (androidui = {}));
 var android;
 (function (android) {
     var view;
     (function (view) {
         var SystemClock = android.os.SystemClock;
         var Log = android.util.Log;
+        var Platform = androidui.util.Platform;
         const DEBUG = false;
         const TAG = "KeyEvent";
         class KeyEvent {
@@ -6205,6 +6218,20 @@ var android;
                 if (this.mKeyCode >= KeyEvent.KEYCODE_KeyA && this.mKeyCode <= KeyEvent.KEYCODE_KeyZ
                     && !this.mShiftKey && !this.mCtrlKey && !this.mAltKey && !this.mMetaKey) {
                     this.mKeyCode += 32;
+                }
+                if (Platform.isAndroid) {
+                    if (!this.mShiftKey && !this.mCtrlKey && !this.mAltKey && !this.mMetaKey) {
+                        this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.noMeta[this.mKeyCode] || this.mKeyCode;
+                    }
+                    else if (this.mShiftKey && !this.mCtrlKey && !this.mAltKey && !this.mMetaKey) {
+                        this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.shift[this.mKeyCode] || this.mKeyCode;
+                    }
+                    else if (!this.mShiftKey && this.mCtrlKey && !this.mAltKey && !this.mMetaKey) {
+                        this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.ctrl[this.mKeyCode] || this.mKeyCode;
+                    }
+                    else if (!this.mShiftKey && !this.mCtrlKey && this.mAltKey && !this.mMetaKey) {
+                        this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.alt[this.mKeyCode] || this.mKeyCode;
+                    }
                 }
                 if (action === KeyEvent.ACTION_DOWN) {
                     this.mDownTime = SystemClock.uptimeMillis();
@@ -6466,6 +6493,25 @@ var android;
         KeyEvent.KEYCODE_Add = 0x2b;
         KeyEvent.KEYCODE_BACK = -1;
         KeyEvent.KEYCODE_MENU = -2;
+        KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME = {
+            noMeta: {
+                186: KeyEvent.KEYCODE_Semicolon,
+                188: KeyEvent.KEYCODE_Comma,
+                190: KeyEvent.KEYCODE_Period,
+                191: KeyEvent.KEYCODE_Slash,
+                192: KeyEvent.KEYCODE_Quotation,
+                219: KeyEvent.KEYCODE_LeftBracket,
+                220: KeyEvent.KEYCODE_Backslash,
+                221: KeyEvent.KEYCODE_RightBracket,
+                189: KeyEvent.KEYCODE_Minus,
+                187: KeyEvent.KEYCODE_Equal,
+            },
+            shift: {
+                187: KeyEvent.KEYCODE_Add,
+            },
+            ctrl: {},
+            alt: {}
+        };
         KeyEvent.ACTION_DOWN = 0;
         KeyEvent.ACTION_UP = 1;
         KeyEvent.META_MASK_SHIFT = 16;
@@ -41626,18 +41672,6 @@ var android;
         })(method = text.method || (text.method = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-var androidui;
-(function (androidui) {
-    var util;
-    (function (util) {
-        class Platform {
-        }
-        Platform.isIOS = navigator.userAgent.match(/(iPhone|iPad|iPod|ios)/i) ? true : false;
-        Platform.isAndroid = navigator.userAgent.match('Android') ? true : false;
-        Platform.isWeChat = navigator.userAgent.match(/MicroMessenger/i) ? true : false;
-        util.Platform = Platform;
-    })(util = androidui.util || (androidui.util = {}));
-})(androidui || (androidui = {}));
 var android;
 (function (android) {
     var widget;

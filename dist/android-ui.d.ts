@@ -1478,6 +1478,13 @@ declare module androidui.image {
         }
     }
 }
+declare module androidui.util {
+    class Platform {
+        static isIOS: boolean;
+        static isAndroid: boolean;
+        static isWeChat: boolean;
+    }
+}
 declare module android.view {
     class KeyEvent {
         static KEYCODE_DPAD_UP: number;
@@ -1591,6 +1598,25 @@ declare module android.view {
         static KEYCODE_Add: number;
         static KEYCODE_BACK: number;
         static KEYCODE_MENU: number;
+        static KEYCODE_CHANGE_ANDROID_CHROME: {
+            noMeta: {
+                186: number;
+                187: number;
+                188: number;
+                189: number;
+                190: number;
+                191: number;
+                192: number;
+                219: number;
+                220: number;
+                221: number;
+            };
+            shift: {
+                187: number;
+            };
+            ctrl: {};
+            alt: {};
+        };
         static ACTION_DOWN: number;
         static ACTION_UP: number;
         static META_MASK_SHIFT: number;
@@ -7651,13 +7677,6 @@ declare module android.text.method {
         private static instance;
         getTransformation(source: String, v: android.view.View): String;
         static getInstance(): PasswordTransformationMethod;
-    }
-}
-declare module androidui.util {
-    class Platform {
-        static isIOS: boolean;
-        static isAndroid: boolean;
-        static isWeChat: boolean;
     }
 }
 declare module android.widget {

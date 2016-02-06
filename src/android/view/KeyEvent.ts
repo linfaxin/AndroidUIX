@@ -6,12 +6,14 @@
 ///<reference path="../view/ViewConfiguration.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/Log.ts"/>
+///<reference path="../../androidui/util/Platform.ts"/>
 module android.view{
     import Resources = android.content.res.Resources;
     import Rect = android.graphics.Rect;
     import ViewConfiguration = android.view.ViewConfiguration;
     import SystemClock = android.os.SystemClock;
     import Log = android.util.Log;
+    import Platform = androidui.util.Platform;
 
     const DEBUG = false;
     const TAG = "KeyEvent";
@@ -153,6 +155,27 @@ module android.view{
         //can't listen menu on browser
         static KEYCODE_MENU          = -2;
 
+        static KEYCODE_CHANGE_ANDROID_CHROME = {
+            noMeta : {
+                186: KeyEvent.KEYCODE_Semicolon,//';'
+                188: KeyEvent.KEYCODE_Comma,//','
+                190: KeyEvent.KEYCODE_Period,//'.'
+                191: KeyEvent.KEYCODE_Slash,//'/'
+                192: KeyEvent.KEYCODE_Quotation,//'''
+                219: KeyEvent.KEYCODE_LeftBracket,//'['
+                220: KeyEvent.KEYCODE_Backslash,//'\'
+                221: KeyEvent.KEYCODE_RightBracket,//']'
+                189: KeyEvent.KEYCODE_Minus,//'-'
+                187: KeyEvent.KEYCODE_Equal,//'='
+            },
+            shift : {
+                187: KeyEvent.KEYCODE_Add,//'+'
+            },
+            ctrl : {},
+            alt : {}
+            //TODO more code
+        };
+
 
 
 
@@ -245,6 +268,24 @@ module android.view{
                 && !this.mShiftKey && !this.mCtrlKey && !this.mAltKey && !this.mMetaKey){
                 this.mKeyCode += 32;
             }
+            //key code convert in android chrome
+            if(Platform.isAndroid){
+                if(!this.mShiftKey && !this.mCtrlKey && !this.mAltKey && !this.mMetaKey){
+                    this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.noMeta[this.mKeyCode] || this.mKeyCode;
+
+                }else if(this.mShiftKey && !this.mCtrlKey && !this.mAltKey && !this.mMetaKey){
+                    this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.shift[this.mKeyCode] || this.mKeyCode;
+
+                }else if(!this.mShiftKey && this.mCtrlKey && !this.mAltKey && !this.mMetaKey){
+                    this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.ctrl[this.mKeyCode] || this.mKeyCode;
+
+                }else if(!this.mShiftKey && !this.mCtrlKey && this.mAltKey && !this.mMetaKey){
+                    this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.alt[this.mKeyCode] || this.mKeyCode;
+
+                }
+            }
+
+
 
             if(action === KeyEvent.ACTION_DOWN){
                 this.mDownTime = SystemClock.uptimeMillis();
