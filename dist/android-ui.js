@@ -1,10 +1,10 @@
 var androidui;
 (function (androidui) {
     androidui.sdk_version_info = `
-AndroidUI4Web: https://github.com/linfaxin/AndroidUI4Web
-version: 0.2.1
+AndroidUI4Web: https://github.com/linfaxin/AndroidUI-WebApp
+version: 0.3.0
 release type: Pre-release
-release date: 2016-01-31
+release date: 2016-02-07
 `;
 })(androidui || (androidui = {}));
 var java;
