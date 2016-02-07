@@ -64,6 +64,7 @@ module androidui.widget {
             } else {
                 let sWidth = this.bindElement.style.width;
                 this.bindElement.style.width = width / density + "px";
+                this.bindElement.style.height = '';
                 height = this.bindElement.offsetHeight * density;
 
                 this.bindElement.style.width = sWidth;
