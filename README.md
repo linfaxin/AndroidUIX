@@ -2,7 +2,7 @@
 [中文文档](https://github.com/linfaxin/AndroidUI4Web/blob/master/README_cn.md)
 
 Make a high-performance web app with Android UI.
-[Sample App](http://linfaxin.com/AndroidUI4Web/sample/main.html)
+[Sample App](http://linfaxin.com/AndroidUI-WebApp/sample/main.html)
 
 
 ### Feature
@@ -25,7 +25,7 @@ You can read and clone [Hello World App](https://github.com/linfaxin/AndroidUI4W
 2. Android Chrome: 40-50fps
 3. Android WebView(4.4): 20-30fps
 
-You can test [Sample App](http://linfaxin.com/AndroidUI4Web/sample/main.html) on your device.
+You can test [Sample App](http://linfaxin.com/AndroidUI-WebApp/sample/main.html) on your device.
 
 
 ### LICENSE
