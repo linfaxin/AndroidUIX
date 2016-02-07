@@ -7,7 +7,7 @@
 
 ### 合适的WebApp框架
 
-[AndroidUI4Web](https://github.com/linfaxin/AndroidUI4Web)是一个高性能的WebApp框架, 在移动浏览器上有与原生App一致的体验.
+[AndroidUI-WebApp](https://github.com/linfaxin/AndroidUI-WebApp)是一个高性能的WebApp框架, 在移动浏览器上有与原生App一致的体验.
 对Android开发者们来说, 更重要的是:
 框架移植自Android, 开发方式和API调用与Android开发保持一致, Android们可以低成本快速上手开发.
 
@@ -24,14 +24,14 @@
 
 ### Sample App
 
-在线Sample地址: http://linfaxin.com/AndroidUI4Web/sample/main.html
+在线Sample地址: http://linfaxin.com/AndroidUI-WebApp/sample/main.html
 预览:
 ![预览](http://linfaxin.com/image/androidui/sample_app_preview.png)
 
 
 ### 高性能的原因:Canvas
 
-Android中的视图是通过Android的Canvas对象渲染的, AndroidUI4Web框架接管Android的视图层, 所有渲染最终由Web Canvas实现.
+Android中的视图是通过Android的Canvas对象渲染的, AndroidUI-WebApp框架接管Android的视图层, 所有渲染最终由Web Canvas实现.
 主流的Web开发是DOM开发, 而DOM节点的性能是公认的慢的, 其他框架不能胜任一个复杂的WebApp开发.
 [参考](http://www.csdn.net/article/2015-03-03/2824083-Canvas-UI)
 
