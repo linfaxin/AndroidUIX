@@ -10739,8 +10739,11 @@ declare module android.app {
 declare module androidui.widget {
     import View = android.view.View;
     class HtmlBaseView extends View {
+        private mHtmlTouchAble;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         onTouchEvent(event: android.view.MotionEvent): boolean;
+        setHtmlTouchAble(enable: boolean): void;
+        isHtmlTouchAble(): boolean;
         requestSyncBoundToElement(immediately?: boolean): void;
         protected onAttachedToWindow(): void;
     }

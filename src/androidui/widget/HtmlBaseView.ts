@@ -17,14 +17,25 @@ module androidui.widget {
     import TypedValue = android.util.TypedValue;
 
     export class HtmlBaseView extends View {
+        private mHtmlTouchAble = false;
 
         constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:any) {
             super(context, bindElement, defStyle);
         }
 
         onTouchEvent(event:android.view.MotionEvent):boolean {
-            event[android.view.ViewRootImpl.ContinueEventToDom] = true;
-            return super.onTouchEvent(event) || true;
+            if(this.mHtmlTouchAble){
+                event[android.view.ViewRootImpl.ContinueEventToDom] = true;
+            }
+            return super.onTouchEvent(event) || this.mHtmlTouchAble;
+        }
+
+        setHtmlTouchAble(enable:boolean):void {
+            this.mHtmlTouchAble = enable;
+        }
+
+        isHtmlTouchAble():boolean {
+            return this.mHtmlTouchAble;
         }
 
         //default sync bound immediately

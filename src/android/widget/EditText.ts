@@ -259,7 +259,7 @@ export class EditText extends TextView {
 
             //return true;
         }
-        return super.onTouchEvent(event) || true;
+        return super.onTouchEvent(event) || this.isInputElementShowed();
     }
 
     private filterKeyEvent(event:android.view.KeyEvent):boolean {

@@ -41886,7 +41886,7 @@ var android;
                         this.getParent().requestDisallowInterceptTouchEvent(true);
                     }
                 }
-                return super.onTouchEvent(event) || true;
+                return super.onTouchEvent(event) || this.isInputElementShowed();
             }
             filterKeyEvent(event) {
                 let keyCode = event.getKeyCode();
@@ -57187,10 +57187,19 @@ var androidui;
         class HtmlBaseView extends View {
             constructor(context, bindElement, defStyle) {
                 super(context, bindElement, defStyle);
+                this.mHtmlTouchAble = false;
             }
             onTouchEvent(event) {
-                event[android.view.ViewRootImpl.ContinueEventToDom] = true;
-                return super.onTouchEvent(event) || true;
+                if (this.mHtmlTouchAble) {
+                    event[android.view.ViewRootImpl.ContinueEventToDom] = true;
+                }
+                return super.onTouchEvent(event) || this.mHtmlTouchAble;
+            }
+            setHtmlTouchAble(enable) {
+                this.mHtmlTouchAble = enable;
+            }
+            isHtmlTouchAble() {
+                return this.mHtmlTouchAble;
             }
             requestSyncBoundToElement(immediately = true) {
                 super.requestSyncBoundToElement(immediately);
