@@ -99,6 +99,7 @@ var sample;
         var R;
         (function (R) {
             var _layout_data = {
+                "activity_main": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:padding=\"12dp\" android:gravity=\"center\">\n        <textview id=\"android_tip\" android:visibility=\"gone\">NOTE:Suggest use Chrome for better experience</textview>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleBaseWidgetActivity')\">Base Widget</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleFrameLayoutActivity')\">FrameLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleLinearLayoutActivity')\">LinearLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleRelativeLayoutActivity')\">RelativeLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleTextViewActivity')\">TextView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleButtonActivity')\">Button</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleImageViewActivity')\">ImageView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleEditTextActivity')\">EditText</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleListViewActivity')\">ListView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleGridViewActivity')\">GridView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleExpandableListViewActivity')\">ExpandableListView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleViewPagerActivity')\">ViewPager</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleDrawerLayoutActivity')\">DrawerLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleViewPagerGalleryActivity')\">ImageGallery&amp;Gesture</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SamplePullRefreshLoadActivity')\">List pull refresh &amp; pull load</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SamplePickerActivity')\">Picker</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleAnimationActivity')\">Animation</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleLifeCallbackActivity')\">Activity Life Circel</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleContacteActivity')\">Activity Start&amp;Result</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleWebViewActivity')\">WebView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleHtmlViewActivity')\">HtmlView</button>\n    </linearlayout>\n</scrollview>",
                 "sample_animation": "<scrollview>\n    <linearlayout android:padding=\"0 6dp\" gravity=\"center\" android:orientation=\"vertical\">\n        <textview gravity=\"center\">Rotate:</textview>\n        <imageview id=\"rotate_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"20dp 12dp\"></imageview>\n        <textview gravity=\"center\">Translate:</textview>\n        <imageview id=\"translate_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Scale:</textview>\n        <imageview id=\"scale_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Alpha:</textview>\n        <imageview id=\"alpha_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Animation Set:</textview>\n        <imageview id=\"anim_set\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n    </linearlayout>\n</scrollview>",
                 "sample_base_widget": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:padding=\"12dp\" android:gravity=\"center\">\n        <textview android:layout_width=\"wrap_content\">\n            TextView\n        </textview>\n        <button android:layout_width=\"wrap_content\">\n            Button\n        </button>\n        <imageview android:src=\"assets/images/logo_google_3.png\">\n        </imageview>\n        <checkbox android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\">\n            CheckBox\n        </checkbox>\n        <radiogroup android:gravity=\"center\" android:orientation=\"HORIZONTAL\" android:layout_marginbottom=\"12dp\">\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio1\n            </radiobutton>\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio2\n            </radiobutton>\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio3\n            </radiobutton>\n        </radiogroup>\n        <button id=\"btn_open_dialog\" android:layout_width=\"wrap_content\">\n            OpenDialog\n        </button>\n        <spinner android:layout_width=\"wrap_content\" android:entries=\"[&quot;Item1&quot;, &quot;Item2&quot;, &quot;Item3&quot;, &quot;Item4&quot;, &quot;Item5&quot;, &quot;Item6&quot;, &quot;Item7&quot;]\">\n        </spinner>\n        <button id=\"btn_show_popup\" android:layout_width=\"wrap_content\">\n            PopupWindow\n        </button>\n\n        <progressbar android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\"></progressbar>\n        <progressbar android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginbottom=\"12dp\" style=\"@android:attr/progressBarStyleHorizontal\" android:max=\"100\" android:progress=\"50\" android:secondaryprogress=\"70\"></progressbar>\n\n        <seekbar android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginbottom=\"12dp\"></seekbar>\n\n        <ratingbar android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\"></ratingbar>\n\n    </linearlayout>\n</scrollview>",
                 "sample_button": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:gravity=\"center\">\n        <button android:layout_width=\"wrap_content\">\n            Button\n        </button>\n        <button android:layout_width=\"wrap_content\" android:enabled=\"false\">\n            DisableButton\n        </button>\n        <button id=\"btn_click\">\n            ButtonClick\n        </button>\n        <button android:layout_width=\"wrap_content\" onclick=\"this.setText('Click:'+new Date().getTime());\">\n            ButtonClick2\n        </button>\n        <button id=\"btn_long_click\">\n            ButtonLongClick\n        </button>\n        <button android:style=\"@style/btn_custom1\">\n            ButtonStyled\n        </button>\n        <button android:style=\"@style/btn_custom1\" android:enabled=\"false\">\n            ButtonStyledDisable\n        </button>\n        <button android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textcolor=\"@color/white\" android:cornerradius=\"4dp\" android:background=\"#f00\" android:state_pressed=\"@style/btn_custom1/pressed\">\n            ButtonStyled2\n        </button>\n        <button android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textcolor=\"@color/white\" android:cornerradius=\"4dp\" android:background=\"#f00\" android:state_pressed=\"background:#f66;\">\n            ButtonStyled3\n        </button>\n    </linearlayout>\n</scrollview>",
@@ -147,6 +148,7 @@ var sample;
                 return layout;
             }();
 
+            layout.activity_main = '@layout/activity_main';
             layout.sample_animation = '@layout/sample_animation';
             layout.sample_base_widget = '@layout/sample_base_widget';
             layout.sample_button = '@layout/sample_button';
@@ -193,11 +195,81 @@ var sample;
     var app;
     (function (app) {
         var ActionBarActivity = android.app.ActionBarActivity;
+        var R = sample.app.R;
+
+        var MainActivity = function (_ActionBarActivity) {
+            _inherits(MainActivity, _ActionBarActivity);
+
+            function MainActivity() {
+                _classCallCheck(this, MainActivity);
+
+                return _possibleConstructorReturn(this, Object.getPrototypeOf(MainActivity).apply(this, arguments));
+            }
+
+            _createClass(MainActivity, [{
+                key: "onCreate",
+                value: function onCreate(savedInstanceState) {
+                    _get(Object.getPrototypeOf(MainActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    this.setContentView(R.layout.activity_main);
+                    var activity = this;
+                    if (navigator.userAgent.match('Android')) {
+                        this.findViewById('android_tip').setVisibility(android.view.View.VISIBLE);
+                    }
+                    var menu = new android.view.Menu(activity);
+                    var forkItem = menu.add('Fork me on GitHub');
+                    var aboutItem = menu.add('About');
+                    menu.setCallback({
+                        onMenuItemSelected: function onMenuItemSelected(menu, item) {
+                            if (item == forkItem) {
+                                window.location.href = 'https://github.com/linfaxin/AndroidUI4Web';
+                            } else if (item == aboutItem) {
+                                new android.app.AlertDialog.Builder(activity).setTitle('About').setMessage('AndroidUI4Web by LinFaXin.').setPositiveButton(android.R.string_.ok, null).show();
+                            }
+                            return true;
+                        }
+                    });
+                    var menuPopupHelper = new android.view.menu.MenuPopupHelper(activity, menu, activity.getActionBar().mActionRight);
+                    activity.getActionBar().setActionRight('', android.R.image.ic_menu_moreoverflow_normal_holo_dark, {
+                        onClick: function onClick(view) {
+                            menuPopupHelper.show();
+                        }
+                    });
+                }
+            }, {
+                key: "onBackPressed",
+                value: function onBackPressed() {
+                    var _this2 = this;
+
+                    if (!this.confirmDialog) {
+                        (function () {
+                            var activity = _this2;
+                            _this2.confirmDialog = new android.app.AlertDialog.Builder(activity).setTitle('Promt').setIcon(sample.app.R.image.icon_alert).setMessage('Exit confirm?').setNegativeButton(android.R.string_.cancel, null).setPositiveButton(android.R.string_.ok, {
+                                onClick: function onClick(dialog, which) {
+                                    activity.finish();
+                                }
+                            }).create();
+                        })();
+                    }
+                    this.confirmDialog.show();
+                }
+            }]);
+
+            return MainActivity;
+        }(ActionBarActivity);
+
+        app.MainActivity = MainActivity;
+    })(app = sample.app || (sample.app = {}));
+})(sample || (sample = {}));
+var sample;
+(function (sample) {
+    var app;
+    (function (app) {
+        var ActionBarActivity = android.app.ActionBarActivity;
         var Animation = android.view.animation.Animation;
         var R = sample.app.R;
 
-        var SampleAnimationActivity = function (_ActionBarActivity) {
-            _inherits(SampleAnimationActivity, _ActionBarActivity);
+        var SampleAnimationActivity = function (_ActionBarActivity2) {
+            _inherits(SampleAnimationActivity, _ActionBarActivity2);
 
             function SampleAnimationActivity() {
                 _classCallCheck(this, SampleAnimationActivity);
@@ -263,8 +335,8 @@ var sample;
         var PopupWindow = android.widget.PopupWindow;
         var R = sample.app.R;
 
-        var SampleBaseWidgetActivity = function (_ActionBarActivity2) {
-            _inherits(SampleBaseWidgetActivity, _ActionBarActivity2);
+        var SampleBaseWidgetActivity = function (_ActionBarActivity3) {
+            _inherits(SampleBaseWidgetActivity, _ActionBarActivity3);
 
             function SampleBaseWidgetActivity() {
                 _classCallCheck(this, SampleBaseWidgetActivity);
@@ -316,8 +388,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleButtonActivity = function (_ActionBarActivity3) {
-            _inherits(SampleButtonActivity, _ActionBarActivity3);
+        var SampleButtonActivity = function (_ActionBarActivity4) {
+            _inherits(SampleButtonActivity, _ActionBarActivity4);
 
             function SampleButtonActivity() {
                 _classCallCheck(this, SampleButtonActivity);
@@ -366,8 +438,8 @@ var sample;
         var Gravity = android.view.Gravity;
         var TAG = 'SampleContacteActivity';
 
-        var SampleContacteActivity = function (_ActionBarActivity4) {
-            _inherits(SampleContacteActivity, _ActionBarActivity4);
+        var SampleContacteActivity = function (_ActionBarActivity5) {
+            _inherits(SampleContacteActivity, _ActionBarActivity5);
 
             function SampleContacteActivity() {
                 _classCallCheck(this, SampleContacteActivity);
@@ -419,8 +491,8 @@ var sample;
 
         app.SampleContacteActivity = SampleContacteActivity;
 
-        var SampleShowIntentActivity = function (_ActionBarActivity5) {
-            _inherits(SampleShowIntentActivity, _ActionBarActivity5);
+        var SampleShowIntentActivity = function (_ActionBarActivity6) {
+            _inherits(SampleShowIntentActivity, _ActionBarActivity6);
 
             function SampleShowIntentActivity() {
                 _classCallCheck(this, SampleShowIntentActivity);
@@ -443,8 +515,8 @@ var sample;
 
         app.SampleShowIntentActivity = SampleShowIntentActivity;
 
-        var SampleResultActivity = function (_ActionBarActivity6) {
-            _inherits(SampleResultActivity, _ActionBarActivity6);
+        var SampleResultActivity = function (_ActionBarActivity7) {
+            _inherits(SampleResultActivity, _ActionBarActivity7);
 
             function SampleResultActivity() {
                 _classCallCheck(this, SampleResultActivity);
@@ -483,8 +555,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleDrawerLayoutActivity = function (_ActionBarActivity7) {
-            _inherits(SampleDrawerLayoutActivity, _ActionBarActivity7);
+        var SampleDrawerLayoutActivity = function (_ActionBarActivity8) {
+            _inherits(SampleDrawerLayoutActivity, _ActionBarActivity8);
 
             function SampleDrawerLayoutActivity() {
                 _classCallCheck(this, SampleDrawerLayoutActivity);
@@ -514,8 +586,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleEditTextActivity = function (_ActionBarActivity8) {
-            _inherits(SampleEditTextActivity, _ActionBarActivity8);
+        var SampleEditTextActivity = function (_ActionBarActivity9) {
+            _inherits(SampleEditTextActivity, _ActionBarActivity9);
 
             function SampleEditTextActivity() {
                 _classCallCheck(this, SampleEditTextActivity);
@@ -549,8 +621,8 @@ var sample;
         var BaseExpandableListAdapter = android.widget.BaseExpandableListAdapter;
         var R = sample.app.R;
 
-        var SampleExpandableListViewActivity = function (_ActionBarActivity9) {
-            _inherits(SampleExpandableListViewActivity, _ActionBarActivity9);
+        var SampleExpandableListViewActivity = function (_ActionBarActivity10) {
+            _inherits(SampleExpandableListViewActivity, _ActionBarActivity10);
 
             function SampleExpandableListViewActivity() {
                 _classCallCheck(this, SampleExpandableListViewActivity);
@@ -587,10 +659,10 @@ var sample;
                     args[_key] = arguments[_key];
                 }
 
-                var _this10 = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO, [this].concat(args)));
+                var _this12 = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO, [this].concat(args)));
 
-                _this10.data = [{ 'name': 'A', 'items': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10'] }, { 'name': 'B', 'items': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10'] }, { 'name': 'C', 'items': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'] }, { 'name': 'D', 'items': ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'] }, { 'name': 'E', 'items': ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10'] }, { 'name': 'F', 'items': ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10'] }, { 'name': 'G', 'items': ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10'] }, { 'name': 'H', 'items': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10'] }, { 'name': 'I', 'items': ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10'] }, { 'name': 'J', 'items': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'] }, { 'name': 'K', 'items': ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10'] }];
-                return _this10;
+                _this12.data = [{ 'name': 'A', 'items': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10'] }, { 'name': 'B', 'items': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10'] }, { 'name': 'C', 'items': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'] }, { 'name': 'D', 'items': ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'] }, { 'name': 'E', 'items': ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10'] }, { 'name': 'F', 'items': ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10'] }, { 'name': 'G', 'items': ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10'] }, { 'name': 'H', 'items': ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10'] }, { 'name': 'I', 'items': ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10'] }, { 'name': 'J', 'items': ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'] }, { 'name': 'K', 'items': ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8', 'K9', 'K10'] }];
+                return _this12;
             }
 
             _createClass(MyListAdapter, [{
@@ -669,8 +741,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleFrameLayoutActivity = function (_ActionBarActivity10) {
-            _inherits(SampleFrameLayoutActivity, _ActionBarActivity10);
+        var SampleFrameLayoutActivity = function (_ActionBarActivity11) {
+            _inherits(SampleFrameLayoutActivity, _ActionBarActivity11);
 
             function SampleFrameLayoutActivity() {
                 _classCallCheck(this, SampleFrameLayoutActivity);
@@ -702,8 +774,8 @@ var sample;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleGridViewActivity = function (_ActionBarActivity11) {
-            _inherits(SampleGridViewActivity, _ActionBarActivity11);
+        var SampleGridViewActivity = function (_ActionBarActivity12) {
+            _inherits(SampleGridViewActivity, _ActionBarActivity12);
 
             function SampleGridViewActivity() {
                 _classCallCheck(this, SampleGridViewActivity);
@@ -773,8 +845,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleHtmlViewActivity = function (_ActionBarActivity12) {
-            _inherits(SampleHtmlViewActivity, _ActionBarActivity12);
+        var SampleHtmlViewActivity = function (_ActionBarActivity13) {
+            _inherits(SampleHtmlViewActivity, _ActionBarActivity13);
 
             function SampleHtmlViewActivity() {
                 _classCallCheck(this, SampleHtmlViewActivity);
@@ -804,8 +876,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleImageViewActivity = function (_ActionBarActivity13) {
-            _inherits(SampleImageViewActivity, _ActionBarActivity13);
+        var SampleImageViewActivity = function (_ActionBarActivity14) {
+            _inherits(SampleImageViewActivity, _ActionBarActivity14);
 
             function SampleImageViewActivity() {
                 _classCallCheck(this, SampleImageViewActivity);
@@ -838,8 +910,8 @@ var sample;
         var Gravity = android.view.Gravity;
         var TAG = 'SampleLifeCallbackActivity';
 
-        var SampleLifeCallbackActivity = function (_ActionBarActivity14) {
-            _inherits(SampleLifeCallbackActivity, _ActionBarActivity14);
+        var SampleLifeCallbackActivity = function (_ActionBarActivity15) {
+            _inherits(SampleLifeCallbackActivity, _ActionBarActivity15);
 
             function SampleLifeCallbackActivity() {
                 _classCallCheck(this, SampleLifeCallbackActivity);
@@ -916,8 +988,8 @@ var sample;
 
         app.SampleLifeCallbackActivity = SampleLifeCallbackActivity;
 
-        var SampleLifeCallbackNormalActivity = function (_ActionBarActivity15) {
-            _inherits(SampleLifeCallbackNormalActivity, _ActionBarActivity15);
+        var SampleLifeCallbackNormalActivity = function (_ActionBarActivity16) {
+            _inherits(SampleLifeCallbackNormalActivity, _ActionBarActivity16);
 
             function SampleLifeCallbackNormalActivity() {
                 _classCallCheck(this, SampleLifeCallbackNormalActivity);
@@ -982,8 +1054,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleLinearLayoutActivity = function (_ActionBarActivity16) {
-            _inherits(SampleLinearLayoutActivity, _ActionBarActivity16);
+        var SampleLinearLayoutActivity = function (_ActionBarActivity17) {
+            _inherits(SampleLinearLayoutActivity, _ActionBarActivity17);
 
             function SampleLinearLayoutActivity() {
                 _classCallCheck(this, SampleLinearLayoutActivity);
@@ -1015,8 +1087,8 @@ var sample;
         var BaseAdapter = android.widget.BaseAdapter;
         var R = sample.app.R;
 
-        var SampleListViewActivity = function (_ActionBarActivity17) {
-            _inherits(SampleListViewActivity, _ActionBarActivity17);
+        var SampleListViewActivity = function (_ActionBarActivity18) {
+            _inherits(SampleListViewActivity, _ActionBarActivity18);
 
             function SampleListViewActivity() {
                 _classCallCheck(this, SampleListViewActivity);
@@ -1086,8 +1158,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SamplePickerActivity = function (_ActionBarActivity18) {
-            _inherits(SamplePickerActivity, _ActionBarActivity18);
+        var SamplePickerActivity = function (_ActionBarActivity19) {
+            _inherits(SamplePickerActivity, _ActionBarActivity19);
 
             function SamplePickerActivity() {
                 _classCallCheck(this, SamplePickerActivity);
@@ -1120,8 +1192,8 @@ var sample;
         var PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
         var R = sample.app.R;
 
-        var SamplePullRefreshLoadActivity = function (_ActionBarActivity19) {
-            _inherits(SamplePullRefreshLoadActivity, _ActionBarActivity19);
+        var SamplePullRefreshLoadActivity = function (_ActionBarActivity20) {
+            _inherits(SamplePullRefreshLoadActivity, _ActionBarActivity20);
 
             function SamplePullRefreshLoadActivity() {
                 _classCallCheck(this, SamplePullRefreshLoadActivity);
@@ -1175,10 +1247,10 @@ var sample;
                     args[_key2] = arguments[_key2];
                 }
 
-                var _this24 = _possibleConstructorReturn(this, (_Object$getPrototypeO2 = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO2, [this].concat(args)));
+                var _this26 = _possibleConstructorReturn(this, (_Object$getPrototypeO2 = Object.getPrototypeOf(MyListAdapter)).call.apply(_Object$getPrototypeO2, [this].concat(args)));
 
-                _this24.data = [];
-                return _this24;
+                _this26.data = [];
+                return _this26;
             }
 
             _createClass(MyListAdapter, [{
@@ -1218,8 +1290,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleRelativeLayoutActivity = function (_ActionBarActivity20) {
-            _inherits(SampleRelativeLayoutActivity, _ActionBarActivity20);
+        var SampleRelativeLayoutActivity = function (_ActionBarActivity21) {
+            _inherits(SampleRelativeLayoutActivity, _ActionBarActivity21);
 
             function SampleRelativeLayoutActivity() {
                 _classCallCheck(this, SampleRelativeLayoutActivity);
@@ -1249,8 +1321,8 @@ var sample;
         var ActionBarActivity = android.app.ActionBarActivity;
         var R = sample.app.R;
 
-        var SampleTextViewActivity = function (_ActionBarActivity21) {
-            _inherits(SampleTextViewActivity, _ActionBarActivity21);
+        var SampleTextViewActivity = function (_ActionBarActivity22) {
+            _inherits(SampleTextViewActivity, _ActionBarActivity22);
 
             function SampleTextViewActivity() {
                 _classCallCheck(this, SampleTextViewActivity);
@@ -1282,8 +1354,8 @@ var sample;
         var Color = android.graphics.Color;
         var R = sample.app.R;
 
-        var SampleViewPagerActivity = function (_ActionBarActivity22) {
-            _inherits(SampleViewPagerActivity, _ActionBarActivity22);
+        var SampleViewPagerActivity = function (_ActionBarActivity23) {
+            _inherits(SampleViewPagerActivity, _ActionBarActivity23);
 
             function SampleViewPagerActivity() {
                 _classCallCheck(this, SampleViewPagerActivity);
@@ -1346,8 +1418,8 @@ var sample;
         var R = sample.app.R;
         var ActionBarActivity = android.app.ActionBarActivity;
 
-        var SampleViewPagerGalleryActivity = function (_ActionBarActivity23) {
-            _inherits(SampleViewPagerGalleryActivity, _ActionBarActivity23);
+        var SampleViewPagerGalleryActivity = function (_ActionBarActivity24) {
+            _inherits(SampleViewPagerGalleryActivity, _ActionBarActivity24);
 
             function SampleViewPagerGalleryActivity() {
                 _classCallCheck(this, SampleViewPagerGalleryActivity);
@@ -1378,8 +1450,8 @@ var sample;
         var WebView = android.webkit.WebView;
         var WebViewClient = android.webkit.WebViewClient;
 
-        var SampleWebViewActivity = function (_ActionBarActivity24) {
-            _inherits(SampleWebViewActivity, _ActionBarActivity24);
+        var SampleWebViewActivity = function (_ActionBarActivity25) {
+            _inherits(SampleWebViewActivity, _ActionBarActivity25);
 
             function SampleWebViewActivity() {
                 _classCallCheck(this, SampleWebViewActivity);
@@ -1409,10 +1481,10 @@ var sample;
             function MyWebViewClient(activity) {
                 _classCallCheck(this, MyWebViewClient);
 
-                var _this31 = _possibleConstructorReturn(this, Object.getPrototypeOf(MyWebViewClient).call(this));
+                var _this33 = _possibleConstructorReturn(this, Object.getPrototypeOf(MyWebViewClient).call(this));
 
-                _this31.activity = activity;
-                return _this31;
+                _this33.activity = activity;
+                return _this33;
             }
 
             _createClass(MyWebViewClient, [{

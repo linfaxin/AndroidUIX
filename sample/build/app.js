@@ -69,6 +69,7 @@ var sample;
         var R;
         (function (R) {
             const _layout_data = {
+                "activity_main": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:padding=\"12dp\" android:gravity=\"center\">\n        <textview id=\"android_tip\" android:visibility=\"gone\">NOTE:Suggest use Chrome for better experience</textview>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleBaseWidgetActivity')\">Base Widget</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleFrameLayoutActivity')\">FrameLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleLinearLayoutActivity')\">LinearLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleRelativeLayoutActivity')\">RelativeLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleTextViewActivity')\">TextView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleButtonActivity')\">Button</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleImageViewActivity')\">ImageView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleEditTextActivity')\">EditText</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleListViewActivity')\">ListView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleGridViewActivity')\">GridView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleExpandableListViewActivity')\">ExpandableListView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleViewPagerActivity')\">ViewPager</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleDrawerLayoutActivity')\">DrawerLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleViewPagerGalleryActivity')\">ImageGallery&amp;Gesture</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SamplePullRefreshLoadActivity')\">List pull refresh &amp; pull load</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SamplePickerActivity')\">Picker</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleAnimationActivity')\">Animation</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleLifeCallbackActivity')\">Activity Life Circel</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleContacteActivity')\">Activity Start&amp;Result</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleWebViewActivity')\">WebView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleHtmlViewActivity')\">HtmlView</button>\n    </linearlayout>\n</scrollview>",
                 "sample_animation": "<scrollview>\n    <linearlayout android:padding=\"0 6dp\" gravity=\"center\" android:orientation=\"vertical\">\n        <textview gravity=\"center\">Rotate:</textview>\n        <imageview id=\"rotate_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"20dp 12dp\"></imageview>\n        <textview gravity=\"center\">Translate:</textview>\n        <imageview id=\"translate_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Scale:</textview>\n        <imageview id=\"scale_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Alpha:</textview>\n        <imageview id=\"alpha_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Animation Set:</textview>\n        <imageview id=\"anim_set\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n    </linearlayout>\n</scrollview>",
                 "sample_base_widget": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:padding=\"12dp\" android:gravity=\"center\">\n        <textview android:layout_width=\"wrap_content\">\n            TextView\n        </textview>\n        <button android:layout_width=\"wrap_content\">\n            Button\n        </button>\n        <imageview android:src=\"assets/images/logo_google_3.png\">\n        </imageview>\n        <checkbox android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\">\n            CheckBox\n        </checkbox>\n        <radiogroup android:gravity=\"center\" android:orientation=\"HORIZONTAL\" android:layout_marginbottom=\"12dp\">\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio1\n            </radiobutton>\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio2\n            </radiobutton>\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio3\n            </radiobutton>\n        </radiogroup>\n        <button id=\"btn_open_dialog\" android:layout_width=\"wrap_content\">\n            OpenDialog\n        </button>\n        <spinner android:layout_width=\"wrap_content\" android:entries=\"[&quot;Item1&quot;, &quot;Item2&quot;, &quot;Item3&quot;, &quot;Item4&quot;, &quot;Item5&quot;, &quot;Item6&quot;, &quot;Item7&quot;]\">\n        </spinner>\n        <button id=\"btn_show_popup\" android:layout_width=\"wrap_content\">\n            PopupWindow\n        </button>\n\n        <progressbar android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\"></progressbar>\n        <progressbar android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginbottom=\"12dp\" style=\"@android:attr/progressBarStyleHorizontal\" android:max=\"100\" android:progress=\"50\" android:secondaryprogress=\"70\"></progressbar>\n\n        <seekbar android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginbottom=\"12dp\"></seekbar>\n\n        <ratingbar android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\"></ratingbar>\n\n    </linearlayout>\n</scrollview>",
                 "sample_button": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:gravity=\"center\">\n        <button android:layout_width=\"wrap_content\">\n            Button\n        </button>\n        <button android:layout_width=\"wrap_content\" android:enabled=\"false\">\n            DisableButton\n        </button>\n        <button id=\"btn_click\">\n            ButtonClick\n        </button>\n        <button android:layout_width=\"wrap_content\" onclick=\"this.setText('Click:'+new Date().getTime());\">\n            ButtonClick2\n        </button>\n        <button id=\"btn_long_click\">\n            ButtonLongClick\n        </button>\n        <button android:style=\"@style/btn_custom1\">\n            ButtonStyled\n        </button>\n        <button android:style=\"@style/btn_custom1\" android:enabled=\"false\">\n            ButtonStyledDisable\n        </button>\n        <button android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textcolor=\"@color/white\" android:cornerradius=\"4dp\" android:background=\"#f00\" android:state_pressed=\"@style/btn_custom1/pressed\">\n            ButtonStyled2\n        </button>\n        <button android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textcolor=\"@color/white\" android:cornerradius=\"4dp\" android:background=\"#f00\" android:state_pressed=\"background:#f66;\">\n            ButtonStyled3\n        </button>\n    </linearlayout>\n</scrollview>",
@@ -108,6 +109,7 @@ var sample;
                     return data;
                 }
             }
+            layout.activity_main = '@layout/activity_main';
             layout.sample_animation = '@layout/sample_animation';
             layout.sample_base_widget = '@layout/sample_base_widget';
             layout.sample_button = '@layout/sample_button';
@@ -208,6 +210,65 @@ var sample;
 
 `;
         })(R = app.R || (app.R = {}));
+    })(app = sample.app || (sample.app = {}));
+})(sample || (sample = {}));
+var sample;
+(function (sample) {
+    var app;
+    (function (app) {
+        var ActionBarActivity = android.app.ActionBarActivity;
+        var R = sample.app.R;
+        class MainActivity extends ActionBarActivity {
+            onCreate(savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                this.setContentView(R.layout.activity_main);
+                const activity = this;
+                if (navigator.userAgent.match('Android')) {
+                    this.findViewById('android_tip').setVisibility(android.view.View.VISIBLE);
+                }
+                var menu = new android.view.Menu(activity);
+                var forkItem = menu.add('Fork me on GitHub');
+                var aboutItem = menu.add('About');
+                menu.setCallback({
+                    onMenuItemSelected: function (menu, item) {
+                        if (item == forkItem) {
+                            window.location.href = 'https://github.com/linfaxin/AndroidUI4Web';
+                        }
+                        else if (item == aboutItem) {
+                            new android.app.AlertDialog.Builder(activity)
+                                .setTitle('About')
+                                .setMessage('AndroidUI4Web by LinFaXin.')
+                                .setPositiveButton(android.R.string_.ok, null)
+                                .show();
+                        }
+                        return true;
+                    }
+                });
+                var menuPopupHelper = new android.view.menu.MenuPopupHelper(activity, menu, activity.getActionBar().mActionRight);
+                activity.getActionBar().setActionRight('', android.R.image.ic_menu_moreoverflow_normal_holo_dark, {
+                    onClick: function (view) {
+                        menuPopupHelper.show();
+                    }
+                });
+            }
+            onBackPressed() {
+                if (!this.confirmDialog) {
+                    const activity = this;
+                    this.confirmDialog = new android.app.AlertDialog.Builder(activity)
+                        .setTitle('Promt')
+                        .setIcon(sample.app.R.image.icon_alert)
+                        .setMessage('Exit confirm?')
+                        .setNegativeButton(android.R.string_.cancel, null)
+                        .setPositiveButton(android.R.string_.ok, {
+                        onClick: function (dialog, which) {
+                            activity.finish();
+                        }
+                    }).create();
+                }
+                this.confirmDialog.show();
+            }
+        }
+        app.MainActivity = MainActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
 var sample;
