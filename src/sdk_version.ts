@@ -2,8 +2,8 @@
 module androidui {
     export var sdk_version_info = `
 AndroidUI4Web: https://github.com/linfaxin/AndroidUI-WebApp
-version: 0.3.0
+version: 0.4.0
 release type: Pre-release
-release date: 2016-02-07
+release date: 2016-02-12
 `;
 }
