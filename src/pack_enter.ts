@@ -29,6 +29,8 @@
 ///<reference path="android/widget/Spinner.ts"/>
 ///<reference path="android/widget/ListPopupWindow.ts"/>
 
+///<reference path="android/webkit/WebView.ts"/>
+
 ///<reference path="android/app/AlertDialog.ts"/>
 
 

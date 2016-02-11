@@ -51727,6 +51727,117 @@ var android;
 })(android || (android = {}));
 var android;
 (function (android) {
+    var webkit;
+    (function (webkit) {
+        class WebViewClient {
+            onPageStarted(view, url) {
+            }
+            onPageFinished(view, url) {
+            }
+            onReceivedTitle(view, title) {
+            }
+        }
+        webkit.WebViewClient = WebViewClient;
+    })(webkit = android.webkit || (android.webkit = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
+    var webkit;
+    (function (webkit) {
+        var FrameLayout = android.widget.FrameLayout;
+        class WebView extends FrameLayout {
+            constructor(context, bindElement, defStyle) {
+                super(context, bindElement, defStyle);
+                let density = this.getResources().getDisplayMetrics().density;
+                this.setMinimumWidth(300 * density);
+                this.setMinimumHeight(150 * density);
+                this.initIFrameElement();
+            }
+            initIFrameElement() {
+                this.iFrameElement = document.createElement('iframe');
+                this.iFrameElement.style.border = 'none';
+                this.iFrameElement.style.height = '100%';
+                this.iFrameElement.style.width = '100%';
+                this.iFrameElement.onload = () => {
+                    if (this.mClient) {
+                        this.mClient.onReceivedTitle(this, this.getTitle());
+                        this.mClient.onPageFinished(this, this.iFrameElement.src);
+                    }
+                };
+                this.bindElement.appendChild(this.iFrameElement);
+            }
+            loadUrl(url) {
+                if (this.mClient)
+                    this.mClient.onPageStarted(this, url);
+                this.iFrameElement.src = url;
+            }
+            loadData(data) {
+                this.iFrameElement['srcdoc'] = data;
+            }
+            evaluateJavascript(script) {
+                try {
+                    eval.call(this.iFrameElement.contentWindow, script);
+                }
+                catch (e) {
+                    console.warn(e);
+                    eval(script);
+                }
+            }
+            stopLoading() {
+                try {
+                    this.iFrameElement.contentWindow['stop']();
+                }
+                catch (e) {
+                    console.error(e);
+                }
+            }
+            reload() {
+                this.iFrameElement.src = this.iFrameElement.src;
+            }
+            getUrl() {
+                try {
+                    return this.iFrameElement.contentWindow.document.URL;
+                }
+                catch (e) {
+                    return this.iFrameElement.src;
+                }
+            }
+            getTitle() {
+                try {
+                    return this.iFrameElement.contentWindow.document.title;
+                }
+                catch (e) {
+                    console.warn(e);
+                    return '';
+                }
+            }
+            getContentHeight() {
+                try {
+                    return this.iFrameElement.contentWindow.document.documentElement.offsetHeight;
+                }
+                catch (e) {
+                    console.warn(e);
+                    return 0;
+                }
+            }
+            getContentWidth() {
+                try {
+                    return this.iFrameElement.contentWindow.document.documentElement.offsetWidth;
+                }
+                catch (e) {
+                    console.warn(e);
+                    return 0;
+                }
+            }
+            setWebViewClient(client) {
+                this.mClient = client;
+            }
+        }
+        webkit.WebView = WebView;
+    })(webkit = android.webkit || (android.webkit = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
     var view;
     (function (view) {
         var animation;

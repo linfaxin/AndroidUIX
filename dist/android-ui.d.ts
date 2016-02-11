@@ -9724,6 +9724,32 @@ declare module android.widget {
         }
     }
 }
+declare module android.webkit {
+    class WebViewClient {
+        onPageStarted(view: WebView, url: string): void;
+        onPageFinished(view: WebView, url: string): void;
+        onReceivedTitle(view: WebView, title: string): void;
+    }
+}
+declare module android.webkit {
+    import FrameLayout = android.widget.FrameLayout;
+    class WebView extends FrameLayout {
+        private iFrameElement;
+        private mClient;
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        private initIFrameElement();
+        loadUrl(url: string): void;
+        loadData(data: string): void;
+        evaluateJavascript(script: string): any;
+        stopLoading(): void;
+        reload(): void;
+        getUrl(): string;
+        getTitle(): string;
+        getContentHeight(): number;
+        getContentWidth(): number;
+        setWebViewClient(client: WebViewClient): void;
+    }
+}
 declare module android.view.animation {
     import Animation = android.view.animation.Animation;
     import Transformation = android.view.animation.Transformation;
