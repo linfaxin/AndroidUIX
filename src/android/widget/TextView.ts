@@ -478,6 +478,8 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         const a = this._attrBinder;
         a.addAttr('textColorHighlight', (value)=>{
             this.setHighlightColor(a.parseColor(value, this.mHighlightColor));
+        }, ()=>{
+            return this.getHighlightColor();
         });
         a.addAttr('textColor', (value)=>{
             let color = a.parseColorList(value);
@@ -503,42 +505,60 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         a.addAttr('shadowColor', (value)=>{
             this.setShadowLayer(this.mShadowRadius, this.mShadowDx, this.mShadowDy,
                 a.parseColor(value, this.mTextPaint.shadowColor));
+        }, ()=>{
+            return this.getShadowColor();
         });
         a.addAttr('shadowDx', (value)=>{
             let dx = a.parseNumber(value, this.mShadowDx);
             this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
+        }, ()=>{
+            return this.getShadowDx();
         });
         a.addAttr('shadowDy', (value)=>{
             let dy = a.parseNumber(value, this.mShadowDy);
             this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
+        }, ()=>{
+            return this.getShadowDy();
         });
         a.addAttr('shadowRadius', (value)=>{
             let radius = a.parseNumber(value, this.mShadowRadius);
             this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
+        }, ()=>{
+            return this.getShadowRadius();
         });
 
         a.addAttr('drawableLeft', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+        }, ()=>{
+            return this.getCompoundDrawables()[0];
         });
         a.addAttr('drawableTop', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
+        }, ()=>{
+            return this.getCompoundDrawables()[1];
         });
         a.addAttr('drawableRight', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+        }, ()=>{
+            return this.getCompoundDrawables()[2];
         });
         a.addAttr('drawableBottom', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
+        }, ()=>{
+            return this.getCompoundDrawables()[3];
         });
         a.addAttr('drawablePadding', (value)=>{
             this.setCompoundDrawablePadding(a.parseNumber(value));
+        }, ()=>{
+            return this.getCompoundDrawablePadding();
         });
         a.addAttr('maxLines', (value)=>{
             value = Number.parseInt(value);
@@ -621,11 +641,9 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         });
         a.addAttr('text', (value)=>{
             this.setText(a.parseString(value));
-        }
-        //    , ()=>{
-        //    return this.getText();//FIXME when state attr refactoring ok
-        //}
-        );
+        }, ()=>{
+            return this.getText();
+        });
         a.addAttr('scrollHorizontally', (value)=>{
             this.setHorizontallyScrolling(a.parseBoolean(value, false));
         });
@@ -645,6 +663,8 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         });
         a.addAttr('enabled', (value)=>{
             this.setEnabled(a.parseBoolean(value, this.isEnabled()));
+        }, ()=>{
+            return this.isEnabled();
         });
         a.addAttr('lineSpacingExtra', (value)=>{
             this.setLineSpacing(a.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);

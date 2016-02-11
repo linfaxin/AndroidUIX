@@ -9,18 +9,18 @@ module androidui.attr{
     import View = android.view.View;
 
     export class StateAttrList{
-        private list = new Array<StateAttr>(0);
-        private list_reverse:StateAttr[];
-        private match_list = new Array<StateAttr>(0);
+        private list:Array<StateAttr> = [];
+        private matchedAttrCache:Array<StateAttr> = [];
         private mView:View;
 
         constructor(view:View){
             this.mView = view;
-            this.list.push(new StateAttr([]));//init state
+            this.optStateAttr([]);//ensure default stateAttr
             this._initStyleAttributes(view.bindElement, []);
         }
 
         private _initStyleAttributes(ele:Element, inParseState:number[]){
+
             let attributes = Array.from(ele.attributes);
             //parse ref style first
             attributes.forEach((attr:Attr)=>{
@@ -45,7 +45,6 @@ module androidui.attr{
                 }
             });
 
-            this.list_reverse = this.list.concat().reverse();
         }
 
         private _initStyleAttr(attr:Attr, ele:Element, inParseState:number[]){
@@ -57,12 +56,13 @@ module androidui.attr{
             let attrValue = attr.value;
 
 
-            //check inParseState mar change
             if(attrName.startsWith('state_')){
-                //attr with state
+                //merge new state
                 let newStateSet = StateAttr.parseStateAttrName(attrName);
-                inParseState = inParseState.concat(Array.from(newStateSet));
-                inParseState = Array.from(new Set(inParseState)).sort();
+                for(let state of inParseState){
+                    newStateSet.add(state);
+                }
+                inParseState = Array.from(newStateSet).sort();
             }
 
 
@@ -72,10 +72,12 @@ module androidui.attr{
             if(attrName.startsWith('state_') || attrName==='style'){
                 //attr with state
                 if(attrValue.startsWith('@')){
+                    //support: android:state_pressed="@style/myStyle"
                     let reference = this.mView.getResources().getReference(attrValue, false);
                     if(reference) this._initStyleAttributes(reference, inParseState);
 
                 }else{
+                    //support: android:state_pressed="padding:10dp; background:#333;"
                     for(let part of attrValue.split(';')){
                         let [name, value] = part.split(':');
                         value = value ? this.mView.getResources().getString(value) : '';
@@ -88,12 +90,13 @@ module androidui.attr{
             }
         }
 
-        private static EmptyArray = [];
         getDefaultStateAttr():StateAttr{
-            return this.getStateAttr(StateAttrList.EmptyArray);
+            for(let stateAttr of this.list){
+                if(stateAttr.isDefaultState()) return stateAttr;
+            }
         }
 
-        getStateAttr(state:number[]):StateAttr{
+        private getStateAttr(state:number[]):StateAttr{
             for(let stateAttr of this.list){
                 if(stateAttr.isStateEquals(state)) return stateAttr;
             }
@@ -103,21 +106,38 @@ module androidui.attr{
             let stateAttr = this.getStateAttr(state);
             if(!stateAttr){
                 stateAttr = new StateAttr(state);
-                this.list.splice(0, 0, stateAttr);
+                this.list.push(stateAttr);
             }
             return stateAttr;
         }
 
-        getMatchedAttr(state:number[]):StateAttr {
-            for(let stateAttr of this.match_list){
+        getMatchedStateAttr(state:number[]):StateAttr {
+            if(state == null) return null;
+            for(let stateAttr of this.matchedAttrCache){
                 if(stateAttr.isStateEquals(state)) return stateAttr;
             }
-            let matchedAttr = new StateAttr(state);
-            for(let stateAttr of this.list_reverse){
-                if(stateAttr.isStateMatch(state)) matchedAttr.putAll(stateAttr);
+            let matchedAttr:StateAttr = new StateAttr(state);
+            for(let stateAttr of this.list){
+                if(stateAttr.isDefaultState()) continue;//ignore default state
+                if(stateAttr.isStateMatch(state)){
+                    matchedAttr.putAll(stateAttr);
+                }
             }
-            this.match_list.push(matchedAttr);
+            this.matchedAttrCache.push(matchedAttr);
             return matchedAttr;
+        }
+
+        /**
+         * call when the attr is not stateable (when user set a new value to the attr by code)
+         * @param attrName this attr's name
+         */
+        removeAttrAllState(attrName:string){
+            for(let stateAttr of this.list){
+                stateAttr.getAttrMap().delete(attrName);
+            }
+            for(let stateAttr of this.matchedAttrCache){
+                stateAttr.getAttrMap().delete(attrName);
+            }
         }
     }
 }

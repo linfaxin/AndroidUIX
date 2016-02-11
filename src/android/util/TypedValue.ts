@@ -56,7 +56,7 @@ module android.util{
             if(valueWithUnit===undefined || valueWithUnit===null){
                 throw Error('complexToDimensionPixelSize error: valueWithUnit is '+valueWithUnit);
             }
-            if(valueWithUnit === ''+(Number.parseInt(valueWithUnit))) return Number.parseInt(valueWithUnit);
+            if(valueWithUnit === ''+(Number.parseFloat(valueWithUnit))) return Number.parseFloat(valueWithUnit);
 
             if(typeof valueWithUnit !== 'string') valueWithUnit = valueWithUnit+"";
             let scale = 1;
@@ -105,7 +105,7 @@ module android.util{
 
             }else if(valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_FRACTION)){
                 valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_FRACTION, "");
-                scale = Number.parseInt(valueWithUnit) / 100;
+                scale = Number.parseFloat(valueWithUnit) / 100;
                 if(Number.isNaN(scale)) return 0;
                 valueWithUnit = <any>baseValue;
 

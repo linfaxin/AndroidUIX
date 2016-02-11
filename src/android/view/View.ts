@@ -869,44 +869,51 @@ module android.view {
             a.addAttr('background', (value)=>{
                 this.setBackground(a.parseDrawable(value));
             }, ()=>{
-                if(this.mBackground instanceof ColorDrawable){
-                    return Color.toRGBAFunc((<ColorDrawable>this.mBackground).getColor());
-                }
+                //if(this.mBackground instanceof ColorDrawable){
+                //    return Color.toRGBAFunc((<ColorDrawable>this.mBackground).getColor());
+                //}
                 //if(this.mBackground instanceof NetDrawable) return `url(${this.mBackground.getImage().src})`;
                 return this.mBackground;
             });
             a.addAttr('padding', (value)=>{
+                if(value==null) value = 0;
                 let [left, top, right, bottom] = a.parsePaddingMarginLTRB(value);
                 this._setPaddingWithUnit(left, top, right, bottom);
             }, ()=>{
                 return this.mPaddingTop + ' ' + this.mPaddingRight + ' ' + this.mPaddingBottom + ' ' + this.mPaddingLeft;
             }),
             a.addAttr('paddingLeft', (value)=>{
+                if(value==null) value = 0;
                 this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
             }, ()=>{
                 return this.mPaddingLeft;
             }),
             a.addAttr('paddingStart', (value)=>{
+                if(value==null) value = 0;
                 this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
             }, ()=>{
                 return this.mPaddingLeft;
             }),
             a.addAttr('paddingTop', (value)=>{
+                if(value==null) value = 0;
                 this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
             }, ()=>{
                 return this.mPaddingTop;
             }),
             a.addAttr('paddingRight', (value)=>{
+                if(value==null) value = 0;
                 this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
             }, ()=>{
                 return this.mPaddingRight;
             }),
             a.addAttr('paddingEnd', (value)=>{
+                if(value==null) value = 0;
                 this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
             }, ()=>{
                 return this.mPaddingRight;
             }),
             a.addAttr('paddingBottom', (value)=>{
+                if(value==null) value = 0;
                 this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
             }, ()=>{
                 return this.mPaddingBottom;
@@ -914,28 +921,44 @@ module android.view {
             a.addAttr('scrollX', (value)=>{
                 value = Number.parseInt(value);
                 if(Number.isInteger(value)) this.scrollTo(value, this.mScrollY);
+            }, ()=>{
+                return this.getScrollX();
             }),
             a.addAttr('scrollY', (value)=>{
                 value = Number.parseInt(value);
                 if(Number.isInteger(value)) this.scrollTo(this.mScrollX, value);
+            }, ()=>{
+                return this.getScrollY();
             }),
             a.addAttr('alpha', (value)=>{
-                this.setAlpha(a.parseNumber(value));
+                this.setAlpha(a.parseNumber(value, this.getAlpha()));
+            }, ()=>{
+                return this.getAlpha();
             }),
             a.addAttr('transformPivotX', (value)=>{
-                this.setPivotX(a.parseNumber(value, 0));
+                this.setPivotX(a.parseNumber(value, this.getPivotX()));
+            }, ()=>{
+                return this.getPivotX();
             }),
             a.addAttr('transformPivotY', (value)=>{
-                this.setPivotY(a.parseNumber(value, 0));
+                this.setPivotY(a.parseNumber(value, this.getPivotY()));
+            }, ()=>{
+                return this.getPivotY();
             }),
             a.addAttr('translationX', (value)=>{
-                this.setTranslationX(a.parseNumber(value, 0));
+                this.setTranslationX(a.parseNumber(value, this.getTranslationX()));
+            }, ()=>{
+                return this.getTranslationX();
             }),
             a.addAttr('translationY', (value)=>{
-                this.setTranslationY(a.parseNumber(value, 0));
+                this.setTranslationY(a.parseNumber(value, this.getTranslationY()));
+            }, ()=>{
+                return this.getTranslationY();
             }),
             a.addAttr('rotation', (value)=>{
-                this.setRotation(a.parseNumber(value, 0));
+                this.setRotation(a.parseNumber(value, this.getRotation()));
+            }, ()=>{
+                return this.getRotation();
             }),
             a.addAttr('rotationX', (value)=>{
                 //TODO not support rotationX
@@ -944,10 +967,14 @@ module android.view {
                 //TODO not support rotationY
             }),
             a.addAttr('scaleX', (value)=>{
-                this.setScaleX(a.parseNumber(value, 1));
+                this.setScaleX(a.parseNumber(value, this.getScaleX()));
+            }, ()=>{
+                return this.getScaleX();
             }),
             a.addAttr('scaleY', (value)=>{
-                this.setScaleY(a.parseNumber(value, 1));
+                this.setScaleY(a.parseNumber(value, this.getScaleY()));
+            }, ()=>{
+                return this.getScaleY();
             }),
             a.addAttr('tag', (value)=>{
                 this.setTag(value);
@@ -959,22 +986,30 @@ module android.view {
                 if(a.parseBoolean(value, false)){
                     this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
                 }
+            }, ()=>{
+                return this.isFocusable();
             }),
             a.addAttr('focusableInTouchMode', (value)=>{
                 if(a.parseBoolean(value, false)){
                     this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
                         View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
                 }
+            }, ()=>{
+                return this.isFocusableInTouchMode();
             }),
             a.addAttr('clickable', (value)=>{
                 if(a.parseBoolean(value, false)){
                     this.setFlags(View.CLICKABLE, View.CLICKABLE);
                 }
+            }, ()=>{
+                return this.isClickable();
             }),
             a.addAttr('longClickable', (value)=>{
                 if(a.parseBoolean(value, false)){
                     this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
                 }
+            }, ()=>{
+                return this.isLongClickable();
             }),
             a.addAttr('saveEnabled', (value)=>{
                 if(a.parseBoolean(value, false)){
@@ -990,6 +1025,8 @@ module android.view {
                 if(value === 'gone') this.setVisibility(View.GONE);
                 else if(value === 'invisible') this.setVisibility(View.INVISIBLE);
                 else if(value === 'visible') this.setVisibility(View.VISIBLE);
+            }, ()=>{
+                return this.getVisibility();
             }),
             a.addAttr('scrollbars', (value)=>{
                 if(value==='none') {
@@ -6421,43 +6458,38 @@ module android.view {
                 this.onBindElementAttributeChanged(attr.name, null, attr.value);
             }
         }
-        private _fireStateChangeToAttribute(oldState:number[], newState:number[]){
+        private  _fireStateChangeToAttribute(oldState:number[], newState:number[]){
             if(!this._stateAttrList) return;
-            if(oldState+'' === newState+'') return;
+            if(java.util.Arrays.equals(oldState, newState)) return;
 
-            let oldMatchedAttr:StateAttr = oldState ? this._stateAttrList.getMatchedAttr(oldState) : null;
-            let matchedAttr:StateAttr = this._stateAttrList.getMatchedAttr(newState);
+            let oldMatchedAttr:StateAttr = this._stateAttrList.getMatchedStateAttr(oldState);
+            let matchedAttr:StateAttr = this._stateAttrList.getMatchedStateAttr(newState);
 
-            let attrMap = matchedAttr.mergeRemovedFrom(oldMatchedAttr);
-            for(let [key, value] of attrMap.entries()){
-                //hold the current state to old state attr, so the state attr is sync with the view state.
-                if(oldMatchedAttr) {
-                    let oldValue;
-                    if(key.startsWith('layout_')){
-                        let params = this.getLayoutParams();
-                        if(params){
-                            let attrName = key.substring('layout_'.length);
-                            oldValue=params._attrBinder.getAttrValue(attrName);
-                        }
-                    }else{
-                        oldValue = this._attrBinder.getAttrValue(key);
-                    }
-                    if (oldValue != null){
-                        oldMatchedAttr.setAttr(key, oldValue);
-                    }
+            //let attrMap = matchedAttr.createDiffKeyAsNullValueAttrMap(oldMatchedAttr);
+            for(let [key, value] of matchedAttr.getAttrMap().entries()){
+                let attrValue = this._getBinderAttrValue(key);
+
+                //set the current value to oldStateAttr, so if state change back, current value will restore
+                if(oldMatchedAttr && attrValue!=null) {
+                    oldMatchedAttr.setAttr(key, attrValue);
                 }
 
+                if(value == attrValue) continue;
 
-                key = 'android:' + key;
-                if( (value===null || value===undefined) ){
-                    if(this.bindElement.hasAttribute(key)){
-                        this.bindElement.removeAttribute(key);
-                    }else{
-                        this.onBindElementAttributeChanged(key, null, null);//force fire remove event
-                    }
-                }else{
-                    this.bindElement.setAttribute(key, value);
+                this.onBindElementAttributeChanged(key, null, value);
+            }
+        }
+
+        private _getBinderAttrValue(key:string):string {
+            if(!key) return null;
+            if(key.startsWith('layout_')){
+                let params = this.getLayoutParams();
+                if(params){
+                    let attrName = key.substring('layout_'.length);
+                    return params._attrBinder.getAttrValue(attrName);
                 }
+            }else{
+                return this._attrBinder.getAttrValue(key);
             }
         }
 

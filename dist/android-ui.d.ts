@@ -1373,6 +1373,14 @@ declare module android.util {
         static LOCALE: number;
     }
 }
+declare module java.util {
+    class Arrays {
+        static sort(a: number[], fromIndex: number, toIndex: number): void;
+        private static rangeCheck(arrayLength, fromIndex, toIndex);
+        static asList<T>(array: T[]): List<T>;
+        static equals(a: any[], a2: any[]): boolean;
+    }
+}
 declare module androidui.attr {
     class StateAttr {
         private stateSpec;
@@ -1382,9 +1390,10 @@ declare module androidui.attr {
         hasAttr(name: string): boolean;
         getAttrMap(): Map<string, string>;
         putAll(stateAttr: StateAttr): void;
+        isDefaultState(): boolean;
         isStateEquals(state: number[]): boolean;
         isStateMatch(state: number[]): boolean;
-        mergeRemovedFrom(another: StateAttr): Map<string, string>;
+        createDiffKeyAsNullValueAttrMap(another: StateAttr): Map<string, string>;
         static parseStateAttrName(stateDesc: any): Set<number>;
     }
 }
@@ -1392,17 +1401,16 @@ declare module androidui.attr {
     import View = android.view.View;
     class StateAttrList {
         private list;
-        private list_reverse;
-        private match_list;
+        private matchedAttrCache;
         private mView;
         constructor(view: View);
         private _initStyleAttributes(ele, inParseState);
         private _initStyleAttr(attr, ele, inParseState);
-        private static EmptyArray;
         getDefaultStateAttr(): StateAttr;
-        getStateAttr(state: number[]): StateAttr;
+        private getStateAttr(state);
         private optStateAttr(state);
-        getMatchedAttr(state: number[]): StateAttr;
+        getMatchedStateAttr(state: number[]): StateAttr;
+        removeAttrAllState(attrName: string): void;
     }
 }
 declare module androidui.attr {
@@ -1420,7 +1428,7 @@ declare module androidui.attr {
         constructor(host: View | ViewGroup.LayoutParams);
         addAttr(attrName: string, onAttrChange: (newValue: any) => void, stashAttrValueWhenStateChange?: () => any): void;
         onAttrChange(attrName: string, attrValue: any, context: Context): void;
-        getAttrValue(attrName: string): any;
+        getAttrValue(attrName: string): string;
         private getRefObject(ref);
         private setRefObject(obj);
         parsePaddingMarginLTRB(value: any): string[];
@@ -3413,6 +3421,7 @@ declare module android.view {
         private _parseInitedAttribute();
         private _fireInitedAttributeChange();
         private _fireStateChangeToAttribute(oldState, newState);
+        private _getBinderAttrValue(key);
         private onBindElementAttributeChanged(attributeName, oldVal, newVal);
         hasAttributeIgnoreCase(name: string): boolean;
         getAttributeIgnoreCase(name: string): string;
@@ -4369,13 +4378,6 @@ declare module android.text.style {
             getTabStop(): number;
             private mTab;
         }
-    }
-}
-declare module java.util {
-    class Arrays {
-        static sort(a: number[], fromIndex: number, toIndex: number): void;
-        private static rangeCheck(arrayLength, fromIndex, toIndex);
-        static asList<T>(array: T[]): List<T>;
     }
 }
 declare module android.text {

@@ -47,8 +47,11 @@ module androidui.attr {
             if(onAttrChangeCall) onAttrChangeCall.call(this.host, attrValue);
         }
 
-        getAttrValue(attrName:string):any {
-            if(!attrName) return null;
+        /**
+         * @returns {string} undefined if not set get callback on addAttr
+         */
+        getAttrValue(attrName:string):string {
+            if(!attrName) return undefined;
             attrName = attrName.toLowerCase();
             let getAttrCall = this.attrStashMap.get(attrName);
             if(getAttrCall){
@@ -59,7 +62,7 @@ module androidui.attr {
                 if(typeof value === "string") return value;
                 return this.setRefObject(value);
             }
-            return null;
+            return undefined;
         }
 
 

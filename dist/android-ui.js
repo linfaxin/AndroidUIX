@@ -5406,8 +5406,8 @@ var android;
                 if (valueWithUnit === undefined || valueWithUnit === null) {
                     throw Error('complexToDimensionPixelSize error: valueWithUnit is ' + valueWithUnit);
                 }
-                if (valueWithUnit === '' + (Number.parseInt(valueWithUnit)))
-                    return Number.parseInt(valueWithUnit);
+                if (valueWithUnit === '' + (Number.parseFloat(valueWithUnit)))
+                    return Number.parseFloat(valueWithUnit);
                 if (typeof valueWithUnit !== 'string')
                     valueWithUnit = valueWithUnit + "";
                 let scale = 1;
@@ -5456,7 +5456,7 @@ var android;
                 }
                 else if (valueWithUnit.endsWith(TypedValue.COMPLEX_UNIT_FRACTION)) {
                     valueWithUnit = valueWithUnit.replace(TypedValue.COMPLEX_UNIT_FRACTION, "");
-                    scale = Number.parseInt(valueWithUnit) / 100;
+                    scale = Number.parseFloat(valueWithUnit) / 100;
                     if (Number.isNaN(scale))
                         return 0;
                     valueWithUnit = baseValue;
@@ -5527,6 +5527,58 @@ var android;
         util.LayoutDirection = LayoutDirection;
     })(util = android.util || (android.util = {}));
 })(android || (android = {}));
+var java;
+(function (java) {
+    var util;
+    (function (util) {
+        class Arrays {
+            static sort(a, fromIndex, toIndex) {
+                Arrays.rangeCheck(a.length, fromIndex, toIndex);
+                var sort = new Array(toIndex - fromIndex);
+                for (let i = fromIndex; i < toIndex; i++) {
+                    sort[i - fromIndex] = a[i];
+                }
+                sort.sort((a, b) => {
+                    return a > b ? 1 : -1;
+                });
+                for (let i = fromIndex; i < toIndex; i++) {
+                    a[i] = sort[i - fromIndex];
+                }
+            }
+            static rangeCheck(arrayLength, fromIndex, toIndex) {
+                if (fromIndex > toIndex) {
+                    throw new Error("ArrayIndexOutOfBoundsException:fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+                }
+                if (fromIndex < 0) {
+                    throw new Error('ArrayIndexOutOfBoundsException:' + fromIndex);
+                }
+                if (toIndex > arrayLength) {
+                    throw new Error('ArrayIndexOutOfBoundsException:' + toIndex);
+                }
+            }
+            static asList(array) {
+                let list = new util.ArrayList();
+                list.array.push(...array);
+                return list;
+            }
+            static equals(a, a2) {
+                if (a == a2)
+                    return true;
+                if (a == null || a2 == null)
+                    return false;
+                let length = a.length;
+                if (a2.length != length)
+                    return false;
+                for (let i = 0; i < length; i++) {
+                    if (a[i] != a2[i])
+                        return false;
+                }
+                return true;
+            }
+        }
+        util.Arrays = Arrays;
+    })(util = java.util || (java.util = {}));
+})(java || (java = {}));
 var androidui;
 (function (androidui) {
     var attr;
@@ -5534,7 +5586,7 @@ var androidui;
         class StateAttr {
             constructor(state) {
                 this.attributes = new Map();
-                this.stateSpec = state.sort();
+                this.stateSpec = state.concat().sort();
             }
             setAttr(name, value) {
                 this.attributes.set(name, value);
@@ -5550,15 +5602,18 @@ var androidui;
                     this.attributes.set(key, value);
                 }
             }
+            isDefaultState() {
+                return this.stateSpec.length === 0;
+            }
             isStateEquals(state) {
                 if (!state)
                     return false;
-                return this.stateSpec + '' === state.sort() + '';
+                return java.util.Arrays.equals(this.stateSpec, state.sort());
             }
             isStateMatch(state) {
                 return android.util.StateSet.stateSetMatches(this.stateSpec, state);
             }
-            mergeRemovedFrom(another) {
+            createDiffKeyAsNullValueAttrMap(another) {
                 if (!another)
                     return this.attributes;
                 let removed = new Map(another.attributes);
@@ -5599,10 +5654,10 @@ var androidui;
     (function (attr_1) {
         class StateAttrList {
             constructor(view) {
-                this.list = new Array(0);
-                this.match_list = new Array(0);
+                this.list = [];
+                this.matchedAttrCache = [];
                 this.mView = view;
-                this.list.push(new attr_1.StateAttr([]));
+                this.optStateAttr([]);
                 this._initStyleAttributes(view.bindElement, []);
             }
             _initStyleAttributes(ele, inParseState) {
@@ -5626,7 +5681,6 @@ var androidui;
                         this._initStyleAttr(attr, ele, inParseState);
                     }
                 });
-                this.list_reverse = this.list.concat().reverse();
             }
             _initStyleAttr(attr, ele, inParseState) {
                 let attrName = attr.name;
@@ -5638,8 +5692,10 @@ var androidui;
                 let attrValue = attr.value;
                 if (attrName.startsWith('state_')) {
                     let newStateSet = attr_1.StateAttr.parseStateAttrName(attrName);
-                    inParseState = inParseState.concat(Array.from(newStateSet));
-                    inParseState = Array.from(new Set(inParseState)).sort();
+                    for (let state of inParseState) {
+                        newStateSet.add(state);
+                    }
+                    inParseState = Array.from(newStateSet).sort();
                 }
                 let _stateAttr = this.optStateAttr(inParseState);
                 if (attrName.startsWith('state_') || attrName === 'style') {
@@ -5663,7 +5719,10 @@ var androidui;
                 }
             }
             getDefaultStateAttr() {
-                return this.getStateAttr(StateAttrList.EmptyArray);
+                for (let stateAttr of this.list) {
+                    if (stateAttr.isDefaultState())
+                        return stateAttr;
+                }
             }
             getStateAttr(state) {
                 for (let stateAttr of this.list) {
@@ -5675,25 +5734,37 @@ var androidui;
                 let stateAttr = this.getStateAttr(state);
                 if (!stateAttr) {
                     stateAttr = new attr_1.StateAttr(state);
-                    this.list.splice(0, 0, stateAttr);
+                    this.list.push(stateAttr);
                 }
                 return stateAttr;
             }
-            getMatchedAttr(state) {
-                for (let stateAttr of this.match_list) {
+            getMatchedStateAttr(state) {
+                if (state == null)
+                    return null;
+                for (let stateAttr of this.matchedAttrCache) {
                     if (stateAttr.isStateEquals(state))
                         return stateAttr;
                 }
                 let matchedAttr = new attr_1.StateAttr(state);
-                for (let stateAttr of this.list_reverse) {
-                    if (stateAttr.isStateMatch(state))
+                for (let stateAttr of this.list) {
+                    if (stateAttr.isDefaultState())
+                        continue;
+                    if (stateAttr.isStateMatch(state)) {
                         matchedAttr.putAll(stateAttr);
+                    }
                 }
-                this.match_list.push(matchedAttr);
+                this.matchedAttrCache.push(matchedAttr);
                 return matchedAttr;
             }
+            removeAttrAllState(attrName) {
+                for (let stateAttr of this.list) {
+                    stateAttr.getAttrMap().delete(attrName);
+                }
+                for (let stateAttr of this.matchedAttrCache) {
+                    stateAttr.getAttrMap().delete(attrName);
+                }
+            }
         }
-        StateAttrList.EmptyArray = [];
         attr_1.StateAttrList = StateAttrList;
     })(attr = androidui.attr || (androidui.attr = {}));
 })(androidui || (androidui = {}));
@@ -5735,7 +5806,7 @@ var androidui;
             }
             getAttrValue(attrName) {
                 if (!attrName)
-                    return null;
+                    return undefined;
                 attrName = attrName.toLowerCase();
                 let getAttrCall = this.attrStashMap.get(attrName);
                 if (getAttrCall) {
@@ -5750,7 +5821,7 @@ var androidui;
                         return value;
                     return this.setRefObject(value);
                 }
-                return null;
+                return undefined;
             }
             getRefObject(ref) {
                 if (ref && ref.startsWith('@ref/')) {
@@ -10851,7 +10922,6 @@ var android;
         var RoundRectDrawable = android.graphics.drawable.RoundRectDrawable;
         var PixelFormat = android.graphics.PixelFormat;
         var Matrix = android.graphics.Matrix;
-        var Color = android.graphics.Color;
         var Paint = android.graphics.Paint;
         var StringBuilder = java.lang.StringBuilder;
         var JavaObject = java.lang.JavaObject;
@@ -10965,43 +11035,54 @@ var android;
                 a.addAttr('background', (value) => {
                     this.setBackground(a.parseDrawable(value));
                 }, () => {
-                    if (this.mBackground instanceof ColorDrawable) {
-                        return Color.toRGBAFunc(this.mBackground.getColor());
-                    }
                     return this.mBackground;
                 });
                 a.addAttr('padding', (value) => {
+                    if (value == null)
+                        value = 0;
                     let [left, top, right, bottom] = a.parsePaddingMarginLTRB(value);
                     this._setPaddingWithUnit(left, top, right, bottom);
                 }, () => {
                     return this.mPaddingTop + ' ' + this.mPaddingRight + ' ' + this.mPaddingBottom + ' ' + this.mPaddingLeft;
                 }),
                     a.addAttr('paddingLeft', (value) => {
+                        if (value == null)
+                            value = 0;
                         this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
                     }, () => {
                         return this.mPaddingLeft;
                     }),
                     a.addAttr('paddingStart', (value) => {
+                        if (value == null)
+                            value = 0;
                         this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
                     }, () => {
                         return this.mPaddingLeft;
                     }),
                     a.addAttr('paddingTop', (value) => {
+                        if (value == null)
+                            value = 0;
                         this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
                     }, () => {
                         return this.mPaddingTop;
                     }),
                     a.addAttr('paddingRight', (value) => {
+                        if (value == null)
+                            value = 0;
                         this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
                     }, () => {
                         return this.mPaddingRight;
                     }),
                     a.addAttr('paddingEnd', (value) => {
+                        if (value == null)
+                            value = 0;
                         this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
                     }, () => {
                         return this.mPaddingRight;
                     }),
                     a.addAttr('paddingBottom', (value) => {
+                        if (value == null)
+                            value = 0;
                         this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
                     }, () => {
                         return this.mPaddingBottom;
@@ -11010,39 +11091,59 @@ var android;
                         value = Number.parseInt(value);
                         if (Number.isInteger(value))
                             this.scrollTo(value, this.mScrollY);
+                    }, () => {
+                        return this.getScrollX();
                     }),
                     a.addAttr('scrollY', (value) => {
                         value = Number.parseInt(value);
                         if (Number.isInteger(value))
                             this.scrollTo(this.mScrollX, value);
+                    }, () => {
+                        return this.getScrollY();
                     }),
                     a.addAttr('alpha', (value) => {
-                        this.setAlpha(a.parseNumber(value));
+                        this.setAlpha(a.parseNumber(value, this.getAlpha()));
+                    }, () => {
+                        return this.getAlpha();
                     }),
                     a.addAttr('transformPivotX', (value) => {
-                        this.setPivotX(a.parseNumber(value, 0));
+                        this.setPivotX(a.parseNumber(value, this.getPivotX()));
+                    }, () => {
+                        return this.getPivotX();
                     }),
                     a.addAttr('transformPivotY', (value) => {
-                        this.setPivotY(a.parseNumber(value, 0));
+                        this.setPivotY(a.parseNumber(value, this.getPivotY()));
+                    }, () => {
+                        return this.getPivotY();
                     }),
                     a.addAttr('translationX', (value) => {
-                        this.setTranslationX(a.parseNumber(value, 0));
+                        this.setTranslationX(a.parseNumber(value, this.getTranslationX()));
+                    }, () => {
+                        return this.getTranslationX();
                     }),
                     a.addAttr('translationY', (value) => {
-                        this.setTranslationY(a.parseNumber(value, 0));
+                        this.setTranslationY(a.parseNumber(value, this.getTranslationY()));
+                    }, () => {
+                        return this.getTranslationY();
                     }),
                     a.addAttr('rotation', (value) => {
-                        this.setRotation(a.parseNumber(value, 0));
+                        this.setRotation(a.parseNumber(value, this.getRotation()));
+                    }, () => {
+                        return this.getRotation();
                     }),
                     a.addAttr('rotationX', (value) => {
                     }),
                     a.addAttr('rotationY', (value) => {
                     }),
                     a.addAttr('scaleX', (value) => {
-                        this.setScaleX(a.parseNumber(value, 1));
+                        this.setScaleX(a.parseNumber(value, this.getScaleX()));
+                    }, () => {
+                        return this.getScaleX();
                     }),
                     a.addAttr('scaleY', (value) => {
-                        this.setScaleY(a.parseNumber(value, 1));
+                        this.setScaleY(a.parseNumber(value, this.getScaleY()));
+                    }, () => {
+                        return this.getScaleY();
                     }),
                     a.addAttr('tag', (value) => {
                         this.setTag(value);
@@ -11054,21 +11155,29 @@ var android;
                         if (a.parseBoolean(value, false)) {
                             this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
                         }
+                    }, () => {
+                        return this.isFocusable();
                     }),
                     a.addAttr('focusableInTouchMode', (value) => {
                         if (a.parseBoolean(value, false)) {
                             this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE, View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
                         }
+                    }, () => {
+                        return this.isFocusableInTouchMode();
                     }),
                     a.addAttr('clickable', (value) => {
                         if (a.parseBoolean(value, false)) {
                             this.setFlags(View.CLICKABLE, View.CLICKABLE);
                         }
+                    }, () => {
+                        return this.isClickable();
                     }),
                     a.addAttr('longClickable', (value) => {
                         if (a.parseBoolean(value, false)) {
                             this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
                         }
+                    }, () => {
+                        return this.isLongClickable();
                     }),
                     a.addAttr('saveEnabled', (value) => {
                         if (a.parseBoolean(value, false)) {
@@ -11086,6 +11195,8 @@ var android;
                             this.setVisibility(View.INVISIBLE);
                         else if (value === 'visible')
                             this.setVisibility(View.VISIBLE);
+                    }, () => {
+                        return this.getVisibility();
                     }),
                     a.addAttr('scrollbars', (value) => {
                         if (value === 'none') {
@@ -14707,40 +14818,32 @@ var android;
             _fireStateChangeToAttribute(oldState, newState) {
                 if (!this._stateAttrList)
                     return;
-                if (oldState + '' === newState + '')
+                if (java.util.Arrays.equals(oldState, newState))
                     return;
-                let oldMatchedAttr = oldState ? this._stateAttrList.getMatchedAttr(oldState) : null;
-                let matchedAttr = this._stateAttrList.getMatchedAttr(newState);
-                let attrMap = matchedAttr.mergeRemovedFrom(oldMatchedAttr);
-                for (let [key, value] of attrMap.entries()) {
-                    if (oldMatchedAttr) {
-                        let oldValue;
-                        if (key.startsWith('layout_')) {
-                            let params = this.getLayoutParams();
-                            if (params) {
-                                let attrName = key.substring('layout_'.length);
-                                oldValue = params._attrBinder.getAttrValue(attrName);
-                            }
-                        }
-                        else {
-                            oldValue = this._attrBinder.getAttrValue(key);
-                        }
-                        if (oldValue != null) {
-                            oldMatchedAttr.setAttr(key, oldValue);
-                        }
+                let oldMatchedAttr = this._stateAttrList.getMatchedStateAttr(oldState);
+                let matchedAttr = this._stateAttrList.getMatchedStateAttr(newState);
+                for (let [key, value] of matchedAttr.getAttrMap().entries()) {
+                    let attrValue = this._getBinderAttrValue(key);
+                    if (oldMatchedAttr && attrValue != null) {
+                        oldMatchedAttr.setAttr(key, attrValue);
                     }
-                    key = 'android:' + key;
-                    if ((value === null || value === undefined)) {
-                        if (this.bindElement.hasAttribute(key)) {
-                            this.bindElement.removeAttribute(key);
-                        }
-                        else {
-                            this.onBindElementAttributeChanged(key, null, null);
-                        }
+                    if (value == attrValue)
+                        continue;
+                    this.onBindElementAttributeChanged(key, null, value);
+                }
+            }
+            _getBinderAttrValue(key) {
+                if (!key)
+                    return null;
+                if (key.startsWith('layout_')) {
+                    let params = this.getLayoutParams();
+                    if (params) {
+                        let attrName = key.substring('layout_'.length);
+                        return params._attrBinder.getAttrValue(attrName);
                     }
-                    else {
-                        this.bindElement.setAttribute(key, value);
-                    }
+                }
+                else {
+                    return this._attrBinder.getAttrValue(key);
                 }
             }
             onBindElementAttributeChanged(attributeName, oldVal, newVal) {
@@ -20478,44 +20581,6 @@ var android;
         })(style = text.style || (text.style = {}));
     })(text = android.text || (android.text = {}));
 })(android || (android = {}));
-var java;
-(function (java) {
-    var util;
-    (function (util) {
-        class Arrays {
-            static sort(a, fromIndex, toIndex) {
-                Arrays.rangeCheck(a.length, fromIndex, toIndex);
-                var sort = new Array(toIndex - fromIndex);
-                for (let i = fromIndex; i < toIndex; i++) {
-                    sort[i - fromIndex] = a[i];
-                }
-                sort.sort((a, b) => {
-                    return a > b ? 1 : -1;
-                });
-                for (let i = fromIndex; i < toIndex; i++) {
-                    a[i] = sort[i - fromIndex];
-                }
-            }
-            static rangeCheck(arrayLength, fromIndex, toIndex) {
-                if (fromIndex > toIndex) {
-                    throw new Error("ArrayIndexOutOfBoundsException:fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
-                }
-                if (fromIndex < 0) {
-                    throw new Error('ArrayIndexOutOfBoundsException:' + fromIndex);
-                }
-                if (toIndex > arrayLength) {
-                    throw new Error('ArrayIndexOutOfBoundsException:' + toIndex);
-                }
-            }
-            static asList(array) {
-                let list = new util.ArrayList();
-                list.array.push(...array);
-                return list;
-            }
-        }
-        util.Arrays = Arrays;
-    })(util = java.util || (java.util = {}));
-})(java || (java = {}));
 var android;
 (function (android) {
     var text;
@@ -30758,6 +30823,8 @@ var android;
                 const a = this._attrBinder;
                 a.addAttr('textColorHighlight', (value) => {
                     this.setHighlightColor(a.parseColor(value, this.mHighlightColor));
+                }, () => {
+                    return this.getHighlightColor();
                 });
                 a.addAttr('textColor', (value) => {
                     let color = a.parseColorList(value);
@@ -30784,41 +30851,59 @@ var android;
                 });
                 a.addAttr('shadowColor', (value) => {
                     this.setShadowLayer(this.mShadowRadius, this.mShadowDx, this.mShadowDy, a.parseColor(value, this.mTextPaint.shadowColor));
+                }, () => {
+                    return this.getShadowColor();
                 });
                 a.addAttr('shadowDx', (value) => {
                     let dx = a.parseNumber(value, this.mShadowDx);
                     this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
+                }, () => {
+                    return this.getShadowDx();
                 });
                 a.addAttr('shadowDy', (value) => {
                     let dy = a.parseNumber(value, this.mShadowDy);
                     this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
+                }, () => {
+                    return this.getShadowDy();
                 });
                 a.addAttr('shadowRadius', (value) => {
                     let radius = a.parseNumber(value, this.mShadowRadius);
                     this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
+                }, () => {
+                    return this.getShadowRadius();
                 });
                 a.addAttr('drawableLeft', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+                }, () => {
+                    return this.getCompoundDrawables()[0];
                 });
                 a.addAttr('drawableTop', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
+                }, () => {
+                    return this.getCompoundDrawables()[1];
                 });
                 a.addAttr('drawableRight', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+                }, () => {
+                    return this.getCompoundDrawables()[2];
                 });
                 a.addAttr('drawableBottom', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
+                }, () => {
+                    return this.getCompoundDrawables()[3];
                 });
                 a.addAttr('drawablePadding', (value) => {
                     this.setCompoundDrawablePadding(a.parseNumber(value));
+                }, () => {
+                    return this.getCompoundDrawablePadding();
                 });
                 a.addAttr('maxLines', (value) => {
                     value = Number.parseInt(value);
@@ -30910,6 +30995,8 @@ var android;
                 });
                 a.addAttr('text', (value) => {
                     this.setText(a.parseString(value));
+                }, () => {
+                    return this.getText();
                 });
                 a.addAttr('scrollHorizontally', (value) => {
                     this.setHorizontallyScrolling(a.parseBoolean(value, false));
@@ -30932,6 +31019,8 @@ var android;
                 });
                 a.addAttr('enabled', (value) => {
                     this.setEnabled(a.parseBoolean(value, this.isEnabled()));
+                }, () => {
+                    return this.isEnabled();
                 });
                 a.addAttr('lineSpacingExtra', (value) => {
                     this.setLineSpacing(a.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);
