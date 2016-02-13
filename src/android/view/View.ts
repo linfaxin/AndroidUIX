@@ -6470,7 +6470,7 @@ module android.view {
                 let attrValue = this._getBinderAttrValue(key);
 
                 //set the current value to oldStateAttr, so if state change back, current value will restore
-                if(oldMatchedAttr && attrValue!=null) {
+                if(oldMatchedAttr) {
                     oldMatchedAttr.setAttr(key, attrValue);
                 }
 

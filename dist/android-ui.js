@@ -14824,7 +14824,7 @@ var android;
                 let matchedAttr = this._stateAttrList.getMatchedStateAttr(newState);
                 for (let [key, value] of matchedAttr.getAttrMap().entries()) {
                     let attrValue = this._getBinderAttrValue(key);
-                    if (oldMatchedAttr && attrValue != null) {
+                    if (oldMatchedAttr) {
                         oldMatchedAttr.setAttr(key, attrValue);
                     }
                     if (value == attrValue)
