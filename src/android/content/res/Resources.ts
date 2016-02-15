@@ -86,6 +86,7 @@ module android.content.res{
                 return android.R.drawable[refString] || android.R.image[refString];
 
             }else if(Resources.buildDrawableFinder && refString.startsWith('@drawable/')){
+                refString = refString.substring('@drawable/'.length);
                 return Resources.buildDrawableFinder(refString);
 
             }else if(refString.startsWith('@')){

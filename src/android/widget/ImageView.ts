@@ -156,7 +156,7 @@ export class ImageView extends View {
             return this.mScaleType.toString();
         });
         a.addAttr('drawableAlpha', (value)=>{
-            this.setAlpha(a.parseNumber(value, this.mAlpha));
+            this.setImageAlpha(a.parseNumber(value, this.mAlpha));
         }, ()=>{
             return this.mAlpha;
         });
@@ -1017,17 +1017,6 @@ export class ImageView extends View {
      * @see #getImageAlpha()
      */
     setImageAlpha(alpha:number):void  {
-        this.setAlpha(alpha);
-    }
-
-    /**
-     * Sets the alpha value that should be applied to the image.
-     *
-     * @param alpha the alpha value that should be applied to the image
-     *
-     * @deprecated use #setImageAlpha(int) instead
-     */
-    setAlpha(alpha:number):void  {
         // keep it legal
         alpha &= 0xFF;
         if (this.mAlpha != alpha) {
@@ -1037,6 +1026,24 @@ export class ImageView extends View {
             this.invalidate();
         }
     }
+
+    ///**
+    // * Sets the alpha value that should be applied to the image.
+    // *
+    // * @param alpha the alpha value that should be applied to the image
+    // *
+    // * @deprecated use #setImageAlpha(int) instead
+    // */
+    //setAlpha(alpha:number):void  {
+    //    // keep it legal
+    //    alpha &= 0xFF;
+    //    if (this.mAlpha != alpha) {
+    //        this.mAlpha = alpha;
+    //        this.mColorMod = true;
+    //        this.applyColorMod();
+    //        this.invalidate();
+    //    }
+    //}
 
     private applyColorMod():void  {
         // re-applied if the Drawable is changed.

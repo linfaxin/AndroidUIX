@@ -4330,6 +4330,7 @@ var android;
                         return android.R.drawable[refString] || android.R.image[refString];
                     }
                     else if (Resources.buildDrawableFinder && refString.startsWith('@drawable/')) {
+                        refString = refString.substring('@drawable/'.length);
                         return Resources.buildDrawableFinder(refString);
                     }
                     else if (refString.startsWith('@')) {
@@ -42272,7 +42273,7 @@ var android;
                     return this.mScaleType.toString();
                 });
                 a.addAttr('drawableAlpha', (value) => {
-                    this.setAlpha(a.parseNumber(value, this.mAlpha));
+                    this.setImageAlpha(a.parseNumber(value, this.mAlpha));
                 }, () => {
                     return this.mAlpha;
                 });
@@ -42711,9 +42712,6 @@ var android;
                 return this.mAlpha;
             }
             setImageAlpha(alpha) {
-                this.setAlpha(alpha);
-            }
-            setAlpha(alpha) {
                 alpha &= 0xFF;
                 if (this.mAlpha != alpha) {
                     this.mAlpha = alpha;

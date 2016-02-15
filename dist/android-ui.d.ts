@@ -7803,7 +7803,6 @@ declare module android.widget {
         getBaselineAlignBottom(): boolean;
         getImageAlpha(): number;
         setImageAlpha(alpha: number): void;
-        setAlpha(alpha: number): void;
         private applyColorMod();
         setVisibility(visibility: number): void;
         protected onAttachedToWindow(): void;
