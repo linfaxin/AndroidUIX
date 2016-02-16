@@ -25,8 +25,12 @@ Android开发者可以从[这篇文章](README_for_Androids_cn.md)快速起步�
 2. Android Chrome:40-50fps
 3. Android WebView(4.4):20-30fps
 
-你也可以在自己的设备上测试[Sample App](http://linfaxin.com/AndroidUI-WebApp/sample/main.html)。
+你也可以在自己的设备上测试Sample。
 
+### Sample
+
+* [Sample App](http://linfaxin.com/AndroidUI-WebApp/sample/main.html)
+* [干货WebApp](http://linfaxin.com/GankWebApp)
 
 ### 支持
 
