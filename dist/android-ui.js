@@ -51794,6 +51794,12 @@ var android;
                     }
                 };
                 this.bindElement.appendChild(this.iFrameElement);
+                this.bindElement.style['webkitOverflowScrolling'] = this.bindElement.style['overflowScrolling'] = 'touch';
+                this.bindElement.style.overflowY = 'scroll';
+            }
+            onTouchEvent(event) {
+                event[android.view.ViewRootImpl.ContinueEventToDom] = true;
+                return super.onTouchEvent(event) || true;
             }
             loadUrl(url) {
                 if (this.mClient)

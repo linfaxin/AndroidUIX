@@ -9737,6 +9737,7 @@ declare module android.webkit {
         private mClient;
         constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initIFrameElement();
+        onTouchEvent(event: android.view.MotionEvent): boolean;
         loadUrl(url: string): void;
         loadData(data: string): void;
         evaluateJavascript(script: string): any;

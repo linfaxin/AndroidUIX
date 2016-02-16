@@ -32,7 +32,14 @@ module android.webkit {
                 }
             };
             this.bindElement.appendChild(this.iFrameElement);
+            this.bindElement.style['webkitOverflowScrolling'] = this.bindElement.style['overflowScrolling'] = 'touch';
+            this.bindElement.style.overflowY = 'scroll';
 
+        }
+
+        onTouchEvent(event:android.view.MotionEvent):boolean {
+            event[android.view.ViewRootImpl.ContinueEventToDom] = true;
+            return super.onTouchEvent(event) || true;
         }
 
         /**
