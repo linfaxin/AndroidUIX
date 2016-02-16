@@ -1,6 +1,3 @@
-declare module androidui {
-    var sdk_version_info: string;
-}
 declare module java.util {
     interface List<T> {
         size(): number;

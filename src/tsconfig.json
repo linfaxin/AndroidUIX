@@ -7,7 +7,6 @@
     "sourceMap": false
   },
   "files": [
-    "sdk_version",
     "pack_enter"
   ],
   "exclude": [

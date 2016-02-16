@@ -1,10 +1,33 @@
 {
-  "repository": {},
-  "license": "UNLICENSED",
-
+  "name": "androidui-webapp",
+  "version": "0.4.2",
+  "description": "Framework to make high-performance SPA/WebApp. Render with web canvas.",
+  "keywords": [
+    "webapp",
+    "app",
+    "canvas",
+    "spa"
+  ],
+  "author": "LinFaXin",
+  "maintainers": [
+    "LinFaXin <linlinfaxin@163.com> (http://linfaxin.com)"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linfaxin/AndroidUI-WebApp/tree/master/dist"
+  },
+  "bugs": {
+    "url": "https://github.com/linfaxin/AndroidUI-WebApp/issues"
+  },
   "devDependencies": {
     "jsdom": "^7.2.2",
     "babel-cli": "^6.4.5",
     "babel-preset-es2015": "^6.3.13"
+  },
+  "scripts": {
+    "build" : "npm install && npm run buildSrc && npm run buildSample",
+    "buildSrc" : "cd src && node build_sdk_res.js && ../buildtool/typescript/bin/tsc -p ./ && babel ../dist/android-ui.js -o ../dist/android-ui.es5.js -s --presets=es2015",
+    "buildSample" : "cd sample && node build_res.js sample.app ../../../dist/android-ui.d.ts && ../buildtool/typescript/bin/tsc -p ./ && babel build/app.js -o build/app.es5.js -s --presets=es2015"
   }
 }
