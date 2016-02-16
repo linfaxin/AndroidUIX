@@ -16,8 +16,9 @@ module android.view {
 
     interface TouchEvent extends UIEvent {
         touches: TouchList;
-        targetTouches: TouchList;
         changedTouches: TouchList;
+        type: string;
+        //targetTouches: TouchList;
         //rotation: number;
         //scale: number;
     }
@@ -27,7 +28,8 @@ module android.view {
         item: (index:number) => Touch;
     }
     interface Touch {
-        identifier: number;
+        //identifier: number;
+        id_fix:number;
         target: EventTarget;
         screenX: number;
         screenY: number;
@@ -39,6 +41,46 @@ module android.view {
         //add as history
         mEventTime?:number;
     }
+
+
+    const ID_FixID_Cache:Array<number> = [];
+
+    /**
+     * identifier on iOS safari was not same as other platform
+     * http://stackoverflow.com/questions/25008690/javascript-ipad-touch-event-identifier-is-continually-incrementing
+     */
+    function fixEventId(e:TouchEvent){
+        for (let i = 0, length = e.changedTouches.length; i < length; i++) {
+            fixTouchId(e.changedTouches[i]);
+        }
+        for (let i = 0, length = e.touches.length; i < length; i++) {
+            fixTouchId(e.touches[i]);
+        }
+        if(e.type == 'touchend' || e.type == 'touchcancel'){
+            ID_FixID_Cache[e.changedTouches[0].id_fix] = null;
+        }
+    }
+    function fixTouchId(touch:Touch){
+        let originID = touch['identifier'];
+        if(originID <= 10){
+            //no need fix
+            touch.id_fix = originID;
+            ID_FixID_Cache[originID] = originID;
+            return;
+        }
+        touch.id_fix = ID_FixID_Cache.indexOf(originID);
+        if(touch.id_fix>=0) return;
+
+        for(let i = 0, length=ID_FixID_Cache.length + 1; i<length; i++){
+            if(ID_FixID_Cache[i] == null){
+                ID_FixID_Cache[i] = originID;
+                touch.id_fix = i;
+                return;
+            }
+        }
+
+    }
+
 
     export class MotionEvent {
 
@@ -110,7 +152,8 @@ module android.view {
             newEv.mDownTime = downTime;
             newEv.mEventTime = eventTime;
             let touch:Touch = {
-                identifier: 0,
+                //identifier: 0,
+                id_fix: 0,
                 target: null,
                 screenX: x,
                 screenY: y,
@@ -128,15 +171,17 @@ module android.view {
         initWithTouch(event, baseAction:number, windowBound = new Rect() ) {
             //this._event = event;
             let e = <TouchEvent>event;
+            fixEventId(e);
+
             let now = android.os.SystemClock.uptimeMillis();
             //get actionIndex
             let action = baseAction;
             let actionIndex = -1;
             let activeTouch = e.changedTouches[0];
             this._activeTouch = activeTouch;
-            let activePointerId = activeTouch.identifier;
+            let activePointerId = activeTouch.id_fix;
             for (let i = 0, length = e.touches.length; i < length; i++) {
-                if (e.touches[i].identifier === activePointerId) {
+                if (e.touches[i].id_fix === activePointerId) {
                     actionIndex = i;
                     MotionEvent.IdIndexCache.set(activePointerId, i);//cache the index, action_up will use
                     break;
@@ -239,7 +284,8 @@ module android.view {
             this.mAction = MotionEvent.ACTION_SCROLL;
             this.mActivePointerId = 0;
             let touch:Touch = {
-                identifier: 0,
+                //identifier: 0,
+                id_fix: 0,
                 target: null,
                 screenX: e.screenX,
                 screenY: e.screenY,
@@ -316,13 +362,13 @@ module android.view {
         }
 
         getPointerId(pointerIndex:number):number {
-            return this.mTouchingPointers[pointerIndex].identifier;
+            return this.mTouchingPointers[pointerIndex].id_fix;
         }
 
 
         findPointerIndex(pointerId:number):number {
             for (let i = 0, length = this.mTouchingPointers.length; i < length; i++) {
-                if (this.mTouchingPointers[i].identifier === pointerId) {
+                if (this.mTouchingPointers[i].id_fix === pointerId) {
                     return i;
                 }
             }
@@ -346,13 +392,13 @@ module android.view {
 
         getHistoricalX(pointerIndex:number, pos:number):number {
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
+            let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].id_fix);
             return (moveHistory[pos].pageX) * density + this.mXOffset;
         }
 
         getHistoricalY(pointerIndex:number, pos:number):number {
             let density = android.content.res.Resources.getDisplayMetrics().density;
-            let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].identifier);
+            let moveHistory = MotionEvent.TouchMoveRecord.get(this.mTouchingPointers[pointerIndex].id_fix);
             return (moveHistory[pos].pageY) * density + this.mYOffset;
         }
 
@@ -479,7 +525,7 @@ module android.view {
 
             ev.mAction = newAction;
             ev.mTouchingPointers = this.mTouchingPointers.filter((item:Touch)=> {
-                return newPointerIds.indexOf(item.identifier) >= 0;
+                return newPointerIds.indexOf(item.id_fix) >= 0;
             });
 
             return ev;
