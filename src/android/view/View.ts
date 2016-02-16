@@ -1395,6 +1395,7 @@ module android.view {
         private updateMatrix():void  {
             const info:View.TransformationInfo = this.mTransformationInfo;
             if (info == null) {
+                this._syncMatrixToElement();
                 return;
             }
             if (info.mMatrixDirty) {
@@ -1430,6 +1431,7 @@ module android.view {
                 info.mMatrixIsIdentity = info.mMatrix.isIdentity();
                 info.mInverseMatrixDirty = true;
             }
+            this._syncMatrixToElement();
         }
 
         ///**
@@ -3870,9 +3872,9 @@ module android.view {
                 if (sizeChanged) {
                     if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
                         // A change in dimension means an auto-centered pivot point changes, too
-                        //if (mTransformationInfo != null) {
-                        //    mTransformationInfo.mMatrixDirty = true;
-                        //}
+                        if (this.mTransformationInfo != null) {
+                            this.mTransformationInfo.mMatrixDirty = true;
+                        }
                     }
                     this.sizeChange(newWidth, newHeight, oldWidth, oldHeight);
                 }
@@ -6355,13 +6357,13 @@ module android.view {
                 const density = this.getResources().getDisplayMetrics().density;
                 let bind = this.bindElement;
 
-                //bind.style.transform = bind.style.webkitTransform = `translate3d(${left}px, ${top}px, 0px)`;
-                //bind.style.transform = bind.style.webkitTransform = `translate(${left/density}px, ${top/density}px)`;
                 bind.style.left = (left-pScrollX)/density + 'px';
                 bind.style.top = (top-pScrollY)/density + 'px';
 
                 bind.style.width = width / density + 'px';
                 bind.style.height = height / density + 'px';
+
+                this._syncMatrixToElement();
             }
 
             //this._syncScrollToElement();
@@ -6371,6 +6373,19 @@ module android.view {
                 for (var i = 0 ,  count = group.getChildCount(); i<count; i++){
                     group.getChildAt(i)._syncBoundAndScrollToElement();
                 }
+            }
+        }
+
+        private static TempMatrixValue = new Array<number>(9);
+        private _lastSyncTransform:string;
+        protected _syncMatrixToElement(){
+            let matrix = this.getMatrix();
+            let v = View.TempMatrixValue;
+            matrix.getValues(v);
+
+            let transfrom = `matrix(${v[Matrix.MSCALE_X]}, ${-v[Matrix.MSKEW_X]}, ${-v[Matrix.MSKEW_Y]}, ${v[Matrix.MSCALE_Y]}, ${v[Matrix.MTRANS_X]}, ${v[Matrix.MTRANS_Y]})`;
+            if(this._lastSyncTransform != transfrom){
+                this._lastSyncTransform = this.bindElement.style.transform = this.bindElement.style.webkitTransform = transfrom;
             }
         }
 

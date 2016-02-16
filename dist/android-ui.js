@@ -2,9 +2,9 @@ var androidui;
 (function (androidui) {
     androidui.sdk_version_info = `
 AndroidUI4Web: https://github.com/linfaxin/AndroidUI-WebApp
-version: 0.4.0
+version: 0.4.1
 release type: Pre-release
-release date: 2016-02-12
+release date: 2016-02-16
 `;
 })(androidui || (androidui = {}));
 var java;
@@ -11532,6 +11532,7 @@ var android;
             updateMatrix() {
                 const info = this.mTransformationInfo;
                 if (info == null) {
+                    this._syncMatrixToElement();
                     return;
                 }
                 if (info.mMatrixDirty) {
@@ -11551,6 +11552,7 @@ var android;
                     info.mMatrixIsIdentity = info.mMatrix.isIdentity();
                     info.mInverseMatrixDirty = true;
                 }
+                this._syncMatrixToElement();
             }
             getRotation() {
                 return this.mTransformationInfo != null ? this.mTransformationInfo.mRotation : 0;
@@ -13011,6 +13013,9 @@ var android;
                     this.mPrivateFlags |= View.PFLAG_HAS_BOUNDS;
                     if (sizeChanged) {
                         if ((this.mPrivateFlags & View.PFLAG_PIVOT_EXPLICITLY_SET) == 0) {
+                            if (this.mTransformationInfo != null) {
+                                this.mTransformationInfo.mMatrixDirty = true;
+                            }
                         }
                         this.sizeChange(newWidth, newHeight, oldWidth, oldHeight);
                     }
@@ -14775,12 +14780,22 @@ var android;
                     bind.style.top = (top - pScrollY) / density + 'px';
                     bind.style.width = width / density + 'px';
                     bind.style.height = height / density + 'px';
+                    this._syncMatrixToElement();
                 }
                 if (this instanceof view_2.ViewGroup) {
                     const group = this;
                     for (var i = 0, count = group.getChildCount(); i < count; i++) {
                         group.getChildAt(i)._syncBoundAndScrollToElement();
                     }
+                }
+            }
+            _syncMatrixToElement() {
+                let matrix = this.getMatrix();
+                let v = View.TempMatrixValue;
+                matrix.getValues(v);
+                let transfrom = `matrix(${v[Matrix.MSCALE_X]}, ${-v[Matrix.MSKEW_X]}, ${-v[Matrix.MSKEW_Y]}, ${v[Matrix.MSCALE_Y]}, ${v[Matrix.MTRANS_X]}, ${v[Matrix.MTRANS_Y]})`;
+                if (this._lastSyncTransform != transfrom) {
+                    this._lastSyncTransform = this.bindElement.style.transform = this.bindElement.style.webkitTransform = transfrom;
                 }
             }
             syncVisibleToElement() {
@@ -15106,6 +15121,7 @@ var android;
         View.TEXT_ALIGNMENT_DEFAULT = View.TEXT_ALIGNMENT_GRAVITY;
         View.TEXT_ALIGNMENT_RESOLVED_DEFAULT = View.TEXT_ALIGNMENT_GRAVITY;
         View.AndroidViewProperty = 'AndroidView';
+        View.TempMatrixValue = new Array(9);
         view_2.View = View;
         (function (View) {
             class TransformationInfo {

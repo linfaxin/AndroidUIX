@@ -3415,6 +3415,9 @@ declare module android.view {
         private _lastSyncScrollX;
         private _lastSyncScrollY;
         protected _syncBoundAndScrollToElement(): void;
+        private static TempMatrixValue;
+        private _lastSyncTransform;
+        protected _syncMatrixToElement(): void;
         syncVisibleToElement(): void;
         syncDrawStateToElement(): void;
         private _initAttrObserver();
