@@ -4295,8 +4295,8 @@ var android;
                     displayMetrics.density = density;
                     displayMetrics.densityDpi = density * DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.scaledDensity = density;
-                    displayMetrics.widthPixels = window.innerWidth * density;
-                    displayMetrics.heightPixels = window.innerHeight * density;
+                    displayMetrics.widthPixels = document.documentElement.offsetWidth * density;
+                    displayMetrics.heightPixels = document.documentElement.offsetHeight * density;
                     return displayMetrics;
                 }
                 getObjectRef(refString) {
