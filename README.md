@@ -25,7 +25,14 @@ You can read and clone [Hello World App](https://github.com/linfaxin/AndroidUI4W
 2. Android Chrome: 40-50fps
 3. Android WebView(4.4): 20-30fps
 
-You can test [Sample App](http://linfaxin.com/AndroidUI-WebApp/sample/main.html) on your device.
+You can test Sample on your device.
+
+
+### Sample
+
+* [Sample App](http://linfaxin.com/AndroidUI-WebApp/sample/main.html)
+* [GankWebApp](http://linfaxin.com/GankWebApp)
+
 
 
 ### LICENSE
