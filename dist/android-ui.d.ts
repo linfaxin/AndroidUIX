@@ -672,6 +672,7 @@ declare module android.graphics.drawable {
         mLevel: number;
         mVisible: boolean;
         mCallback: WeakReference<Drawable.Callback>;
+        private mIgnoreNotifySizeChange;
         constructor();
         abstract draw(canvas: Canvas): any;
         setBounds(rect: Rect): any;
@@ -681,6 +682,7 @@ declare module android.graphics.drawable {
         setDither(dither: boolean): void;
         setCallback(cb: Drawable.Callback): void;
         getCallback(): Drawable.Callback;
+        setIgnoreNotifySizeChange(isIgnore: boolean): void;
         notifySizeChangeSelf(): void;
         invalidateSelf(): void;
         scheduleSelf(what: any, when: any): void;

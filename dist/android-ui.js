@@ -2817,6 +2817,7 @@ var android;
                     this.mStateSet = StateSet.WILD_CARD;
                     this.mLevel = 0;
                     this.mVisible = true;
+                    this.mIgnoreNotifySizeChange = false;
                 }
                 setBounds(...args) {
                     if (args.length === 1) {
@@ -2859,7 +2860,12 @@ var android;
                     }
                     return null;
                 }
+                setIgnoreNotifySizeChange(isIgnore) {
+                    this.mIgnoreNotifySizeChange = isIgnore;
+                }
                 notifySizeChangeSelf() {
+                    if (this.mIgnoreNotifySizeChange)
+                        return;
                     let callback = this.getCallback();
                     if (callback != null && callback.drawableSizeChange) {
                         callback.drawableSizeChange(this);
@@ -14706,7 +14712,7 @@ var android;
                     this.bindElement[View.AndroidViewProperty] = null;
                 }
                 this.bindElement = bindElement || document.createElement(this.tagName());
-                this.bindElementOnClickAttr = this.bindElement.getAttribute('onclick');
+                this.bindElementOnClickAttr = this.bindElement.getAttribute('onclick') || this.bindElement.getAttribute('android:onclick');
                 this.bindElement.removeAttribute('onclick');
                 if (this.bindElementOnClickAttr)
                     this.setClickable(true);
