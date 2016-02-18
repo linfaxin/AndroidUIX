@@ -13,7 +13,7 @@
 
 ### 开始
 
-参考[Hello World App](https://github.com/linfaxin/AndroidUI4Web-HelloWorld) 来书写你的WebApp。
+使用[命令行工具](https://github.com/linfaxin/AndroidUI-CLI) 来创建一个HelloWorld工程
 Android开发者可以从[这篇文章](README_for_Androids_cn.md)快速起步。
 
 

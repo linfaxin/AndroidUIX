@@ -14,7 +14,7 @@ Make a high-performance web app with Android UI.
 
 ### Getting Started 
 
-You can read and clone [Hello World App](https://github.com/linfaxin/AndroidUI4Web-HelloWorld) to get a start.
+You can use [AndroidUI-CLI](https://github.com/linfaxin/AndroidUI-CLI) to create a HelloWorld Project.
 
 
 ### 60fps
