@@ -1,6 +1,6 @@
 {
   "name": "androidui-webapp",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Framework to make high-performance SPA/WebApp. Render with web canvas.",
   "keywords": [
     "webapp",
