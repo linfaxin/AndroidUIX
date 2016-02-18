@@ -27,6 +27,8 @@ module android.graphics.drawable {
         mVisible = true;
         mCallback:WeakReference<Drawable.Callback>;
 
+        private mIgnoreNotifySizeChange = false;
+
         constructor() {
         }
 
@@ -83,7 +85,16 @@ module android.graphics.drawable {
             return null;
         }
 
+        /**
+         * by default, NetDrawable will change it's bound when load image finish.
+         * If you wan lock a bound to a NetDrawable, you shound call this method to ignore it.
+         */
+        setIgnoreNotifySizeChange(isIgnore:boolean):void {
+            this.mIgnoreNotifySizeChange = isIgnore;
+        }
+
         notifySizeChangeSelf() {
+            if(this.mIgnoreNotifySizeChange) return;
             let callback = this.getCallback();
             if (callback != null && callback.drawableSizeChange) {
                 callback.drawableSizeChange(this);
