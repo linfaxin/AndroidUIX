@@ -70,6 +70,8 @@
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;
-var event = document.createEvent("CustomEvent");
-event.initCustomEvent("AndroidUILoadFinish", true, true, null);
-document.dispatchEvent(event);
+(function() {
+	var event = document.createEvent("CustomEvent");
+	event.initCustomEvent("AndroidUILoadFinish", true, true, null);
+	document.dispatchEvent(event);
+})();
