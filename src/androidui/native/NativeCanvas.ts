@@ -82,24 +82,25 @@ module androidui.native {
         }
 
         protected drawRectImpl(left:number, top:number, width:number, height:number, style:android.graphics.Paint.Style){
-            NativeApi.canvas.drawRect(this.canvasId, left, top, width, height);//TODO pass style
+            NativeApi.canvas.drawRect(this.canvasId, left, top, width, height, style);
         }
 
         protected drawOvalImpl(oval:android.graphics.RectF, style:android.graphics.Paint.Style):void {
-            //TODO
+            NativeApi.canvas.drawOval(this.canvasId, oval.left, oval.top, oval.right, oval.bottom, style);
         }
 
         protected drawCircleImpl(cx:number, cy:number, radius:number, style:android.graphics.Paint.Style):void {
-            //TODO
+            NativeApi.canvas.drawCircle(this.canvasId, cx, cy, radius, style);
         }
 
         protected drawArcImpl(oval:android.graphics.RectF, startAngle:number, sweepAngle:number, useCenter:boolean, style:android.graphics.Paint.Style):void {
-            //TODO
+            NativeApi.canvas.drawArc(this.canvasId, oval.left, oval.top, oval.right, oval.bottom, startAngle, sweepAngle, useCenter, style);
         }
 
         protected drawRoundRectImpl(rect:android.graphics.RectF, radiusTopLeft:number, radiusTopRight:number,
                                     radiusBottomRight:number, radiusBottomLeft:number, style:android.graphics.Paint.Style):void {
-            //TODO
+            NativeApi.canvas.drawRoundRectImpl(this.canvasId, rect.left, rect.top, rect.width(), rect.height(),
+                radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style);
         }
 
         protected drawTextImpl(text:string, x:number, y:number, style:android.graphics.Paint.Style):void {
