@@ -56,10 +56,10 @@ module androidui.native {
             }
             /** lock area to be draw on. The lock area can be modified.*/
             lockCanvas(surfaceId:number, canvasId:number, left:number, top:number, right:number, bottom:number):void{
-                batchCall.pushCall('lockCanvas', [surfaceId, canvasId, left, top, right, bottom]);
+                batchCall.pushCall('31', [surfaceId, canvasId, left, top, right, bottom]);
             }
             unlockCanvasAndPost(surfaceId:number, canvasId:number):void{
-                batchCall.pushCall('unlockCanvasAndPost', [surfaceId, canvasId]);
+                batchCall.pushCall('32', [surfaceId, canvasId]);
                 JSBridge.batchCall(batchCall.toString());
                 batchCall.clear();
             }
@@ -91,7 +91,7 @@ module androidui.native {
                 batchCall.pushCall('40', [canvasId, left, top, width, height]);
             }
             drawRect(canvasId:number, left:number, top:number, width:number, height:number, style:android.graphics.Paint.Style):void{
-                batchCall.pushCall('41', [canvasId, left, top, width, height, style]);
+                batchCall.pushCall('41', [canvasId, left, top, width, height, style||android.graphics.Paint.Style.FILL]);
             }
             clipRect(canvasId:number, left:number, top:number, width:number, height:number):void{
                 batchCall.pushCall('42', [canvasId, left, top, width, height]);
@@ -170,17 +170,17 @@ module androidui.native {
                 batchCall.pushCall('58', [canvasId, fontName]);
             }
             drawOval(canvasId:number, left:number, top:number, right:number, bottom:number, style:android.graphics.Paint.Style):void{
-                batchCall.pushCall('59', [canvasId, left, top, right, bottom, style]);
+                batchCall.pushCall('59', [canvasId, left, top, right, bottom, style||android.graphics.Paint.Style.FILL]);
             }
             drawCircle(canvasId:number, cx:number, cy:number, radius:number, style:android.graphics.Paint.Style):void{
-                batchCall.pushCall('60', [canvasId, cx, cy, radius, style]);
+                batchCall.pushCall('60', [canvasId, cx, cy, radius, style||android.graphics.Paint.Style.FILL]);
             }
             drawArc(canvasId:number, left:number, top:number, right:number, bottom:number, startAngle:number, sweepAngle:number, useCenter:boolean, style:android.graphics.Paint.Style):void{
-                batchCall.pushCall('61', [canvasId, left, top, right, bottom, startAngle, sweepAngle, useCenter, style]);
+                batchCall.pushCall('61', [canvasId, left, top, right, bottom, startAngle, sweepAngle, useCenter, style||android.graphics.Paint.Style.FILL]);
             }
             drawRoundRectImpl(canvasId:number, left:number, top:number, width:number, height:number, radiusTopLeft:number, radiusTopRight:number,
                               radiusBottomRight:number, radiusBottomLeft:number, style:android.graphics.Paint.Style):void {
-                batchCall.pushCall('62', [canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style]);
+                batchCall.pushCall('62', [canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style||android.graphics.Paint.Style.FILL]);
             }
 
         }

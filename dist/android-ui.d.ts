@@ -10964,6 +10964,7 @@ declare module androidui.widget {
 }
 declare module androidui.native {
     import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
     class NativeCanvas extends Canvas {
         private canvasId;
         protected initImpl(): void;
@@ -10979,7 +10980,7 @@ declare module androidui.native {
         protected restoreImpl(): void;
         protected clipRectImpl(left: number, top: number, width: number, height: number): void;
         protected drawCanvasImpl(canvas: android.graphics.Canvas, offsetX: number, offsetY: number): void;
-        protected drawImageImpl(image: androidui.image.NetImage, dstRect: android.graphics.Rect): void;
+        protected drawImageImpl(image: androidui.image.NetImage, srcRect?: Rect, dstRect?: Rect): void;
         protected drawRectImpl(left: number, top: number, width: number, height: number, style: android.graphics.Paint.Style): void;
         protected drawOvalImpl(oval: android.graphics.RectF, style: android.graphics.Paint.Style): void;
         protected drawCircleImpl(cx: number, cy: number, radius: number, style: android.graphics.Paint.Style): void;
@@ -11046,7 +11047,7 @@ declare module androidui.native {
             concat(canvasId: number, MSCALE_X: number, MSKEW_X: number, MTRANS_X: number, MSKEW_Y: number, MSCALE_Y: number, MTRANS_Y: number): void;
             drawColor(canvasId: number, color: number): void;
             clearRect(canvasId: number, left: number, top: number, width: number, height: number): void;
-            drawRect(canvasId: number, left: number, top: number, width: number, height: number): void;
+            drawRect(canvasId: number, left: number, top: number, width: number, height: number, style: android.graphics.Paint.Style): void;
             clipRect(canvasId: number, left: number, top: number, width: number, height: number): void;
             save(canvasId: number): void;
             restore(canvasId: number): void;
@@ -11063,6 +11064,10 @@ declare module androidui.native {
             setShadow(canvasId: number, radius: number, dx: number, dy: number, color: number): void;
             setFontSize(canvasId: number, size: number): void;
             setFont(canvasId: number, fontName: string): void;
+            drawOval(canvasId: number, left: number, top: number, right: number, bottom: number, style: android.graphics.Paint.Style): void;
+            drawCircle(canvasId: number, cx: number, cy: number, radius: number, style: android.graphics.Paint.Style): void;
+            drawArc(canvasId: number, left: number, top: number, right: number, bottom: number, startAngle: number, sweepAngle: number, useCenter: boolean, style: android.graphics.Paint.Style): void;
+            drawRoundRectImpl(canvasId: number, left: number, top: number, width: number, height: number, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number, style: android.graphics.Paint.Style): void;
         }
         interface ImageApi {
             createImage(imageId: number): void;

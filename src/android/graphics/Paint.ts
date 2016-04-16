@@ -187,7 +187,7 @@ module android.graphics{
 
 
 
-        private mTextStyle:Paint.Style;
+        private mTextStyle = Paint.Style.FILL;
         private mColor:number;
         private mAlpha:number;
         private mStrokeWidth:number;

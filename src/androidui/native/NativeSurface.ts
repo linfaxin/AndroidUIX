@@ -22,9 +22,7 @@ module androidui.native {
             this.surfaceId = ++sNextSurfaceID;
             SurfaceInstances.set(this.surfaceId, this);
             let bound = this.mCanvasBound;
-            let density = android.content.res.Resources.getDisplayMetrics().density;
-            NativeApi.surface.createSurface(this.surfaceId,
-                bound.left * density, bound.top * density, bound.right * density, bound.bottom * density);
+            NativeApi.surface.createSurface(this.surfaceId, bound.left, bound.top, bound.right, bound.bottom);
         }
 
         notifyBoundChange() {

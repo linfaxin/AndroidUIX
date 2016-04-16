@@ -73,8 +73,9 @@ module androidui.native {
             }
         }
 
-        protected drawImageImpl(image:androidui.image.NetImage, dstRect:android.graphics.Rect):void {
+        protected drawImageImpl(image:androidui.image.NetImage, srcRect?:Rect, dstRect?:Rect):void {
             if(image instanceof NativeImage){
+                //TODO pass draw src area args
                 NativeApi.canvas.drawImage(this.canvasId, image.imageId, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
             }else{
                 throw Error('image should be NativeImage');

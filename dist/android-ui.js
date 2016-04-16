@@ -1033,6 +1033,7 @@ var android;
     (function (graphics) {
         class Paint {
             constructor(flag = 0) {
+                this.mTextStyle = Paint.Style.FILL;
                 this.textScaleX = 1;
                 this.mFlag = 0;
                 this.shadowDx = 0;
@@ -58784,7 +58785,7 @@ var androidui;
                     throw Error('canvas should be NativeCanvas');
                 }
             }
-            drawImageImpl(image, dstRect) {
+            drawImageImpl(image, srcRect, dstRect) {
                 if (image instanceof native.NativeImage) {
                     native.NativeApi.canvas.drawImage(this.canvasId, image.imageId, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
                 }
@@ -58793,15 +58794,19 @@ var androidui;
                 }
             }
             drawRectImpl(left, top, width, height, style) {
-                native.NativeApi.canvas.drawRect(this.canvasId, left, top, width, height);
+                native.NativeApi.canvas.drawRect(this.canvasId, left, top, width, height, style);
             }
             drawOvalImpl(oval, style) {
+                native.NativeApi.canvas.drawOval(this.canvasId, oval.left, oval.top, oval.right, oval.bottom, style);
             }
             drawCircleImpl(cx, cy, radius, style) {
+                native.NativeApi.canvas.drawCircle(this.canvasId, cx, cy, radius, style);
             }
             drawArcImpl(oval, startAngle, sweepAngle, useCenter, style) {
+                native.NativeApi.canvas.drawArc(this.canvasId, oval.left, oval.top, oval.right, oval.bottom, startAngle, sweepAngle, useCenter, style);
             }
             drawRoundRectImpl(rect, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style) {
+                native.NativeApi.canvas.drawRoundRectImpl(this.canvasId, rect.left, rect.top, rect.width(), rect.height(), radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style);
             }
             drawTextImpl(text, x, y, style) {
                 native.NativeApi.canvas.drawText(this.canvasId, text, x, y, style);
@@ -58864,8 +58869,7 @@ var androidui;
                 this.surfaceId = ++sNextSurfaceID;
                 SurfaceInstances.set(this.surfaceId, this);
                 let bound = this.mCanvasBound;
-                let density = android.content.res.Resources.getDisplayMetrics().density;
-                native.NativeApi.surface.createSurface(this.surfaceId, bound.left * density, bound.top * density, bound.right * density, bound.bottom * density);
+                native.NativeApi.surface.createSurface(this.surfaceId, bound.left, bound.top, bound.right, bound.bottom);
             }
             notifyBoundChange() {
                 this.initCanvasBound();
@@ -58950,7 +58954,7 @@ var androidui;
         }
         native.NativeApi = NativeApi;
         (function (NativeApi) {
-            class CallQueues {
+            class BatchCall {
                 constructor() {
                     this.calls = [];
                 }
@@ -58973,7 +58977,7 @@ var androidui;
                     return this.method + JSON.stringify(this.args);
                 }
             }
-            let callQueues = new CallQueues();
+            let batchCall = new BatchCall();
             class SurfaceApi {
                 createSurface(surfaceId, left, top, right, bottom) {
                     JSBridge.createSurface(surfaceId, left, top, right, bottom);
@@ -58982,90 +58986,102 @@ var androidui;
                     JSBridge.onSurfaceBoundChange(surfaceId, left, top, right, bottom);
                 }
                 lockCanvas(surfaceId, canvasId, left, top, right, bottom) {
-                    callQueues.pushCall('lockCanvas', [surfaceId, canvasId, left, top, right, bottom]);
+                    batchCall.pushCall('31', [surfaceId, canvasId, left, top, right, bottom]);
                 }
                 unlockCanvasAndPost(surfaceId, canvasId) {
-                    callQueues.pushCall('unlockCanvasAndPost', [surfaceId, canvasId]);
-                    JSBridge.batchCall(callQueues.toString());
-                    callQueues.clear();
+                    batchCall.pushCall('32', [surfaceId, canvasId]);
+                    JSBridge.batchCall(batchCall.toString());
+                    batchCall.clear();
                 }
             }
             NativeApi.SurfaceApi = SurfaceApi;
             class CanvasApi {
                 createCanvas(canvasId, width, height) {
-                    callQueues.pushCall('createCanvas', [canvasId, width, height]);
+                    batchCall.pushCall('33', [canvasId, width, height]);
                 }
                 recycleCanvas(canvasId) {
-                    callQueues.pushCall('recycleCanvas', [canvasId]);
+                    batchCall.pushCall('34', [canvasId]);
                 }
                 translate(canvasId, dx, dy) {
-                    callQueues.pushCall('translate', [canvasId, dx, dy]);
+                    batchCall.pushCall('35', [canvasId, dx, dy]);
                 }
                 scale(canvasId, sx, sy) {
-                    callQueues.pushCall('scale', [canvasId, sx, sy]);
+                    batchCall.pushCall('36', [canvasId, sx, sy]);
                 }
                 rotate(canvasId, degrees) {
-                    callQueues.pushCall('rotate', [canvasId, degrees]);
+                    batchCall.pushCall('37', [canvasId, degrees]);
                 }
                 concat(canvasId, MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y) {
-                    callQueues.pushCall('concat', [canvasId, MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y]);
+                    batchCall.pushCall('38', [canvasId, MSCALE_X, MSKEW_X, MTRANS_X, MSKEW_Y, MSCALE_Y, MTRANS_Y]);
                 }
                 drawColor(canvasId, color) {
-                    callQueues.pushCall('drawColor', [canvasId, color]);
+                    batchCall.pushCall('39', [canvasId, color]);
                 }
                 clearRect(canvasId, left, top, width, height) {
-                    callQueues.pushCall('clearRect', [canvasId, left, top, width, height]);
+                    batchCall.pushCall('40', [canvasId, left, top, width, height]);
                 }
-                drawRect(canvasId, left, top, width, height) {
-                    callQueues.pushCall('drawRect', [canvasId, left, top, width, height]);
+                drawRect(canvasId, left, top, width, height, style) {
+                    batchCall.pushCall('41', [canvasId, left, top, width, height, style || android.graphics.Paint.Style.FILL]);
                 }
                 clipRect(canvasId, left, top, width, height) {
-                    callQueues.pushCall('clipRect', [canvasId, left, top, width, height]);
+                    batchCall.pushCall('42', [canvasId, left, top, width, height]);
                 }
                 save(canvasId) {
-                    callQueues.pushCall('save', [canvasId]);
+                    batchCall.pushCall('43', [canvasId]);
                 }
                 restore(canvasId) {
-                    callQueues.pushCall('restore', [canvasId]);
+                    batchCall.pushCall('44', [canvasId]);
                 }
                 drawCanvas(canvasId, drawCanvasId, offsetX, offsetY) {
-                    callQueues.pushCall('drawCanvas', [canvasId, drawCanvasId, offsetX, offsetY]);
+                    batchCall.pushCall('45', [canvasId, drawCanvasId, offsetX, offsetY]);
                 }
                 drawImage(canvasId, drawImageId, dstLeft, dstTop, dstWidth, dstHeight) {
-                    callQueues.pushCall('drawImage', [canvasId, drawImageId, dstLeft, dstTop, dstWidth, dstHeight]);
+                    batchCall.pushCall('46', [canvasId, drawImageId, dstLeft, dstTop, dstWidth, dstHeight]);
                 }
                 drawText(canvasId, text, x, y, fillStyle) {
-                    callQueues.pushCall('drawText', [canvasId, encodeURIComponent(text), x, y, fillStyle]);
+                    batchCall.pushCall('47', [canvasId, encodeURIComponent(text), x, y, fillStyle]);
                 }
                 setFillColor(canvasId, color) {
-                    callQueues.pushCall('setFillColor', [canvasId, color]);
+                    batchCall.pushCall('49', [canvasId, color]);
                 }
                 multiplyAlpha(canvasId, alpha) {
-                    callQueues.pushCall('multiplyAlpha', [canvasId, alpha]);
+                    batchCall.pushCall('50', [canvasId, alpha]);
                 }
                 setAlpha(canvasId, alpha) {
-                    callQueues.pushCall('setAlpha', [canvasId, alpha]);
+                    batchCall.pushCall('51', [canvasId, alpha]);
                 }
                 setTextAlign(canvasId, align) {
-                    callQueues.pushCall('setTextAlign', [canvasId, align]);
+                    batchCall.pushCall('52', [canvasId, align]);
                 }
                 setLineWidth(canvasId, width) {
-                    callQueues.pushCall('setLineWidth', [canvasId, width]);
+                    batchCall.pushCall('53', [canvasId, width]);
                 }
                 setLineCap(canvasId, lineCap) {
-                    callQueues.pushCall('setLineCap', [canvasId, lineCap]);
+                    batchCall.pushCall('54', [canvasId, lineCap]);
                 }
                 setLineJoin(canvasId, lineJoin) {
-                    callQueues.pushCall('setLineJoin', [canvasId, lineJoin]);
+                    batchCall.pushCall('55', [canvasId, lineJoin]);
                 }
                 setShadow(canvasId, radius, dx, dy, color) {
-                    callQueues.pushCall('setShadow', [canvasId, radius, dx, dy, color]);
+                    batchCall.pushCall('56', [canvasId, radius, dx, dy, color]);
                 }
                 setFontSize(canvasId, size) {
-                    callQueues.pushCall('setFontSize', [canvasId, size]);
+                    batchCall.pushCall('57', [canvasId, size]);
                 }
                 setFont(canvasId, fontName) {
-                    callQueues.pushCall('setFont', [canvasId, fontName]);
+                    batchCall.pushCall('58', [canvasId, fontName]);
+                }
+                drawOval(canvasId, left, top, right, bottom, style) {
+                    batchCall.pushCall('59', [canvasId, left, top, right, bottom, style || android.graphics.Paint.Style.FILL]);
+                }
+                drawCircle(canvasId, cx, cy, radius, style) {
+                    batchCall.pushCall('60', [canvasId, cx, cy, radius, style || android.graphics.Paint.Style.FILL]);
+                }
+                drawArc(canvasId, left, top, right, bottom, startAngle, sweepAngle, useCenter, style) {
+                    batchCall.pushCall('61', [canvasId, left, top, right, bottom, startAngle, sweepAngle, useCenter, style || android.graphics.Paint.Style.FILL]);
+                }
+                drawRoundRectImpl(canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style) {
+                    batchCall.pushCall('62', [canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style || android.graphics.Paint.Style.FILL]);
                 }
             }
             NativeApi.CanvasApi = CanvasApi;
