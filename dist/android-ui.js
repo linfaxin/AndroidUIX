@@ -58778,6 +58778,9 @@ var androidui;
             clipRectImpl(left, top, width, height) {
                 native.NativeApi.canvas.clipRect(this.canvasId, left, top, width, height);
             }
+            clipRoundRectImpl(left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft) {
+                native.NativeApi.canvas.clipRect(this.canvasId, left, top, width, height);
+            }
             drawCanvasImpl(canvas, offsetX, offsetY) {
                 if (canvas instanceof NativeCanvas) {
                     native.NativeApi.canvas.drawCanvas(this.canvasId, canvas.canvasId, offsetX, offsetY);

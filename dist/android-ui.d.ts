@@ -10979,6 +10979,7 @@ declare module androidui.native {
         protected saveImpl(): void;
         protected restoreImpl(): void;
         protected clipRectImpl(left: number, top: number, width: number, height: number): void;
+        protected clipRoundRectImpl(left: number, top: number, width: number, height: number, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number): void;
         protected drawCanvasImpl(canvas: android.graphics.Canvas, offsetX: number, offsetY: number): void;
         protected drawImageImpl(image: androidui.image.NetImage, srcRect?: Rect, dstRect?: Rect): void;
         protected drawRectImpl(left: number, top: number, width: number, height: number, style: android.graphics.Paint.Style): void;
