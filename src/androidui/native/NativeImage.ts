@@ -14,6 +14,7 @@ module androidui.native {
 
     export class NativeImage extends NetImage{
         imageId:number;
+        private getPixelsCallbacks:Array<(data:number[])=>void>;
 
         protected createImage(){
             this.imageId = sNextId++;
@@ -31,7 +32,16 @@ module androidui.native {
         }
 
         getPixels(bound:Rect, callBack:(data:number[])=>void):void {
-            //TODO native impl
+            if(!callBack) return;
+            if(!bound) bound = new Rect(0, 0, this.width, this.height);
+            if(bound.isEmpty()) {
+                callBack([]);
+                return;
+            }
+            if(!this.getPixelsCallbacks) this.getPixelsCallbacks = [];
+            this.getPixelsCallbacks.push(callBack);
+            let callBackIndex = this.getPixelsCallbacks.length-1;
+            NativeApi.image.getPixels(this.imageId, callBackIndex, bound.left, bound.top, bound.right, bound.bottom);
         }
 
         //call from native
@@ -46,6 +56,14 @@ module androidui.native {
             let image:NativeImage = NativeImageInstances.get(imageId);
             image.mImageWidth = image.mImageHeight = 0;
             image.fireOnError();
+        }
+
+        //call from native
+        private static notifyGetPixels(imageId:number, callBackIndex:number, data:number[]){
+            let image:NativeImage = NativeImageInstances.get(imageId);
+            let callBack = image.getPixelsCallbacks[callBackIndex];
+            image.getPixelsCallbacks[callBackIndex] = null;
+            callBack(data);
         }
     }
 }

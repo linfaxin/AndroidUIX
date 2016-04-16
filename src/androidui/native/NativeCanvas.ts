@@ -22,6 +22,7 @@ module androidui.native {
         }
         protected createCanvasImpl():void {
             NativeApi.canvas.createCanvas(this.canvasId, this.mWidth, this.mHeight);
+            this.save();//is need?
         }
 
         protected recycleImpl():void {
@@ -75,8 +76,14 @@ module androidui.native {
 
         protected drawImageImpl(image:androidui.image.NetImage, srcRect?:Rect, dstRect?:Rect):void {
             if(image instanceof NativeImage){
-                //TODO pass draw src area args
-                NativeApi.canvas.drawImage(this.canvasId, image.imageId, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                if(srcRect && dstRect) {
+                    NativeApi.canvas.drawImage8args(this.canvasId, image.imageId, srcRect.left, srcRect.top, srcRect.right, srcRect.bottom,
+                        dstRect.left, dstRect.top, dstRect.right, dstRect.bottom);
+                } else if (dstRect) {
+                    NativeApi.canvas.drawImage4args(this.canvasId, image.imageId, dstRect.left, dstRect.top, dstRect.right, dstRect.bottom);
+                } else {
+                    NativeApi.canvas.drawImage2args(this.canvasId, image.imageId, 0, 0);
+                }
             }else{
                 throw Error('image should be NativeImage');
             }
@@ -109,7 +116,7 @@ module androidui.native {
         }
 
         protected setColorImpl(color:number, style?:android.graphics.Paint.Style):void {
-            NativeApi.canvas.setFillColor(this.canvasId, color);//TODO pass style
+            NativeApi.canvas.setFillColor(this.canvasId, color, style);
         }
 
         protected multiplyAlphaImpl(alpha:number):void {

@@ -11017,12 +11017,14 @@ declare module androidui.native {
     import Rect = android.graphics.Rect;
     class NativeImage extends NetImage {
         imageId: number;
+        private getPixelsCallbacks;
         protected createImage(): void;
         protected loadImage(): void;
         recycle(): void;
         getPixels(bound: Rect, callBack: (data: number[]) => void): void;
         private static notifyLoadFinish(imageId, width, height);
         private static notifyLoadError(imageId);
+        private static notifyGetPixels(imageId, callBackIndex, data);
     }
 }
 declare module androidui.native {
@@ -11052,9 +11054,11 @@ declare module androidui.native {
             save(canvasId: number): void;
             restore(canvasId: number): void;
             drawCanvas(canvasId: number, drawCanvasId: number, offsetX: number, offsetY: number): void;
-            drawImage(canvasId: number, drawImageId: number, dstLeft: number, dstTop: number, dstWidth: number, dstHeight: number): void;
-            drawText(canvasId: number, text: string, x: number, y: number, fillStyle: number): void;
-            setFillColor(canvasId: number, color: number): void;
+            drawImage2args(canvasId: number, drawImageId: number, left: number, top: number): void;
+            drawImage4args(canvasId: number, drawImageId: number, dstLeft: number, dstTop: number, dstRight: number, dstBottom: number): void;
+            drawImage8args(canvasId: number, drawImageId: number, srcLeft: number, srcTop: number, srcRight: number, srcBottom: number, dstLeft: number, dstTop: number, dstRight: number, dstBottom: number): void;
+            drawText(canvasId: number, text: string, x: number, y: number, fillStyle: android.graphics.Paint.Style): void;
+            setFillColor(canvasId: number, color: number, style: android.graphics.Paint.Style): void;
             multiplyAlpha(canvasId: number, alpha: number): void;
             setAlpha(canvasId: number, alpha: number): void;
             setTextAlign(canvasId: number, align: string): void;
@@ -11073,7 +11077,7 @@ declare module androidui.native {
             createImage(imageId: number): void;
             loadImage(imageId: number, src: string): void;
             recycleImage(imageId: number): void;
-            measureText(text: string, textSize: number): number;
+            getPixels(imageId: number, callbackIndex: number, left: number, top: number, right: number, bottom: number): void;
         }
     }
 }

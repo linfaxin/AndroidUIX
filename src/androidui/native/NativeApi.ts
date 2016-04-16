@@ -105,8 +105,15 @@ module androidui.native {
             drawCanvas(canvasId:number, drawCanvasId:number, offsetX:number, offsetY:number){
                 batchCall.pushCall('45', [canvasId, drawCanvasId, offsetX, offsetY]);
             }
-            drawImage(canvasId:number, drawImageId:number, dstLeft:number, dstTop:number, dstWidth:number, dstHeight:number):void{
-                batchCall.pushCall('46', [canvasId, drawImageId, dstLeft, dstTop, dstWidth, dstHeight]);
+            drawImage2args(canvasId:number, drawImageId:number, left:number, top:number):void {
+                batchCall.pushCall('70', [canvasId, drawImageId, left, top]);
+            }
+            drawImage4args(canvasId:number, drawImageId:number, dstLeft:number, dstTop:number, dstRight:number, dstBottom:number):void {
+                batchCall.pushCall('71', [canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom]);
+            }
+            drawImage8args(canvasId:number, drawImageId:number, srcLeft:number, srcTop:number, srcRight:number, srcBottom:number,
+                           dstLeft:number, dstTop:number, dstRight:number, dstBottom:number):void {
+                batchCall.pushCall('72', [canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom]);
             }
             /**
              * @param canvasId
@@ -115,12 +122,12 @@ module androidui.native {
              * @param y right position to start draw text
              * @param fillStyle 0:fill / 1:stroke / 2:fill&stroke
              */
-            drawText(canvasId:number, text:string, x:number, y:number, fillStyle:number):void{
-                batchCall.pushCall('47', [canvasId, encodeURIComponent(text), x, y, fillStyle]);
+            drawText(canvasId:number, text:string, x:number, y:number, fillStyle:android.graphics.Paint.Style):void{
+                batchCall.pushCall('47', [canvasId, encodeURIComponent(text), x, y, fillStyle||android.graphics.Paint.Style.FILL]);
             }
 
-            setFillColor(canvasId:number, color:number):void{
-                batchCall.pushCall('49', [canvasId, color]);
+            setFillColor(canvasId:number, color:number, style:android.graphics.Paint.Style):void{
+                batchCall.pushCall('49', [canvasId, color, style||android.graphics.Paint.Style.FILL]);
             }
             /**
              * @param canvasId
@@ -189,7 +196,7 @@ module androidui.native {
             createImage(imageId:number):void;
             loadImage(imageId:number, src:string):void;
             recycleImage(imageId:number):void;
-            measureText(text:string, textSize:number):number;
+            getPixels(imageId:number, callbackIndex:number, left:number, top:number, right:number, bottom:number):void;
         }
     }
 
@@ -198,6 +205,7 @@ module androidui.native {
         createSurface(surfaceId:number, left:number, top:number, right:number, bottom:number):void;
         onSurfaceBoundChange(surfaceId:number, left:number, top:number, right:number, bottom:number):void;
         batchCall(jsonString:string):void;
+        measureText(text:string, textSize:number):number;
     }
 
     if(JSBridge){

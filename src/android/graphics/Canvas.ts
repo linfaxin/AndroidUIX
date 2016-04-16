@@ -66,7 +66,7 @@ module android.graphics {
             this.mCanvasElement.width = this.mWidth;
             this.mCanvasElement.height = this.mHeight;
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
-            this._saveCount = this.save();//is need?
+            this.save();//is need?
         }
 
         recycle():void {

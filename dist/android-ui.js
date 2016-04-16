@@ -2245,7 +2245,7 @@ var android;
                 this.mCanvasElement.width = this.mWidth;
                 this.mCanvasElement.height = this.mHeight;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                this._saveCount = this.save();
+                this.save();
             }
             recycle() {
                 Canvas.recycleRect(this.mCurrentClip);
@@ -58746,6 +58746,7 @@ var androidui;
             }
             createCanvasImpl() {
                 native.NativeApi.canvas.createCanvas(this.canvasId, this.mWidth, this.mHeight);
+                this.save();
             }
             recycleImpl() {
                 native.NativeApi.canvas.recycleCanvas(this.canvasId);
@@ -58787,7 +58788,15 @@ var androidui;
             }
             drawImageImpl(image, srcRect, dstRect) {
                 if (image instanceof native.NativeImage) {
-                    native.NativeApi.canvas.drawImage(this.canvasId, image.imageId, dstRect.left, dstRect.top, dstRect.width(), dstRect.height());
+                    if (srcRect && dstRect) {
+                        native.NativeApi.canvas.drawImage8args(this.canvasId, image.imageId, srcRect.left, srcRect.top, srcRect.right, srcRect.bottom, dstRect.left, dstRect.top, dstRect.right, dstRect.bottom);
+                    }
+                    else if (dstRect) {
+                        native.NativeApi.canvas.drawImage4args(this.canvasId, image.imageId, dstRect.left, dstRect.top, dstRect.right, dstRect.bottom);
+                    }
+                    else {
+                        native.NativeApi.canvas.drawImage2args(this.canvasId, image.imageId, 0, 0);
+                    }
                 }
                 else {
                     throw Error('image should be NativeImage');
@@ -58812,7 +58821,7 @@ var androidui;
                 native.NativeApi.canvas.drawText(this.canvasId, text, x, y, style);
             }
             setColorImpl(color, style) {
-                native.NativeApi.canvas.setFillColor(this.canvasId, color);
+                native.NativeApi.canvas.setFillColor(this.canvasId, color, style);
             }
             multiplyAlphaImpl(alpha) {
                 native.NativeApi.canvas.multiplyAlpha(this.canvasId, alpha);
@@ -58912,6 +58921,7 @@ var androidui;
     var native;
     (function (native) {
         var NetImage = androidui.image.NetImage;
+        var Rect = android.graphics.Rect;
         let sNextId = 0;
         const NativeImageInstances = new Map();
         class NativeImage extends NetImage {
@@ -58928,6 +58938,19 @@ var androidui;
                 NativeImageInstances.delete(this.imageId);
             }
             getPixels(bound, callBack) {
+                if (!callBack)
+                    return;
+                if (!bound)
+                    bound = new Rect(0, 0, this.width, this.height);
+                if (bound.isEmpty()) {
+                    callBack([]);
+                    return;
+                }
+                if (!this.getPixelsCallbacks)
+                    this.getPixelsCallbacks = [];
+                this.getPixelsCallbacks.push(callBack);
+                let callBackIndex = this.getPixelsCallbacks.length - 1;
+                native.NativeApi.image.getPixels(this.imageId, callBackIndex, bound.left, bound.top, bound.right, bound.bottom);
             }
             static notifyLoadFinish(imageId, width, height) {
                 let image = NativeImageInstances.get(imageId);
@@ -58939,6 +58962,12 @@ var androidui;
                 let image = NativeImageInstances.get(imageId);
                 image.mImageWidth = image.mImageHeight = 0;
                 image.fireOnError();
+            }
+            static notifyGetPixels(imageId, callBackIndex, data) {
+                let image = NativeImageInstances.get(imageId);
+                let callBack = image.getPixelsCallbacks[callBackIndex];
+                image.getPixelsCallbacks[callBackIndex] = null;
+                callBack(data);
             }
         }
         native.NativeImage = NativeImage;
@@ -59035,14 +59064,20 @@ var androidui;
                 drawCanvas(canvasId, drawCanvasId, offsetX, offsetY) {
                     batchCall.pushCall('45', [canvasId, drawCanvasId, offsetX, offsetY]);
                 }
-                drawImage(canvasId, drawImageId, dstLeft, dstTop, dstWidth, dstHeight) {
-                    batchCall.pushCall('46', [canvasId, drawImageId, dstLeft, dstTop, dstWidth, dstHeight]);
+                drawImage2args(canvasId, drawImageId, left, top) {
+                    batchCall.pushCall('70', [canvasId, drawImageId, left, top]);
+                }
+                drawImage4args(canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom) {
+                    batchCall.pushCall('71', [canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom]);
+                }
+                drawImage8args(canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom) {
+                    batchCall.pushCall('72', [canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom]);
                 }
                 drawText(canvasId, text, x, y, fillStyle) {
-                    batchCall.pushCall('47', [canvasId, encodeURIComponent(text), x, y, fillStyle]);
+                    batchCall.pushCall('47', [canvasId, encodeURIComponent(text), x, y, fillStyle || android.graphics.Paint.Style.FILL]);
                 }
-                setFillColor(canvasId, color) {
-                    batchCall.pushCall('49', [canvasId, color]);
+                setFillColor(canvasId, color, style) {
+                    batchCall.pushCall('49', [canvasId, color, style || android.graphics.Paint.Style.FILL]);
                 }
                 multiplyAlpha(canvasId, alpha) {
                     batchCall.pushCall('50', [canvasId, alpha]);
