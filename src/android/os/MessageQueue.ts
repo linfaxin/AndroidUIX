@@ -21,7 +21,6 @@ module android.os {
             return window.setTimeout(callback, 1000 / 60);
         };
     }
-    window.requestAnimationFrame = requestAnimationFrame;
 
     export class MessageQueue {
 
@@ -103,8 +102,11 @@ module android.os {
             if(!MessageQueue._loopActive){
                 MessageQueue._loopActive = true;
 
-                requestAnimationFrame(MessageQueue.loop);
+                MessageQueue.requestNextLoop();
             }
+        }
+        private static requestNextLoop(){
+            requestAnimationFrame(MessageQueue.loop);
         }
 
         private static loop(){
@@ -126,7 +128,7 @@ module android.os {
                 MessageQueue.dispatchMessage(traversalMessages[i]);
             }
 
-            if(MessageQueue.messages.size>0) requestAnimationFrame(MessageQueue.loop);
+            if(MessageQueue.messages.size>0) MessageQueue.requestNextLoop();
             else MessageQueue._loopActive = false;
         }
 

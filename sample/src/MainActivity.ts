@@ -16,9 +16,9 @@ module sample.app {
 
         protected onCreate(savedInstanceState?:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
-            this.setContentView(R.layout.activity_main);
-
             const activity = this;
+
+            this.setContentView(R.layout.activity_main);
 
             if(navigator.userAgent.match('Android')){
                 this.findViewById('android_tip').setVisibility(android.view.View.VISIBLE);

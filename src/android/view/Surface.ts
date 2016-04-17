@@ -71,14 +71,14 @@ module android.view{
                 canvas = new Canvas(width, height);
                 if (left != 0 || top != 0) canvas.translate(-left, -top);
 
-                let mCanvasContent = this.mCanvasElement.getContext('2d');
-                mCanvasContent.clearRect(left, top, width, height);
+                //let mCanvasContent = this.mCanvasElement.getContext('2d');
+                //mCanvasContent.clearRect(left, top, width, height);
 
             }else {
                 canvas = new SurfaceLockCanvas(this.mCanvasBound.width(), this.mCanvasBound.height(), this.mCanvasElement);
                 this.mLockSaveCount = canvas.save();
                 canvas.clipRect(left, top, left + width, top + height);
-                canvas.clearColor();
+                //canvas.clearColor();
             }
             return canvas;
         }

@@ -5120,7 +5120,6 @@ var android;
                 return window.setTimeout(callback, 1000 / 60);
             };
         }
-        window.requestAnimationFrame = requestAnimationFrame;
         class MessageQueue {
             static getMessages(h, args, object) {
                 let msgs = [];
@@ -5182,8 +5181,11 @@ var android;
             static checkLoop() {
                 if (!MessageQueue._loopActive) {
                     MessageQueue._loopActive = true;
-                    requestAnimationFrame(MessageQueue.loop);
+                    MessageQueue.requestNextLoop();
                 }
+            }
+            static requestNextLoop() {
+                requestAnimationFrame(MessageQueue.loop);
             }
             static loop() {
                 let normalMessages = [];
@@ -5204,7 +5206,7 @@ var android;
                     MessageQueue.dispatchMessage(traversalMessages[i]);
                 }
                 if (MessageQueue.messages.size > 0)
-                    requestAnimationFrame(MessageQueue.loop);
+                    MessageQueue.requestNextLoop();
                 else
                     MessageQueue._loopActive = false;
             }
@@ -15361,14 +15363,11 @@ var android;
                     canvas = new Canvas(width, height);
                     if (left != 0 || top != 0)
                         canvas.translate(-left, -top);
-                    let mCanvasContent = this.mCanvasElement.getContext('2d');
-                    mCanvasContent.clearRect(left, top, width, height);
                 }
                 else {
                     canvas = new SurfaceLockCanvas(this.mCanvasBound.width(), this.mCanvasBound.height(), this.mCanvasElement);
                     this.mLockSaveCount = canvas.save();
                     canvas.clipRect(left, top, left + width, top + height);
-                    canvas.clearColor();
                 }
                 return canvas;
             }
@@ -58991,22 +58990,13 @@ var androidui;
                     this.calls = [];
                 }
                 pushCall(method, methodArgs) {
-                    this.calls.push(new NativeCall(method, methodArgs));
+                    this.calls.push(method + JSON.stringify(methodArgs));
                 }
                 clear() {
                     this.calls = [];
                 }
                 toString() {
                     return this.calls.join('\n');
-                }
-            }
-            class NativeCall {
-                constructor(methodName, methodArgs) {
-                    this.method = methodName;
-                    this.args = methodArgs;
-                }
-                toString() {
-                    return this.method + JSON.stringify(this.args);
                 }
             }
             let batchCall = new BatchCall();
@@ -59131,6 +59121,9 @@ var androidui;
             NativeApi.surface = new NativeApi.SurfaceApi();
             NativeApi.canvas = new NativeApi.CanvasApi();
             NativeApi.image = JSBridge;
+            android.os.MessageQueue.requestNextLoop = () => {
+                setTimeout(android.os.MessageQueue.loop, 0);
+            };
         }
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));

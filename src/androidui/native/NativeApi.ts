@@ -21,9 +21,11 @@ module androidui.native {
 
     export module NativeApi {
         class BatchCall {
-            private calls:NativeCall[] = [];
+            //private calls:NativeCall[] = [];
+            private calls:String[] = [];
             pushCall(method:string, methodArgs:any[]){
-                this.calls.push(new NativeCall(method, methodArgs));
+                //this.calls.push(new NativeCall(method, methodArgs));
+                this.calls.push(method + JSON.stringify(methodArgs));
             }
             clear(){
                 this.calls = [];
@@ -32,18 +34,18 @@ module androidui.native {
                 return this.calls.join('\n');
             }
         }
-        class NativeCall {
-            method:string;
-            args:any[];
-
-            constructor(methodName:string, methodArgs:any[]) {
-                this.method = methodName;
-                this.args = methodArgs;
-            }
-            toString(){
-                return this.method + JSON.stringify(this.args);
-            }
-        }
+        //class NativeCall {
+        //    method:string;
+        //    args:any[];
+        //
+        //    constructor(methodName:string, methodArgs:any[]) {
+        //        this.method = methodName;
+        //        this.args = methodArgs;
+        //    }
+        //    toString(){
+        //        return this.method + JSON.stringify(this.args);
+        //    }
+        //}
 
         let batchCall = new BatchCall();
 
@@ -221,6 +223,9 @@ module androidui.native {
         NativeApi.canvas = new NativeApi.CanvasApi();
         NativeApi.image = JSBridge;
 
+        android.os.MessageQueue.requestNextLoop = ()=>{
+            setTimeout(android.os.MessageQueue.loop, 0);
+        }
     }
 
 }

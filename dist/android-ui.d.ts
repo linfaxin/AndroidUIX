@@ -1272,6 +1272,7 @@ declare module android.os {
         static removeCallbacksAndMessages(h: Handler, object: any): void;
         private static _loopActive;
         private static checkLoop();
+        private static requestNextLoop();
         private static loop();
         private static dispatchMessage(msg);
     }
