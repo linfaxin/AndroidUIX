@@ -225,7 +225,8 @@ module androidui.native {
 
         android.os.MessageQueue.requestNextLoop = ()=>{
             setTimeout(android.os.MessageQueue.loop, 0);
-        }
+        };
+        android.view.ViewRootImpl.prototype.trackFPS = ()=>{};//ignore web's trackFPS
     }
 
 }

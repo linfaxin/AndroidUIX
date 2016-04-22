@@ -59124,10 +59124,15 @@ var androidui;
             android.os.MessageQueue.requestNextLoop = () => {
                 setTimeout(android.os.MessageQueue.loop, 0);
             };
+            android.view.ViewRootImpl.prototype.trackFPS = () => { };
         }
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;
-window.dispatchEvent(new CustomEvent("AndroidUILoadFinish"));
+(function () {
+    var event = document.createEvent("CustomEvent");
+    event.initCustomEvent("AndroidUILoadFinish", true, true, null);
+    document.dispatchEvent(event);
+})();
