@@ -89,8 +89,8 @@ module androidui.native {
             drawColor(canvasId:number, color:number):void{
                 batchCall.pushCall('39', [canvasId, color]);
             }
-            clearRect(canvasId:number, left:number, top:number, width:number, height:number):void{
-                batchCall.pushCall('40', [canvasId, left, top, width, height]);
+            clearColor(canvasId:number):void{
+                batchCall.pushCall('40', [canvasId]);
             }
             drawRect(canvasId:number, left:number, top:number, width:number, height:number, style:android.graphics.Paint.Style):void{
                 batchCall.pushCall('41', [canvasId, left, top, width, height, style||android.graphics.Paint.Style.FILL]);
@@ -111,6 +111,7 @@ module androidui.native {
                 batchCall.pushCall('70', [canvasId, drawImageId, left, top]);
             }
             drawImage4args(canvasId:number, drawImageId:number, dstLeft:number, dstTop:number, dstRight:number, dstBottom:number):void {
+                if(dstLeft==null || isNaN(dstLeft)) throw new Error('drawImage4args error');
                 batchCall.pushCall('71', [canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom]);
             }
             drawImage8args(canvasId:number, drawImageId:number, srcLeft:number, srcTop:number, srcRight:number, srcBottom:number,

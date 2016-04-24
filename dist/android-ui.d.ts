@@ -591,7 +591,7 @@ declare module android.graphics {
         drawColor(color: number): void;
         protected drawARGBImpl(a: number, r: number, g: number, b: number): void;
         clearColor(): void;
-        protected clearRectImpl(left: number, top: number, width: number, height: number): void;
+        protected clearColorImpl(): void;
         save(): number;
         protected saveImpl(): void;
         restore(): void;
@@ -10976,7 +10976,7 @@ declare module androidui.native {
         protected rotateImpl(degrees: number): void;
         protected concatImpl(MSCALE_X: number, MSKEW_X: number, MTRANS_X: number, MSKEW_Y: number, MSCALE_Y: number, MTRANS_Y: number, MPERSP_0: number, MPERSP_1: number, MPERSP_2: number): void;
         protected drawARGBImpl(a: number, r: number, g: number, b: number): void;
-        protected clearRectImpl(left: number, top: number, width: number, height: number): void;
+        protected clearColorImpl(): void;
         protected saveImpl(): void;
         protected restoreImpl(): void;
         protected clipRectImpl(left: number, top: number, width: number, height: number): void;
@@ -11050,7 +11050,7 @@ declare module androidui.native {
             rotate(canvasId: number, degrees: number): void;
             concat(canvasId: number, MSCALE_X: number, MSKEW_X: number, MTRANS_X: number, MSKEW_Y: number, MSCALE_Y: number, MTRANS_Y: number): void;
             drawColor(canvasId: number, color: number): void;
-            clearRect(canvasId: number, left: number, top: number, width: number, height: number): void;
+            clearColor(canvasId: number): void;
             drawRect(canvasId: number, left: number, top: number, width: number, height: number, style: android.graphics.Paint.Style): void;
             clipRect(canvasId: number, left: number, top: number, width: number, height: number): void;
             save(canvasId: number): void;

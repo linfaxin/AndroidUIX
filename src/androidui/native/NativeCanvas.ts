@@ -50,8 +50,8 @@ module androidui.native {
             NativeApi.canvas.drawColor(this.canvasId, android.graphics.Color.argb(a, r, g, b));
         }
 
-        protected clearRectImpl(left:number, top:number, width:number, height:number):void {
-            NativeApi.canvas.clearRect(this.canvasId, left, top, width, height);
+        protected clearColorImpl():void {
+            NativeApi.canvas.clearColor(this.canvasId);
         }
 
         protected saveImpl():void {

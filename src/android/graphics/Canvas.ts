@@ -153,13 +153,12 @@ module android.graphics {
         }
 
         clearColor():void {
-            this.clearRectImpl(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+            this.clearColorImpl();
         }
 
-        protected clearRectImpl(left:number, top:number, width:number, height:number):void {
-            this._mCanvasContent.clearRect(left, top, width, height);
+        protected clearColorImpl():void {
+            this._mCanvasContent.clearRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
         }
-
 
         save():number {
             this.saveImpl();

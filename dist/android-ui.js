@@ -2318,10 +2318,10 @@ var android;
                 this._mCanvasContent.fillStyle = preStyle;
             }
             clearColor() {
-                this.clearRectImpl(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
+                this.clearColorImpl();
             }
-            clearRectImpl(left, top, width, height) {
-                this._mCanvasContent.clearRect(left, top, width, height);
+            clearColorImpl() {
+                this._mCanvasContent.clearRect(this.mCurrentClip.left, this.mCurrentClip.top, this.mCurrentClip.width(), this.mCurrentClip.height());
             }
             save() {
                 this.saveImpl();
@@ -2962,6 +2962,8 @@ var android;
                     return false;
                 }
                 onBoundsChange(bounds) {
+                    if (bounds == null || isNaN(bounds.left))
+                        throw new Error('bounds error');
                 }
                 getIntrinsicWidth() {
                     return -1;
@@ -7011,6 +7013,12 @@ var android;
                     this.mPaddingT = new Array(N);
                     this.mPaddingR = new Array(N);
                     this.mPaddingB = new Array(N);
+                    for (var i = 0; i < N; i++) {
+                        this.mPaddingL[i] = 0;
+                        this.mPaddingT[i] = 0;
+                        this.mPaddingR[i] = 0;
+                        this.mPaddingB[i] = 0;
+                    }
                 }
                 getConstantState() {
                     if (this.mLayerState.canConstantState()) {
@@ -58765,8 +58773,8 @@ var androidui;
             drawARGBImpl(a, r, g, b) {
                 native.NativeApi.canvas.drawColor(this.canvasId, android.graphics.Color.argb(a, r, g, b));
             }
-            clearRectImpl(left, top, width, height) {
-                native.NativeApi.canvas.clearRect(this.canvasId, left, top, width, height);
+            clearColorImpl() {
+                native.NativeApi.canvas.clearColor(this.canvasId);
             }
             saveImpl() {
                 native.NativeApi.canvas.save(this.canvasId);
@@ -58895,7 +58903,6 @@ var androidui;
             unlockCanvasAndPost(canvas) {
                 if (canvas instanceof native.NativeCanvas) {
                     native.NativeApi.surface.unlockCanvasAndPost(this.surfaceId, canvas.canvasId);
-                    native.NativeApi.canvas.recycleCanvas(canvas.canvasId);
                 }
                 else {
                     throw Error('canvas is not NativeCanvas');
@@ -59039,8 +59046,8 @@ var androidui;
                 drawColor(canvasId, color) {
                     batchCall.pushCall('39', [canvasId, color]);
                 }
-                clearRect(canvasId, left, top, width, height) {
-                    batchCall.pushCall('40', [canvasId, left, top, width, height]);
+                clearColor(canvasId) {
+                    batchCall.pushCall('40', [canvasId]);
                 }
                 drawRect(canvasId, left, top, width, height, style) {
                     batchCall.pushCall('41', [canvasId, left, top, width, height, style || android.graphics.Paint.Style.FILL]);
@@ -59061,6 +59068,8 @@ var androidui;
                     batchCall.pushCall('70', [canvasId, drawImageId, left, top]);
                 }
                 drawImage4args(canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom) {
+                    if (dstLeft == null || isNaN(dstLeft))
+                        throw new Error('drawImage4args error');
                     batchCall.pushCall('71', [canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom]);
                 }
                 drawImage8args(canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom) {

@@ -40,7 +40,6 @@ module androidui.native {
         unlockCanvasAndPost(canvas:android.graphics.Canvas):void {
             if(canvas instanceof NativeCanvas){
                 NativeApi.surface.unlockCanvasAndPost(this.surfaceId, canvas.canvasId);
-                NativeApi.canvas.recycleCanvas(canvas.canvasId);
             }else{
                 throw Error('canvas is not NativeCanvas');
             }

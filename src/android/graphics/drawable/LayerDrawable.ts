@@ -531,6 +531,13 @@ export class LayerDrawable extends Drawable implements Drawable.Callback {
         this.mPaddingT = new Array<number>(N);
         this.mPaddingR = new Array<number>(N);
         this.mPaddingB = new Array<number>(N);
+        //androidui: fill 0 to new array (like java)
+        for (var i = 0; i < N; i++) {
+            this.mPaddingL[i] = 0;
+            this.mPaddingT[i] = 0;
+            this.mPaddingR[i] = 0;
+            this.mPaddingB[i] = 0;
+        }
     }
 
     getConstantState():Drawable.ConstantState  {
