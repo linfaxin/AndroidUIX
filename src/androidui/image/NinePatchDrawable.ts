@@ -90,6 +90,8 @@ module androidui.image {
         }
 
         private getNinePatchCache():Canvas {
+            if(!androidui.native.NativeCanvas.CanvasCacheEnable) return null;
+
             let bound = this.getBounds();
             let width = bound.width();
             let height = bound.height();

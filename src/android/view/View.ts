@@ -4681,6 +4681,11 @@ module android.view {
                 caching = (layerType != View.LAYER_TYPE_NONE);
             }
 
+            //androidui: androidui runtime will make this flag false.
+            if(!androidui.native.NativeCanvas.CanvasCacheEnable){
+                caching = false;
+            }
+
             const a:Animation = this.getAnimation();
             if (a != null) {
                 more = this.drawAnimation(parent, drawingTime, a, scalingRequired);

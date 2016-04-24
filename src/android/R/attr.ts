@@ -35,7 +35,7 @@ module android.R {
         static get textViewStyle() {
             return {
                 textSize: '14sp',
-                layerType: 'software',
+                //layerType: 'software',
                 textColor: color.textView_textColor,
                 textColorHint: 0xff808080
             };

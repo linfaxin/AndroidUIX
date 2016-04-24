@@ -2962,8 +2962,6 @@ var android;
                     return false;
                 }
                 onBoundsChange(bounds) {
-                    if (bounds == null || isNaN(bounds.left))
-                        throw new Error('bounds error');
                 }
                 getIntrinsicWidth() {
                     return -1;
@@ -8731,6 +8729,8 @@ var androidui;
                 }
             }
             getNinePatchCache() {
+                if (!androidui.native.NativeCanvas.CanvasCacheEnable)
+                    return null;
                 let bound = this.getBounds();
                 let width = bound.width();
                 let height = bound.height();
@@ -10725,7 +10725,6 @@ var android;
             static get textViewStyle() {
                 return {
                     textSize: '14sp',
-                    layerType: 'software',
                     textColor: R.color.textView_textColor,
                     textColorHint: 0xff808080
                 };
@@ -13573,6 +13572,9 @@ var android;
                 }
                 else {
                     caching = (layerType != View.LAYER_TYPE_NONE);
+                }
+                if (!androidui.native.NativeCanvas.CanvasCacheEnable) {
+                    caching = false;
                 }
                 const a = this.getAnimation();
                 if (a != null) {
@@ -58871,7 +58873,11 @@ var androidui;
                     return width;
                 };
             }
+            static notifyCanvasCacheEnable(enable) {
+                NativeCanvas.CanvasCacheEnable = enable;
+            }
         }
+        NativeCanvas.CanvasCacheEnable = true;
         native.NativeCanvas = NativeCanvas;
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));

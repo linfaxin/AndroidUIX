@@ -2505,13 +2505,11 @@ declare module android.R {
         static viewStyle: any;
         static textViewStyle: {
             textSize: string;
-            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         };
         static buttonStyle: {
             textSize: string;
-            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -2525,7 +2523,6 @@ declare module android.R {
         };
         static editTextStyle: {
             textSize: string;
-            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -2544,7 +2541,6 @@ declare module android.R {
         };
         static checkboxStyle: {
             textSize: string;
-            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -2561,7 +2557,6 @@ declare module android.R {
         };
         static radiobuttonStyle: {
             textSize: string;
-            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -8312,7 +8307,6 @@ declare module android.widget {
     class CheckBox extends CompoundButton {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             textSize: string;
-            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -8334,7 +8328,6 @@ declare module android.widget {
     class RadioButton extends CompoundButton {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             textSize: string;
-            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -10968,6 +10961,7 @@ declare module androidui.native {
     import Rect = android.graphics.Rect;
     class NativeCanvas extends Canvas {
         private canvasId;
+        static CanvasCacheEnable: boolean;
         protected initImpl(): void;
         protected createCanvasImpl(): void;
         protected recycleImpl(): void;
@@ -11000,6 +10994,7 @@ declare module androidui.native {
         protected setFontSizeImpl(size: number): void;
         protected setFontImpl(fontName: string): void;
         private static applyTextMeasure(cacheMeasureTextSize, defaultWidth, widths);
+        private static notifyCanvasCacheEnable(enable);
     }
 }
 declare module androidui.native {
