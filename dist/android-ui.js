@@ -17996,8 +17996,8 @@ var java;
                 return n.toString(16);
             }
         }
-        Integer.MIN_VALUE = Number.MIN_SAFE_INTEGER;
-        Integer.MAX_VALUE = Number.MAX_SAFE_INTEGER;
+        Integer.MIN_VALUE = -0x80000000;
+        Integer.MAX_VALUE = 0x7fffffff;
         lang.Integer = Integer;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
@@ -59003,7 +59003,9 @@ var androidui;
                     this.calls = [];
                 }
                 pushCall(method, methodArgs) {
-                    this.calls.push(method + JSON.stringify(methodArgs));
+                    this.calls.push(method);
+                    this.calls.push(...methodArgs);
+                    this.calls.push(null);
                 }
                 clear() {
                     this.calls = [];
@@ -59082,7 +59084,8 @@ var androidui;
                     batchCall.pushCall('72', [canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom]);
                 }
                 drawText(canvasId, text, x, y, fillStyle) {
-                    batchCall.pushCall('47', [canvasId, encodeURIComponent(text), x, y, fillStyle || android.graphics.Paint.Style.FILL]);
+                    text = '"' + text.replace(/(\n)+|(\r\n)+/g, "\\n") + '"';
+                    batchCall.pushCall('47', [canvasId, text, x, y, fillStyle || android.graphics.Paint.Style.FILL]);
                 }
                 setFillColor(canvasId, color, style) {
                     batchCall.pushCall('49', [canvasId, color, style || android.graphics.Paint.Style.FILL]);

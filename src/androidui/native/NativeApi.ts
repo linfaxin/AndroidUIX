@@ -25,7 +25,10 @@ module androidui.native {
             private calls:String[] = [];
             pushCall(method:string, methodArgs:any[]){
                 //this.calls.push(new NativeCall(method, methodArgs));
-                this.calls.push(method + JSON.stringify(methodArgs));
+                //this.calls.push(method + JSON.stringify(methodArgs));
+                this.calls.push(method);
+                this.calls.push(...methodArgs);
+                this.calls.push(null);
             }
             clear(){
                 this.calls = [];
@@ -126,7 +129,8 @@ module androidui.native {
              * @param fillStyle 0:fill / 1:stroke / 2:fill&stroke
              */
             drawText(canvasId:number, text:string, x:number, y:number, fillStyle:android.graphics.Paint.Style):void{
-                batchCall.pushCall('47', [canvasId, encodeURIComponent(text), x, y, fillStyle||android.graphics.Paint.Style.FILL]);
+                text = '"'+text.replace(/(\n)+|(\r\n)+/g, "\\n") + '"';
+                batchCall.pushCall('47', [canvasId, text, x, y, fillStyle||android.graphics.Paint.Style.FILL]);
             }
 
             setFillColor(canvasId:number, color:number, style:android.graphics.Paint.Style):void{
