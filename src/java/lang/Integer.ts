@@ -3,8 +3,8 @@
  */
 module java.lang{
     export class Integer{
-        static MIN_VALUE = Number.MIN_SAFE_INTEGER;
-        static MAX_VALUE = Number.MAX_SAFE_INTEGER;
+        static MIN_VALUE = -0x80000000;
+        static MAX_VALUE = 0x7fffffff;
 
         static parseInt(value:string):number {
             return Number.parseInt(value);
