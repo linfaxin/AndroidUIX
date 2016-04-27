@@ -15,7 +15,6 @@ module androidui.native {
 
     export class NativeCanvas extends Canvas {
         private canvasId:number;
-        public static CanvasCacheEnable = true;
 
         protected initImpl():void {
             this.canvasId = ++sNextID;
@@ -28,6 +27,10 @@ module androidui.native {
 
         protected recycleImpl():void {
             NativeApi.canvas.recycleCanvas(this.canvasId);
+        }
+
+        public isNativeAccelerated():boolean{
+            return true;
         }
 
         protected translateImpl(dx:number, dy:number):void {
@@ -170,9 +173,6 @@ module androidui.native {
                 }
                 return width;
             };
-        }
-        private static notifyCanvasCacheEnable(enable){
-            NativeCanvas.CanvasCacheEnable = enable;
         }
     }
 

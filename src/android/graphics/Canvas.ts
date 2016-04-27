@@ -88,6 +88,9 @@ module android.graphics {
             return this.mWidth;
         }
 
+        public isNativeAccelerated():boolean{
+            return false;
+        }
 
         translate(dx:number, dy:number):void {
             if(dx==0 && dy==0) return;
@@ -774,7 +777,7 @@ module android.graphics {
          * @param alpha [0, 1]
          */
         multiplyAlpha(alpha:number):void {
-            if(typeof alpha === 'number'){
+            if(typeof alpha === 'number' && alpha < 1){
                 this.multiplyAlphaImpl(alpha);
             }
         }

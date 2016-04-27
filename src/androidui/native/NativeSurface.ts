@@ -32,7 +32,7 @@ module androidui.native {
         }
 
         protected lockCanvasImpl(left:number, top:number, width:number, height:number):android.graphics.Canvas {
-            let canvas = new SurfaceLockCanvas(width, height);
+            let canvas = new NativeSurfaceLockCanvas(width, height);
             NativeApi.surface.lockCanvas(this.surfaceId, canvas.canvasId, left, top, left+width, top+height);
             return canvas;
         }
@@ -58,7 +58,7 @@ module androidui.native {
         }
     }
 
-    class SurfaceLockCanvas extends NativeCanvas{
+    class NativeSurfaceLockCanvas extends NativeCanvas{
 
         protected createCanvasImpl():void {
             //no need create canvas, will create when lock canvas

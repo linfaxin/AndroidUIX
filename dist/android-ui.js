@@ -2282,6 +2282,9 @@ var android;
             getWidth() {
                 return this.mWidth;
             }
+            isNativeAccelerated() {
+                return false;
+            }
             translate(dx, dy) {
                 if (dx == 0 && dy == 0)
                     return;
@@ -2726,7 +2729,7 @@ var android;
                 }
             }
             multiplyAlpha(alpha) {
-                if (typeof alpha === 'number') {
+                if (typeof alpha === 'number' && alpha < 1) {
                     this.multiplyAlphaImpl(alpha);
                 }
             }
@@ -8727,7 +8730,7 @@ var androidui;
                 if (!this.mNinePatchBorderInfo)
                     return;
                 if (!this.isImageSizeEmpty()) {
-                    let cache = NinePatchDrawable.DrawNinePatchWithCache ? this.getNinePatchCache() : null;
+                    let cache = this.getNinePatchCache();
                     if (cache) {
                         canvas.drawCanvas(cache);
                     }
@@ -8737,8 +8740,6 @@ var androidui;
                 }
             }
             getNinePatchCache() {
-                if (!androidui.native.NativeCanvas.CanvasCacheEnable)
-                    return null;
                 let bound = this.getBounds();
                 let width = bound.width();
                 let height = bound.height();
@@ -10733,6 +10734,7 @@ var android;
             static get textViewStyle() {
                 return {
                     textSize: '14sp',
+                    layerType: 'software',
                     textColor: R.color.textView_textColor,
                     textColorHint: 0xff808080
                 };
@@ -13574,15 +13576,13 @@ var android;
                 let caching = false;
                 let layerType = this.getLayerType();
                 const hardwareAccelerated = false;
+                const nativeAccelerated = canvas.isNativeAccelerated();
                 if ((flags & view_2.ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) != 0 ||
                     (flags & view_2.ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) != 0) {
                     caching = true;
                 }
                 else {
-                    caching = (layerType != View.LAYER_TYPE_NONE);
-                }
-                if (!androidui.native.NativeCanvas.CanvasCacheEnable) {
-                    caching = false;
+                    caching = (layerType != View.LAYER_TYPE_NONE) || hardwareAccelerated || nativeAccelerated;
                 }
                 const a = this.getAnimation();
                 if (a != null) {
@@ -14798,7 +14798,7 @@ var android;
                     bind.style.top = (top - pScrollY) / density + 'px';
                     bind.style.width = width / density + 'px';
                     bind.style.height = height / density + 'px';
-                    this._syncMatrixToElement();
+                    this.getMatrix();
                 }
                 if (this instanceof view_2.ViewGroup) {
                     const group = this;
@@ -14808,7 +14808,8 @@ var android;
                 }
             }
             _syncMatrixToElement() {
-                let matrix = this.getMatrix();
+                let matrix = this.mTransformationInfo == null ? Matrix.IDENTITY_MATRIX : this.mTransformationInfo.mMatrix;
+                matrix = matrix || Matrix.IDENTITY_MATRIX;
                 let v = View.TempMatrixValue;
                 matrix.getValues(v);
                 let transfrom = `matrix(${v[Matrix.MSCALE_X]}, ${-v[Matrix.MSKEW_X]}, ${-v[Matrix.MSKEW_Y]}, ${v[Matrix.MSCALE_Y]}, ${v[Matrix.MTRANS_X]}, ${v[Matrix.MTRANS_Y]})`;
@@ -58768,6 +58769,9 @@ var androidui;
             recycleImpl() {
                 native.NativeApi.canvas.recycleCanvas(this.canvasId);
             }
+            isNativeAccelerated() {
+                return true;
+            }
             translateImpl(dx, dy) {
                 native.NativeApi.canvas.translate(this.canvasId, dx, dy);
             }
@@ -58881,11 +58885,7 @@ var androidui;
                     return width;
                 };
             }
-            static notifyCanvasCacheEnable(enable) {
-                NativeCanvas.CanvasCacheEnable = enable;
-            }
         }
-        NativeCanvas.CanvasCacheEnable = true;
         native.NativeCanvas = NativeCanvas;
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
@@ -58910,7 +58910,7 @@ var androidui;
                 native.NativeApi.surface.onSurfaceBoundChange(this.surfaceId, bound.left, bound.top, bound.right, bound.bottom);
             }
             lockCanvasImpl(left, top, width, height) {
-                let canvas = new SurfaceLockCanvas(width, height);
+                let canvas = new NativeSurfaceLockCanvas(width, height);
                 native.NativeApi.surface.lockCanvas(this.surfaceId, canvas.canvasId, left, top, left + width, top + height);
                 return canvas;
             }
@@ -58933,7 +58933,7 @@ var androidui;
             }
         }
         native.NativeSurface = NativeSurface;
-        class SurfaceLockCanvas extends native.NativeCanvas {
+        class NativeSurfaceLockCanvas extends native.NativeCanvas {
             createCanvasImpl() {
             }
         }

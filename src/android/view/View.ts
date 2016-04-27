@@ -4673,17 +4673,13 @@ module android.view {
             let caching = false;
             let layerType = this.getLayerType();
             const hardwareAccelerated = false;
+            const nativeAccelerated = canvas.isNativeAccelerated();
 
             if ((flags & ViewGroup.FLAG_CHILDREN_DRAWN_WITH_CACHE) != 0 ||
                 (flags & ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE) != 0) {
                 caching = true;
             } else {
-                caching = (layerType != View.LAYER_TYPE_NONE);
-            }
-
-            //androidui: androidui runtime will make this flag false.
-            if(!androidui.native.NativeCanvas.CanvasCacheEnable){
-                caching = false;
+                caching = (layerType != View.LAYER_TYPE_NONE) || hardwareAccelerated || nativeAccelerated;
             }
 
             const a:Animation = this.getAnimation();
@@ -5385,7 +5381,7 @@ module android.view {
             return who == this.mBackground;
         }
         protected drawableStateChanged() {
-            this.getDrawableState();//fire may state change to stateAttrList
+            this.getDrawableState();//androidui: fire may state change to stateAttrList
 
             let d = this.mBackground;
             if (d != null && d.isStateful()) {
@@ -6368,7 +6364,7 @@ module android.view {
                 bind.style.width = width / density + 'px';
                 bind.style.height = height / density + 'px';
 
-                this._syncMatrixToElement();
+                this.getMatrix();
             }
 
             //this._syncScrollToElement();
@@ -6384,7 +6380,8 @@ module android.view {
         private static TempMatrixValue = new Array<number>(9);
         private _lastSyncTransform:string;
         protected _syncMatrixToElement(){
-            let matrix = this.getMatrix();
+            let matrix = this.mTransformationInfo == null ? Matrix.IDENTITY_MATRIX : this.mTransformationInfo.mMatrix;
+            matrix = matrix || Matrix.IDENTITY_MATRIX;
             let v = View.TempMatrixValue;
             matrix.getValues(v);
 

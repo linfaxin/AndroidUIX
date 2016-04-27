@@ -579,6 +579,7 @@ declare module android.graphics {
         protected recycleImpl(): void;
         getHeight(): number;
         getWidth(): number;
+        isNativeAccelerated(): boolean;
         translate(dx: number, dy: number): void;
         protected translateImpl(dx: number, dy: number): void;
         scale(sx: number, sy: number, px?: number, py?: number): void;
@@ -2506,11 +2507,13 @@ declare module android.R {
         static viewStyle: any;
         static textViewStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         };
         static buttonStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -2524,6 +2527,7 @@ declare module android.R {
         };
         static editTextStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -2542,6 +2546,7 @@ declare module android.R {
         };
         static checkboxStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -2558,6 +2563,7 @@ declare module android.R {
         };
         static radiobuttonStyle: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -8308,6 +8314,7 @@ declare module android.widget {
     class CheckBox extends CompoundButton {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -8329,6 +8336,7 @@ declare module android.widget {
     class RadioButton extends CompoundButton {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             textSize: string;
+            layerType: string;
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
@@ -10962,10 +10970,10 @@ declare module androidui.native {
     import Rect = android.graphics.Rect;
     class NativeCanvas extends Canvas {
         private canvasId;
-        static CanvasCacheEnable: boolean;
         protected initImpl(): void;
         protected createCanvasImpl(): void;
         protected recycleImpl(): void;
+        isNativeAccelerated(): boolean;
         protected translateImpl(dx: number, dy: number): void;
         protected scaleImpl(sx: number, sy: number): void;
         protected rotateImpl(degrees: number): void;
@@ -10995,7 +11003,6 @@ declare module androidui.native {
         protected setFontSizeImpl(size: number): void;
         protected setFontImpl(fontName: string): void;
         private static applyTextMeasure(cacheMeasureTextSize, defaultWidth, widths);
-        private static notifyCanvasCacheEnable(enable);
     }
 }
 declare module androidui.native {

@@ -62,7 +62,7 @@ module androidui.image {
         draw(canvas:Canvas):void {
             if(!this.mNinePatchBorderInfo) return;
             if(!this.isImageSizeEmpty()){
-                let cache = NinePatchDrawable.DrawNinePatchWithCache ? this.getNinePatchCache() : null;
+                let cache = this.getNinePatchCache();
                 if(cache){
                     canvas.drawCanvas(cache);
                 }else{
@@ -72,8 +72,6 @@ module androidui.image {
         }
 
         private getNinePatchCache():Canvas {
-            if(!androidui.native.NativeCanvas.CanvasCacheEnable) return null;
-
             let bound = this.getBounds();
             let width = bound.width();
             let height = bound.height();
