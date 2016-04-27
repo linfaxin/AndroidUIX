@@ -41,7 +41,7 @@ module androidui.image {
 
         protected onLoad():void {
             //parse nine patch border now.
-            let image = this.mState.mImage;
+            let image:NetImage = this.mState.mImage;
 
             let ninePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(image.src);
             if(ninePatchBorderInfo){
@@ -50,29 +50,11 @@ module androidui.image {
                 return;
             }
 
-            //left border
-            this.mTmpRect.set(0, 1, 1, image.height-1);
-            image.getPixels(this.mTmpRect, (leftBorder:number[])=>{
-
-                //top border
-                this.mTmpRect.set(1, 0, image.width-1, 1);
-                image.getPixels(this.mTmpRect, (topBorder:number[])=>{
-
-                    //right border
-                    this.mTmpRect.set(image.width-1, 1, image.width, image.height-1);
-                    image.getPixels(this.mTmpRect, (rightBorder:number[])=>{
-
-                        //bottom border
-                        this.mTmpRect.set(1, image.height-1, image.width-1, image.height);
-                        image.getPixels(this.mTmpRect, (bottomBorder:number[])=>{
-
-                            ninePatchBorderInfo = new NinePatchBorderInfo(leftBorder, topBorder, rightBorder, bottomBorder);
-                            NinePatchDrawable.GlobalBorderInfoCache.set(image.src, ninePatchBorderInfo);
-                            //parse border finish, notify load finish.
-                            super.onLoad();
-                        });
-                    });
-                });
+            image.getBorderPixels((leftBorder:number[], topBorder:number[], rightBorder:number[], bottomBorder:number[])=>{
+                ninePatchBorderInfo = new NinePatchBorderInfo(leftBorder, topBorder, rightBorder, bottomBorder);
+                NinePatchDrawable.GlobalBorderInfoCache.set(image.src, ninePatchBorderInfo);
+                //parse border finish, notify load finish.
+                super.onLoad();
             });
         }
 

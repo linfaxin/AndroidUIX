@@ -123,6 +123,33 @@ module androidui.image{
             //no impl for web
         }
 
+        getBorderPixels(callBack:(leftBorder:number[], topBorder:number[], rightBorder:number[], bottomBorder:number[])=>void):void {
+            if(!callBack) return;
+            let mTmpRect = new Rect();
+
+            //left border
+            mTmpRect.set(0, 1, 1, this.height-1);
+            this.getPixels(mTmpRect, (leftBorder:number[])=>{
+
+                //top border
+                mTmpRect.set(1, 0, this.width-1, 1);
+                this.getPixels(mTmpRect, (topBorder:number[])=>{
+
+                    //right border
+                    mTmpRect.set(this.width-1, 1, this.width, this.height-1);
+                    this.getPixels(mTmpRect, (rightBorder:number[])=>{
+
+                        //bottom border
+                        mTmpRect.set(1, this.height-1, this.width-1, this.height);
+                        this.getPixels(mTmpRect, (bottomBorder:number[])=>{
+
+                            callBack(leftBorder, topBorder, rightBorder, bottomBorder);
+                        });
+                    });
+                });
+            });
+        }
+
         getPixels(bound:Rect, callBack:(data:number[])=>void):void {
             if(!callBack) return;
             let canvasEle = document.createElement('canvas');

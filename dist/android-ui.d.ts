@@ -552,6 +552,7 @@ declare module androidui.image {
         addLoadListener(onload: () => void, onerror?: () => void): void;
         removeLoadListener(onload?: () => void, onerror?: () => void): void;
         recycle(): void;
+        getBorderPixels(callBack: (leftBorder: number[], topBorder: number[], rightBorder: number[], bottomBorder: number[]) => void): void;
         getPixels(bound: Rect, callBack: (data: number[]) => void): void;
     }
 }
@@ -11014,12 +11015,17 @@ declare module androidui.native {
     import Rect = android.graphics.Rect;
     class NativeImage extends NetImage {
         imageId: number;
+        leftBorder: number[];
+        topBorder: number[];
+        rightBorder: number[];
+        bottomBorder: number[];
         private getPixelsCallbacks;
         protected createImage(): void;
         protected loadImage(): void;
         recycle(): void;
         getPixels(bound: Rect, callBack: (data: number[]) => void): void;
-        private static notifyLoadFinish(imageId, width, height);
+        getBorderPixels(callBack: (leftBorder: number[], topBorder: number[], rightBorder: number[], bottomBorder: number[]) => void): void;
+        private static notifyLoadFinish(imageId, width, height, leftBorder, topBorder, rightBorder, bottomBorder);
         private static notifyLoadError(imageId);
         private static notifyGetPixels(imageId, callBackIndex, data);
     }

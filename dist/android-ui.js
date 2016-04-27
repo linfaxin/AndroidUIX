@@ -2175,6 +2175,24 @@ var androidui;
             }
             recycle() {
             }
+            getBorderPixels(callBack) {
+                if (!callBack)
+                    return;
+                let mTmpRect = new Rect();
+                mTmpRect.set(0, 1, 1, this.height - 1);
+                this.getPixels(mTmpRect, (leftBorder) => {
+                    mTmpRect.set(1, 0, this.width - 1, 1);
+                    this.getPixels(mTmpRect, (topBorder) => {
+                        mTmpRect.set(this.width - 1, 1, this.width, this.height - 1);
+                        this.getPixels(mTmpRect, (rightBorder) => {
+                            mTmpRect.set(1, this.height - 1, this.width - 1, this.height);
+                            this.getPixels(mTmpRect, (bottomBorder) => {
+                                callBack(leftBorder, topBorder, rightBorder, bottomBorder);
+                            });
+                        });
+                    });
+                });
+            }
             getPixels(bound, callBack) {
                 if (!callBack)
                     return;
@@ -8699,20 +8717,10 @@ var androidui;
                     super.onLoad();
                     return;
                 }
-                this.mTmpRect.set(0, 1, 1, image.height - 1);
-                image.getPixels(this.mTmpRect, (leftBorder) => {
-                    this.mTmpRect.set(1, 0, image.width - 1, 1);
-                    image.getPixels(this.mTmpRect, (topBorder) => {
-                        this.mTmpRect.set(image.width - 1, 1, image.width, image.height - 1);
-                        image.getPixels(this.mTmpRect, (rightBorder) => {
-                            this.mTmpRect.set(1, image.height - 1, image.width - 1, image.height);
-                            image.getPixels(this.mTmpRect, (bottomBorder) => {
-                                ninePatchBorderInfo = new NinePatchBorderInfo(leftBorder, topBorder, rightBorder, bottomBorder);
-                                NinePatchDrawable.GlobalBorderInfoCache.set(image.src, ninePatchBorderInfo);
-                                super.onLoad();
-                            });
-                        });
-                    });
+                image.getBorderPixels((leftBorder, topBorder, rightBorder, bottomBorder) => {
+                    ninePatchBorderInfo = new NinePatchBorderInfo(leftBorder, topBorder, rightBorder, bottomBorder);
+                    NinePatchDrawable.GlobalBorderInfoCache.set(image.src, ninePatchBorderInfo);
+                    super.onLoad();
                 });
             }
             draw(canvas) {
@@ -58967,10 +58975,24 @@ var androidui;
                 let callBackIndex = this.getPixelsCallbacks.length - 1;
                 native.NativeApi.image.getPixels(this.imageId, callBackIndex, bound.left, bound.top, bound.right, bound.bottom);
             }
-            static notifyLoadFinish(imageId, width, height) {
+            getBorderPixels(callBack) {
+                if (!callBack)
+                    return;
+                if (this.leftBorder && this.topBorder && this.rightBorder && this.bottomBorder) {
+                    callBack(this.leftBorder, this.topBorder, this.rightBorder, this.bottomBorder);
+                }
+                else {
+                    super.getBorderPixels(callBack);
+                }
+            }
+            static notifyLoadFinish(imageId, width, height, leftBorder, topBorder, rightBorder, bottomBorder) {
                 let image = NativeImageInstances.get(imageId);
                 image.mImageWidth = width;
                 image.mImageHeight = height;
+                image.leftBorder = leftBorder;
+                image.topBorder = topBorder;
+                image.rightBorder = rightBorder;
+                image.bottomBorder = bottomBorder;
                 image.fireOnLoad();
             }
             static notifyLoadError(imageId) {

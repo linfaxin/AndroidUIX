@@ -14,6 +14,10 @@ module androidui.native {
 
     export class NativeImage extends NetImage{
         imageId:number;
+        leftBorder:number[];
+        topBorder:number[];
+        rightBorder:number[];
+        bottomBorder:number[];
         private getPixelsCallbacks:Array<(data:number[])=>void>;
 
         protected createImage(){
@@ -44,11 +48,26 @@ module androidui.native {
             NativeApi.image.getPixels(this.imageId, callBackIndex, bound.left, bound.top, bound.right, bound.bottom);
         }
 
+
+        getBorderPixels(callBack:(leftBorder:number[], topBorder:number[], rightBorder:number[], bottomBorder:number[])=>void):void {
+            if(!callBack) return;
+            if(this.leftBorder && this.topBorder && this.rightBorder && this.bottomBorder){
+                callBack(this.leftBorder, this.topBorder, this.rightBorder, this.bottomBorder);
+            }else{
+                super.getBorderPixels(callBack);
+            }
+        }
+
         //call from native
-        private static notifyLoadFinish(imageId:number, width:number, height:number){
+        private static notifyLoadFinish(imageId:number, width:number, height:number,
+                                        leftBorder:number[], topBorder:number[], rightBorder:number[], bottomBorder:number[]){
             let image:NativeImage = NativeImageInstances.get(imageId);
             image.mImageWidth = width;
             image.mImageHeight = height;
+            image.leftBorder = leftBorder;
+            image.topBorder = topBorder;
+            image.rightBorder = rightBorder;
+            image.bottomBorder = bottomBorder;
             image.fireOnLoad();
         }
         //call from native
