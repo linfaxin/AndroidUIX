@@ -46,6 +46,10 @@ module android.R {
         static get ic_menu_moreoverflow_normal_holo_dark(){return new NetDrawable(image_base64.ic_menu_moreoverflow_normal_holo_dark)}
         static get menu_panel_holo_dark(){return new NinePatchDrawable(image_base64.menu_panel_holo_dark)}
         static get menu_panel_holo_light(){return new NinePatchDrawable(image_base64.menu_panel_holo_light)}
+        static get popup_bottom_bright(){return new NinePatchDrawable(image_base64.popup_bottom_bright)}
+        static get popup_center_bright(){return new NinePatchDrawable(image_base64.popup_center_bright)}
+        static get popup_full_bright(){return new NinePatchDrawable(image_base64.popup_full_bright)}
+        static get popup_top_bright(){return new NinePatchDrawable(image_base64.popup_top_bright)}
         static get progressbar_indeterminate_holo1(){return new NetDrawable(image_base64.progressbar_indeterminate_holo1)}
         static get progressbar_indeterminate_holo2(){return new NetDrawable(image_base64.progressbar_indeterminate_holo2)}
         static get progressbar_indeterminate_holo3(){return new NetDrawable(image_base64.progressbar_indeterminate_holo3)}

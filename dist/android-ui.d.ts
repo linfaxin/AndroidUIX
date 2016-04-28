@@ -2112,7 +2112,6 @@ declare module androidui.image {
     import Canvas = android.graphics.Canvas;
     class NinePatchDrawable extends NetDrawable {
         private static GlobalBorderInfoCache;
-        private static DrawNinePatchWithCache;
         private mTmpRect;
         private mTmpRect2;
         private mNinePatchBorderInfo;
@@ -2191,6 +2190,10 @@ declare module android.R {
         static ic_menu_moreoverflow_normal_holo_dark: any;
         static menu_panel_holo_dark: any;
         static menu_panel_holo_light: any;
+        static popup_bottom_bright: any;
+        static popup_center_bright: any;
+        static popup_full_bright: any;
+        static popup_top_bright: any;
         static progressbar_indeterminate_holo1: any;
         static progressbar_indeterminate_holo2: any;
         static progressbar_indeterminate_holo3: any;
@@ -2251,6 +2254,10 @@ declare module android.R {
         static ic_menu_moreoverflow_normal_holo_dark: NetDrawable;
         static menu_panel_holo_dark: NinePatchDrawable;
         static menu_panel_holo_light: NinePatchDrawable;
+        static popup_bottom_bright: NinePatchDrawable;
+        static popup_center_bright: NinePatchDrawable;
+        static popup_full_bright: NinePatchDrawable;
+        static popup_top_bright: NinePatchDrawable;
         static progressbar_indeterminate_holo1: NetDrawable;
         static progressbar_indeterminate_holo2: NetDrawable;
         static progressbar_indeterminate_holo3: NetDrawable;

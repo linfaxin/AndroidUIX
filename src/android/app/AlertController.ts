@@ -553,15 +553,15 @@ module android.app {
 
         private setBackground(topPanel:LinearLayout, contentPanel:LinearLayout, customPanel:View, hasButtons:boolean, hasTitle:boolean, buttonPanel:View):void {
             /* Get all the different background required */
-            let fullDark:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_full_bright;//R.drawable.popup_full_dark;
-            let topDark:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_top_bright;//R.drawable.popup_top_dark;
-            let centerDark:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_center_bright;//R.drawable.popup_center_dark;
-            let bottomDark:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_bottom_bright;//R.drawable.popup_bottom_dark;
-            let fullBright:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_full_bright;
-            let topBright:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_top_bright;
-            let centerBright:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_center_bright;
-            let bottomBright:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_bottom_bright;
-            let bottomMedium:Drawable = new ColorDrawable(Color.WHITE);//R.drawable.popup_bottom_bright;//R.drawable.popup_bottom_medium;
+            let fullDark:Drawable = R.image.popup_full_bright;//R.drawable.popup_full_dark;
+            let topDark:Drawable = R.image.popup_top_bright;//R.drawable.popup_top_dark;
+            let centerDark:Drawable = R.image.popup_center_bright;//R.drawable.popup_center_dark;
+            let bottomDark:Drawable = R.image.popup_bottom_bright;//R.drawable.popup_bottom_dark;
+            let fullBright:Drawable = R.image.popup_full_bright;
+            let topBright:Drawable = R.image.popup_top_bright;
+            let centerBright:Drawable = R.image.popup_center_bright;
+            let bottomBright:Drawable = R.image.popup_bottom_bright;
+            let bottomMedium:Drawable = R.image.popup_bottom_bright;//R.drawable.popup_bottom_medium;
             /*
              * We now set the background of all of the sections of the alert.
              * First collect together each section that is being displayed along

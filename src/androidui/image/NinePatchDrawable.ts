@@ -20,7 +20,6 @@ module androidui.image {
 
     export class NinePatchDrawable extends NetDrawable {
         private static GlobalBorderInfoCache = new Map<string, NinePatchBorderInfo>();
-        private static DrawNinePatchWithCache = true;
 
         private mTmpRect = new Rect();
         private mTmpRect2 = new Rect();
@@ -101,8 +100,8 @@ module androidui.image {
             let staticHeightSum = this.mNinePatchBorderInfo.getVerticalStaticLengthSum();
             let extraWidth = bound.width() - staticWidthSum;
             let extraHeight = bound.height() - staticHeightSum;
-            let staticWidthPartScale = extraWidth>=0 ? 1 : bound.width()/staticWidthSum;
-            let staticHeightPartScale = extraHeight>=0 ? 1 : bound.height()/staticHeightSum;
+            let staticWidthPartScale = (extraWidth>=0 || staticWidthSum==0) ? 1 : bound.width()/staticWidthSum;
+            let staticHeightPartScale = (extraHeight>=0 || staticHeightSum==0) ? 1 : bound.height()/staticHeightSum;
             const scaleHorizontalWeightSum = this.mNinePatchBorderInfo.getHorizontalScaleLengthSum();
             const scaleVerticalWeightSum = this.mNinePatchBorderInfo.getVerticalScaleLengthSum();
 
@@ -114,8 +113,10 @@ module androidui.image {
                     let typedValue = heightParts[i];
                     let isScalePart = NinePatchBorderInfo.isScaleType(typedValue);
                     let srcHeight = NinePatchBorderInfo.getValueUnpack(typedValue);
+                    if(srcHeight <= 0) continue;
                     let dstHeight;
                     if(isScalePart){
+                        if(scaleVerticalWeightSum == 0) continue;
                         dstHeight = extraHeight * srcHeight / scaleVerticalWeightSum;
                         if(dstHeight <= 0) continue;
 
@@ -214,8 +215,9 @@ module androidui.image {
             if(currentStatic) this.verticalStaticLengthSum += tmpLength;
             this.verticalScaleLengthSum = leftBorder.length - this.verticalStaticLengthSum;
             this.verticalTypedValues.push(currentStatic ? tmpLength : -tmpLength);//negative value mean scale pixel
-            tmpLength = 0;
 
+            tmpLength = 0;
+            currentStatic = true;
             for(let color of topBorder){
                 let isScaleColor = NinePatchBorderInfo.isScaleColor(color);
                 let typeChange = (isScaleColor && currentStatic) || (!isScaleColor && !currentStatic);
@@ -232,7 +234,7 @@ module androidui.image {
             if(currentStatic) this.horizontalStaticLengthSum += tmpLength;
             this.horizontalScaleLengthSum = topBorder.length - this.horizontalStaticLengthSum;
             this.horizontalTypedValues.push(currentStatic ? tmpLength : -tmpLength);//negative value mean scale pixel
-            tmpLength = 0;
+
 
             //padding from left & top
             if(this.horizontalTypedValues.length>=3){

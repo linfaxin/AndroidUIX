@@ -2256,6 +2256,10 @@ var android;
                 this.mCanvasElement.width = this.mWidth;
                 this.mCanvasElement.height = this.mHeight;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
+                this._mCanvasContent['mozImageSmoothingEnabled'] = false;
+                this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
+                this._mCanvasContent['msImageSmoothingEnabled'] = false;
+                this._mCanvasContent['imageSmoothingEnabled'] = false;
                 this.save();
             }
             recycle() {
@@ -2468,7 +2472,7 @@ var android;
                         this._mCanvasContent.drawImage(image.browserImage, 0, 0);
                     }
                     else {
-                        this._mCanvasContent.drawImage(image.browserImage, srcRect.left, srcRect.top, srcRect.width(), srcRect.height(), 0, 0, image.browserImage.width, image.browserImage.height);
+                        this._mCanvasContent.drawImage(image.browserImage, srcRect.left, srcRect.top, srcRect.width(), srcRect.height(), 0, 0, srcRect.width(), srcRect.height());
                     }
                 }
                 else {
@@ -4235,7 +4239,7 @@ var android;
     (function (R) {
         const _layout_data = {
             "action_bar": "<merge>\n    <linearlayout id=\"action_bar_center_layout\" android:layout_marginLeft=\"60dp\" android:layout_marginRight=\"60dp\" android:minHeight=\"48dp\" android:gravity=\"center\" android:orientation=\"vertical\">\n        <textview id=\"action_bar_title\" android:gravity=\"center\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"18sp\"></textview>\n        <textview id=\"action_bar_sub_title\" android:visibility=\"gone\" android:gravity=\"center\" android:layout_marginTop=\"4dp\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"12sp\"></textview>\n    </linearlayout>\n    <button id=\"action_bar_left\" android:visibility=\"gone\" android:layout_gravity=\"left|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingLeft=\"6dp\" android:paddingRight=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\"></button>\n    <button id=\"action_bar_right\" android:visibility=\"gone\" android:layout_gravity=\"right|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingRight=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\"></button>\n</merge>",
-            "alert_dialog": "<linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:cornerRadius=\"4dp\" android:layout_marginStart=\"8dip\" android:layout_marginEnd=\"8dip\" android:orientation=\"vertical\" id=\"parentPanel\">\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"vertical\" id=\"topPanel\">\n        <view android:layout_width=\"match_parent\" android:layout_height=\"1dip\" android:visibility=\"gone\" android:background=\"#aaa\" id=\"titleDividerTop\"></view>\n        <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"horizontal\" android:gravity=\"center_vertical|start\" android:minHeight=\"64dp\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" id=\"title_template\">\n            <imageview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingEnd=\"8dip\" id=\"icon\"></imageview>\n            <textview android:maxLines=\"1\" android:scrollHorizontally=\"true\" android:textSize=\"22sp\" android:textColor=\"#333\" android:singleLine=\"true\" android:ellipsize=\"end\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:textAlignment=\"viewStart\" id=\"alertTitle\"></textview>\n        </linearlayout>\n        <view android:layout_width=\"match_parent\" android:layout_height=\"1dip\" android:visibility=\"gone\" android:background=\"#aaa\" id=\"titleDivider\"></view>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </linearlayout>\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_weight=\"1\" android:orientation=\"vertical\" android:minHeight=\"64dp\" id=\"contentPanel\">\n        <scrollview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:clipToPadding=\"false\" id=\"scrollView\">\n            <textview android:textSize=\"18sp\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:paddingStart=\"16dip\" android:paddingEnd=\"16dip\" android:paddingTop=\"8dip\" android:paddingBottom=\"8dip\" id=\"message\"></textview>\n        </scrollview>\n    </linearlayout>\n\n    <framelayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_weight=\"1\" android:minHeight=\"64dp\" id=\"customPanel\">\n        <framelayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" id=\"custom\"></framelayout>\n    </framelayout>\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:minHeight=\"48dip\" android:orientation=\"vertical\" android:divider=\"@android:drawable/divider_horizontal\" android:showDividers=\"beginning\" android:dividerPadding=\"0dip\" id=\"buttonPanel\">\n        <linearlayout android:divider=\"@android:drawable/divider_vertical\" android:showDividers=\"middle\" android:dividerPadding=\"0dp\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"horizontal\" android:layoutDirection=\"locale\" android:measureWithLargestChild=\"true\">\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"start\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button2\"></button>\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"center_horizontal\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button3\"></button>\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"end\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button1\"></button>\n        </linearlayout>\n     </linearlayout>\n</linearlayout>",
+            "alert_dialog": "<linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_marginStart=\"8dip\" android:layout_marginEnd=\"8dip\" android:orientation=\"vertical\" id=\"parentPanel\">\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"vertical\" id=\"topPanel\">\n        <view android:layout_width=\"match_parent\" android:layout_height=\"1dip\" android:visibility=\"gone\" android:background=\"#aaa\" id=\"titleDividerTop\"></view>\n        <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"horizontal\" android:gravity=\"center_vertical|start\" android:minHeight=\"64dp\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" id=\"title_template\">\n            <imageview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingEnd=\"8dip\" id=\"icon\"></imageview>\n            <textview android:maxLines=\"1\" android:scrollHorizontally=\"true\" android:textSize=\"22sp\" android:textColor=\"#333\" android:singleLine=\"true\" android:ellipsize=\"end\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:textAlignment=\"viewStart\" id=\"alertTitle\"></textview>\n        </linearlayout>\n        <view android:layout_width=\"match_parent\" android:layout_height=\"1dip\" android:visibility=\"gone\" android:background=\"#aaa\" id=\"titleDivider\"></view>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </linearlayout>\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_weight=\"1\" android:orientation=\"vertical\" android:minHeight=\"64dp\" id=\"contentPanel\">\n        <scrollview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:clipToPadding=\"false\" id=\"scrollView\">\n            <textview android:textSize=\"18sp\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:paddingStart=\"16dip\" android:paddingEnd=\"16dip\" android:paddingTop=\"8dip\" android:paddingBottom=\"8dip\" id=\"message\"></textview>\n        </scrollview>\n    </linearlayout>\n\n    <framelayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_weight=\"1\" android:minHeight=\"64dp\" id=\"customPanel\">\n        <framelayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" id=\"custom\"></framelayout>\n    </framelayout>\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:minHeight=\"48dip\" android:orientation=\"vertical\" android:divider=\"@android:drawable/divider_horizontal\" android:showDividers=\"beginning\" android:dividerPadding=\"0dip\" id=\"buttonPanel\">\n        <linearlayout android:divider=\"@android:drawable/divider_vertical\" android:showDividers=\"middle\" android:dividerPadding=\"0dp\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"horizontal\" android:layoutDirection=\"locale\" android:measureWithLargestChild=\"true\">\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"start\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button2\"></button>\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"center_horizontal\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button3\"></button>\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"end\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button1\"></button>\n        </linearlayout>\n     </linearlayout>\n</linearlayout>",
             "alert_dialog_progress": "<relativelayout android:layout_width=\"wrap_content\" android:layout_height=\"match_parent\">\n        <progressbar style=\"@android:attr/progressBarStyleHorizontal\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_marginTop=\"16dip\" android:layout_marginBottom=\"1dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_centerHorizontal=\"true\" id=\"progress\"></progressbar>\n        <textview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingBottom=\"16dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_alignParentStart=\"true\" android:layout_below=\"progress\" id=\"progress_percent\"></textview>\n        <textview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingBottom=\"16dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_alignParentEnd=\"true\" android:layout_below=\"progress\" id=\"progress_number\"></textview>\n</relativelayout>",
             "id": "<resources>\n    <item id=\"content\"></item>\n    <item id=\"background\"></item>\n    <item id=\"secondaryProgress\"></item>\n    <item id=\"progress\"></item>\n    <item id=\"contentPanel\"></item>\n    <item id=\"topPanel\"></item>\n    <item id=\"buttonPanel\"></item>\n    <item id=\"customPanel\"></item>\n    <item id=\"custom\"></item>\n    <item id=\"titleDivider\"></item>\n    <item id=\"titleDividerTop\"></item>\n    <item id=\"title_template\"></item>\n    <item id=\"icon\"></item>\n    <item id=\"alertTitle\"></item>\n    <item id=\"scrollView\"></item>\n    <item id=\"message\"></item>\n    <item id=\"button1\"></item>\n    <item id=\"button2\"></item>\n    <item id=\"button3\"></item>\n    <item id=\"leftSpacer\"></item>\n    <item id=\"rightSpacer\"></item>\n    <item id=\"text1\"></item>\n</resources>",
             "popup_menu_item_layout": "<linearlayout android:layout_width=\"match_parent\" android:layout_height=\"48dp\" android:minWidth=\"196dip\" android:paddingEnd=\"16dip\">\n\n    <imageview android:visibility=\"gone\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:layout_gravity=\"center_vertical\" android:layout_marginStart=\"8dip\" android:layout_marginEnd=\"-8dip\" android:layout_marginTop=\"8dip\" android:layout_marginBottom=\"8dip\" android:scaleType=\"centerInside\" android:duplicateParentState=\"true\" id=\"icon\"></imageview>\n    \n    <!-- The title and summary have some gap between them, and this 'group' should be centered vertically. -->\n    <relativelayout android:layout_width=\"0dip\" android:layout_weight=\"1\" android:layout_height=\"wrap_content\" android:layout_gravity=\"center_vertical\" android:layout_marginStart=\"16dip\" android:duplicateParentState=\"true\">\n        \n        <textview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_alignParentTop=\"true\" android:layout_alignParentStart=\"true\" android:textColor=\"@android:color/primary_text_dark_disable_only\" android:textSize=\"18sp\" android:singleLine=\"true\" android:duplicateParentState=\"true\" android:ellipsize=\"marquee\" android:fadingEdge=\"horizontal\" android:textAlignment=\"viewStart\" id=\"title\"></textview>\n\n        <textview android:visibility=\"gone\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:layout_below=\"title\" android:layout_alignParentStart=\"true\" android:textColor=\"@android:color/primary_text_dark_disable_only\" android:textSize=\"12sp\" android:singleLine=\"true\" android:duplicateParentState=\"true\" android:textAlignment=\"viewStart\" id=\"shortcut\"></textview>\n\n    </relativelayout>\n\n    <!-- Checkbox, and/or radio button will be inserted here. -->\n    \n</linearlayout>",
@@ -8762,8 +8766,8 @@ var androidui;
                 let staticHeightSum = this.mNinePatchBorderInfo.getVerticalStaticLengthSum();
                 let extraWidth = bound.width() - staticWidthSum;
                 let extraHeight = bound.height() - staticHeightSum;
-                let staticWidthPartScale = extraWidth >= 0 ? 1 : bound.width() / staticWidthSum;
-                let staticHeightPartScale = extraHeight >= 0 ? 1 : bound.height() / staticHeightSum;
+                let staticWidthPartScale = (extraWidth >= 0 || staticWidthSum == 0) ? 1 : bound.width() / staticWidthSum;
+                let staticHeightPartScale = (extraHeight >= 0 || staticHeightSum == 0) ? 1 : bound.height() / staticHeightSum;
                 const scaleHorizontalWeightSum = this.mNinePatchBorderInfo.getHorizontalScaleLengthSum();
                 const scaleVerticalWeightSum = this.mNinePatchBorderInfo.getVerticalScaleLengthSum();
                 const drawColumn = (srcFromX, srcToX, dstFromX, dstToX) => {
@@ -8774,8 +8778,12 @@ var androidui;
                         let typedValue = heightParts[i];
                         let isScalePart = NinePatchBorderInfo.isScaleType(typedValue);
                         let srcHeight = NinePatchBorderInfo.getValueUnpack(typedValue);
+                        if (srcHeight <= 0)
+                            continue;
                         let dstHeight;
                         if (isScalePart) {
+                            if (scaleVerticalWeightSum == 0)
+                                continue;
                             dstHeight = extraHeight * srcHeight / scaleVerticalWeightSum;
                             if (dstHeight <= 0)
                                 continue;
@@ -8822,7 +8830,6 @@ var androidui;
             }
         }
         NinePatchDrawable.GlobalBorderInfoCache = new Map();
-        NinePatchDrawable.DrawNinePatchWithCache = true;
         image_2.NinePatchDrawable = NinePatchDrawable;
         class NinePatchBorderInfo {
             constructor(leftBorder, topBorder, rightBorder, bottomBorder) {
@@ -8858,6 +8865,7 @@ var androidui;
                 this.verticalScaleLengthSum = leftBorder.length - this.verticalStaticLengthSum;
                 this.verticalTypedValues.push(currentStatic ? tmpLength : -tmpLength);
                 tmpLength = 0;
+                currentStatic = true;
                 for (let color of topBorder) {
                     let isScaleColor = NinePatchBorderInfo.isScaleColor(color);
                     let typeChange = (isScaleColor && currentStatic) || (!isScaleColor && !currentStatic);
@@ -8877,7 +8885,6 @@ var androidui;
                     this.horizontalStaticLengthSum += tmpLength;
                 this.horizontalScaleLengthSum = topBorder.length - this.horizontalStaticLengthSum;
                 this.horizontalTypedValues.push(currentStatic ? tmpLength : -tmpLength);
-                tmpLength = 0;
                 if (this.horizontalTypedValues.length >= 3) {
                     this.paddingLeft = Math.max(0, this.horizontalTypedValues[0]);
                     this.paddingRight = Math.max(0, this.horizontalTypedValues[this.horizontalTypedValues.length - 1]);
@@ -9294,6 +9301,26 @@ var android;
                 null,
                 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAABCCAMAAACsNf57AAAA5FBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADd3d0AAADJycnMzMy6urrs7Ozu7u51dXV8fHwkJCRjY2PQ0NDb29vt7e3s7Oz39/fy8vLv7+8AAADx8fHk5OT/AAD39/f19fXm5ubr6+vo6OjHx8fKysrNzc3Pz8/R0dHT09Pz8/P5+flMDi8tAAAAOnRSTlMAAwkNFwYkEBMgHDsqNlBJGnaJfF+PZycwLUEzPk1HW1ZEb1JkgWCGaP1qY+ff3c6KiVsm+vf09OvngRpQJAAAA7pJREFUaN7t2Wl3mkAUBmBsCJEdY1qWYVUkLtnTVY1ZuqQ1////9F6QAKOx51Qm8YNvPod5zp0ZmLlyKzNhFG47M+PePDvCjrAj/JPQYJi1BHr8/ZpTKNYSirHfMUghoQg0oBh+r8YUjBKCJhTj49gHkGaNweehpFC8SMgB8F98rUHGAkERaAAOj6MbhgQRa4oEMQx0ICNH0IS8BBkgG16oLRkjQ+SFoAkoyADXo2/zu7W5/c88Pd1+HV0jAg05YVIqAgoOeH50Pp8yynx+dz7i+QM0PJdhUhU0YQrOpmOGmZ7BdDTLhkl5GrAGkvh5zDLTL6KEdSimYgJ/GQH2AtZAML+PmebBFLAOsC8oAk5DWgNTYU1QTKxDNhUFoYEEXAiiaRPWBGKbIi4HJDTKBFyLOA2WypqgWjgVsCKrhH0gNGEaFFuVWRNk1VZgKppA2F9FsGSXNcGVrZUEXIyGKNjEjVgTIpfYgmjggiwIjZwAK8HxWRN8B1ZDTmhQBMEkaqSzJuiRSkxhNUESFCL7HmuC58tEEaRVBEMyFVXWNdYETZdVxZSMZUITCLbqvgbBVW0gNKsEfDciQXa9LmtC13NlJOD7kSaIQHBeg+AAQVxNUCwghKwJIRAsZQ1BY0/QdoQdoULY1k35Bq+m7XpBlz9T9+PlsP1McfTH+hNTw8Ng+WPNVY4scqSfDMYMc3OiRzJ1ZMFUDm4Xp4+Dmw1z/0JuBqeXlYMbVybs5cfXq4vTH6vzcym/qDyW8ruUP4t8PLm8yo+vewWBPsTrWpAMO61Wr3d8eHj4vobAY457vVarM0wCTacP8TOKANvS98Ig7nda7TYgQLF5jgHQbrc6/TgIPR+2JE0o7pQG7glYDVo3OAIEVAIcdaQFFQDAUdDVYCXgfjCKOyUQMBmBxzslcR1dC4Mk7g87oKgl8KBhP06CUNMdl+Cdks8IXInQyC/3eKt0It3rhkGQJHH8oYbEcZIEQdj19MjBG2V+uW/khGqLw1QsVXYj39MAATmqIUGAAM3zI1dWLcXMWxw0AQxphwHqQADhRL6v656n1RDP03XfjxwAEKhB2l0AQUGge02CaVsqIpwIGODYND4MHzkIUC3bFOhe04xuO/IGIhTbsogKkJoCjyKWZSsIyGqQC5BA9x0zAyBQQYhaQwjB8QGQCqi+I9V9RUTW/k2bvyZIagk8KG0CSwjIO8Db2INODYjIe/HgWETaKMYifNGHBwAKtvD3CDQ8I1IHSmpL8eMQAjBb9tvUjMqEcejxuL9XNZodPDUZeAAAAABJRU5ErkJggg=="
             ],
+            "popup_bottom_bright": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAABOCAMAAAAKPPg1AAAAjVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNTU0BAQEAAAAAAAAAAAAAAABaWloAAAAYGBgAAAAAAAAAAAAAAAAAAAAAAAAaGhpoaGhQUFAeHh5ZWVlaWlr///8AAABqampXV1fx8fGbm5tSUlJgYGBRUVH5+fljY2MLHkH2AAAAJHRSTlMAAwYME1IpDwpBITgvThvHSx0WJDP1RW48Oi0ZPUlm4pBe9LzqzGhUAAACDklEQVRYw+3S3VLbMBCG4YQkwrJsodjGjSwrP6X8lAD3f3nd3dkwTIMSK+aEQe+xNc98kifR3WPxx/jIdHo1u57rXBRKmsXi5vHh6U98Tw+PN4uFkaoQuZ5fz66mU1aSk5zkJCc5yUlOcpKTnOQkJznJ+ZlOBo77QseBkwX2uKXolPQjHS9VJ5YudG8ZO70vRzml79nJwk7dNeCUI5wSnKarTzizeUVOO9Jpyanms1OOaKw0ZoRjjLSNOOfQD+f9CMd7+t3+dyh2Dg/UtuC8XuC8gtO2h+dhhzt2rJR3b/u/l7R/u5PSnnI+Xlwvt5v988vLc1R4YL/Zyv7DtbFzPEjnMEj15XZz+/s2Mjix2Za9gjm5PswJODgIb87sduv1+ldM8P1uZ/DWaE7YQaiCFxJFY63tZeuNKYdmjG9lD+eaQsDrVMh87vAgTZBayQscuVLEaJ5DzvEghvJadCDBIrAGBgasAaUTdQ5MaA4Pel+EUqOUxVbnsphSDSrva3jOscODCMprogrABlYUhNQ5MTgn5DCEixxISMVECCgO1xCDTmAQQyQtwQJsYDkYS1KYCczBEKI3QqlyTgM2OK2dq0DBOyOGlfDV4SSkAIsICERwzIlLY4gloNBCbVAkoIEIKcyEIZaQii9jhZkBEJXFRWfOMwwhxVpMLDDCzDlrVEFjvDpJpVKp79R9fJNg/wAgGweRXaclSwAAAABJRU5ErkJggg=="
+            ],
+            "popup_center_bright": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAAALCAMAAABVqWPqAAAAS1BMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABZWVlEREQODg4AAAAAAAAAAAAAAAD///8AAABbW1vd3d2VlZVSUlKKX/cCAAAAE3RSTlMAUAcDQjkoIRoUDwvvsGdNSTEu3NAXBQAAAEtJREFUOMtjIBWIQAHJ+iAUMzMTNxcnBzubECuLACMjr6iomDAZQFyCh4+Rn4VVkI2dg5OLm4mJGWrLqD2j9ozaQ749+HIwyQCPaQAIoTUzantFuwAAAABJRU5ErkJggg=="
+            ],
+            "popup_full_bright": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAABnCAMAAAAqn6zLAAAAq1BMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAApKSk8PDw2NjYuLi4AAAA+Pj44ODgqKio5OTlEREQwMDBhYWE0NDQTExNra2tqamppaWlFRUVqampqamr///9cXFwAAABTU1NWVlbBwcHHx8fLy8u9vb1jY2PT09OioqKZmZkZwWr6AAAALHRSTlMABgoOTSMTTxY9Kx0ZETMvHydIRkA2ODqBn5WJRJqQe3iFgf1qUOrf2pTl5E4lyI0AAAMkSURBVGje7drbctMwEAbghDhO5Pgoy1YBA06bHji0TYEA7/9k7Frd2jOtHEnN9DT6M8MNcr/5Vd9kt5OxXFlm8vIzhY/ZqanbD586xgYk5J1lzCWq0hMzw/SYkaQQAhKrKM5A6rugEYbh0irwAFokjYWUBI04jlcWgeNgAbWv0pSYBBAg8nxulTwHDCiSxtugAkXAKIoisggcBwukMEQIC2nqEIMKEFmWpRaB42ApaTZWiJhOAaOqaymZYaSs6ypFak4QFtLWUQwikgnRNE1pFDgoBJN1ilAeLxMFPRBi4nweZWnNRFNyHgTBwihwkPOyEQwkbBQmmkJYB2+tYyopJUFmIUZKBdHNaeus8NKkON20x8fHRx8tcgQPtBsOjaIip0IPBBysU0SpZKfr77tLh+wuWi7rLFKFdH1mSVenYnL97WR77ZDtycVGSlUIL+6+MumuLV7NoY5gX3fbvzcO+bfdtUzU8BuKl3RxmmuDOo34dLn988MhN9eXX0QjU+3FTTtniU4teAPOLxfnNzhNw+DiVvHQuYKPinLUtQXlY5ySiyorco2Dr0GonCbgj3E4F/U+B99qVgb8vbtzxINGwosw5qjXoFwEj3GC4PZFeCIHX+wxR/DX4pRP4yyMnPoADvOOd7zjHe94xzve8Y53vOOdV+BUB3De1vfGwffgl/C9/mDO889dDjlHeqa52B1z6xxozqd1Dj+31PS5N4f96RDNHFY/Vz5znSufbyTTzZXJGc7Jz9zm5OctZzQn3zv3r6Q4bdefIR8sgufXLRdy39x/uMdgbnsMCQ8O9xij658CIWRAWRgnCGgvE82xDl6bfjuX3EIpSqLbMnGDwDG1aKqgDTDaOlSo35ul3UpLRbCR0H/KukqhzJCZji/oYoAKWgNWRlGLwAgUtZ6jOppCg4UjUl0yg9BmE3eoPTMdX6Aqida08LDJB4NIbLCnpYUwrZ1XmNwoeBIRUEYZyv01emyUfpHer7dNFvbKgoSGwbMzRKjMvpBEmFmIIGUf1NV1+asNMowUsvAfx9w9byTRMUuBAKtgf4cnfHx8fF58ruwz0eY/HRQD4ERyIRoAAAAASUVORK5CYII="
+            ],
+            "popup_top_bright": [
+                null,
+                null,
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGcAAABOCAMAAAAKPPg1AAAAgVBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNTU0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2NjYAAAAAAAAAAAA5OTlpaWlYWFgjIyNWVlZFRUX///8AAABqampXV1fx8fFcXFxUVFTHx8e+vr5kZGQwQJg3AAAAIXRSTlMAA1IGChNMIRovKA9BOMcNF0g0JSw+HpUcOkWN9aVcv4I+EWOzAAAB1klEQVRYw+3YUU/CMBQFYJxattGpA1q3qqgIKPz/H+i5vUsmiYV2I8aHe567fDmnfdrkZNYpmSTnalzSmOshiYd64yY9vRWnsHGfGrYipE5hYzab3aYE59nqpBNMrzDxkBLGfkjnGChE5HneIDYmDYLzwFhi6AxDCgw7nU4X8cFpC4ukkxBN6stAAQKjLMtlfHB6QRRJvtIVEqrTMXa6AFEU85QUxXIJynZQqBDXIaYhBUZVta2JTdtWFSySGkAoFHT83TBTzKvWaO2cq+OCk1qbtpoXDM0YCtVhBmWggFBKZXHBSWCQUImhQCG6HVott2AwGEOQIlMzg/kA2ZyWu/6tUF+nRBu9entCHlNCH7ytNBqVXaGQQ3WwGkZbvTzvhuT5ZYXpsBwVIicwm69TGQPmc0gAGVNxIR4uMJulOlq/7g77r/TsD7tXramQDQwHhx517us4d7f5eB+Sj82dc75QjqcdcDCbd3Rdw9kOYLZw6lp7xw/XO+sjp6HZnFIjHKUcDdccOesjh6/HjHYMHHveqVU2wslUfdbpricb5WTdBQUdPDd7McfiwYWci/b5P44a6ShxxBFHHHHEEUccccQRRxxxxBFHHHHEEedv//OFs07PJJhvB2dQcPxwm8wAAAAASUVORK5CYII="
+            ],
             "progressbar_indeterminate_holo1": [
                 null,
                 null,
@@ -9434,6 +9461,10 @@ var android;
             ic_menu_moreoverflow_normal_holo_dark: null,
             menu_panel_holo_dark: null,
             menu_panel_holo_light: null,
+            popup_bottom_bright: null,
+            popup_center_bright: null,
+            popup_full_bright: null,
+            popup_top_bright: null,
             progressbar_indeterminate_holo1: null,
             progressbar_indeterminate_holo2: null,
             progressbar_indeterminate_holo3: null,
@@ -9571,6 +9602,18 @@ var android;
             static get menu_panel_holo_light() {
                 return imageCache.menu_panel_holo_light || (imageCache.menu_panel_holo_light = findRatioImage(data.menu_panel_holo_light));
             }
+            static get popup_bottom_bright() {
+                return imageCache.popup_bottom_bright || (imageCache.popup_bottom_bright = findRatioImage(data.popup_bottom_bright));
+            }
+            static get popup_center_bright() {
+                return imageCache.popup_center_bright || (imageCache.popup_center_bright = findRatioImage(data.popup_center_bright));
+            }
+            static get popup_full_bright() {
+                return imageCache.popup_full_bright || (imageCache.popup_full_bright = findRatioImage(data.popup_full_bright));
+            }
+            static get popup_top_bright() {
+                return imageCache.popup_top_bright || (imageCache.popup_top_bright = findRatioImage(data.popup_top_bright));
+            }
             static get progressbar_indeterminate_holo1() {
                 return imageCache.progressbar_indeterminate_holo1 || (imageCache.progressbar_indeterminate_holo1 = findRatioImage(data.progressbar_indeterminate_holo1));
             }
@@ -9671,6 +9714,10 @@ var android;
             static get ic_menu_moreoverflow_normal_holo_dark() { return new NetDrawable(R.image_base64.ic_menu_moreoverflow_normal_holo_dark); }
             static get menu_panel_holo_dark() { return new NinePatchDrawable(R.image_base64.menu_panel_holo_dark); }
             static get menu_panel_holo_light() { return new NinePatchDrawable(R.image_base64.menu_panel_holo_light); }
+            static get popup_bottom_bright() { return new NinePatchDrawable(R.image_base64.popup_bottom_bright); }
+            static get popup_center_bright() { return new NinePatchDrawable(R.image_base64.popup_center_bright); }
+            static get popup_full_bright() { return new NinePatchDrawable(R.image_base64.popup_full_bright); }
+            static get popup_top_bright() { return new NinePatchDrawable(R.image_base64.popup_top_bright); }
             static get progressbar_indeterminate_holo1() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo1); }
             static get progressbar_indeterminate_holo2() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo2); }
             static get progressbar_indeterminate_holo3() { return new NetDrawable(R.image_base64.progressbar_indeterminate_holo3); }
@@ -48806,8 +48853,6 @@ var android;
         const MATCH_PARENT = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
         var R = android.R;
         var DialogInterface = android.content.DialogInterface;
-        var ColorDrawable = android.graphics.drawable.ColorDrawable;
-        var Color = android.graphics.Color;
         var Handler = android.os.Handler;
         var Message = android.os.Message;
         var TextUtils = android.text.TextUtils;
@@ -49103,15 +49148,15 @@ var android;
                 }
             }
             setBackground(topPanel, contentPanel, customPanel, hasButtons, hasTitle, buttonPanel) {
-                let fullDark = new ColorDrawable(Color.WHITE);
-                let topDark = new ColorDrawable(Color.WHITE);
-                let centerDark = new ColorDrawable(Color.WHITE);
-                let bottomDark = new ColorDrawable(Color.WHITE);
-                let fullBright = new ColorDrawable(Color.WHITE);
-                let topBright = new ColorDrawable(Color.WHITE);
-                let centerBright = new ColorDrawable(Color.WHITE);
-                let bottomBright = new ColorDrawable(Color.WHITE);
-                let bottomMedium = new ColorDrawable(Color.WHITE);
+                let fullDark = R.image.popup_full_bright;
+                let topDark = R.image.popup_top_bright;
+                let centerDark = R.image.popup_center_bright;
+                let bottomDark = R.image.popup_bottom_bright;
+                let fullBright = R.image.popup_full_bright;
+                let topBright = R.image.popup_top_bright;
+                let centerBright = R.image.popup_center_bright;
+                let bottomBright = R.image.popup_bottom_bright;
+                let bottomMedium = R.image.popup_bottom_bright;
                 let views = new Array(4);
                 let light = new Array(4);
                 let lastView = null;

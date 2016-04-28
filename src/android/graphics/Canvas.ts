@@ -66,6 +66,10 @@ module android.graphics {
             this.mCanvasElement.width = this.mWidth;
             this.mCanvasElement.height = this.mHeight;
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
+            this._mCanvasContent['mozImageSmoothingEnabled'] = false;
+            this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
+            this._mCanvasContent['msImageSmoothingEnabled'] = false;
+            this._mCanvasContent['imageSmoothingEnabled'] = false;
             this.save();//is need?
         }
 
@@ -326,7 +330,8 @@ module android.graphics {
                 }else{
                     this._mCanvasContent.drawImage(image.browserImage,
                         srcRect.left, srcRect.top, srcRect.width(), srcRect.height(),
-                        0, 0, image.browserImage.width, image.browserImage.height
+                        0, 0, srcRect.width(), srcRect.height()
+                        // 0, 0, image.browserImage.width, image.browserImage.height
                     );
                 }
 
