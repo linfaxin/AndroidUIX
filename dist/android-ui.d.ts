@@ -11009,6 +11009,7 @@ declare module androidui.native {
     import Surface = android.view.Surface;
     class NativeSurface extends Surface {
         private surfaceId;
+        private lockedCanvas;
         protected initImpl(): void;
         notifyBoundChange(): void;
         protected lockCanvasImpl(left: number, top: number, width: number, height: number): android.graphics.Canvas;

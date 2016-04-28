@@ -58906,9 +58906,11 @@ var androidui;
                 native.NativeApi.surface.onSurfaceBoundChange(this.surfaceId, bound.left, bound.top, bound.right, bound.bottom);
             }
             lockCanvasImpl(left, top, width, height) {
-                let canvas = new NativeSurfaceLockCanvas(width, height);
-                native.NativeApi.surface.lockCanvas(this.surfaceId, canvas.canvasId, left, top, left + width, top + height);
-                return canvas;
+                if (!this.lockedCanvas) {
+                    this.lockedCanvas = new NativeSurfaceLockCanvas(width, height);
+                }
+                native.NativeApi.surface.lockCanvas(this.surfaceId, this.lockedCanvas.canvasId, left, top, left + width, top + height);
+                return this.lockedCanvas;
             }
             unlockCanvasAndPost(canvas) {
                 if (canvas instanceof native.NativeCanvas) {

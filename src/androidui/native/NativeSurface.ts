@@ -16,6 +16,7 @@ module androidui.native {
 
     export class NativeSurface extends Surface{
         private surfaceId;
+        private lockedCanvas:NativeSurfaceLockCanvas;
 
         protected initImpl() {
             this.initCanvasBound();
@@ -32,9 +33,11 @@ module androidui.native {
         }
 
         protected lockCanvasImpl(left:number, top:number, width:number, height:number):android.graphics.Canvas {
-            let canvas = new NativeSurfaceLockCanvas(width, height);
-            NativeApi.surface.lockCanvas(this.surfaceId, canvas.canvasId, left, top, left+width, top+height);
-            return canvas;
+            if(!this.lockedCanvas){
+                this.lockedCanvas = new NativeSurfaceLockCanvas(width, height);
+            }
+            NativeApi.surface.lockCanvas(this.surfaceId, this.lockedCanvas.canvasId, left, top, left+width, top+height);
+            return this.lockedCanvas;
         }
 
         unlockCanvasAndPost(canvas:android.graphics.Canvas):void {
