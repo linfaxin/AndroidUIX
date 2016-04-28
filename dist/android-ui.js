@@ -58800,7 +58800,7 @@ var androidui;
                 native.NativeApi.canvas.clipRect(this.canvasId, left, top, width, height);
             }
             clipRoundRectImpl(left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft) {
-                native.NativeApi.canvas.clipRect(this.canvasId, left, top, width, height);
+                native.NativeApi.canvas.clipRoundRectImpl(this.canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
             }
             drawCanvasImpl(canvas, offsetX, offsetY) {
                 if (canvas instanceof NativeCanvas) {
@@ -59094,17 +59094,6 @@ var androidui;
                 drawCanvas(canvasId, drawCanvasId, offsetX, offsetY) {
                     batchCall.pushCall('45', [canvasId, drawCanvasId, offsetX, offsetY]);
                 }
-                drawImage2args(canvasId, drawImageId, left, top) {
-                    batchCall.pushCall('70', [canvasId, drawImageId, left, top]);
-                }
-                drawImage4args(canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom) {
-                    if (dstLeft == null || isNaN(dstLeft))
-                        throw new Error('drawImage4args error');
-                    batchCall.pushCall('71', [canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom]);
-                }
-                drawImage8args(canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom) {
-                    batchCall.pushCall('72', [canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom]);
-                }
                 drawText(canvasId, text, x, y, fillStyle) {
                     text = '"' + text.replace(/(\n)+|(\r\n)+/g, "\\n") + '"';
                     batchCall.pushCall('47', [canvasId, text, x, y, fillStyle || android.graphics.Paint.Style.FILL]);
@@ -59150,6 +59139,18 @@ var androidui;
                 }
                 drawRoundRectImpl(canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style) {
                     batchCall.pushCall('62', [canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style || android.graphics.Paint.Style.FILL]);
+                }
+                clipRoundRectImpl(canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft) {
+                    batchCall.pushCall('63', [canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft]);
+                }
+                drawImage2args(canvasId, drawImageId, left, top) {
+                    batchCall.pushCall('70', [canvasId, drawImageId, left, top]);
+                }
+                drawImage4args(canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom) {
+                    batchCall.pushCall('71', [canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom]);
+                }
+                drawImage8args(canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom) {
+                    batchCall.pushCall('72', [canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom]);
                 }
             }
             NativeApi.CanvasApi = CanvasApi;

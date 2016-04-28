@@ -71,7 +71,7 @@ module androidui.native {
         }
         protected clipRoundRectImpl(left:number, top:number, width:number, height:number, radiusTopLeft:number,
                                     radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number):void {
-            NativeApi.canvas.clipRect(this.canvasId, left, top, width, height);//FIXME support round rect clip
+            NativeApi.canvas.clipRoundRectImpl(this.canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
         }
 
         protected drawCanvasImpl(canvas:android.graphics.Canvas, offsetX:number, offsetY:number):void {

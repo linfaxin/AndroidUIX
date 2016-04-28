@@ -11064,9 +11064,6 @@ declare module androidui.native {
             save(canvasId: number): void;
             restore(canvasId: number): void;
             drawCanvas(canvasId: number, drawCanvasId: number, offsetX: number, offsetY: number): void;
-            drawImage2args(canvasId: number, drawImageId: number, left: number, top: number): void;
-            drawImage4args(canvasId: number, drawImageId: number, dstLeft: number, dstTop: number, dstRight: number, dstBottom: number): void;
-            drawImage8args(canvasId: number, drawImageId: number, srcLeft: number, srcTop: number, srcRight: number, srcBottom: number, dstLeft: number, dstTop: number, dstRight: number, dstBottom: number): void;
             drawText(canvasId: number, text: string, x: number, y: number, fillStyle: android.graphics.Paint.Style): void;
             setFillColor(canvasId: number, color: number, style: android.graphics.Paint.Style): void;
             multiplyAlpha(canvasId: number, alpha: number): void;
@@ -11082,6 +11079,10 @@ declare module androidui.native {
             drawCircle(canvasId: number, cx: number, cy: number, radius: number, style: android.graphics.Paint.Style): void;
             drawArc(canvasId: number, left: number, top: number, right: number, bottom: number, startAngle: number, sweepAngle: number, useCenter: boolean, style: android.graphics.Paint.Style): void;
             drawRoundRectImpl(canvasId: number, left: number, top: number, width: number, height: number, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number, style: android.graphics.Paint.Style): void;
+            clipRoundRectImpl(canvasId: number, left: number, top: number, width: number, height: number, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number): void;
+            drawImage2args(canvasId: number, drawImageId: number, left: number, top: number): void;
+            drawImage4args(canvasId: number, drawImageId: number, dstLeft: number, dstTop: number, dstRight: number, dstBottom: number): void;
+            drawImage8args(canvasId: number, drawImageId: number, srcLeft: number, srcTop: number, srcRight: number, srcBottom: number, dstLeft: number, dstTop: number, dstRight: number, dstBottom: number): void;
         }
         interface ImageApi {
             createImage(imageId: number): void;

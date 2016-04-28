@@ -110,17 +110,6 @@ module androidui.native {
             drawCanvas(canvasId:number, drawCanvasId:number, offsetX:number, offsetY:number){
                 batchCall.pushCall('45', [canvasId, drawCanvasId, offsetX, offsetY]);
             }
-            drawImage2args(canvasId:number, drawImageId:number, left:number, top:number):void {
-                batchCall.pushCall('70', [canvasId, drawImageId, left, top]);
-            }
-            drawImage4args(canvasId:number, drawImageId:number, dstLeft:number, dstTop:number, dstRight:number, dstBottom:number):void {
-                if(dstLeft==null || isNaN(dstLeft)) throw new Error('drawImage4args error');
-                batchCall.pushCall('71', [canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom]);
-            }
-            drawImage8args(canvasId:number, drawImageId:number, srcLeft:number, srcTop:number, srcRight:number, srcBottom:number,
-                           dstLeft:number, dstTop:number, dstRight:number, dstBottom:number):void {
-                batchCall.pushCall('72', [canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom]);
-            }
             /**
              * @param canvasId
              * @param text text to be draw
@@ -196,7 +185,21 @@ module androidui.native {
                               radiusBottomRight:number, radiusBottomLeft:number, style:android.graphics.Paint.Style):void {
                 batchCall.pushCall('62', [canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft, style||android.graphics.Paint.Style.FILL]);
             }
+            clipRoundRectImpl(canvasId:number, left:number, top:number, width:number, height:number,
+                              radiusTopLeft:number, radiusTopRight:number, radiusBottomRight:number, radiusBottomLeft:number):void {
+                batchCall.pushCall('63', [canvasId, left, top, width, height, radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft]);
+            }
 
+            drawImage2args(canvasId:number, drawImageId:number, left:number, top:number):void {
+                batchCall.pushCall('70', [canvasId, drawImageId, left, top]);
+            }
+            drawImage4args(canvasId:number, drawImageId:number, dstLeft:number, dstTop:number, dstRight:number, dstBottom:number):void {
+                batchCall.pushCall('71', [canvasId, drawImageId, dstLeft, dstTop, dstRight, dstBottom]);
+            }
+            drawImage8args(canvasId:number, drawImageId:number, srcLeft:number, srcTop:number, srcRight:number, srcBottom:number,
+                           dstLeft:number, dstTop:number, dstRight:number, dstBottom:number):void {
+                batchCall.pushCall('72', [canvasId, drawImageId, srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom]);
+            }
         }
 
         export interface ImageApi {
