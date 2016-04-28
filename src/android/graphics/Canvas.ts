@@ -776,26 +776,26 @@ module android.graphics {
         /**
          * @param alpha [0, 1]
          */
-        multiplyAlpha(alpha:number):void {
+        multiplyGlobalAlpha(alpha:number):void {
             if(typeof alpha === 'number' && alpha < 1){
-                this.multiplyAlphaImpl(alpha);
+                this.multiplyGlobalAlphaImpl(alpha);
             }
         }
 
-        protected multiplyAlphaImpl(alpha:number):void {
+        protected multiplyGlobalAlphaImpl(alpha:number):void {
             this._mCanvasContent.globalAlpha *= alpha;
         }
 
         /**
          * @param alpha [0, 1]
          */
-        setAlpha(alpha:number):void {
+        setGlobalAlpha(alpha:number):void {
             if(typeof alpha === 'number'){
-                this.setAlphaImpl(alpha);
+                this.setGlobalAlphaImpl(alpha);
             }
         }
 
-        protected setAlphaImpl(alpha:number):void {
+        protected setGlobalAlphaImpl(alpha:number):void {
             this._mCanvasContent.globalAlpha = alpha;
         }
 

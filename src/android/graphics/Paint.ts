@@ -189,7 +189,6 @@ module android.graphics{
 
         private mTextStyle = Paint.Style.FILL;
         private mColor:number;
-        private mAlpha:number;
         private mStrokeWidth:number;
         private align:Paint.Align;
         private mStrokeCap:Paint.Cap;
@@ -249,7 +248,6 @@ module android.graphics{
         private setClassVariablesFrom(paint:Paint):void  {
             this.mTextStyle = paint.mTextStyle;
             this.mColor = paint.mColor;
-            this.mAlpha = paint.mAlpha;
             this.mStrokeWidth = paint.mStrokeWidth;
             this.align = paint.align;
             this.mStrokeCap = paint.mStrokeCap;
@@ -313,12 +311,30 @@ module android.graphics{
             this.textScaleX = scaleX;
         }
 
+        /**
+         * Return the paint's color. Note that the color is a 32bit value
+         * containing alpha as well as r,g,b. This 32bit value is not premultiplied,
+         * meaning that its alpha can be any value, regardless of the values of
+         * r,g,b. See the Color class for more details.
+         *
+         * @return the paint's color (and alpha).
+         */
         getColor():number{
             return this.mColor;
         }
+
+        /**
+         * Set the paint's color. Note that the color is an int containing alpha
+         * as well as r,g,b. This 32bit value is not premultiplied, meaning that
+         * its alpha can be any value, regardless of the values of r,g,b.
+         * See the Color class for more details.
+         *
+         * @param color The new color (including alpha) to set in the paint.
+         */
         setColor(color:number){
             this.mColor = color;
         }
+
         /**
          * Helper to setColor(), that takes a,r,g,b and constructs the color int
          *
@@ -330,16 +346,27 @@ module android.graphics{
         setARGB(a:number, r:number, g:number, b:number):void  {
             this.setColor((a << 24) | (r << 16) | (g << 8) | b);
         }
+
+        /**
+         * Helper to getColor() that just returns the color's alpha value. This is
+         * the same as calling getColor() >>> 24. It always returns a value between
+         * 0 (completely transparent) and 255 (completely opaque).
+         *
+         * @return the alpha component of the paint's color.
+         */
         getAlpha():number{
-            if(this.mAlpha==null) return 255;
-            return this.mAlpha;
+            return Color.alpha(this.mColor);
         }
 
         /**
-         * @param alpha set the alpha component [0..255].
+         * Helper to setColor(), that only assigns the color's alpha value,
+         * leaving its r,g,b values unchanged. Results are undefined if the alpha
+         * value is outside of the range [0..255]
+         *
+         * @param alpha set the alpha component [0..255] of the paint's color.
          */
         setAlpha(alpha:number){
-            this.mAlpha = alpha;
+            this.setColor(Color.argb(alpha, Color.red(this.mColor), Color.green(this.mColor), Color.blue(this.mColor)));
         }
 
         /**
@@ -767,7 +794,6 @@ module android.graphics{
 
         isEmpty():boolean {
             return this.mColor==null
-                && this.mAlpha==null
                 && this.align==null
                 && this.mStrokeWidth==null
                 && this.mStrokeCap==null
@@ -781,10 +807,6 @@ module android.graphics{
 
             if(this.mColor!=null) {
                 canvas.setColor(this.mColor, this.getStyle());
-            }
-
-            if(this.mAlpha!=null){
-                canvas.multiplyAlpha(this.mAlpha / 255);
             }
 
             if(this.align!=null){

@@ -451,6 +451,9 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
      */
     private mEditor:any;
 
+    //androidui: flag will set to true when editing.
+    protected mSkipDrawText = false;
+
     /*
      * Kick-start the font cache for the zygote process (to pay the cost of
      * initializing freetype for our default font only once).
@@ -3997,6 +4000,10 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         }
         this.mTextPaint.setColor(color);
         this.mTextPaint.drawableState = this.getDrawableState();
+
+        //androidui: will set to true by EditText (when editing)
+        if(this.mSkipDrawText) return;
+
         canvas.save();
 
         /*  Would be faster if we didn't have to do this. Can we chop the

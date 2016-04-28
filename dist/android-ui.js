@@ -1050,7 +1050,6 @@ var android;
             setClassVariablesFrom(paint) {
                 this.mTextStyle = paint.mTextStyle;
                 this.mColor = paint.mColor;
-                this.mAlpha = paint.mAlpha;
                 this.mStrokeWidth = paint.mStrokeWidth;
                 this.align = paint.align;
                 this.mStrokeCap = paint.mStrokeCap;
@@ -1093,12 +1092,10 @@ var android;
                 this.setColor((a << 24) | (r << 16) | (g << 8) | b);
             }
             getAlpha() {
-                if (this.mAlpha == null)
-                    return 255;
-                return this.mAlpha;
+                return graphics.Color.alpha(this.mColor);
             }
             setAlpha(alpha) {
-                this.mAlpha = alpha;
+                this.setColor(graphics.Color.argb(alpha, graphics.Color.red(this.mColor), graphics.Color.green(this.mColor), graphics.Color.blue(this.mColor)));
             }
             getStrokeWidth() {
                 return this.mStrokeWidth;
@@ -1285,7 +1282,6 @@ var android;
             }
             isEmpty() {
                 return this.mColor == null
-                    && this.mAlpha == null
                     && this.align == null
                     && this.mStrokeWidth == null
                     && this.mStrokeCap == null
@@ -1296,9 +1292,6 @@ var android;
             applyToCanvas(canvas) {
                 if (this.mColor != null) {
                     canvas.setColor(this.mColor, this.getStyle());
-                }
-                if (this.mAlpha != null) {
-                    canvas.multiplyAlpha(this.mAlpha / 255);
                 }
                 if (this.align != null) {
                     canvas.setTextAlign(Paint.Align[this.align].toLowerCase());
@@ -2728,20 +2721,20 @@ var android;
                         break;
                 }
             }
-            multiplyAlpha(alpha) {
+            multiplyGlobalAlpha(alpha) {
                 if (typeof alpha === 'number' && alpha < 1) {
-                    this.multiplyAlphaImpl(alpha);
+                    this.multiplyGlobalAlphaImpl(alpha);
                 }
             }
-            multiplyAlphaImpl(alpha) {
+            multiplyGlobalAlphaImpl(alpha) {
                 this._mCanvasContent.globalAlpha *= alpha;
             }
-            setAlpha(alpha) {
+            setGlobalAlpha(alpha) {
                 if (typeof alpha === 'number') {
-                    this.setAlphaImpl(alpha);
+                    this.setGlobalAlphaImpl(alpha);
                 }
             }
-            setAlphaImpl(alpha) {
+            setGlobalAlphaImpl(alpha) {
                 this._mCanvasContent.globalAlpha = alpha;
             }
             setTextAlign(align) {
@@ -13675,7 +13668,7 @@ var android;
                         if (hasNoCache) {
                             const multipliedAlpha = Math.floor((255 * alpha));
                             if (!this.onSetAlpha(multipliedAlpha)) {
-                                canvas.multiplyAlpha(alpha);
+                                canvas.multiplyGlobalAlpha(alpha);
                             }
                             else {
                                 this.mPrivateFlags |= View.PFLAG_ALPHA_SET;
@@ -13714,7 +13707,7 @@ var android;
                 }
                 else if (cache != null) {
                     this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
-                    canvas.multiplyAlpha(alpha);
+                    canvas.multiplyGlobalAlpha(alpha);
                     if (layerType == View.LAYER_TYPE_NONE) {
                         if (alpha < 1) {
                             parent.mGroupFlags |= view_2.ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;
@@ -30878,6 +30871,7 @@ var android;
                 this.mTextSelectHandleRightRes = 0;
                 this.mTextSelectHandleRes = 0;
                 this.mTextEditSuggestionItemLayout = 0;
+                this.mSkipDrawText = false;
                 this.mText = "";
                 const res = this.getResources();
                 this.mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -32406,6 +32400,8 @@ var android;
                 }
                 this.mTextPaint.setColor(color);
                 this.mTextPaint.drawableState = this.getDrawableState();
+                if (this.mSkipDrawText)
+                    return;
                 canvas.save();
                 let extendedPaddingTop = this.getExtendedPaddingTop();
                 let extendedPaddingBottom = this.getExtendedPaddingBottom();
@@ -42019,10 +42015,10 @@ var android;
                     return;
                 this.mForceDisableDraw = disable;
                 if (disable) {
-                    this.mTextPaint.setAlpha(0);
+                    this.mSkipDrawText = true;
                 }
                 else {
-                    this.mTextPaint.setAlpha(255);
+                    this.mSkipDrawText = false;
                 }
                 this.invalidate();
             }
@@ -58847,11 +58843,11 @@ var androidui;
             setColorImpl(color, style) {
                 native.NativeApi.canvas.setFillColor(this.canvasId, color, style);
             }
-            multiplyAlphaImpl(alpha) {
-                native.NativeApi.canvas.multiplyAlpha(this.canvasId, alpha);
+            multiplyGlobalAlphaImpl(alpha) {
+                native.NativeApi.canvas.multiplyGlobalAlpha(this.canvasId, alpha);
             }
-            setAlphaImpl(alpha) {
-                native.NativeApi.canvas.setAlpha(this.canvasId, alpha);
+            setGlobalAlphaImpl(alpha) {
+                native.NativeApi.canvas.setGlobalAlpha(this.canvasId, alpha);
             }
             setTextAlignImpl(align) {
                 native.NativeApi.canvas.setTextAlign(this.canvasId, align);
@@ -59101,10 +59097,10 @@ var androidui;
                 setFillColor(canvasId, color, style) {
                     batchCall.pushCall('49', [canvasId, color, style || android.graphics.Paint.Style.FILL]);
                 }
-                multiplyAlpha(canvasId, alpha) {
+                multiplyGlobalAlpha(canvasId, alpha) {
                     batchCall.pushCall('50', [canvasId, alpha]);
                 }
-                setAlpha(canvasId, alpha) {
+                setGlobalAlpha(canvasId, alpha) {
                     batchCall.pushCall('51', [canvasId, alpha]);
                 }
                 setTextAlign(canvasId, align) {

@@ -144,13 +144,13 @@ export class EditText extends TextView {
             this.mSingleLineInputElement.onblur = ()=>{
                 this.mSingleLineInputElement.style.opacity = '0';
                 this.setForceDisableDrawText(false);
-            }
+            };
             this.mSingleLineInputElement.onfocus = ()=>{
                 this.mSingleLineInputElement.style.opacity = '1';
                 if(this.getText().length>0){
                     this.setForceDisableDrawText(true);
                 }
-            }
+            };
             this.mSingleLineInputElement.oninput = ()=>this.onInputValueChange();
         }
         if(this.inputElement === this.mSingleLineInputElement) return;
@@ -174,13 +174,13 @@ export class EditText extends TextView {
             this.mMultilineInputElement.onblur = ()=>{
                 this.mMultilineInputElement.style.opacity = '0';
                 this.setForceDisableDrawText(false);
-            }
+            };
             this.mMultilineInputElement.onfocus = ()=>{
                 this.mMultilineInputElement.style.opacity = '1';
                 if(this.getText().length>0){
                     this.setForceDisableDrawText(true);
                 }
-            }
+            };
             this.mMultilineInputElement.oninput = ()=>this.onInputValueChange();
         }
         if(this.inputElement === this.mMultilineInputElement) return;
@@ -234,9 +234,9 @@ export class EditText extends TextView {
         if(this.mForceDisableDraw == disable) return;
         this.mForceDisableDraw = disable;
         if(disable){
-            this.mTextPaint.setAlpha(0);
+            this.mSkipDrawText = true;
         }else{
-            this.mTextPaint.setAlpha(255);
+            this.mSkipDrawText = false;
         }
         this.invalidate();
     }

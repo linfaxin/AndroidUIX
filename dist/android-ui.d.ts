@@ -318,7 +318,6 @@ declare module android.graphics {
         static DEFAULT_PAINT_FLAGS: number;
         private mTextStyle;
         private mColor;
-        private mAlpha;
         private mStrokeWidth;
         private align;
         private mStrokeCap;
@@ -642,10 +641,10 @@ declare module android.graphics {
         protected static getMeasureTextFontFamily(): string;
         setColor(color: number, style?: Paint.Style): void;
         protected setColorImpl(color: number, style?: Paint.Style): void;
-        multiplyAlpha(alpha: number): void;
-        protected multiplyAlphaImpl(alpha: number): void;
-        setAlpha(alpha: number): void;
-        protected setAlphaImpl(alpha: number): void;
+        multiplyGlobalAlpha(alpha: number): void;
+        protected multiplyGlobalAlphaImpl(alpha: number): void;
+        setGlobalAlpha(alpha: number): void;
+        protected setGlobalAlphaImpl(alpha: number): void;
         setTextAlign(align: string): void;
         protected setTextAlignImpl(align: string): void;
         setLineWidth(width: number): void;
@@ -6419,6 +6418,7 @@ declare module android.widget {
         mTextSelectHandleRes: number;
         mTextEditSuggestionItemLayout: number;
         private mEditor;
+        protected mSkipDrawText: boolean;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private setTypefaceFromAttrs(familyName, typefaceIndex, styleIndex);
         private setRelativeDrawablesIfNeeded(start, end);
@@ -10993,8 +10993,8 @@ declare module androidui.native {
         protected drawRoundRectImpl(rect: android.graphics.RectF, radiusTopLeft: number, radiusTopRight: number, radiusBottomRight: number, radiusBottomLeft: number, style: android.graphics.Paint.Style): void;
         protected drawTextImpl(text: string, x: number, y: number, style: android.graphics.Paint.Style): void;
         protected setColorImpl(color: number, style?: android.graphics.Paint.Style): void;
-        protected multiplyAlphaImpl(alpha: number): void;
-        protected setAlphaImpl(alpha: number): void;
+        protected multiplyGlobalAlphaImpl(alpha: number): void;
+        protected setGlobalAlphaImpl(alpha: number): void;
         protected setTextAlignImpl(align: string): void;
         protected setLineWidthImpl(width: number): void;
         protected setLineCapImpl(lineCap: string): void;
@@ -11066,8 +11066,8 @@ declare module androidui.native {
             drawCanvas(canvasId: number, drawCanvasId: number, offsetX: number, offsetY: number): void;
             drawText(canvasId: number, text: string, x: number, y: number, fillStyle: android.graphics.Paint.Style): void;
             setFillColor(canvasId: number, color: number, style: android.graphics.Paint.Style): void;
-            multiplyAlpha(canvasId: number, alpha: number): void;
-            setAlpha(canvasId: number, alpha: number): void;
+            multiplyGlobalAlpha(canvasId: number, alpha: number): void;
+            setGlobalAlpha(canvasId: number, alpha: number): void;
             setTextAlign(canvasId: number, align: string): void;
             setLineWidth(canvasId: number, width: number): void;
             setLineCap(canvasId: number, lineCap: string): void;

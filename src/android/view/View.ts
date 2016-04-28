@@ -4797,7 +4797,7 @@ module android.view {
                     if (hasNoCache) {
                         const multipliedAlpha:number = Math.floor((255 * alpha));
                         if (!this.onSetAlpha(multipliedAlpha)) {
-                            canvas.multiplyAlpha(alpha);
+                            canvas.multiplyGlobalAlpha(alpha);
                             //let layerFlags:number = Canvas.HAS_ALPHA_LAYER_SAVE_FLAG;
                             //if ((flags & ViewGroup.FLAG_CLIP_CHILDREN) != 0 || layerType != View.LAYER_TYPE_NONE) {
                             //    layerFlags |= Canvas.CLIP_TO_LAYER_SAVE_FLAG;
@@ -4851,7 +4851,7 @@ module android.view {
                 }
             } else if (cache != null) {
                 this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
-                canvas.multiplyAlpha(alpha);
+                canvas.multiplyGlobalAlpha(alpha);
                 if (layerType == View.LAYER_TYPE_NONE) {
                     if (alpha < 1) {
                         parent.mGroupFlags |= ViewGroup.FLAG_ALPHA_LOWER_THAN_ONE;

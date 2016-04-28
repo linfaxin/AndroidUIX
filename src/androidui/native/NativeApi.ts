@@ -129,14 +129,14 @@ module androidui.native {
              * @param canvasId
              * @param alpha [0, 1]
              */
-            multiplyAlpha(canvasId:number, alpha:number):void{
+            multiplyGlobalAlpha(canvasId:number, alpha:number):void{
                 batchCall.pushCall('50', [canvasId, alpha]);
             }
             /**
              * @param canvasId
              * @param alpha [0, 1]
              */
-            setAlpha(canvasId:number, alpha:number):void{
+            setGlobalAlpha(canvasId:number, alpha:number):void{
                 batchCall.pushCall('51', [canvasId, alpha]);
             }
             /**

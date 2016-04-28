@@ -127,12 +127,12 @@ module androidui.native {
             NativeApi.canvas.setFillColor(this.canvasId, color, style);
         }
 
-        protected multiplyAlphaImpl(alpha:number):void {
-            NativeApi.canvas.multiplyAlpha(this.canvasId, alpha);
+        protected multiplyGlobalAlphaImpl(alpha:number):void {
+            NativeApi.canvas.multiplyGlobalAlpha(this.canvasId, alpha);
         }
 
-        protected setAlphaImpl(alpha:number):void {
-            NativeApi.canvas.setAlpha(this.canvasId, alpha);
+        protected setGlobalAlphaImpl(alpha:number):void {
+            NativeApi.canvas.setGlobalAlpha(this.canvasId, alpha);
         }
 
         protected setTextAlignImpl(align:string):void {
