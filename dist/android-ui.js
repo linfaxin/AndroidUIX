@@ -1,3 +1,7 @@
+/*!
+ * AndroidUI-WebApp v0.5.0
+ * https://github.com/linfaxin/AndroidUI-WebApp
+ */
 var java;
 (function (java) {
     var util;
