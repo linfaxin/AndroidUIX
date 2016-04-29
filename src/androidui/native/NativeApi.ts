@@ -211,7 +211,9 @@ module androidui.native {
     }
 
 
-    interface Bridge extends NativeApi.ImageApi{
+    interface Bridge extends NativeApi.ImageApi {
+        initRuntime():number;
+        pageAlive(deadDelay:number):number;
         createSurface(surfaceId:number, left:number, top:number, right:number, bottom:number):void;
         onSurfaceBoundChange(surfaceId:number, left:number, top:number, right:number, bottom:number):void;
         batchCall(jsonString:string):void;
@@ -235,6 +237,13 @@ module androidui.native {
             setTimeout(android.os.MessageQueue.loop, 0);
         };
         android.view.ViewRootImpl.prototype.trackFPS = ()=>{};//ignore web's trackFPS
+
+        JSBridge.initRuntime();
+        window.addEventListener('load', ()=>{
+            setInterval(()=>{
+                JSBridge.pageAlive(1500);
+            }, 800);
+        });
     }
 
 }

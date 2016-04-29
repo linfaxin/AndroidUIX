@@ -59213,6 +59213,10 @@ var androidui;
                 setTimeout(android.os.MessageQueue.loop, 0);
             };
             android.view.ViewRootImpl.prototype.trackFPS = () => { };
+            JSBridge.initRuntime();
+            setInterval(() => {
+                JSBridge.pageAlive(1500);
+            }, 800);
         }
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
