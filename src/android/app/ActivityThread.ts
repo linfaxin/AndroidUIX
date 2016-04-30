@@ -166,7 +166,6 @@ module android.app{
             //delay destroy ensure activity call all start/resume life circle.
             setTimeout(()=>{
                 let isCreateSuc = this.mLaunchedActivities.has(activity);//common case it's true, finish() in onCreate() will false here
-                let isRootActivity = this.isRootActivity(activity);
 
                 if(activity.mCallActivity && activity.getIntent() && activity.getIntent().mRequestCode>=0){
                     activity.mCallActivity.dispatchActivityResult(null, activity.getIntent().mRequestCode, activity.mResultCode, activity.mResultData)
@@ -177,8 +176,10 @@ module android.app{
 
                 if(!isCreateSuc) return;
 
-                if(isRootActivity){
-                    PageStack.back(true);
+                if(this.mLaunchedActivities.size == 0){
+                    if(history.length<=2){
+                        this.androidUI.showAppClosed();
+                    }
 
                 }else if(activity.getIntent()){
                     PageStack.notifyPageClosed(activity.getIntent().activityName);

@@ -344,10 +344,8 @@ module PageStack{
         checkInitCalled();
         if(DEBUG) console.log('notifyPageClosed', pageId);
         if(historyLocking){
-            if(DEBUG) console.log('notifyPageClosed historyLocking', pageId, currentStack);
             //do delay
             ensureLockDo(()=>{
-                if(DEBUG) console.log('notifyPageClosed historyLocking release', pageId, currentStack);
                 notifyPageClosed(pageId);
             });
             return;
@@ -358,13 +356,11 @@ module PageStack{
             let state = stackList[i];
             if(state.pageId == pageId){
                 if(i === historyLength-1){//last page closed, back the history now
-                    if(DEBUG) console.log('notifyPageClosed i === historyLength-1', pageId, currentStack);
                     removeLastHistoryIfFaked();
                     historyGo(-1);
                 }else{
                     let delta = i - historyLength;
                     (function (delta) {
-                        if (DEBUG) console.log('notifyPageClosed delta=' + delta, pageId, currentStack);
                         removeLastHistoryIfFaked();
                         //back history to the aim page first
                         historyGo(delta);

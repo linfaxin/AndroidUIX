@@ -15754,11 +15754,7 @@ var PageStack;
         if (PageStack.DEBUG)
             console.log('notifyPageClosed', pageId);
         if (historyLocking) {
-            if (PageStack.DEBUG)
-                console.log('notifyPageClosed historyLocking', pageId, PageStack.currentStack);
             ensureLockDo(() => {
-                if (PageStack.DEBUG)
-                    console.log('notifyPageClosed historyLocking release', pageId, PageStack.currentStack);
                 notifyPageClosed(pageId);
             });
             return;
@@ -15769,16 +15765,12 @@ var PageStack;
             let state = stackList[i];
             if (state.pageId == pageId) {
                 if (i === historyLength - 1) {
-                    if (PageStack.DEBUG)
-                        console.log('notifyPageClosed i === historyLength-1', pageId, PageStack.currentStack);
                     removeLastHistoryIfFaked();
                     historyGo(-1);
                 }
                 else {
                     let delta = i - historyLength;
                     (function (delta) {
-                        if (PageStack.DEBUG)
-                            console.log('notifyPageClosed delta=' + delta, pageId, PageStack.currentStack);
                         removeLastHistoryIfFaked();
                         historyGo(delta);
                         ensureLockDoAtFront(() => {
@@ -16051,15 +16043,16 @@ var android;
             scheduleDestroyActivity(activity, finishing = true) {
                 setTimeout(() => {
                     let isCreateSuc = this.mLaunchedActivities.has(activity);
-                    let isRootActivity = this.isRootActivity(activity);
                     if (activity.mCallActivity && activity.getIntent() && activity.getIntent().mRequestCode >= 0) {
                         activity.mCallActivity.dispatchActivityResult(null, activity.getIntent().mRequestCode, activity.mResultCode, activity.mResultData);
                     }
                     this.handleDestroyActivity(activity, finishing);
                     if (!isCreateSuc)
                         return;
-                    if (isRootActivity) {
-                        PageStack.back(true);
+                    if (this.mLaunchedActivities.size == 0) {
+                        if (history.length <= 2) {
+                            this.androidUI.showAppClosed();
+                        }
                     }
                     else if (activity.getIntent()) {
                         PageStack.notifyPageClosed(activity.getIntent().activityName);
@@ -16595,9 +16588,96 @@ var androidui;
                 this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
             }
         }
+        setUIClient(uiClient) {
+            this.uiClient = uiClient;
+        }
+        showAppClosed() {
+            AndroidUI.showAppClosed(this);
+        }
+        static showAppClosed(androidUI) {
+            androidUI.androidUIElement.parentNode.removeChild(androidUI.androidUIElement);
+            if (androidUI.uiClient && androidUI.uiClient.shouldShowAppClosed) {
+                androidUI.uiClient.shouldShowAppClosed(androidUI);
+            }
+        }
     }
     AndroidUI.BindToElementName = 'AndroidUI';
     androidui.AndroidUI = AndroidUI;
+})(androidui || (androidui = {}));
+var androidui;
+(function (androidui) {
+    if (typeof HTMLDivElement !== 'function') {
+        var _HTMLDivElement = function () { };
+        _HTMLDivElement.prototype = HTMLDivElement.prototype;
+        HTMLDivElement = _HTMLDivElement;
+    }
+    class AndroidUIElement extends HTMLDivElement {
+        createdCallback() {
+            $domReady(() => initElement(this));
+        }
+        attachedCallback() {
+        }
+        detachedCallback() {
+        }
+        attributeChangedCallback(attributeName, oldVal, newVal) {
+            if (attributeName === 'debug' && newVal != null && newVal != 'false' && newVal != '0') {
+                this.AndroidUI.showDebugLayout();
+            }
+        }
+    }
+    androidui.AndroidUIElement = AndroidUIElement;
+    function runFunction(func) {
+        if (typeof window[func] === "function") {
+            window[func]();
+        }
+        else {
+            try {
+                eval(func);
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+    }
+    function $domReady(func) {
+        if (/^loaded|^complete|^interactive/.test(document.readyState)) {
+            setTimeout(func, 0);
+        }
+        else {
+            document.addEventListener('DOMContentLoaded', func);
+        }
+    }
+    function initElement(ele) {
+        ele.AndroidUI = new androidui.AndroidUI(ele);
+        let debugAttr = ele.getAttribute('debug');
+        if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
+            ele.AndroidUI.showDebugLayout();
+        let onClose = ele.getAttribute('onclose');
+        if (onClose) {
+            ele.AndroidUI.setUIClient({
+                shouldShowAppClosed(androidUI) {
+                    if (!onClose)
+                        return;
+                    runFunction(onClose);
+                }
+            });
+        }
+        let onLoad = ele.getAttribute('onload');
+        if (onLoad) {
+            runFunction(onLoad);
+        }
+    }
+    if (typeof document['registerElement'] === "function") {
+        document.registerElement("android-ui", AndroidUIElement);
+    }
+    else {
+        $domReady(() => {
+            let eles = document.getElementsByTagName('android-ui');
+            for (let ele of Array.from(eles)) {
+                initElement(ele);
+            }
+        });
+    }
     let styleElement = document.createElement('style');
     styleElement.innerHTML += `
         android-ui {
@@ -16629,54 +16709,6 @@ var androidui;
         }
         `;
     document.head.appendChild(styleElement);
-})(androidui || (androidui = {}));
-var androidui;
-(function (androidui) {
-    if (typeof HTMLDivElement !== 'function') {
-        var _HTMLDivElement = function () { };
-        _HTMLDivElement.prototype = HTMLDivElement.prototype;
-        HTMLDivElement = _HTMLDivElement;
-    }
-    class AndroidUIElement extends HTMLDivElement {
-        createdCallback() {
-            $domReady(() => initElement(this));
-        }
-        attachedCallback() {
-        }
-        detachedCallback() {
-        }
-        attributeChangedCallback(attributeName, oldVal, newVal) {
-            if (attributeName === 'debug' && newVal != null && newVal != 'false' && newVal != '0') {
-                this.AndroidUI.showDebugLayout();
-            }
-        }
-    }
-    androidui.AndroidUIElement = AndroidUIElement;
-    function initElement(ele) {
-        ele.AndroidUI = new androidui.AndroidUI(ele);
-        let debugAttr = ele.getAttribute('debug');
-        if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
-            ele.AndroidUI.showDebugLayout();
-    }
-    if (typeof document['registerElement'] === "function") {
-        document.registerElement("android-ui", AndroidUIElement);
-    }
-    else {
-        $domReady(() => {
-            let eles = document.getElementsByTagName('android-ui');
-            for (let ele of Array.from(eles)) {
-                initElement(ele);
-            }
-        });
-    }
-    function $domReady(func) {
-        if (/^loaded|^complete|^interactive/.test(document.readyState)) {
-            setTimeout(func, 0);
-        }
-        else {
-            document.addEventListener('DOMContentLoaded', func);
-        }
-    }
 })(androidui || (androidui = {}));
 var android;
 (function (android) {
@@ -57560,11 +57592,6 @@ var android;
             hideActionLeft() {
                 this.mActionLeft.setVisibility(View.GONE);
             }
-            setActionRightText(name, listener) {
-                this.mActionRight.setText(name);
-                this.mActionRight.setVisibility(View.VISIBLE);
-                this.mActionRight.setOnClickListener(listener);
-            }
             setActionRight(name, icon, listener) {
                 this.mActionRight.setText(name);
                 this.mActionRight.setVisibility(View.VISIBLE);
@@ -59355,6 +59382,9 @@ var androidui;
                 setTimeout(android.os.MessageQueue.loop, 0);
             };
             android.view.ViewRootImpl.prototype.trackFPS = () => { };
+            androidui.AndroidUI.showAppClosed = () => {
+                JSBridge.closeApp();
+            };
             JSBridge.initRuntime();
             window.addEventListener('load', () => {
                 setInterval(() => {

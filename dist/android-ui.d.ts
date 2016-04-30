@@ -3680,6 +3680,7 @@ declare module android.R {
     }
 }
 declare module androidui {
+    import UIClient = androidui.AndroidUI.UIClient;
     class AndroidUI {
         static BindToElementName: string;
         androidUIElement: AndroidUIElement;
@@ -3689,6 +3690,7 @@ declare module androidui {
         private _viewRootImpl;
         private mApplication;
         appName: string;
+        private uiClient;
         private rootResourceElement;
         private _windowBound;
         private tempRect;
@@ -3712,6 +3714,14 @@ declare module androidui {
         private initBrowserVisibleChange();
         private notifyRootSizeChange();
         showDebugLayout(): void;
+        setUIClient(uiClient: UIClient): void;
+        showAppClosed(): void;
+        private static showAppClosed(androidUI);
+    }
+    module AndroidUI {
+        interface UIClient {
+            shouldShowAppClosed?(androidUI: AndroidUI): any;
+        }
     }
 }
 declare module androidui {
@@ -10769,7 +10779,6 @@ declare module android.app {
         isShowing(): boolean;
         setActionLeft(name: string, icon: Drawable, listener: View.OnClickListener): void;
         hideActionLeft(): void;
-        setActionRightText(name: string, listener: View.OnClickListener): void;
         setActionRight(name: string, icon: Drawable, listener: View.OnClickListener): void;
         hideActionRight(): void;
     }

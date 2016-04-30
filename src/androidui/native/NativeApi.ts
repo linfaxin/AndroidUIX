@@ -212,8 +212,9 @@ module androidui.native {
 
 
     interface Bridge extends NativeApi.ImageApi {
-        initRuntime():number;
-        pageAlive(deadDelay:number):number;
+        initRuntime():void;
+        closeApp():void;
+        pageAlive(deadDelay:number):void;
         createSurface(surfaceId:number, left:number, top:number, right:number, bottom:number):void;
         onSurfaceBoundChange(surfaceId:number, left:number, top:number, right:number, bottom:number):void;
         batchCall(jsonString:string):void;
@@ -233,10 +234,15 @@ module androidui.native {
         NativeApi.canvas = new NativeApi.CanvasApi();
         NativeApi.image = JSBridge;
 
-        android.os.MessageQueue.requestNextLoop = ()=>{
+        //override some method
+        android.os.MessageQueue.requestNextLoop = ()=>{//loop fast.
             setTimeout(android.os.MessageQueue.loop, 0);
         };
         android.view.ViewRootImpl.prototype.trackFPS = ()=>{};//ignore web's trackFPS
+        androidui.AndroidUI.showAppClosed = ()=>{
+            JSBridge.closeApp();
+        };
+
 
         JSBridge.initRuntime();
         window.addEventListener('load', ()=>{

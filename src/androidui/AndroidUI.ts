@@ -24,6 +24,7 @@ module androidui {
     import KeyEvent = android.view.KeyEvent;
     import Intent = android.content.Intent;
     import ActivityThread = android.app.ActivityThread;
+    import UIClient = androidui.AndroidUI.UIClient;
 
     export class AndroidUI {
         static BindToElementName = 'AndroidUI';
@@ -38,6 +39,7 @@ module androidui {
         private _viewRootImpl:android.view.ViewRootImpl;
         private mApplication:android.app.Application;
         appName:string;
+        private uiClient:AndroidUI.UIClient;
 
         private rootResourceElement:Element;
 
@@ -387,39 +389,27 @@ module androidui {
                 this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
             }
         }
+
+        setUIClient(uiClient:UIClient){
+            this.uiClient = uiClient;
+        }
+
+        showAppClosed():void {
+            AndroidUI.showAppClosed(this);
+        }
+        
+        private static showAppClosed(androidUI:AndroidUI) {
+            //NOTE: will override by NativeApi
+            androidUI.androidUIElement.parentNode.removeChild(androidUI.androidUIElement);
+            if(androidUI.uiClient && androidUI.uiClient.shouldShowAppClosed){
+                androidUI.uiClient.shouldShowAppClosed(androidUI);
+            }
+        }
     }
 
-    //init common style
-    let styleElement = document.createElement('style');
-    styleElement.innerHTML += `
-        android-ui {
-            position : relative;
-            overflow : hidden;
-            display : block;
-            outline: none;
+    export module AndroidUI{
+        export interface UIClient{
+            shouldShowAppClosed?(androidUI:AndroidUI);
         }
-        android-ui * {
-            overflow : hidden;
-            border : none;
-            outline: none;
-            pointer-events: auto;
-        }
-        android-ui resources {
-            display: none;
-        }
-        android-ui Button {
-            border: none;
-            background: none;
-        }
-        android-ui windowsgroup {
-            pointer-events: none;
-        }
-        android-ui > canvas {
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-        `;
-    document.head.appendChild(styleElement);
-
+    }
 }
