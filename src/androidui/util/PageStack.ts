@@ -1,6 +1,5 @@
 /**
  * Created by linfaxin on 15/12/30.
- *
  */
 
 module PageStack{
@@ -8,16 +7,36 @@ module PageStack{
     const history_go = history.go;
     export var currentStack:StateStack;
 
+    /**
+     * callback when user press back history button
+     * @return is back press consumed
+     */
     export var backListener:()=>boolean;
-    export var pageOpenHandler:(pageId:string, pageExtra?:any, isRestore?:boolean)=>boolean;
-    export var pageCloseHandler:(pageId:string, pageExtra?:any)=>boolean;
+    /**
+     * callback when call PageStack.openPage()
+     * @return opened page or true means open success
+     */
+    export var pageOpenHandler:(pageId:string, pageExtra?:any, isRestore?:boolean)=>any;
+    /**
+     * callback when user modify location.hash
+     * @return opened page or true means open success
+     */
+    export var pagePushHandler:(pageId:string, pageExtra?:any)=>any;
+    /**
+     * callback when page will close
+     * @return closed page or true means close success. The history will back after close success
+     */
+    export var pageCloseHandler:(pageId:string, pageExtra?:any)=>any;
 
     let historyLocking = false;//wait history go complete
+    let windowLoadLocking = true;//wait window load finish
     let pendingFuncLock = [];
 
+    let initCalled = false;
+
     export function init(){
-        removeLastHistoryIfFaked();
-        ensureLockDo(_init);//FIXME restore page no delay
+        initCalled = true;
+        _init();
 
         //override history go/back/forward
         history.go = function(delta:number){
@@ -29,6 +48,9 @@ module PageStack{
         history.forward = function(){
             PageStack.go(1);
         };
+    }
+    function checkInitCalled(){
+        if(!initCalled) throw Error("PageStack.init() must be call first");
     }
 
     function _init(){
@@ -44,20 +66,38 @@ module PageStack{
                     stack: [{pageId: null}]
                 };
 
-            //set root state when _init PageStack
-            //location.hash = location.hash + '#';//force clear history forward
-            history.replaceState(currentStack, null, '#');
+            let initOpenUrl = location.hash;
+            if(initOpenUrl && initOpenUrl.indexOf('#')===0) initOpenUrl = initOpenUrl.substring(1);
+
+            removeLastHistoryIfFaked();
+            ensureLockDo(()=>{
+                //set root hash '#' when _init PageStack
+                history.replaceState(currentStack, null, '#');
+            });
+
+            if(initOpenUrl && initOpenUrl.length>0){
+                if(firePagePush(initOpenUrl, null)){
+                    notifyNewPageOpened(initOpenUrl);
+                }
+            }
         }
         ensureLastHistoryFaked();
 
 
-        initOnpopstate();
-        //init delay, because safari will trigger a 'onpopstate' when page load finish.
-        window.addEventListener('load', ()=>{
-            window.removeEventListener('popstate', onpopstateListener);
-            //a 'popstate' event will trigger before next frame in safari
+        if (document.readyState === 'complete') {
+            windowLoadLocking = false;
             setTimeout(initOnpopstate, 0);
-        });
+
+        }else{
+            window.addEventListener('load', ()=>{
+                windowLoadLocking = false;
+
+                //init listener popstate delay, because safari will trigger a 'onpopstate' when page load finish, should ignore this.
+                window.removeEventListener('popstate', onpopstateListener);
+                //a 'popstate' event will trigger before next frame in safari
+                setTimeout(initOnpopstate, 0);
+            });
+        }
     }
 
     //_init onpopstate, deal when user press back / modify location hash
@@ -80,7 +120,7 @@ module PageStack{
 
             //back the changed hash page & fake page
             historyGo(-2, false);
-            if(firePageOpen(pageId, null)){
+            if(firePagePush(pageId, null)){
                 notifyNewPageOpened(pageId);
 
             }else{
@@ -110,7 +150,8 @@ module PageStack{
 
             }else{
                 var stackList = currentStack.stack;
-                if(firePageClose(stackList[stackList.length-1].pageId, stackList[stackList.length-1].extra)){
+                var pageId = stackList[stackList.length-1].pageId;
+                if(firePageClose(pageId, stackList[stackList.length-1].extra)){
                     //should go back real.
                     historyGo(-1);
 
@@ -127,6 +168,7 @@ module PageStack{
 
 
     export function go(delta:number, pageAlreadyClose=false){
+        checkInitCalled();
         if(historyLocking){
             //do delay
             ensureLockDo(()=>{
@@ -166,13 +208,39 @@ module PageStack{
     }
 
     export function back(pageAlreadyClose=false){
+        checkInitCalled();
         go(-1, pageAlreadyClose);
     }
 
-    export function openPage(pageId:string, extra?:any){
+    export function openPage(pageId:string, extra?:any):any {
+        checkInitCalled();
         pageId+='';
-        if(firePageOpen(pageId, extra)){
-            notifyNewPageOpened(pageId);
+        var openResult = firePageOpen(pageId, extra);
+        if(openResult){
+            notifyNewPageOpened(pageId, extra);
+        }
+        return openResult;
+    }
+
+    export function backToPage(pageId:string){
+        checkInitCalled();
+        if(DEBUG) console.log('backToPage', pageId);
+        if(historyLocking){
+            //do delay
+            ensureLockDo(()=>{
+                backToPage(pageId);
+            });
+        }
+        let stackList = currentStack.stack;
+        let historyLength = stackList.length;
+        for(let i=historyLength-1; i>=0; i--){//reverse
+            let state = stackList[i];
+            if(state.pageId == pageId){
+                let delta = i - historyLength;
+                removeLastHistoryIfFaked();
+                historyGo(delta);
+                return;
+            }
         }
     }
 
@@ -241,10 +309,19 @@ module PageStack{
             }
         }
     }
-    function firePageOpen(pageId:string, pageExtra?:any, isRestore=false):boolean {
+    function firePageOpen(pageId:string, pageExtra?:any, isRestore=false):any {
         if(pageOpenHandler){
             try {
                 return pageOpenHandler(pageId, pageExtra, isRestore);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
+    function firePagePush(pageId:string, pageExtra?:any):any {
+        if(pagePushHandler){
+            try {
+                return pagePushHandler(pageId, pageExtra);
             } catch (e) {
                 console.error(e);
             }
@@ -264,12 +341,16 @@ module PageStack{
      * call when app logic already close page. sync browser history here.
      */
     export function notifyPageClosed(pageId:string):void {
+        checkInitCalled();
         if(DEBUG) console.log('notifyPageClosed', pageId);
         if(historyLocking){
+            if(DEBUG) console.log('notifyPageClosed historyLocking', pageId, currentStack);
             //do delay
             ensureLockDo(()=>{
+                if(DEBUG) console.log('notifyPageClosed historyLocking release', pageId, currentStack);
                 notifyPageClosed(pageId);
             });
+            return;
         }
         let stackList = currentStack.stack;
         let historyLength = stackList.length;
@@ -277,11 +358,13 @@ module PageStack{
             let state = stackList[i];
             if(state.pageId == pageId){
                 if(i === historyLength-1){//last page closed, back the history now
+                    if(DEBUG) console.log('notifyPageClosed i === historyLength-1', pageId, currentStack);
                     removeLastHistoryIfFaked();
                     historyGo(-1);
                 }else{
                     let delta = i - historyLength;
-                    (function(delta){
+                    (function (delta) {
+                        if (DEBUG) console.log('notifyPageClosed delta=' + delta, pageId, currentStack);
                         removeLastHistoryIfFaked();
                         //back history to the aim page first
                         historyGo(delta);
@@ -289,7 +372,7 @@ module PageStack{
                         ensureLockDoAtFront(()=> {
                             let historyLength = stackList.length;
                             let pageStartAddIndex = historyLength + delta + 1;
-                            for(let j = pageStartAddIndex; j<historyLength; j++){
+                            for (let j = pageStartAddIndex; j < historyLength; j++) {
                                 notifyNewPageOpened(stackList[j].pageId, stackList[j].extra);
                             }
                         });
@@ -304,6 +387,7 @@ module PageStack{
      * call when app logic already open page. sync browser history here.
      */
     export function notifyNewPageOpened(pageId:string, extra?:any){
+        checkInitCalled();
         if(DEBUG) console.log('notifyNewPageOpened', pageId);
         let state:StateSaved = {
             pageId : pageId,
@@ -325,9 +409,54 @@ module PageStack{
         });
     }
 
+    export function getPageExtra(pageId?:string):any {
+        checkInitCalled();
+        let stackList = currentStack.stack;
+        let historyLength = stackList.length;
+
+        if(!pageId){
+            return stackList[historyLength - 1].extra;
+
+        }else{
+            for(let i=historyLength-1; i>=0; i--) {//reverse
+                let state = stackList[i];
+                if(state.pageId == pageId){
+                    return state.extra;
+                }
+            }
+        }
+    }
+
+    export function setPageExtra(extra:any, pageId?:string):void {
+        checkInitCalled();
+        removeLastHistoryIfFaked();
+        ensureLockDo(function() {
+            let stackList = currentStack.stack;
+            let historyLength = stackList.length;
+
+            if(!pageId){
+                stackList[historyLength - 1].extra = extra;
+                history.replaceState(currentStack, null, '');
+
+            }else{
+                for(let i=historyLength-1; i>=0; i--) {//reverse
+                    let state = stackList[i];
+                    if(state.pageId == pageId){
+                        state.extra = extra;
+                        history.replaceState(currentStack, null, '');
+                        break;
+                    }
+                }
+            }
+
+            ensureLastHistoryFakedImpl();
+        });
+    }
+
 
     function ensureLockDo(func:()=>any){
-        if(!historyLocking){
+        checkInitCalled();
+        if(!historyLocking && !windowLoadLocking){
             func();
             return;
         }
@@ -336,7 +465,8 @@ module PageStack{
     }
 
     function ensureLockDoAtFront(func:()=>any, runNowIfNotLock=false){
-        if(!historyLocking && runNowIfNotLock){
+        checkInitCalled();
+        if(!historyLocking && !windowLoadLocking && runNowIfNotLock){
             func();
             return;
         }
@@ -349,7 +479,7 @@ module PageStack{
         if(execLockedTimeoutId) clearTimeout(execLockedTimeoutId);
 
         function execLockedFunctions(){
-            if(historyLocking){
+            if(historyLocking || windowLoadLocking){
                 clearTimeout(execLockedTimeoutId);
                 execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
 
@@ -357,7 +487,7 @@ module PageStack{
                 let f;
                 while(f = pendingFuncLock.shift()){
                     f();
-                    if(historyLocking){
+                    if(historyLocking || windowLoadLocking){
                         //case history change when call the function, all other functions will call next frame.
                         clearTimeout(execLockedTimeoutId);
                         execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
@@ -371,9 +501,12 @@ module PageStack{
 
 
     function removeLastHistoryIfFaked(){
+        ensureLockDo(removeLastHistoryIfFakedImpl);
+    }
+    function removeLastHistoryIfFakedImpl(){
         if(history.state && history.state.isFake){
             if(DEBUG) console.log('remove Fake History');
-            history.replaceState({}, null, '');//make history.state.isFake = false
+            history.replaceState(null, null, '');//make history.state.isFake = false
             historyGo(-1, false);
         }
     }
