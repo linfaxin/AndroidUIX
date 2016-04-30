@@ -2260,10 +2260,6 @@ var android;
                 this.mCanvasElement.width = this.mWidth;
                 this.mCanvasElement.height = this.mHeight;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
-                this._mCanvasContent['mozImageSmoothingEnabled'] = false;
-                this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
-                this._mCanvasContent['msImageSmoothingEnabled'] = false;
-                this._mCanvasContent['imageSmoothingEnabled'] = false;
                 this.save();
             }
             recycle() {
@@ -2809,6 +2805,24 @@ var android;
                 let font = fontParts.join(' ');
                 if (font != cFont)
                     this._mCanvasContent.font = font;
+            }
+            isImageSmoothingEnabled() {
+                return this.isImageSmoothingEnabledImpl();
+            }
+            isImageSmoothingEnabledImpl() {
+                return this._mCanvasContent['mozImageSmoothingEnabled']
+                    || this._mCanvasContent['webkitImageSmoothingEnabled']
+                    || this._mCanvasContent['msImageSmoothingEnabled']
+                    || this._mCanvasContent['imageSmoothingEnabled'];
+            }
+            setImageSmoothingEnabled(enable) {
+                this.setImageSmoothingEnabledImpl(enable);
+            }
+            setImageSmoothingEnabledImpl(enable) {
+                this._mCanvasContent['mozImageSmoothingEnabled'] = enable;
+                this._mCanvasContent['webkitImageSmoothingEnabled'] = enable;
+                this._mCanvasContent['msImageSmoothingEnabled'] = enable;
+                this._mCanvasContent['imageSmoothingEnabled'] = enable;
             }
         }
         Canvas.TempMatrixValue = new Array(9);
@@ -8773,6 +8787,8 @@ var androidui;
                 return cache;
             }
             drawNinePatch(canvas) {
+                let smoothEnableBak = canvas.isImageSmoothingEnabled();
+                canvas.setImageSmoothingEnabled(false);
                 let imageWidth = this.mImageWidth;
                 let imageHeight = this.mImageHeight;
                 if (imageHeight <= 0 || imageWidth <= 0)
@@ -8837,6 +8853,7 @@ var androidui;
                     srcFromX += srcWidth;
                     dstFromX += dstWidth;
                 }
+                canvas.setImageSmoothingEnabled(smoothEnableBak);
             }
             getPadding(padding) {
                 let info = this.mNinePatchBorderInfo;
@@ -59086,6 +59103,11 @@ var androidui;
             }
             setFontImpl(fontName) {
                 native.NativeApi.canvas.setFont(this.canvasId, fontName);
+            }
+            isImageSmoothingEnabledImpl() {
+                return false;
+            }
+            setImageSmoothingEnabledImpl(enable) {
             }
             static applyTextMeasure(cacheMeasureTextSize, defaultWidth, widths) {
                 android.graphics.Canvas.measureTextImpl = function (text, textSize) {

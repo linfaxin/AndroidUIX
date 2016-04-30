@@ -66,10 +66,6 @@ module android.graphics {
             this.mCanvasElement.width = this.mWidth;
             this.mCanvasElement.height = this.mHeight;
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
-            this._mCanvasContent['mozImageSmoothingEnabled'] = false;
-            this._mCanvasContent['webkitImageSmoothingEnabled'] = false;
-            this._mCanvasContent['msImageSmoothingEnabled'] = false;
-            this._mCanvasContent['imageSmoothingEnabled'] = false;
             this.save();//is need?
         }
 
@@ -874,6 +870,25 @@ module android.graphics {
             fontParts[fontParts.length - 1] = fontName;//font family
             let font = fontParts.join(' ');
             if(font!=cFont) this._mCanvasContent.font = font;
+        }
+
+        isImageSmoothingEnabled():boolean {
+            return this.isImageSmoothingEnabledImpl();
+        }
+        protected isImageSmoothingEnabledImpl():boolean {
+            return this._mCanvasContent['mozImageSmoothingEnabled']
+                || this._mCanvasContent['webkitImageSmoothingEnabled']
+                || this._mCanvasContent['msImageSmoothingEnabled']
+                || this._mCanvasContent['imageSmoothingEnabled'];
+        }
+        setImageSmoothingEnabled(enable:boolean):void {
+            this.setImageSmoothingEnabledImpl(enable);
+        }
+        protected setImageSmoothingEnabledImpl(enable:boolean):void {
+            this._mCanvasContent['mozImageSmoothingEnabled'] = enable;
+            this._mCanvasContent['webkitImageSmoothingEnabled'] = enable;
+            this._mCanvasContent['msImageSmoothingEnabled'] = enable;
+            this._mCanvasContent['imageSmoothingEnabled'] = enable;
         }
     }
 }

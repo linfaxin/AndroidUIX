@@ -90,6 +90,9 @@ module androidui.image {
         }
 
         private drawNinePatch(canvas:Canvas):void {
+            let smoothEnableBak = canvas.isImageSmoothingEnabled();
+            canvas.setImageSmoothingEnabled(false);
+
             let imageWidth = this.mImageWidth;
             let imageHeight = this.mImageHeight;
             if(imageHeight<=0 || imageWidth<=0) return;
@@ -157,6 +160,7 @@ module androidui.image {
                 dstFromX+=dstWidth;
             }
 
+            canvas.setImageSmoothingEnabled(smoothEnableBak);
         }
 
 

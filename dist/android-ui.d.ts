@@ -659,6 +659,10 @@ declare module android.graphics {
         protected setFontSizeImpl(size: number): void;
         setFont(fontName: string): void;
         protected setFontImpl(fontName: string): void;
+        isImageSmoothingEnabled(): boolean;
+        protected isImageSmoothingEnabledImpl(): boolean;
+        setImageSmoothingEnabled(enable: boolean): void;
+        protected setImageSmoothingEnabledImpl(enable: boolean): void;
     }
 }
 declare module android.graphics.drawable {
@@ -11034,6 +11038,8 @@ declare module androidui.native {
         protected setShadowImpl(radius: number, dx: number, dy: number, color: number): void;
         protected setFontSizeImpl(size: number): void;
         protected setFontImpl(fontName: string): void;
+        protected isImageSmoothingEnabledImpl(): boolean;
+        protected setImageSmoothingEnabledImpl(enable: boolean): void;
         private static applyTextMeasure(cacheMeasureTextSize, defaultWidth, widths);
     }
 }

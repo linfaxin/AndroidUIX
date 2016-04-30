@@ -163,6 +163,14 @@ module androidui.native {
             NativeApi.canvas.setFont(this.canvasId, fontName);
         }
 
+
+        protected isImageSmoothingEnabledImpl():boolean {
+            return false;
+        }
+        protected setImageSmoothingEnabledImpl(enable:boolean):void {
+            //native no need
+        }
+
         private static applyTextMeasure(cacheMeasureTextSize:number, defaultWidth:number, widths:number[]){
             android.graphics.Canvas.measureTextImpl = function(text:string, textSize:number):number {
                 let width = 0;
