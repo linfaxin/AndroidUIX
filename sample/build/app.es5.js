@@ -905,6 +905,7 @@ var sample;
     var app;
     (function (app) {
         var ActionBarActivity = android.app.ActionBarActivity;
+        var Intent = android.content.Intent;
         var Button = android.widget.Button;
         var Log = android.util.Log;
         var Gravity = android.view.Gravity;
@@ -1003,6 +1004,11 @@ var sample;
                     _get(Object.getPrototypeOf(SampleLifeCallbackNormalActivity.prototype), "onCreate", this).call(this, savedInstanceState);
                     this.setTitle('Normal Activity');
                     var activity = this;
+                    activity.getActionBar().setActionRight('Home', null, {
+                        onClick: function onClick(view) {
+                            activity.startActivity(new Intent('sample.app.MainActivity').setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                        }
+                    });
                     var btn = new Button(this);
                     btn.setText(android.R.string_.close);
                     btn.setOnClickListener({

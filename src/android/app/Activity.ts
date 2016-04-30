@@ -1015,7 +1015,7 @@ module android.app{
             if(typeof intent === 'string') intent = new Intent(<string>intent);
             if(requestCode>=0) (<Intent>intent).mRequestCode = requestCode;
 
-            this.androidUI.mActivityThread.scheduleLaunchActivity(this, <Intent>intent, options);
+            this.androidUI.mActivityThread.execStartActivity(this, <Intent>intent, options);
 
             //    let ar:Instrumentation.ActivityResult = this.mInstrumentation.execStartActivity(this, this.mMainThread.getApplicationThread(), this.mToken, this, intent, requestCode, options);
             //    if (ar != null) {
@@ -1515,15 +1515,17 @@ module android.app{
 
 
         private performPause():void {
-            //this.mDoReportFullyDrawn = false;
-            //this.mFragments.dispatchPause();
-            this.mCalled = false;
-            this.onPause();
-            this.mResumed = false;
-            if (!this.mCalled) {
-                throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPause()")`);
+            if(this.mResumed) {
+                //this.mDoReportFullyDrawn = false;
+                //this.mFragments.dispatchPause();
+                this.mCalled = false;
+                this.onPause();
+                this.mResumed = false;
+                if (!this.mCalled) {
+                    throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPause()")`);
+                }
+                this.mResumed = false;
             }
-            this.mResumed = false;
         }
 
         private performUserLeaving():void  {

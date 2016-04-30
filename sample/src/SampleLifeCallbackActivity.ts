@@ -80,8 +80,14 @@ module sample.app {
     export class SampleLifeCallbackNormalActivity extends ActionBarActivity{
         protected onCreate(savedInstanceState:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
-            this.setTitle('Normal Activity')
+            this.setTitle('Normal Activity');
             const activity = this;
+            
+            activity.getActionBar().setActionRight('Home', null, {
+                onClick : function(view){
+                    activity.startActivity(new Intent('sample.app.MainActivity').setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                }
+            });
 
             let btn = new Button(this);
             btn.setText(android.R.string_.close);
@@ -89,7 +95,7 @@ module sample.app {
                 onClick(view:View){
                     activity.finish();
                 }
-            })
+            });
             let params = new android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.CENTER);
             this.setContentView(btn, params);
         }

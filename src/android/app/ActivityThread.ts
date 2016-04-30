@@ -112,6 +112,13 @@ module android.app{
             this.scheduleActivityResume();
         }
 
+        execStartActivity(callActivity:Activity, intent:Intent, options?:android.os.Bundle):void {
+            if((intent.getFlags() & Intent.FLAG_ACTIVITY_CLEAR_TOP) != 0){
+                if(this.scheduleBackTo(intent)) return;
+            }
+            this.scheduleLaunchActivity(callActivity, intent, options);
+        }
+
         activityResumeTimeout;
         scheduleActivityResume():void {
             if(this.activityResumeTimeout) clearTimeout(this.activityResumeTimeout);
@@ -156,7 +163,7 @@ module android.app{
         }
 
         scheduleDestroyActivity(activity:Activity, finishing = true):void {
-            //delay destroy ensure activity call all start/resume life circel.
+            //delay destroy ensure activity call all start/resume life circle.
             setTimeout(()=>{
                 let isCreateSuc = this.mLaunchedActivities.has(activity);//common case it's true, finish() in onCreate() will false here
                 let isRootActivity = this.isRootActivity(activity);
@@ -369,12 +376,7 @@ module android.app{
                 activity.mFinished = true;
             }
             //pause
-            activity.mCalled = false;
             activity.performPause();
-            if (!activity.mCalled) {
-                throw new Error(
-                    "Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onPause()");
-            }
             //stop
             activity.performStop();
 

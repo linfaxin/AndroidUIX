@@ -967,8 +967,10 @@ declare module android.content {
     class Intent {
         private mExtras;
         private mRequestCode;
+        private mFlags;
         private activityName;
-        constructor(activityClassOrName?: string);
+        static FLAG_ACTIVITY_CLEAR_TOP: number;
+        constructor(activityName?: string);
         getBooleanExtra(name: string, defaultValue: boolean): boolean;
         getIntExtra(name: string, defaultValue: number): number;
         getLongExtra(name: string, defaultValue: number): number;
@@ -984,6 +986,9 @@ declare module android.content {
         hasExtra(name: string): boolean;
         putExtra(name: string, value: any): Intent;
         getExtras(): Bundle;
+        getFlags(): number;
+        setFlags(flags: number): Intent;
+        addFlags(flags: number): Intent;
     }
 }
 declare module androidui.util {
@@ -3589,14 +3594,18 @@ declare module PageStack {
     var DEBUG: boolean;
     var currentStack: StateStack;
     var backListener: () => boolean;
-    var pageOpenHandler: (pageId: string, pageExtra?: any, isRestore?: boolean) => boolean;
-    var pageCloseHandler: (pageId: string, pageExtra?: any) => boolean;
+    var pageOpenHandler: (pageId: string, pageExtra?: any, isRestore?: boolean) => any;
+    var pagePushHandler: (pageId: string, pageExtra?: any) => any;
+    var pageCloseHandler: (pageId: string, pageExtra?: any) => any;
     function init(): void;
     function go(delta: number, pageAlreadyClose?: boolean): void;
     function back(pageAlreadyClose?: boolean): void;
-    function openPage(pageId: string, extra?: any): void;
+    function openPage(pageId: string, extra?: any): any;
+    function backToPage(pageId: string): void;
     function notifyPageClosed(pageId: string): void;
     function notifyNewPageOpened(pageId: string, extra?: any): void;
+    function getPageExtra(pageId?: string): any;
+    function setPageExtra(extra: any, pageId?: string): void;
     interface StateStack {
         pageId: string;
         isRoot?: boolean;
@@ -3626,6 +3635,7 @@ declare module android.app {
         getOverrideHideAnimation(): Animation;
         scheduleApplicationHide(): void;
         scheduleApplicationShow(): void;
+        execStartActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
         activityResumeTimeout: any;
         scheduleActivityResume(): void;
         scheduleLaunchActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
@@ -10759,6 +10769,7 @@ declare module android.app {
         isShowing(): boolean;
         setActionLeft(name: string, icon: Drawable, listener: View.OnClickListener): void;
         hideActionLeft(): void;
+        setActionRightText(name: string, listener: View.OnClickListener): void;
         setActionRight(name: string, icon: Drawable, listener: View.OnClickListener): void;
         hideActionRight(): void;
     }

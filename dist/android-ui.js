@@ -4008,9 +4008,10 @@ var android;
     (function (content) {
         var Bundle = android.os.Bundle;
         class Intent {
-            constructor(activityClassOrName) {
+            constructor(activityName) {
                 this.mRequestCode = -1;
-                this.activityName = activityClassOrName;
+                this.mFlags = 0;
+                this.activityName = activityName;
             }
             getBooleanExtra(name, defaultValue) {
                 return this.mExtras == null ? defaultValue : this.mExtras.get(name, defaultValue);
@@ -4061,7 +4062,19 @@ var android;
             getExtras() {
                 return (this.mExtras != null) ? new Bundle(this.mExtras) : null;
             }
+            getFlags() {
+                return this.mFlags;
+            }
+            setFlags(flags) {
+                this.mFlags = flags;
+                return this;
+            }
+            addFlags(flags) {
+                this.mFlags |= flags;
+                return this;
+            }
         }
+        Intent.FLAG_ACTIVITY_CLEAR_TOP = 0x04000000;
         content.Intent = Intent;
     })(content = android.content || (android.content = {}));
 })(android || (android = {}));
@@ -15464,10 +15477,12 @@ var PageStack;
     PageStack.DEBUG = false;
     const history_go = history.go;
     let historyLocking = false;
+    let windowLoadLocking = true;
     let pendingFuncLock = [];
+    let initCalled = false;
     function init() {
-        removeLastHistoryIfFaked();
-        ensureLockDo(_init);
+        initCalled = true;
+        _init();
         history.go = function (delta) {
             PageStack.go(delta);
         };
@@ -15479,6 +15494,10 @@ var PageStack;
         };
     }
     PageStack.init = init;
+    function checkInitCalled() {
+        if (!initCalled)
+            throw Error("PageStack.init() must be call first");
+    }
     function _init() {
         PageStack.currentStack = history.state;
         if (PageStack.currentStack && !PageStack.currentStack.isRoot) {
@@ -15491,14 +15510,31 @@ var PageStack;
                 isRoot: true,
                 stack: [{ pageId: null }]
             };
-            history.replaceState(PageStack.currentStack, null, '#');
+            let initOpenUrl = location.hash;
+            if (initOpenUrl && initOpenUrl.indexOf('#') === 0)
+                initOpenUrl = initOpenUrl.substring(1);
+            removeLastHistoryIfFaked();
+            ensureLockDo(() => {
+                history.replaceState(PageStack.currentStack, null, '#');
+            });
+            if (initOpenUrl && initOpenUrl.length > 0) {
+                if (firePagePush(initOpenUrl, null)) {
+                    notifyNewPageOpened(initOpenUrl);
+                }
+            }
         }
         ensureLastHistoryFaked();
-        initOnpopstate();
-        window.addEventListener('load', () => {
-            window.removeEventListener('popstate', onpopstateListener);
+        if (document.readyState === 'complete') {
+            windowLoadLocking = false;
             setTimeout(initOnpopstate, 0);
-        });
+        }
+        else {
+            window.addEventListener('load', () => {
+                windowLoadLocking = false;
+                window.removeEventListener('popstate', onpopstateListener);
+                setTimeout(initOnpopstate, 0);
+            });
+        }
     }
     let onpopstateListener = function (ev) {
         let stack = ev.state;
@@ -15513,7 +15549,7 @@ var PageStack;
             if (pageId[0] === '#')
                 pageId = pageId.substring(1);
             historyGo(-2, false);
-            if (firePageOpen(pageId, null)) {
+            if (firePagePush(pageId, null)) {
                 notifyNewPageOpened(pageId);
             }
             else {
@@ -15537,7 +15573,8 @@ var PageStack;
             }
             else {
                 var stackList = PageStack.currentStack.stack;
-                if (firePageClose(stackList[stackList.length - 1].pageId, stackList[stackList.length - 1].extra)) {
+                var pageId = stackList[stackList.length - 1].pageId;
+                if (firePageClose(pageId, stackList[stackList.length - 1].extra)) {
                     historyGo(-1);
                 }
                 else {
@@ -15551,6 +15588,7 @@ var PageStack;
         window.addEventListener('popstate', onpopstateListener);
     }
     function go(delta, pageAlreadyClose = false) {
+        checkInitCalled();
         if (historyLocking) {
             ensureLockDo(() => {
                 go(delta);
@@ -15582,16 +15620,42 @@ var PageStack;
         }
     }
     function back(pageAlreadyClose = false) {
+        checkInitCalled();
         go(-1, pageAlreadyClose);
     }
     PageStack.back = back;
     function openPage(pageId, extra) {
+        checkInitCalled();
         pageId += '';
-        if (firePageOpen(pageId, extra)) {
-            notifyNewPageOpened(pageId);
+        var openResult = firePageOpen(pageId, extra);
+        if (openResult) {
+            notifyNewPageOpened(pageId, extra);
         }
+        return openResult;
     }
     PageStack.openPage = openPage;
+    function backToPage(pageId) {
+        checkInitCalled();
+        if (PageStack.DEBUG)
+            console.log('backToPage', pageId);
+        if (historyLocking) {
+            ensureLockDo(() => {
+                backToPage(pageId);
+            });
+        }
+        let stackList = PageStack.currentStack.stack;
+        let historyLength = stackList.length;
+        for (let i = historyLength - 1; i >= 0; i--) {
+            let state = stackList[i];
+            if (state.pageId == pageId) {
+                let delta = i - historyLength;
+                removeLastHistoryIfFaked();
+                historyGo(delta);
+                return;
+            }
+        }
+    }
+    PageStack.backToPage = backToPage;
     let releaseLockingTimeout;
     let requestHistoryGoWhenLocking = 0;
     let ensureFakeAfterHistoryChange = false;
@@ -15665,6 +15729,16 @@ var PageStack;
             }
         }
     }
+    function firePagePush(pageId, pageExtra) {
+        if (PageStack.pagePushHandler) {
+            try {
+                return PageStack.pagePushHandler(pageId, pageExtra);
+            }
+            catch (e) {
+                console.error(e);
+            }
+        }
+    }
     function firePageClose(pageId, pageExtra) {
         if (PageStack.pageCloseHandler) {
             try {
@@ -15676,12 +15750,18 @@ var PageStack;
         }
     }
     function notifyPageClosed(pageId) {
+        checkInitCalled();
         if (PageStack.DEBUG)
             console.log('notifyPageClosed', pageId);
         if (historyLocking) {
+            if (PageStack.DEBUG)
+                console.log('notifyPageClosed historyLocking', pageId, PageStack.currentStack);
             ensureLockDo(() => {
+                if (PageStack.DEBUG)
+                    console.log('notifyPageClosed historyLocking release', pageId, PageStack.currentStack);
                 notifyPageClosed(pageId);
             });
+            return;
         }
         let stackList = PageStack.currentStack.stack;
         let historyLength = stackList.length;
@@ -15689,12 +15769,16 @@ var PageStack;
             let state = stackList[i];
             if (state.pageId == pageId) {
                 if (i === historyLength - 1) {
+                    if (PageStack.DEBUG)
+                        console.log('notifyPageClosed i === historyLength-1', pageId, PageStack.currentStack);
                     removeLastHistoryIfFaked();
                     historyGo(-1);
                 }
                 else {
                     let delta = i - historyLength;
                     (function (delta) {
+                        if (PageStack.DEBUG)
+                            console.log('notifyPageClosed delta=' + delta, pageId, PageStack.currentStack);
                         removeLastHistoryIfFaked();
                         historyGo(delta);
                         ensureLockDoAtFront(() => {
@@ -15712,6 +15796,7 @@ var PageStack;
     }
     PageStack.notifyPageClosed = notifyPageClosed;
     function notifyNewPageOpened(pageId, extra) {
+        checkInitCalled();
         if (PageStack.DEBUG)
             console.log('notifyNewPageOpened', pageId);
         let state = {
@@ -15732,8 +15817,50 @@ var PageStack;
         });
     }
     PageStack.notifyNewPageOpened = notifyNewPageOpened;
+    function getPageExtra(pageId) {
+        checkInitCalled();
+        let stackList = PageStack.currentStack.stack;
+        let historyLength = stackList.length;
+        if (!pageId) {
+            return stackList[historyLength - 1].extra;
+        }
+        else {
+            for (let i = historyLength - 1; i >= 0; i--) {
+                let state = stackList[i];
+                if (state.pageId == pageId) {
+                    return state.extra;
+                }
+            }
+        }
+    }
+    PageStack.getPageExtra = getPageExtra;
+    function setPageExtra(extra, pageId) {
+        checkInitCalled();
+        removeLastHistoryIfFaked();
+        ensureLockDo(function () {
+            let stackList = PageStack.currentStack.stack;
+            let historyLength = stackList.length;
+            if (!pageId) {
+                stackList[historyLength - 1].extra = extra;
+                history.replaceState(PageStack.currentStack, null, '');
+            }
+            else {
+                for (let i = historyLength - 1; i >= 0; i--) {
+                    let state = stackList[i];
+                    if (state.pageId == pageId) {
+                        state.extra = extra;
+                        history.replaceState(PageStack.currentStack, null, '');
+                        break;
+                    }
+                }
+            }
+            ensureLastHistoryFakedImpl();
+        });
+    }
+    PageStack.setPageExtra = setPageExtra;
     function ensureLockDo(func) {
-        if (!historyLocking) {
+        checkInitCalled();
+        if (!historyLocking && !windowLoadLocking) {
             func();
             return;
         }
@@ -15741,7 +15868,8 @@ var PageStack;
         _queryLockDo();
     }
     function ensureLockDoAtFront(func, runNowIfNotLock = false) {
-        if (!historyLocking && runNowIfNotLock) {
+        checkInitCalled();
+        if (!historyLocking && !windowLoadLocking && runNowIfNotLock) {
             func();
             return;
         }
@@ -15753,7 +15881,7 @@ var PageStack;
         if (execLockedTimeoutId)
             clearTimeout(execLockedTimeoutId);
         function execLockedFunctions() {
-            if (historyLocking) {
+            if (historyLocking || windowLoadLocking) {
                 clearTimeout(execLockedTimeoutId);
                 execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
             }
@@ -15761,7 +15889,7 @@ var PageStack;
                 let f;
                 while (f = pendingFuncLock.shift()) {
                     f();
-                    if (historyLocking) {
+                    if (historyLocking || windowLoadLocking) {
                         clearTimeout(execLockedTimeoutId);
                         execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
                         break;
@@ -15772,10 +15900,13 @@ var PageStack;
         execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
     }
     function removeLastHistoryIfFaked() {
+        ensureLockDo(removeLastHistoryIfFakedImpl);
+    }
+    function removeLastHistoryIfFakedImpl() {
         if (history.state && history.state.isFake) {
             if (PageStack.DEBUG)
                 console.log('remove Fake History');
-            history.replaceState({}, null, '');
+            history.replaceState(null, null, '');
             historyGo(-1, false);
         }
     }
@@ -15871,6 +16002,13 @@ var android;
             }
             scheduleApplicationShow() {
                 this.scheduleActivityResume();
+            }
+            execStartActivity(callActivity, intent, options) {
+                if ((intent.getFlags() & Intent.FLAG_ACTIVITY_CLEAR_TOP) != 0) {
+                    if (this.scheduleBackTo(intent))
+                        return;
+                }
+                this.scheduleLaunchActivity(callActivity, intent, options);
             }
             scheduleActivityResume() {
                 if (this.activityResumeTimeout)
@@ -16072,11 +16210,7 @@ var android;
                 if (finishing) {
                     activity.mFinished = true;
                 }
-                activity.mCalled = false;
                 activity.performPause();
-                if (!activity.mCalled) {
-                    throw new Error("Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onPause()");
-                }
                 activity.performStop();
                 activity.mCalled = false;
                 activity.performDestroy();
@@ -24603,7 +24737,7 @@ var android;
                     intent = new Intent(intent);
                 if (requestCode >= 0)
                     intent.mRequestCode = requestCode;
-                this.androidUI.mActivityThread.scheduleLaunchActivity(this, intent, options);
+                this.androidUI.mActivityThread.execStartActivity(this, intent, options);
                 if (requestCode >= 0) {
                     this.mStartedActivity = true;
                 }
@@ -24737,13 +24871,15 @@ var android;
                 }
             }
             performPause() {
-                this.mCalled = false;
-                this.onPause();
-                this.mResumed = false;
-                if (!this.mCalled) {
-                    throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPause()")`);
+                if (this.mResumed) {
+                    this.mCalled = false;
+                    this.onPause();
+                    this.mResumed = false;
+                    if (!this.mCalled) {
+                        throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPause()")`);
+                    }
+                    this.mResumed = false;
                 }
-                this.mResumed = false;
             }
             performUserLeaving() {
                 this.onUserInteraction();
@@ -57424,11 +57560,17 @@ var android;
             hideActionLeft() {
                 this.mActionLeft.setVisibility(View.GONE);
             }
+            setActionRightText(name, listener) {
+                this.mActionRight.setText(name);
+                this.mActionRight.setVisibility(View.VISIBLE);
+                this.mActionRight.setOnClickListener(listener);
+            }
             setActionRight(name, icon, listener) {
                 this.mActionRight.setText(name);
                 this.mActionRight.setVisibility(View.VISIBLE);
                 let drawables = this.mActionRight.getCompoundDrawables();
-                icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+                if (icon)
+                    icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
                 this.mActionRight.setCompoundDrawables(drawables[0], drawables[1], icon, drawables[3]);
                 this.mActionRight.setOnClickListener(listener);
             }
@@ -59214,9 +59356,11 @@ var androidui;
             };
             android.view.ViewRootImpl.prototype.trackFPS = () => { };
             JSBridge.initRuntime();
-            setInterval(() => {
-                JSBridge.pageAlive(1500);
-            }, 800);
+            window.addEventListener('load', () => {
+                setInterval(() => {
+                    JSBridge.pageAlive(1500);
+                }, 800);
+            });
         }
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));

@@ -68,7 +68,7 @@ import Application = android.app.Application;
  * </div>
  *
  * AndroidUI:
- * NOTE: ActionBar‘s style was not same as Android, title was move to center. No logo support
+ * NOTE: AndroidUI's ActionBar was not same as Android's.
  */
 export class ActionBar extends FrameLayout {
 
@@ -897,7 +897,7 @@ export class ActionBar extends FrameLayout {
             this.mActionRight.setText(name);
             this.mActionRight.setVisibility(View.VISIBLE);
             let drawables = this.mActionRight.getCompoundDrawables();
-            icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+            if(icon) icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
             this.mActionRight.setCompoundDrawables(drawables[0], drawables[1], icon, drawables[3]);
             this.mActionRight.setOnClickListener(listener);
         }
