@@ -38,15 +38,8 @@ module androidui.widget {
             return this.mHtmlTouchAble;
         }
 
-        //default sync bound immediately
-        requestSyncBoundToElement(immediately = true):void {
-            super.requestSyncBoundToElement(immediately);
-        }
-
-        protected onAttachedToWindow():void {
-            //HtmlBaseView show at debug layout
-            this.getContext().androidUI.showDebugLayout();
-            return super.onAttachedToWindow();
+        protected dependOnDebugLayout():boolean {
+            return true;
         }
     }
 

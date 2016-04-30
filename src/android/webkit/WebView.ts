@@ -1,12 +1,12 @@
-///<reference path="../widget/FrameLayout.ts"/>
+///<reference path="../../androidui/widget/HtmlBaseView.ts"/>
 ///<reference path="WebViewClient.ts"/>
 
 
 
 module android.webkit {
-    import FrameLayout = android.widget.FrameLayout;
+    import HtmlBaseView = androidui.widget.HtmlBaseView;
 
-    export class WebView extends FrameLayout {
+    export class WebView extends HtmlBaseView {
         private iFrameElement:HTMLIFrameElement;
         private mClient:WebViewClient;
 
@@ -28,18 +28,13 @@ module android.webkit {
             this.iFrameElement.onload = ()=>{
                 if(this.mClient){
                     this.mClient.onReceivedTitle(this, this.getTitle());
-                    this.mClient.onPageFinished(this, this.iFrameElement.src);
+                    this.mClient.onPageFinished(this, this.getUrl());
                 }
             };
             this.bindElement.appendChild(this.iFrameElement);
             this.bindElement.style['webkitOverflowScrolling'] = this.bindElement.style['overflowScrolling'] = 'touch';
-            this.bindElement.style.overflowY = 'scroll';
+            this.bindElement.style.overflowY = 'auto';
 
-        }
-
-        onTouchEvent(event:android.view.MotionEvent):boolean {
-            event[android.view.ViewRootImpl.ContinueEventToDom] = true;
-            return super.onTouchEvent(event) || true;
         }
 
         /**

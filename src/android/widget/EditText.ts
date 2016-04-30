@@ -513,14 +513,12 @@ export class EditText extends TextView {
             this.inputElement.style.padding = '0px';
         }
     }
-
-    protected onAttachedToWindow():void {
-        //input element show at debug layout
-        this.getContext().androidUI.showDebugLayout();
-        return super.onAttachedToWindow();
+    
+    protected dependOnDebugLayout():boolean {
+        return true;
     }
 
-    //protected getDefaultEditable():boolean  {
+//protected getDefaultEditable():boolean  {
     //    return true;
     //}
     //

@@ -14137,7 +14137,6 @@ var android;
                     this.mDrawableState = this.onCreateDrawableState(0);
                     this.mPrivateFlags &= ~View.PFLAG_DRAWABLE_STATE_DIRTY;
                     this._fireStateChangeToAttribute(oldDrawableState, this.mDrawableState);
-                    this.syncDrawStateToElement();
                     return this.mDrawableState;
                 }
             }
@@ -14615,6 +14614,9 @@ var android;
                     this.mPrivateFlags |= View.PFLAG_SCROLL_CONTAINER_ADDED;
                 }
                 this.onAttachedToWindow();
+                if (this.dependOnDebugLayout()) {
+                    this.getContext().androidUI.viewAttachedDependOnDebugLayout(this);
+                }
                 let li = this.mListenerInfo;
                 let listeners = li != null ? li.mOnAttachStateChangeListeners : null;
                 if (listeners != null && listeners.size() > 0) {
@@ -14647,6 +14649,9 @@ var android;
                     }
                 }
                 this.onDetachedFromWindow();
+                if (this.dependOnDebugLayout()) {
+                    this.getContext().androidUI.viewDetachedDependOnDebugLayout(this);
+                }
                 let li = this.mListenerInfo;
                 let listeners = li != null ? li.mOnAttachStateChangeListeners : null;
                 if (listeners != null && listeners.size() > 0) {
@@ -14805,7 +14810,7 @@ var android;
                 this._parseInitedAttribute();
                 this._initAttrObserver();
             }
-            requestSyncBoundToElement(immediately = false) {
+            requestSyncBoundToElement(immediately = this.dependOnDebugLayout()) {
                 let rootView = this.getRootView();
                 if (!rootView)
                     return;
@@ -14889,28 +14894,8 @@ var android;
                     this.bindElement.style.visibility = '';
                 }
             }
-            syncDrawStateToElement() {
-                const bind = this.bindElement;
-                if (this.isPressed())
-                    bind.classList.add('_pressed');
-                else
-                    bind.classList.remove('_pressed');
-                if (this.isEnabled())
-                    bind.classList.remove('_disabled');
-                else
-                    bind.classList.add('_disabled');
-                if (this.isFocused())
-                    bind.classList.add('_focused');
-                else
-                    bind.classList.remove('_focused');
-                if (this.isSelected())
-                    bind.classList.add('_selected');
-                else
-                    bind.classList.remove('_selected');
-                if (this.isActivated())
-                    bind.classList.add('_activated');
-                else
-                    bind.classList.remove('_activated');
+            dependOnDebugLayout() {
+                return false;
             }
             _initAttrObserver() {
                 if (!window['MutationObserver'])
@@ -16295,6 +16280,8 @@ var androidui;
     class AndroidUI {
         constructor(androidUIElement) {
             this._canvas = document.createElement("canvas");
+            this.viewsDependOnDebugLayout = new Set();
+            this.showDebugLayoutDefault = false;
             this._windowBound = new android.graphics.Rect();
             this.tempRect = new android.graphics.Rect();
             this.touchEvent = new MotionEvent();
@@ -16583,9 +16570,30 @@ var androidui;
                 this._viewRootImpl.notifyResized(this.tempRect);
             }
         }
+        viewAttachedDependOnDebugLayout(view) {
+            this.viewsDependOnDebugLayout.add(view);
+            this.showDebugLayout();
+        }
+        viewDetachedDependOnDebugLayout(view) {
+            this.viewsDependOnDebugLayout.delete(view);
+            if (this.viewsDependOnDebugLayout.size == 0 && !this.showDebugLayoutDefault) {
+                this.hideDebugLayout();
+            }
+        }
+        setShowDebugLayout(showDebugLayoutDefault = true) {
+            this.showDebugLayoutDefault = showDebugLayoutDefault;
+            if (showDebugLayoutDefault) {
+                this.showDebugLayout();
+            }
+        }
         showDebugLayout() {
             if (this.windowManager.getWindowsLayout().bindElement.parentNode === null) {
                 this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
+            }
+        }
+        hideDebugLayout() {
+            if (this.windowManager.getWindowsLayout().bindElement.parentNode === this.androidUIElement) {
+                this.androidUIElement.removeChild(this.windowManager.getWindowsLayout().bindElement);
             }
         }
         setUIClient(uiClient) {
@@ -16621,7 +16629,7 @@ var androidui;
         }
         attributeChangedCallback(attributeName, oldVal, newVal) {
             if (attributeName === 'debug' && newVal != null && newVal != 'false' && newVal != '0') {
-                this.AndroidUI.showDebugLayout();
+                this.AndroidUI.setShowDebugLayout();
             }
         }
     }
@@ -16651,7 +16659,7 @@ var androidui;
         ele.AndroidUI = new androidui.AndroidUI(ele);
         let debugAttr = ele.getAttribute('debug');
         if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
-            ele.AndroidUI.showDebugLayout();
+            ele.AndroidUI.setShowDebugLayout();
         let onClose = ele.getAttribute('onclose');
         if (onClose) {
             ele.AndroidUI.setUIClient({
@@ -42467,9 +42475,8 @@ var android;
                     this.inputElement.style.padding = '0px';
                 }
             }
-            onAttachedToWindow() {
-                this.getContext().androidUI.showDebugLayout();
-                return super.onAttachedToWindow();
+            dependOnDebugLayout() {
+                return true;
             }
             setEllipsize(ellipsis) {
                 if (ellipsis == TextUtils.TruncateAt.MARQUEE) {
@@ -51999,6 +52006,35 @@ var android;
         })(Spinner = widget.Spinner || (widget.Spinner = {}));
     })(widget = android.widget || (android.widget = {}));
 })(android || (android = {}));
+var androidui;
+(function (androidui) {
+    var widget;
+    (function (widget) {
+        var View = android.view.View;
+        class HtmlBaseView extends View {
+            constructor(context, bindElement, defStyle) {
+                super(context, bindElement, defStyle);
+                this.mHtmlTouchAble = false;
+            }
+            onTouchEvent(event) {
+                if (this.mHtmlTouchAble) {
+                    event[android.view.ViewRootImpl.ContinueEventToDom] = true;
+                }
+                return super.onTouchEvent(event) || this.mHtmlTouchAble;
+            }
+            setHtmlTouchAble(enable) {
+                this.mHtmlTouchAble = enable;
+            }
+            isHtmlTouchAble() {
+                return this.mHtmlTouchAble;
+            }
+            dependOnDebugLayout() {
+                return true;
+            }
+        }
+        widget.HtmlBaseView = HtmlBaseView;
+    })(widget = androidui.widget || (androidui.widget = {}));
+})(androidui || (androidui = {}));
 var android;
 (function (android) {
     var webkit;
@@ -52018,8 +52054,8 @@ var android;
 (function (android) {
     var webkit;
     (function (webkit) {
-        var FrameLayout = android.widget.FrameLayout;
-        class WebView extends FrameLayout {
+        var HtmlBaseView = androidui.widget.HtmlBaseView;
+        class WebView extends HtmlBaseView {
             constructor(context, bindElement, defStyle) {
                 super(context, bindElement, defStyle);
                 let density = this.getResources().getDisplayMetrics().density;
@@ -52035,16 +52071,12 @@ var android;
                 this.iFrameElement.onload = () => {
                     if (this.mClient) {
                         this.mClient.onReceivedTitle(this, this.getTitle());
-                        this.mClient.onPageFinished(this, this.iFrameElement.src);
+                        this.mClient.onPageFinished(this, this.getUrl());
                     }
                 };
                 this.bindElement.appendChild(this.iFrameElement);
                 this.bindElement.style['webkitOverflowScrolling'] = this.bindElement.style['overflowScrolling'] = 'touch';
-                this.bindElement.style.overflowY = 'scroll';
-            }
-            onTouchEvent(event) {
-                event[android.view.ViewRootImpl.ContinueEventToDom] = true;
-                return super.onTouchEvent(event) || true;
+                this.bindElement.style.overflowY = 'auto';
             }
             loadUrl(url) {
                 if (this.mClient)
@@ -57660,39 +57692,6 @@ var android;
         app.ActionBarActivity = ActionBarActivity;
     })(app = android.app || (android.app = {}));
 })(android || (android = {}));
-var androidui;
-(function (androidui) {
-    var widget;
-    (function (widget) {
-        var View = android.view.View;
-        class HtmlBaseView extends View {
-            constructor(context, bindElement, defStyle) {
-                super(context, bindElement, defStyle);
-                this.mHtmlTouchAble = false;
-            }
-            onTouchEvent(event) {
-                if (this.mHtmlTouchAble) {
-                    event[android.view.ViewRootImpl.ContinueEventToDom] = true;
-                }
-                return super.onTouchEvent(event) || this.mHtmlTouchAble;
-            }
-            setHtmlTouchAble(enable) {
-                this.mHtmlTouchAble = enable;
-            }
-            isHtmlTouchAble() {
-                return this.mHtmlTouchAble;
-            }
-            requestSyncBoundToElement(immediately = true) {
-                super.requestSyncBoundToElement(immediately);
-            }
-            onAttachedToWindow() {
-                this.getContext().androidUI.showDebugLayout();
-                return super.onAttachedToWindow();
-            }
-        }
-        widget.HtmlBaseView = HtmlBaseView;
-    })(widget = androidui.widget || (androidui.widget = {}));
-})(androidui || (androidui = {}));
 var androidui;
 (function (androidui) {
     var widget;

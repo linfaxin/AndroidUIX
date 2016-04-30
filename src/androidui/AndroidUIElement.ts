@@ -30,7 +30,7 @@ module androidui{
 
         attributeChangedCallback(attributeName:string, oldVal:string, newVal:string):void {
             if(attributeName==='debug' && newVal!=null && newVal!='false' && newVal!='0'){
-                this.AndroidUI.showDebugLayout();
+                this.AndroidUI.setShowDebugLayout();
             }
         }
     }
@@ -59,7 +59,7 @@ module androidui{
     function initElement(ele:AndroidUIElement){
         ele.AndroidUI = new AndroidUI(ele);
         let debugAttr = ele.getAttribute('debug');
-        if(debugAttr!=null && debugAttr!='0' && debugAttr!='false') ele.AndroidUI.showDebugLayout();
+        if(debugAttr!=null && debugAttr!='0' && debugAttr!='false') ele.AndroidUI.setShowDebugLayout();
 
         //life callback
         let onClose = ele.getAttribute('onclose');

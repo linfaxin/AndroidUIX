@@ -5408,7 +5408,6 @@ module android.view {
                 this.mDrawableState = this.onCreateDrawableState(0);
                 this.mPrivateFlags &= ~View.PFLAG_DRAWABLE_STATE_DIRTY;
                 this._fireStateChangeToAttribute(oldDrawableState, this.mDrawableState);
-                this.syncDrawStateToElement();
                 return this.mDrawableState;
             }
         }
@@ -6060,6 +6059,11 @@ module android.view {
             }
             //performCollectViewAttributes(mAttachInfo, visibility);
             this.onAttachedToWindow();
+            
+            //AndroidUI: force show debug layout if the view depend on debug layout.
+            if(this.dependOnDebugLayout()){
+                this.getContext().androidUI.viewAttachedDependOnDebugLayout(this);
+            }
 
             let li = this.mListenerInfo;
             let listeners = li != null ? li.mOnAttachStateChangeListeners : null;
@@ -6109,6 +6113,11 @@ module android.view {
             }
 
             this.onDetachedFromWindow();
+
+            //AndroidUI: notity debug layout the view depend on debug layout has detached.
+            if(this.dependOnDebugLayout()){
+                this.getContext().androidUI.viewDetachedDependOnDebugLayout(this);
+            }
 
             let li = this.mListenerInfo;
             let listeners = li != null ? li.mOnAttachStateChangeListeners : null;
@@ -6301,7 +6310,7 @@ module android.view {
         private _syncToElementImmediatelyLock:boolean;
         private _syncToElementRun: Runnable;
 
-        requestSyncBoundToElement(immediately=false):void {
+        requestSyncBoundToElement(immediately=this.dependOnDebugLayout()):void {
             let rootView = this.getRootView();
             if(!rootView) return;
 
@@ -6431,24 +6440,9 @@ module android.view {
                 this.bindElement.style.visibility = '';
             }
         }
-
-        syncDrawStateToElement(){
-            const bind = this.bindElement;
-
-            if(this.isPressed()) bind.classList.add('_pressed');
-            else bind.classList.remove('_pressed');
-
-            if(this.isEnabled()) bind.classList.remove('_disabled');
-            else bind.classList.add('_disabled');
-
-            if(this.isFocused()) bind.classList.add('_focused');
-            else bind.classList.remove('_focused');
-
-            if(this.isSelected()) bind.classList.add('_selected');
-            else bind.classList.remove('_selected');
-
-            if(this.isActivated()) bind.classList.add('_activated');
-            else bind.classList.remove('_activated');
+        
+        protected dependOnDebugLayout(){
+            return false;
         }
 
         private _initAttrObserver(){

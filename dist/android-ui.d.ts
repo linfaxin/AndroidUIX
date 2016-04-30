@@ -3432,7 +3432,7 @@ declare module android.view {
         private _lastSyncTransform;
         protected _syncMatrixToElement(): void;
         syncVisibleToElement(): void;
-        syncDrawStateToElement(): void;
+        protected dependOnDebugLayout(): boolean;
         private _initAttrObserver();
         private _parseInitedAttribute();
         private _fireInitedAttributeChange();
@@ -3680,6 +3680,7 @@ declare module android.R {
     }
 }
 declare module androidui {
+    import View = android.view.View;
     import UIClient = androidui.AndroidUI.UIClient;
     class AndroidUI {
         static BindToElementName: string;
@@ -3691,6 +3692,8 @@ declare module androidui {
         private mApplication;
         appName: string;
         private uiClient;
+        private viewsDependOnDebugLayout;
+        private showDebugLayoutDefault;
         private rootResourceElement;
         private _windowBound;
         private tempRect;
@@ -3713,7 +3716,11 @@ declare module androidui {
         private initRootSizeChange();
         private initBrowserVisibleChange();
         private notifyRootSizeChange();
-        showDebugLayout(): void;
+        viewAttachedDependOnDebugLayout(view: View): void;
+        viewDetachedDependOnDebugLayout(view: View): void;
+        setShowDebugLayout(showDebugLayoutDefault?: boolean): void;
+        private showDebugLayout();
+        private hideDebugLayout();
         setUIClient(uiClient: UIClient): void;
         showAppClosed(): void;
         private static showAppClosed(androidUI);
@@ -7759,7 +7766,7 @@ declare module android.widget {
         setInputType(type: number): void;
         getInputType(): number;
         private syncTextBoundInfoToInputElement();
-        protected onAttachedToWindow(): void;
+        protected dependOnDebugLayout(): boolean;
         setEllipsize(ellipsis: TextUtils.TruncateAt): void;
     }
 }
@@ -9755,6 +9762,17 @@ declare module android.widget {
         }
     }
 }
+declare module androidui.widget {
+    import View = android.view.View;
+    class HtmlBaseView extends View {
+        private mHtmlTouchAble;
+        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        onTouchEvent(event: android.view.MotionEvent): boolean;
+        setHtmlTouchAble(enable: boolean): void;
+        isHtmlTouchAble(): boolean;
+        protected dependOnDebugLayout(): boolean;
+    }
+}
 declare module android.webkit {
     class WebViewClient {
         onPageStarted(view: WebView, url: string): void;
@@ -9763,13 +9781,12 @@ declare module android.webkit {
     }
 }
 declare module android.webkit {
-    import FrameLayout = android.widget.FrameLayout;
-    class WebView extends FrameLayout {
+    import HtmlBaseView = androidui.widget.HtmlBaseView;
+    class WebView extends HtmlBaseView {
         private iFrameElement;
         private mClient;
         constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initIFrameElement();
-        onTouchEvent(event: android.view.MotionEvent): boolean;
         loadUrl(url: string): void;
         loadData(data: string): void;
         evaluateJavascript(script: string): any;
@@ -10794,18 +10811,6 @@ declare module android.app {
         setActionBar(actionBar: ActionBar): void;
         getActionBar(): ActionBar;
         protected onTitleChanged(title: string, color: number): void;
-    }
-}
-declare module androidui.widget {
-    import View = android.view.View;
-    class HtmlBaseView extends View {
-        private mHtmlTouchAble;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
-        onTouchEvent(event: android.view.MotionEvent): boolean;
-        setHtmlTouchAble(enable: boolean): void;
-        isHtmlTouchAble(): boolean;
-        requestSyncBoundToElement(immediately?: boolean): void;
-        protected onAttachedToWindow(): void;
     }
 }
 declare module androidui.widget {

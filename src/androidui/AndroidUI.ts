@@ -40,6 +40,8 @@ module androidui {
         private mApplication:android.app.Application;
         appName:string;
         private uiClient:AndroidUI.UIClient;
+        private viewsDependOnDebugLayout = new Set<View>();
+        private showDebugLayoutDefault = false;
 
         private rootResourceElement:Element;
 
@@ -383,10 +385,31 @@ module androidui {
             }
         }
 
+        viewAttachedDependOnDebugLayout(view:View):void{
+            this.viewsDependOnDebugLayout.add(view);
+            this.showDebugLayout();
+        }
+        viewDetachedDependOnDebugLayout(view:View):void{
+            this.viewsDependOnDebugLayout.delete(view);
+            if(this.viewsDependOnDebugLayout.size==0 && !this.showDebugLayoutDefault){
+                this.hideDebugLayout();
+            }
+        }
 
-        showDebugLayout(){
+        setShowDebugLayout(showDebugLayoutDefault = true){
+            this.showDebugLayoutDefault = showDebugLayoutDefault;
+            if(showDebugLayoutDefault){
+                this.showDebugLayout();
+            }
+        }
+        private showDebugLayout(){
             if(this.windowManager.getWindowsLayout().bindElement.parentNode === null){
                 this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
+            }
+        }
+        private hideDebugLayout(){
+            if(this.windowManager.getWindowsLayout().bindElement.parentNode === this.androidUIElement){
+                this.androidUIElement.removeChild(this.windowManager.getWindowsLayout().bindElement);
             }
         }
 
