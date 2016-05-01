@@ -2810,19 +2810,18 @@ var android;
                 return this.isImageSmoothingEnabledImpl();
             }
             isImageSmoothingEnabledImpl() {
-                return this._mCanvasContent['mozImageSmoothingEnabled']
-                    || this._mCanvasContent['webkitImageSmoothingEnabled']
-                    || this._mCanvasContent['msImageSmoothingEnabled']
-                    || this._mCanvasContent['imageSmoothingEnabled'];
+                return this._mCanvasContent['imageSmoothingEnabled'] || this._mCanvasContent['webkitImageSmoothingEnabled'];
             }
             setImageSmoothingEnabled(enable) {
                 this.setImageSmoothingEnabledImpl(enable);
             }
             setImageSmoothingEnabledImpl(enable) {
-                this._mCanvasContent['mozImageSmoothingEnabled'] = enable;
-                this._mCanvasContent['webkitImageSmoothingEnabled'] = enable;
-                this._mCanvasContent['msImageSmoothingEnabled'] = enable;
-                this._mCanvasContent['imageSmoothingEnabled'] = enable;
+                if ('imageSmoothingEnabled' in this._mCanvasContent) {
+                    this._mCanvasContent['imageSmoothingEnabled'] = enable;
+                }
+                else if ('webkitImageSmoothingEnabled' in this._mCanvasContent) {
+                    this._mCanvasContent['webkitImageSmoothingEnabled'] = enable;
+                }
             }
         }
         Canvas.TempMatrixValue = new Array(9);
