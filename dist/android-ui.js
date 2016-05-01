@@ -1,5 +1,5 @@
 /*!
- * AndroidUI-WebApp v0.5.0
+ * AndroidUI-WebApp v0.5.1
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
