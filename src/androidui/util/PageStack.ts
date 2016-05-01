@@ -6,6 +6,7 @@ module PageStack{
     export var DEBUG = false;
     const history_go = history.go;
     export var currentStack:StateStack;
+    var iFrameHistoryLengthAsFake = 0;
 
     /**
      * callback when user press back history button
@@ -42,11 +43,11 @@ module PageStack{
         history.go = function(delta:number){
             PageStack.go(delta);
         };
-        history.back = function(){
-            PageStack.go(-1);
+        history.back = function(delta=-1){
+            PageStack.go(delta);
         };
-        history.forward = function(){
-            PageStack.go(1);
+        history.forward = function(delta=1){
+            PageStack.go(delta);
         };
     }
     function checkInitCalled(){
@@ -248,7 +249,7 @@ module PageStack{
     let releaseLockingTimeout;
     let requestHistoryGoWhenLocking = 0;
     let ensureFakeAfterHistoryChange = false;
-    function historyGo(delta:number, ensureFaked=true){
+    export function historyGo(delta:number, ensureFaked=true){
         if(delta>=0) return;//not support forward
         if(history.length === 1) return;//no history
 
@@ -495,6 +496,15 @@ module PageStack{
         execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
     }
 
+    /**
+     * If current page has iFrame, you should call this method to fix history before close the page.
+     * (no need if iFrame has no history)
+     * @param historyLengthWhenInitIFrame
+     */
+    export function preClosePageHasIFrame(historyLengthWhenInitIFrame:number){
+        history.pushState({isFake:true}, null, null);
+        iFrameHistoryLengthAsFake = history.length - historyLengthWhenInitIFrame;
+    }
 
     function removeLastHistoryIfFaked(){
         ensureLockDo(removeLastHistoryIfFakedImpl);
@@ -503,7 +513,8 @@ module PageStack{
         if(history.state && history.state.isFake){
             if(DEBUG) console.log('remove Fake History');
             history.replaceState(null, null, '');//make history.state.isFake = false
-            historyGo(-1, false);
+            historyGo(-1 - iFrameHistoryLengthAsFake, false);
+            iFrameHistoryLengthAsFake = 0;
         }
     }
 

@@ -3606,10 +3606,12 @@ declare module PageStack {
     function back(pageAlreadyClose?: boolean): void;
     function openPage(pageId: string, extra?: any): any;
     function backToPage(pageId: string): void;
+    function historyGo(delta: number, ensureFaked?: boolean): void;
     function notifyPageClosed(pageId: string): void;
     function notifyNewPageOpened(pageId: string, extra?: any): void;
     function getPageExtra(pageId?: string): any;
     function setPageExtra(extra: any, pageId?: string): void;
+    function preClosePageHasIFrame(historyLengthWhenInitIFrame: number): void;
     interface StateStack {
         pageId: string;
         isRoot?: boolean;
@@ -9789,8 +9791,12 @@ declare module android.webkit {
     class WebView extends HtmlBaseView {
         private iFrameElement;
         private mClient;
+        private initIFrameHistoryLength;
         constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
-        private initIFrameElement();
+        private initIFrameElement(url);
+        private checkActivityResume();
+        goBack(): void;
+        canGoBack(): boolean;
         loadUrl(url: string): void;
         loadData(data: string): void;
         evaluateJavascript(script: string): any;

@@ -179,6 +179,8 @@ module android.app{
                 if(this.mLaunchedActivities.size == 0){
                     if(history.length<=2){
                         this.androidUI.showAppClosed();
+                    }else{
+                        PageStack.back(true);
                     }
 
                 }else if(activity.getIntent()){

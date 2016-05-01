@@ -5,10 +5,17 @@
 
 module android.webkit {
     import HtmlBaseView = androidui.widget.HtmlBaseView;
+    import Activity = android.app.Activity;
 
+    /**
+     * AndroidUI NOTE: can't call any webview's methods when host activity was pause
+     * some method can't work fine when load other host's page (Cross domain)
+     * WARN: webView may make history stack weirdly when webView load to other url after first url loaded.
+     */
     export class WebView extends HtmlBaseView {
         private iFrameElement:HTMLIFrameElement;
         private mClient:WebViewClient;
+        private initIFrameHistoryLength = -1;
 
         constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:any) {
             super(context, bindElement, defStyle);
@@ -17,24 +24,55 @@ module android.webkit {
             let density = this.getResources().getDisplayMetrics().density;
             this.setMinimumWidth(300 * density);
             this.setMinimumHeight(150 * density);
-            this.initIFrameElement();
+            // this.initIFrameElement(); //init when call loadUrl()
         }
 
-        private initIFrameElement(){
+        private initIFrameElement(url:string){
             this.iFrameElement = document.createElement('iframe');
             this.iFrameElement.style.border = 'none';
             this.iFrameElement.style.height = '100%';
             this.iFrameElement.style.width = '100%';
             this.iFrameElement.onload = ()=>{
+                this.checkActivityResume();
+                if(this.initIFrameHistoryLength<0) this.initIFrameHistoryLength = history.length;
                 if(this.mClient){
                     this.mClient.onReceivedTitle(this, this.getTitle());
                     this.mClient.onPageFinished(this, this.getUrl());
                 }
             };
-            this.bindElement.appendChild(this.iFrameElement);
             this.bindElement.style['webkitOverflowScrolling'] = this.bindElement.style['overflowScrolling'] = 'touch';
             this.bindElement.style.overflowY = 'auto';
 
+            if(url) this.iFrameElement.src = url;
+            this.bindElement.appendChild(this.iFrameElement);
+
+
+            //override activity's onDestroy
+            let activity = <Activity>this.getContext();
+            let onDestroy = activity.onDestroy;
+            activity.onDestroy = ()=>{
+                onDestroy.call(activity);
+                PageStack.preClosePageHasIFrame(this.initIFrameHistoryLength);
+            };
+        }
+
+        private checkActivityResume(){
+            if(!(<Activity>this.getContext()).mResumed){
+                console.error('can\'t call any webview\'s methods when host activity was pause');
+            }
+        }
+
+        goBack():void {
+            this.checkActivityResume();
+            if(this.canGoBack()){
+                history.back();
+            }
+        }
+
+        canGoBack():boolean {
+            this.checkActivityResume();
+            if(this.initIFrameHistoryLength<0) return false;
+            return history.length > this.initIFrameHistoryLength;
         }
 
         /**
@@ -42,12 +80,20 @@ module android.webkit {
          *
          * @param url the URL of the resource to load
          */
-        loadUrl(url:string):void  {
+        loadUrl(url:string):void {
+            if(this.initIFrameHistoryLength>0){//iframe already loaded, should check.
+                this.checkActivityResume();
+            }
+            if(!this.iFrameElement){
+                this.initIFrameElement(url);
+            }
+
             if(this.mClient) this.mClient.onPageStarted(this, url);
             this.iFrameElement.src = url;
         }
 
         loadData(data:string):void  {
+            if(!this.iFrameElement) this.initIFrameElement('');
             this.iFrameElement['srcdoc'] = data;
         }
 
@@ -64,6 +110,7 @@ module android.webkit {
          * Stops the current load.
          */
         stopLoading():void  {
+            if(!this.iFrameElement) return;
             try {
                 this.iFrameElement.contentWindow['stop']();
             } catch (e) {
@@ -75,7 +122,12 @@ module android.webkit {
          * Reloads the current URL.
          */
         reload():void {
-            this.iFrameElement.src = this.iFrameElement.src;
+            if(!this.iFrameElement) return;
+            try {
+                this.iFrameElement.contentWindow.location.reload();
+            } catch (e) {
+                this.iFrameElement.src = this.iFrameElement.src;
+            }
         }
 
         /**
@@ -86,6 +138,7 @@ module android.webkit {
          * @return the URL for the current page
          */
         getUrl():string  {
+            if(!this.iFrameElement) return '';
             try {
                 return this.iFrameElement.contentWindow.document.URL;
             } catch (e) {
@@ -146,6 +199,5 @@ module android.webkit {
         setWebViewClient(client:WebViewClient):void  {
             this.mClient = client;
         }
-
     }
 }

@@ -15477,6 +15477,7 @@ var PageStack;
 (function (PageStack) {
     PageStack.DEBUG = false;
     const history_go = history.go;
+    var iFrameHistoryLengthAsFake = 0;
     let historyLocking = false;
     let windowLoadLocking = true;
     let pendingFuncLock = [];
@@ -15487,11 +15488,11 @@ var PageStack;
         history.go = function (delta) {
             PageStack.go(delta);
         };
-        history.back = function () {
-            PageStack.go(-1);
+        history.back = function (delta = -1) {
+            PageStack.go(delta);
         };
-        history.forward = function () {
-            PageStack.go(1);
+        history.forward = function (delta = 1) {
+            PageStack.go(delta);
         };
     }
     PageStack.init = init;
@@ -15701,6 +15702,7 @@ var PageStack;
         releaseLockingTimeout = setTimeout(checkRelease, 0);
         history_go.call(history, delta);
     }
+    PageStack.historyGo = historyGo;
     function restorePageFromStackIfNeed() {
         if (PageStack.currentStack) {
             let copy = PageStack.currentStack.stack.concat();
@@ -15892,6 +15894,11 @@ var PageStack;
         }
         execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
     }
+    function preClosePageHasIFrame(historyLengthWhenInitIFrame) {
+        history.pushState({ isFake: true }, null, null);
+        iFrameHistoryLengthAsFake = history.length - historyLengthWhenInitIFrame;
+    }
+    PageStack.preClosePageHasIFrame = preClosePageHasIFrame;
     function removeLastHistoryIfFaked() {
         ensureLockDo(removeLastHistoryIfFakedImpl);
     }
@@ -15900,7 +15907,8 @@ var PageStack;
             if (PageStack.DEBUG)
                 console.log('remove Fake History');
             history.replaceState(null, null, '');
-            historyGo(-1, false);
+            historyGo(-1 - iFrameHistoryLengthAsFake, false);
+            iFrameHistoryLengthAsFake = 0;
         }
     }
     function ensureLastHistoryFaked() {
@@ -16053,6 +16061,9 @@ var android;
                     if (this.mLaunchedActivities.size == 0) {
                         if (history.length <= 2) {
                             this.androidUI.showAppClosed();
+                        }
+                        else {
+                            PageStack.back(true);
                         }
                     }
                     else if (activity.getIntent()) {
@@ -52074,32 +52085,68 @@ var android;
         class WebView extends HtmlBaseView {
             constructor(context, bindElement, defStyle) {
                 super(context, bindElement, defStyle);
+                this.initIFrameHistoryLength = -1;
                 let density = this.getResources().getDisplayMetrics().density;
                 this.setMinimumWidth(300 * density);
                 this.setMinimumHeight(150 * density);
-                this.initIFrameElement();
             }
-            initIFrameElement() {
+            initIFrameElement(url) {
                 this.iFrameElement = document.createElement('iframe');
                 this.iFrameElement.style.border = 'none';
                 this.iFrameElement.style.height = '100%';
                 this.iFrameElement.style.width = '100%';
                 this.iFrameElement.onload = () => {
+                    this.checkActivityResume();
+                    if (this.initIFrameHistoryLength < 0)
+                        this.initIFrameHistoryLength = history.length;
                     if (this.mClient) {
                         this.mClient.onReceivedTitle(this, this.getTitle());
                         this.mClient.onPageFinished(this, this.getUrl());
                     }
                 };
-                this.bindElement.appendChild(this.iFrameElement);
                 this.bindElement.style['webkitOverflowScrolling'] = this.bindElement.style['overflowScrolling'] = 'touch';
                 this.bindElement.style.overflowY = 'auto';
+                if (url)
+                    this.iFrameElement.src = url;
+                this.bindElement.appendChild(this.iFrameElement);
+                let activity = this.getContext();
+                let onDestroy = activity.onDestroy;
+                activity.onDestroy = () => {
+                    onDestroy.call(activity);
+                    PageStack.preClosePageHasIFrame(this.initIFrameHistoryLength);
+                };
+            }
+            checkActivityResume() {
+                if (!this.getContext().mResumed) {
+                    console.error('can\'t call any webview\'s methods when host activity was pause');
+                }
+            }
+            goBack() {
+                this.checkActivityResume();
+                if (this.canGoBack()) {
+                    history.back();
+                }
+            }
+            canGoBack() {
+                this.checkActivityResume();
+                if (this.initIFrameHistoryLength < 0)
+                    return false;
+                return history.length > this.initIFrameHistoryLength;
             }
             loadUrl(url) {
+                if (this.initIFrameHistoryLength > 0) {
+                    this.checkActivityResume();
+                }
+                if (!this.iFrameElement) {
+                    this.initIFrameElement(url);
+                }
                 if (this.mClient)
                     this.mClient.onPageStarted(this, url);
                 this.iFrameElement.src = url;
             }
             loadData(data) {
+                if (!this.iFrameElement)
+                    this.initIFrameElement('');
                 this.iFrameElement['srcdoc'] = data;
             }
             evaluateJavascript(script) {
@@ -52112,6 +52159,8 @@ var android;
                 }
             }
             stopLoading() {
+                if (!this.iFrameElement)
+                    return;
                 try {
                     this.iFrameElement.contentWindow['stop']();
                 }
@@ -52120,9 +52169,18 @@ var android;
                 }
             }
             reload() {
-                this.iFrameElement.src = this.iFrameElement.src;
+                if (!this.iFrameElement)
+                    return;
+                try {
+                    this.iFrameElement.contentWindow.location.reload();
+                }
+                catch (e) {
+                    this.iFrameElement.src = this.iFrameElement.src;
+                }
             }
             getUrl() {
+                if (!this.iFrameElement)
+                    return '';
                 try {
                     return this.iFrameElement.contentWindow.document.URL;
                 }

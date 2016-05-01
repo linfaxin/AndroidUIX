@@ -34,15 +34,4 @@
     <p>Content</p>
     <p>Content</p>
 </body>
-<script>
-    //let click anchor don't change parent window's history
-    var anchors = document.getElementsByTagName('a');
-    for (var i = 0; i < anchors.length; i++) {
-        (function(anchor){
-            anchor.addEventListener('click', function(event) {
-                history.replaceState(null, null, anchor.href);
-            }, false);
-        })(anchors[i]);
-    }
-</script>
 </html>
