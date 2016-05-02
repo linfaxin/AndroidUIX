@@ -2,11 +2,6 @@
 
 module android.webkit {
     export class WebViewClient {
-
-        onPageStarted(view:WebView, url:string):void  {
-
-        }
-
         onPageFinished(view:WebView, url:string):void  {
 
         }

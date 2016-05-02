@@ -14703,8 +14703,7 @@ var android;
                 return false;
             }
             debug(depth = 0) {
-                let originProto = Object.getPrototypeOf(this);
-                console.dir(Object.assign(Object.create(originProto), this));
+                console.dir(this.bindElement);
             }
             toString() {
                 return this.tagName();
@@ -52073,8 +52072,6 @@ var android;
     var webkit;
     (function (webkit) {
         class WebViewClient {
-            onPageStarted(view, url) {
-            }
             onPageFinished(view, url) {
             }
             onReceivedTitle(view, title) {
@@ -52146,33 +52143,7 @@ var android;
                 if (!this.iFrameElement) {
                     this.initIFrameElement(url);
                 }
-                if (this.mClient)
-                    this.mClient.onPageStarted(this, url);
                 this.iFrameElement.src = url;
-            }
-            loadData(data) {
-                if (!this.iFrameElement)
-                    this.initIFrameElement('');
-                this.iFrameElement['srcdoc'] = data;
-            }
-            evaluateJavascript(script) {
-                try {
-                    eval.call(this.iFrameElement.contentWindow, script);
-                }
-                catch (e) {
-                    console.warn(e);
-                    eval(script);
-                }
-            }
-            stopLoading() {
-                if (!this.iFrameElement)
-                    return;
-                try {
-                    this.iFrameElement.contentWindow['stop']();
-                }
-                catch (e) {
-                    console.error(e);
-                }
             }
             reload() {
                 if (!this.iFrameElement)
@@ -52201,24 +52172,6 @@ var android;
                 catch (e) {
                     console.warn(e);
                     return '';
-                }
-            }
-            getContentHeight() {
-                try {
-                    return this.iFrameElement.contentWindow.document.documentElement.offsetHeight;
-                }
-                catch (e) {
-                    console.warn(e);
-                    return 0;
-                }
-            }
-            getContentWidth() {
-                try {
-                    return this.iFrameElement.contentWindow.document.documentElement.offsetWidth;
-                }
-                catch (e) {
-                    console.warn(e);
-                    return 0;
                 }
             }
             setWebViewClient(client) {
@@ -59364,6 +59317,87 @@ var androidui;
 (function (androidui) {
     var native;
     (function (native) {
+        var WebView = android.webkit.WebView;
+        var Rect = android.graphics.Rect;
+        const anchor = document.createElement('a');
+        const webViewMap = new Map();
+        class NativeWebView extends WebView {
+            constructor(context, bindElement, defStyle) {
+                super(context, bindElement, defStyle);
+                this.mBoundRect = new Rect();
+                this.mRectTmp = new Rect();
+                this.mLocationTmp = new Array(2);
+                native.NativeApi.webView.createWebView(this.hashCode());
+                webViewMap.set(this.hashCode(), this);
+                let activity = this.getContext();
+                let onDestroy = activity.onDestroy;
+                activity.onDestroy = () => {
+                    onDestroy.call(activity);
+                    webViewMap.delete(this.hashCode());
+                    native.NativeApi.webView.destroyWebView(this.hashCode());
+                };
+            }
+            goBack() {
+                native.NativeApi.webView.webViewGoBack(this.hashCode());
+            }
+            canGoBack() {
+                return this.mCanGoBack;
+            }
+            loadUrl(url) {
+                anchor.href = url;
+                url = anchor.href;
+                this.mUrl = url;
+                native.NativeApi.webView.webViewLoadUrl(this.hashCode(), url);
+            }
+            reload() {
+                native.NativeApi.webView.webViewReload(this.hashCode());
+            }
+            getUrl() {
+                return this.mUrl;
+            }
+            getTitle() {
+                return this.mTitle || this.getUrl();
+            }
+            setWebViewClient(client) {
+                super.setWebViewClient(client);
+            }
+            dependOnDebugLayout() {
+                return false;
+            }
+            _syncBoundAndScrollToElement() {
+                super._syncBoundAndScrollToElement();
+                this.getLocationOnScreen(this.mLocationTmp);
+                this.mRectTmp.set(this.mLocationTmp[0], this.mLocationTmp[1], this.mLocationTmp[0] + this.getWidth(), this.mLocationTmp[1] + this.getHeight());
+                if (!this.mRectTmp.equals(this.mBoundRect)) {
+                    this.mBoundRect.set(this.mRectTmp);
+                    native.NativeApi.webView.webViewBoundChange(this.hashCode(), this.mBoundRect.left, this.mBoundRect.top, this.mBoundRect.right, this.mBoundRect.bottom);
+                }
+            }
+            static notifyLoadFinish(viewHash, url, title) {
+                let nativeWebView = webViewMap.get(viewHash);
+                if (nativeWebView == null)
+                    return;
+                nativeWebView.mUrl = url;
+                nativeWebView.mTitle = title;
+                if (nativeWebView.mClient != null) {
+                    nativeWebView.mClient.onReceivedTitle(nativeWebView, title);
+                    nativeWebView.mClient.onPageFinished(nativeWebView, url);
+                }
+            }
+            static notifyWebViewHistoryChange(viewHash, currentHistoryIndex, historySize) {
+                let nativeWebView = webViewMap.get(viewHash);
+                if (nativeWebView == null)
+                    return;
+                nativeWebView.mCanGoBack = currentHistoryIndex > 0;
+            }
+        }
+        native.NativeWebView = NativeWebView;
+    })(native = androidui.native || (androidui.native = {}));
+})(androidui || (androidui = {}));
+var androidui;
+(function (androidui) {
+    var native;
+    (function (native) {
         const AndroidJsBridgeProperty = 'AndroidUIRuntime';
         const JSBridge = window[AndroidJsBridgeProperty];
         class NativeApi {
@@ -59510,10 +59544,12 @@ var androidui;
             android.graphics.Canvas.prototype = native.NativeCanvas.prototype;
             androidui.image.NetImage.prototype = native.NativeImage.prototype;
             android.widget.EditText = native.NativeEditText;
+            android.webkit.WebView = native.NativeWebView;
             NativeApi.surface = new NativeApi.SurfaceApi();
             NativeApi.canvas = new NativeApi.CanvasApi();
             NativeApi.image = JSBridge;
             NativeApi.editText = JSBridge;
+            NativeApi.webView = JSBridge;
             android.os.MessageQueue.requestNextLoop = () => {
                 setTimeout(android.os.MessageQueue.loop, 0);
             };

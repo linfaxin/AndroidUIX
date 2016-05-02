@@ -9782,7 +9782,6 @@ declare module androidui.widget {
 }
 declare module android.webkit {
     class WebViewClient {
-        onPageStarted(view: WebView, url: string): void;
         onPageFinished(view: WebView, url: string): void;
         onReceivedTitle(view: WebView, title: string): void;
     }
@@ -9791,7 +9790,7 @@ declare module android.webkit {
     import HtmlBaseView = androidui.widget.HtmlBaseView;
     class WebView extends HtmlBaseView {
         private iFrameElement;
-        private mClient;
+        protected mClient: WebViewClient;
         private initIFrameHistoryLength;
         constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initIFrameElement(url);
@@ -9799,14 +9798,9 @@ declare module android.webkit {
         goBack(): void;
         canGoBack(): boolean;
         loadUrl(url: string): void;
-        loadData(data: string): void;
-        evaluateJavascript(script: string): any;
-        stopLoading(): void;
         reload(): void;
         getUrl(): string;
         getTitle(): string;
-        getContentHeight(): number;
-        getContentWidth(): number;
         setWebViewClient(client: WebViewClient): void;
     }
 }
@@ -11094,11 +11088,35 @@ declare module androidui.native {
     }
 }
 declare module androidui.native {
+    import WebView = android.webkit.WebView;
+    class NativeWebView extends WebView {
+        private mBoundRect;
+        private mRectTmp;
+        private mLocationTmp;
+        private mUrl;
+        private mTitle;
+        private mCanGoBack;
+        constructor(context: android.content.Context, bindElement: HTMLElement, defStyle: any);
+        goBack(): void;
+        canGoBack(): boolean;
+        loadUrl(url: string): void;
+        reload(): void;
+        getUrl(): string;
+        getTitle(): string;
+        setWebViewClient(client: android.webkit.WebViewClient): void;
+        protected dependOnDebugLayout(): boolean;
+        protected _syncBoundAndScrollToElement(): void;
+        private static notifyLoadFinish(viewHash, url, title);
+        private static notifyWebViewHistoryChange(viewHash, currentHistoryIndex, historySize);
+    }
+}
+declare module androidui.native {
     class NativeApi {
         static surface: NativeApi.SurfaceApi;
         static canvas: NativeApi.CanvasApi;
         static image: NativeApi.ImageApi;
         static editText: NativeApi.EditTextApi;
+        static webView: NativeApi.WebViewApi;
     }
     module NativeApi {
         class SurfaceApi {
@@ -11148,8 +11166,16 @@ declare module androidui.native {
             getPixels(imageId: number, callbackIndex: number, left: number, top: number, right: number, bottom: number): void;
         }
         interface EditTextApi {
-            showEditText(viewHash: number, left: number, top: number, right: number, bottom: number): any;
-            hideEditText(viewHash: number): any;
+            showEditText(viewHash: number, left: number, top: number, right: number, bottom: number): void;
+            hideEditText(viewHash: number): void;
+        }
+        interface WebViewApi {
+            createWebView(viewHash: number): void;
+            destroyWebView(viewHash: number): void;
+            webViewBoundChange(viewHash: number, left: number, top: number, right: number, bottom: number): void;
+            webViewLoadUrl(viewHash: number, url: string): void;
+            webViewGoBack(viewHash: number): void;
+            webViewReload(viewHash: number): void;
         }
     }
 }

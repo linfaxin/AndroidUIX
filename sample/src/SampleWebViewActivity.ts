@@ -15,14 +15,24 @@ module sample.app {
 
     export class SampleWebViewActivity extends ActionBarActivity{
 
+        webView:WebView;
         protected onCreate(savedInstanceState?:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
 
-            let webView = new WebView(this);
-            this.setContentView(webView);
-            webView.setWebViewClient(new MyWebViewClient(this));
+            this.webView = new WebView(this);
+            this.setContentView(this.webView);
+            this.webView.setWebViewClient(new MyWebViewClient(this));
 
-            webView.loadUrl('assets/webviewpages/page1.html');
+            this.webView.loadUrl('assets/webviewpages/page1.html');
+        }
+
+
+        onBackPressed():void {
+            if(this.webView.canGoBack()){
+                this.webView.goBack();
+                return;
+            }
+            super.onBackPressed();
         }
     }
 

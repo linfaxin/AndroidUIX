@@ -1469,10 +1469,19 @@ var sample;
                 key: "onCreate",
                 value: function onCreate(savedInstanceState) {
                     _get(Object.getPrototypeOf(SampleWebViewActivity.prototype), "onCreate", this).call(this, savedInstanceState);
-                    var webView = new WebView(this);
-                    this.setContentView(webView);
-                    webView.setWebViewClient(new MyWebViewClient(this));
-                    webView.loadUrl('assets/webviewpages/page1.html');
+                    this.webView = new WebView(this);
+                    this.setContentView(this.webView);
+                    this.webView.setWebViewClient(new MyWebViewClient(this));
+                    this.webView.loadUrl('assets/webviewpages/page1.html');
+                }
+            }, {
+                key: "onBackPressed",
+                value: function onBackPressed() {
+                    if (this.webView.canGoBack()) {
+                        this.webView.goBack();
+                        return;
+                    }
+                    _get(Object.getPrototypeOf(SampleWebViewActivity.prototype), "onBackPressed", this).call(this);
                 }
             }]);
 

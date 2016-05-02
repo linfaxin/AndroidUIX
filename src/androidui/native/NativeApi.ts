@@ -5,19 +5,23 @@
 ///<reference path="NativeCanvas.ts"/>
 ///<reference path="NativeImage.ts"/>
 ///<reference path="NativeEditText.ts"/>
+///<reference path="NativeWebView.ts"/>
+///<reference path="../../android/webkit/WebView.ts"/>
 
 
 module androidui.native {
 
     import EditTextApi = androidui.native.NativeApi.EditTextApi;
+    import WebViewApi = androidui.native.NativeApi.WebViewApi;
     const AndroidJsBridgeProperty = 'AndroidUIRuntime';//android js bridge name
-    const JSBridge:Bridge = window[AndroidJsBridgeProperty];
+    const JSBridge:BridgeImpl = window[AndroidJsBridgeProperty];
 
     export class NativeApi {
         static surface:NativeApi.SurfaceApi;
         static canvas:NativeApi.CanvasApi;
         static image:NativeApi.ImageApi;
         static editText:NativeApi.EditTextApi;
+        static webView:NativeApi.WebViewApi;
     }
 
     export module NativeApi {
@@ -211,13 +215,22 @@ module androidui.native {
         }
 
         export interface EditTextApi {
-            showEditText(viewHash:number, left:number, top:number, right:number, bottom:number);
-            hideEditText(viewHash:number);
+            showEditText(viewHash:number, left:number, top:number, right:number, bottom:number):void;
+            hideEditText(viewHash:number):void;
+        }
+
+        export interface WebViewApi {
+            createWebView(viewHash:number):void;
+            destroyWebView(viewHash:number):void;
+            webViewBoundChange(viewHash:number, left:number, top:number, right:number, bottom:number):void;
+            webViewLoadUrl(viewHash:number, url:string):void;
+            webViewGoBack(viewHash:number):void;
+            webViewReload(viewHash:number):void;
         }
     }
 
 
-    interface Bridge extends NativeApi.ImageApi, EditTextApi {
+    interface BridgeImpl extends NativeApi.ImageApi, EditTextApi, WebViewApi {
         initRuntime():void;
         closeApp():void;
         pageAlive(deadDelay:number):void;
@@ -231,7 +244,8 @@ module androidui.native {
         android.view.Surface.prototype = NativeSurface.prototype;
         android.graphics.Canvas.prototype = NativeCanvas.prototype;
         androidui.image.NetImage.prototype = NativeImage.prototype;
-        android.widget.EditText = NativeEditText;//ensure no place import editText.
+        android.widget.EditText = NativeEditText;//ensure no place import.
+        android.webkit.WebView = NativeWebView;//ensure no place import.
 
         //android.graphics.Canvas.measureTextImpl = function(text:string, textSize:number):number {
         //    return JSBridge.measureText(text, textSize);
@@ -241,6 +255,7 @@ module androidui.native {
         NativeApi.canvas = new NativeApi.CanvasApi();
         NativeApi.image = JSBridge;
         NativeApi.editText = JSBridge;
+        NativeApi.webView = JSBridge;
 
         //override some method
         android.os.MessageQueue.requestNextLoop = ()=>{//loop fast.

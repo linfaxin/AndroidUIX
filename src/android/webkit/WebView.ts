@@ -8,13 +8,15 @@ module android.webkit {
     import Activity = android.app.Activity;
 
     /**
-     * AndroidUI NOTE: can't call any webview's methods when host activity was pause
+     * AndroidUI NOTE: (in browser)
+     * can't call any webView's methods when host activity was pause
      * some method can't work fine when load other host's page (Cross domain)
      * WARN: webView may make history stack weirdly when webView load to other url after first url loaded.
+     * (in native mode webView no these limits)
      */
     export class WebView extends HtmlBaseView {
         private iFrameElement:HTMLIFrameElement;
-        private mClient:WebViewClient;
+        protected mClient:WebViewClient;
         private initIFrameHistoryLength = -1;
 
         constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:any) {
@@ -88,34 +90,7 @@ module android.webkit {
                 this.initIFrameElement(url);
             }
 
-            if(this.mClient) this.mClient.onPageStarted(this, url);
             this.iFrameElement.src = url;
-        }
-
-        loadData(data:string):void  {
-            if(!this.iFrameElement) this.initIFrameElement('');
-            this.iFrameElement['srcdoc'] = data;
-        }
-
-        evaluateJavascript(script:string):any {
-            try {
-                eval.call(this.iFrameElement.contentWindow, script);
-            } catch (e) {
-                console.warn(e);
-                eval(script);
-            }
-        }
-
-        /**
-         * Stops the current load.
-         */
-        stopLoading():void  {
-            if(!this.iFrameElement) return;
-            try {
-                this.iFrameElement.contentWindow['stop']();
-            } catch (e) {
-                console.error(e);
-            }
         }
 
         /**
@@ -158,35 +133,6 @@ module android.webkit {
             } catch (e) {
                 console.warn(e);
                 return '';
-            }
-        }
-
-        /**
-         * Gets the height of the HTML content.
-         *
-         * @return the height of the HTML content
-         */
-        getContentHeight():number  {
-            try {
-                return this.iFrameElement.contentWindow.document.documentElement.offsetHeight;
-            } catch (e) {
-                console.warn(e);
-                return 0;
-            }
-        }
-
-        /**
-         * Gets the width of the HTML content.
-         *
-         * @return the width of the HTML content
-         * @hide
-         */
-        getContentWidth():number  {
-            try {
-                return this.iFrameElement.contentWindow.document.documentElement.offsetWidth;
-            } catch (e) {
-                console.warn(e);
-                return 0;
             }
         }
 

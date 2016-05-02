@@ -6088,7 +6088,7 @@ module android.view {
             }
             //needGlobalAttributesUpdate(false);
         }
-        protected onAttachedToWindow() {
+        protected onAttachedToWindow():void {
             //if ((this.mPrivateFlags & View.PFLAG_REQUEST_TRANSPARENT_REGIONS) != 0) {
             //    this.mParent.requestTransparentRegion(this);
             //}
@@ -6103,7 +6103,7 @@ module android.view {
             this.jumpDrawablesToCurrentState();
         }
 
-        dispatchDetachedFromWindow() {
+        dispatchDetachedFromWindow():void {
             let info = this.mAttachInfo;
             if (info != null) {
                 let vis = info.mWindowVisibility;
@@ -6141,7 +6141,7 @@ module android.view {
                 this.mOverlay.getOverlayView().dispatchDetachedFromWindow();
             }
         }
-        protected onDetachedFromWindow() {
+        protected onDetachedFromWindow():void {
             this.mPrivateFlags &= ~View.PFLAG_CANCEL_NEXT_UP_EVENT;
             this.mPrivateFlags3 &= ~View.PFLAG3_IS_LAID_OUT;
 
@@ -6156,7 +6156,7 @@ module android.view {
 
             this.mCurrentAnimation = null;
         }
-        cleanupDraw() {
+        cleanupDraw():void {
             if (this.mAttachInfo != null) {
                 this.mAttachInfo.mViewRootImpl.cancelInvalidate(this);
             }
@@ -6165,9 +6165,8 @@ module android.view {
             return false;//always false
         }
         debug(depth=0){
-            //custom impl:
-            let originProto = Object.getPrototypeOf(this);
-            console.dir(Object.assign(Object.create(originProto), this));
+            //androidui impl:
+            console.dir(this.bindElement);
         }
 
 
