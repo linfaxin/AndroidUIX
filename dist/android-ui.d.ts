@@ -7750,13 +7750,14 @@ declare module android.widget {
         protected initBindElement(bindElement: HTMLElement): void;
         protected onInputValueChange(): void;
         private switchToSingleLineInputElement();
-        private switchToMultilineInputElement();
-        private tryShowInputElement();
-        performClick(event: android.view.MotionEvent): boolean;
-        private tryDismissInputElement();
-        protected onFocusChanged(focused: boolean, direction: number, previouslyFocusedRect: android.graphics.Rect): void;
+        protected switchToMultilineInputElement(): void;
+        protected tryShowInputElement(): void;
+        protected tryDismissInputElement(): void;
+        protected onInputElementFocusChanged(focused: boolean): void;
         isInputElementShowed(): boolean;
-        private setForceDisableDrawText(disable);
+        performClick(event: android.view.MotionEvent): boolean;
+        protected onFocusChanged(focused: boolean, direction: number, previouslyFocusedRect: android.graphics.Rect): void;
+        protected setForceDisableDrawText(disable: boolean): void;
         protected updateTextColors(): void;
         onTouchEvent(event: android.view.MotionEvent): boolean;
         private filterKeyEvent(event);
@@ -11083,10 +11084,21 @@ declare module androidui.native {
     }
 }
 declare module androidui.native {
+    class NativeEditText extends android.widget.EditText {
+        private mRectTmp;
+        private computeTextArea();
+        protected onInputElementFocusChanged(focused: boolean): any;
+        protected tryShowInputElement(): any;
+        protected tryDismissInputElement(): any;
+        protected _syncBoundAndScrollToElement(): void;
+    }
+}
+declare module androidui.native {
     class NativeApi {
         static surface: NativeApi.SurfaceApi;
         static canvas: NativeApi.CanvasApi;
         static image: NativeApi.ImageApi;
+        static editText: NativeApi.EditTextApi;
     }
     module NativeApi {
         class SurfaceApi {
@@ -11134,6 +11146,10 @@ declare module androidui.native {
             loadImage(imageId: number, src: string): void;
             recycleImage(imageId: number): void;
             getPixels(imageId: number, callbackIndex: number, left: number, top: number, right: number, bottom: number): void;
+        }
+        interface EditTextApi {
+            showEditText(viewHash: number, left: number, top: number, right: number, bottom: number): any;
+            hideEditText(viewHash: number): any;
         }
     }
 }

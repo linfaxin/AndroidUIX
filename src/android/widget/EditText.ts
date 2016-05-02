@@ -144,12 +144,14 @@ export class EditText extends TextView {
             this.mSingleLineInputElement.onblur = ()=>{
                 this.mSingleLineInputElement.style.opacity = '0';
                 this.setForceDisableDrawText(false);
+                this.onInputElementFocusChanged(false);
             };
             this.mSingleLineInputElement.onfocus = ()=>{
                 this.mSingleLineInputElement.style.opacity = '1';
                 if(this.getText().length>0){
                     this.setForceDisableDrawText(true);
                 }
+                this.onInputElementFocusChanged(true);
             };
             this.mSingleLineInputElement.oninput = ()=>this.onInputValueChange();
         }
@@ -160,7 +162,7 @@ export class EditText extends TextView {
         }
         this.inputElement = this.mSingleLineInputElement;
     }
-    private switchToMultilineInputElement(){
+    protected switchToMultilineInputElement(){
         if(!this.mMultilineInputElement) {
             this.mMultilineInputElement = document.createElement('textarea');
             this.mMultilineInputElement.style.position = 'absolute';
@@ -174,12 +176,14 @@ export class EditText extends TextView {
             this.mMultilineInputElement.onblur = ()=>{
                 this.mMultilineInputElement.style.opacity = '0';
                 this.setForceDisableDrawText(false);
+                this.onInputElementFocusChanged(false);
             };
             this.mMultilineInputElement.onfocus = ()=>{
                 this.mMultilineInputElement.style.opacity = '1';
                 if(this.getText().length>0){
                     this.setForceDisableDrawText(true);
                 }
+                this.onInputElementFocusChanged(true);
             };
             this.mMultilineInputElement.oninput = ()=>this.onInputValueChange();
         }
@@ -190,7 +194,7 @@ export class EditText extends TextView {
         }
         this.inputElement = this.mMultilineInputElement;
     }
-    private tryShowInputElement(){
+    protected tryShowInputElement(){
         if(!this.isInputElementShowed()){
             this.inputElement.value = this.getText().toString();
             this.bindElement.appendChild(this.inputElement);
@@ -203,18 +207,24 @@ export class EditText extends TextView {
         }
     }
 
-
-    performClick(event:android.view.MotionEvent):boolean {
-        this.tryShowInputElement();
-        return super.performClick(event);
-    }
-
-    private tryDismissInputElement(){
+    protected tryDismissInputElement(){
         try {
             if (this.inputElement.parentNode) this.bindElement.removeChild(this.inputElement);
         } catch (e) {
         }
         this.setForceDisableDrawText(false);
+    }
+    
+    protected onInputElementFocusChanged(focused:boolean) {
+    }
+
+    isInputElementShowed():boolean {
+        return this.inputElement.parentElement != null && this.inputElement.style.opacity != '0';
+    }
+
+    performClick(event:android.view.MotionEvent):boolean {
+        this.tryShowInputElement();
+        return super.performClick(event);
     }
 
     protected onFocusChanged(focused:boolean, direction:number, previouslyFocusedRect:android.graphics.Rect):void {
@@ -226,11 +236,7 @@ export class EditText extends TextView {
         }
     }
 
-    isInputElementShowed():boolean {
-        return this.inputElement.parentElement != null;
-    }
-
-    private setForceDisableDrawText(disable:boolean){
+    protected setForceDisableDrawText(disable:boolean){
         if(this.mForceDisableDraw == disable) return;
         this.mForceDisableDraw = disable;
         if(disable){

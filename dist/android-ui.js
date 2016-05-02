@@ -42180,12 +42180,14 @@ var android;
                     this.mSingleLineInputElement.onblur = () => {
                         this.mSingleLineInputElement.style.opacity = '0';
                         this.setForceDisableDrawText(false);
+                        this.onInputElementFocusChanged(false);
                     };
                     this.mSingleLineInputElement.onfocus = () => {
                         this.mSingleLineInputElement.style.opacity = '1';
                         if (this.getText().length > 0) {
                             this.setForceDisableDrawText(true);
                         }
+                        this.onInputElementFocusChanged(true);
                     };
                     this.mSingleLineInputElement.oninput = () => this.onInputValueChange();
                 }
@@ -42211,12 +42213,14 @@ var android;
                     this.mMultilineInputElement.onblur = () => {
                         this.mMultilineInputElement.style.opacity = '0';
                         this.setForceDisableDrawText(false);
+                        this.onInputElementFocusChanged(false);
                     };
                     this.mMultilineInputElement.onfocus = () => {
                         this.mMultilineInputElement.style.opacity = '1';
                         if (this.getText().length > 0) {
                             this.setForceDisableDrawText(true);
                         }
+                        this.onInputElementFocusChanged(true);
                     };
                     this.mMultilineInputElement.oninput = () => this.onInputValueChange();
                 }
@@ -42239,10 +42243,6 @@ var android;
                     this.syncTextBoundInfoToInputElement();
                 }
             }
-            performClick(event) {
-                this.tryShowInputElement();
-                return super.performClick(event);
-            }
             tryDismissInputElement() {
                 try {
                     if (this.inputElement.parentNode)
@@ -42252,6 +42252,15 @@ var android;
                 }
                 this.setForceDisableDrawText(false);
             }
+            onInputElementFocusChanged(focused) {
+            }
+            isInputElementShowed() {
+                return this.inputElement.parentElement != null && this.inputElement.style.opacity != '0';
+            }
+            performClick(event) {
+                this.tryShowInputElement();
+                return super.performClick(event);
+            }
             onFocusChanged(focused, direction, previouslyFocusedRect) {
                 super.onFocusChanged(focused, direction, previouslyFocusedRect);
                 if (focused) {
@@ -42260,9 +42269,6 @@ var android;
                 else {
                     this.tryDismissInputElement();
                 }
-            }
-            isInputElementShowed() {
-                return this.inputElement.parentElement != null;
             }
             setForceDisableDrawText(disable) {
                 if (this.mForceDisableDraw == disable)
@@ -59308,6 +59314,56 @@ var androidui;
 (function (androidui) {
     var native;
     (function (native) {
+        var Rect = android.graphics.Rect;
+        class NativeEditText extends android.widget.EditText {
+            constructor(...args) {
+                super(...args);
+                this.mRectTmp = new Rect();
+            }
+            computeTextArea() {
+                this.getGlobalVisibleRect(this.mRectTmp);
+                if (this.mLayout == null) {
+                    this.assumeLayout();
+                }
+                this.mRectTmp.left += this.getTotalPaddingLeft();
+                this.mRectTmp.top += this.getTotalPaddingTop();
+                this.mRectTmp.right -= (this.getTotalPaddingRight());
+                this.mRectTmp.bottom -= (this.getTotalPaddingBottom());
+            }
+            onInputElementFocusChanged(focused) {
+                if (focused) {
+                    this.computeTextArea();
+                    native.NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+                }
+                else {
+                    native.NativeApi.editText.hideEditText(this.hashCode());
+                }
+                return super.onInputElementFocusChanged(focused);
+            }
+            tryShowInputElement() {
+                this.computeTextArea();
+                native.NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+                return super.tryShowInputElement();
+            }
+            tryDismissInputElement() {
+                native.NativeApi.editText.hideEditText(this.hashCode());
+                return super.tryDismissInputElement();
+            }
+            _syncBoundAndScrollToElement() {
+                super._syncBoundAndScrollToElement();
+                if (this.isInputElementShowed() && this.isFocused() && this.getText().length > 0) {
+                    this.computeTextArea();
+                    native.NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+                }
+            }
+        }
+        native.NativeEditText = NativeEditText;
+    })(native = androidui.native || (androidui.native = {}));
+})(androidui || (androidui = {}));
+var androidui;
+(function (androidui) {
+    var native;
+    (function (native) {
         const AndroidJsBridgeProperty = 'AndroidUIRuntime';
         const JSBridge = window[AndroidJsBridgeProperty];
         class NativeApi {
@@ -59453,9 +59509,11 @@ var androidui;
             android.view.Surface.prototype = native.NativeSurface.prototype;
             android.graphics.Canvas.prototype = native.NativeCanvas.prototype;
             androidui.image.NetImage.prototype = native.NativeImage.prototype;
+            android.widget.EditText = native.NativeEditText;
             NativeApi.surface = new NativeApi.SurfaceApi();
             NativeApi.canvas = new NativeApi.CanvasApi();
             NativeApi.image = JSBridge;
+            NativeApi.editText = JSBridge;
             android.os.MessageQueue.requestNextLoop = () => {
                 setTimeout(android.os.MessageQueue.loop, 0);
             };

@@ -1,15 +1,15 @@
-/**
- * Created by linfaxin on 15/12/14.
- */
+///<reference path="../../android/widget/EditText.ts"/>
 ///<reference path="../../android/view/Surface.ts"/>
 ///<reference path="../../android/graphics/Canvas.ts"/>
 ///<reference path="NativeSurface.ts"/>
 ///<reference path="NativeCanvas.ts"/>
 ///<reference path="NativeImage.ts"/>
+///<reference path="NativeEditText.ts"/>
 
 
 module androidui.native {
 
+    import EditTextApi = androidui.native.NativeApi.EditTextApi;
     const AndroidJsBridgeProperty = 'AndroidUIRuntime';//android js bridge name
     const JSBridge:Bridge = window[AndroidJsBridgeProperty];
 
@@ -17,6 +17,7 @@ module androidui.native {
         static surface:NativeApi.SurfaceApi;
         static canvas:NativeApi.CanvasApi;
         static image:NativeApi.ImageApi;
+        static editText:NativeApi.EditTextApi;
     }
 
     export module NativeApi {
@@ -208,10 +209,15 @@ module androidui.native {
             recycleImage(imageId:number):void;
             getPixels(imageId:number, callbackIndex:number, left:number, top:number, right:number, bottom:number):void;
         }
+
+        export interface EditTextApi {
+            showEditText(viewHash:number, left:number, top:number, right:number, bottom:number);
+            hideEditText(viewHash:number);
+        }
     }
 
 
-    interface Bridge extends NativeApi.ImageApi {
+    interface Bridge extends NativeApi.ImageApi, EditTextApi {
         initRuntime():void;
         closeApp():void;
         pageAlive(deadDelay:number):void;
@@ -225,6 +231,7 @@ module androidui.native {
         android.view.Surface.prototype = NativeSurface.prototype;
         android.graphics.Canvas.prototype = NativeCanvas.prototype;
         androidui.image.NetImage.prototype = NativeImage.prototype;
+        android.widget.EditText = NativeEditText;//ensure no place import editText.
 
         //android.graphics.Canvas.measureTextImpl = function(text:string, textSize:number):number {
         //    return JSBridge.measureText(text, textSize);
@@ -233,6 +240,7 @@ module androidui.native {
         NativeApi.surface = new NativeApi.SurfaceApi();
         NativeApi.canvas = new NativeApi.CanvasApi();
         NativeApi.image = JSBridge;
+        NativeApi.editText = JSBridge;
 
         //override some method
         android.os.MessageQueue.requestNextLoop = ()=>{//loop fast.
