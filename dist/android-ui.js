@@ -59286,27 +59286,27 @@ var androidui;
             onInputElementFocusChanged(focused) {
                 if (focused) {
                     this.computeTextArea();
-                    native.NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+                    native.NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
                 }
                 else {
-                    native.NativeApi.editText.hideEditText(this.hashCode());
+                    native.NativeApi.drawHTML.hideDrawHTMLBound(this.hashCode());
                 }
                 return super.onInputElementFocusChanged(focused);
             }
             tryShowInputElement() {
                 this.computeTextArea();
-                native.NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+                native.NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
                 return super.tryShowInputElement();
             }
             tryDismissInputElement() {
-                native.NativeApi.editText.hideEditText(this.hashCode());
+                native.NativeApi.drawHTML.hideDrawHTMLBound(this.hashCode());
                 return super.tryDismissInputElement();
             }
             _syncBoundAndScrollToElement() {
                 super._syncBoundAndScrollToElement();
                 if (this.isInputElementShowed() && this.isFocused() && this.getText().length > 0) {
                     this.computeTextArea();
-                    native.NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+                    native.NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
                 }
             }
         }
@@ -59392,6 +59392,30 @@ var androidui;
             }
         }
         native.NativeWebView = NativeWebView;
+    })(native = androidui.native || (androidui.native = {}));
+})(androidui || (androidui = {}));
+var androidui;
+(function (androidui) {
+    var native;
+    (function (native) {
+        var HtmlView = androidui.widget.HtmlView;
+        var Rect = android.graphics.Rect;
+        class NativeHtmlView extends HtmlView {
+            constructor(...args) {
+                super(...args);
+                this.mRectDrawHTMLBoundTmp = new Rect();
+            }
+            _syncBoundAndScrollToElement() {
+                super._syncBoundAndScrollToElement();
+                this.getGlobalVisibleRect(this.mRectDrawHTMLBoundTmp);
+                native.NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectDrawHTMLBoundTmp.left, this.mRectDrawHTMLBoundTmp.top, this.mRectDrawHTMLBoundTmp.right, this.mRectDrawHTMLBoundTmp.bottom);
+            }
+            onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                native.NativeApi.drawHTML.hideDrawHTMLBound(this.hashCode());
+            }
+        }
+        native.NativeHtmlView = NativeHtmlView;
     })(native = androidui.native || (androidui.native = {}));
 })(androidui || (androidui = {}));
 var androidui;
@@ -59545,10 +59569,11 @@ var androidui;
             androidui.image.NetImage.prototype = native.NativeImage.prototype;
             android.widget.EditText = native.NativeEditText;
             android.webkit.WebView = native.NativeWebView;
+            androidui.widget.HtmlView = native.NativeHtmlView;
             NativeApi.surface = new NativeApi.SurfaceApi();
             NativeApi.canvas = new NativeApi.CanvasApi();
             NativeApi.image = JSBridge;
-            NativeApi.editText = JSBridge;
+            NativeApi.drawHTML = JSBridge;
             NativeApi.webView = JSBridge;
             android.os.MessageQueue.requestNextLoop = () => {
                 setTimeout(android.os.MessageQueue.loop, 0);

@@ -11111,11 +11111,19 @@ declare module androidui.native {
     }
 }
 declare module androidui.native {
+    import HtmlView = androidui.widget.HtmlView;
+    class NativeHtmlView extends HtmlView {
+        private mRectDrawHTMLBoundTmp;
+        protected _syncBoundAndScrollToElement(): void;
+        protected onDetachedFromWindow(): void;
+    }
+}
+declare module androidui.native {
     class NativeApi {
         static surface: NativeApi.SurfaceApi;
         static canvas: NativeApi.CanvasApi;
         static image: NativeApi.ImageApi;
-        static editText: NativeApi.EditTextApi;
+        static drawHTML: NativeApi.DrawHTMLBoundApi;
         static webView: NativeApi.WebViewApi;
     }
     module NativeApi {
@@ -11165,9 +11173,9 @@ declare module androidui.native {
             recycleImage(imageId: number): void;
             getPixels(imageId: number, callbackIndex: number, left: number, top: number, right: number, bottom: number): void;
         }
-        interface EditTextApi {
-            showEditText(viewHash: number, left: number, top: number, right: number, bottom: number): void;
-            hideEditText(viewHash: number): void;
+        interface DrawHTMLBoundApi {
+            showDrawHTMLBound(viewHash: number, left: number, top: number, right: number, bottom: number): void;
+            hideDrawHTMLBound(viewHash: number): void;
         }
         interface WebViewApi {
             createWebView(viewHash: number): void;

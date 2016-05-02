@@ -24,21 +24,21 @@ module androidui.native {
         protected onInputElementFocusChanged(focused:boolean):any {
             if(focused){
                 this.computeTextArea();
-                NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+                NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
             }else{
-                NativeApi.editText.hideEditText(this.hashCode());
+                NativeApi.drawHTML.hideDrawHTMLBound(this.hashCode());
             }
             return super.onInputElementFocusChanged(focused);
         }
 
         protected tryShowInputElement():any {
             this.computeTextArea();
-            NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+            NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
             return super.tryShowInputElement();
         }
 
         protected tryDismissInputElement():any {
-            NativeApi.editText.hideEditText(this.hashCode());
+            NativeApi.drawHTML.hideDrawHTMLBound(this.hashCode());
             return super.tryDismissInputElement();
         }
 
@@ -46,7 +46,7 @@ module androidui.native {
             super._syncBoundAndScrollToElement();
             if(this.isInputElementShowed() && this.isFocused() && this.getText().length>0) {
                 this.computeTextArea();
-                NativeApi.editText.showEditText(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
+                NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
             }
         }
     }

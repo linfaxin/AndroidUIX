@@ -6,12 +6,13 @@
 ///<reference path="NativeImage.ts"/>
 ///<reference path="NativeEditText.ts"/>
 ///<reference path="NativeWebView.ts"/>
+///<reference path="NativeHtmlView.ts"/>
 ///<reference path="../../android/webkit/WebView.ts"/>
 
 
 module androidui.native {
 
-    import EditTextApi = androidui.native.NativeApi.EditTextApi;
+    import EditTextApi = androidui.native.NativeApi.DrawHTMLBoundApi;
     import WebViewApi = androidui.native.NativeApi.WebViewApi;
     const AndroidJsBridgeProperty = 'AndroidUIRuntime';//android js bridge name
     const JSBridge:BridgeImpl = window[AndroidJsBridgeProperty];
@@ -20,7 +21,7 @@ module androidui.native {
         static surface:NativeApi.SurfaceApi;
         static canvas:NativeApi.CanvasApi;
         static image:NativeApi.ImageApi;
-        static editText:NativeApi.EditTextApi;
+        static drawHTML:NativeApi.DrawHTMLBoundApi;
         static webView:NativeApi.WebViewApi;
     }
 
@@ -214,9 +215,9 @@ module androidui.native {
             getPixels(imageId:number, callbackIndex:number, left:number, top:number, right:number, bottom:number):void;
         }
 
-        export interface EditTextApi {
-            showEditText(viewHash:number, left:number, top:number, right:number, bottom:number):void;
-            hideEditText(viewHash:number):void;
+        export interface DrawHTMLBoundApi {
+            showDrawHTMLBound(viewHash:number, left:number, top:number, right:number, bottom:number):void;
+            hideDrawHTMLBound(viewHash:number):void;
         }
 
         export interface WebViewApi {
@@ -246,6 +247,7 @@ module androidui.native {
         androidui.image.NetImage.prototype = NativeImage.prototype;
         android.widget.EditText = NativeEditText;//ensure no place import.
         android.webkit.WebView = NativeWebView;//ensure no place import.
+        androidui.widget.HtmlView = NativeHtmlView;//ensure no place import.
 
         //android.graphics.Canvas.measureTextImpl = function(text:string, textSize:number):number {
         //    return JSBridge.measureText(text, textSize);
@@ -254,7 +256,7 @@ module androidui.native {
         NativeApi.surface = new NativeApi.SurfaceApi();
         NativeApi.canvas = new NativeApi.CanvasApi();
         NativeApi.image = JSBridge;
-        NativeApi.editText = JSBridge;
+        NativeApi.drawHTML = JSBridge;
         NativeApi.webView = JSBridge;
 
         //override some method
