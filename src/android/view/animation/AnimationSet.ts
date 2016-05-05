@@ -405,7 +405,7 @@ export class AnimationSet extends Animation {
         let storedOffsets:number[] = this.mStoredOffsets;
         if (startOffsetSet) {
             if (storedOffsets == null || storedOffsets.length != count) {
-                storedOffsets = this.mStoredOffsets = new Array<number>(count);
+                storedOffsets = this.mStoredOffsets = androidui.util.ArrayCreator.newNumberArray(count);
             }
         } else if (storedOffsets != null) {
             storedOffsets = this.mStoredOffsets = null;

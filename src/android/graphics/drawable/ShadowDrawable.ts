@@ -1,10 +1,12 @@
 /**
  * Created by linfaxin on 16/1/13.
+ * androidui drawable
  */
 ///<reference path="Drawable.ts"/>
 ///<reference path="../Canvas.ts"/>
 ///<reference path="../Paint.ts"/>
 
+//TODO move to androidui/drawable package
 module android.graphics.drawable{
 
     /**

@@ -1,6 +1,19 @@
-/**
- * Created by linfaxin on 15/10/17.
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="../view/ViewConfiguration.ts"/>
 ///<reference path="../view/animation/Interpolator.ts"/>
 ///<reference path="../content/res/Resources.ts"/>
@@ -16,6 +29,11 @@ module android.widget{
     import Log = android.util.Log;
     import NumberChecker = androidui.util.NumberChecker;
 
+    /**
+     * This class encapsulates scrolling with the ability to overshoot the bounds
+     * of a scrolling operation. This class is a drop-in replacement for
+     * {@link android.widget.Scroller} in most cases.
+     */
     export class OverScroller{
         private mMode = 0;
         private mScrollerX:SplineOverScroller;
@@ -28,6 +46,13 @@ module android.widget{
         static FLING_MODE = 1;
 
 
+        /**
+         * Creates an OverScroller.
+         * @param interpolator The scroll interpolator. If null, a default (viscous) interpolator will
+         * be used.
+         * @param flywheel If true, successive fling motions will keep on increasing scroll speed.
+         * @hide
+         */
         constructor(interpolator?:Interpolator, flywheel=true) {
             this.mInterpolator = interpolator;
             this.mFlywheel = flywheel;
@@ -39,37 +64,93 @@ module android.widget{
             this.mInterpolator = interpolator;
         }
 
+        /**
+         * The amount of friction applied to flings. The default value
+         * is {@link ViewConfiguration#getScrollFriction}.
+         *
+         * @param friction A scalar dimension-less value representing the coefficient of
+         *         friction.
+         */
         setFriction(friction:number) {
             NumberChecker.warnNotNumber(friction);
             this.mScrollerX.setFriction(friction);
             this.mScrollerY.setFriction(friction);
         }
+        /**
+         *
+         * Returns whether the scroller has finished scrolling.
+         *
+         * @return True if the scroller has finished scrolling, false otherwise.
+         */
         isFinished():boolean {
             return this.mScrollerX.mFinished && this.mScrollerY.mFinished;
         }
+        /**
+         * Force the finished field to a particular value. Contrary to
+         * {@link #abortAnimation()}, forcing the animation to finished
+         * does NOT cause the scroller to move to the final x and y
+         * position.
+         *
+         * @param finished The new finished value.
+         */
         forceFinished(finished:boolean) {
             this.mScrollerX.mFinished = this.mScrollerY.mFinished = finished;
         }
+        /**
+         * Returns the current X offset in the scroll.
+         *
+         * @return The new X offset as an absolute distance from the origin.
+         */
         getCurrX():number {
             return this.mScrollerX.mCurrentPosition;
         }
+        /**
+         * Returns the current Y offset in the scroll.
+         *
+         * @return The new Y offset as an absolute distance from the origin.
+         */
         getCurrY():number {
             return this.mScrollerY.mCurrentPosition;
         }
+        /**
+         * Returns the absolute value of the current velocity.
+         *
+         * @return The original velocity less the deceleration, norm of the X and Y velocity vector.
+         */
         getCurrVelocity():number {
             let squaredNorm = this.mScrollerX.mCurrVelocity * this.mScrollerX.mCurrVelocity;
             squaredNorm += this.mScrollerY.mCurrVelocity * this.mScrollerY.mCurrVelocity;
             return Math.sqrt(squaredNorm);
         }
+        /**
+         * Returns the start X offset in the scroll.
+         *
+         * @return The start X offset as an absolute distance from the origin.
+         */
         getStartX():number {
             return this.mScrollerX.mStart;
         }
+        /**
+         * Returns the start Y offset in the scroll.
+         *
+         * @return The start Y offset as an absolute distance from the origin.
+         */
         getStartY():number {
             return this.mScrollerY.mStart;
         }
+        /**
+         * Returns where the scroll will end. Valid only for "fling" scrolls.
+         *
+         * @return The final X offset as an absolute distance from the origin.
+         */
         getFinalX():number {
             return this.mScrollerX.mFinal;
         }
+        /**
+         * Returns where the scroll will end. Valid only for "fling" scrolls.
+         *
+         * @return The final Y offset as an absolute distance from the origin.
+         */
         getFinalY():number {
             return this.mScrollerY.mFinal;
         }
@@ -96,6 +177,10 @@ module android.widget{
         //setFinalY(newY:number) {
         //    this.mScrollerY.setFinalPosition(newY);
         //}
+        /**
+         * Call this when you want to know the new location. If it returns true, the
+         * animation is not yet finished.
+         */
         computeScrollOffset():boolean {
             if (this.isFinished()) {
                 return false;
@@ -147,12 +232,37 @@ module android.widget{
 
             return true;
         }
+        /**
+         * Start scrolling by providing a starting point and the distance to travel.
+         *
+         * @param startX Starting horizontal scroll offset in pixels. Positive
+         *        numbers will scroll the content to the left.
+         * @param startY Starting vertical scroll offset in pixels. Positive numbers
+         *        will scroll the content up.
+         * @param dx Horizontal distance to travel. Positive numbers will scroll the
+         *        content to the left.
+         * @param dy Vertical distance to travel. Positive numbers will scroll the
+         *        content up.
+         * @param duration Duration of the scroll in milliseconds.
+         */
         startScroll(startX:number, startY:number, dx:number, dy:number, duration=OverScroller.DEFAULT_DURATION) {
             NumberChecker.warnNotNumber(startX, startY, dx, dy, duration);
             this.mMode = OverScroller.SCROLL_MODE;
             this.mScrollerX.startScroll(startX, dx, duration);
             this.mScrollerY.startScroll(startY, dy, duration);
         }
+        /**
+         * Call this when you want to 'spring back' into a valid coordinate range.
+         *
+         * @param startX Starting X coordinate
+         * @param startY Starting Y coordinate
+         * @param minX Minimum valid X value
+         * @param maxX Maximum valid X value
+         * @param minY Minimum valid Y value
+         * @param maxY Minimum valid Y value
+         * @return true if a springback was initiated, false if startX and startY were
+         *          already within the valid range.
+         */
         springBack(startX:number, startY:number, minX:number, maxX:number, minY:number, maxY:number):boolean {
             NumberChecker.warnNotNumber(startX, startY, minX, maxX, minY, maxY);
             this.mMode = OverScroller.FLING_MODE;
@@ -162,6 +272,33 @@ module android.widget{
             const spingbackY = this.mScrollerY.springback(startY, minY, maxY);
             return spingbackX || spingbackY;
         }
+        /**
+         * Start scrolling based on a fling gesture. The distance traveled will
+         * depend on the initial velocity of the fling.
+         *
+         * @param startX Starting point of the scroll (X)
+         * @param startY Starting point of the scroll (Y)
+         * @param velocityX Initial velocity of the fling (X) measured in pixels per
+         *            second.
+         * @param velocityY Initial velocity of the fling (Y) measured in pixels per
+         *            second
+         * @param minX Minimum X value. The scroller will not scroll past this point
+         *            unless overX > 0. If overfling is allowed, it will use minX as
+         *            a springback boundary.
+         * @param maxX Maximum X value. The scroller will not scroll past this point
+         *            unless overX > 0. If overfling is allowed, it will use maxX as
+         *            a springback boundary.
+         * @param minY Minimum Y value. The scroller will not scroll past this point
+         *            unless overY > 0. If overfling is allowed, it will use minY as
+         *            a springback boundary.
+         * @param maxY Maximum Y value. The scroller will not scroll past this point
+         *            unless overY > 0. If overfling is allowed, it will use maxY as
+         *            a springback boundary.
+         * @param overX Overfling range. If > 0, horizontal overfling in either
+         *            direction will be possible.
+         * @param overY Overfling range. If > 0, vertical overfling in either
+         *            direction will be possible.
+         */
         fling(startX:number, startY:number, velocityX:number, velocityY:number,
               minX:number, maxX:number, minY:number, maxY:number, overX=0, overY=0) {
             NumberChecker.warnNotNumber(startX, startY, velocityX, velocityY, minX, maxX, minY, maxY, overX, overY);
@@ -180,24 +317,77 @@ module android.widget{
             this.mScrollerX.fling(startX, velocityX, minX, maxX, overX);
             this.mScrollerY.fling(startY, velocityY, minY, maxY, overY);
         }
+        /**
+         * Notify the scroller that we've reached a horizontal boundary.
+         * Normally the information to handle this will already be known
+         * when the animation is started, such as in a call to one of the
+         * fling functions. However there are cases where this cannot be known
+         * in advance. This function will transition the current motion and
+         * animate from startX to finalX as appropriate.
+         *
+         * @param startX Starting/current X position
+         * @param finalX Desired final X position
+         * @param overX Magnitude of overscroll allowed. This should be the maximum
+         *              desired distance from finalX. Absolute value - must be positive.
+         */
         notifyHorizontalEdgeReached(startX:number, finalX:number, overX:number) {
             NumberChecker.warnNotNumber(startX, finalX, overX);
             this.mScrollerX.notifyEdgeReached(startX, finalX, overX);
         }
+        /**
+         * Notify the scroller that we've reached a vertical boundary.
+         * Normally the information to handle this will already be known
+         * when the animation is started, such as in a call to one of the
+         * fling functions. However there are cases where this cannot be known
+         * in advance. This function will animate a parabolic motion from
+         * startY to finalY.
+         *
+         * @param startY Starting/current Y position
+         * @param finalY Desired final Y position
+         * @param overY Magnitude of overscroll allowed. This should be the maximum
+         *              desired distance from finalY. Absolute value - must be positive.
+         */
         notifyVerticalEdgeReached(startY:number, finalY:number, overY:number) {
             NumberChecker.warnNotNumber(startY, finalY, overY);
             this.mScrollerY.notifyEdgeReached(startY, finalY, overY);
         }
+        /**
+         * Returns whether the current Scroller is currently returning to a valid position.
+         * Valid bounds were provided by the
+         * {@link #fling(int, int, int, int, int, int, int, int, int, int)} method.
+         *
+         * One should check this value before calling
+         * {@link #startScroll(int, int, int, int)} as the interpolation currently in progress
+         * to restore a valid position will then be stopped. The caller has to take into account
+         * the fact that the started scroll will start from an overscrolled position.
+         *
+         * @return true when the current position is overscrolled and in the process of
+         *         interpolating back to a valid value.
+         */
         isOverScrolled():boolean {
             return ((!this.mScrollerX.mFinished &&
             this.mScrollerX.mState != SplineOverScroller.SPLINE) ||
             (!this.mScrollerY.mFinished &&
             this.mScrollerY.mState != SplineOverScroller.SPLINE));
         }
+        /**
+         * Stops the animation. Contrary to {@link #forceFinished(boolean)},
+         * aborting the animating causes the scroller to move to the final x and y
+         * positions.
+         *
+         * @see #forceFinished(boolean)
+         */
         abortAnimation() {
             this.mScrollerX.finish();
             this.mScrollerY.finish();
         }
+        /**
+         * Returns the time elapsed since the beginning of the scrolling.
+         *
+         * @return The elapsed time in milliseconds.
+         *
+         * @hide
+         */
         timePassed():number {
             const time = SystemClock.uptimeMillis();
             const startTime = Math.min(this.mScrollerX.mStartTime, this.mScrollerY.mStartTime);
@@ -221,8 +411,8 @@ module android.widget{
         static P2 = 1.0 - SplineOverScroller.END_TENSION * (1 - SplineOverScroller.INFLEXION);
 
         static NB_SAMPLES = 100;
-        static SPLINE_POSITION = new Array<number>(SplineOverScroller.NB_SAMPLES + 1);
-        static SPLINE_TIME = new Array<number>(SplineOverScroller.NB_SAMPLES + 1);
+        static SPLINE_POSITION = androidui.util.ArrayCreator.newNumberArray(SplineOverScroller.NB_SAMPLES + 1);
+        static SPLINE_TIME = androidui.util.ArrayCreator.newNumberArray(SplineOverScroller.NB_SAMPLES + 1);
 
         static SPLINE = 0;
         static CUBIC = 1;

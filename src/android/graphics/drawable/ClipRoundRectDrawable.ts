@@ -1,10 +1,11 @@
 /**
  * Created by linfaxin on 16/1/3.
+ * AndroidUI drawable
  */
 ///<reference path="Drawable.ts"/>
 ///<reference path="../Canvas.ts"/>
 
-
+//TODO move to androidui/drawable dir
 module android.graphics.drawable{
     import Canvas = android.graphics.Canvas;
 

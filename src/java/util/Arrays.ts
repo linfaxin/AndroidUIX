@@ -3,6 +3,7 @@
  */
 ///<reference path="List.ts"/>
 ///<reference path="ArrayList.ts"/>
+///<reference path="../../androidui/util/ArrayCreator.ts"/>
 
 module java.util {
     export class Arrays {
@@ -31,7 +32,7 @@ module java.util {
         static sort(a:number[], fromIndex:number, toIndex:number) {
             Arrays.rangeCheck(a.length, fromIndex, toIndex);
 
-            var sort = new Array<number>(toIndex-fromIndex);
+            var sort = androidui.util.ArrayCreator.newNumberArray(toIndex-fromIndex);
             for(let i = fromIndex; i < toIndex; i++){
                 sort[i-fromIndex] = a[i];
             }

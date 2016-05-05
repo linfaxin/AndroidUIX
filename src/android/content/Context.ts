@@ -1,6 +1,6 @@
 /**
  * Created by linfaxin on 16/1/4.
- * lite impl of Android Content
+ * lite impl of Android's Content
  */
 ///<reference path="../view/WindowManager.ts"/>
 ///<reference path="res/Resources.ts"/>

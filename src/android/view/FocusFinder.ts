@@ -1,6 +1,19 @@
-/**
- * Created by linfaxin on 15/11/10.
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="View.ts"/>
 ///<reference path="ViewGroup.ts"/>
 
@@ -10,8 +23,15 @@ module android.view{
     import ArrayList = java.util.ArrayList;
 
 
+    /**
+     * The algorithm used for finding the next focusable view in a given direction
+     * from a view that currently has focus.
+     */
     export class FocusFinder{
         private static sFocusFinder:FocusFinder;
+        /**
+         * Get the focus finder for this thread.
+         */
         static getInstance():FocusFinder{
             if(!FocusFinder.sFocusFinder){
                 FocusFinder.sFocusFinder = new FocusFinder();
@@ -25,9 +45,26 @@ module android.view{
         private mSequentialFocusComparator = new SequentialFocusComparator();
         private mTempList = new ArrayList<View>();
 
+        /**
+         * Find the next view to take focus in root's descendants, starting from the view
+         * that currently is focused.
+         * @param root Contains focused. Cannot be null.
+         * @param focused Has focus now.
+         * @param direction Direction to look.
+         * @return The next focusable view, or null if none exists.
+         */
         findNextFocus(root:ViewGroup, focused:View, direction:number):View{
             return this._findNextFocus(root, focused, null, direction);
         }
+
+        /**
+         * Find the next view to take focus in root's descendants, searching from
+         * a particular rectangle in root's coordinates.
+         * @param root Contains focusedRect. Cannot be null.
+         * @param focusedRect The starting point of the search.
+         * @param direction Direction to look.
+         * @return The next focusable view, or null if none exists.
+         */
         findNextFocusFromRect(root:ViewGroup, focusedRect:Rect, direction:number) {
             this.mFocusedRect.set(focusedRect);
             return this._findNextFocus(root, null, this.mFocusedRect, direction);
@@ -209,6 +246,16 @@ module android.view{
             return null;
         }
 
+        /**
+         * Is rect1 a better candidate than rect2 for a focus search in a particular
+         * direction from a source rect?  This is the core routine that determines
+         * the order of focus searching.
+         * @param direction the direction (up, down, left, right)
+         * @param source The source we are searching from
+         * @param rect1 The candidate rectangle
+         * @param rect2 The current best candidate.
+         * @return Whether the candidate is the new best.
+         */
         isBetterCandidate(direction:number, source:Rect, rect1:Rect, rect2:Rect):boolean {
 
             // to be a better candidate, need to at least be a candidate in the first
@@ -242,6 +289,12 @@ module android.view{
                 FocusFinder.minorAxisDistance(direction, source, rect2)));
         }
 
+        /**
+         * One rectangle may be another candidate than another by virtue of being
+         * exclusively in the beam of the source rect.
+         * @return Whether rect1 is a better candidate than rect2 by virtue of it being in src's
+         *      beam
+         */
         beamBeats(direction:number, source:Rect, rect1:Rect, rect2:Rect):boolean {
             const rect1InSrcBeam = this.beamsOverlap(direction, source, rect1);
             const rect2InSrcBeam = this.beamsOverlap(direction, source, rect2);
@@ -274,11 +327,24 @@ module android.view{
             < FocusFinder.majorAxisDistanceToFarEdge(direction, source, rect2));
         }
 
+        /**
+         * Fudge-factor opportunity: how to calculate distance given major and minor
+         * axis distances.  Warning: this fudge factor is finely tuned, be sure to
+         * run all focus tests if you dare tweak it.
+         */
         getWeightedDistanceFor(majorAxisDistance:number, minorAxisDistance:number):number {
             return 13 * majorAxisDistance * majorAxisDistance
                 + minorAxisDistance * minorAxisDistance;
         }
 
+        /**
+         * Is destRect a candidate for the next focus given the direction?  This
+         * checks whether the dest is at least partially to the direction of (e.g left of)
+         * from source.
+         *
+         * Includes an edge case for an empty rect (which is used in some cases when
+         * searching from a point on the screen).
+         */
         isCandidate(srcRect:Rect, destRect:Rect, direction:number):boolean {
             switch (direction) {
                 case View.FOCUS_LEFT:
@@ -298,6 +364,13 @@ module android.view{
                 + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
         }
 
+        /**
+         * Do the "beams" w.r.t the given direction's axis of rect1 and rect2 overlap?
+         * @param direction the direction (up, down, left, right)
+         * @param rect1 The first rectangle
+         * @param rect2 The second rectangle
+         * @return whether the beams overlap
+         */
         beamsOverlap(direction:number, rect1:Rect, rect2:Rect):boolean {
             switch (direction) {
                 case View.FOCUS_LEFT:
@@ -311,6 +384,9 @@ module android.view{
                 + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
         }
 
+        /**
+         * e.g for left, is 'to left of'
+         */
         isToDirectionOf(direction:number, src:Rect, dest:Rect):boolean {
             switch (direction) {
                 case View.FOCUS_LEFT:
@@ -325,6 +401,11 @@ module android.view{
             throw new Error("direction must be one of "
                 + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
         }
+        /**
+         * @return The distance from the edge furthest in the given direction
+         *   of source to the edge nearest in the given direction of dest.  If the
+         *   dest is not in the direction from source, return 0.
+         */
         static majorAxisDistance(direction:number, source:Rect, dest:Rect):number {
             return Math.max(0, FocusFinder.majorAxisDistanceRaw(direction, source, dest));
         }
@@ -342,6 +423,12 @@ module android.view{
             throw new Error("direction must be one of "
                 + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
         }
+        /**
+         * @return The distance along the major axis w.r.t the direction from the
+         *   edge of source to the far edge of dest. If the
+         *   dest is not in the direction from source, return 1 (to break ties with
+         *   {@link #majorAxisDistance}).
+         */
         static majorAxisDistanceToFarEdge(direction:number, source:Rect, dest:Rect):number {
             return Math.max(1, FocusFinder.majorAxisDistanceToFarEdgeRaw(direction, source, dest));
         }
@@ -359,6 +446,14 @@ module android.view{
             throw new Error("direction must be one of "
                 + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
         }
+        /**
+         * Find the distance on the minor axis w.r.t the direction to the nearest
+         * edge of the destination rectangle.
+         * @param direction the direction (up, down, left, right)
+         * @param source The source rect.
+         * @param dest The destination rect.
+         * @return The distance.
+         */
         static minorAxisDistance(direction:number, source:Rect, dest:Rect):number {
             switch (direction) {
                 case View.FOCUS_LEFT:
@@ -378,6 +473,17 @@ module android.view{
                 + "{FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT}.");
         }
 
+        /**
+         * Find the nearest touchable view to the specified view.
+         *
+         * @param root The root of the tree in which to search
+         * @param x X coordinate from which to start the search
+         * @param y Y coordinate from which to start the search
+         * @param direction Direction to look
+         * @param deltas Offset from the <x, y> to the edge of the nearest view. Note that this array
+         *        may already be populated with values.
+         * @return The nearest touchable view, or null if none exists.
+         */
         findNearestTouchable(root:ViewGroup, x:number, y:number, direction:number, deltas:number[]):View {
             let touchables = root.getTouchables();
             let minDistance = Number.MAX_SAFE_INTEGER;
@@ -447,6 +553,10 @@ module android.view{
             return closest;
         }
 
+
+        /**
+         * Is destRect a candidate for the next touch given the direction?
+         */
         private isTouchCandidate(x:number, y:number, destRect:Rect, direction:number):boolean {
             switch (direction) {
                 case View.FOCUS_LEFT:
@@ -466,6 +576,10 @@ module android.view{
     }
 
 
+    /**
+     * Sorts views according to their visual layout and geometry for default tab order.
+     * This is used for sequential focus traversal.
+     */
     class SequentialFocusComparator {
         mFirstRect = new Rect();
         mSecondRect = new Rect();

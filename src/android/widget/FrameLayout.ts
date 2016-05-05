@@ -1,6 +1,19 @@
-/**
- * Created by linfaxin on 15/10/9.
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="../view/Gravity.ts"/>
 ///<reference path="../view/ViewOverlay.ts"/>
 ///<reference path="../view/ViewGroup.ts"/>
@@ -17,6 +30,25 @@ module android.widget {
     import Rect = android.graphics.Rect;
     import Canvas = android.graphics.Canvas;
 
+    /**
+     * FrameLayout is designed to block out an area on the screen to display
+     * a single item. Generally, FrameLayout should be used to hold a single child view, because it can
+     * be difficult to organize child views in a way that's scalable to different screen sizes without
+     * the children overlapping each other. You can, however, add multiple children to a FrameLayout
+     * and control their position within the FrameLayout by assigning gravity to each child, using the
+     * <a href="FrameLayout.LayoutParams.html#attr_android:layout_gravity">{@code
+     * android:layout_gravity}</a> attribute.
+     * <p>Child views are drawn in a stack, with the most recently added child on top.
+     * The size of the FrameLayout is the size of its largest child (plus padding), visible
+     * or not (if the FrameLayout's parent permits). Views that are {@link android.view.View#GONE} are
+     * used for sizing
+     * only if {@link #setMeasureAllChildren(boolean) setConsiderGoneChildrenWhenMeasuring()}
+     * is set to true.
+     *
+     * @attr ref android.R.styleable#FrameLayout_foreground
+     * @attr ref android.R.styleable#FrameLayout_foregroundGravity
+     * @attr ref android.R.styleable#FrameLayout_measureAllChildren
+     */
     export class FrameLayout extends ViewGroup {
         static DEFAULT_CHILD_GRAVITY = Gravity.TOP | Gravity.LEFT;
 
@@ -42,10 +74,28 @@ module android.widget {
             })
         }
 
+        /**
+         * Describes how the foreground is positioned.
+         *
+         * @return foreground gravity.
+         *
+         * @see #setForegroundGravity(int)
+         *
+         * @attr ref android.R.styleable#FrameLayout_foregroundGravity
+         */
         getForegroundGravity():number {
             return this.mForegroundGravity;
         }
 
+        /**
+         * Describes how the foreground is positioned. Defaults to START and TOP.
+         *
+         * @param foregroundGravity See {@link android.view.Gravity}
+         *
+         * @see #getForegroundGravity()
+         *
+         * @attr ref android.R.styleable#FrameLayout_foregroundGravity
+         */
         setForegroundGravity(foregroundGravity:number) {
             if (this.mForegroundGravity != foregroundGravity) {
                 if ((foregroundGravity & Gravity.HORIZONTAL_GRAVITY_MASK) == 0) {
@@ -94,11 +144,26 @@ module android.widget {
             }
         }
 
+        /**
+         * Returns a set of layout parameters with a width of
+         * {@link android.view.ViewGroup.LayoutParams#MATCH_PARENT},
+         * and a height of {@link android.view.ViewGroup.LayoutParams#MATCH_PARENT}.
+         */
         protected generateDefaultLayoutParams():FrameLayout.LayoutParams {
             return new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
         }
 
+        /**
+         * Supply a Drawable that is to be rendered on top of all of the child
+         * views in the frame layout.  Any padding in the Drawable will be taken
+         * into account by ensuring that the children are inset to be placed
+         * inside of the padding area.
+         *
+         * @param drawable The Drawable to be drawn on top of the children.
+         *
+         * @attr ref android.R.styleable#FrameLayout_foreground
+         */
         setForeground(drawable:Drawable) {
             if (this.mForeground != drawable) {
                 if (this.mForeground != null) {
@@ -135,6 +200,12 @@ module android.widget {
             }
         }
 
+        /**
+         * Returns the drawable used as the foreground of this FrameLayout. The
+         * foreground drawable, if non-null, is always drawn on top of the children.
+         *
+         * @return A Drawable or null if no foreground was set.
+         */
         getForeground():Drawable {
             return this.mForeground;
         }
@@ -353,9 +424,24 @@ module android.widget {
             }
         }
 
+        /**
+         * Sets whether to consider all children, or just those in
+         * the VISIBLE or INVISIBLE state, when measuring. Defaults to false.
+         *
+         * @param measureAll true to consider children marked GONE, false otherwise.
+         * Default value is false.
+         *
+         * @attr ref android.R.styleable#FrameLayout_measureAllChildren
+         */
         setMeasureAllChildren( measureAll:boolean) {
             this.mMeasureAllChildren = measureAll;
         }
+        /**
+         * Determines whether all children, or just those in the VISIBLE or
+         * INVISIBLE state, are considered when measuring.
+         *
+         * @return Whether all children are considered when measuring.
+         */
         getMeasureAllChildren() {
             return this.mMeasureAllChildren;
         }
@@ -371,11 +457,44 @@ module android.widget {
     }
 
     export module FrameLayout {
+        /**
+         * Per-child layout information for layouts that support margins.
+         * See {@link android.R.styleable#FrameLayout_Layout FrameLayout Layout Attributes}
+         * for a list of all child view attributes that this class supports.
+         *
+         * @attr ref android.R.styleable#FrameLayout_Layout_layout_gravity
+         */
         export class LayoutParams extends ViewGroup.MarginLayoutParams {
+            /**
+             * The gravity to apply with the View to which these layout parameters
+             * are associated.
+             *
+             * @see android.view.Gravity
+             *
+             * @attr ref android.R.styleable#FrameLayout_Layout_layout_gravity
+             */
             gravity = -1;
 
             constructor();
+            /**
+             * Copy constructor. Clones the width, height, margin values, and
+             * gravity of the source.
+             *
+             * @param source The layout params to copy from.
+             */
             constructor(source:ViewGroup.LayoutParams);
+            /**
+             * Creates a new set of layout parameters with the specified width, height
+             * and weight.
+             *
+             * @param width the width, either {@link #MATCH_PARENT},
+             *        {@link #WRAP_CONTENT} or a fixed size in pixels
+             * @param height the height, either {@link #MATCH_PARENT},
+             *        {@link #WRAP_CONTENT} or a fixed size in pixels
+             * @param gravity the gravity
+             *
+             * @see android.view.Gravity
+             */
             constructor(width:number, height:number, gravity?:number);
             constructor(...args) {
                 super();

@@ -1,5 +1,6 @@
 /**
  * Created by linfaxin on 15/10/13.
+ * AndroidUI's impl
  */
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../graphics/Canvas.ts"/>

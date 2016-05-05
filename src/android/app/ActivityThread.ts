@@ -1,6 +1,6 @@
 /**
  * Created by linfaxin on 16/1/5.
- * simple impl of android ActivityThread
+ * androidui's impl of android's ActivityThread
  */
 
 ///<reference path="Activity.ts"/>

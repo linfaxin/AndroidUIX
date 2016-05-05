@@ -3877,7 +3877,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             const length:number = drawableState.length;
             for (let i:number = 0; i < length; i++) {
                 if (drawableState[i] == View.VIEW_STATE_PRESSED) {
-                    const nonPressedState:number[] = new Array<number>(length - 1);
+                    const nonPressedState:number[] = androidui.util.ArrayCreator.newNumberArray(length - 1);
                     System.arraycopy(drawableState, 0, nonPressedState, 0, i);
                     System.arraycopy(drawableState, i + 1, nonPressedState, i, length - i - 1);
                     return nonPressedState;

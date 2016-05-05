@@ -1,11 +1,28 @@
-/**
- * Created by linfaxin on 15/10/9.
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="../graphics/Rect.ts"/>
 
 module android.view{
     import Rect = android.graphics.Rect;
 
+    /**
+     * Standard constants and tools for placing an object within a potentially
+     * larger container.
+     */
     export class Gravity{
         /** Constant indicating that no gravity has been set **/
         static NO_GRAVITY = 0x0000;
@@ -110,6 +127,23 @@ module android.view{
          */
         //static RELATIVE_HORIZONTAL_GRAVITY_MASK = Gravity.START | Gravity.END;
 
+        /**
+         * Apply a gravity constant to an object and take care if layout direction is RTL or not.
+         *
+         * @param gravity The desired placement of the object, as defined by the
+         *                constants in this class.
+         * @param w The horizontal size of the object.
+         * @param h The vertical size of the object.
+         * @param container The frame of the containing space, in which the object
+         *                  will be placed.  Should be large enough to contain the
+         *                  width and height of the object.
+         * @param outRect Receives the computed frame of the object in its
+         *                container.
+         * @param layoutDirection The layout direction.
+         *
+         * @see View#LAYOUT_DIRECTION_LTR
+         * @see View#LAYOUT_DIRECTION_RTL
+         */
         static apply(gravity:number, w:number, h:number, container:Rect, outRect:Rect, layoutDirection?:number) {
             let xAdj = 0, yAdj = 0;
             if(layoutDirection!=null) gravity = Gravity.getAbsoluteGravity(gravity, layoutDirection);
@@ -188,6 +222,17 @@ module android.view{
             }
         }
 
+        /**
+         * <p>Convert script specific gravity to absolute horizontal value.</p>
+         *
+         * if horizontal direction is LTR, then START will set LEFT and END will set RIGHT.
+         * if horizontal direction is RTL, then START will set RIGHT and END will set LEFT.
+         *
+         *
+         * @param gravity The gravity to convert to absolute (horizontal) values.
+         * @param layoutDirection The layout direction.
+         * @return gravity converted to absolute (horizontal) values.
+         */
         static getAbsoluteGravity(gravity:number, layoutDirection?:number):number {
             return gravity;//no need parse.
         }

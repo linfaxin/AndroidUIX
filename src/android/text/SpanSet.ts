@@ -52,9 +52,9 @@ export class SpanSet<E> {
         if (length > 0 && (this.spans == null || this.spans.length < length)) {
             // These arrays may end up being too large because of the discarded empty spans
             this.spans = new Array<E>(length);//<E[]> Array.newInstance(this.classType, length);
-            this.spanStarts = new Array<number>(length);
-            this.spanEnds = new Array<number>(length);
-            this.spanFlags = new Array<number>(length);
+            this.spanStarts = androidui.util.ArrayCreator.newNumberArray(length);
+            this.spanEnds = androidui.util.ArrayCreator.newNumberArray(length);
+            this.spanFlags = androidui.util.ArrayCreator.newNumberArray(length);
         }
         this.numberOfSpans = 0;
         for (let i:number = 0; i < length; i++) {

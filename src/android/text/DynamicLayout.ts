@@ -109,10 +109,10 @@ export class DynamicLayout extends Layout {
         // undefined ellipsis.
         let start:number[];
         if (ellipsize != null) {
-            start = new Array<number>(DynamicLayout.COLUMNS_ELLIPSIZE);
+            start = androidui.util.ArrayCreator.newNumberArray(DynamicLayout.COLUMNS_ELLIPSIZE);
             start[DynamicLayout.ELLIPSIS_START] = DynamicLayout.ELLIPSIS_UNDEFINED;
         } else {
-            start = new Array<number>(DynamicLayout.COLUMNS_NORMAL);
+            start = androidui.util.ArrayCreator.newNumberArray(DynamicLayout.COLUMNS_NORMAL);
         }
         let dirs:Layout.Directions[] =  [ DynamicLayout.DIRS_ALL_LEFT_TO_RIGHT ];
         let fm = new Paint.FontMetricsInt();
@@ -235,10 +235,10 @@ export class DynamicLayout extends Layout {
         // insert new layout
         let ints:number[];
         if (this.mEllipsize) {
-            ints = new Array<number>(DynamicLayout.COLUMNS_ELLIPSIZE);
+            ints = androidui.util.ArrayCreator.newNumberArray(DynamicLayout.COLUMNS_ELLIPSIZE);
             ints[DynamicLayout.ELLIPSIS_START] = DynamicLayout.ELLIPSIS_UNDEFINED;
         } else {
-            ints = new Array<number>(DynamicLayout.COLUMNS_NORMAL);
+            ints = androidui.util.ArrayCreator.newNumberArray(DynamicLayout.COLUMNS_NORMAL);
         }
         let objects:Layout.Directions[] = new Array<Layout.Directions>(1);
         for (let i:number = 0; i < n; i++) {
@@ -285,7 +285,7 @@ export class DynamicLayout extends Layout {
             }
         }
         // mBlockIndices and mBlockEndLines should have the same length
-        this.mBlockIndices = new Array<number>(this.mBlockEndLines.length);
+        this.mBlockIndices = androidui.util.ArrayCreator.newNumberArray(this.mBlockEndLines.length);
         for (let i:number = 0; i < this.mBlockEndLines.length; i++) {
             this.mBlockIndices[i] = DynamicLayout.INVALID_BLOCK_INDEX;
         }
@@ -300,7 +300,7 @@ export class DynamicLayout extends Layout {
         const line:number = this.getLineForOffset(offset);
         if (this.mBlockEndLines == null) {
             // Initial creation of the array, no test on previous block ending line
-            this.mBlockEndLines = new Array<number>((1));
+            this.mBlockEndLines = androidui.util.ArrayCreator.newNumberArray((1));
             this.mBlockEndLines[this.mNumberOfBlocks] = line;
             this.mNumberOfBlocks++;
             return;
@@ -309,7 +309,7 @@ export class DynamicLayout extends Layout {
         if (line > previousBlockEndLine) {
             if (this.mNumberOfBlocks == this.mBlockEndLines.length) {
                 // Grow the array if needed
-                let blockEndLines:number[] = new Array<number>((this.mNumberOfBlocks + 1));
+                let blockEndLines:number[] = androidui.util.ArrayCreator.newNumberArray((this.mNumberOfBlocks + 1));
                 System.arraycopy(this.mBlockEndLines, 0, blockEndLines, 0, this.mNumberOfBlocks);
                 this.mBlockEndLines = blockEndLines;
             }
@@ -378,8 +378,8 @@ export class DynamicLayout extends Layout {
         }
         if (newNumberOfBlocks > this.mBlockEndLines.length) {
             const newSize:number = (newNumberOfBlocks);
-            let blockEndLines:number[] = new Array<number>(newSize);
-            let blockIndices:number[] = new Array<number>(newSize);
+            let blockEndLines:number[] = androidui.util.ArrayCreator.newNumberArray(newSize);
+            let blockIndices:number[] = androidui.util.ArrayCreator.newNumberArray(newSize);
             System.arraycopy(this.mBlockEndLines, 0, blockEndLines, 0, firstBlock);
             System.arraycopy(this.mBlockIndices, 0, blockIndices, 0, firstBlock);
             System.arraycopy(this.mBlockEndLines, lastBlock + 1, blockEndLines, firstBlock + numAddedBlocks, this.mNumberOfBlocks - lastBlock - 1);
@@ -426,8 +426,8 @@ export class DynamicLayout extends Layout {
      * @hide
      */
     setBlocksDataForTest(blockEndLines:number[], blockIndices:number[], numberOfBlocks:number):void  {
-        this.mBlockEndLines = new Array<number>(blockEndLines.length);
-        this.mBlockIndices = new Array<number>(blockIndices.length);
+        this.mBlockEndLines = androidui.util.ArrayCreator.newNumberArray(blockEndLines.length);
+        this.mBlockIndices = androidui.util.ArrayCreator.newNumberArray(blockIndices.length);
         System.arraycopy(blockEndLines, 0, this.mBlockEndLines, 0, blockEndLines.length);
         System.arraycopy(blockIndices, 0, this.mBlockIndices, 0, blockIndices.length);
         this.mNumberOfBlocks = numberOfBlocks;

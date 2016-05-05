@@ -596,13 +596,13 @@ export class ViewDragHelper {
 
     private ensureMotionHistorySizeForId(pointerId:number):void  {
         if (this.mInitialMotionX == null || this.mInitialMotionX.length <= pointerId) {
-            let imx:number[] = new Array<number>(pointerId + 1);
-            let imy:number[] = new Array<number>(pointerId + 1);
-            let lmx:number[] = new Array<number>(pointerId + 1);
-            let lmy:number[] = new Array<number>(pointerId + 1);
-            let iit:number[] = new Array<number>(pointerId + 1);
-            let edip:number[] = new Array<number>(pointerId + 1);
-            let edl:number[] = new Array<number>(pointerId + 1);
+            let imx:number[] = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+            let imy:number[] = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+            let lmx:number[] = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+            let lmy:number[] = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+            let iit:number[] = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+            let edip:number[] = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+            let edl:number[] = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
             if (this.mInitialMotionX != null) {
                 System.arraycopy(this.mInitialMotionX, 0, imx, 0, this.mInitialMotionX.length);
                 System.arraycopy(this.mInitialMotionY, 0, imy, 0, this.mInitialMotionY.length);

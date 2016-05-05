@@ -118,7 +118,7 @@ export class MeasuredText {
         this.mLen = len;
         this.mPos = 0;
         if (this.mWidths == null || this.mWidths.length < len) {
-            this.mWidths = new Array<number>(len);
+            this.mWidths = androidui.util.ArrayCreator.newNumberArray(len);
         }
         //if (this.mChars == null || this.mChars.length < len) {
         //    this.mChars = new Array<string>(ArrayUtils.idealCharArraySize(len));

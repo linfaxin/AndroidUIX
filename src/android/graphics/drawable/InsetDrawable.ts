@@ -1,5 +1,17 @@
-/**
- * Created by linfaxin on 15/11/2.
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 ///<reference path="Drawable.ts"/>
 ///<reference path="../Canvas.ts"/>
@@ -8,7 +20,24 @@
 module android.graphics.drawable{
     import Canvas = android.graphics.Canvas;
 
+    /**
+     * A Drawable that insets another Drawable by a specified distance.
+     * This is used when a View needs a background that is smaller than
+     * the View's actual bounds.
+     *
+     * <p>It can be defined in an XML file with the <code>&lt;inset></code> element. For more
+     * information, see the guide to <a
+     * href="{@docRoot}guide/topics/resources/drawable-resource.html">Drawable Resources</a>.</p>
+     *
+     * @attr ref android.R.styleable#InsetDrawable_visible
+     * @attr ref android.R.styleable#InsetDrawable_drawable
+     * @attr ref android.R.styleable#InsetDrawable_insetLeft
+     * @attr ref android.R.styleable#InsetDrawable_insetRight
+     * @attr ref android.R.styleable#InsetDrawable_insetTop
+     * @attr ref android.R.styleable#InsetDrawable_insetBottom
+     */
     export class InsetDrawable extends Drawable implements Drawable.Callback{
+        // Most of this is copied from ScaleDrawable.
         private mInsetState:InsetState;
         private mTmpRect = new Rect();
         private mMutated = false;
@@ -137,6 +166,9 @@ module android.graphics.drawable{
             }
             return this;
         }
+        /**
+         * Returns the drawable wrapped by this InsetDrawable. May be null.
+         */
         getDrawable():Drawable {
             return this.mInsetState.mDrawable;
         }

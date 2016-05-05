@@ -311,7 +311,7 @@ export class AnimationState extends DrawableContainer.DrawableContainerState {
             this.mDurations = orig.mDurations;
             this.mOneShot = orig.mOneShot;
         } else {
-            this.mDurations = new Array<number>(this.getCapacity());
+            this.mDurations = androidui.util.ArrayCreator.newNumberArray(this.getCapacity());
             this.mOneShot = true;
         }
     }
@@ -329,7 +329,7 @@ export class AnimationState extends DrawableContainer.DrawableContainerState {
 
     //growArray(oldSize:number, newSize:number):void  {
     //    super.growArray(oldSize, newSize);
-    //    let newDurations:number[] = new Array<number>(newSize);
+    //    let newDurations:number[] = androidui.util.ArrayCreator.newNumberArray(newSize);
     //    System.arraycopy(this.mDurations, 0, newDurations, 0, oldSize);
     //    this.mDurations = newDurations;
     //}

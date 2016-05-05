@@ -1,12 +1,26 @@
-/**
- * Created by linfaxin on 15/11/9.
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="../content/res/Resources.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 ///<reference path="../view/ViewConfiguration.ts"/>
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../../androidui/util/Platform.ts"/>
+
 module android.view{
     import Resources = android.content.res.Resources;
     import Rect = android.graphics.Rect;
@@ -18,6 +32,63 @@ module android.view{
     const DEBUG = false;
     const TAG = "KeyEvent";
 
+
+    /**
+     * Object used to report key and button events.
+     * <p>
+     * Each key press is described by a sequence of key events.  A key press
+     * starts with a key event with {@link #ACTION_DOWN}.  If the key is held
+     * sufficiently long that it repeats, then the initial down is followed
+     * additional key events with {@link #ACTION_DOWN} and a non-zero value for
+     * {@link #getRepeatCount()}.  The last key event is a {@link #ACTION_UP}
+     * for the key up.  If the key press is canceled, the key up event will have the
+     * {@link #FLAG_CANCELED} flag set.
+     * </p><p>
+     * Key events are generally accompanied by a key code ({@link #getKeyCode()}),
+     * scan code ({@link #getScanCode()}) and meta state ({@link #getMetaState()}).
+     * Key code constants are defined in this class.  Scan code constants are raw
+     * device-specific codes obtained from the OS and so are not generally meaningful
+     * to applications unless interpreted using the {@link KeyCharacterMap}.
+     * Meta states describe the pressed state of key modifiers
+     * such as {@link #META_SHIFT_ON} or {@link #META_ALT_ON}.
+     * </p><p>
+     * Key codes typically correspond one-to-one with individual keys on an input device.
+     * Many keys and key combinations serve quite different functions on different
+     * input devices so care must be taken when interpreting them.  Always use the
+     * {@link KeyCharacterMap} associated with the input device when mapping keys
+     * to characters.  Be aware that there may be multiple key input devices active
+     * at the same time and each will have its own key character map.
+     * </p><p>
+     * As soft input methods can use multiple and inventive ways of inputting text,
+     * there is no guarantee that any key press on a soft keyboard will generate a key
+     * event: this is left to the IME's discretion, and in fact sending such events is
+     * discouraged.  You should never rely on receiving KeyEvents for any key on a soft
+     * input method.  In particular, the default software keyboard will never send any
+     * key event to any application targetting Jelly Bean or later, and will only send
+     * events for some presses of the delete and return keys to applications targetting
+     * Ice Cream Sandwich or earlier.  Be aware that other software input methods may
+     * never send key events regardless of the version.  Consider using editor actions
+     * like {@link android.view.inputmethod.EditorInfo#IME_ACTION_DONE} if you need
+     * specific interaction with the software keyboard, as it gives more visibility to
+     * the user as to how your application will react to key presses.
+     * </p><p>
+     * When interacting with an IME, the framework may deliver key events
+     * with the special action {@link #ACTION_MULTIPLE} that either specifies
+     * that single repeated key code or a sequence of characters to insert.
+     * </p><p>
+     * In general, the framework cannot guarantee that the key events it delivers
+     * to a view always constitute complete key sequences since some events may be dropped
+     * or modified by containing views before they are delivered.  The view implementation
+     * should be prepared to handle {@link #FLAG_CANCELED} and should tolerate anomalous
+     * situations such as receiving a new {@link #ACTION_DOWN} without first having
+     * received an {@link #ACTION_UP} for the prior key press.
+     * </p><p>
+     * Refer to {@link InputDevice} for more information about how different kinds of
+     * input devices and sources represent keys and buttons.
+     * </p>
+     * 
+     * AndroidUI NOTE: some impl modified;
+     */
     export class KeyEvent{
         /** Key code constant: Directional Pad Up key.
          * May also be synthesized from trackball motions. */

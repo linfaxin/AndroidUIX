@@ -50,7 +50,7 @@ export class PackedIntVector {
         this.mRowGapStart = 0;
         this.mRowGapLength = this.mRows;
         this.mValues = null;
-        this.mValueGap = new Array<number>(2 * columns);
+        this.mValueGap = androidui.util.ArrayCreator.newNumberArray(2 * columns);
     }
 
     /**
@@ -234,7 +234,7 @@ export class PackedIntVector {
         const columns:number = this.mColumns;
         let newsize:number = this.size() + 1;
         newsize = (newsize * columns) / columns;
-        let newvalues:number[] = new Array<number>(newsize * columns);
+        let newvalues:number[] = androidui.util.ArrayCreator.newNumberArray(newsize * columns);
         const valuegap:number[] = this.mValueGap;
         const rowgapstart:number = this.mRowGapStart;
         let after:number = this.mRows - (rowgapstart + this.mRowGapLength);

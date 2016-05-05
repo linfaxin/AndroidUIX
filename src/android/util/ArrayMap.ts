@@ -1,5 +1,6 @@
 /**
  * Created by linfaxin on 15/12/12.
+ * AndroidUI's impl.
  */
 module android.util{
     export class ArrayMap<K, V>{

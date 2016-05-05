@@ -1,10 +1,12 @@
 /**
  * Created by linfaxin on 15/10/29.
+ * AndroidUI drawable
  */
 ///<reference path="Drawable.ts"/>
 ///<reference path="../Canvas.ts"/>
 ///<reference path="../Paint.ts"/>
 
+//TODO move to androidui/drawable
 module android.graphics.drawable{
 
     export class RoundRectDrawable extends Drawable{

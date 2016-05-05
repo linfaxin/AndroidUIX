@@ -1,6 +1,19 @@
-/**
- * Created by linfaxin on 15/10/30.
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="Drawable.ts"/>
 ///<reference path="../Canvas.ts"/>
 
@@ -24,15 +37,35 @@ module android.graphics.drawable{
         private mAlwaysDrawHorizontalTrack= false;
         private mAlwaysDrawVerticalTrack= false;
 
+        /**
+         * Indicate whether the horizontal scrollbar track should always be drawn regardless of the
+         * extent. Defaults to false.
+         *
+         * @param alwaysDrawTrack Set to true if the track should always be drawn
+         */
         setAlwaysDrawHorizontalTrack(alwaysDrawTrack:boolean) {
             this.mAlwaysDrawHorizontalTrack = alwaysDrawTrack;
         }
+        /**
+         * Indicate whether the vertical scrollbar track should always be drawn regardless of the
+         * extent. Defaults to false.
+         *
+         * @param alwaysDrawTrack Set to true if the track should always be drawn
+         */
         setAlwaysDrawVerticalTrack(alwaysDrawTrack:boolean) {
             this.mAlwaysDrawVerticalTrack = alwaysDrawTrack;
         }
+        /**
+         * Indicates whether the vertical scrollbar track should always be drawn regardless of the
+         * extent.
+         */
         getAlwaysDrawVerticalTrack() {
             return this.mAlwaysDrawVerticalTrack;
         }
+        /**
+         * Indicates whether the horizontal scrollbar track should always be drawn regardless of the
+         * extent.
+         */
         getAlwaysDrawHorizontalTrack() {
             return this.mAlwaysDrawHorizontalTrack;
         }

@@ -527,10 +527,10 @@ export class LayerDrawable extends Drawable implements Drawable.Callback {
         if (this.mPaddingL != null && this.mPaddingL.length >= N) {
             return;
         }
-        this.mPaddingL = new Array<number>(N);
-        this.mPaddingT = new Array<number>(N);
-        this.mPaddingR = new Array<number>(N);
-        this.mPaddingB = new Array<number>(N);
+        this.mPaddingL = androidui.util.ArrayCreator.newNumberArray(N);
+        this.mPaddingT = androidui.util.ArrayCreator.newNumberArray(N);
+        this.mPaddingR = androidui.util.ArrayCreator.newNumberArray(N);
+        this.mPaddingB = androidui.util.ArrayCreator.newNumberArray(N);
         //androidui: fill 0 to new array (like java)
         for (var i = 0; i < N; i++) {
             this.mPaddingL[i] = 0;

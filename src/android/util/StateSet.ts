@@ -1,18 +1,61 @@
-/**
- * Created by linfaxin on 15/10/29.
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="../../java/lang/System.ts"/>
+///<reference path="../../androidui/util/ArrayCreator.ts"/>
 
 module android.util{
     import System = java.lang.System;
 
+    /**
+     * State sets are arrays of positive ints where each element
+     * represents the state of a {@link android.view.View} (e.g. focused,
+     * selected, visible, etc.).  A {@link android.view.View} may be in
+     * one or more of those states.
+     *
+     * A state spec is an array of signed ints where each element
+     * represents a required (if positive) or an undesired (if negative)
+     * {@link android.view.View} state.
+     *
+     * Utils dealing with state sets.
+     *
+     * In theory we could encapsulate the state set and state spec arrays
+     * and not have static methods here but there is some concern about
+     * performance since these methods are called during view drawing.
+     */
     export class StateSet{
         static WILD_CARD:Array<number> = [];
         static NOTHING:Array<number> = [0];
 
+        /**
+         * Return whether the stateSetOrSpec is matched by all StateSets.
+         *
+         * @param stateSetOrSpec a state set or state spec.
+         */
         static isWildCard(stateSetOrSpec:Array<number>):boolean{
             return stateSetOrSpec.length == 0 || stateSetOrSpec[0] == 0;
         }
+
+        /**
+         * Return whether the stateSet matches the desired stateSpec.
+         *
+         * @param stateSpec an array of required (if positive) or
+         *        prohibited (if negative) {@link android.view.View} states.
+         * @param stateSet an array of {@link android.view.View} states
+         */
         static stateSetMatches(stateSpec:Array<number>, stateSetOrState:Array<number>|number):boolean{
             if(Number.isInteger(<number>stateSetOrState)){
                 return StateSet._stateSetMatches_single(stateSpec, <number>stateSetOrState);
@@ -97,7 +140,7 @@ module android.util{
             if (states.length == newSize) {
                 return states;
             }
-            let trimmedStates = new Array<number>(newSize);
+            let trimmedStates = androidui.util.ArrayCreator.newNumberArray(newSize);
             System.arraycopy(states, 0, trimmedStates, 0, newSize);
             return trimmedStates;
         }

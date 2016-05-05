@@ -1,6 +1,17 @@
-/**
- * Created by linfaxin on 16/1/3.
+/*
+ * Copyright (C) 2007 The Android Open Source Project
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 ///<reference path="../content/Context.ts"/>
@@ -12,6 +23,32 @@ module android.view{
     import ClassFinder = androidui.util.ClassFinder;
     import HtmlDataAdapter = androidui.widget.HtmlDataAdapter;
 
+    /**
+     * Instantiates a layout XML file into its corresponding {@link android.view.View}
+     * objects. It is never used directly. Instead, use
+     * {@link android.app.Activity#getLayoutInflater()} or
+     * {@link Context#getSystemService} to retrieve a standard LayoutInflater instance
+     * that is already hooked up to the current context and correctly configured
+     * for the device you are running on.  For example:
+     *
+     * <pre>LayoutInflater inflater = (LayoutInflater)context.getSystemService
+     *      (Context.LAYOUT_INFLATER_SERVICE);</pre>
+     *
+     * <p>
+     * To create a new LayoutInflater with an additional {@link Factory} for your
+     * own views, you can use {@link #cloneInContext} to clone an existing
+     * ViewFactory, and then call {@link #setFactory} on it to include your
+     * Factory.
+     *
+     * <p>
+     * For performance reasons, view inflation relies heavily on pre-processing of
+     * XML files that is done at build time. Therefore, it is not currently possible
+     * to use LayoutInflater with an XmlPullParser over a plain XML file at runtime;
+     * it only works with an XmlPullParser returned from a compiled resource
+     * (R.<em>something</em> file.)
+     *
+     * @see Context#getSystemService
+     */
     export class LayoutInflater{
         //private static TAG_MERGE:string = "merge";
         //

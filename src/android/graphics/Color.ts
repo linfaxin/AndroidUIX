@@ -1,7 +1,32 @@
-/**
- * Created by linfaxin on 15/10/14.
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 module android.graphics{
+    /**
+     * The Color class defines methods for creating and converting color ints.
+     * Colors are represented as packed ints, made up of 4 bytes: alpha, red,
+     * green, blue. The values are unpremultiplied, meaning any transparency is
+     * stored solely in the alpha component, and not in the color components. The
+     * components are stored as follows (alpha << 24) | (red << 16) |
+     * (green << 8) | blue. Each component ranges between 0..255 with 0
+     * meaning no contribution for that component, and 255 meaning 100%
+     * contribution. Thus opaque-black would be 0xFF000000 (100% opaque but
+     * no contributions from red, green, or blue), and opaque-white would be
+     * 0xFFFFFFFF
+     */
     export class Color {
         static BLACK = 0xFF000000;
         static DKGRAY = 0xFF444444;
@@ -75,6 +100,17 @@ module android.graphics{
         static argb(alpha:number, red:number, green:number, blue:number):number {
             return (alpha << 24) | (red << 16) | (green << 8) | blue;
         }
+
+        /**
+         * Return a color-int from alpha, red, green, blue components.
+         * These component values should be [0..255], but there is no
+         * range check performed, so if they are out of range, the
+         * returned color is undefined.
+         * @param red   Red component [0..255] of the color
+         * @param green Green component [0..255] of the color
+         * @param blue  Blue component [0..255] of the color
+         * @param alpha Alpha component [0..255] of the color
+         */
         static rgba(red:number, green:number, blue:number, alpha:number):number {
             return (alpha << 24) | (red << 16) | (green << 8) | blue;
         }
@@ -124,6 +160,11 @@ module android.graphics{
             throw new Error("Unknown color");
         }
 
+        /**
+         * convert color value to hex color string (#xxxxxxxx)
+         * @param color c
+         * @returns {string} #xxxxxxxx
+         */
         static toARGBHex(color:number):string {
             let r = Color.red(color);
             let g = Color.green(color);
@@ -135,6 +176,11 @@ module android.graphics{
             let hA = a<16 ? '0'+a.toString(16) : a.toString(16);
             return "#"+hA+hR+hG+hB;
         }
+        /**
+         * convert color value to css color func string rgba(xx,xx,xx,x)
+         * @param color c
+         * @returns {string} rgba(xx,xx,xx,x)
+         */
         static toRGBAFunc(color:number):string {
             let r = Color.red(color);
             let g = Color.green(color);

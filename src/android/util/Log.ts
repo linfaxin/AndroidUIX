@@ -1,5 +1,6 @@
 /**
  * Created by linfaxin on 15/10/5.
+ * AndrodUI's impl.
  */
 module android.util {
     export class Log {

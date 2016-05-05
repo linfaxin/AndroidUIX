@@ -33,6 +33,7 @@
 ///<reference path="../../../../uk/co/senab/photoview/GestureDetector.ts"/>
 ///<reference path="../../../../uk/co/senab/photoview/IPhotoView.ts"/>
 ///<reference path="../../../../uk/co/senab/photoview/PhotoView.ts"/>
+///<reference path="../../../../../androidui/util/ArrayCreator.ts"/>
 
 module uk.co.senab.photoview {
     import Canvas = android.graphics.Canvas;
@@ -151,7 +152,7 @@ module uk.co.senab.photoview {
 
         private mDisplayRect:RectF = new RectF();
 
-        private mMatrixValues:number[] = new Array<number>(9);
+        private mMatrixValues:number[] = androidui.util.ArrayCreator.newNumberArray(9);
 
         // Listeners
         private mMatrixChangeListener:PhotoViewAttacher.OnMatrixChangedListener;

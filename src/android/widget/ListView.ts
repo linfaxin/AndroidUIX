@@ -3201,7 +3201,7 @@ export class ListView extends AbsListView {
         if (this.mChoiceMode != ListView.CHOICE_MODE_NONE && this.mCheckStates != null && this.mAdapter != null) {
             const states:SparseBooleanArray = this.mCheckStates;
             const count:number = states.size();
-            const ids:number[] = new Array<number>(count);
+            const ids:number[] = androidui.util.ArrayCreator.newNumberArray(count);
             const adapter:ListAdapter = this.mAdapter;
             let checkedCount:number = 0;
             for (let i:number = 0; i < count; i++) {
@@ -3213,12 +3213,12 @@ export class ListView extends AbsListView {
             if (checkedCount == count) {
                 return ids;
             } else {
-                const result:number[] = new Array<number>(checkedCount);
+                const result:number[] = androidui.util.ArrayCreator.newNumberArray(checkedCount);
                 System.arraycopy(ids, 0, result, 0, checkedCount);
                 return result;
             }
         }
-        return new Array<number>(0);
+        return androidui.util.ArrayCreator.newNumberArray(0);
     }
 
     //onInitializeAccessibilityEvent(event:AccessibilityEvent):void  {

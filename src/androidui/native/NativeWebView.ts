@@ -16,7 +16,7 @@ module androidui.native{
     export class NativeWebView extends WebView{
         private mBoundRect = new Rect();
         private mRectTmp = new Rect();
-        private mLocationTmp = new Array<number>(2);
+        private mLocationTmp = androidui.util.ArrayCreator.newNumberArray(2);
         
         private mUrl:string;
         private mTitle:string;

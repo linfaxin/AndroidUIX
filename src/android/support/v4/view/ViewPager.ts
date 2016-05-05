@@ -1,6 +1,19 @@
-/**
- * Created by linfaxin on 15/11/5.
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="../../../view/View.ts"/>
 ///<reference path="../../../view/VelocityTracker.ts"/>
 ///<reference path="../../../widget/OverScroller.ts"/>
@@ -42,7 +55,37 @@ module android.support.v4.view {
 
     const SymbolDecor = Symbol();
 
+    /**
+     * Layout manager that allows the user to flip left and right
+     * through pages of data.  You supply an implementation of a
+     * {@link PagerAdapter} to generate the pages that the view shows.
+     *
+     * <p>Note this class is currently under early design and
+     * development.  The API will likely change in later updates of
+     * the compatibility library, requiring changes to the source code
+     * of apps when they are compiled against the newer version.</p>
+     *
+     * <p>ViewPager is most often used in conjunction with {@link android.app.Fragment},
+     * which is a convenient way to supply and manage the lifecycle of each page.
+     * There are standard adapters implemented for using fragments with the ViewPager,
+     * which cover the most common use cases.  These are
+     * {@link android.support.v4.app.FragmentPagerAdapter} and
+     * {@link android.support.v4.app.FragmentStatePagerAdapter}; each of these
+     * classes have simple code showing how to build a full user interface
+     * with them.
+     *
+     * <p>Here is a more complicated example of ViewPager, using it in conjuction
+     * with {@link android.app.ActionBar} tabs.  You can find other examples of using
+     * ViewPager in the API 4+ Support Demos and API 13+ Support Demos sample code.
+     *
+     * {@sample development/samples/Support13Demos/src/com/example/android/supportv13/app/ActionBarTabsPager.java
+     *      complete}
+     */
     export class ViewPager extends ViewGroup {
+        /**
+         * Used to track what the expected number of items in the adapter should be.
+         * If the app changes this when we don't expect it, we'll throw a big obnoxious exception.
+         */
         private mExpectedAdapterCount = 0;
         private static COMPARATOR = (lhs:ItemInfo, rhs:ItemInfo):number=> {
             return lhs.position - rhs.position;

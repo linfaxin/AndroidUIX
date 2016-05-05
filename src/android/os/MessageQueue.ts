@@ -1,5 +1,6 @@
 /**
  * Created by linfaxin on 15/10/5.
+ * AndroidUI's impl.
  */
 ///<reference path="Message.ts"/>
 ///<reference path="Handler.ts"/>

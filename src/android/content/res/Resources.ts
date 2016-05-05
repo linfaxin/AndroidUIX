@@ -1,5 +1,6 @@
 /**
  * Created by linfaxin on 15/10/5.
+ * Androidui's impl
  */
 ///<reference path="../../util/DisplayMetrics.ts"/>
 ///<reference path="../../content/Context.ts"/>

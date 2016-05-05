@@ -1,5 +1,6 @@
 /**
  * Created by linfaxin on 16/1/21.
+ * androidui NOTE: ActionBarActivity is not same style as android's
  */
 ///<reference path="Activity.ts"/>
 ///<reference path="ActionBar.ts"/>

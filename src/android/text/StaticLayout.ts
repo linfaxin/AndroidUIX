@@ -75,14 +75,14 @@ export class StaticLayout extends Layout {
         //constructor( text:CharSequence) {
         //    super(text, null, 0, null, 0, 0);
         //    this.mColumns = StaticLayout.COLUMNS_ELLIPSIZE;
-        //    this.mLines = new Array<number>(ArrayUtils.idealIntArraySize(2 * this.mColumns));
+        //    this.mLines = androidui.util.ArrayCreator.newNumberArray(ArrayUtils.idealIntArraySize(2 * this.mColumns));
         //    this.mLineDirections = new Array<Layout.Directions>(ArrayUtils.idealIntArraySize(2 * this.mColumns));
         //    // FIXME This is never recycled
         //    this.mMeasured = MeasuredText.obtain();
         //}
         if(source==null){
             this.mColumns = StaticLayout.COLUMNS_ELLIPSIZE;
-            this.mLines = new Array<number>((2 * this.mColumns));
+            this.mLines = androidui.util.ArrayCreator.newNumberArray((2 * this.mColumns));
             this.mLineDirections = new Array<Layout.Directions>((2 * this.mColumns));
             // FIXME This is never recycled
             this.mMeasured = MeasuredText.obtain();
@@ -107,7 +107,7 @@ export class StaticLayout extends Layout {
             this.mColumns = StaticLayout.COLUMNS_NORMAL;
             this.mEllipsizedWidth = outerwidth;
         }
-        this.mLines = new Array<number>(2 * this.mColumns);
+        this.mLines = androidui.util.ArrayCreator.newNumberArray(2 * this.mColumns);
         this.mLineDirections = new Array<Layout.Directions>(2 * this.mColumns);
         this.mMaximumVisibleLineCount = maxLines;
         this.mMeasured = MeasuredText.obtain();
@@ -159,7 +159,7 @@ export class StaticLayout extends Layout {
                 chooseHt = StaticLayout.getParagraphSpans<LineHeightSpan>(spanned, paraStart, paraEnd, LineHeightSpan.type);
                 if (chooseHt.length != 0) {
                     if (chooseHtv == null || chooseHtv.length < chooseHt.length) {
-                        chooseHtv = new Array<number>(chooseHt.length);
+                        chooseHtv = androidui.util.ArrayCreator.newNumberArray(chooseHt.length);
                     }
                     for (let i:number = 0; i < chooseHt.length; i++) {
                         let o:number = spanned.getSpanStart(chooseHt[i]);
@@ -508,7 +508,7 @@ export class StaticLayout extends Layout {
         let lines:number[] = this.mLines;
         if (want >= lines.length) {
             let nlen:number = (want + 1);
-            let grow:number[] = new Array<number>(nlen);
+            let grow:number[] = androidui.util.ArrayCreator.newNumberArray(nlen);
             System.arraycopy(lines, 0, grow, 0, lines.length);
             this.mLines = grow;
             lines = grow;

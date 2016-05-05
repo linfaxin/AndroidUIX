@@ -1825,7 +1825,7 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     //    let backup:number[] = this.mCompatibilityParamsBackup;
     //    if (backup == null) {
     //        // we backup 4 elements, x, y, width, height
-    //        backup = this.mCompatibilityParamsBackup = new Array<number>(4);
+    //        backup = this.mCompatibilityParamsBackup = androidui.util.ArrayCreator.newNumberArray(4);
     //    }
     //    backup[0] = this.x;
     //    backup[1] = this.y;

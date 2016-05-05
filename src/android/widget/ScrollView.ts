@@ -1,6 +1,19 @@
-/**
- * Created by linfaxin on 15/10/17.
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="../view/View.ts"/>
 ///<reference path="../view/ViewGroup.ts"/>
 ///<reference path="../view/MotionEvent.ts"/>
@@ -14,6 +27,30 @@
 ///<reference path="../os/SystemClock.ts"/>
 ///<reference path="../graphics/Rect.ts"/>
 
+
+/**
+ * Layout container for a view hierarchy that can be scrolled by the user,
+ * allowing it to be larger than the physical display.  A ScrollView
+ * is a {@link FrameLayout}, meaning you should place one child in it
+ * containing the entire contents to scroll; this child may itself be a layout
+ * manager with a complex hierarchy of objects.  A child that is often used
+ * is a {@link LinearLayout} in a vertical orientation, presenting a vertical
+ * array of top-level items that the user can scroll through.
+ * <p>You should never use a ScrollView with a {@link ListView}, because
+ * ListView takes care of its own vertical scrolling.  Most importantly, doing this
+ * defeats all of the important optimizations in ListView for dealing with
+ * large lists, since it effectively forces the ListView to display its entire
+ * list of items to fill up the infinite container supplied by ScrollView.
+ * <p>The {@link TextView} class also
+ * takes care of its own scrolling, so does not require a ScrollView, but
+ * using the two together is possible to achieve the effect of a text view
+ * within a larger container.
+ *
+ * <p>ScrollView only supports vertical scrolling. For horizontal scrolling,
+ * use {@link HorizontalScrollView}.
+ *
+ * @attr ref android.R.styleable#ScrollView_fillViewport
+ */
 module android.widget {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
@@ -39,12 +76,39 @@ module android.widget {
         private mLastScroll = 0;
         private mTempRect = new Rect();
         private mScroller:OverScroller;
+        /**
+         * Position of the last motion event.
+         */
         private mLastMotionY = 0;
+        /**
+         * True when the layout has changed but the traversal has not come through yet.
+         * Ideally the view hierarchy would keep track of this for us.
+         */
         private mIsLayoutDirty = true;
+        /**
+         * The child to give focus to in the event that a child has requested focus while the
+         * layout is dirty. This prevents the scroll from being wrong if the child has not been
+         * laid out before requesting focus.
+         */
         private mChildToScrollTo:View;
+        /**
+         * True if the user is currently dragging this ScrollView around. This is
+         * not the same as 'is being flinged', which can be checked by
+         * mScroller.isFinished() (flinging begins when the user lifts his finger).
+         */
         private mIsBeingDragged = false;
+        /**
+         * Determines speed during touch scrolling
+         */
         private mVelocityTracker:VelocityTracker;
+        /**
+         * When set to true, the scroll view measure its child to make it fill the currently
+         * visible area.
+         */
         private mFillViewport = false;
+        /**
+         * Whether arrow scrolling is animated.
+         */
         private mSmoothScrollingEnabled = true;
 
         //private  mTouchSlop = 0;
@@ -69,6 +133,10 @@ module android.widget {
         //    return Math.max(this.mOverflingDistance, minOverY);
         //}
 
+        /**
+         * ID of the active pointer. This is used to retain consistency during
+         * drags/flings if multiple pointers are used.
+         */
         private mActivePointerId = ScrollView.INVALID_POINTER;
 
         constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
@@ -83,6 +151,10 @@ module android.widget {
             return true;
         }
 
+        /**
+         * @return The maximum amount this scroll view will scroll in response to
+         *   an arrow event.
+         */
         getMaxScrollAmount():number {
             return (ScrollView.MAX_SCROLL_FACTOR * (this.mBottom - this.mTop));
         }
@@ -111,6 +183,9 @@ module android.widget {
             return super.addView(...args);
         }
 
+        /**
+         * @return Returns true this ScrollView can be scrolled
+         */
         private canScroll():boolean {
             let child = this.getChildAt(0);
             if (child != null) {
@@ -120,10 +195,26 @@ module android.widget {
             return false;
         }
 
+        /**
+         * Indicates whether this ScrollView's content is stretched to fill the viewport.
+         *
+         * @return True if the content fills the viewport, false otherwise.
+         *
+         * @attr ref android.R.styleable#ScrollView_fillViewport
+         */
         isFillViewport():boolean {
             return this.mFillViewport;
         }
 
+        /**
+         * Indicates this ScrollView whether it should stretch its content height to fill
+         * the viewport or not.
+         *
+         * @param fillViewport True to stretch the content's height to the viewport's
+         *        boundaries, false otherwise.
+         *
+         * @attr ref android.R.styleable#ScrollView_fillViewport
+         */
         setFillViewport(fillViewport:boolean) {
             if (fillViewport != this.mFillViewport) {
                 this.mFillViewport = fillViewport;
@@ -131,10 +222,17 @@ module android.widget {
             }
         }
 
+        /**
+         * @return Whether arrow scrolling will animate its transition.
+         */
         isSmoothScrollingEnabled():boolean {
             return this.mSmoothScrollingEnabled;
         }
 
+        /**
+         * Set whether arrow scrolling will animate its transition.
+         * @param smoothScrollingEnabled whether arrow scrolling will animate its transition
+         */
         setSmoothScrollingEnabled(smoothScrollingEnabled:boolean) {
             this.mSmoothScrollingEnabled = smoothScrollingEnabled;
         }
@@ -175,6 +273,14 @@ module android.widget {
             return super.dispatchKeyEvent(event) || this.executeKeyEvent(event);
         }
 
+        /**
+         * You can call this function yourself to have the scroll view perform
+         * scrolling from a key event, just as if the event had been dispatched to
+         * it by the view hierarchy.
+         *
+         * @param event The key event to execute.
+         * @return Return true if the event was handled, else false.
+         */
         executeKeyEvent(event:KeyEvent):boolean {
             this.mTempRect.setEmpty();
 
@@ -577,6 +683,21 @@ module android.widget {
             return scrollRange;
         }
 
+        /**
+         * <p>
+         * Finds the next focusable component that fits in the specified bounds.
+         * </p>
+         *
+         * @param topFocus look for a candidate is the one at the top of the bounds
+         *                 if topFocus is true, or at the bottom of the bounds if topFocus is
+         *                 false
+         * @param top      the top offset of the bounds in which a focusable must be
+         *                 found
+         * @param bottom   the bottom offset of the bounds in which a focusable must
+         *                 be found
+         * @return the next focusable component in the bounds or null if none can
+         *         be found
+         */
         private findFocusableViewInBounds(topFocus:boolean, top:number, bottom:number):View {
             let focusables:List<View> = this.getFocusables(View.FOCUS_FORWARD);
             let focusCandidate:View = null;
@@ -670,6 +791,18 @@ module android.widget {
             return this.scrollAndFocus(direction, this.mTempRect.top, this.mTempRect.bottom);
         }
 
+        /**
+         * <p>Handles scrolling in response to a "home/end" shortcut press. This
+         * method will scroll the view to the top or bottom and give the focus
+         * to the topmost/bottommost component in the new visible area. If no
+         * component is a good candidate for focus, this scrollview reclaims the
+         * focus.</p>
+         *
+         * @param direction the scroll direction: {@link android.view.View#FOCUS_UP}
+         *                  to go the top of the view or
+         *                  {@link android.view.View#FOCUS_DOWN} to go the bottom
+         * @return true if the key event is consumed by this method, false otherwise
+         */
         fullScroll(direction:number):boolean {
             let down = direction == View.FOCUS_DOWN;
             let height = this.getHeight();
@@ -689,6 +822,18 @@ module android.widget {
             return this.scrollAndFocus(direction, this.mTempRect.top, this.mTempRect.bottom);
         }
 
+        /**
+         * <p>Scrolls the view to make the area defined by <code>top</code> and
+         * <code>bottom</code> visible. This method attempts to give the focus
+         * to a component visible in this area. If no component can be focused in
+         * the new visible area, the focus is reclaimed by this ScrollView.</p>
+         *
+         * @param direction the scroll direction: {@link android.view.View#FOCUS_UP}
+         *                  to go upward, {@link android.view.View#FOCUS_DOWN} to downward
+         * @param top       the top offset of the new area to be made visible
+         * @param bottom    the bottom offset of the new area to be made visible
+         * @return true if the key event is consumed by this method, false otherwise
+         */
         private scrollAndFocus(direction:number, top:number, bottom:number):boolean {
             let handled = true;
 
@@ -713,6 +858,14 @@ module android.widget {
 
             return handled;
         }
+
+        /**
+         * Handle scrolling in response to an up or down arrow click.
+         *
+         * @param direction The direction corresponding to the arrow key that was
+         *                  pressed
+         * @return True if we consumed the event, false otherwise
+         */
         arrowScroll(direction:number):boolean {
             let currentFocused = this.findFocus();
             if (currentFocused == this) currentFocused = null;
@@ -761,9 +914,17 @@ module android.widget {
             }
             return true;
         }
+        /**
+         * @return whether the descendant of this scroll view is scrolled off
+         *  screen.
+         */
         private isOffScreen(descendant:View):boolean {
             return !this.isWithinDeltaOfScreen(descendant, 0, this.getHeight());
         }
+        /**
+         * @return whether the descendant of this scroll view is within delta
+         *  pixels of being on the screen.
+         */
         private isWithinDeltaOfScreen(descendant:View, delta:number, height:number):boolean {
             descendant.getDrawingRect(this.mTempRect);
             this.offsetDescendantRectToMyCoords(descendant, this.mTempRect);
@@ -771,6 +932,11 @@ module android.widget {
             return (this.mTempRect.bottom + delta) >= this.getScrollY()
                 && (this.mTempRect.top - delta) <= (this.getScrollY() + height);
         }
+        /**
+         * Smooth scroll by a Y delta
+         *
+         * @param delta the number of pixels to scroll by on the Y axis
+         */
         private doScrollY(delta:number){
             if (delta != 0) {
                 if (this.mSmoothScrollingEnabled) {
@@ -780,6 +946,12 @@ module android.widget {
                 }
             }
         }
+        /**
+         * Like {@link View#scrollBy}, but scroll smoothly instead of immediately.
+         *
+         * @param dx the number of pixels to scroll by on the X axis
+         * @param dy the number of pixels to scroll by on the Y axis
+         */
         smoothScrollBy(dx:number, dy:number){
             if (this.getChildCount() == 0) {
                 // Nothing to do.
@@ -803,9 +975,19 @@ module android.widget {
             }
             this.mLastScroll = SystemClock.uptimeMillis();
         }
+        /**
+         * Like {@link #scrollTo}, but scroll smoothly instead of immediately.
+         *
+         * @param x the position where to scroll on the X axis
+         * @param y the position where to scroll on the Y axis
+         */
         smoothScrollTo(x:number, y:number) {
             this.smoothScrollBy(x - this.mScrollX, y - this.mScrollY);
         }
+        /**
+         * <p>The scroll range of a scroll view is the overall height of all of its
+         * children.</p>
+         */
         protected computeVerticalScrollRange() {
             const count = this.getChildCount();
             const contentHeight = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
@@ -913,6 +1095,11 @@ module android.widget {
             }
         }
 
+        /**
+         * Scrolls the view to the given child.
+         *
+         * @param child the View to scroll to
+         */
         private scrollToChild(child:View) {
             child.getDrawingRect(this.mTempRect);
 
@@ -925,6 +1112,14 @@ module android.widget {
                 this.scrollBy(0, scrollDelta);
             }
         }
+        /**
+         * If rect is off screen, scroll just enough to get it (or at least the
+         * first screen size chunk of it) on screen.
+         *
+         * @param rect      The rectangle.
+         * @param immediate True to scroll immediately without animation
+         * @return true if scrolling was performed
+         */
         private scrollToChildRect(rect:Rect, immediate:boolean) {
             const delta = this.computeScrollDeltaToGetChildRectOnScreen(rect);
             const scroll = delta != 0;
@@ -937,6 +1132,14 @@ module android.widget {
             }
             return scroll;
         }
+        /**
+         * Compute the amount to scroll in the Y direction in order to get
+         * a rectangle completely on the screen (or, if taller than the screen,
+         * at least the first screen size chunk of it).
+         *
+         * @param rect The rect.
+         * @return The scroll delta.
+         */
         computeScrollDeltaToGetChildRectOnScreen(rect:Rect):number{
             if (this.getChildCount() == 0) return 0;
 
@@ -1005,6 +1208,13 @@ module android.widget {
             super.requestChildFocus(child, focused);
         }
 
+        /**
+         * When looking for focus in children of a scroll view, need to be a little
+         * more careful not to give focus to something that is scrolled off screen.
+         *
+         * This is more expensive than the default {@link android.view.ViewGroup}
+         * implementation, otherwise this behavior might have been made the default.
+         */
         protected onRequestFocusInDescendants(direction:number, previouslyFocusedRect:Rect):boolean {
             // (ugh).
             if (direction == View.FOCUS_FORWARD) {
@@ -1081,6 +1291,9 @@ module android.widget {
             }
         }
 
+        /**
+         * Return true if child is a descendant of parent, (or equal to the parent).
+         */
         private static isViewDescendantOf(child:View, parent:View):boolean {
             if (child == parent) {
                 return true;
@@ -1089,6 +1302,13 @@ module android.widget {
             const theParent = child.getParent();
             return (theParent instanceof ViewGroup) && ScrollView.isViewDescendantOf(<any>theParent, parent);
         }
+        /**
+         * Fling the scroll view
+         *
+         * @param velocityY The initial velocity in the Y direction. Positive
+         *                  numbers mean that the finger/cursor is moving down the screen,
+         *                  which means we want to scroll towards the top.
+         */
         fling(velocityY:number){
             if (this.getChildCount() > 0) {
                 let height = this.getHeight() - this.mPaddingBottom - this.mPaddingTop;
@@ -1105,6 +1325,11 @@ module android.widget {
             this.recycleVelocityTracker();
         }
 
+        /**
+         * {@inheritDoc}
+         *
+         * <p>This version also clamps the scrolling to the bounds of our child.
+         */
         scrollTo(x:number, y:number){
             // we rely on the fact the View.scrollBy calls scrollTo.
             if (this.getChildCount() > 0) {

@@ -1,6 +1,6 @@
 /**
  * Created by linfaxin on 16/1/4.
- * lite impl of Android Intent. Only use for startActivity
+ * lite impl of Android's Intent.
  */
 ///<reference path="../os/Bundle.ts"/>
 

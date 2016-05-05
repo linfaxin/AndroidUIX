@@ -1,6 +1,19 @@
-/**
- * Created by linfaxin on 15/10/17.
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="../util/Log.ts"/>
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="MotionEvent.ts"/>
@@ -11,7 +24,16 @@ module android.view{
     import Pools = android.util.Pools;
     import MotionEvent = android.view.MotionEvent;
     import KeyEvent = android.view.KeyEvent;
-
+    /**
+     * Helper for tracking the velocity of touch events, for implementing
+     * flinging and other such gestures.
+     *
+     * Use {@link #obtain} to retrieve a new instance of the class when you are going
+     * to begin tracking.  Put the motion events you receive into it with
+     * {@link #addMovement(MotionEvent)}.  When you want to determine the velocity call
+     * {@link #computeCurrentVelocity(int)} and then call {@link #getXVelocity(int)}
+     * and {@link #getYVelocity(int)} to retrieve the velocity for each pointer id.
+     */
     export class VelocityTracker{
         private static TAG = "VelocityTracker";
         private static DEBUG = Log.VelocityTracker_DBG;
@@ -34,10 +56,22 @@ module android.view{
 
         private mNext:VelocityTracker;
 
+        /**
+         * Retrieve a new VelocityTracker object to watch the velocity of a
+         * motion.  Be sure to call {@link #recycle} when done.  You should
+         * generally only maintain an active object while tracking a movement,
+         * so that the VelocityTracker can be re-used elsewhere.
+         *
+         * @return Returns a new VelocityTracker.
+         */
         static obtain():VelocityTracker {
             let instance = VelocityTracker.sPool.acquire();
             return (instance != null) ? instance : new VelocityTracker();
         }
+        /**
+         * Return a VelocityTracker object back to be re-used by others.  You must
+         * not touch the object after calling this function.
+         */
         recycle() {
             this.clear();
             VelocityTracker.sPool.release(this);
@@ -52,6 +86,9 @@ module android.view{
             this.clear();
         }
 
+        /**
+         * Reset the velocity tracker back to its initial state.
+         */
         clear() {
             VelocityTracker.releasePointerList(this.mPointerListHead);
 
@@ -59,6 +96,15 @@ module android.view{
             this.mLastTouchIndex = 0;
         }
 
+        /**
+         * Add a user's movement to the tracker.  You should call this for the
+         * initial {@link MotionEvent#ACTION_DOWN}, the following
+         * {@link MotionEvent#ACTION_MOVE} events that you receive, and the
+         * final {@link MotionEvent#ACTION_UP}.  You can, however, call this
+         * for whichever events you desire.
+         *
+         * @param ev The MotionEvent you received and would like to track.
+         */
         addMovement(ev:MotionEvent) {
             let historySize = ev.getHistorySize();
             const pointerCount = ev.getPointerCount();
@@ -152,6 +198,19 @@ module android.view{
                 pointer = nextPointer;
             }
         }
+        /**
+         * Compute the current velocity based on the points that have been
+         * collected.  Only call this when you actually want to retrieve velocity
+         * information, as it is relatively expensive.  You can then retrieve
+         * the velocity with {@link #getXVelocity()} and
+         * {@link #getYVelocity()}.
+         *
+         * @param units The units you would like the velocity in.  A value of 1
+         * provides pixels per millisecond, 1000 provides pixels per second, etc.
+         * @param maxVelocity The maximum velocity that can be computed by this method.
+         * This value must be declared in the same unit as the units parameter. This value
+         * must be positive.
+         */
         computeCurrentVelocity(units:number, maxVelocity=Number.MAX_SAFE_INTEGER) {
             const lastTouchIndex = this.mLastTouchIndex;
 
@@ -226,10 +285,24 @@ module android.view{
                 }
             }
         }
+        /**
+         * Retrieve the last computed X velocity.  You must first call
+         * {@link #computeCurrentVelocity(int)} before calling this function.
+         *
+         * @param id Which pointer's velocity to return.
+         * @return The previously computed X velocity.
+         */
         getXVelocity(id=0):number {
             let pointer = this.getPointer(id);
             return pointer != null ? pointer.xVelocity : 0;
         }
+        /**
+         * Retrieve the last computed Y velocity.  You must first call
+         * {@link #computeCurrentVelocity(int)} before calling this function.
+         *
+         * @param id Which pointer's velocity to return.
+         * @return The previously computed Y velocity.
+         */
         getYVelocity(id=0):number {
             let pointer = this.getPointer(id);
             return pointer != null ? pointer.yVelocity : 0;
@@ -298,9 +371,9 @@ module android.view{
         xVelocity=0;
         yVelocity=0;
 
-        pastX = new Array<number>((<any>VelocityTracker).NUM_PAST);
-        pastY = new Array<number>((<any>VelocityTracker).NUM_PAST);
-        pastTime = new Array<number>((<any>VelocityTracker).NUM_PAST);// uses Long.MIN_VALUE as a sentinel
+        pastX = androidui.util.ArrayCreator.newNumberArray((<any>VelocityTracker).NUM_PAST);
+        pastY = androidui.util.ArrayCreator.newNumberArray((<any>VelocityTracker).NUM_PAST);
+        pastTime = androidui.util.ArrayCreator.newNumberArray((<any>VelocityTracker).NUM_PAST);// uses Long.MIN_VALUE as a sentinel
 
         generation = 0;
     }

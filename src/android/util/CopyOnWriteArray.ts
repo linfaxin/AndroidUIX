@@ -1,5 +1,6 @@
 /**
  * Created by linfaxin on 15/10/6.
+ * AndroidUI's impl.
  */
 module android.util {
 

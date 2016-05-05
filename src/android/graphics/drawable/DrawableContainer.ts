@@ -1,6 +1,19 @@
-/**
- * Created by linfaxin on 15/11/2.
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 ///<reference path="Drawable.ts"/>
 ///<reference path="../Canvas.ts"/>
 ///<reference path="../Rect.ts"/>
@@ -23,11 +36,24 @@ module android.graphics.drawable{
     import SparseArray = android.util.SparseArray;
     import SystemClock = android.os.SystemClock;
 
-
+    /**
+     * A helper class that contains several {@link Drawable}s and selects which one to use.
+     *
+     * You can subclass it to create your own DrawableContainers or directly use one its child classes.
+     */
     export class DrawableContainer extends Drawable implements Drawable.Callback {
         private static DEBUG = Log.DBG_DrawableContainer;
         private static TAG = "DrawableContainer";
-
+        /**
+         * To be proper, we should have a getter for dither (and alpha, etc.)
+         * so that proxy classes like this can save/restore their delegates'
+         * values, but we don't have getters. Since we do have setters
+         * (e.g. setDither), which this proxy forwards on, we have to have some
+         * default/initial setting.
+         *
+         * The initial setting for dither is now true, since it almost always seems
+         * to improve the quality at negligible cost.
+         */
         static DEFAULT_DITHER = true;
         private mDrawableContainerState:DrawableContainer.DrawableContainerState;
         private mCurrDrawable:Drawable;
@@ -42,6 +68,7 @@ module android.graphics.drawable{
         private mExitAnimationEnd=0;
         private mLastDrawable:Drawable;
 
+        // overrides from Drawable
         draw(canvas:Canvas) {
             if (this.mCurrDrawable != null) {
                 this.mCurrDrawable.draw(canvas);
@@ -102,10 +129,20 @@ module android.graphics.drawable{
             }
         }
 
+        /**
+         * Change the global fade duration when a new drawable is entering
+         * the scene.
+         * @param ms The amount of time to fade in milliseconds.
+         */
         setEnterFadeDuration(ms:number) {
             this.mDrawableContainerState.mEnterFadeDuration = ms;
         }
 
+        /**
+         * Change the global fade duration when a new drawable is leaving
+         * the scene.
+         * @param ms The amount of time to fade in milliseconds.
+         */
         setExitFadeDuration(ms:number) {
             this.mDrawableContainerState.mExitFadeDuration = ms;
         }
@@ -383,6 +420,13 @@ module android.graphics.drawable{
     }
 
     export module DrawableContainer{
+
+        /**
+         * A ConstantState that can contain several {@link Drawable}s.
+         *
+         * This class was made public to enable testing, and its visibility may change in a future
+         * release.
+         */
         export class DrawableContainerState implements Drawable.ConstantState{
             mOwner:DrawableContainer;
             private mDrawableFutures:SparseArray<ConstantStateFuture>;
@@ -521,6 +565,10 @@ module android.graphics.drawable{
             getChildCount() {
                 return this.mNumChildren;
             }
+
+            /*
+             * @deprecated Use {@link #getChild} instead.
+             */
             getChildren():Array<Drawable> {
                 // Create all futures for backwards compatibility.
                 this.createAllFutures();
@@ -559,6 +607,11 @@ module android.graphics.drawable{
 
                 this.mMutated = true;
             }
+            /**
+             * A boolean value indicating whether to use the maximum padding value
+             * of all frames in the set (false), or to use the padding value of the
+             * frame being shown (true). Default value is false.
+             */
             setVariablePadding(variable:boolean) {
                 this.mVariablePadding = variable;
             }
@@ -726,11 +779,21 @@ module android.graphics.drawable{
 
         }
 
+        /**
+         * Class capable of cloning a Drawable from another Drawable's
+         * ConstantState.
+         */
         class ConstantStateFuture{
             private mConstantState:Drawable.ConstantState;
             constructor(source:Drawable) {
                 this.mConstantState = source.getConstantState();
             }
+            /**
+             * Obtains and prepares the Drawable represented by this future.
+             *
+             * @param state the container into which this future will be placed
+             * @return a prepared Drawable
+             */
             get(state:DrawableContainerState):Drawable {
                 const result = this.mConstantState.newDrawable();
                 //result.setLayoutDirection(state.mLayoutDirection);

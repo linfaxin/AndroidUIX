@@ -512,7 +512,7 @@ module android.widget {
             this._attrBinder.addAttr('itemCount', (value)=>{
                 this.SELECTOR_WHEEL_ITEM_COUNT = this._attrBinder.parseNumber(value, this.SELECTOR_WHEEL_ITEM_COUNT);
                 this.SELECTOR_MIDDLE_ITEM_INDEX = Math.floor(this.SELECTOR_WHEEL_ITEM_COUNT / 2);
-                this.mSelectorIndices = new Array<number>(this.SELECTOR_WHEEL_ITEM_COUNT);
+                this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
             });
 
             // process style attributes
@@ -549,7 +549,7 @@ module android.widget {
             //let colors:ColorStateList = this.mInputText.getTextColors();
             paint.setColor(Color.DKGRAY);
             this.mSelectorWheelPaint = paint;
-            this.mSelectorIndices = new Array<number>(this.SELECTOR_WHEEL_ITEM_COUNT);
+            this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
             this.applyDefaultAttributes(R.attr.numberPickerStyle);
 
             if (this.mMinHeight_ != NumberPicker.SIZE_UNSPECIFIED && this.mMaxHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMinHeight_ > this.mMaxHeight) {

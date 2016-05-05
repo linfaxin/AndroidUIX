@@ -1,5 +1,6 @@
 /**
  * Created by linfaxin on 15/10/27.
+ * AndroidUI's impl: converted TypedValue to pixel value.
  */
 ///<reference path="DisplayMetrics.ts"/>
 ///<reference path="../content/res/Resources.ts"/>

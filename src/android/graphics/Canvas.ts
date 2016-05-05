@@ -1,6 +1,8 @@
 /**
  * Created by linfaxin on 15/10/13.
+ * AndroidUI's Canvas impl. will draw to web <canvas> in browser, and will replace by NativeCanvas in native.
  */
+
 ///<reference path="../util/Pools.ts"/>
 ///<reference path="../util/Log.ts"/>
 ///<reference path="Rect.ts"/>
@@ -17,6 +19,19 @@ module android.graphics {
     import Color = android.graphics.Color;
     import NetImage = androidui.image.NetImage;
 
+    /**
+     * The Canvas class holds the "draw" calls. To draw something, you need
+     * 4 basic components: A Bitmap to hold the pixels, a Canvas to host
+     * the draw calls (writing into the bitmap), a drawing primitive (e.g. Rect,
+     * Path, text, Bitmap), and a paint (to describe the colors and styles for the
+     * drawing).
+     *
+     * <div class="special reference">
+     * <h3>Developer Guides</h3>
+     * <p>For more information about how to use Canvas, read the
+     * <a href="{@docRoot}guide/topics/graphics/2d-graphics.html">
+     * Canvas and Drawables</a> developer guide.</p></div>
+     */
     export class Canvas {
         protected mCanvasElement:HTMLCanvasElement;
         private mWidth = 0;
@@ -25,7 +40,7 @@ module android.graphics {
         private _saveCount = 0;
         protected mCurrentClip:Rect;
         private mClipStateMap = new Map<number, Rect>();
-        protected static TempMatrixValue = new Array<number>(9);
+        protected static TempMatrixValue = androidui.util.ArrayCreator.newNumberArray(9);
 
 
         /**

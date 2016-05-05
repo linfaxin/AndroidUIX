@@ -20,6 +20,7 @@
 ///<reference path="../../android/graphics/Point.ts"/>
 ///<reference path="../../android/graphics/Rect.ts"/>
 ///<reference path="../../android/graphics/RectF.ts"/>
+///<reference path="../../androidui/util/ArrayCreator.ts"/>
 
 module android.graphics {
 import Log = android.util.Log;
@@ -63,7 +64,7 @@ export class Matrix {
 
     private static MATRIX_SIZE:number = 9;
 
-    private mValues = new Array<number>(Matrix.MATRIX_SIZE);
+    private mValues = androidui.util.ArrayCreator.newNumberArray(Matrix.MATRIX_SIZE);
 
     /** @hide */
     static IDENTITY_MATRIX:Matrix = (()=>{
@@ -589,7 +590,7 @@ export class Matrix {
         let tmpDest:number[] = dst;
         let inPlace:boolean = dst == src;
         if (inPlace) {
-            tmpDest = new Array<number>(dstIndex + count);
+            tmpDest = androidui.util.ArrayCreator.newNumberArray(dstIndex + count);
         }
         for (let i:number = 0; i < count; i += 2) {
             // just in case we are doing in place, we better put this in temp vars
@@ -714,7 +715,7 @@ export class Matrix {
      * @hide
      */
     toShortString(sb:StringBuilder):void  {
-        let values:number[] = new Array<number>(9);
+        let values:number[] = androidui.util.ArrayCreator.newNumberArray(9);
         this.getValues(values);
         sb.append('[');
         sb.append(values[0]);
@@ -743,7 +744,7 @@ export class Matrix {
      * @param matrix
      */
     private postTransform(matrix:number[]):void  {
-        let tmp:number[] = new Array<number>(9);
+        let tmp:number[] = androidui.util.ArrayCreator.newNumberArray(9);
         Matrix.multiply(tmp, this.mValues, matrix);
         this.mValues = tmp;
     }
@@ -754,7 +755,7 @@ export class Matrix {
      * @param matrix
      */
     private preTransform(matrix:number[]):void  {
-        let tmp:number[] = new Array<number>(9);
+        let tmp:number[] = androidui.util.ArrayCreator.newNumberArray(9);
         Matrix.multiply(tmp, matrix, this.mValues);
         this.mValues = tmp;
     }
@@ -792,7 +793,7 @@ export class Matrix {
      */
     /*package*/
     static getTranslate(dx:number, dy:number):number[]  {
-        return this.setTranslate(new Array<number>(9), dx, dy);
+        return this.setTranslate(androidui.util.ArrayCreator.newNumberArray(9), dx, dy);
     }
 
     /*package*/
@@ -821,8 +822,8 @@ export class Matrix {
         if(px==null || py==null){
             return  [ sx, 0, 0, 0, sy, 0, 0, 0, 1 ];
         }
-        let tmp:number[] = new Array<number>(9);
-        let tmp2:number[] = new Array<number>(9);
+        let tmp:number[] = androidui.util.ArrayCreator.newNumberArray(9);
+        let tmp2:number[] = androidui.util.ArrayCreator.newNumberArray(9);
         // TODO: do it in one pass
         // translate tmp so that the pivot is in 0,0
         this.setTranslate(tmp, -px, -py);
@@ -843,7 +844,7 @@ export class Matrix {
 
     /*package*/
     static getRotate_2(sin:number, cos:number):number[]  {
-        return this.setRotate_2(new Array<number>(9), sin, cos);
+        return this.setRotate_2(androidui.util.ArrayCreator.newNumberArray(9), sin, cos);
     }
 
     /*package*/
@@ -870,8 +871,8 @@ export class Matrix {
 
     /*package*/
     static getRotate_3(degrees:number, px:number, py:number):number[]  {
-        let tmp:number[] = new Array<number>(9);
-        let tmp2:number[] = new Array<number>(9);
+        let tmp:number[] = androidui.util.ArrayCreator.newNumberArray(9);
+        let tmp2:number[] = androidui.util.ArrayCreator.newNumberArray(9);
         // TODO: do it in one pass
         // translate so that the pivot is in 0,0
         this.setTranslate(tmp, -px, -py);
@@ -891,8 +892,8 @@ export class Matrix {
             return  [ 1, kx, 0, ky, 1, 0, 0, 0, 1 ];
         }
 
-        let tmp:number[] = new Array<number>(9);
-        let tmp2:number[] = new Array<number>(9);
+        let tmp:number[] = androidui.util.ArrayCreator.newNumberArray(9);
+        let tmp2:number[] = androidui.util.ArrayCreator.newNumberArray(9);
         // TODO: do it in one pass
         // translate so that the pivot is in 0,0
         this.setTranslate(tmp, -px, -py);

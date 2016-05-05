@@ -1621,9 +1621,9 @@ export class TabStops {
             for (let o of spans) {
                 if (TabStopSpan.isImpl(o)) {
                     if (stops == null) {
-                        stops = new Array<number>(10);
+                        stops = androidui.util.ArrayCreator.newNumberArray(10);
                     } else if (ns == stops.length) {
-                        let nstops:number[] = new Array<number>(ns * 2);
+                        let nstops:number[] = androidui.util.ArrayCreator.newNumberArray(ns * 2);
                         for (let i:number = 0; i < ns; ++i) {
                             nstops[i] = stops[i];
                         }
