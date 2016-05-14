@@ -104,6 +104,7 @@ module sample.app {
     export class SampleLifeCallbackFloatingActivity extends SampleLifeCallbackNormalActivity{
         protected onCreate(savedInstanceState:android.os.Bundle):void {
             super.onCreate(savedInstanceState);
+            this.setTitle('Float Activity');
             this.getActionBar().hide();
 
             let density = this.getResources().getDisplayMetrics().density;

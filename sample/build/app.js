@@ -757,6 +757,7 @@ var sample;
         class SampleLifeCallbackFloatingActivity extends SampleLifeCallbackNormalActivity {
             onCreate(savedInstanceState) {
                 super.onCreate(savedInstanceState);
+                this.setTitle('Float Activity');
                 this.getActionBar().hide();
                 let density = this.getResources().getDisplayMetrics().density;
                 this.getWindow().setFloating(true);

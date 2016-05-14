@@ -161,14 +161,21 @@ export module WindowManager{
             this.mWindowManager = windowManager;
         }
 
-        dispatchKeyEvent(event:android.view.KeyEvent):boolean {
+        getTopFocusableWindowView():ViewGroup {
             const count:number = this.getChildCount();
             for (let i:number = count-1; i >=0; i--) {
                 let child = this.getChildAt(i);
                 let wparams = <WindowManager.LayoutParams>child.getLayoutParams();
-                if(wparams.isFocusable() && child.dispatchKeyEvent(event)){
-                    return true;
+                if(wparams.isFocusable()){
+                    return <ViewGroup>child;
                 }
+            }
+        }
+
+        dispatchKeyEvent(event:android.view.KeyEvent):boolean {
+            let topFocusView = this.getTopFocusableWindowView();
+            if(topFocusView && topFocusView.dispatchKeyEvent(event)){
+                return true;
             }
             return super.dispatchKeyEvent(event);
         }

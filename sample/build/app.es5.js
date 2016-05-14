@@ -1039,6 +1039,7 @@ var sample;
                 key: "onCreate",
                 value: function onCreate(savedInstanceState) {
                     _get(Object.getPrototypeOf(SampleLifeCallbackFloatingActivity.prototype), "onCreate", this).call(this, savedInstanceState);
+                    this.setTitle('Float Activity');
                     this.getActionBar().hide();
                     var density = this.getResources().getDisplayMetrics().density;
                     this.getWindow().setFloating(true);

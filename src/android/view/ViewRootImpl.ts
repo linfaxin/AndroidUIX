@@ -327,7 +327,7 @@ module android.view {
                 }
 
                 // Ask host how big it wants to be
-                windowSizeMayChange ==  this.measureHierarchy(host, lp,
+                windowSizeMayChange = this.measureHierarchy(host, lp,
                     desiredWindowWidth, desiredWindowHeight) || windowSizeMayChange;
             }
 
@@ -858,6 +858,10 @@ module android.view {
         focusSearch(focused:View, direction:number):View {
             if (!(this.mView instanceof ViewGroup)) {
                 return null;
+            }
+            if(this.mView instanceof WindowManager.Layout){
+                let topWindow = (<WindowManager.Layout>this.mView).getTopFocusableWindowView();
+                if(topWindow) return FocusFinder.getInstance().findNextFocus(topWindow, focused, direction);
             }
             return FocusFinder.getInstance().findNextFocus(<ViewGroup>this.mView, focused, direction);
         }
