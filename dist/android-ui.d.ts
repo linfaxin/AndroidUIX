@@ -78,7 +78,7 @@ declare module android.graphics {
         right: number;
         bottom: number;
         constructor();
-        constructor(rect: Rect);
+        constructor(r: Rect);
         constructor(left: number, top: number, right: number, bottom: number);
         equals(r: Rect): boolean;
         toString(): string;
@@ -93,7 +93,7 @@ declare module android.graphics {
         exactCenterX(): number;
         exactCenterY(): number;
         setEmpty(): void;
-        set(rect: Rect): any;
+        set(src: Rect): any;
         set(left: any, top: any, right: any, bottom: any): any;
         offset(dx: any, dy: any): void;
         offsetTo(newLeft: any, newTop: any): void;
@@ -101,11 +101,13 @@ declare module android.graphics {
         contains(x: number, y: number): boolean;
         contains(left: number, top: number, right: number, bottom: number): boolean;
         contains(r: Rect): boolean;
-        intersect(rect: Rect): boolean;
+        intersect(r: Rect): boolean;
         intersect(left: number, top: number, right: number, bottom: number): boolean;
+        setIntersect(a: Rect, b: Rect): boolean;
         intersects(rect: Rect): boolean;
         intersects(left: number, top: number, right: number, bottom: number): boolean;
-        union(rect: Rect): any;
+        static intersects(a: Rect, b: Rect): boolean;
+        union(r: Rect): any;
         union(x: number, y: number): any;
         union(left: number, top: number, right: number, bottom: number): any;
         sort(): void;
@@ -226,6 +228,13 @@ declare module java.lang {
         };
         static currentTimeMillis(): number;
         static arraycopy(src: any[], srcPos: number, dest: any[], destPos: number, length: number): void;
+    }
+}
+declare module androidui.util {
+    class ArrayCreator {
+        static newNumberArray(size: number): Array<number>;
+        static newBooleanArray(size: number): Array<boolean>;
+        static fillArray(array: Array<any>, value: any): void;
     }
 }
 declare module android.util {
@@ -692,8 +701,7 @@ declare module android.graphics.drawable {
         invalidateSelf(): void;
         scheduleSelf(what: any, when: any): void;
         unscheduleSelf(what: any): void;
-        abstract: any;
-        setAlpha(alpha: number): void;
+        abstract setAlpha(alpha: number): void;
         getAlpha(): number;
         isStateful(): boolean;
         setState(stateSet: Array<number>): boolean;
@@ -1059,6 +1067,7 @@ declare module android.content.res {
         private static from(context);
         static getDisplayMetrics(): DisplayMetrics;
         getDisplayMetrics(): DisplayMetrics;
+        private fillDisplayMetrics(displayMetrics);
         private getObjectRef(refString);
         static buildAttrFinder: (refString: string) => any;
         getAttr(refString: string): any;
@@ -1241,22 +1250,17 @@ declare module android.view {
 declare module android.os {
     import Runnable = java.lang.Runnable;
     class Message {
-        private static Type_Normal;
-        private static Type_Traversal;
+        protected static Type_Normal: number;
+        protected static Type_Traversal: number;
         private mType;
         what: number;
         arg1: number;
         arg2: number;
         obj: any;
-        when: number;
-        target: Handler;
-        callback: Runnable;
+        protected when: number;
+        protected target: Handler;
+        protected callback: Runnable;
         private static sPool;
-        recycle(): void;
-        copyFrom(o: Message): void;
-        sendToTarget(): void;
-        clearForRecycle(): void;
-        toString(now?: number): string;
         static obtain(): Message;
         static obtain(orig: Message): Message;
         static obtain(h: Handler): Message;
@@ -1265,6 +1269,13 @@ declare module android.os {
         static obtain(h: Handler, what: number, obj: any): Message;
         static obtain(h: Handler, what: number, arg1: number, arg2: number): Message;
         static obtain(h: Handler, what: number, arg1: number, arg2: number, obj: any): Message;
+        recycle(): void;
+        copyFrom(o: Message): void;
+        setTarget(target: Handler): void;
+        getTarget(): Handler;
+        sendToTarget(): void;
+        protected clearForRecycle(): void;
+        toString(now?: number): string;
     }
 }
 declare module android.os {
@@ -1291,7 +1302,7 @@ declare module android.os {
     import Runnable = java.lang.Runnable;
     class Handler {
         mCallback: Handler.Callback;
-        constructor(mCallback?: Handler.Callback);
+        constructor(callback?: Handler.Callback);
         handleMessage(msg: Message): void;
         dispatchMessage(msg: Message): void;
         obtainMessage(): Message;
@@ -1300,7 +1311,7 @@ declare module android.os {
         obtainMessage(what: number, arg1: number, arg2: number): Message;
         obtainMessage(what: number, arg1: number, arg2: number, obj: any): Message;
         post(r: Runnable): boolean;
-        private postAsTraversal(r);
+        protected postAsTraversal(r: Runnable): boolean;
         postAtTime(r: Runnable, uptimeMillis: number): boolean;
         postAtTime(r: Runnable, token: any, uptimeMillis: number): boolean;
         postDelayed(r: Runnable, delayMillis: number): boolean;
@@ -1326,9 +1337,9 @@ declare module android.os {
 }
 declare module android.content.res {
     class ColorStateList {
-        mDefaultColor: number;
-        mColors: Array<number>;
         mStateSpecs: Array<Array<number>>;
+        mColors: Array<number>;
+        mDefaultColor: number;
         private static EMPTY;
         private static sCache;
         constructor(states: Array<Array<number>>, colors: Array<number>);
@@ -1357,6 +1368,7 @@ declare module android.util {
         private static UNIT_SCALE_MAP;
         private static initUnit();
         static applyDimension(unit: string, size: number, dm: DisplayMetrics): number;
+        static isDynamicUnitValue(valueWithUnit: string): boolean;
         static complexToDimensionPixelSize(valueWithUnit: string, baseValue?: number, metrics?: DisplayMetrics): number;
     }
 }
@@ -4795,17 +4807,18 @@ declare module android.view {
     class WindowManager {
         private mWindowsLayout;
         private mActiveWindow;
+        private static FocusViewRemenber;
         constructor(context: Context);
         getWindowsLayout(): ViewGroup;
         addWindow(window: Window): void;
         updateWindowLayout(window: Window, params: ViewGroup.LayoutParams): void;
         removeWindow(window: Window): void;
-        private clearWindowFocus();
     }
     module WindowManager {
         class Layout extends android.widget.FrameLayout {
             private mWindowManager;
             constructor(context: android.content.Context, windowManager: WindowManager);
+            getTopFocusableWindowView(): ViewGroup;
             dispatchKeyEvent(event: android.view.KeyEvent): boolean;
             protected isTransformedTouchPointInView(x: number, y: number, child: android.view.View, outLocalPoint: android.graphics.Point): boolean;
             onChildVisibilityChanged(child: android.view.View, oldVisibility: number, newVisibility: number): void;
@@ -7316,7 +7329,7 @@ declare module android.widget {
 declare module android.database {
     import ArrayList = java.util.ArrayList;
     abstract class Observable<T> {
-        mObservers: ArrayList<T>;
+        protected mObservers: ArrayList<T>;
         registerObserver(observer: T): void;
         unregisterObserver(observer: T): void;
         unregisterAll(): void;

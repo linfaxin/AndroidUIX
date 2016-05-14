@@ -1,5 +1,5 @@
-/*!
- * AndroidUI-WebApp v0.5.1
+/**
+ * AndroidUI-WebApp v0.5.2
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -216,10 +216,10 @@ var android;
                 }
                 else if (args.length === 4 || args.length === 0) {
                     let [left = 0, t = 0, right = 0, bottom = 0] = args;
-                    this.left = left;
-                    this.top = t;
-                    this.right = right;
-                    this.bottom = bottom;
+                    this.left = left || 0;
+                    this.top = t || 0;
+                    this.right = right || 0;
+                    this.bottom = bottom || 0;
                 }
             }
             equals(r) {
@@ -302,10 +302,10 @@ var android;
                 }
                 else {
                     let [left = 0, t = 0, right = 0, bottom = 0] = args;
-                    this.left = left;
-                    this.top = t;
-                    this.right = right;
-                    this.bottom = bottom;
+                    this.left = left || 0;
+                    this.top = t || 0;
+                    this.right = right || 0;
+                    this.bottom = bottom || 0;
                 }
             }
             offset(dx, dy) {
@@ -365,6 +365,16 @@ var android;
                     return false;
                 }
             }
+            setIntersect(a, b) {
+                if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) {
+                    this.left = Math.max(a.left, b.left);
+                    this.top = Math.max(a.top, b.top);
+                    this.right = Math.min(a.right, b.right);
+                    this.bottom = Math.min(a.bottom, b.bottom);
+                    return true;
+                }
+                return false;
+            }
             intersects(...args) {
                 if (args.length === 1) {
                     let rect = args[0];
@@ -374,6 +384,9 @@ var android;
                     let [left = 0, t = 0, right = 0, bottom = 0] = args;
                     return this.left < right && left < this.right && this.top < bottom && t < this.bottom;
                 }
+            }
+            static intersects(a, b) {
+                return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
             }
             union(...args) {
                 if (arguments.length === 1) {
@@ -762,6 +775,31 @@ var java;
         lang.System = System;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
+var androidui;
+(function (androidui) {
+    var util;
+    (function (util) {
+        class ArrayCreator {
+            static newNumberArray(size) {
+                let array = new Array(size);
+                if (size > 0)
+                    ArrayCreator.fillArray(array, 0);
+                return array;
+            }
+            static newBooleanArray(size) {
+                let array = new Array(size);
+                ArrayCreator.fillArray(array, false);
+                return array;
+            }
+            static fillArray(array, value) {
+                for (var i = 0, length = array.length; i < length; i++) {
+                    array[i] = value;
+                }
+            }
+        }
+        util.ArrayCreator = ArrayCreator;
+    })(util = androidui.util || (androidui.util = {}));
+})(androidui || (androidui = {}));
 var android;
 (function (android) {
     var util;
@@ -845,7 +883,7 @@ var android;
                 if (states.length == newSize) {
                     return states;
                 }
-                let trimmedStates = new Array(newSize);
+                let trimmedStates = androidui.util.ArrayCreator.newNumberArray(newSize);
                 System.arraycopy(states, 0, trimmedStates, 0, newSize);
                 return trimmedStates;
             }
@@ -1242,7 +1280,7 @@ var android;
                     | (text.length - contextEnd) | cursorOpt) < 0) || cursorOpt > Paint.CURSOR_OPT_MAX_VALUE) {
                     throw Error(`new IndexOutOfBoundsException()`);
                 }
-                const scalarArray = new Array(contextLength);
+                const scalarArray = androidui.util.ArrayCreator.newNumberArray(contextLength);
                 this.getTextRunAdvances_count(text, contextStart, contextLength, contextStart, contextLength, flags, scalarArray, 0);
                 let pos = offset - contextStart;
                 switch (cursorOpt) {
@@ -1484,7 +1522,7 @@ var android;
         var StringBuilder = java.lang.StringBuilder;
         class Matrix {
             constructor(values) {
-                this.mValues = new Array(Matrix.MATRIX_SIZE);
+                this.mValues = androidui.util.ArrayCreator.newNumberArray(Matrix.MATRIX_SIZE);
                 if (values instanceof Matrix)
                     this.set(values);
                 else if (values instanceof Array) {
@@ -1707,7 +1745,7 @@ var android;
                 let tmpDest = dst;
                 let inPlace = dst == src;
                 if (inPlace) {
-                    tmpDest = new Array(dstIndex + count);
+                    tmpDest = androidui.util.ArrayCreator.newNumberArray(dstIndex + count);
                 }
                 for (let i = 0; i < count; i += 2) {
                     let x = this.mValues[0] * src[i + srcIndex] + this.mValues[1] * src[i + srcIndex + 1] + this.mValues[2];
@@ -1776,7 +1814,7 @@ var android;
                 return sb.toString();
             }
             toShortString(sb) {
-                let values = new Array(9);
+                let values = androidui.util.ArrayCreator.newNumberArray(9);
                 this.getValues(values);
                 sb.append('[');
                 sb.append(values[0]);
@@ -1799,12 +1837,12 @@ var android;
                 sb.append(']');
             }
             postTransform(matrix) {
-                let tmp = new Array(9);
+                let tmp = androidui.util.ArrayCreator.newNumberArray(9);
                 Matrix.multiply(tmp, this.mValues, matrix);
                 this.mValues = tmp;
             }
             preTransform(matrix) {
-                let tmp = new Array(9);
+                let tmp = androidui.util.ArrayCreator.newNumberArray(9);
                 Matrix.multiply(tmp, matrix, this.mValues);
                 this.mValues = tmp;
             }
@@ -1823,7 +1861,7 @@ var android;
                 dest[8] = b[6] * a[2] + b[7] * a[5] + b[8] * a[8];
             }
             static getTranslate(dx, dy) {
-                return this.setTranslate(new Array(9), dx, dy);
+                return this.setTranslate(androidui.util.ArrayCreator.newNumberArray(9), dx, dy);
             }
             static setTranslate(dest, dx, dy) {
                 dest[0] = 1;
@@ -1841,8 +1879,8 @@ var android;
                 if (px == null || py == null) {
                     return [sx, 0, 0, 0, sy, 0, 0, 0, 1];
                 }
-                let tmp = new Array(9);
-                let tmp2 = new Array(9);
+                let tmp = androidui.util.ArrayCreator.newNumberArray(9);
+                let tmp2 = androidui.util.ArrayCreator.newNumberArray(9);
                 this.setTranslate(tmp, -px, -py);
                 Matrix.multiply(tmp2, tmp, Matrix.getScale(sx, sy));
                 Matrix.multiply(tmp, tmp2, Matrix.getTranslate(px, py));
@@ -1855,7 +1893,7 @@ var android;
                 return Matrix.getRotate_2(sin, cos);
             }
             static getRotate_2(sin, cos) {
-                return this.setRotate_2(new Array(9), sin, cos);
+                return this.setRotate_2(androidui.util.ArrayCreator.newNumberArray(9), sin, cos);
             }
             static setRotate_1(dest, degrees) {
                 let rad = Math_toRadians(degrees);
@@ -1876,8 +1914,8 @@ var android;
                 return dest;
             }
             static getRotate_3(degrees, px, py) {
-                let tmp = new Array(9);
-                let tmp2 = new Array(9);
+                let tmp = androidui.util.ArrayCreator.newNumberArray(9);
+                let tmp2 = androidui.util.ArrayCreator.newNumberArray(9);
                 this.setTranslate(tmp, -px, -py);
                 let rad = Math_toRadians(degrees);
                 let cos = Math.cos(rad);
@@ -1890,8 +1928,8 @@ var android;
                 if (px == null || py == null) {
                     return [1, kx, 0, ky, 1, 0, 0, 0, 1];
                 }
-                let tmp = new Array(9);
-                let tmp2 = new Array(9);
+                let tmp = androidui.util.ArrayCreator.newNumberArray(9);
+                let tmp2 = androidui.util.ArrayCreator.newNumberArray(9);
                 this.setTranslate(tmp, -px, -py);
                 Matrix.multiply(tmp2, tmp, [1, kx, 0, ky, 1, 0, 0, 0, 1]);
                 Matrix.multiply(tmp, tmp2, Matrix.getTranslate(px, py));
@@ -2824,7 +2862,7 @@ var android;
                 }
             }
         }
-        Canvas.TempMatrixValue = new Array(9);
+        Canvas.TempMatrixValue = androidui.util.ArrayCreator.newNumberArray(9);
         Canvas.DIRECTION_LTR = 0;
         Canvas.DIRECTION_RTL = 1;
         Canvas.sRectPool = new Pools.SynchronizedPool(20);
@@ -4320,6 +4358,9 @@ var android;
             class Resources {
                 constructor(context) {
                     this.context = context;
+                    window.addEventListener('resize', () => {
+                        this.fillDisplayMetrics(this.displayMetrics);
+                    });
                 }
                 static getSystem() {
                     return Resources.instance;
@@ -4334,7 +4375,10 @@ var android;
                     if (this.displayMetrics)
                         return this.displayMetrics;
                     this.displayMetrics = new DisplayMetrics();
-                    let displayMetrics = this.displayMetrics;
+                    this.fillDisplayMetrics(this.displayMetrics);
+                    return this.displayMetrics;
+                }
+                fillDisplayMetrics(displayMetrics) {
                     let density = window.devicePixelRatio;
                     displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.ydpi = window.screen.deviceYDPI || DisplayMetrics.DENSITY_DEFAULT;
@@ -4343,7 +4387,6 @@ var android;
                     displayMetrics.scaledDensity = density;
                     displayMetrics.widthPixels = document.documentElement.offsetWidth * density;
                     displayMetrics.heightPixels = document.documentElement.offsetHeight * density;
-                    return displayMetrics;
                 }
                 getObjectRef(refString) {
                     if (refString.startsWith('@'))
@@ -5071,6 +5114,40 @@ var android;
                 this.arg2 = 0;
                 this.when = 0;
             }
+            static obtain(...args) {
+                let m = Message.sPool.acquire();
+                m = m || new Message();
+                if (args.length === 1) {
+                    if (args[0] instanceof Message) {
+                        let orig = args[0];
+                        [m.target, m.what, m.arg1, m.arg2, m.obj, m.callback] =
+                            [orig.target, orig.what, orig.arg1, orig.arg2, orig.obj, orig.callback];
+                    }
+                    else if (args[0] instanceof os.Handler) {
+                        m.target = args[0];
+                    }
+                    else {
+                        throw new Error('unknown args');
+                    }
+                }
+                else if (args.length === 2) {
+                    m.target = args[0];
+                    if (typeof args[1] === 'number')
+                        m.what = args[1];
+                    else
+                        m.callback = args[1];
+                }
+                else if (args.length === 3) {
+                    [m.target, m.what, m.obj] = args;
+                }
+                else if (args.length === 4) {
+                    [m.target, m.what, m.arg1, m.arg2] = args;
+                }
+                else {
+                    [m.target, m.what, m.arg1 = 0, m.arg2, m.obj, m.callback] = args;
+                }
+                return m;
+            }
             recycle() {
                 this.clearForRecycle();
                 Message.sPool.release(this);
@@ -5081,6 +5158,12 @@ var android;
                 this.arg1 = o.arg1;
                 this.arg2 = o.arg2;
                 this.obj = o.obj;
+            }
+            setTarget(target) {
+                this.target = target;
+            }
+            getTarget() {
+                return this.target;
             }
             sendToTarget() {
                 this.target.sendMessage(this);
@@ -5115,37 +5198,6 @@ var android;
                 }
                 b.append(" }");
                 return b.toString();
-            }
-            static obtain(...args) {
-                let m = Message.sPool.acquire();
-                m = m || new Message();
-                if (args.length === 1) {
-                    if (args[0] instanceof Message) {
-                        let orig = args[0];
-                        [m.target, m.what, m.arg1, m.arg2, m.obj, m.callback] =
-                            [orig.target, orig.what, orig.arg1, orig.arg2, orig.obj, orig.callback];
-                    }
-                    else {
-                        m.target = args[0];
-                    }
-                }
-                else if (args.length === 2) {
-                    m.target = args[0];
-                    if (typeof args[1] === 'number')
-                        m.what = args[1];
-                    else
-                        m.callback = args[1];
-                }
-                else if (args.length === 3) {
-                    [m.target, m.what, m.obj] = args;
-                }
-                else if (args.length === 4) {
-                    [m.target, m.what, m.arg1, m.arg2] = args;
-                }
-                else {
-                    [m.target, m.what, m.arg1 = 0, m.arg2, m.obj, m.callback] = args;
-                }
-                return m;
             }
         }
         Message.Type_Normal = 0;
@@ -5276,8 +5328,8 @@ var android;
     var os;
     (function (os) {
         class Handler {
-            constructor(mCallback) {
-                this.mCallback = mCallback;
+            constructor(callback) {
+                this.mCallback = callback;
             }
             handleMessage(msg) {
             }
@@ -5413,7 +5465,7 @@ var android;
                     return csl;
                 }
                 withAlpha(alpha) {
-                    let colors = new Array(this.mColors.length);
+                    let colors = androidui.util.ArrayCreator.newNumberArray(this.mColors.length);
                     let len = colors.length;
                     for (let i = 0; i < len; i++) {
                         colors[i] = (this.mColors[i] & 0xFFFFFF) | (alpha << 24);
@@ -5479,6 +5531,11 @@ var android;
                     scale = TypedValue.UNIT_SCALE_MAP.get(unit) || 1;
                 }
                 return size * scale;
+            }
+            static isDynamicUnitValue(valueWithUnit) {
+                if (typeof valueWithUnit != "string")
+                    return false;
+                return valueWithUnit.match(`${TypedValue.COMPLEX_UNIT_VH}$|${TypedValue.COMPLEX_UNIT_VW}$|${TypedValue.COMPLEX_UNIT_FRACTION}$`) != null;
             }
             static complexToDimensionPixelSize(valueWithUnit, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()) {
                 if (this.initUnit)
@@ -5614,7 +5671,7 @@ var java;
         class Arrays {
             static sort(a, fromIndex, toIndex) {
                 Arrays.rangeCheck(a.length, fromIndex, toIndex);
-                var sort = new Array(toIndex - fromIndex);
+                var sort = androidui.util.ArrayCreator.newNumberArray(toIndex - fromIndex);
                 for (let i = fromIndex; i < toIndex; i++) {
                     sort[i - fromIndex] = a[i];
                 }
@@ -7055,10 +7112,10 @@ var android;
                     if (this.mPaddingL != null && this.mPaddingL.length >= N) {
                         return;
                     }
-                    this.mPaddingL = new Array(N);
-                    this.mPaddingT = new Array(N);
-                    this.mPaddingR = new Array(N);
-                    this.mPaddingB = new Array(N);
+                    this.mPaddingL = androidui.util.ArrayCreator.newNumberArray(N);
+                    this.mPaddingT = androidui.util.ArrayCreator.newNumberArray(N);
+                    this.mPaddingR = androidui.util.ArrayCreator.newNumberArray(N);
+                    this.mPaddingB = androidui.util.ArrayCreator.newNumberArray(N);
                     for (var i = 0; i < N; i++) {
                         this.mPaddingL[i] = 0;
                         this.mPaddingT[i] = 0;
@@ -8263,7 +8320,7 @@ var android;
                             this.mOneShot = orig.mOneShot;
                         }
                         else {
-                            this.mDurations = new Array(this.getCapacity());
+                            this.mDurations = androidui.util.ArrayCreator.newNumberArray(this.getCapacity());
                             this.mOneShot = true;
                         }
                     }
@@ -14183,11 +14240,11 @@ var android;
                 }
                 let fullState;
                 if (drawableState != null) {
-                    fullState = new Array(drawableState.length + extraSpace);
+                    fullState = androidui.util.ArrayCreator.newNumberArray(drawableState.length + extraSpace);
                     System.arraycopy(drawableState, 0, fullState, 0, drawableState.length);
                 }
                 else {
-                    fullState = new Array(extraSpace);
+                    fullState = androidui.util.ArrayCreator.newNumberArray(extraSpace);
                 }
                 return fullState;
             }
@@ -15125,7 +15182,7 @@ var android;
             View.VIEW_STATE_SETS = new Array(1 << NUM_BITS);
             for (let i = 0; i < View.VIEW_STATE_SETS.length; i++) {
                 let numBits = Integer_bitCount(i);
-                const stataSet = new Array(numBits);
+                const stataSet = androidui.util.ArrayCreator.newNumberArray(numBits);
                 let pos = 0;
                 for (let j = 0; j < orderedIds.length; j += 2) {
                     if ((i & orderedIds[j + 1]) != 0) {
@@ -15197,7 +15254,7 @@ var android;
         View.TEXT_ALIGNMENT_DEFAULT = View.TEXT_ALIGNMENT_GRAVITY;
         View.TEXT_ALIGNMENT_RESOLVED_DEFAULT = View.TEXT_ALIGNMENT_GRAVITY;
         View.AndroidViewProperty = 'AndroidView';
-        View.TempMatrixValue = new Array(9);
+        View.TempMatrixValue = androidui.util.ArrayCreator.newNumberArray(9);
         view_2.View = View;
         (function (View) {
             class TransformationInfo {
@@ -15263,9 +15320,9 @@ var android;
                     this.mPoint = new Point();
                     this.mTmpMatrix = new Matrix();
                     this.mTmpTransformation = new Transformation();
-                    this.mTmpTransformLocation = new Array(2);
+                    this.mTmpTransformLocation = androidui.util.ArrayCreator.newNumberArray(2);
                     this.mScrollContainers = new Set();
-                    this.mInvalidateChildLocation = new Array(2);
+                    this.mInvalidateChildLocation = androidui.util.ArrayCreator.newNumberArray(2);
                     this.mHasWindowFocus = false;
                     this.mWindowVisibility = 0;
                     this.mViewRootImpl = mViewRootImpl;
@@ -16922,7 +16979,7 @@ var android;
                             windowSizeMayChange = true;
                         }
                     }
-                    windowSizeMayChange == this.measureHierarchy(host, lp, desiredWindowWidth, desiredWindowHeight) || windowSizeMayChange;
+                    windowSizeMayChange = this.measureHierarchy(host, lp, desiredWindowWidth, desiredWindowHeight) || windowSizeMayChange;
                 }
                 if (layoutRequested) {
                     this.mLayoutRequested = false;
@@ -17313,6 +17370,11 @@ var android;
             focusSearch(focused, direction) {
                 if (!(this.mView instanceof view_3.ViewGroup)) {
                     return null;
+                }
+                if (this.mView instanceof view_3.WindowManager.Layout) {
+                    let topWindow = this.mView.getTopFocusableWindowView();
+                    if (topWindow)
+                        return view_3.FocusFinder.getInstance().findNextFocus(topWindow, focused, direction);
                 }
                 return view_3.FocusFinder.getInstance().findNextFocus(this.mView, focused, direction);
             }
@@ -18260,7 +18322,6 @@ var android;
     (function (view_5) {
         var Rect = android.graphics.Rect;
         var SystemClock = android.os.SystemClock;
-        var TypedValue = android.util.TypedValue;
         var System = java.lang.System;
         var ArrayList = java.util.ArrayList;
         var Integer = java.lang.Integer;
@@ -19579,7 +19640,7 @@ var android;
                 rect.offset(dx, dy);
                 if (offset != null) {
                     if (!child.hasIdentityMatrix()) {
-                        let position = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformLocation : new Array(2);
+                        let position = this.mAttachInfo != null ? this.mAttachInfo.mTmpTransformLocation : androidui.util.ArrayCreator.newNumberArray(2);
                         position[0] = offset.x;
                         position[1] = offset.y;
                         child.getMatrix().mapPoints(position);
@@ -19971,6 +20032,7 @@ var android;
         ViewGroup.CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
         view_5.ViewGroup = ViewGroup;
         (function (ViewGroup) {
+            var TypedValue = android.util.TypedValue;
             class LayoutParams {
                 constructor(...args) {
                     this._width = 0;
@@ -20016,11 +20078,15 @@ var android;
                     else {
                         let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                         try {
-                            this._width = TypedValue.complexToDimensionPixelSize(this._width, parentWidth, this._measuringMeasureSpec);
+                            let parsedValue = TypedValue.complexToDimensionPixelSize(this._width, parentWidth, this._measuringMeasureSpec);
+                            if (TypedValue.isDynamicUnitValue(this._width)) {
+                                return parsedValue;
+                            }
+                            this._width = parsedValue;
                         }
                         catch (e) {
                             console.error(e);
-                            this._width = -2;
+                            return -2;
                         }
                     }
                     return this._width;
@@ -20039,11 +20105,15 @@ var android;
                     else {
                         let parentHeight = view_5.View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
                         try {
-                            this._height = TypedValue.complexToDimensionPixelSize(this._height, parentHeight, this._measuringMeasureSpec);
+                            let parsedValue = TypedValue.complexToDimensionPixelSize(this._height, parentHeight, this._measuringMeasureSpec);
+                            if (TypedValue.isDynamicUnitValue(this._height)) {
+                                return parsedValue;
+                            }
+                            this._height = parsedValue;
                         }
                         catch (e) {
                             console.error(e);
-                            this._height = -2;
+                            return -2;
                         }
                     }
                     return this._height;
@@ -20143,11 +20213,15 @@ var android;
                         return this._leftMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        this._leftMargin = TypedValue.complexToDimensionPixelSize(this._leftMargin, parentWidth, this._measuringMeasureSpec);
+                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._leftMargin, parentWidth, this._measuringMeasureSpec);
+                        if (TypedValue.isDynamicUnitValue(this._leftMargin)) {
+                            return parsedValue;
+                        }
+                        this._leftMargin = parsedValue;
                     }
                     catch (e) {
                         console.warn(e);
-                        this._leftMargin = 0;
+                        return 0;
                     }
                     return this._leftMargin;
                 }
@@ -20156,11 +20230,15 @@ var android;
                         return this._topMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        this._topMargin = TypedValue.complexToDimensionPixelSize(this._topMargin, parentWidth, this._measuringMeasureSpec);
+                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._topMargin, parentWidth, this._measuringMeasureSpec);
+                        if (TypedValue.isDynamicUnitValue(this._topMargin)) {
+                            return parsedValue;
+                        }
+                        this._topMargin = parsedValue;
                     }
                     catch (e) {
                         console.warn(e);
-                        this._topMargin = 0;
+                        return 0;
                     }
                     return this._topMargin;
                 }
@@ -20169,11 +20247,15 @@ var android;
                         return this._rightMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        this._rightMargin = TypedValue.complexToDimensionPixelSize(this._rightMargin, parentWidth, this._measuringMeasureSpec);
+                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._rightMargin, parentWidth, this._measuringMeasureSpec);
+                        if (TypedValue.isDynamicUnitValue(this._rightMargin)) {
+                            return parsedValue;
+                        }
+                        this._rightMargin = parsedValue;
                     }
                     catch (e) {
                         console.warn(e);
-                        this._rightMargin = 0;
+                        return 0;
                     }
                     return this._rightMargin;
                 }
@@ -20182,11 +20264,15 @@ var android;
                         return this._bottomMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        this._bottomMargin = TypedValue.complexToDimensionPixelSize(this._bottomMargin, parentWidth, this._measuringMeasureSpec);
+                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._bottomMargin, parentWidth, this._measuringMeasureSpec);
+                        if (TypedValue.isDynamicUnitValue(this._bottomMargin)) {
+                            return parsedValue;
+                        }
+                        this._bottomMargin = parsedValue;
                     }
                     catch (e) {
                         console.warn(e);
-                        this._bottomMargin = 0;
+                        return 0;
                     }
                     return this._bottomMargin;
                 }
@@ -20904,9 +20990,9 @@ var android;
                 const length = allSpans.length;
                 if (length > 0 && (this.spans == null || this.spans.length < length)) {
                     this.spans = new Array(length);
-                    this.spanStarts = new Array(length);
-                    this.spanEnds = new Array(length);
-                    this.spanFlags = new Array(length);
+                    this.spanStarts = androidui.util.ArrayCreator.newNumberArray(length);
+                    this.spanEnds = androidui.util.ArrayCreator.newNumberArray(length);
+                    this.spanFlags = androidui.util.ArrayCreator.newNumberArray(length);
                 }
                 this.numberOfSpans = 0;
                 for (let i = 0; i < length; i++) {
@@ -22582,10 +22668,10 @@ var android;
                         for (let o of spans) {
                             if (TabStopSpan.isImpl(o)) {
                                 if (stops == null) {
-                                    stops = new Array(10);
+                                    stops = androidui.util.ArrayCreator.newNumberArray(10);
                                 }
                                 else if (ns == stops.length) {
-                                    let nstops = new Array(ns * 2);
+                                    let nstops = androidui.util.ArrayCreator.newNumberArray(ns * 2);
                                     for (let i = 0; i < ns; ++i) {
                                         nstops[i] = stops[i];
                                     }
@@ -22738,7 +22824,7 @@ var android;
                 this.mLen = len;
                 this.mPos = 0;
                 if (this.mWidths == null || this.mWidths.length < len) {
-                    this.mWidths = new Array(len);
+                    this.mWidths = androidui.util.ArrayCreator.newNumberArray(len);
                 }
                 this.mChars = text.toString().substring(start, end);
                 if (Spanned.isImplements(text)) {
@@ -23131,11 +23217,28 @@ var android;
                 window.setContainer(this);
                 let decorView = window.getDecorView();
                 let type = wparams.type;
+                let lastFocusWindowView = this.mWindowsLayout.getTopFocusableWindowView();
                 this.mWindowsLayout.addView(decorView, wparams);
                 decorView.dispatchAttachedToWindow(window.mAttachInfo, 0);
                 if (wparams.isFocusable()) {
-                    this.clearWindowFocus();
                     decorView.dispatchWindowFocusChanged(true);
+                    if (lastFocusWindowView && lastFocusWindowView.hasFocus()) {
+                        const focused = lastFocusWindowView.findFocus();
+                        lastFocusWindowView[WindowManager.FocusViewRemenber] = focused;
+                        if (focused != null) {
+                            focused.clearFocusInternal(true, false);
+                        }
+                        lastFocusWindowView.dispatchWindowFocusChanged(false);
+                        decorView.addOnLayoutChangeListener({
+                            onLayoutChange(v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) {
+                                decorView.removeOnLayoutChangeListener(this);
+                                const newWindowFocused = view.FocusFinder.getInstance().findNextFocus(decorView, null, View.FOCUS_DOWN);
+                                if (newWindowFocused != null) {
+                                    newWindowFocused.requestFocus(View.FOCUS_DOWN);
+                                }
+                            }
+                        });
+                    }
                 }
                 if (decorView instanceof ViewGroup) {
                     decorView.setMotionEventSplittingEnabled(wparams.isSplitTouch());
@@ -23174,10 +23277,19 @@ var android;
                 else {
                     this.mWindowsLayout.removeView(decor);
                 }
-            }
-            clearWindowFocus() {
+                if (wparams.isFocusable()) {
+                    let resumeWindowView = this.mWindowsLayout.getTopFocusableWindowView();
+                    if (resumeWindowView) {
+                        resumeWindowView.dispatchWindowFocusChanged(true);
+                    }
+                    let resumeFocus = resumeWindowView[WindowManager.FocusViewRemenber];
+                    if (resumeFocus) {
+                        resumeFocus.requestFocus(View.FOCUS_DOWN);
+                    }
+                }
             }
         }
+        WindowManager.FocusViewRemenber = Symbol();
         view.WindowManager = WindowManager;
         (function (WindowManager) {
             class Layout extends android.widget.FrameLayout {
@@ -23185,14 +23297,20 @@ var android;
                     super(context);
                     this.mWindowManager = windowManager;
                 }
-                dispatchKeyEvent(event) {
+                getTopFocusableWindowView() {
                     const count = this.getChildCount();
                     for (let i = count - 1; i >= 0; i--) {
                         let child = this.getChildAt(i);
                         let wparams = child.getLayoutParams();
-                        if (wparams.isFocusable() && child.dispatchKeyEvent(event)) {
-                            return true;
+                        if (wparams.isFocusable()) {
+                            return child;
                         }
+                    }
+                }
+                dispatchKeyEvent(event) {
+                    let topFocusView = this.getTopFocusableWindowView();
+                    if (topFocusView && topFocusView.dispatchKeyEvent(event)) {
+                        return true;
                     }
                     return super.dispatchKeyEvent(event);
                 }
@@ -23777,7 +23895,7 @@ var android;
                     let storedOffsets = this.mStoredOffsets;
                     if (startOffsetSet) {
                         if (storedOffsets == null || storedOffsets.length != count) {
-                            storedOffsets = this.mStoredOffsets = new Array(count);
+                            storedOffsets = this.mStoredOffsets = androidui.util.ArrayCreator.newNumberArray(count);
                         }
                     }
                     else if (storedOffsets != null) {
@@ -25319,9 +25437,9 @@ var android;
                 this.id = 0;
                 this.xVelocity = 0;
                 this.yVelocity = 0;
-                this.pastX = new Array(VelocityTracker.NUM_PAST);
-                this.pastY = new Array(VelocityTracker.NUM_PAST);
-                this.pastTime = new Array(VelocityTracker.NUM_PAST);
+                this.pastX = androidui.util.ArrayCreator.newNumberArray(VelocityTracker.NUM_PAST);
+                this.pastY = androidui.util.ArrayCreator.newNumberArray(VelocityTracker.NUM_PAST);
+                this.pastTime = androidui.util.ArrayCreator.newNumberArray(VelocityTracker.NUM_PAST);
                 this.generation = 0;
             }
         }
@@ -26417,8 +26535,8 @@ var android;
         SplineOverScroller.P1 = SplineOverScroller.START_TENSION * SplineOverScroller.INFLEXION;
         SplineOverScroller.P2 = 1.0 - SplineOverScroller.END_TENSION * (1 - SplineOverScroller.INFLEXION);
         SplineOverScroller.NB_SAMPLES = 100;
-        SplineOverScroller.SPLINE_POSITION = new Array(SplineOverScroller.NB_SAMPLES + 1);
-        SplineOverScroller.SPLINE_TIME = new Array(SplineOverScroller.NB_SAMPLES + 1);
+        SplineOverScroller.SPLINE_POSITION = androidui.util.ArrayCreator.newNumberArray(SplineOverScroller.NB_SAMPLES + 1);
+        SplineOverScroller.SPLINE_TIME = androidui.util.ArrayCreator.newNumberArray(SplineOverScroller.NB_SAMPLES + 1);
         SplineOverScroller.SPLINE = 0;
         SplineOverScroller.CUBIC = 1;
         SplineOverScroller.BALLISTIC = 2;
@@ -27837,8 +27955,8 @@ var android;
                 const heightMode = MeasureSpec.getMode(heightMeasureSpec);
                 let matchHeight = false;
                 if (this.mMaxAscent == null || this.mMaxDescent == null) {
-                    this.mMaxAscent = new Array(LinearLayout.VERTICAL_GRAVITY_COUNT);
-                    this.mMaxDescent = new Array(LinearLayout.VERTICAL_GRAVITY_COUNT);
+                    this.mMaxAscent = androidui.util.ArrayCreator.newNumberArray(LinearLayout.VERTICAL_GRAVITY_COUNT);
+                    this.mMaxDescent = androidui.util.ArrayCreator.newNumberArray(LinearLayout.VERTICAL_GRAVITY_COUNT);
                 }
                 let maxAscent = this.mMaxAscent;
                 let maxDescent = this.mMaxDescent;
@@ -28903,8 +29021,10 @@ var android;
     var database;
     (function (database) {
         class DataSetObserver {
-            onChanged() { }
-            onInvalidated() { }
+            onChanged() {
+            }
+            onInvalidated() {
+            }
         }
         database.DataSetObserver = DataSetObserver;
     })(database = android.database || (android.database = {}));
@@ -29592,7 +29712,7 @@ var android;
                 this.mRowGapStart = 0;
                 this.mRowGapLength = this.mRows;
                 this.mValues = null;
-                this.mValueGap = new Array(2 * columns);
+                this.mValueGap = androidui.util.ArrayCreator.newNumberArray(2 * columns);
             }
             getValue(row, column) {
                 const columns = this.mColumns;
@@ -29684,7 +29804,7 @@ var android;
                 const columns = this.mColumns;
                 let newsize = this.size() + 1;
                 newsize = (newsize * columns) / columns;
-                let newvalues = new Array(newsize * columns);
+                let newvalues = androidui.util.ArrayCreator.newNumberArray(newsize * columns);
                 const valuegap = this.mValueGap;
                 const rowgapstart = this.mRowGapStart;
                 let after = this.mRows - (rowgapstart + this.mRowGapLength);
@@ -29944,7 +30064,7 @@ var android;
                 this.mFontMetricsInt = new Paint.FontMetricsInt();
                 if (source == null) {
                     this.mColumns = StaticLayout.COLUMNS_ELLIPSIZE;
-                    this.mLines = new Array((2 * this.mColumns));
+                    this.mLines = androidui.util.ArrayCreator.newNumberArray((2 * this.mColumns));
                     this.mLineDirections = new Array((2 * this.mColumns));
                     this.mMeasured = MeasuredText.obtain();
                     return;
@@ -29961,7 +30081,7 @@ var android;
                     this.mColumns = StaticLayout.COLUMNS_NORMAL;
                     this.mEllipsizedWidth = outerwidth;
                 }
-                this.mLines = new Array(2 * this.mColumns);
+                this.mLines = androidui.util.ArrayCreator.newNumberArray(2 * this.mColumns);
                 this.mLineDirections = new Array(2 * this.mColumns);
                 this.mMaximumVisibleLineCount = maxLines;
                 this.mMeasured = MeasuredText.obtain();
@@ -30006,7 +30126,7 @@ var android;
                         chooseHt = StaticLayout.getParagraphSpans(spanned, paraStart, paraEnd, LineHeightSpan.type);
                         if (chooseHt.length != 0) {
                             if (chooseHtv == null || chooseHtv.length < chooseHt.length) {
-                                chooseHtv = new Array(chooseHt.length);
+                                chooseHtv = androidui.util.ArrayCreator.newNumberArray(chooseHt.length);
                             }
                             for (let i = 0; i < chooseHt.length; i++) {
                                 let o = spanned.getSpanStart(chooseHt[i]);
@@ -30270,7 +30390,7 @@ var android;
                 let lines = this.mLines;
                 if (want >= lines.length) {
                     let nlen = (want + 1);
-                    let grow = new Array(nlen);
+                    let grow = androidui.util.ArrayCreator.newNumberArray(nlen);
                     System.arraycopy(lines, 0, grow, 0, lines.length);
                     this.mLines = grow;
                     lines = grow;
@@ -30562,11 +30682,11 @@ var android;
                 }
                 let start;
                 if (ellipsize != null) {
-                    start = new Array(DynamicLayout.COLUMNS_ELLIPSIZE);
+                    start = androidui.util.ArrayCreator.newNumberArray(DynamicLayout.COLUMNS_ELLIPSIZE);
                     start[DynamicLayout.ELLIPSIS_START] = DynamicLayout.ELLIPSIS_UNDEFINED;
                 }
                 else {
-                    start = new Array(DynamicLayout.COLUMNS_NORMAL);
+                    start = androidui.util.ArrayCreator.newNumberArray(DynamicLayout.COLUMNS_NORMAL);
                 }
                 let dirs = [DynamicLayout.DIRS_ALL_LEFT_TO_RIGHT];
                 let fm = new Paint.FontMetricsInt();
@@ -30646,11 +30766,11 @@ var android;
                 this.mInts.adjustValuesBelow(startline, DynamicLayout.TOP, startv - endv + ht);
                 let ints;
                 if (this.mEllipsize) {
-                    ints = new Array(DynamicLayout.COLUMNS_ELLIPSIZE);
+                    ints = androidui.util.ArrayCreator.newNumberArray(DynamicLayout.COLUMNS_ELLIPSIZE);
                     ints[DynamicLayout.ELLIPSIS_START] = DynamicLayout.ELLIPSIS_UNDEFINED;
                 }
                 else {
-                    ints = new Array(DynamicLayout.COLUMNS_NORMAL);
+                    ints = androidui.util.ArrayCreator.newNumberArray(DynamicLayout.COLUMNS_NORMAL);
                 }
                 let objects = new Array(1);
                 for (let i = 0; i < n; i++) {
@@ -30692,7 +30812,7 @@ var android;
                         offset += DynamicLayout.BLOCK_MINIMUM_CHARACTER_LENGTH;
                     }
                 }
-                this.mBlockIndices = new Array(this.mBlockEndLines.length);
+                this.mBlockIndices = androidui.util.ArrayCreator.newNumberArray(this.mBlockEndLines.length);
                 for (let i = 0; i < this.mBlockEndLines.length; i++) {
                     this.mBlockIndices[i] = DynamicLayout.INVALID_BLOCK_INDEX;
                 }
@@ -30700,7 +30820,7 @@ var android;
             addBlockAtOffset(offset) {
                 const line = this.getLineForOffset(offset);
                 if (this.mBlockEndLines == null) {
-                    this.mBlockEndLines = new Array((1));
+                    this.mBlockEndLines = androidui.util.ArrayCreator.newNumberArray((1));
                     this.mBlockEndLines[this.mNumberOfBlocks] = line;
                     this.mNumberOfBlocks++;
                     return;
@@ -30708,7 +30828,7 @@ var android;
                 const previousBlockEndLine = this.mBlockEndLines[this.mNumberOfBlocks - 1];
                 if (line > previousBlockEndLine) {
                     if (this.mNumberOfBlocks == this.mBlockEndLines.length) {
-                        let blockEndLines = new Array((this.mNumberOfBlocks + 1));
+                        let blockEndLines = androidui.util.ArrayCreator.newNumberArray((this.mNumberOfBlocks + 1));
                         System.arraycopy(this.mBlockEndLines, 0, blockEndLines, 0, this.mNumberOfBlocks);
                         this.mBlockEndLines = blockEndLines;
                     }
@@ -30756,8 +30876,8 @@ var android;
                 }
                 if (newNumberOfBlocks > this.mBlockEndLines.length) {
                     const newSize = (newNumberOfBlocks);
-                    let blockEndLines = new Array(newSize);
-                    let blockIndices = new Array(newSize);
+                    let blockEndLines = androidui.util.ArrayCreator.newNumberArray(newSize);
+                    let blockIndices = androidui.util.ArrayCreator.newNumberArray(newSize);
                     System.arraycopy(this.mBlockEndLines, 0, blockEndLines, 0, firstBlock);
                     System.arraycopy(this.mBlockIndices, 0, blockIndices, 0, firstBlock);
                     System.arraycopy(this.mBlockEndLines, lastBlock + 1, blockEndLines, firstBlock + numAddedBlocks, this.mNumberOfBlocks - lastBlock - 1);
@@ -30799,8 +30919,8 @@ var android;
                 }
             }
             setBlocksDataForTest(blockEndLines, blockIndices, numberOfBlocks) {
-                this.mBlockEndLines = new Array(blockEndLines.length);
-                this.mBlockIndices = new Array(blockIndices.length);
+                this.mBlockEndLines = androidui.util.ArrayCreator.newNumberArray(blockEndLines.length);
+                this.mBlockIndices = androidui.util.ArrayCreator.newNumberArray(blockIndices.length);
                 System.arraycopy(blockEndLines, 0, this.mBlockEndLines, 0, blockEndLines.length);
                 System.arraycopy(blockIndices, 0, this.mBlockIndices, 0, blockIndices.length);
                 this.mNumberOfBlocks = numberOfBlocks;
@@ -32559,7 +32679,7 @@ var android;
                     const length = drawableState.length;
                     for (let i = 0; i < length; i++) {
                         if (drawableState[i] == View.VIEW_STATE_PRESSED) {
-                            const nonPressedState = new Array(length - 1);
+                            const nonPressedState = androidui.util.ArrayCreator.newNumberArray(length - 1);
                             System.arraycopy(drawableState, 0, nonPressedState, 0, i);
                             System.arraycopy(drawableState, i + 1, nonPressedState, i, length - i - 1);
                             return nonPressedState;
@@ -40131,7 +40251,7 @@ var android;
                 if (this.mChoiceMode != ListView.CHOICE_MODE_NONE && this.mCheckStates != null && this.mAdapter != null) {
                     const states = this.mCheckStates;
                     const count = states.size();
-                    const ids = new Array(count);
+                    const ids = androidui.util.ArrayCreator.newNumberArray(count);
                     const adapter = this.mAdapter;
                     let checkedCount = 0;
                     for (let i = 0; i < count; i++) {
@@ -40143,12 +40263,12 @@ var android;
                         return ids;
                     }
                     else {
-                        const result = new Array(checkedCount);
+                        const result = androidui.util.ArrayCreator.newNumberArray(checkedCount);
                         System.arraycopy(ids, 0, result, 0, checkedCount);
                         return result;
                     }
                 }
-                return new Array(0);
+                return androidui.util.ArrayCreator.newNumberArray(0);
             }
         }
         ListView.NO_POSITION = -1;
@@ -44638,7 +44758,7 @@ var android;
                 this._attrBinder.addAttr('itemCount', (value) => {
                     this.SELECTOR_WHEEL_ITEM_COUNT = this._attrBinder.parseNumber(value, this.SELECTOR_WHEEL_ITEM_COUNT);
                     this.SELECTOR_MIDDLE_ITEM_INDEX = Math.floor(this.SELECTOR_WHEEL_ITEM_COUNT / 2);
-                    this.mSelectorIndices = new Array(this.SELECTOR_WHEEL_ITEM_COUNT);
+                    this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
                 });
                 this.mTextSize = Math.floor(16 * this.getResources().getDisplayMetrics().density);
                 let paint = new Paint();
@@ -44647,7 +44767,7 @@ var android;
                 paint.setTextSize(this.mTextSize);
                 paint.setColor(Color.DKGRAY);
                 this.mSelectorWheelPaint = paint;
-                this.mSelectorIndices = new Array(this.SELECTOR_WHEEL_ITEM_COUNT);
+                this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
                 this.applyDefaultAttributes(R.attr.numberPickerStyle);
                 if (this.mMinHeight_ != NumberPicker.SIZE_UNSPECIFIED && this.mMaxHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMinHeight_ > this.mMaxHeight) {
                     throw Error(`new IllegalArgumentException("minHeight > maxHeight")`);
@@ -54873,13 +54993,13 @@ var android;
                     }
                     ensureMotionHistorySizeForId(pointerId) {
                         if (this.mInitialMotionX == null || this.mInitialMotionX.length <= pointerId) {
-                            let imx = new Array(pointerId + 1);
-                            let imy = new Array(pointerId + 1);
-                            let lmx = new Array(pointerId + 1);
-                            let lmy = new Array(pointerId + 1);
-                            let iit = new Array(pointerId + 1);
-                            let edip = new Array(pointerId + 1);
-                            let edl = new Array(pointerId + 1);
+                            let imx = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+                            let imy = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+                            let lmx = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+                            let lmy = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+                            let iit = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+                            let edip = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
+                            let edl = androidui.util.ArrayCreator.newNumberArray(pointerId + 1);
                             if (this.mInitialMotionX != null) {
                                 System.arraycopy(this.mInitialMotionX, 0, imx, 0, this.mInitialMotionX.length);
                                 System.arraycopy(this.mInitialMotionY, 0, imy, 0, this.mInitialMotionY.length);
@@ -56696,7 +56816,7 @@ var uk;
                         this.mDrawMatrix = new Matrix();
                         this.mSuppMatrix = new Matrix();
                         this.mDisplayRect = new RectF();
-                        this.mMatrixValues = new Array(9);
+                        this.mMatrixValues = androidui.util.ArrayCreator.newNumberArray(9);
                         this.mIvTop = 0;
                         this.mIvRight = 0;
                         this.mIvBottom = 0;
@@ -59326,7 +59446,7 @@ var androidui;
                 super(context, bindElement, defStyle);
                 this.mBoundRect = new Rect();
                 this.mRectTmp = new Rect();
-                this.mLocationTmp = new Array(2);
+                this.mLocationTmp = androidui.util.ArrayCreator.newNumberArray(2);
                 native.NativeApi.webView.createWebView(this.hashCode());
                 webViewMap.set(this.hashCode(), this);
                 let activity = this.getContext();
