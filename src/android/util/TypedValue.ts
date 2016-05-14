@@ -52,6 +52,12 @@ module android.util{
             return size * scale;
         }
 
+        static isDynamicUnitValue(valueWithUnit:string):boolean {
+            if(typeof valueWithUnit != "string") return false;
+            return valueWithUnit.match(`${TypedValue.COMPLEX_UNIT_VH}$|${TypedValue.COMPLEX_UNIT_VW}$|${TypedValue.COMPLEX_UNIT_FRACTION}$`)!=null;
+
+        }
+
         static complexToDimensionPixelSize(valueWithUnit:string, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()):number {
             if(this.initUnit) this.initUnit();
             if(valueWithUnit===undefined || valueWithUnit===null){

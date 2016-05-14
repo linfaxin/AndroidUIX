@@ -2506,6 +2506,7 @@ module android.view {
     }
 
     export module ViewGroup {
+        import TypedValue = android.util.TypedValue;
         export class LayoutParams {
             static FILL_PARENT = -1;
             static MATCH_PARENT = -1;
@@ -2523,11 +2524,16 @@ module android.view {
                 else{
                     let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        this._width = TypedValue.complexToDimensionPixelSize(
+                        let parsedValue = TypedValue.complexToDimensionPixelSize(
                             <any>this._width, parentWidth, this._measuringMeasureSpec);
+                        //not save if dynamic, next get will compute again
+                        if(TypedValue.isDynamicUnitValue(<any>this._width)){
+                            return parsedValue;
+                        }
+                        this._width = parsedValue;
                     } catch (e) {
                         console.error(e);
-                        this._width = -2;
+                        return -2;
                     }
                 }
                 return this._width;
@@ -2545,11 +2551,16 @@ module android.view {
                 else{
                     let parentHeight = View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
                     try {
-                        this._height = TypedValue.complexToDimensionPixelSize(
+                        let parsedValue = TypedValue.complexToDimensionPixelSize(
                             <any>this._height, parentHeight, this._measuringMeasureSpec);
+                        //not save if dynamic, next get will compute again
+                        if(TypedValue.isDynamicUnitValue(<any>this._height)){
+                            return parsedValue;
+                        }
+                        this._height = parsedValue;
                     } catch (e) {
                         console.error(e);
-                        this._height = -2;
+                        return -2;
                     }
                 }
                 return this._height;
@@ -2620,11 +2631,16 @@ module android.view {
                 if(typeof this._leftMargin === 'number') return this._leftMargin;
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                 try {
-                    this._leftMargin = TypedValue.complexToDimensionPixelSize(
+                    let parsedValue = TypedValue.complexToDimensionPixelSize(
                         <any>this._leftMargin, parentWidth, this._measuringMeasureSpec);
+                    //not save if dynamic, next get will compute again
+                    if(TypedValue.isDynamicUnitValue(<any>this._leftMargin)){
+                        return parsedValue;
+                    }
+                    this._leftMargin = parsedValue;
                 } catch (e) {
                     console.warn(e);
-                    this._leftMargin = 0;
+                    return 0;
                 }
                 return this._leftMargin;
             }
@@ -2633,11 +2649,16 @@ module android.view {
                 //topMargin with percent will use parent's width
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                 try {
-                    this._topMargin = TypedValue.complexToDimensionPixelSize(
+                    let parsedValue = TypedValue.complexToDimensionPixelSize(
                         <any>this._topMargin, parentWidth, this._measuringMeasureSpec);
+                    //not save if dynamic, next get will compute again
+                    if(TypedValue.isDynamicUnitValue(<any>this._topMargin)){
+                        return parsedValue;
+                    }
+                    this._topMargin = parsedValue;
                 } catch (e) {
                     console.warn(e);
-                    this._topMargin = 0;
+                    return 0;
                 }
                 return this._topMargin;
             }
@@ -2645,11 +2666,16 @@ module android.view {
                 if(typeof this._rightMargin === 'number') return this._rightMargin;
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                 try {
-                    this._rightMargin = TypedValue.complexToDimensionPixelSize(
+                    let parsedValue = TypedValue.complexToDimensionPixelSize(
                         <any>this._rightMargin, parentWidth, this._measuringMeasureSpec);
+                    //not save if dynamic, next get will compute again
+                    if(TypedValue.isDynamicUnitValue(<any>this._rightMargin)){
+                        return parsedValue;
+                    }
+                    this._rightMargin = parsedValue;
                 } catch (e) {
                     console.warn(e);
-                    this._rightMargin = 0;
+                    return 0;
                 }
                 return this._rightMargin;
             }
@@ -2658,11 +2684,16 @@ module android.view {
                 //topMargin with percent will use parent's width
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                 try {
-                    this._bottomMargin = TypedValue.complexToDimensionPixelSize(
+                    let parsedValue = TypedValue.complexToDimensionPixelSize(
                         <any>this._bottomMargin, parentWidth, this._measuringMeasureSpec);
+                    //not save if dynamic, next get will compute again
+                    if(TypedValue.isDynamicUnitValue(<any>this._bottomMargin)){
+                        return parsedValue;
+                    }
+                    this._bottomMargin = parsedValue;
                 } catch (e) {
                     console.warn(e);
-                    this._bottomMargin = 0;
+                    return 0;
                 }
                 return this._bottomMargin;
             }
