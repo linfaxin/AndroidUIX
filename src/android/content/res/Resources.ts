@@ -19,6 +19,10 @@ module android.content.res{
 
         constructor(context?:Context) {
             this.context = context;
+
+            window.addEventListener('resize', ()=>{
+                this.fillDisplayMetrics(this.displayMetrics);
+            });
         }
 
         static getSystem():Resources {
@@ -36,7 +40,10 @@ module android.content.res{
         getDisplayMetrics():DisplayMetrics {
             if(this.displayMetrics) return this.displayMetrics;
             this.displayMetrics = new DisplayMetrics();
-            let displayMetrics = this.displayMetrics;
+            this.fillDisplayMetrics(this.displayMetrics);
+            return this.displayMetrics;
+        }
+        private fillDisplayMetrics(displayMetrics:DisplayMetrics){
             let density = window.devicePixelRatio;
 
             displayMetrics.xdpi = window.screen.deviceXDPI || DisplayMetrics.DENSITY_DEFAULT;
@@ -47,8 +54,6 @@ module android.content.res{
 
             displayMetrics.widthPixels = document.documentElement.offsetWidth * density;
             displayMetrics.heightPixels = document.documentElement.offsetHeight * density;
-
-            return displayMetrics;
         }
 
         private getObjectRef(refString:string):any{
