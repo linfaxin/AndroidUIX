@@ -67,6 +67,8 @@ export class WindowManager {
     private mWindowsLayout:WindowManager.Layout;
     private mActiveWindow:Window;
 
+    private static FocusViewRemenber = Symbol();
+
     constructor(context:Context) {
         this.mWindowsLayout = new WindowManager.Layout(context, this);
         let viewRootImpl = context.androidUI._viewRootImpl;
@@ -92,17 +94,40 @@ export class WindowManager {
         window.setContainer(this);
         let decorView = window.getDecorView();
 
+
         //TODO use type as z-index
         let type = wparams.type;
+        let lastFocusWindowView = this.mWindowsLayout.getTopFocusableWindowView();
         this.mWindowsLayout.addView(decorView, wparams);
 
         decorView.dispatchAttachedToWindow(window.mAttachInfo, 0);
         //window.mAttachInfo.mTreeObserver.dispatchOnWindowAttachedChange(true);
 
         if(wparams.isFocusable()){
-            this.clearWindowFocus();
             decorView.dispatchWindowFocusChanged(true);
-            //TODO change focus to new window.
+
+            //clearLastWindowFocus
+            if(lastFocusWindowView && lastFocusWindowView.hasFocus()){
+                const focused = lastFocusWindowView.findFocus();
+                lastFocusWindowView[WindowManager.FocusViewRemenber] = focused;
+                if (focused != null) {
+                    focused.clearFocusInternal(true, false);
+                }
+                lastFocusWindowView.dispatchWindowFocusChanged(false);
+
+                //new window should be focused
+                decorView.addOnLayoutChangeListener({
+                    onLayoutChange(v:View, left:number , top:number , right:number , bottom:number,
+                                   oldLeft:number , oldTop:number , oldRight:number , oldBottom:number){
+                        decorView.removeOnLayoutChangeListener(this);
+
+                        const newWindowFocused = FocusFinder.getInstance().findNextFocus(<ViewGroup>decorView, null, View.FOCUS_DOWN);
+                        if (newWindowFocused != null) {
+                            newWindowFocused.requestFocus(View.FOCUS_DOWN);
+                        }
+                    }
+                });
+            }
         }
         if(decorView instanceof ViewGroup){
             decorView.setMotionEventSplittingEnabled(wparams.isSplitTouch());
@@ -140,11 +165,17 @@ export class WindowManager {
         }else{
             this.mWindowsLayout.removeView(decor);
         }
-
-    }
-
-    private clearWindowFocus(){
-        //TODO clear focus
+        
+        if(wparams.isFocusable()) {
+            let resumeWindowView = this.mWindowsLayout.getTopFocusableWindowView();
+            if (resumeWindowView) {
+                resumeWindowView.dispatchWindowFocusChanged(true);
+            }
+            let resumeFocus = resumeWindowView[WindowManager.FocusViewRemenber];
+            if(resumeFocus){
+                resumeFocus.requestFocus(View.FOCUS_DOWN);
+            }
+        }
     }
 }
 
@@ -160,6 +191,7 @@ export module WindowManager{
             super(context);
             this.mWindowManager = windowManager;
         }
+        
 
         getTopFocusableWindowView():ViewGroup {
             const count:number = this.getChildCount();
