@@ -1,5 +1,5 @@
 /**
- * AndroidUI-WebApp v0.5.2
+ * AndroidUI-WebApp v0.5.3
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -23224,7 +23224,7 @@ var android;
                     decorView.dispatchWindowFocusChanged(true);
                     if (lastFocusWindowView && lastFocusWindowView.hasFocus()) {
                         const focused = lastFocusWindowView.findFocus();
-                        lastFocusWindowView[WindowManager.FocusViewRemenber] = focused;
+                        lastFocusWindowView[WindowManager.FocusViewRemember] = focused;
                         if (focused != null) {
                             focused.clearFocusInternal(true, false);
                         }
@@ -23281,15 +23281,15 @@ var android;
                     let resumeWindowView = this.mWindowsLayout.getTopFocusableWindowView();
                     if (resumeWindowView) {
                         resumeWindowView.dispatchWindowFocusChanged(true);
-                    }
-                    let resumeFocus = resumeWindowView[WindowManager.FocusViewRemenber];
-                    if (resumeFocus) {
-                        resumeFocus.requestFocus(View.FOCUS_DOWN);
+                        let resumeFocus = resumeWindowView[WindowManager.FocusViewRemember];
+                        if (resumeFocus) {
+                            resumeFocus.requestFocus(View.FOCUS_DOWN);
+                        }
                     }
                 }
             }
         }
-        WindowManager.FocusViewRemenber = Symbol();
+        WindowManager.FocusViewRemember = Symbol();
         view.WindowManager = WindowManager;
         (function (WindowManager) {
             class Layout extends android.widget.FrameLayout {

@@ -4807,7 +4807,7 @@ declare module android.view {
     class WindowManager {
         private mWindowsLayout;
         private mActiveWindow;
-        private static FocusViewRemenber;
+        private static FocusViewRemember;
         constructor(context: Context);
         getWindowsLayout(): ViewGroup;
         addWindow(window: Window): void;
