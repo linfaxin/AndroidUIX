@@ -11098,6 +11098,7 @@ declare module androidui.native {
         protected tryShowInputElement(): any;
         protected tryDismissInputElement(): any;
         protected _syncBoundAndScrollToElement(): void;
+        protected onDetachedFromWindow(): void;
     }
 }
 declare module androidui.native {

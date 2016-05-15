@@ -1,5 +1,5 @@
 /**
- * AndroidUI-WebApp v0.5.5
+ * AndroidUI-WebApp v0.5.6
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -14910,6 +14910,9 @@ var android;
                 rootView.postDelayed(rootView._syncToElementRun, 1000);
             }
             _syncBoundAndScrollToElement() {
+                if (!this.isAttachedToWindow()) {
+                    return;
+                }
                 const left = this.mLeft;
                 const top = this.mTop;
                 const width = this.getWidth();
@@ -59438,6 +59441,10 @@ var androidui;
                     this.computeTextArea();
                     native.NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
                 }
+            }
+            onDetachedFromWindow() {
+                super.onDetachedFromWindow();
+                native.NativeApi.drawHTML.hideDrawHTMLBound(this.hashCode());
             }
         }
         native.NativeEditText = NativeEditText;
