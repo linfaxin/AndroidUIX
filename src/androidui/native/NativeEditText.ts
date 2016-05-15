@@ -49,5 +49,10 @@ module androidui.native {
                 NativeApi.drawHTML.showDrawHTMLBound(this.hashCode(), this.mRectTmp.left, this.mRectTmp.top, this.mRectTmp.right, this.mRectTmp.bottom);
             }
         }
+        
+        protected onDetachedFromWindow():void {
+            super.onDetachedFromWindow();
+            NativeApi.drawHTML.hideDrawHTMLBound(this.hashCode());
+        }
     }
 }

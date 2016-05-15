@@ -6903,7 +6903,7 @@ module android.view {
                 rootView._syncToElementRun = {
                     run:()=>{
                         rootView._syncToElementLock = false;
-                        rootView._syncToElementImmediatelyLock = false
+                        rootView._syncToElementImmediatelyLock = false;
                         rootView._syncBoundAndScrollToElement();
                     }
                 };
@@ -6929,6 +6929,9 @@ module android.view {
         private _lastSyncScrollX:number;
         private _lastSyncScrollY:number;
         protected _syncBoundAndScrollToElement():void {
+            if(!this.isAttachedToWindow()){
+                return;
+            }
             //bound
             const left = this.mLeft;
             const top = this.mTop;
