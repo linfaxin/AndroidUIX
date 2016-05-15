@@ -1491,6 +1491,7 @@ export interface Callback {
             this.Window_this = window;
             this.bindElement.classList.add(window.mContext.constructor.name);
             this.setBackgroundColor(android.graphics.Color.WHITE);//default window bg
+            this.setIsRootNamespace(true);//window's decor view is root.
         }
 
         protected drawFromParent(canvas:android.graphics.Canvas, parent:ViewGroup, drawingTime:number):boolean {

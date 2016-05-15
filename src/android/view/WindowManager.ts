@@ -65,7 +65,7 @@ import Animation = android.view.animation.Animation;
  */
 export class WindowManager {
     private mWindowsLayout:WindowManager.Layout;
-    private mActiveWindow:Window;
+    protected mActiveWindow:Window;
 
     private static FocusViewRemember = Symbol();
 
@@ -193,7 +193,7 @@ export module WindowManager{
         }
         
 
-        getTopFocusableWindowView():ViewGroup {
+        getTopFocusableWindowView(findParent=true):ViewGroup {
             const count:number = this.getChildCount();
             for (let i:number = count-1; i >=0; i--) {
                 let child = this.getChildAt(i);
@@ -202,10 +202,20 @@ export module WindowManager{
                     return <ViewGroup>child;
                 }
             }
+
+            if(findParent){
+                let decor = this.getParent();
+                if(decor!=null){
+                    let windowLayout = decor.getParent();
+                    if(windowLayout instanceof Layout){
+                        return windowLayout.getTopFocusableWindowView();
+                    }
+                }
+            }
         }
 
         dispatchKeyEvent(event:android.view.KeyEvent):boolean {
-            let topFocusView = this.getTopFocusableWindowView();
+            let topFocusView = this.getTopFocusableWindowView(false);
             if(topFocusView && topFocusView.dispatchKeyEvent(event)){
                 return true;
             }
