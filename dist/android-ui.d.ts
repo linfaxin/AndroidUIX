@@ -1677,7 +1677,7 @@ declare module android.view {
         private mShiftKey;
         private mCtrlKey;
         private mMetaKey;
-        private mIsTypingKey;
+        protected mIsTypingKey: boolean;
         private _downingKeyEventMap;
         static obtain(action: number, code: number): KeyEvent;
         initKeyEvent(keyEvent: KeyboardEvent, action: number): void;

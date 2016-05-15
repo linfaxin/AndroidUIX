@@ -304,7 +304,7 @@ module android.view{
         private mMetaKey : boolean;
 
 
-        private mIsTypingKey:boolean;
+        protected mIsTypingKey:boolean;
         //private _activeKeyEvent : KeyboardEvent;
         private _downingKeyEventMap = new Map<number, KeyboardEvent[]>();
 

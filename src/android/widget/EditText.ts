@@ -315,12 +315,12 @@ export class EditText extends TextView {
 
     onKeyDown(keyCode:number, event:android.view.KeyEvent):boolean {
         this.checkFilterKeyEventToDom(event);
-        return super.onKeyDown(keyCode, event) || true;
+        return super.onKeyDown(keyCode, event) || event.mIsTypingKey;
     }
 
     onKeyUp(keyCode:number, event:android.view.KeyEvent):boolean {
         this.checkFilterKeyEventToDom(event);
-        return super.onKeyUp(keyCode, event) || true;
+        return super.onKeyUp(keyCode, event) || event.mIsTypingKey;
     }
 
     requestSyncBoundToElement(immediately = false):void {
