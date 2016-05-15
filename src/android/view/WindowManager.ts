@@ -67,7 +67,7 @@ export class WindowManager {
     private mWindowsLayout:WindowManager.Layout;
     private mActiveWindow:Window;
 
-    private static FocusViewRemenber = Symbol();
+    private static FocusViewRemember = Symbol();
 
     constructor(context:Context) {
         this.mWindowsLayout = new WindowManager.Layout(context, this);
@@ -109,7 +109,7 @@ export class WindowManager {
             //clearLastWindowFocus
             if(lastFocusWindowView && lastFocusWindowView.hasFocus()){
                 const focused = lastFocusWindowView.findFocus();
-                lastFocusWindowView[WindowManager.FocusViewRemenber] = focused;
+                lastFocusWindowView[WindowManager.FocusViewRemember] = focused;
                 if (focused != null) {
                     focused.clearFocusInternal(true, false);
                 }
@@ -170,10 +170,10 @@ export class WindowManager {
             let resumeWindowView = this.mWindowsLayout.getTopFocusableWindowView();
             if (resumeWindowView) {
                 resumeWindowView.dispatchWindowFocusChanged(true);
-            }
-            let resumeFocus = resumeWindowView[WindowManager.FocusViewRemenber];
-            if(resumeFocus){
-                resumeFocus.requestFocus(View.FOCUS_DOWN);
+                let resumeFocus = resumeWindowView[WindowManager.FocusViewRemember];
+                if(resumeFocus){
+                    resumeFocus.requestFocus(View.FOCUS_DOWN);
+                }
             }
         }
     }
