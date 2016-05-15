@@ -39,7 +39,7 @@ module androidui.attr{
 
         isStateEquals(state:number[]):boolean{
             if(!state) return false;
-            return java.util.Arrays.equals(this.stateSpec, state.sort());
+            return java.util.Arrays.equals(this.stateSpec, state.concat().sort());
         }
 
         isStateMatch(state:number[]):boolean{
