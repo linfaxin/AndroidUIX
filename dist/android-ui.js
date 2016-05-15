@@ -1,5 +1,5 @@
 /**
- * AndroidUI-WebApp v0.5.3
+ * AndroidUI-WebApp v0.5.4
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -5745,7 +5745,7 @@ var androidui;
             isStateEquals(state) {
                 if (!state)
                     return false;
-                return java.util.Arrays.equals(this.stateSpec, state.sort());
+                return java.util.Arrays.equals(this.stateSpec, state.concat().sort());
             }
             isStateMatch(state) {
                 return android.util.StateSet.stateSetMatches(this.stateSpec, state);
@@ -23297,7 +23297,7 @@ var android;
                     super(context);
                     this.mWindowManager = windowManager;
                 }
-                getTopFocusableWindowView() {
+                getTopFocusableWindowView(findParent = true) {
                     const count = this.getChildCount();
                     for (let i = count - 1; i >= 0; i--) {
                         let child = this.getChildAt(i);
@@ -23306,9 +23306,18 @@ var android;
                             return child;
                         }
                     }
+                    if (findParent) {
+                        let decor = this.getParent();
+                        if (decor != null) {
+                            let windowLayout = decor.getParent();
+                            if (windowLayout instanceof Layout) {
+                                return windowLayout.getTopFocusableWindowView();
+                            }
+                        }
+                    }
                 }
                 dispatchKeyEvent(event) {
-                    let topFocusView = this.getTopFocusableWindowView();
+                    let topFocusView = this.getTopFocusableWindowView(false);
                     if (topFocusView && topFocusView.dispatchKeyEvent(event)) {
                         return true;
                     }
@@ -24580,6 +24589,7 @@ var android;
                 this.Window_this = window;
                 this.bindElement.classList.add(window.mContext.constructor.name);
                 this.setBackgroundColor(android.graphics.Color.WHITE);
+                this.setIsRootNamespace(true);
             }
             drawFromParent(canvas, parent, drawingTime) {
                 let windowAnimation = this.getAnimation();

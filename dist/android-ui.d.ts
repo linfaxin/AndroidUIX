@@ -4806,7 +4806,7 @@ declare module android.view {
     import Animation = android.view.animation.Animation;
     class WindowManager {
         private mWindowsLayout;
-        private mActiveWindow;
+        protected mActiveWindow: Window;
         private static FocusViewRemember;
         constructor(context: Context);
         getWindowsLayout(): ViewGroup;
@@ -4818,7 +4818,7 @@ declare module android.view {
         class Layout extends android.widget.FrameLayout {
             private mWindowManager;
             constructor(context: android.content.Context, windowManager: WindowManager);
-            getTopFocusableWindowView(): ViewGroup;
+            getTopFocusableWindowView(findParent?: boolean): ViewGroup;
             dispatchKeyEvent(event: android.view.KeyEvent): boolean;
             protected isTransformedTouchPointInView(x: number, y: number, child: android.view.View, outLocalPoint: android.graphics.Point): boolean;
             onChildVisibilityChanged(child: android.view.View, oldVisibility: number, newVisibility: number): void;
