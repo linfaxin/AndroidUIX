@@ -22,6 +22,7 @@ module androidui.image{
         private mTileModeX:NetDrawable.TileMode;
         private mTileModeY:NetDrawable.TileMode;
         private mTmpTileBound:Rect;
+        
 
         constructor(src:string|NetImage, paint?:Paint, overrideImageRatio?:number){
             super();
@@ -43,6 +44,13 @@ module androidui.image{
             let imageRatio = image.getImageRatio();
             this.mImageWidth = Math.floor(image.width / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
             this.mImageHeight = Math.floor(image.height / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
+        }
+
+        setURL(url:string, hiddenWhenLoading=true):void {
+            if(hiddenWhenLoading){
+                this.mImageWidth = this.mImageHeight = 0;
+            }
+            this.mState.mImage.src = url;
         }
 
         draw(canvas:Canvas):void {
@@ -172,7 +180,7 @@ module androidui.image{
             if(paint!=null) this.paint.set(paint);
         }
         newDrawable():Drawable {
-            return new NetDrawable(this.mImage, this.paint);
+            return new NetDrawable(this.mImage.src, this.paint);
         }
     }
 }

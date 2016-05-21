@@ -37,6 +37,8 @@ import Log = android.util.Log;
 import View = android.view.View;
 import Integer = java.lang.Integer;
 import System = java.lang.System;
+import NetDrawable = androidui.image.NetDrawable;
+    
 /**
  * Displays an arbitrary image, such as an icon.  The ImageView class
  * can load images from various sources (such as resources or content
@@ -395,27 +397,36 @@ export class ImageView extends View {
     /**
      * Sets the content of this ImageView to the specified Uri.
      *
-     * <p class="note">This does Bitmap reading and decoding on the UI
-     * thread, which can cause a latency hiccup.  If that's a concern,
-     * consider using {@link #setImageDrawable(android.graphics.drawable.Drawable)} or
-     * {@link #setImageBitmap(android.graphics.Bitmap)} and
-     * {@link android.graphics.BitmapFactory} instead.</p>
+     // * <p class="note">This does Bitmap reading and decoding on the UI
+     // * thread, which can cause a latency hiccup.  If that's a concern,
+     // * consider using {@link #setImageDrawable(android.graphics.drawable.Drawable)} or
+     // * {@link #setImageBitmap(android.graphics.Bitmap)} and
+     // * {@link android.graphics.BitmapFactory} instead.</p>
+     //
+     * AndroidUI note: suggest to load net image use this method
      *
      * @param uri The Uri of an image
      */
     setImageURI(uri:string):void  {
         //if (this.mResource != 0 || (this.mUri != uri && (uri == null || this.mUri == null || !uri.equals(this.mUri)))) {
         if (this.mUri != uri) {
-            this.updateDrawable(null);
-            //this.mResource = 0;
-            this.mUri = uri;
-            const oldWidth:number = this.mDrawableWidth;
-            const oldHeight:number = this.mDrawableHeight;
-            this.resolveUri();
-            if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
-                this.requestLayout();
+            if(this.mDrawable instanceof NetDrawable){//use same obj to load image
+                this.mUri = uri;
+                (<NetDrawable>this.mDrawable).setURL(uri);
+                this.invalidate();
+
+            }else {
+                this.updateDrawable(null);
+                //this.mResource = 0;
+                this.mUri = uri;
+                const oldWidth:number = this.mDrawableWidth;
+                const oldHeight:number = this.mDrawableHeight;
+                this.resolveUri();
+                if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
+                    this.requestLayout();
+                }
+                this.invalidate();
             }
-            this.invalidate();
         }
     }
 

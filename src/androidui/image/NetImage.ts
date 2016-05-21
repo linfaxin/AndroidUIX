@@ -90,13 +90,13 @@ module androidui.image{
 
         private fireOnLoad(){
             this.mImageLoaded = true;
-            for(let load of this.mOnLoads){
+            for(let load of [...this.mOnLoads]){
                 load();
             }
         }
         private fireOnError(){
             this.mImageLoaded = false;
-            for(let error of this.mOnErrors){
+            for(let error of [...this.mOnErrors]){
                 error();
             }
         }
