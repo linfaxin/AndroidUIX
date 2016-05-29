@@ -108,8 +108,7 @@ res文件夹放图片,布局等资源, 在构建时会生成R文件在gen目录,
 
 ### 查看WebApp
 
-需要先起一个本地服务器, 然后打开index.html文件的地址.
-如果使用WebStorm, 可以直接对index.html文件右键->Open In Browser 就可以查看.
+需要先起一个本地服务器, 然后打开index.html文件的地址 (如果使用WebStorm, 可以直接对index.html文件右键->Open In Browser 就可以查看)
 打开页面后, 需要打开浏览器的开发者模式和手机模拟器, 具体参考[这里](http://www.cocoachina.com/webapp/20141231/10815.html)
 
 
@@ -125,8 +124,6 @@ res文件夹放图片,布局等资源, 在构建时会生成R文件在gen目录,
     ></TextView>
 </FrameLayout>
 ```
-
-另外layout_width和layout_height属性不是必须项, 如果没有定义则以父节点的默认定义为准. [参考ViewGroup.generateDefaultLayoutParams](http://developer.android.com/intl/zh-cn/reference/android/view/ViewGroup.html)
 
 如果新增了布局文件, 需要先手动build, 才可以在代码中以 R.layout.xxx 方式引用到这个布局:
 ```bash
@@ -167,13 +164,13 @@ WebStorm + TypeScript 使得代码提示和错误检查十分友好, 代码书�
 
 IOS端稳定在50fps+, 全程原生级别的流畅度.
 Android端Chrome浏览器根据机子性能在40-50fps左右, 接近原生级别的流畅度.
-Android4.x系统WebView:30fps左右.
+打包成App(嵌入Runtime):50fps+
 Android4.x原生系统默认浏览器:30fps左右.不过国内主流机型都是定制过的系统(小米系统等), 默认浏览器内核已是较新版本, 能有40-50fps.
 
 
 ### 打包成App发布
 
-目前可以使用[Cordova(PhoneGap)](http://cordova.apache.org/)打包方案, 同时建议Android端打包进[CrossWalk](https://crosswalk-project.org/)内核保证4.x系统的流畅度.
+目前可以使用[Cordova(PhoneGap)](http://cordova.apache.org/)打包方案
 
 
 ### 进入调试
