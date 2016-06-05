@@ -1,5 +1,5 @@
 /**
- * AndroidUI-WebApp v0.5.6
+ * AndroidUI-WebApp v0.5.7
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -2182,13 +2182,13 @@ var androidui;
             }
             fireOnLoad() {
                 this.mImageLoaded = true;
-                for (let load of this.mOnLoads) {
+                for (let load of [...this.mOnLoads]) {
                     load();
                 }
             }
             fireOnError() {
                 this.mImageLoaded = false;
-                for (let error of this.mOnErrors) {
+                for (let error of [...this.mOnErrors]) {
                     error();
                 }
             }
@@ -6258,6 +6258,12 @@ var androidui;
                 this.mImageWidth = Math.floor(image.width / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
                 this.mImageHeight = Math.floor(image.height / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
             }
+            setURL(url, hiddenWhenLoading = true) {
+                if (hiddenWhenLoading) {
+                    this.mImageWidth = this.mImageHeight = 0;
+                }
+                this.mState.mImage.src = url;
+            }
             draw(canvas) {
                 if (!this.isImageSizeEmpty()) {
                     let emptyTileX = this.mTileModeX == null || this.mTileModeX == NetDrawable.TileMode.DEFAULT;
@@ -6367,7 +6373,7 @@ var androidui;
                     this.paint.set(paint);
             }
             newDrawable() {
-                return new NetDrawable(this.mImage, this.paint);
+                return new NetDrawable(this.mImage.src, this.paint);
             }
         }
     })(image = androidui.image || (androidui.image = {}));
@@ -42661,6 +42667,8 @@ var android;
         var RectF = android.graphics.RectF;
         var View = android.view.View;
         var Integer = java.lang.Integer;
+        var NetDrawable = androidui.image.NetDrawable;
+        var LayoutParams = android.view.ViewGroup.LayoutParams;
         class ImageView extends View {
             constructor(context, bindElement, defStyle) {
                 super(context, bindElement, defStyle);
@@ -42753,10 +42761,34 @@ var android;
             }
             drawableSizeChange(who) {
                 if (who == this.mDrawable) {
-                    this.resizeFromDrawable();
+                    this.checkResizeFromDrawable();
                 }
                 else {
                     super.drawableSizeChange(who);
+                }
+            }
+            checkResizeFromDrawable() {
+                let d = this.mDrawable;
+                if (d != null) {
+                    let w = d.getIntrinsicWidth();
+                    if (w < 0)
+                        w = this.mDrawableWidth;
+                    let h = d.getIntrinsicHeight();
+                    if (h < 0)
+                        h = this.mDrawableHeight;
+                    if (w != this.mDrawableWidth || h != this.mDrawableHeight) {
+                        this.mDrawableWidth = w;
+                        this.mDrawableHeight = h;
+                        if (this.mLayoutParams != null
+                            && this.mLayoutParams.width != LayoutParams.WRAP_CONTENT && this.mLayoutParams.width != LayoutParams.MATCH_PARENT
+                            && this.mLayoutParams.height != LayoutParams.WRAP_CONTENT && this.mLayoutParams.height != LayoutParams.MATCH_PARENT) {
+                            this.configureBounds();
+                            this.invalidate();
+                        }
+                        else {
+                            this.requestLayout();
+                        }
+                    }
                 }
             }
             hasOverlappingRendering() {
@@ -42788,15 +42820,22 @@ var android;
             }
             setImageURI(uri) {
                 if (this.mUri != uri) {
-                    this.updateDrawable(null);
-                    this.mUri = uri;
-                    const oldWidth = this.mDrawableWidth;
-                    const oldHeight = this.mDrawableHeight;
-                    this.resolveUri();
-                    if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
-                        this.requestLayout();
+                    if (this.mDrawable instanceof NetDrawable) {
+                        this.mUri = uri;
+                        this.mDrawable.setURL(uri);
+                        this.invalidate();
                     }
-                    this.invalidate();
+                    else {
+                        this.updateDrawable(null);
+                        this.mUri = uri;
+                        const oldWidth = this.mDrawableWidth;
+                        const oldHeight = this.mDrawableHeight;
+                        this.resolveUri();
+                        if (oldWidth != this.mDrawableWidth || oldHeight != this.mDrawableHeight) {
+                            this.requestLayout();
+                        }
+                        this.invalidate();
+                    }
                 }
             }
             setImageDrawable(drawable) {

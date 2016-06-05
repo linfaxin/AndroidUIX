@@ -1483,6 +1483,7 @@ declare module androidui.image {
         private mTmpTileBound;
         constructor(src: string | NetImage, paint?: Paint, overrideImageRatio?: number);
         protected initBoundWithLoadedImage(image: NetImage): void;
+        setURL(url: string, hiddenWhenLoading?: boolean): void;
         draw(canvas: Canvas): void;
         private drawTile(canvas);
         setAlpha(alpha: number): void;
@@ -7825,6 +7826,7 @@ declare module android.widget {
         jumpDrawablesToCurrentState(): void;
         invalidateDrawable(dr: Drawable): void;
         drawableSizeChange(who: Drawable): void;
+        private checkResizeFromDrawable();
         hasOverlappingRendering(): boolean;
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;
