@@ -7826,7 +7826,6 @@ declare module android.widget {
         jumpDrawablesToCurrentState(): void;
         invalidateDrawable(dr: Drawable): void;
         drawableSizeChange(who: Drawable): void;
-        private checkResizeFromDrawable();
         hasOverlappingRendering(): boolean;
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;

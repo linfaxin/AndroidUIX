@@ -42761,34 +42761,10 @@ var android;
             }
             drawableSizeChange(who) {
                 if (who == this.mDrawable) {
-                    this.checkResizeFromDrawable();
+                    this.resizeFromDrawable();
                 }
                 else {
                     super.drawableSizeChange(who);
-                }
-            }
-            checkResizeFromDrawable() {
-                let d = this.mDrawable;
-                if (d != null) {
-                    let w = d.getIntrinsicWidth();
-                    if (w < 0)
-                        w = this.mDrawableWidth;
-                    let h = d.getIntrinsicHeight();
-                    if (h < 0)
-                        h = this.mDrawableHeight;
-                    if (w != this.mDrawableWidth || h != this.mDrawableHeight) {
-                        this.mDrawableWidth = w;
-                        this.mDrawableHeight = h;
-                        if (this.mLayoutParams != null
-                            && this.mLayoutParams.width != LayoutParams.WRAP_CONTENT && this.mLayoutParams.width != LayoutParams.MATCH_PARENT
-                            && this.mLayoutParams.height != LayoutParams.WRAP_CONTENT && this.mLayoutParams.height != LayoutParams.MATCH_PARENT) {
-                            this.configureBounds();
-                            this.invalidate();
-                        }
-                        else {
-                            this.requestLayout();
-                        }
-                    }
                 }
             }
             hasOverlappingRendering() {
@@ -42967,7 +42943,15 @@ var android;
                     if (w != this.mDrawableWidth || h != this.mDrawableHeight) {
                         this.mDrawableWidth = w;
                         this.mDrawableHeight = h;
-                        this.requestLayout();
+                        if (this.mLayoutParams != null
+                            && this.mLayoutParams.width != LayoutParams.WRAP_CONTENT && this.mLayoutParams.width != LayoutParams.MATCH_PARENT
+                            && this.mLayoutParams.height != LayoutParams.WRAP_CONTENT && this.mLayoutParams.height != LayoutParams.MATCH_PARENT) {
+                            this.configureBounds();
+                        }
+                        else {
+                            this.requestLayout();
+                        }
+                        this.invalidate();
                         return true;
                     }
                 }
