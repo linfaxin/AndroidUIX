@@ -21,11 +21,11 @@ Android开发者可以从[这篇文章](README_for_Androids_cn.md)快速起步�
 
 在移动端60fps非常困难, 目前Sample页在移动端的fps:
 
-1. IOS:50fps左右
-2. Android Chrome:40-50fps
-3. Android WebView(4.4):20-30fps
+1. IOS: 50-60fps
+2. Android Chrome: 50fps
+3. Android WebView(App嵌入[Runtime](https://github.com/linfaxin/AndroidUIRuntimeAndroid)运行时): 50fps
 
-你也可以在自己的设备上测试Sample。
+你也可以在自己的手机浏览器上测试Sample。
 
 ### Sample
 

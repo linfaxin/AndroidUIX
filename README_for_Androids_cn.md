@@ -163,14 +163,8 @@ WebStorm + TypeScript 使得代码提示和错误检查十分友好, 代码书�
 ### 移动端的性能
 
 IOS端稳定在50fps+, 全程原生级别的流畅度.
-Android端Chrome浏览器根据机子性能在40-50fps左右, 接近原生级别的流畅度.
-打包成App(嵌入Runtime):50fps+
-Android4.x原生系统默认浏览器:30fps左右.不过国内主流机型都是定制过的系统(小米系统等), 默认浏览器内核已是较新版本, 能有40-50fps.
-
-
-### 打包成App发布
-
-目前可以使用[Cordova(PhoneGap)](http://cordova.apache.org/)打包方案
+Android端Chrome浏览器根据机子性能在50fps左右, 接近原生级别的流畅度.
+Android端WebView(App嵌入[Runtime](https://github.com/linfaxin/AndroidUIRuntimeAndroid)):50fps
 
 
 ### 进入调试

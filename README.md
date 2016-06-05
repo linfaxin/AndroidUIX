@@ -21,9 +21,9 @@ You can use [AndroidUI-CLI](https://github.com/linfaxin/AndroidUI-CLI) to create
 
 60fps is difficult on mobile device, the sample app's fps:
 
-1. IOS: 50fps
-2. Android Chrome: 40-50fps
-3. Android WebView(4.4): 20-30fps
+1. IOS: 50-60fps
+2. Android Chrome: 50fps
+3. Android WebView(with [Runtime](https://github.com/linfaxin/AndroidUIRuntimeAndroid)): 50fps
 
 You can test Sample on your device.
 
