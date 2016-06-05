@@ -38,6 +38,7 @@ import View = android.view.View;
 import Integer = java.lang.Integer;
 import System = java.lang.System;
 import NetDrawable = androidui.image.NetDrawable;
+import LayoutParams = android.view.ViewGroup.LayoutParams;
     
 /**
  * Displays an arbitrary image, such as an icon.  The ImageView class
@@ -228,9 +229,37 @@ export class ImageView extends View {
 
     drawableSizeChange(who : Drawable):void{
         if (who == this.mDrawable) {
-            this.resizeFromDrawable();
+            this.checkResizeFromDrawable();
         }else {
             super.drawableSizeChange(who);
+        }
+    }
+
+    /**
+     * Check whether entirely new img requires a new view layout.
+     */
+    private checkResizeFromDrawable():void  {
+        let d:Drawable = this.mDrawable;
+        if (d != null) {
+            let w:number = d.getIntrinsicWidth();
+            if (w < 0) w = this.mDrawableWidth;
+            let h:number = d.getIntrinsicHeight();
+            if (h < 0) h = this.mDrawableHeight;
+            if (w != this.mDrawableWidth || h != this.mDrawableHeight) {
+                this.mDrawableWidth = w;
+                this.mDrawableHeight = h;
+
+                if (this.mLayoutParams!=null
+                    && this.mLayoutParams.width != LayoutParams.WRAP_CONTENT && this.mLayoutParams.width != LayoutParams.MATCH_PARENT
+                    && this.mLayoutParams.height != LayoutParams.WRAP_CONTENT && this.mLayoutParams.height != LayoutParams.MATCH_PARENT) {
+                    // In a fixed-size view, no need requestLayout.
+                    this.configureBounds();
+                    this.invalidate();
+
+                } else {
+                    this.requestLayout();
+                }
+            }
         }
     }
 

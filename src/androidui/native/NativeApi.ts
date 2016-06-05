@@ -259,8 +259,8 @@ module androidui.native {
         NativeApi.drawHTML = JSBridge;
         NativeApi.webView = JSBridge;
 
-        //override some method
-        android.os.MessageQueue.requestNextLoop = ()=>{//loop fast.
+        //override some methods
+        android.os.MessageQueue.requestNextLoop = ()=>{//loop fast on android4 webview
             setTimeout(android.os.MessageQueue.loop, 0);
         };
         android.view.ViewRootImpl.prototype.trackFPS = ()=>{};//ignore web's trackFPS
