@@ -21,7 +21,9 @@ module android.content.res{
             this.context = context;
 
             window.addEventListener('resize', ()=>{
-                this.fillDisplayMetrics(this.displayMetrics);
+                if(this.displayMetrics){
+                    this.fillDisplayMetrics(this.displayMetrics);
+                }
             });
         }
 
