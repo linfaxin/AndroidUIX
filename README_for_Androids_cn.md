@@ -26,7 +26,7 @@
 
 在线Sample地址: http://linfaxin.com/AndroidUI-WebApp/sample/main.html
 预览:
-![预览](http://linfaxin.com/image/androidui/sample_app_preview.png)
+![预览](http://blog.linfaxin.com/image/androidui/sample_app_preview.png)
 
 
 ### 高性能的原因:Canvas
@@ -85,7 +85,7 @@ Preferences -> Languages & Frameworks -> TypeScript: 1.Enable TypeScript Compile
 
 ### 默认工程一览
 
-![目录文件一览](http://linfaxin.com/image/androidui/hello_world_project_dir_preview.png)
+![目录文件一览](http://blog.linfaxin.com/image/androidui/hello_world_project_dir_preview.png)
 
 目录/文件说明:
 
@@ -153,11 +153,11 @@ WebStorm + TypeScript 使得代码提示和错误检查十分友好, 代码书�
 布局开发有提示补全和错误属性检查，但没有布局预览, 也可以先在AndroidStudio里写好复制过来。
 在Chrome开发台的调试和断点能力比原生开发体验更优, 界面和代码的调试都比原生Android开发更友好.
 界面调试:
-![界面调试](http://linfaxin.com/image/androidui/debug_layout.png)
+![界面调试](http://blog.linfaxin.com/image/androidui/debug_layout.png)
 实时查看View属性:
-![节点调试](http://linfaxin.com/image/androidui/debug_node.png)
+![节点调试](http://blog.linfaxin.com/image/androidui/debug_node.png)
 代码调试:
-![代码调试](http://linfaxin.com/image/androidui/debug_source.png)
+![代码调试](http://blog.linfaxin.com/image/androidui/debug_source.png)
 
 
 ### 移动端的性能
