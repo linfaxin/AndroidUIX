@@ -3479,8 +3479,11 @@ module android.view {
             }
             views.add(this);
         }
-        setOnFocusChangeListener(l:View.OnFocusChangeListener) {
-            this.getListenerInfo().mOnFocusChangeListener = l;
+        setOnFocusChangeListener(l:View.OnFocusChangeListener|((v:View, hasFocus:boolean)=>void)) {
+            if(typeof l == "function"){
+                l = View.OnFocusChangeListener.fromFunction(<(v:View, hasFocus:boolean)=>void>l);
+            }
+            this.getListenerInfo().mOnFocusChangeListener = <View.OnFocusChangeListener>l;
         }
         getOnFocusChangeListener():View.OnFocusChangeListener {
             let li = this.mListenerInfo;
@@ -3784,8 +3787,11 @@ module android.view {
 
             return false;
         }
-        setOnKeyListener(l:View.OnKeyListener) {
-            this.getListenerInfo().mOnKeyListener = l;
+        setOnKeyListener(l:View.OnKeyListener|((v:View, keyCode:number, event:KeyEvent)=>void)) {
+            if(typeof l == "function"){
+                l = View.OnKeyListener.fromFunction(<(v:View, keyCode:number, event:KeyEvent)=>void>l);
+            }
+            this.getListenerInfo().mOnKeyListener = <View.OnKeyListener>l;
         }
         getKeyDispatcherState():KeyEvent.DispatcherState {
             return this.mAttachInfo != null ? this.mAttachInfo.mKeyDispatchState : null;
@@ -4115,11 +4121,14 @@ module android.view {
             }
             li.mOnAttachStateChangeListeners.remove(listener);
         }
-        setOnClickListener(l:View.OnClickListener) {
+        setOnClickListener(l:View.OnClickListener|((v:View)=>void)) {
             if (!this.isClickable()) {
                 this.setClickable(true);
             }
-            this.getListenerInfo().mOnClickListener = l;
+            if(typeof l == "function"){
+                l = View.OnClickListener.fromFunction(<(v:View)=>void>l);
+            }
+            this.getListenerInfo().mOnClickListener = <View.OnClickListener>l;
         }
         hasOnClickListeners():boolean {
             let li = this.mListenerInfo;
@@ -4127,11 +4136,14 @@ module android.view {
         }
 
 
-        setOnLongClickListener(l:View.OnLongClickListener) {
+        setOnLongClickListener(l:View.OnLongClickListener|((v:View)=>boolean)) {
             if (!this.isLongClickable()) {
                 this.setLongClickable(true);
             }
-            this.getListenerInfo().mOnLongClickListener = l;
+            if(typeof l == "function"){
+                l = View.OnLongClickListener.fromFunction(<(v:View)=>boolean>l);
+            }
+            this.getListenerInfo().mOnLongClickListener = <View.OnLongClickListener>l;
         }
         playSoundEffect(soundConstant:number){
             //no impl
@@ -4150,7 +4162,8 @@ module android.view {
 
             let li = this.mListenerInfo;
             if (li != null && li.mOnClickListener != null) {
-                handle = li.mOnClickListener.onClick(this) || handle;
+                li.mOnClickListener.onClick(this);
+                handle = true;
             }
 
             return handle;
@@ -4203,8 +4216,11 @@ module android.view {
                     ViewConfiguration.getLongPressTimeout() - delayOffset);
             }
         }
-        setOnTouchListener(l:View.OnTouchListener) {
-            this.getListenerInfo().mOnTouchListener = l;
+        setOnTouchListener(l:View.OnTouchListener|((v:View, event:MotionEvent)=>void)) {
+            if(typeof l == "function"){
+                l = View.OnTouchListener.fromFunction(<()=>void>l);
+            }
+            this.getListenerInfo().mOnTouchListener = <View.OnTouchListener>l;
         }
         isClickable() {
             return (this.mViewFlags & View.CLICKABLE) == View.CLICKABLE;
@@ -7366,26 +7382,68 @@ module android.view {
             onViewDetachedFromWindow(v:View);
         }
         export interface OnLayoutChangeListener{
-            onLayoutChange(v:View, left:number , top:number , right:number , bottom:number,
-                           oldLeft:number , oldTop:number , oldRight:number , oldBottom:number);
+            onLayoutChange(v:View, left:number , top:number, right:number, bottom:number,
+                           oldLeft:number, oldTop:number , oldRight:number , oldBottom:number):void;
         }
         export interface OnClickListener{
-            onClick(v:View);
+            onClick(v:View):void;
+        }
+        export module OnClickListener{
+            export function fromFunction(func:(v:View)=>void):OnClickListener {
+                return {
+                    onClick : func
+                }
+            }
         }
         export interface OnLongClickListener{
             onLongClick(v:View):boolean;
         }
+        export module OnLongClickListener{
+            export function fromFunction(func:(v:View)=>boolean):OnLongClickListener {
+                return {
+                    onLongClick : func
+                }
+            }
+        }
         export interface OnFocusChangeListener{
-            onFocusChange(v:View, hasFocus:boolean);
+            onFocusChange(v:View, hasFocus:boolean):void;
+        }
+        export module OnFocusChangeListener{
+            export function fromFunction(func:(v:View, hasFocus:boolean)=>void):OnFocusChangeListener {
+                return {
+                    onFocusChange : func
+                }
+            }
         }
         export interface OnTouchListener{
-            onTouch(v:View, event:MotionEvent);
+            onTouch(v:View, event:MotionEvent):void;
+        }
+        export module OnTouchListener{
+            export function fromFunction(func:(v:View, event:MotionEvent)=>void):OnTouchListener {
+                return {
+                    onTouch : func
+                }
+            }
         }
         export interface OnKeyListener{
-            onKey(v:View, keyCode:number, event:KeyEvent);
+            onKey(v:View, keyCode:number, event:KeyEvent):void;
+        }
+        export module OnKeyListener{
+            export function fromFunction(func:(v:View, keyCode:number, event:KeyEvent)=>void):OnKeyListener {
+                return {
+                    onKey : func
+                }
+            }
         }
         export interface OnGenericMotionListener{
             onGenericMotion(v:View, event:MotionEvent);
+        }
+        export module OnGenericMotionListener{
+            export function fromFunction(func:(v:View, event:MotionEvent)=>void):OnGenericMotionListener {
+                return {
+                    onGenericMotion : func
+                }
+            }
         }
 
         export interface Predicate<T>{
