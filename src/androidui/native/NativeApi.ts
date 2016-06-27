@@ -74,6 +74,9 @@ module androidui.native {
                 JSBridge.batchCall(batchCall.toString());
                 batchCall.clear();
             }
+            showFps(fps:number):void {
+                JSBridge.showJSFps(fps);
+            }
         }
 
         export class CanvasApi {
@@ -239,6 +242,7 @@ module androidui.native {
         onSurfaceBoundChange(surfaceId:number, left:number, top:number, right:number, bottom:number):void;
         batchCall(jsonString:string):void;
         measureText(text:string, textSize:number):number;
+        showJSFps(fps:number):void;
     }
 
     if(JSBridge){
@@ -263,7 +267,6 @@ module androidui.native {
         android.os.MessageQueue.requestNextLoop = ()=>{//loop fast
             setTimeout(android.os.MessageQueue.loop, 0);
         };
-        android.view.ViewRootImpl.prototype.trackFPS = ()=>{};//ignore web's trackFPS
         androidui.AndroidUI.showAppClosed = ()=>{
             JSBridge.closeApp();
         };

@@ -48,6 +48,10 @@ module androidui.native {
             }
         }
 
+        showFps(fps:number):void {
+            NativeApi.surface.showFps(fps);
+        }
+
         //call from native
         private static notifySurfaceReady(surfaceId:number){
             let surface:NativeSurface = SurfaceInstances.get(surfaceId);

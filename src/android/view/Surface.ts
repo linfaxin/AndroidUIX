@@ -17,6 +17,7 @@ module android.view{
     export class Surface{
         static DrawToCacheFirstMode = false;
         private mCanvasElement:HTMLCanvasElement;
+        private _showFPSNode:HTMLElement;
         private viewRoot:ViewRootImpl;
         private mLockedRect:Rect = new Rect();
         protected mCanvasBound = new Rect();
@@ -98,6 +99,23 @@ module android.view{
                 canvas.restoreToCount(this.mLockSaveCount);
             }
 
+        }
+
+        showFps(fps:number):void {
+            if(!this._showFPSNode){
+                this._showFPSNode = document.createElement('div');
+                this._showFPSNode.style.position = 'absolute';
+                this._showFPSNode.style.top = '0';
+                this._showFPSNode.style.left = '0';
+                this._showFPSNode.style.width = '60px';
+                this._showFPSNode.style.fontSize = '14px';
+                this._showFPSNode.style.background = 'black';
+                this._showFPSNode.style.color = 'white';
+                this._showFPSNode.style.opacity = '0.7';
+                this._showFPSNode.style.zIndex = '1';
+                this.mCanvasElement.parentNode.appendChild(this._showFPSNode);
+            }
+            this._showFPSNode.innerText = 'FPS:'+fps.toFixed(1);
         }
     }
 

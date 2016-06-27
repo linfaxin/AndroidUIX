@@ -25,6 +25,7 @@ module androidui {
     import Intent = android.content.Intent;
     import ActivityThread = android.app.ActivityThread;
     import UIClient = androidui.AndroidUI.UIClient;
+    import ViewRootImpl = android.view.ViewRootImpl;
 
     export class AndroidUI {
         static BindToElementName = 'AndroidUI';
@@ -67,7 +68,6 @@ module androidui {
         private init() {
             this.appName = document.title;
             this._viewRootImpl = new android.view.ViewRootImpl();
-            this._viewRootImpl.androidUIElement = this.androidUIElement;
 
             this.rootResourceElement = this.androidUIElement.querySelector('resources');
             if(this.rootResourceElement) this.androidUIElement.removeChild(this.rootResourceElement)
@@ -396,10 +396,17 @@ module androidui {
             }
         }
 
+        setDebugEnable(enable = true){
+            ViewRootImpl.DEBUG_FPS = enable;
+            this.setShowDebugLayout(enable);
+        }
+
         setShowDebugLayout(showDebugLayoutDefault = true){
             this.showDebugLayoutDefault = showDebugLayoutDefault;
             if(showDebugLayoutDefault){
                 this.showDebugLayout();
+            }else{
+                this.hideDebugLayout();
             }
         }
         private showDebugLayout(){

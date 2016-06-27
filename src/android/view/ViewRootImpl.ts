@@ -28,7 +28,7 @@
 ///<reference path="../graphics/Canvas.ts"/>
 ///<reference path="../../java/lang/Runnable.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../androidui/AndroidUIElement.ts"/>
+
 module android.view {
     import ViewParent = android.view.ViewParent;
     import View = android.view.View;
@@ -43,6 +43,7 @@ module android.view {
     import System = java.lang.System;
     import Log = android.util.Log;
     import Surface = android.view.Surface;
+    import AndroidUI = androidui.AndroidUI;
 
     export class ViewRootImpl implements ViewParent {
         static TAG = "ViewRootImpl";
@@ -58,7 +59,6 @@ module android.view {
         static ContinueEventToDom = Symbol();
 
         private mView:View;
-        private androidUIElement : androidui.AndroidUIElement;
         private mViewVisibility = View.GONE;
         private mStopped = false;
         private mWidth:number = -1;
@@ -603,7 +603,6 @@ module android.view {
             }
         }
 
-        private _showFPSNode:HTMLElement;
         trackFPS() {
             // Tracks frames per second drawn. First value in a series of draws may be bogus
             // because it down not account for the intervening idle time
@@ -621,19 +620,7 @@ module android.view {
                 if (totalTime > 1000) {
                     let fps = this.mFpsNumFrames * 1000 / totalTime;
                     Log.v(ViewRootImpl.TAG, "FPS:\t" + fps);
-                    if(!this._showFPSNode){
-                        this._showFPSNode = document.createElement('div');
-                        this._showFPSNode.style.position = 'absolute';
-                        this._showFPSNode.style.top = '0';
-                        this._showFPSNode.style.left = '0';
-                        this._showFPSNode.style.width = '60px';
-                        this._showFPSNode.style.fontSize = '14px';
-                        this._showFPSNode.style.background = 'black';
-                        this._showFPSNode.style.color = 'white';
-                        this._showFPSNode.style.opacity = '0.7';
-                        this.androidUIElement.appendChild(this._showFPSNode);
-                    }
-                    this._showFPSNode.innerText = 'FPS:'+fps.toFixed(1);
+                    this.mSurface.showFps(fps);
 
                     this.mFpsStartTime = nowTime;
                     this.mFpsNumFrames = 0;

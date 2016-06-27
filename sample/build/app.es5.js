@@ -223,7 +223,7 @@ var sample;
                             if (item == forkItem) {
                                 window.location.href = 'https://github.com/linfaxin/AndroidUI-WebApp';
                             } else if (item == aboutItem) {
-                                new android.app.AlertDialog.Builder(activity).setTitle('About').setMessage('AndroidU-WebApp by LinFaXin.').setPositiveButton(android.R.string_.ok, null).show();
+                                new android.app.AlertDialog.Builder(activity).setTitle('About').setMessage('AndroidUI-WebApp by LinFaXin.').setPositiveButton(android.R.string_.ok, null).show();
                             }
                             return true;
                         }

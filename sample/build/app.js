@@ -237,7 +237,7 @@ var sample;
                         else if (item == aboutItem) {
                             new android.app.AlertDialog.Builder(activity)
                                 .setTitle('About')
-                                .setMessage('AndroidU-WebApp by LinFaXin.')
+                                .setMessage('AndroidUI-WebApp by LinFaXin.')
                                 .setPositiveButton(android.R.string_.ok, null)
                                 .show();
                         }
