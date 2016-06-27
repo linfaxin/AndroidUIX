@@ -5519,15 +5519,8 @@ module android.widget {
             constructor(w:number, h:number, viewType:number);
             constructor(source:ViewGroup.LayoutParams);
             constructor(...args){
-                super();
-                if(args.length===1){
-                    super(args[0]);
-
-                }else if(args.length===2){
-                    super(args[0], args[1]);
-
-                }else if(args.length===3){
-                    super(args[0], args[1]);
+                super(...(args.length == 3 ? [args[0], args[1]] : args));//not pass viewType to super
+                if(args.length===3){
                     this.viewType = args[2];
                 }
             }

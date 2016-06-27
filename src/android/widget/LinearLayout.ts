@@ -1448,17 +1448,15 @@ module android.widget{
             constructor(source:ViewGroup.LayoutParams);
             constructor(width:number, height:number, weight?:number);
             constructor(...args) {
-                super();
+                super(...(args.length == 3 ? [args[0], args[1]] : args));//not pass weight to super
                 if (args.length === 1) {
                     if(args[0] instanceof LayoutParams){
                         this.gravity = args[0].gravity;
                     }
-                    super(args[0]);
-                } else {
-                    let [width, height, weight=0] = args;
-                    super(width, height);
-                    this.weight = weight;
+                } else if (args.length === 3) {
+                    this.weight = args[2] || 0;
                 }
+
                 let a = this._attrBinder;
                 a.addAttr('gravity', (value)=>{
                     this.gravity = a.parseGravity(value, this.gravity);

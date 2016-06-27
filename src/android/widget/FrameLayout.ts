@@ -497,14 +497,11 @@ module android.widget {
              */
             constructor(width:number, height:number, gravity?:number);
             constructor(...args) {
-                super();
+                super(...(args.length == 3 ? [args[0], args[1]] : args));//not pass gravity to super
                 if (args.length === 1 && args[0] instanceof LayoutParams) {
-                    super(args[0]);
                     this.gravity = args[0].gravity;
-                } else {
-                    let [width, height, gravity=-1] = args;
-                    super(width, height);
-                    this.gravity = gravity;
+                } else if (args.length === 3) {
+                    this.gravity = args[2] || -1;
                 }
 
                 this._attrBinder.addAttr('gravity', (value)=>{

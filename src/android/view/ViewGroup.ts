@@ -2579,6 +2579,7 @@ module android.view {
             constructor();
             constructor(src:LayoutParams);
             constructor(width:number, height:number);
+            constructor(...args);
             constructor(...args) {
                 if (args.length === 1) {
                     let src = args[0];
@@ -2598,7 +2599,7 @@ module android.view {
                         this.width = value;
                     }, ()=>{
                         return this._widthOrig;
-                    })
+                    });
                     this._attrBinder.addAttr('height', (value)=>{
                         if(value==null) value = -2;
                         this.height = value;
@@ -2715,20 +2716,16 @@ module android.view {
             constructor(width:number, height:number);
             constructor(...args);
             constructor(...args) {
-                super();
+                super(...args);
 
                 if (args.length === 1) {
                     let src = args[0];
-                    super(src);
                     if (src instanceof MarginLayoutParams) {
                         this.leftMargin = src._leftMargin;
                         this.topMargin = src._topMargin;
                         this.rightMargin = src._rightMargin;
                         this.bottomMargin = src._bottomMargin;
                     }
-
-                }else if(args.length==2){
-                    super(args[0], args[1]);
                 }
 
                 this._attrBinder.addAttr('marginLeft', (value)=>{
