@@ -3146,7 +3146,7 @@ declare module android.view {
         private findViewInsideOutShouldExist(root, id);
         getFocusables(direction: number): ArrayList<View>;
         addFocusables(views: ArrayList<View>, direction: number, focusableMode?: number): void;
-        setOnFocusChangeListener(l: View.OnFocusChangeListener): void;
+        setOnFocusChangeListener(l: View.OnFocusChangeListener | ((v: View, hasFocus: boolean) => void)): void;
         getOnFocusChangeListener(): View.OnFocusChangeListener;
         requestFocus(direction?: number, previouslyFocusedRect?: any): boolean;
         private requestFocusNoSearch(direction, previouslyFocusedRect);
@@ -3175,7 +3175,7 @@ declare module android.view {
         onGenericMotionEvent(event: MotionEvent): boolean;
         dispatchGenericPointerEvent(event: MotionEvent): boolean;
         dispatchKeyEvent(event: KeyEvent): boolean;
-        setOnKeyListener(l: View.OnKeyListener): void;
+        setOnKeyListener(l: View.OnKeyListener | ((v: View, keyCode: number, event: KeyEvent) => void)): void;
         getKeyDispatcherState(): KeyEvent.DispatcherState;
         onKeyDown(keyCode: number, event: android.view.KeyEvent): boolean;
         onKeyLongPress(keyCode: number, event: android.view.KeyEvent): boolean;
@@ -3199,9 +3199,9 @@ declare module android.view {
         removeOnLayoutChangeListener(listener: View.OnLayoutChangeListener): void;
         addOnAttachStateChangeListener(listener: View.OnAttachStateChangeListener): void;
         removeOnAttachStateChangeListener(listener: View.OnAttachStateChangeListener): void;
-        setOnClickListener(l: View.OnClickListener): void;
+        setOnClickListener(l: View.OnClickListener | ((v: View) => void)): void;
         hasOnClickListeners(): boolean;
-        setOnLongClickListener(l: View.OnLongClickListener): void;
+        setOnLongClickListener(l: View.OnLongClickListener | ((v: View) => boolean)): void;
         playSoundEffect(soundConstant: number): void;
         performHapticFeedback(feedbackConstant: number): boolean;
         performClick(event?: MotionEvent): boolean;
@@ -3209,7 +3209,7 @@ declare module android.view {
         performLongClick(): boolean;
         performButtonActionOnTouchDown(event: MotionEvent): boolean;
         private checkForLongClick(delayOffset?);
-        setOnTouchListener(l: View.OnTouchListener): void;
+        setOnTouchListener(l: View.OnTouchListener | ((v: View, event: MotionEvent) => void)): void;
         isClickable(): boolean;
         setClickable(clickable: boolean): void;
         isLongClickable(): boolean;
@@ -3525,25 +3525,43 @@ declare module android.view {
             onViewDetachedFromWindow(v: View): any;
         }
         interface OnLayoutChangeListener {
-            onLayoutChange(v: View, left: number, top: number, right: number, bottom: number, oldLeft: number, oldTop: number, oldRight: number, oldBottom: number): any;
+            onLayoutChange(v: View, left: number, top: number, right: number, bottom: number, oldLeft: number, oldTop: number, oldRight: number, oldBottom: number): void;
         }
         interface OnClickListener {
-            onClick(v: View): any;
+            onClick(v: View): void;
+        }
+        module OnClickListener {
+            function fromFunction(func: (v: View) => void): OnClickListener;
         }
         interface OnLongClickListener {
             onLongClick(v: View): boolean;
         }
+        module OnLongClickListener {
+            function fromFunction(func: (v: View) => boolean): OnLongClickListener;
+        }
         interface OnFocusChangeListener {
-            onFocusChange(v: View, hasFocus: boolean): any;
+            onFocusChange(v: View, hasFocus: boolean): void;
+        }
+        module OnFocusChangeListener {
+            function fromFunction(func: (v: View, hasFocus: boolean) => void): OnFocusChangeListener;
         }
         interface OnTouchListener {
-            onTouch(v: View, event: MotionEvent): any;
+            onTouch(v: View, event: MotionEvent): void;
+        }
+        module OnTouchListener {
+            function fromFunction(func: (v: View, event: MotionEvent) => void): OnTouchListener;
         }
         interface OnKeyListener {
-            onKey(v: View, keyCode: number, event: KeyEvent): any;
+            onKey(v: View, keyCode: number, event: KeyEvent): void;
+        }
+        module OnKeyListener {
+            function fromFunction(func: (v: View, keyCode: number, event: KeyEvent) => void): OnKeyListener;
         }
         interface OnGenericMotionListener {
             onGenericMotion(v: View, event: MotionEvent): any;
+        }
+        module OnGenericMotionListener {
+            function fromFunction(func: (v: View, event: MotionEvent) => void): OnGenericMotionListener;
         }
         interface Predicate<T> {
             apply(t: T): boolean;
@@ -3592,6 +3610,7 @@ declare module android.view {
     class Surface {
         static DrawToCacheFirstMode: boolean;
         private mCanvasElement;
+        private _showFPSNode;
         private viewRoot;
         private mLockedRect;
         protected mCanvasBound: Rect;
@@ -3605,158 +3624,7 @@ declare module android.view {
         lockCanvas(dirty: Rect): Canvas;
         protected lockCanvasImpl(left: number, top: number, width: number, height: number): Canvas;
         unlockCanvasAndPost(canvas: Canvas): void;
-    }
-}
-declare module PageStack {
-    var DEBUG: boolean;
-    var currentStack: StateStack;
-    var backListener: () => boolean;
-    var pageOpenHandler: (pageId: string, pageExtra?: any, isRestore?: boolean) => any;
-    var pagePushHandler: (pageId: string, pageExtra?: any) => any;
-    var pageCloseHandler: (pageId: string, pageExtra?: any) => any;
-    function init(): void;
-    function go(delta: number, pageAlreadyClose?: boolean): void;
-    function back(pageAlreadyClose?: boolean): void;
-    function openPage(pageId: string, extra?: any): any;
-    function backToPage(pageId: string): void;
-    function historyGo(delta: number, ensureFaked?: boolean): void;
-    function notifyPageClosed(pageId: string): void;
-    function notifyNewPageOpened(pageId: string, extra?: any): void;
-    function getPageExtra(pageId?: string): any;
-    function setPageExtra(extra: any, pageId?: string): void;
-    function preClosePageHasIFrame(historyLengthWhenInitIFrame: number): void;
-    interface StateStack {
-        pageId: string;
-        isRoot?: boolean;
-        stack: StateSaved[];
-    }
-    interface StateSaved {
-        pageId: string;
-        extra?: any;
-    }
-}
-declare module android.app {
-    import Intent = android.content.Intent;
-    import Animation = android.view.animation.Animation;
-    class ActivityThread {
-        androidUI: androidui.AndroidUI;
-        mLaunchedActivities: Set<Activity>;
-        overrideExitAnimation: Animation;
-        overrideEnterAnimation: Animation;
-        overrideResumeAnimation: Animation;
-        overrideHideAnimation: Animation;
-        constructor(androidUI: androidui.AndroidUI);
-        private initWithPageStack();
-        overrideNextWindowAnimation(enterAnimation: Animation, exitAnimation: Animation, resumeAnimation: Animation, hideAnimation: Animation): void;
-        getOverrideEnterAnimation(): Animation;
-        getOverrideExitAnimation(): Animation;
-        getOverrideResumeAnimation(): Animation;
-        getOverrideHideAnimation(): Animation;
-        scheduleApplicationHide(): void;
-        scheduleApplicationShow(): void;
-        execStartActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
-        activityResumeTimeout: any;
-        scheduleActivityResume(): void;
-        scheduleLaunchActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
-        scheduleDestroyActivityByRequestCode(requestCode: number): void;
-        scheduleDestroyActivity(activity: Activity, finishing?: boolean): void;
-        scheduleBackTo(intent: Intent): boolean;
-        canBackTo(intent: Intent): boolean;
-        scheduleBackToRoot(): void;
-        private handlePauseActivity(activity);
-        private performPauseActivity(activity);
-        private handleStopActivity(activity, show?);
-        private performStopActivity(activity, saveState);
-        private handleResumeActivity(a, launching);
-        private performResumeActivity(a, launching);
-        private handleLaunchActivity(intent);
-        private performLaunchActivity(intent);
-        private handleDestroyActivity(activity, finishing);
-        private performDestroyActivity(activity, finishing);
-        private updateVisibility(activity, show);
-        private getVisibleToUserActivities();
-        private isRootActivity(activity);
-        private static getActivityName(activity);
-    }
-}
-declare module android.R {
-    class string_ {
-        static ok: string;
-        static cancel: string;
-        static close: string;
-        static back: string;
-        static crash_catch_alert: string;
-        static prll_header_state_normal: string;
-        static prll_header_state_ready: string;
-        static prll_header_state_loading: string;
-        static prll_header_state_fail: string;
-        static prll_footer_state_normal: string;
-        static prll_footer_state_loading: string;
-        static prll_footer_state_ready: string;
-        static prll_footer_state_fail: string;
-        static prll_footer_state_no_more: string;
-        private static zh();
-    }
-}
-declare module androidui {
-    import View = android.view.View;
-    import UIClient = androidui.AndroidUI.UIClient;
-    class AndroidUI {
-        static BindToElementName: string;
-        androidUIElement: AndroidUIElement;
-        private _canvas;
-        windowManager: android.view.WindowManager;
-        private mActivityThread;
-        private _viewRootImpl;
-        private mApplication;
-        appName: string;
-        private uiClient;
-        private viewsDependOnDebugLayout;
-        private showDebugLayoutDefault;
-        private rootResourceElement;
-        private _windowBound;
-        private tempRect;
-        windowBound: android.graphics.Rect;
-        private touchEvent;
-        private touchAvailable;
-        private ketEvent;
-        constructor(androidUIElement: AndroidUIElement);
-        private init();
-        private initApplication();
-        private initLaunchActivity();
-        private initGlobalCrashHandle();
-        private refreshWindowBound();
-        private initAndroidUIElement();
-        private initEvent();
-        private initTouchEvent();
-        private initMouseEvent();
-        private initKeyEvent();
-        private initGenericEvent();
-        private initRootSizeChange();
-        private initBrowserVisibleChange();
-        private notifyRootSizeChange();
-        viewAttachedDependOnDebugLayout(view: View): void;
-        viewDetachedDependOnDebugLayout(view: View): void;
-        setShowDebugLayout(showDebugLayoutDefault?: boolean): void;
-        private showDebugLayout();
-        private hideDebugLayout();
-        setUIClient(uiClient: UIClient): void;
-        showAppClosed(): void;
-        private static showAppClosed(androidUI);
-    }
-    module AndroidUI {
-        interface UIClient {
-            shouldShowAppClosed?(androidUI: AndroidUI): any;
-        }
-    }
-}
-declare module androidui {
-    class AndroidUIElement extends HTMLDivElement {
-        AndroidUI: AndroidUI;
-        createdCallback(): void;
-        attachedCallback(): void;
-        detachedCallback(): void;
-        attributeChangedCallback(attributeName: string, oldVal: string, newVal: string): void;
+        showFps(fps: number): void;
     }
 }
 declare module android.view {
@@ -3778,7 +3646,6 @@ declare module android.view {
         static DEBUG_FPS: boolean;
         static ContinueEventToDom: symbol;
         private mView;
-        private androidUIElement;
         private mViewVisibility;
         private mStopped;
         private mWidth;
@@ -3831,7 +3698,6 @@ declare module android.view {
         private performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
         isInLayout(): boolean;
         requestLayoutDuringLayout(view: View): boolean;
-        private _showFPSNode;
         trackFPS(): void;
         private performDraw();
         private draw(fullRedrawNeeded);
@@ -4159,6 +4025,7 @@ declare module android.view {
             constructor();
             constructor(src: LayoutParams);
             constructor(width: number, height: number);
+            constructor(...args: any[]);
             parseAttributeFrom(node: Node, context: Context): void;
         }
         class MarginLayoutParams extends LayoutParams {
@@ -5171,6 +5038,159 @@ declare module android.view {
             onWindowFocusChanged(hasFocus: boolean): void;
             onAttachedToWindow(): void;
             onDetachedFromWindow(): void;
+        }
+    }
+}
+declare module PageStack {
+    var DEBUG: boolean;
+    var currentStack: StateStack;
+    var backListener: () => boolean;
+    var pageOpenHandler: (pageId: string, pageExtra?: any, isRestore?: boolean) => any;
+    var pagePushHandler: (pageId: string, pageExtra?: any) => any;
+    var pageCloseHandler: (pageId: string, pageExtra?: any) => any;
+    function init(): void;
+    function go(delta: number, pageAlreadyClose?: boolean): void;
+    function back(pageAlreadyClose?: boolean): void;
+    function openPage(pageId: string, extra?: any): any;
+    function backToPage(pageId: string): void;
+    function historyGo(delta: number, ensureFaked?: boolean): void;
+    function notifyPageClosed(pageId: string): void;
+    function notifyNewPageOpened(pageId: string, extra?: any): void;
+    function getPageExtra(pageId?: string): any;
+    function setPageExtra(extra: any, pageId?: string): void;
+    function preClosePageHasIFrame(historyLengthWhenInitIFrame: number): void;
+    interface StateStack {
+        pageId: string;
+        isRoot?: boolean;
+        stack: StateSaved[];
+    }
+    interface StateSaved {
+        pageId: string;
+        extra?: any;
+    }
+}
+declare module android.app {
+    import Intent = android.content.Intent;
+    import Animation = android.view.animation.Animation;
+    class ActivityThread {
+        androidUI: androidui.AndroidUI;
+        mLaunchedActivities: Set<Activity>;
+        overrideExitAnimation: Animation;
+        overrideEnterAnimation: Animation;
+        overrideResumeAnimation: Animation;
+        overrideHideAnimation: Animation;
+        constructor(androidUI: androidui.AndroidUI);
+        private initWithPageStack();
+        overrideNextWindowAnimation(enterAnimation: Animation, exitAnimation: Animation, resumeAnimation: Animation, hideAnimation: Animation): void;
+        getOverrideEnterAnimation(): Animation;
+        getOverrideExitAnimation(): Animation;
+        getOverrideResumeAnimation(): Animation;
+        getOverrideHideAnimation(): Animation;
+        scheduleApplicationHide(): void;
+        scheduleApplicationShow(): void;
+        execStartActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
+        activityResumeTimeout: any;
+        scheduleActivityResume(): void;
+        scheduleLaunchActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
+        scheduleDestroyActivityByRequestCode(requestCode: number): void;
+        scheduleDestroyActivity(activity: Activity, finishing?: boolean): void;
+        scheduleBackTo(intent: Intent): boolean;
+        canBackTo(intent: Intent): boolean;
+        scheduleBackToRoot(): void;
+        private handlePauseActivity(activity);
+        private performPauseActivity(activity);
+        private handleStopActivity(activity, show?);
+        private performStopActivity(activity, saveState);
+        private handleResumeActivity(a, launching);
+        private performResumeActivity(a, launching);
+        private handleLaunchActivity(intent);
+        private performLaunchActivity(intent);
+        private handleDestroyActivity(activity, finishing);
+        private performDestroyActivity(activity, finishing);
+        private updateVisibility(activity, show);
+        private getVisibleToUserActivities();
+        private isRootActivity(activity);
+        private static getActivityName(activity);
+    }
+}
+declare module android.R {
+    class string_ {
+        static ok: string;
+        static cancel: string;
+        static close: string;
+        static back: string;
+        static crash_catch_alert: string;
+        static prll_header_state_normal: string;
+        static prll_header_state_ready: string;
+        static prll_header_state_loading: string;
+        static prll_header_state_fail: string;
+        static prll_footer_state_normal: string;
+        static prll_footer_state_loading: string;
+        static prll_footer_state_ready: string;
+        static prll_footer_state_fail: string;
+        static prll_footer_state_no_more: string;
+        private static zh();
+    }
+}
+declare module androidui {
+    class AndroidUIElement extends HTMLDivElement {
+        AndroidUI: AndroidUI;
+        createdCallback(): void;
+        attachedCallback(): void;
+        detachedCallback(): void;
+        attributeChangedCallback(attributeName: string, oldVal: string, newVal: string): void;
+    }
+}
+declare module androidui {
+    import View = android.view.View;
+    import UIClient = androidui.AndroidUI.UIClient;
+    class AndroidUI {
+        static BindToElementName: string;
+        androidUIElement: AndroidUIElement;
+        private _canvas;
+        windowManager: android.view.WindowManager;
+        private mActivityThread;
+        private _viewRootImpl;
+        private mApplication;
+        appName: string;
+        private uiClient;
+        private viewsDependOnDebugLayout;
+        private showDebugLayoutDefault;
+        private rootResourceElement;
+        private _windowBound;
+        private tempRect;
+        windowBound: android.graphics.Rect;
+        private touchEvent;
+        private touchAvailable;
+        private ketEvent;
+        constructor(androidUIElement: AndroidUIElement);
+        private init();
+        private initApplication();
+        private initLaunchActivity();
+        private initGlobalCrashHandle();
+        private refreshWindowBound();
+        private initAndroidUIElement();
+        private initEvent();
+        private initTouchEvent();
+        private initMouseEvent();
+        private initKeyEvent();
+        private initGenericEvent();
+        private initRootSizeChange();
+        private initBrowserVisibleChange();
+        private notifyRootSizeChange();
+        viewAttachedDependOnDebugLayout(view: View): void;
+        viewDetachedDependOnDebugLayout(view: View): void;
+        setDebugEnable(enable?: boolean): void;
+        setShowDebugLayout(showDebugLayoutDefault?: boolean): void;
+        private showDebugLayout();
+        private hideDebugLayout();
+        setUIClient(uiClient: UIClient): void;
+        showAppClosed(): void;
+        private static showAppClosed(androidUI);
+    }
+    module AndroidUI {
+        interface UIClient {
+            shouldShowAppClosed?(androidUI: AndroidUI): any;
         }
     }
 }
@@ -11067,6 +11087,7 @@ declare module androidui.native {
         notifyBoundChange(): void;
         protected lockCanvasImpl(left: number, top: number, width: number, height: number): android.graphics.Canvas;
         unlockCanvasAndPost(canvas: android.graphics.Canvas): void;
+        showFps(fps: number): void;
         private static notifySurfaceReady(surfaceId);
         private static notifySurfaceSupportDirtyDraw(surfaceId, dirtyDrawSupport);
     }
@@ -11147,6 +11168,7 @@ declare module androidui.native {
             onSurfaceBoundChange(surfaceId: number, left: number, top: number, right: number, bottom: number): void;
             lockCanvas(surfaceId: number, canvasId: number, left: number, top: number, right: number, bottom: number): void;
             unlockCanvasAndPost(surfaceId: number, canvasId: number): void;
+            showFps(fps: number): void;
         }
         class CanvasApi {
             createCanvas(canvasId: number, width: number, height: number): void;

@@ -1,5 +1,5 @@
 /**
- * AndroidUI-WebApp v0.5.9
+ * AndroidUI-WebApp v0.5.10
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -4359,7 +4359,9 @@ var android;
                 constructor(context) {
                     this.context = context;
                     window.addEventListener('resize', () => {
-                        this.fillDisplayMetrics(this.displayMetrics);
+                        if (this.displayMetrics) {
+                            this.fillDisplayMetrics(this.displayMetrics);
+                        }
                     });
                 }
                 static getSystem() {
@@ -12461,6 +12463,9 @@ var android;
                 views.add(this);
             }
             setOnFocusChangeListener(l) {
+                if (typeof l == "function") {
+                    l = View.OnFocusChangeListener.fromFunction(l);
+                }
                 this.getListenerInfo().mOnFocusChangeListener = l;
             }
             getOnFocusChangeListener() {
@@ -12678,6 +12683,9 @@ var android;
                 return false;
             }
             setOnKeyListener(l) {
+                if (typeof l == "function") {
+                    l = View.OnKeyListener.fromFunction(l);
+                }
                 this.getListenerInfo().mOnKeyListener = l;
             }
             getKeyDispatcherState() {
@@ -12918,6 +12926,9 @@ var android;
                 if (!this.isClickable()) {
                     this.setClickable(true);
                 }
+                if (typeof l == "function") {
+                    l = View.OnClickListener.fromFunction(l);
+                }
                 this.getListenerInfo().mOnClickListener = l;
             }
             hasOnClickListeners() {
@@ -12927,6 +12938,9 @@ var android;
             setOnLongClickListener(l) {
                 if (!this.isLongClickable()) {
                     this.setLongClickable(true);
+                }
+                if (typeof l == "function") {
+                    l = View.OnLongClickListener.fromFunction(l);
                 }
                 this.getListenerInfo().mOnLongClickListener = l;
             }
@@ -12942,7 +12956,8 @@ var android;
                 }
                 let li = this.mListenerInfo;
                 if (li != null && li.mOnClickListener != null) {
-                    handle = li.mOnClickListener.onClick(this) || handle;
+                    li.mOnClickListener.onClick(this);
+                    handle = true;
                 }
                 return handle;
             }
@@ -12976,6 +12991,9 @@ var android;
                 }
             }
             setOnTouchListener(l) {
+                if (typeof l == "function") {
+                    l = View.OnTouchListener.fromFunction(l);
+                }
                 this.getListenerInfo().mOnTouchListener = l;
             }
             isClickable() {
@@ -15342,6 +15360,60 @@ var android;
             class ListenerInfo {
             }
             View.ListenerInfo = ListenerInfo;
+            var OnClickListener;
+            (function (OnClickListener) {
+                function fromFunction(func) {
+                    return {
+                        onClick: func
+                    };
+                }
+                OnClickListener.fromFunction = fromFunction;
+            })(OnClickListener = View.OnClickListener || (View.OnClickListener = {}));
+            var OnLongClickListener;
+            (function (OnLongClickListener) {
+                function fromFunction(func) {
+                    return {
+                        onLongClick: func
+                    };
+                }
+                OnLongClickListener.fromFunction = fromFunction;
+            })(OnLongClickListener = View.OnLongClickListener || (View.OnLongClickListener = {}));
+            var OnFocusChangeListener;
+            (function (OnFocusChangeListener) {
+                function fromFunction(func) {
+                    return {
+                        onFocusChange: func
+                    };
+                }
+                OnFocusChangeListener.fromFunction = fromFunction;
+            })(OnFocusChangeListener = View.OnFocusChangeListener || (View.OnFocusChangeListener = {}));
+            var OnTouchListener;
+            (function (OnTouchListener) {
+                function fromFunction(func) {
+                    return {
+                        onTouch: func
+                    };
+                }
+                OnTouchListener.fromFunction = fromFunction;
+            })(OnTouchListener = View.OnTouchListener || (View.OnTouchListener = {}));
+            var OnKeyListener;
+            (function (OnKeyListener) {
+                function fromFunction(func) {
+                    return {
+                        onKey: func
+                    };
+                }
+                OnKeyListener.fromFunction = fromFunction;
+            })(OnKeyListener = View.OnKeyListener || (View.OnKeyListener = {}));
+            var OnGenericMotionListener;
+            (function (OnGenericMotionListener) {
+                function fromFunction(func) {
+                    return {
+                        onGenericMotion: func
+                    };
+                }
+                OnGenericMotionListener.fromFunction = fromFunction;
+            })(OnGenericMotionListener = View.OnGenericMotionListener || (View.OnGenericMotionListener = {}));
         })(View = view_2.View || (view_2.View = {}));
         (function (View) {
             var AttachInfo;
@@ -15524,6 +15596,22 @@ var android;
                     canvas.restoreToCount(this.mLockSaveCount);
                 }
             }
+            showFps(fps) {
+                if (!this._showFPSNode) {
+                    this._showFPSNode = document.createElement('div');
+                    this._showFPSNode.style.position = 'absolute';
+                    this._showFPSNode.style.top = '0';
+                    this._showFPSNode.style.left = '0';
+                    this._showFPSNode.style.width = '60px';
+                    this._showFPSNode.style.fontSize = '14px';
+                    this._showFPSNode.style.background = 'black';
+                    this._showFPSNode.style.color = 'white';
+                    this._showFPSNode.style.opacity = '0.7';
+                    this._showFPSNode.style.zIndex = '1';
+                    this.mCanvasElement.parentNode.appendChild(this._showFPSNode);
+                }
+                this._showFPSNode.innerText = 'FPS:' + fps.toFixed(1);
+            }
         }
         Surface.DrawToCacheFirstMode = false;
         view.Surface = Surface;
@@ -15538,1278 +15626,6 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
-var PageStack;
-(function (PageStack) {
-    PageStack.DEBUG = false;
-    const history_go = history.go;
-    var iFrameHistoryLengthAsFake = 0;
-    let historyLocking = false;
-    let windowLoadLocking = true;
-    let pendingFuncLock = [];
-    let initCalled = false;
-    function init() {
-        initCalled = true;
-        _init();
-        history.go = function (delta) {
-            PageStack.go(delta);
-        };
-        history.back = function (delta = -1) {
-            PageStack.go(delta);
-        };
-        history.forward = function (delta = 1) {
-            PageStack.go(delta);
-        };
-    }
-    PageStack.init = init;
-    function checkInitCalled() {
-        if (!initCalled)
-            throw Error("PageStack.init() must be call first");
-    }
-    function _init() {
-        PageStack.currentStack = history.state;
-        if (PageStack.currentStack && !PageStack.currentStack.isRoot) {
-            console.log('already has history.state when _init PageState, restore page');
-            restorePageFromStackIfNeed();
-        }
-        else {
-            PageStack.currentStack = PageStack.currentStack || {
-                pageId: '',
-                isRoot: true,
-                stack: [{ pageId: null }]
-            };
-            let initOpenUrl = location.hash;
-            if (initOpenUrl && initOpenUrl.indexOf('#') === 0)
-                initOpenUrl = initOpenUrl.substring(1);
-            removeLastHistoryIfFaked();
-            ensureLockDo(() => {
-                history.replaceState(PageStack.currentStack, null, '#');
-            });
-            if (initOpenUrl && initOpenUrl.length > 0) {
-                if (firePagePush(initOpenUrl, null)) {
-                    notifyNewPageOpened(initOpenUrl);
-                }
-            }
-        }
-        ensureLastHistoryFaked();
-        if (document.readyState === 'complete') {
-            windowLoadLocking = false;
-            setTimeout(initOnpopstate, 0);
-        }
-        else {
-            window.addEventListener('load', () => {
-                windowLoadLocking = false;
-                window.removeEventListener('popstate', onpopstateListener);
-                setTimeout(initOnpopstate, 0);
-            });
-        }
-    }
-    let onpopstateListener = function (ev) {
-        let stack = ev.state;
-        if (historyLocking) {
-            PageStack.currentStack = stack;
-            return;
-        }
-        if (PageStack.DEBUG)
-            console.log('onpopstate', stack);
-        if (!stack) {
-            let pageId = location.hash;
-            if (pageId[0] === '#')
-                pageId = pageId.substring(1);
-            historyGo(-2, false);
-            if (firePagePush(pageId, null)) {
-                notifyNewPageOpened(pageId);
-            }
-            else {
-                ensureLastHistoryFaked();
-            }
-        }
-        else if (PageStack.currentStack.stack.length != stack.stack.length) {
-            let delta = stack.stack.length - PageStack.currentStack.stack.length;
-            if (delta >= 0) {
-                console.warn('something error! stack: ', stack, 'last stack: ', PageStack.currentStack);
-                return;
-            }
-            var stackList = PageStack.currentStack.stack;
-            PageStack.currentStack = stack;
-            tryClosePageAfterHistoryChanged(stackList, delta);
-        }
-        else {
-            PageStack.currentStack = stack;
-            if (fireBackPressed()) {
-                ensureLastHistoryFaked();
-            }
-            else {
-                var stackList = PageStack.currentStack.stack;
-                var pageId = stackList[stackList.length - 1].pageId;
-                if (firePageClose(pageId, stackList[stackList.length - 1].extra)) {
-                    historyGo(-1);
-                }
-                else {
-                    ensureLastHistoryFaked();
-                }
-            }
-        }
-    };
-    function initOnpopstate() {
-        window.removeEventListener('popstate', onpopstateListener);
-        window.addEventListener('popstate', onpopstateListener);
-    }
-    function go(delta, pageAlreadyClose = false) {
-        checkInitCalled();
-        if (historyLocking) {
-            ensureLockDo(() => {
-                go(delta);
-            });
-            return;
-        }
-        var stackList = PageStack.currentStack.stack;
-        if (delta === -1 && !pageAlreadyClose) {
-            if (!firePageClose(stackList[stackList.length - 1].pageId, stackList[stackList.length - 1].extra)) {
-                return;
-            }
-        }
-        removeLastHistoryIfFaked();
-        historyGo(delta);
-        if (delta < -1 && !pageAlreadyClose) {
-            ensureLockDo(() => {
-                tryClosePageAfterHistoryChanged(stackList, delta);
-            });
-        }
-    }
-    PageStack.go = go;
-    function tryClosePageAfterHistoryChanged(stateListBeforeHistoryChange, delta) {
-        let historyLength = stateListBeforeHistoryChange.length;
-        for (let i = historyLength + delta; i < historyLength; i++) {
-            let state = stateListBeforeHistoryChange[i];
-            if (!firePageClose(state.pageId, state.extra)) {
-                notifyNewPageOpened(state.pageId, state.extra);
-            }
-        }
-    }
-    function back(pageAlreadyClose = false) {
-        checkInitCalled();
-        go(-1, pageAlreadyClose);
-    }
-    PageStack.back = back;
-    function openPage(pageId, extra) {
-        checkInitCalled();
-        pageId += '';
-        var openResult = firePageOpen(pageId, extra);
-        if (openResult) {
-            notifyNewPageOpened(pageId, extra);
-        }
-        return openResult;
-    }
-    PageStack.openPage = openPage;
-    function backToPage(pageId) {
-        checkInitCalled();
-        if (PageStack.DEBUG)
-            console.log('backToPage', pageId);
-        if (historyLocking) {
-            ensureLockDo(() => {
-                backToPage(pageId);
-            });
-        }
-        let stackList = PageStack.currentStack.stack;
-        let historyLength = stackList.length;
-        for (let i = historyLength - 1; i >= 0; i--) {
-            let state = stackList[i];
-            if (state.pageId == pageId) {
-                let delta = i - historyLength;
-                removeLastHistoryIfFaked();
-                historyGo(delta);
-                return;
-            }
-        }
-    }
-    PageStack.backToPage = backToPage;
-    let releaseLockingTimeout;
-    let requestHistoryGoWhenLocking = 0;
-    let ensureFakeAfterHistoryChange = false;
-    function historyGo(delta, ensureFaked = true) {
-        if (delta >= 0)
-            return;
-        if (history.length === 1)
-            return;
-        ensureFakeAfterHistoryChange = ensureFakeAfterHistoryChange || ensureFaked;
-        if (historyLocking) {
-            requestHistoryGoWhenLocking += delta;
-            return;
-        }
-        if (PageStack.DEBUG)
-            console.log('historyGo', delta);
-        historyLocking = true;
-        const state = history.state;
-        if (releaseLockingTimeout)
-            clearTimeout(releaseLockingTimeout);
-        function checkRelease() {
-            clearTimeout(releaseLockingTimeout);
-            if (history.state === state) {
-                releaseLockingTimeout = setTimeout(checkRelease, 0);
-            }
-            else {
-                let continueGo = requestHistoryGoWhenLocking;
-                if (continueGo != 0) {
-                    requestHistoryGoWhenLocking = 0;
-                    historyLocking = false;
-                    historyGo(continueGo, false);
-                }
-                else {
-                    if (ensureFakeAfterHistoryChange)
-                        ensureLastHistoryFakedImpl();
-                    ensureFakeAfterHistoryChange = false;
-                    releaseLockingTimeout = setTimeout(() => {
-                        historyLocking = false;
-                    }, 10);
-                }
-            }
-        }
-        releaseLockingTimeout = setTimeout(checkRelease, 0);
-        history_go.call(history, delta);
-    }
-    PageStack.historyGo = historyGo;
-    function restorePageFromStackIfNeed() {
-        if (PageStack.currentStack) {
-            let copy = PageStack.currentStack.stack.concat();
-            copy.shift();
-            for (let saveState of copy) {
-                firePageOpen(saveState.pageId, saveState.extra, true);
-            }
-        }
-    }
-    function fireBackPressed() {
-        if (PageStack.backListener) {
-            try {
-                return PageStack.backListener();
-            }
-            catch (e) {
-                console.error(e);
-            }
-        }
-    }
-    function firePageOpen(pageId, pageExtra, isRestore = false) {
-        if (PageStack.pageOpenHandler) {
-            try {
-                return PageStack.pageOpenHandler(pageId, pageExtra, isRestore);
-            }
-            catch (e) {
-                console.error(e);
-            }
-        }
-    }
-    function firePagePush(pageId, pageExtra) {
-        if (PageStack.pagePushHandler) {
-            try {
-                return PageStack.pagePushHandler(pageId, pageExtra);
-            }
-            catch (e) {
-                console.error(e);
-            }
-        }
-    }
-    function firePageClose(pageId, pageExtra) {
-        if (PageStack.pageCloseHandler) {
-            try {
-                return PageStack.pageCloseHandler(pageId, pageExtra);
-            }
-            catch (e) {
-                console.error(e);
-            }
-        }
-    }
-    function notifyPageClosed(pageId) {
-        checkInitCalled();
-        if (PageStack.DEBUG)
-            console.log('notifyPageClosed', pageId);
-        if (historyLocking) {
-            ensureLockDo(() => {
-                notifyPageClosed(pageId);
-            });
-            return;
-        }
-        let stackList = PageStack.currentStack.stack;
-        let historyLength = stackList.length;
-        for (let i = historyLength - 1; i >= 0; i--) {
-            let state = stackList[i];
-            if (state.pageId == pageId) {
-                if (i === historyLength - 1) {
-                    removeLastHistoryIfFaked();
-                    historyGo(-1);
-                }
-                else {
-                    let delta = i - historyLength;
-                    (function (delta) {
-                        removeLastHistoryIfFaked();
-                        historyGo(delta);
-                        ensureLockDoAtFront(() => {
-                            let historyLength = stackList.length;
-                            let pageStartAddIndex = historyLength + delta + 1;
-                            for (let j = pageStartAddIndex; j < historyLength; j++) {
-                                notifyNewPageOpened(stackList[j].pageId, stackList[j].extra);
-                            }
-                        });
-                    })(delta);
-                }
-                return;
-            }
-        }
-    }
-    PageStack.notifyPageClosed = notifyPageClosed;
-    function notifyNewPageOpened(pageId, extra) {
-        checkInitCalled();
-        if (PageStack.DEBUG)
-            console.log('notifyNewPageOpened', pageId);
-        let state = {
-            pageId: pageId,
-            extra: extra
-        };
-        ensureLockDo(function () {
-            PageStack.currentStack.stack.push(state);
-            PageStack.currentStack.pageId = pageId;
-            PageStack.currentStack.isRoot = false;
-            if (history.state.isFake) {
-                history.replaceState(PageStack.currentStack, null, '#' + pageId);
-            }
-            else {
-                history.pushState(PageStack.currentStack, null, '#' + pageId);
-            }
-            ensureLastHistoryFakedImpl();
-        });
-    }
-    PageStack.notifyNewPageOpened = notifyNewPageOpened;
-    function getPageExtra(pageId) {
-        checkInitCalled();
-        let stackList = PageStack.currentStack.stack;
-        let historyLength = stackList.length;
-        if (!pageId) {
-            return stackList[historyLength - 1].extra;
-        }
-        else {
-            for (let i = historyLength - 1; i >= 0; i--) {
-                let state = stackList[i];
-                if (state.pageId == pageId) {
-                    return state.extra;
-                }
-            }
-        }
-    }
-    PageStack.getPageExtra = getPageExtra;
-    function setPageExtra(extra, pageId) {
-        checkInitCalled();
-        removeLastHistoryIfFaked();
-        ensureLockDo(function () {
-            let stackList = PageStack.currentStack.stack;
-            let historyLength = stackList.length;
-            if (!pageId) {
-                stackList[historyLength - 1].extra = extra;
-                history.replaceState(PageStack.currentStack, null, '');
-            }
-            else {
-                for (let i = historyLength - 1; i >= 0; i--) {
-                    let state = stackList[i];
-                    if (state.pageId == pageId) {
-                        state.extra = extra;
-                        history.replaceState(PageStack.currentStack, null, '');
-                        break;
-                    }
-                }
-            }
-            ensureLastHistoryFakedImpl();
-        });
-    }
-    PageStack.setPageExtra = setPageExtra;
-    function ensureLockDo(func) {
-        checkInitCalled();
-        if (!historyLocking && !windowLoadLocking) {
-            func();
-            return;
-        }
-        pendingFuncLock.push(func);
-        _queryLockDo();
-    }
-    function ensureLockDoAtFront(func, runNowIfNotLock = false) {
-        checkInitCalled();
-        if (!historyLocking && !windowLoadLocking && runNowIfNotLock) {
-            func();
-            return;
-        }
-        pendingFuncLock.splice(0, 0, func);
-        _queryLockDo();
-    }
-    let execLockedTimeoutId;
-    function _queryLockDo() {
-        if (execLockedTimeoutId)
-            clearTimeout(execLockedTimeoutId);
-        function execLockedFunctions() {
-            if (historyLocking || windowLoadLocking) {
-                clearTimeout(execLockedTimeoutId);
-                execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
-            }
-            else {
-                let f;
-                while (f = pendingFuncLock.shift()) {
-                    f();
-                    if (historyLocking || windowLoadLocking) {
-                        clearTimeout(execLockedTimeoutId);
-                        execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
-                        break;
-                    }
-                }
-            }
-        }
-        execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
-    }
-    function preClosePageHasIFrame(historyLengthWhenInitIFrame) {
-        history.pushState({ isFake: true }, null, null);
-        iFrameHistoryLengthAsFake = history.length - historyLengthWhenInitIFrame;
-    }
-    PageStack.preClosePageHasIFrame = preClosePageHasIFrame;
-    function removeLastHistoryIfFaked() {
-        ensureLockDo(removeLastHistoryIfFakedImpl);
-    }
-    function removeLastHistoryIfFakedImpl() {
-        if (history.state && history.state.isFake) {
-            if (PageStack.DEBUG)
-                console.log('remove Fake History');
-            history.replaceState(null, null, '');
-            historyGo(-1 - iFrameHistoryLengthAsFake, false);
-            iFrameHistoryLengthAsFake = 0;
-        }
-    }
-    function ensureLastHistoryFaked() {
-        ensureLockDo(ensureLastHistoryFakedImpl);
-    }
-    function ensureLastHistoryFakedImpl() {
-        if (!history.state.isFake) {
-            if (PageStack.DEBUG)
-                console.log('append Fake History');
-            history.pushState({
-                isFake: true,
-                isRoot: PageStack.currentStack.isRoot,
-                stack: PageStack.currentStack.stack,
-            }, null, '');
-        }
-    }
-})(PageStack || (PageStack = {}));
-var android;
-(function (android) {
-    var app;
-    (function (app) {
-        var Bundle = android.os.Bundle;
-        var Intent = android.content.Intent;
-        var View = android.view.View;
-        class ActivityThread {
-            constructor(androidUI) {
-                this.mLaunchedActivities = new Set();
-                this.androidUI = androidUI;
-            }
-            initWithPageStack() {
-                let backKeyDownEvent = android.view.KeyEvent.obtain(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_BACK);
-                let backKeyUpEvent = android.view.KeyEvent.obtain(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_BACK);
-                PageStack.backListener = () => {
-                    let handleDown = this.androidUI._viewRootImpl.dispatchInputEvent(backKeyDownEvent);
-                    let handleUp = this.androidUI._viewRootImpl.dispatchInputEvent(backKeyUpEvent);
-                    return handleDown || handleUp;
-                };
-                PageStack.pageOpenHandler = (pageId, pageExtra, isRestore) => {
-                    let intent = new Intent(pageId);
-                    if (pageExtra)
-                        intent.mExtras = new Bundle(pageExtra.mExtras);
-                    if (isRestore)
-                        this.overrideNextWindowAnimation(null, null, null, null);
-                    let activity = this.handleLaunchActivity(intent);
-                    return activity && !activity.mFinished;
-                };
-                PageStack.pageCloseHandler = (pageId, pageExtra) => {
-                    if (this.mLaunchedActivities.size === 1) {
-                        let rootActivity = Array.from(this.mLaunchedActivities)[0];
-                        if (pageId == null || rootActivity.getIntent().activityName == pageId) {
-                            this.handleDestroyActivity(rootActivity, true);
-                            return true;
-                        }
-                        return false;
-                    }
-                    for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
-                        let intent = activity.getIntent();
-                        if (intent.activityName == pageId) {
-                            this.handleDestroyActivity(activity, true);
-                            return true;
-                        }
-                    }
-                };
-                PageStack.init();
-            }
-            overrideNextWindowAnimation(enterAnimation, exitAnimation, resumeAnimation, hideAnimation) {
-                this.overrideEnterAnimation = enterAnimation;
-                this.overrideExitAnimation = exitAnimation;
-                this.overrideResumeAnimation = resumeAnimation;
-                this.overrideHideAnimation = hideAnimation;
-            }
-            getOverrideEnterAnimation() {
-                return this.overrideEnterAnimation;
-            }
-            getOverrideExitAnimation() {
-                return this.overrideExitAnimation;
-            }
-            getOverrideResumeAnimation() {
-                return this.overrideResumeAnimation;
-            }
-            getOverrideHideAnimation() {
-                return this.overrideHideAnimation;
-            }
-            scheduleApplicationHide() {
-                let visibleActivities = this.getVisibleToUserActivities();
-                if (visibleActivities.length == 0)
-                    return;
-                this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
-                for (let visibleActivity of visibleActivities) {
-                    this.handleStopActivity(visibleActivity, true);
-                }
-            }
-            scheduleApplicationShow() {
-                this.scheduleActivityResume();
-            }
-            execStartActivity(callActivity, intent, options) {
-                if ((intent.getFlags() & Intent.FLAG_ACTIVITY_CLEAR_TOP) != 0) {
-                    if (this.scheduleBackTo(intent))
-                        return;
-                }
-                this.scheduleLaunchActivity(callActivity, intent, options);
-            }
-            scheduleActivityResume() {
-                if (this.activityResumeTimeout)
-                    clearTimeout(this.activityResumeTimeout);
-                this.activityResumeTimeout = setTimeout(() => {
-                    let visibleActivities = this.getVisibleToUserActivities();
-                    if (visibleActivities.length == 0)
-                        return;
-                    for (let visibleActivity of visibleActivities) {
-                        visibleActivity.performRestart();
-                    }
-                    let activity = visibleActivities.pop();
-                    this.handleResumeActivity(activity, false);
-                    if (activity.getWindow().isFloating()) {
-                        for (let visibleActivity of visibleActivities.reverse()) {
-                            if (visibleActivity.mVisibleFromClient) {
-                                visibleActivity.makeVisible();
-                                if (!visibleActivity.getWindow().isFloating()) {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }, 0);
-            }
-            scheduleLaunchActivity(callActivity, intent, options) {
-                let activity = this.handleLaunchActivity(intent);
-                activity.mCallActivity = callActivity;
-                if (activity && !activity.mFinished) {
-                    PageStack.notifyNewPageOpened(intent.activityName, intent);
-                }
-            }
-            scheduleDestroyActivityByRequestCode(requestCode) {
-                for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
-                    if (activity.getIntent() && requestCode == activity.getIntent().mRequestCode) {
-                        this.scheduleDestroyActivity(activity);
-                    }
-                }
-            }
-            scheduleDestroyActivity(activity, finishing = true) {
-                setTimeout(() => {
-                    let isCreateSuc = this.mLaunchedActivities.has(activity);
-                    if (activity.mCallActivity && activity.getIntent() && activity.getIntent().mRequestCode >= 0) {
-                        activity.mCallActivity.dispatchActivityResult(null, activity.getIntent().mRequestCode, activity.mResultCode, activity.mResultData);
-                    }
-                    this.handleDestroyActivity(activity, finishing);
-                    if (!isCreateSuc)
-                        return;
-                    if (this.mLaunchedActivities.size == 0) {
-                        if (history.length <= 2) {
-                            this.androidUI.showAppClosed();
-                        }
-                        else {
-                            PageStack.back(true);
-                        }
-                    }
-                    else if (activity.getIntent()) {
-                        PageStack.notifyPageClosed(activity.getIntent().activityName);
-                    }
-                }, 0);
-            }
-            scheduleBackTo(intent) {
-                let destroyList = [];
-                let findActivity = false;
-                for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
-                    if (activity.getIntent() && activity.getIntent().activityName == intent.activityName) {
-                        findActivity = true;
-                        break;
-                    }
-                    destroyList.push(activity);
-                }
-                if (findActivity) {
-                    for (let activity of destroyList) {
-                        this.scheduleDestroyActivity(activity);
-                    }
-                    return true;
-                }
-                return false;
-            }
-            canBackTo(intent) {
-                for (let activity of this.mLaunchedActivities) {
-                    if (activity.getIntent().activityName == intent.activityName) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-            scheduleBackToRoot() {
-                let destroyList = Array.from(this.mLaunchedActivities).reverse();
-                destroyList.shift();
-                for (let activity of destroyList) {
-                    this.scheduleDestroyActivity(activity);
-                }
-            }
-            handlePauseActivity(activity) {
-                this.performPauseActivity(activity);
-            }
-            performPauseActivity(activity) {
-                activity.mCalled = false;
-                activity.performPause();
-                if (!activity.mCalled) {
-                    throw new Error("Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onPause()");
-                }
-            }
-            handleStopActivity(activity, show = false) {
-                this.performStopActivity(activity, true);
-                this.updateVisibility(activity, show);
-            }
-            performStopActivity(activity, saveState) {
-                if (!activity.mFinished && saveState) {
-                    let state = new Bundle();
-                    activity.performSaveInstanceState(state);
-                }
-                activity.performStop();
-            }
-            handleResumeActivity(a, launching) {
-                this.performResumeActivity(a, launching);
-                let willBeVisible = !a.mStartedActivity && !a.mFinished;
-                if (willBeVisible && a.mVisibleFromClient) {
-                    a.makeVisible();
-                    this.overrideEnterAnimation = undefined;
-                    this.overrideExitAnimation = undefined;
-                    this.overrideResumeAnimation = undefined;
-                    this.overrideHideAnimation = undefined;
-                }
-            }
-            performResumeActivity(a, launching) {
-                if (!launching) {
-                    a.mStartedActivity = false;
-                }
-                a.performResume();
-            }
-            handleLaunchActivity(intent) {
-                let visibleActivities = this.getVisibleToUserActivities();
-                let a = this.performLaunchActivity(intent);
-                if (a) {
-                    this.handleResumeActivity(a, true);
-                    if (!a.mFinished && visibleActivities.length > 0) {
-                        this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
-                        if (!a.getWindow().getAttributes().isFloating()) {
-                            for (let visibleActivity of visibleActivities) {
-                                this.handleStopActivity(visibleActivity);
-                            }
-                        }
-                    }
-                }
-                return a;
-            }
-            performLaunchActivity(intent) {
-                let activity;
-                let clazz = intent.activityName;
-                try {
-                    if (typeof clazz === 'string')
-                        clazz = eval(clazz);
-                }
-                catch (e) { }
-                if (typeof clazz === 'function')
-                    activity = new clazz(this.androidUI);
-                if (activity instanceof app.Activity) {
-                    try {
-                        let savedInstanceState = null;
-                        activity.mIntent = intent;
-                        activity.mStartedActivity = false;
-                        activity.mCalled = false;
-                        activity.performCreate(savedInstanceState);
-                        if (!activity.mCalled) {
-                            throw new Error("Activity " + intent.activityName + " did not call through to super.onCreate()");
-                        }
-                        if (!activity.mFinished) {
-                            activity.performStart();
-                            activity.performRestoreInstanceState(savedInstanceState);
-                            activity.mCalled = false;
-                            activity.onPostCreate(savedInstanceState);
-                            if (!activity.mCalled) {
-                                throw new Error("Activity " + intent.activityName + " did not call through to super.onPostCreate()");
-                            }
-                        }
-                    }
-                    catch (e) {
-                        console.error(e);
-                        return null;
-                    }
-                    if (!activity.mFinished) {
-                        this.mLaunchedActivities.add(activity);
-                    }
-                    return activity;
-                }
-                return null;
-            }
-            handleDestroyActivity(activity, finishing) {
-                let visibleActivities = this.getVisibleToUserActivities();
-                let isTopVisibleActivity = activity == visibleActivities[visibleActivities.length - 1];
-                let isRootActivity = this.isRootActivity(activity);
-                this.performDestroyActivity(activity, finishing);
-                if (isRootActivity)
-                    activity.getWindow().setWindowAnimations(null, null);
-                this.androidUI.windowManager.removeWindow(activity.getWindow());
-                if (isTopVisibleActivity && !isRootActivity) {
-                    this.scheduleActivityResume();
-                }
-            }
-            performDestroyActivity(activity, finishing) {
-                if (finishing) {
-                    activity.mFinished = true;
-                }
-                activity.performPause();
-                activity.performStop();
-                activity.mCalled = false;
-                activity.performDestroy();
-                if (!activity.mCalled) {
-                    throw new Error("Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onDestroy()");
-                }
-                this.mLaunchedActivities.delete(activity);
-            }
-            updateVisibility(activity, show) {
-                if (show) {
-                    if (activity.mVisibleFromClient) {
-                        activity.makeVisible();
-                    }
-                }
-                else {
-                    activity.getWindow().getDecorView().setVisibility(View.INVISIBLE);
-                }
-            }
-            getVisibleToUserActivities() {
-                let list = [];
-                for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
-                    list.push(activity);
-                    if (!activity.getWindow().getAttributes().isFloating())
-                        break;
-                }
-                list.reverse();
-                return list;
-            }
-            isRootActivity(activity) {
-                return this.mLaunchedActivities.values().next().value == activity;
-            }
-            static getActivityName(activity) {
-                if (activity.getIntent())
-                    return activity.getIntent().activityName;
-                return activity.constructor.name;
-            }
-        }
-        app.ActivityThread = ActivityThread;
-    })(app = android.app || (android.app = {}));
-})(android || (android = {}));
-var android;
-(function (android) {
-    var R;
-    (function (R) {
-        class string_ {
-            static zh() {
-                this.ok = '确定';
-                this.cancel = '取消';
-                this.close = '关闭';
-                this.back = '返回';
-                this.crash_catch_alert = '程序发生错误, 即将重载网页:';
-                this.prll_header_state_normal = '下拉以刷新';
-                this.prll_header_state_ready = '松开马上刷新';
-                this.prll_header_state_loading = '正在刷新...';
-                this.prll_header_state_fail = '刷新失败';
-                this.prll_footer_state_normal = '点击加载更多';
-                this.prll_footer_state_loading = '正在加载...';
-                this.prll_footer_state_ready = '松开加载更多';
-                this.prll_footer_state_no_more = '加载完毕';
-                this.prll_footer_state_fail = '加载失败,点击重试';
-            }
-        }
-        string_.ok = 'OK';
-        string_.cancel = 'Cancel';
-        string_.close = 'Close';
-        string_.back = 'Back';
-        string_.crash_catch_alert = 'Some error happen, will refresh page:';
-        string_.prll_header_state_normal = 'Pull to refresh';
-        string_.prll_header_state_ready = 'Release to refresh';
-        string_.prll_header_state_loading = 'Loading';
-        string_.prll_header_state_fail = 'Refresh fail';
-        string_.prll_footer_state_normal = 'Load more';
-        string_.prll_footer_state_loading = 'Loading';
-        string_.prll_footer_state_ready = 'Pull to load more';
-        string_.prll_footer_state_fail = 'Click to reload';
-        string_.prll_footer_state_no_more = 'Load Finish';
-        R.string_ = string_;
-        const lang = navigator.language.split('-')[0].toLowerCase();
-        if (typeof string_[lang] === 'function')
-            string_[lang].call(string_);
-    })(R = android.R || (android.R = {}));
-})(android || (android = {}));
-var androidui;
-(function (androidui) {
-    var MotionEvent = android.view.MotionEvent;
-    var KeyEvent = android.view.KeyEvent;
-    var Intent = android.content.Intent;
-    var ActivityThread = android.app.ActivityThread;
-    class AndroidUI {
-        constructor(androidUIElement) {
-            this._canvas = document.createElement("canvas");
-            this.viewsDependOnDebugLayout = new Set();
-            this.showDebugLayoutDefault = false;
-            this._windowBound = new android.graphics.Rect();
-            this.tempRect = new android.graphics.Rect();
-            this.touchEvent = new MotionEvent();
-            this.touchAvailable = false;
-            this.ketEvent = new KeyEvent();
-            this.androidUIElement = androidUIElement;
-            if (androidUIElement[AndroidUI.BindToElementName]) {
-                throw Error('already init a AndroidUI with this element');
-            }
-            androidUIElement[AndroidUI.BindToElementName] = this;
-            this.init();
-        }
-        get windowManager() {
-            return this.mApplication.getWindowManager();
-        }
-        get windowBound() {
-            return this._windowBound;
-        }
-        init() {
-            this.appName = document.title;
-            this._viewRootImpl = new android.view.ViewRootImpl();
-            this._viewRootImpl.androidUIElement = this.androidUIElement;
-            this.rootResourceElement = this.androidUIElement.querySelector('resources');
-            if (this.rootResourceElement)
-                this.androidUIElement.removeChild(this.rootResourceElement);
-            else
-                this.rootResourceElement = document.createElement('resources');
-            this.initAndroidUIElement();
-            this.initApplication();
-            this.androidUIElement.appendChild(this._canvas);
-            this.initEvent();
-            this.initRootSizeChange();
-            this._viewRootImpl.setView(this.windowManager.getWindowsLayout());
-            this._viewRootImpl.initSurface(this._canvas);
-            this.initBrowserVisibleChange();
-            this.initLaunchActivity();
-            this.initGlobalCrashHandle();
-        }
-        initApplication() {
-            this.mApplication = new android.app.Application(this);
-            this.mApplication.onCreate();
-        }
-        initLaunchActivity() {
-            this.mActivityThread = new ActivityThread(this);
-            for (let ele of Array.from(this.androidUIElement.children)) {
-                let tagName = ele.tagName;
-                if (tagName != 'ACTIVITY')
-                    continue;
-                let activityName = ele.getAttribute('name') || ele.getAttribute('android:name') || 'android.app.Activity';
-                let intent = new Intent(activityName);
-                this.mActivityThread.overrideNextWindowAnimation(null, null, null, null);
-                let activity = this.mActivityThread.handleLaunchActivity(intent);
-                if (activity) {
-                    this.androidUIElement.removeChild(ele);
-                    for (let element of Array.from(ele.children)) {
-                        android.view.LayoutInflater.from(activity).inflate(element, activity.getWindow().mContentParent, true);
-                    }
-                    let onCreateFunc = ele.getAttribute('oncreate');
-                    if (onCreateFunc && typeof window[onCreateFunc] === "function") {
-                        window[onCreateFunc].call(this, activity);
-                    }
-                }
-            }
-            this.mActivityThread.initWithPageStack();
-        }
-        initGlobalCrashHandle() {
-            window.onerror = (sMsg, sUrl, sLine) => {
-                if (window.confirm(android.R.string_.crash_catch_alert + '\n' + sMsg)) {
-                    window.location.reload();
-                }
-            };
-        }
-        refreshWindowBound() {
-            let boundLeft = this.androidUIElement.offsetLeft;
-            let boundTop = this.androidUIElement.offsetTop;
-            let parent = this.androidUIElement.parentElement;
-            if (parent) {
-                boundLeft += parent.offsetLeft;
-                boundTop += parent.offsetTop;
-                parent = parent.parentElement;
-            }
-            let boundRight = boundLeft + this.androidUIElement.offsetWidth;
-            let boundBottom = boundTop + this.androidUIElement.offsetHeight;
-            if (this._windowBound && this._windowBound.left == boundLeft && this._windowBound.top == boundTop
-                && this._windowBound.right == boundRight && this._windowBound.bottom == boundBottom) {
-                return false;
-            }
-            this._windowBound.set(boundLeft, boundTop, boundRight, boundBottom);
-            return true;
-        }
-        initAndroidUIElement() {
-            if (this.androidUIElement.style.display === 'none') {
-                this.androidUIElement.style.display = '';
-            }
-            this.androidUIElement.setAttribute('tabindex', '0');
-            this.androidUIElement.focus();
-        }
-        initEvent() {
-            this.initTouchEvent();
-            this.initMouseEvent();
-            this.initKeyEvent();
-            this.initGenericEvent();
-        }
-        initTouchEvent() {
-            this.androidUIElement.addEventListener('touchstart', (e) => {
-                this.touchAvailable = true;
-                this.refreshWindowBound();
-                if (e.target != document.activeElement || !this.androidUIElement.contains(document.activeElement)) {
-                    this.androidUIElement.focus();
-                }
-                this.touchEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
-                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-            this.androidUIElement.addEventListener('touchmove', (e) => {
-                this.touchEvent.initWithTouch(e, MotionEvent.ACTION_MOVE, this._windowBound);
-                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-            this.androidUIElement.addEventListener('touchend', (e) => {
-                this.touchEvent.initWithTouch(e, MotionEvent.ACTION_UP, this._windowBound);
-                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-            this.androidUIElement.addEventListener('touchcancel', (e) => {
-                this.touchEvent.initWithTouch(e, MotionEvent.ACTION_CANCEL, this._windowBound);
-                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-        }
-        initMouseEvent() {
-            function mouseToTouchEvent(e) {
-                let touch = {
-                    identifier: 0,
-                    target: null,
-                    screenX: e.screenX,
-                    screenY: e.screenY,
-                    clientX: e.clientX,
-                    clientY: e.clientY,
-                    pageX: e.pageX,
-                    pageY: e.pageY
-                };
-                return {
-                    changedTouches: [touch],
-                    targetTouches: [touch],
-                    touches: e.type === 'mouseup' ? [] : [touch],
-                    timeStamp: e.timeStamp
-                };
-            }
-            let isMouseDown = false;
-            this.androidUIElement.addEventListener('mousedown', (e) => {
-                if (this.touchAvailable)
-                    return;
-                isMouseDown = true;
-                this.refreshWindowBound();
-                this.androidUIElement.focus();
-                this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
-                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-            this.androidUIElement.addEventListener('mousemove', (e) => {
-                if (this.touchAvailable)
-                    return;
-                if (!isMouseDown)
-                    return;
-                this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
-                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-            this.androidUIElement.addEventListener('mouseup', (e) => {
-                if (this.touchAvailable)
-                    return;
-                isMouseDown = false;
-                this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
-                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-            this.androidUIElement.addEventListener('mouseleave', (e) => {
-                if (this.touchAvailable)
-                    return;
-                if (e.fromElement === this.androidUIElement) {
-                    isMouseDown = false;
-                    this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
-                    if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        return true;
-                    }
-                }
-            }, true);
-            let scrollEvent = new MotionEvent();
-            this.androidUIElement.addEventListener('mousewheel', (e) => {
-                scrollEvent.initWithMouseWheel(e);
-                if (this._viewRootImpl.dispatchInputEvent(scrollEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-        }
-        initKeyEvent() {
-            this.androidUIElement.addEventListener('keydown', (e) => {
-                this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_DOWN);
-                if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-            this.androidUIElement.addEventListener('keyup', (e) => {
-                this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_UP);
-                if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return true;
-                }
-            }, true);
-        }
-        initGenericEvent() {
-        }
-        initRootSizeChange() {
-            const _this = this;
-            window.addEventListener('resize', () => {
-                _this.notifyRootSizeChange();
-            });
-            let lastWidth = this.androidUIElement.offsetWidth;
-            let lastHeight = this.androidUIElement.offsetHeight;
-            if (lastWidth > 0 && lastHeight > 0)
-                this.notifyRootSizeChange();
-            setInterval(() => {
-                let width = _this.androidUIElement.offsetWidth;
-                let height = _this.androidUIElement.offsetHeight;
-                if (lastHeight !== height || lastWidth !== width) {
-                    lastWidth = width;
-                    lastHeight = height;
-                    _this.notifyRootSizeChange();
-                }
-            }, 500);
-        }
-        initBrowserVisibleChange() {
-            var eventName = 'visibilitychange';
-            if (document['webkitHidden'] != undefined) {
-                eventName = 'webkitvisibilitychange';
-            }
-            document.addEventListener(eventName, () => {
-                if (document['hidden'] || document['webkitHidden']) {
-                    this.mActivityThread.scheduleApplicationHide();
-                }
-                else {
-                    this.mActivityThread.scheduleApplicationShow();
-                    this._viewRootImpl.invalidate();
-                }
-            }, false);
-        }
-        notifyRootSizeChange() {
-            if (this.refreshWindowBound()) {
-                let density = android.content.res.Resources.getDisplayMetrics().density;
-                this.tempRect.set(this._windowBound.left * density, this._windowBound.top * density, this._windowBound.right * density, this._windowBound.bottom * density);
-                let width = this._windowBound.width();
-                let height = this._windowBound.height();
-                this._canvas.width = width * density;
-                this._canvas.height = height * density;
-                this._canvas.style.width = width + "px";
-                this._canvas.style.height = height + "px";
-                this._viewRootImpl.notifyResized(this.tempRect);
-            }
-        }
-        viewAttachedDependOnDebugLayout(view) {
-            this.viewsDependOnDebugLayout.add(view);
-            this.showDebugLayout();
-        }
-        viewDetachedDependOnDebugLayout(view) {
-            this.viewsDependOnDebugLayout.delete(view);
-            if (this.viewsDependOnDebugLayout.size == 0 && !this.showDebugLayoutDefault) {
-                this.hideDebugLayout();
-            }
-        }
-        setShowDebugLayout(showDebugLayoutDefault = true) {
-            this.showDebugLayoutDefault = showDebugLayoutDefault;
-            if (showDebugLayoutDefault) {
-                this.showDebugLayout();
-            }
-        }
-        showDebugLayout() {
-            if (this.windowManager.getWindowsLayout().bindElement.parentNode === null) {
-                this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
-            }
-        }
-        hideDebugLayout() {
-            if (this.windowManager.getWindowsLayout().bindElement.parentNode === this.androidUIElement) {
-                this.androidUIElement.removeChild(this.windowManager.getWindowsLayout().bindElement);
-            }
-        }
-        setUIClient(uiClient) {
-            this.uiClient = uiClient;
-        }
-        showAppClosed() {
-            AndroidUI.showAppClosed(this);
-        }
-        static showAppClosed(androidUI) {
-            androidUI.androidUIElement.parentNode.removeChild(androidUI.androidUIElement);
-            if (androidUI.uiClient && androidUI.uiClient.shouldShowAppClosed) {
-                androidUI.uiClient.shouldShowAppClosed(androidUI);
-            }
-        }
-    }
-    AndroidUI.BindToElementName = 'AndroidUI';
-    androidui.AndroidUI = AndroidUI;
-})(androidui || (androidui = {}));
-var androidui;
-(function (androidui) {
-    if (typeof HTMLDivElement !== 'function') {
-        var _HTMLDivElement = function () { };
-        _HTMLDivElement.prototype = HTMLDivElement.prototype;
-        HTMLDivElement = _HTMLDivElement;
-    }
-    class AndroidUIElement extends HTMLDivElement {
-        createdCallback() {
-            $domReady(() => initElement(this));
-        }
-        attachedCallback() {
-        }
-        detachedCallback() {
-        }
-        attributeChangedCallback(attributeName, oldVal, newVal) {
-            if (attributeName === 'debug' && newVal != null && newVal != 'false' && newVal != '0') {
-                this.AndroidUI.setShowDebugLayout();
-            }
-        }
-    }
-    androidui.AndroidUIElement = AndroidUIElement;
-    function runFunction(func) {
-        if (typeof window[func] === "function") {
-            window[func]();
-        }
-        else {
-            try {
-                eval(func);
-            }
-            catch (e) {
-                console.warn(e);
-            }
-        }
-    }
-    function $domReady(func) {
-        if (/^loaded|^complete|^interactive/.test(document.readyState)) {
-            setTimeout(func, 0);
-        }
-        else {
-            document.addEventListener('DOMContentLoaded', func);
-        }
-    }
-    function initElement(ele) {
-        ele.AndroidUI = new androidui.AndroidUI(ele);
-        let debugAttr = ele.getAttribute('debug');
-        if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
-            ele.AndroidUI.setShowDebugLayout();
-        let onClose = ele.getAttribute('onclose');
-        if (onClose) {
-            ele.AndroidUI.setUIClient({
-                shouldShowAppClosed(androidUI) {
-                    if (!onClose)
-                        return;
-                    runFunction(onClose);
-                }
-            });
-        }
-        let onLoad = ele.getAttribute('onload');
-        if (onLoad) {
-            runFunction(onLoad);
-        }
-    }
-    if (typeof document['registerElement'] === "function") {
-        document.registerElement("android-ui", AndroidUIElement);
-    }
-    else {
-        $domReady(() => {
-            let eles = document.getElementsByTagName('android-ui');
-            for (let ele of Array.from(eles)) {
-                initElement(ele);
-            }
-        });
-    }
-    let styleElement = document.createElement('style');
-    styleElement.innerHTML += `
-        android-ui {
-            position : relative;
-            overflow : hidden;
-            display : block;
-            outline: none;
-        }
-        android-ui * {
-            overflow : hidden;
-            border : none;
-            outline: none;
-            pointer-events: auto;
-        }
-        android-ui resources {
-            display: none;
-        }
-        android-ui Button {
-            border: none;
-            background: none;
-        }
-        android-ui windowsgroup {
-            pointer-events: none;
-        }
-        android-ui > canvas {
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-        `;
-    document.head.appendChild(styleElement);
-})(androidui || (androidui = {}));
 var android;
 (function (android) {
     var view;
@@ -17200,19 +16016,7 @@ var android;
                     if (totalTime > 1000) {
                         let fps = this.mFpsNumFrames * 1000 / totalTime;
                         Log.v(ViewRootImpl.TAG, "FPS:\t" + fps);
-                        if (!this._showFPSNode) {
-                            this._showFPSNode = document.createElement('div');
-                            this._showFPSNode.style.position = 'absolute';
-                            this._showFPSNode.style.top = '0';
-                            this._showFPSNode.style.left = '0';
-                            this._showFPSNode.style.width = '60px';
-                            this._showFPSNode.style.fontSize = '14px';
-                            this._showFPSNode.style.background = 'black';
-                            this._showFPSNode.style.color = 'white';
-                            this._showFPSNode.style.opacity = '0.7';
-                            this.androidUIElement.appendChild(this._showFPSNode);
-                        }
-                        this._showFPSNode.innerText = 'FPS:' + fps.toFixed(1);
+                        this.mSurface.showFps(fps);
                         this.mFpsStartTime = nowTime;
                         this.mFpsNumFrames = 0;
                     }
@@ -20143,7 +18947,7 @@ var android;
             ViewGroup.LayoutParams = LayoutParams;
             class MarginLayoutParams extends LayoutParams {
                 constructor(...args) {
-                    super();
+                    super(...args);
                     this._leftMargin = 0;
                     this._topMargin = 0;
                     this._rightMargin = 0;
@@ -20154,16 +18958,12 @@ var android;
                     this._bottomMarginOrig = 0;
                     if (args.length === 1) {
                         let src = args[0];
-                        super(src);
                         if (src instanceof MarginLayoutParams) {
                             this.leftMargin = src._leftMargin;
                             this.topMargin = src._topMargin;
                             this.rightMargin = src._rightMargin;
                             this.bottomMargin = src._bottomMargin;
                         }
-                    }
-                    else if (args.length == 2) {
-                        super(args[0], args[1]);
                     }
                     this._attrBinder.addAttr('marginLeft', (value) => {
                         if (value == null)
@@ -20700,16 +19500,13 @@ var android;
         (function (FrameLayout) {
             class LayoutParams extends ViewGroup.MarginLayoutParams {
                 constructor(...args) {
-                    super();
+                    super(...(args.length == 3 ? [args[0], args[1]] : args));
                     this.gravity = -1;
                     if (args.length === 1 && args[0] instanceof LayoutParams) {
-                        super(args[0]);
                         this.gravity = args[0].gravity;
                     }
-                    else {
-                        let [width, height, gravity = -1] = args;
-                        super(width, height);
-                        this.gravity = gravity;
+                    else if (args.length === 3) {
+                        this.gravity = args[2] || -1;
                     }
                     this._attrBinder.addAttr('gravity', (value) => {
                         this.gravity = this._attrBinder.parseGravity(value, this.gravity);
@@ -24724,6 +23521,1285 @@ var android;
         }
     })(view = android.view || (android.view = {}));
 })(android || (android = {}));
+var PageStack;
+(function (PageStack) {
+    PageStack.DEBUG = false;
+    const history_go = history.go;
+    var iFrameHistoryLengthAsFake = 0;
+    let historyLocking = false;
+    let windowLoadLocking = true;
+    let pendingFuncLock = [];
+    let initCalled = false;
+    function init() {
+        initCalled = true;
+        _init();
+        history.go = function (delta) {
+            PageStack.go(delta);
+        };
+        history.back = function (delta = -1) {
+            PageStack.go(delta);
+        };
+        history.forward = function (delta = 1) {
+            PageStack.go(delta);
+        };
+    }
+    PageStack.init = init;
+    function checkInitCalled() {
+        if (!initCalled)
+            throw Error("PageStack.init() must be call first");
+    }
+    function _init() {
+        PageStack.currentStack = history.state;
+        if (PageStack.currentStack && !PageStack.currentStack.isRoot) {
+            console.log('already has history.state when _init PageState, restore page');
+            restorePageFromStackIfNeed();
+        }
+        else {
+            PageStack.currentStack = PageStack.currentStack || {
+                pageId: '',
+                isRoot: true,
+                stack: [{ pageId: null }]
+            };
+            let initOpenUrl = location.hash;
+            if (initOpenUrl && initOpenUrl.indexOf('#') === 0)
+                initOpenUrl = initOpenUrl.substring(1);
+            removeLastHistoryIfFaked();
+            ensureLockDo(() => {
+                history.replaceState(PageStack.currentStack, null, '#');
+            });
+            if (initOpenUrl && initOpenUrl.length > 0) {
+                if (firePagePush(initOpenUrl, null)) {
+                    notifyNewPageOpened(initOpenUrl);
+                }
+            }
+        }
+        ensureLastHistoryFaked();
+        if (document.readyState === 'complete') {
+            windowLoadLocking = false;
+            setTimeout(initOnpopstate, 0);
+        }
+        else {
+            window.addEventListener('load', () => {
+                windowLoadLocking = false;
+                window.removeEventListener('popstate', onpopstateListener);
+                setTimeout(initOnpopstate, 0);
+            });
+        }
+    }
+    let onpopstateListener = function (ev) {
+        let stack = ev.state;
+        if (historyLocking) {
+            PageStack.currentStack = stack;
+            return;
+        }
+        if (PageStack.DEBUG)
+            console.log('onpopstate', stack);
+        if (!stack) {
+            let pageId = location.hash;
+            if (pageId[0] === '#')
+                pageId = pageId.substring(1);
+            historyGo(-2, false);
+            if (firePagePush(pageId, null)) {
+                notifyNewPageOpened(pageId);
+            }
+            else {
+                ensureLastHistoryFaked();
+            }
+        }
+        else if (PageStack.currentStack.stack.length != stack.stack.length) {
+            let delta = stack.stack.length - PageStack.currentStack.stack.length;
+            if (delta >= 0) {
+                console.warn('something error! stack: ', stack, 'last stack: ', PageStack.currentStack);
+                return;
+            }
+            var stackList = PageStack.currentStack.stack;
+            PageStack.currentStack = stack;
+            tryClosePageAfterHistoryChanged(stackList, delta);
+        }
+        else {
+            PageStack.currentStack = stack;
+            if (fireBackPressed()) {
+                ensureLastHistoryFaked();
+            }
+            else {
+                var stackList = PageStack.currentStack.stack;
+                var pageId = stackList[stackList.length - 1].pageId;
+                if (firePageClose(pageId, stackList[stackList.length - 1].extra)) {
+                    historyGo(-1);
+                }
+                else {
+                    ensureLastHistoryFaked();
+                }
+            }
+        }
+    };
+    function initOnpopstate() {
+        window.removeEventListener('popstate', onpopstateListener);
+        window.addEventListener('popstate', onpopstateListener);
+    }
+    function go(delta, pageAlreadyClose = false) {
+        checkInitCalled();
+        if (historyLocking) {
+            ensureLockDo(() => {
+                go(delta);
+            });
+            return;
+        }
+        var stackList = PageStack.currentStack.stack;
+        if (delta === -1 && !pageAlreadyClose) {
+            if (!firePageClose(stackList[stackList.length - 1].pageId, stackList[stackList.length - 1].extra)) {
+                return;
+            }
+        }
+        removeLastHistoryIfFaked();
+        historyGo(delta);
+        if (delta < -1 && !pageAlreadyClose) {
+            ensureLockDo(() => {
+                tryClosePageAfterHistoryChanged(stackList, delta);
+            });
+        }
+    }
+    PageStack.go = go;
+    function tryClosePageAfterHistoryChanged(stateListBeforeHistoryChange, delta) {
+        let historyLength = stateListBeforeHistoryChange.length;
+        for (let i = historyLength + delta; i < historyLength; i++) {
+            let state = stateListBeforeHistoryChange[i];
+            if (!firePageClose(state.pageId, state.extra)) {
+                notifyNewPageOpened(state.pageId, state.extra);
+            }
+        }
+    }
+    function back(pageAlreadyClose = false) {
+        checkInitCalled();
+        go(-1, pageAlreadyClose);
+    }
+    PageStack.back = back;
+    function openPage(pageId, extra) {
+        checkInitCalled();
+        pageId += '';
+        var openResult = firePageOpen(pageId, extra);
+        if (openResult) {
+            notifyNewPageOpened(pageId, extra);
+        }
+        return openResult;
+    }
+    PageStack.openPage = openPage;
+    function backToPage(pageId) {
+        checkInitCalled();
+        if (PageStack.DEBUG)
+            console.log('backToPage', pageId);
+        if (historyLocking) {
+            ensureLockDo(() => {
+                backToPage(pageId);
+            });
+        }
+        let stackList = PageStack.currentStack.stack;
+        let historyLength = stackList.length;
+        for (let i = historyLength - 1; i >= 0; i--) {
+            let state = stackList[i];
+            if (state.pageId == pageId) {
+                let delta = i - historyLength;
+                removeLastHistoryIfFaked();
+                historyGo(delta);
+                return;
+            }
+        }
+    }
+    PageStack.backToPage = backToPage;
+    let releaseLockingTimeout;
+    let requestHistoryGoWhenLocking = 0;
+    let ensureFakeAfterHistoryChange = false;
+    function historyGo(delta, ensureFaked = true) {
+        if (delta >= 0)
+            return;
+        if (history.length === 1)
+            return;
+        ensureFakeAfterHistoryChange = ensureFakeAfterHistoryChange || ensureFaked;
+        if (historyLocking) {
+            requestHistoryGoWhenLocking += delta;
+            return;
+        }
+        if (PageStack.DEBUG)
+            console.log('historyGo', delta);
+        historyLocking = true;
+        const state = history.state;
+        if (releaseLockingTimeout)
+            clearTimeout(releaseLockingTimeout);
+        function checkRelease() {
+            clearTimeout(releaseLockingTimeout);
+            if (history.state === state) {
+                releaseLockingTimeout = setTimeout(checkRelease, 0);
+            }
+            else {
+                let continueGo = requestHistoryGoWhenLocking;
+                if (continueGo != 0) {
+                    requestHistoryGoWhenLocking = 0;
+                    historyLocking = false;
+                    historyGo(continueGo, false);
+                }
+                else {
+                    if (ensureFakeAfterHistoryChange)
+                        ensureLastHistoryFakedImpl();
+                    ensureFakeAfterHistoryChange = false;
+                    releaseLockingTimeout = setTimeout(() => {
+                        historyLocking = false;
+                    }, 10);
+                }
+            }
+        }
+        releaseLockingTimeout = setTimeout(checkRelease, 0);
+        history_go.call(history, delta);
+    }
+    PageStack.historyGo = historyGo;
+    function restorePageFromStackIfNeed() {
+        if (PageStack.currentStack) {
+            let copy = PageStack.currentStack.stack.concat();
+            copy.shift();
+            for (let saveState of copy) {
+                firePageOpen(saveState.pageId, saveState.extra, true);
+            }
+        }
+    }
+    function fireBackPressed() {
+        if (PageStack.backListener) {
+            try {
+                return PageStack.backListener();
+            }
+            catch (e) {
+                console.error(e);
+            }
+        }
+    }
+    function firePageOpen(pageId, pageExtra, isRestore = false) {
+        if (PageStack.pageOpenHandler) {
+            try {
+                return PageStack.pageOpenHandler(pageId, pageExtra, isRestore);
+            }
+            catch (e) {
+                console.error(e);
+            }
+        }
+    }
+    function firePagePush(pageId, pageExtra) {
+        if (PageStack.pagePushHandler) {
+            try {
+                return PageStack.pagePushHandler(pageId, pageExtra);
+            }
+            catch (e) {
+                console.error(e);
+            }
+        }
+    }
+    function firePageClose(pageId, pageExtra) {
+        if (PageStack.pageCloseHandler) {
+            try {
+                return PageStack.pageCloseHandler(pageId, pageExtra);
+            }
+            catch (e) {
+                console.error(e);
+            }
+        }
+    }
+    function notifyPageClosed(pageId) {
+        checkInitCalled();
+        if (PageStack.DEBUG)
+            console.log('notifyPageClosed', pageId);
+        if (historyLocking) {
+            ensureLockDo(() => {
+                notifyPageClosed(pageId);
+            });
+            return;
+        }
+        let stackList = PageStack.currentStack.stack;
+        let historyLength = stackList.length;
+        for (let i = historyLength - 1; i >= 0; i--) {
+            let state = stackList[i];
+            if (state.pageId == pageId) {
+                if (i === historyLength - 1) {
+                    removeLastHistoryIfFaked();
+                    historyGo(-1);
+                }
+                else {
+                    let delta = i - historyLength;
+                    (function (delta) {
+                        removeLastHistoryIfFaked();
+                        historyGo(delta);
+                        ensureLockDoAtFront(() => {
+                            let historyLength = stackList.length;
+                            let pageStartAddIndex = historyLength + delta + 1;
+                            for (let j = pageStartAddIndex; j < historyLength; j++) {
+                                notifyNewPageOpened(stackList[j].pageId, stackList[j].extra);
+                            }
+                        });
+                    })(delta);
+                }
+                return;
+            }
+        }
+    }
+    PageStack.notifyPageClosed = notifyPageClosed;
+    function notifyNewPageOpened(pageId, extra) {
+        checkInitCalled();
+        if (PageStack.DEBUG)
+            console.log('notifyNewPageOpened', pageId);
+        let state = {
+            pageId: pageId,
+            extra: extra
+        };
+        ensureLockDo(function () {
+            PageStack.currentStack.stack.push(state);
+            PageStack.currentStack.pageId = pageId;
+            PageStack.currentStack.isRoot = false;
+            if (history.state.isFake) {
+                history.replaceState(PageStack.currentStack, null, '#' + pageId);
+            }
+            else {
+                history.pushState(PageStack.currentStack, null, '#' + pageId);
+            }
+            ensureLastHistoryFakedImpl();
+        });
+    }
+    PageStack.notifyNewPageOpened = notifyNewPageOpened;
+    function getPageExtra(pageId) {
+        checkInitCalled();
+        let stackList = PageStack.currentStack.stack;
+        let historyLength = stackList.length;
+        if (!pageId) {
+            return stackList[historyLength - 1].extra;
+        }
+        else {
+            for (let i = historyLength - 1; i >= 0; i--) {
+                let state = stackList[i];
+                if (state.pageId == pageId) {
+                    return state.extra;
+                }
+            }
+        }
+    }
+    PageStack.getPageExtra = getPageExtra;
+    function setPageExtra(extra, pageId) {
+        checkInitCalled();
+        removeLastHistoryIfFaked();
+        ensureLockDo(function () {
+            let stackList = PageStack.currentStack.stack;
+            let historyLength = stackList.length;
+            if (!pageId) {
+                stackList[historyLength - 1].extra = extra;
+                history.replaceState(PageStack.currentStack, null, '');
+            }
+            else {
+                for (let i = historyLength - 1; i >= 0; i--) {
+                    let state = stackList[i];
+                    if (state.pageId == pageId) {
+                        state.extra = extra;
+                        history.replaceState(PageStack.currentStack, null, '');
+                        break;
+                    }
+                }
+            }
+            ensureLastHistoryFakedImpl();
+        });
+    }
+    PageStack.setPageExtra = setPageExtra;
+    function ensureLockDo(func) {
+        checkInitCalled();
+        if (!historyLocking && !windowLoadLocking) {
+            func();
+            return;
+        }
+        pendingFuncLock.push(func);
+        _queryLockDo();
+    }
+    function ensureLockDoAtFront(func, runNowIfNotLock = false) {
+        checkInitCalled();
+        if (!historyLocking && !windowLoadLocking && runNowIfNotLock) {
+            func();
+            return;
+        }
+        pendingFuncLock.splice(0, 0, func);
+        _queryLockDo();
+    }
+    let execLockedTimeoutId;
+    function _queryLockDo() {
+        if (execLockedTimeoutId)
+            clearTimeout(execLockedTimeoutId);
+        function execLockedFunctions() {
+            if (historyLocking || windowLoadLocking) {
+                clearTimeout(execLockedTimeoutId);
+                execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
+            }
+            else {
+                let f;
+                while (f = pendingFuncLock.shift()) {
+                    f();
+                    if (historyLocking || windowLoadLocking) {
+                        clearTimeout(execLockedTimeoutId);
+                        execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
+                        break;
+                    }
+                }
+            }
+        }
+        execLockedTimeoutId = setTimeout(execLockedFunctions, 0);
+    }
+    function preClosePageHasIFrame(historyLengthWhenInitIFrame) {
+        history.pushState({ isFake: true }, null, null);
+        iFrameHistoryLengthAsFake = history.length - historyLengthWhenInitIFrame;
+    }
+    PageStack.preClosePageHasIFrame = preClosePageHasIFrame;
+    function removeLastHistoryIfFaked() {
+        ensureLockDo(removeLastHistoryIfFakedImpl);
+    }
+    function removeLastHistoryIfFakedImpl() {
+        if (history.state && history.state.isFake) {
+            if (PageStack.DEBUG)
+                console.log('remove Fake History');
+            history.replaceState(null, null, '');
+            historyGo(-1 - iFrameHistoryLengthAsFake, false);
+            iFrameHistoryLengthAsFake = 0;
+        }
+    }
+    function ensureLastHistoryFaked() {
+        ensureLockDo(ensureLastHistoryFakedImpl);
+    }
+    function ensureLastHistoryFakedImpl() {
+        if (!history.state.isFake) {
+            if (PageStack.DEBUG)
+                console.log('append Fake History');
+            history.pushState({
+                isFake: true,
+                isRoot: PageStack.currentStack.isRoot,
+                stack: PageStack.currentStack.stack,
+            }, null, '');
+        }
+    }
+})(PageStack || (PageStack = {}));
+var android;
+(function (android) {
+    var app;
+    (function (app) {
+        var Bundle = android.os.Bundle;
+        var Intent = android.content.Intent;
+        var View = android.view.View;
+        class ActivityThread {
+            constructor(androidUI) {
+                this.mLaunchedActivities = new Set();
+                this.androidUI = androidUI;
+            }
+            initWithPageStack() {
+                let backKeyDownEvent = android.view.KeyEvent.obtain(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_BACK);
+                let backKeyUpEvent = android.view.KeyEvent.obtain(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_BACK);
+                PageStack.backListener = () => {
+                    let handleDown = this.androidUI._viewRootImpl.dispatchInputEvent(backKeyDownEvent);
+                    let handleUp = this.androidUI._viewRootImpl.dispatchInputEvent(backKeyUpEvent);
+                    return handleDown || handleUp;
+                };
+                PageStack.pageOpenHandler = (pageId, pageExtra, isRestore) => {
+                    let intent = new Intent(pageId);
+                    if (pageExtra)
+                        intent.mExtras = new Bundle(pageExtra.mExtras);
+                    if (isRestore)
+                        this.overrideNextWindowAnimation(null, null, null, null);
+                    let activity = this.handleLaunchActivity(intent);
+                    return activity && !activity.mFinished;
+                };
+                PageStack.pageCloseHandler = (pageId, pageExtra) => {
+                    if (this.mLaunchedActivities.size === 1) {
+                        let rootActivity = Array.from(this.mLaunchedActivities)[0];
+                        if (pageId == null || rootActivity.getIntent().activityName == pageId) {
+                            this.handleDestroyActivity(rootActivity, true);
+                            return true;
+                        }
+                        return false;
+                    }
+                    for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
+                        let intent = activity.getIntent();
+                        if (intent.activityName == pageId) {
+                            this.handleDestroyActivity(activity, true);
+                            return true;
+                        }
+                    }
+                };
+                PageStack.init();
+            }
+            overrideNextWindowAnimation(enterAnimation, exitAnimation, resumeAnimation, hideAnimation) {
+                this.overrideEnterAnimation = enterAnimation;
+                this.overrideExitAnimation = exitAnimation;
+                this.overrideResumeAnimation = resumeAnimation;
+                this.overrideHideAnimation = hideAnimation;
+            }
+            getOverrideEnterAnimation() {
+                return this.overrideEnterAnimation;
+            }
+            getOverrideExitAnimation() {
+                return this.overrideExitAnimation;
+            }
+            getOverrideResumeAnimation() {
+                return this.overrideResumeAnimation;
+            }
+            getOverrideHideAnimation() {
+                return this.overrideHideAnimation;
+            }
+            scheduleApplicationHide() {
+                let visibleActivities = this.getVisibleToUserActivities();
+                if (visibleActivities.length == 0)
+                    return;
+                this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
+                for (let visibleActivity of visibleActivities) {
+                    this.handleStopActivity(visibleActivity, true);
+                }
+            }
+            scheduleApplicationShow() {
+                this.scheduleActivityResume();
+            }
+            execStartActivity(callActivity, intent, options) {
+                if ((intent.getFlags() & Intent.FLAG_ACTIVITY_CLEAR_TOP) != 0) {
+                    if (this.scheduleBackTo(intent))
+                        return;
+                }
+                this.scheduleLaunchActivity(callActivity, intent, options);
+            }
+            scheduleActivityResume() {
+                if (this.activityResumeTimeout)
+                    clearTimeout(this.activityResumeTimeout);
+                this.activityResumeTimeout = setTimeout(() => {
+                    let visibleActivities = this.getVisibleToUserActivities();
+                    if (visibleActivities.length == 0)
+                        return;
+                    for (let visibleActivity of visibleActivities) {
+                        visibleActivity.performRestart();
+                    }
+                    let activity = visibleActivities.pop();
+                    this.handleResumeActivity(activity, false);
+                    if (activity.getWindow().isFloating()) {
+                        for (let visibleActivity of visibleActivities.reverse()) {
+                            if (visibleActivity.mVisibleFromClient) {
+                                visibleActivity.makeVisible();
+                                if (!visibleActivity.getWindow().isFloating()) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }, 0);
+            }
+            scheduleLaunchActivity(callActivity, intent, options) {
+                let activity = this.handleLaunchActivity(intent);
+                activity.mCallActivity = callActivity;
+                if (activity && !activity.mFinished) {
+                    PageStack.notifyNewPageOpened(intent.activityName, intent);
+                }
+            }
+            scheduleDestroyActivityByRequestCode(requestCode) {
+                for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
+                    if (activity.getIntent() && requestCode == activity.getIntent().mRequestCode) {
+                        this.scheduleDestroyActivity(activity);
+                    }
+                }
+            }
+            scheduleDestroyActivity(activity, finishing = true) {
+                setTimeout(() => {
+                    let isCreateSuc = this.mLaunchedActivities.has(activity);
+                    if (activity.mCallActivity && activity.getIntent() && activity.getIntent().mRequestCode >= 0) {
+                        activity.mCallActivity.dispatchActivityResult(null, activity.getIntent().mRequestCode, activity.mResultCode, activity.mResultData);
+                    }
+                    this.handleDestroyActivity(activity, finishing);
+                    if (!isCreateSuc)
+                        return;
+                    if (this.mLaunchedActivities.size == 0) {
+                        if (history.length <= 2) {
+                            this.androidUI.showAppClosed();
+                        }
+                        else {
+                            PageStack.back(true);
+                        }
+                    }
+                    else if (activity.getIntent()) {
+                        PageStack.notifyPageClosed(activity.getIntent().activityName);
+                    }
+                }, 0);
+            }
+            scheduleBackTo(intent) {
+                let destroyList = [];
+                let findActivity = false;
+                for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
+                    if (activity.getIntent() && activity.getIntent().activityName == intent.activityName) {
+                        findActivity = true;
+                        break;
+                    }
+                    destroyList.push(activity);
+                }
+                if (findActivity) {
+                    for (let activity of destroyList) {
+                        this.scheduleDestroyActivity(activity);
+                    }
+                    return true;
+                }
+                return false;
+            }
+            canBackTo(intent) {
+                for (let activity of this.mLaunchedActivities) {
+                    if (activity.getIntent().activityName == intent.activityName) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            scheduleBackToRoot() {
+                let destroyList = Array.from(this.mLaunchedActivities).reverse();
+                destroyList.shift();
+                for (let activity of destroyList) {
+                    this.scheduleDestroyActivity(activity);
+                }
+            }
+            handlePauseActivity(activity) {
+                this.performPauseActivity(activity);
+            }
+            performPauseActivity(activity) {
+                activity.mCalled = false;
+                activity.performPause();
+                if (!activity.mCalled) {
+                    throw new Error("Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onPause()");
+                }
+            }
+            handleStopActivity(activity, show = false) {
+                this.performStopActivity(activity, true);
+                this.updateVisibility(activity, show);
+            }
+            performStopActivity(activity, saveState) {
+                if (!activity.mFinished && saveState) {
+                    let state = new Bundle();
+                    activity.performSaveInstanceState(state);
+                }
+                activity.performStop();
+            }
+            handleResumeActivity(a, launching) {
+                this.performResumeActivity(a, launching);
+                let willBeVisible = !a.mStartedActivity && !a.mFinished;
+                if (willBeVisible && a.mVisibleFromClient) {
+                    a.makeVisible();
+                    this.overrideEnterAnimation = undefined;
+                    this.overrideExitAnimation = undefined;
+                    this.overrideResumeAnimation = undefined;
+                    this.overrideHideAnimation = undefined;
+                }
+            }
+            performResumeActivity(a, launching) {
+                if (!launching) {
+                    a.mStartedActivity = false;
+                }
+                a.performResume();
+            }
+            handleLaunchActivity(intent) {
+                let visibleActivities = this.getVisibleToUserActivities();
+                let a = this.performLaunchActivity(intent);
+                if (a) {
+                    this.handleResumeActivity(a, true);
+                    if (!a.mFinished && visibleActivities.length > 0) {
+                        this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
+                        if (!a.getWindow().getAttributes().isFloating()) {
+                            for (let visibleActivity of visibleActivities) {
+                                this.handleStopActivity(visibleActivity);
+                            }
+                        }
+                    }
+                }
+                return a;
+            }
+            performLaunchActivity(intent) {
+                let activity;
+                let clazz = intent.activityName;
+                try {
+                    if (typeof clazz === 'string')
+                        clazz = eval(clazz);
+                }
+                catch (e) { }
+                if (typeof clazz === 'function')
+                    activity = new clazz(this.androidUI);
+                if (activity instanceof app.Activity) {
+                    try {
+                        let savedInstanceState = null;
+                        activity.mIntent = intent;
+                        activity.mStartedActivity = false;
+                        activity.mCalled = false;
+                        activity.performCreate(savedInstanceState);
+                        if (!activity.mCalled) {
+                            throw new Error("Activity " + intent.activityName + " did not call through to super.onCreate()");
+                        }
+                        if (!activity.mFinished) {
+                            activity.performStart();
+                            activity.performRestoreInstanceState(savedInstanceState);
+                            activity.mCalled = false;
+                            activity.onPostCreate(savedInstanceState);
+                            if (!activity.mCalled) {
+                                throw new Error("Activity " + intent.activityName + " did not call through to super.onPostCreate()");
+                            }
+                        }
+                    }
+                    catch (e) {
+                        console.error(e);
+                        return null;
+                    }
+                    if (!activity.mFinished) {
+                        this.mLaunchedActivities.add(activity);
+                    }
+                    return activity;
+                }
+                return null;
+            }
+            handleDestroyActivity(activity, finishing) {
+                let visibleActivities = this.getVisibleToUserActivities();
+                let isTopVisibleActivity = activity == visibleActivities[visibleActivities.length - 1];
+                let isRootActivity = this.isRootActivity(activity);
+                this.performDestroyActivity(activity, finishing);
+                if (isRootActivity)
+                    activity.getWindow().setWindowAnimations(null, null);
+                this.androidUI.windowManager.removeWindow(activity.getWindow());
+                if (isTopVisibleActivity && !isRootActivity) {
+                    this.scheduleActivityResume();
+                }
+            }
+            performDestroyActivity(activity, finishing) {
+                if (finishing) {
+                    activity.mFinished = true;
+                }
+                activity.performPause();
+                activity.performStop();
+                activity.mCalled = false;
+                activity.performDestroy();
+                if (!activity.mCalled) {
+                    throw new Error("Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onDestroy()");
+                }
+                this.mLaunchedActivities.delete(activity);
+            }
+            updateVisibility(activity, show) {
+                if (show) {
+                    if (activity.mVisibleFromClient) {
+                        activity.makeVisible();
+                    }
+                }
+                else {
+                    activity.getWindow().getDecorView().setVisibility(View.INVISIBLE);
+                }
+            }
+            getVisibleToUserActivities() {
+                let list = [];
+                for (let activity of Array.from(this.mLaunchedActivities).reverse()) {
+                    list.push(activity);
+                    if (!activity.getWindow().getAttributes().isFloating())
+                        break;
+                }
+                list.reverse();
+                return list;
+            }
+            isRootActivity(activity) {
+                return this.mLaunchedActivities.values().next().value == activity;
+            }
+            static getActivityName(activity) {
+                if (activity.getIntent())
+                    return activity.getIntent().activityName;
+                return activity.constructor.name;
+            }
+        }
+        app.ActivityThread = ActivityThread;
+    })(app = android.app || (android.app = {}));
+})(android || (android = {}));
+var android;
+(function (android) {
+    var R;
+    (function (R) {
+        class string_ {
+            static zh() {
+                this.ok = '确定';
+                this.cancel = '取消';
+                this.close = '关闭';
+                this.back = '返回';
+                this.crash_catch_alert = '程序发生错误, 即将重载网页:';
+                this.prll_header_state_normal = '下拉以刷新';
+                this.prll_header_state_ready = '松开马上刷新';
+                this.prll_header_state_loading = '正在刷新...';
+                this.prll_header_state_fail = '刷新失败';
+                this.prll_footer_state_normal = '点击加载更多';
+                this.prll_footer_state_loading = '正在加载...';
+                this.prll_footer_state_ready = '松开加载更多';
+                this.prll_footer_state_no_more = '加载完毕';
+                this.prll_footer_state_fail = '加载失败,点击重试';
+            }
+        }
+        string_.ok = 'OK';
+        string_.cancel = 'Cancel';
+        string_.close = 'Close';
+        string_.back = 'Back';
+        string_.crash_catch_alert = 'Some error happen, will refresh page:';
+        string_.prll_header_state_normal = 'Pull to refresh';
+        string_.prll_header_state_ready = 'Release to refresh';
+        string_.prll_header_state_loading = 'Loading';
+        string_.prll_header_state_fail = 'Refresh fail';
+        string_.prll_footer_state_normal = 'Load more';
+        string_.prll_footer_state_loading = 'Loading';
+        string_.prll_footer_state_ready = 'Pull to load more';
+        string_.prll_footer_state_fail = 'Click to reload';
+        string_.prll_footer_state_no_more = 'Load Finish';
+        R.string_ = string_;
+        const lang = navigator.language.split('-')[0].toLowerCase();
+        if (typeof string_[lang] === 'function')
+            string_[lang].call(string_);
+    })(R = android.R || (android.R = {}));
+})(android || (android = {}));
+var androidui;
+(function (androidui) {
+    if (typeof HTMLDivElement !== 'function') {
+        var _HTMLDivElement = function () { };
+        _HTMLDivElement.prototype = HTMLDivElement.prototype;
+        HTMLDivElement = _HTMLDivElement;
+    }
+    class AndroidUIElement extends HTMLDivElement {
+        createdCallback() {
+            $domReady(() => initElement(this));
+        }
+        attachedCallback() {
+        }
+        detachedCallback() {
+        }
+        attributeChangedCallback(attributeName, oldVal, newVal) {
+            if (attributeName === 'debug' && newVal != null && newVal != 'false' && newVal != '0') {
+                this.AndroidUI.setDebugEnable();
+            }
+        }
+    }
+    androidui.AndroidUIElement = AndroidUIElement;
+    function runFunction(func) {
+        if (typeof window[func] === "function") {
+            window[func]();
+        }
+        else {
+            try {
+                eval(func);
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+    }
+    function $domReady(func) {
+        if (/^loaded|^complete|^interactive/.test(document.readyState)) {
+            setTimeout(func, 0);
+        }
+        else {
+            document.addEventListener('DOMContentLoaded', func);
+        }
+    }
+    function initElement(ele) {
+        ele.AndroidUI = new androidui.AndroidUI(ele);
+        let debugAttr = ele.getAttribute('debug');
+        if (debugAttr != null && debugAttr != '0' && debugAttr != 'false')
+            ele.AndroidUI.setDebugEnable();
+        let onClose = ele.getAttribute('onclose');
+        if (onClose) {
+            ele.AndroidUI.setUIClient({
+                shouldShowAppClosed(androidUI) {
+                    if (!onClose)
+                        return;
+                    runFunction(onClose);
+                }
+            });
+        }
+        let onLoad = ele.getAttribute('onload');
+        if (onLoad) {
+            runFunction(onLoad);
+        }
+    }
+    if (typeof document['registerElement'] === "function") {
+        document.registerElement("android-ui", AndroidUIElement);
+    }
+    else {
+        $domReady(() => {
+            let eles = document.getElementsByTagName('android-ui');
+            for (let ele of Array.from(eles)) {
+                initElement(ele);
+            }
+        });
+    }
+    let styleElement = document.createElement('style');
+    styleElement.innerHTML += `
+        android-ui {
+            position : relative;
+            overflow : hidden;
+            display : block;
+            outline: none;
+        }
+        android-ui * {
+            overflow : hidden;
+            border : none;
+            outline: none;
+            pointer-events: auto;
+        }
+        android-ui resources {
+            display: none;
+        }
+        android-ui Button {
+            border: none;
+            background: none;
+        }
+        android-ui windowsgroup {
+            pointer-events: none;
+        }
+        android-ui > canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        `;
+    document.head.appendChild(styleElement);
+})(androidui || (androidui = {}));
+var androidui;
+(function (androidui) {
+    var MotionEvent = android.view.MotionEvent;
+    var KeyEvent = android.view.KeyEvent;
+    var Intent = android.content.Intent;
+    var ActivityThread = android.app.ActivityThread;
+    var ViewRootImpl = android.view.ViewRootImpl;
+    class AndroidUI {
+        constructor(androidUIElement) {
+            this._canvas = document.createElement("canvas");
+            this.viewsDependOnDebugLayout = new Set();
+            this.showDebugLayoutDefault = false;
+            this._windowBound = new android.graphics.Rect();
+            this.tempRect = new android.graphics.Rect();
+            this.touchEvent = new MotionEvent();
+            this.touchAvailable = false;
+            this.ketEvent = new KeyEvent();
+            this.androidUIElement = androidUIElement;
+            if (androidUIElement[AndroidUI.BindToElementName]) {
+                throw Error('already init a AndroidUI with this element');
+            }
+            androidUIElement[AndroidUI.BindToElementName] = this;
+            this.init();
+        }
+        get windowManager() {
+            return this.mApplication.getWindowManager();
+        }
+        get windowBound() {
+            return this._windowBound;
+        }
+        init() {
+            this.appName = document.title;
+            this._viewRootImpl = new android.view.ViewRootImpl();
+            this.rootResourceElement = this.androidUIElement.querySelector('resources');
+            if (this.rootResourceElement)
+                this.androidUIElement.removeChild(this.rootResourceElement);
+            else
+                this.rootResourceElement = document.createElement('resources');
+            this.initAndroidUIElement();
+            this.initApplication();
+            this.androidUIElement.appendChild(this._canvas);
+            this.initEvent();
+            this.initRootSizeChange();
+            this._viewRootImpl.setView(this.windowManager.getWindowsLayout());
+            this._viewRootImpl.initSurface(this._canvas);
+            this.initBrowserVisibleChange();
+            this.initLaunchActivity();
+            this.initGlobalCrashHandle();
+        }
+        initApplication() {
+            this.mApplication = new android.app.Application(this);
+            this.mApplication.onCreate();
+        }
+        initLaunchActivity() {
+            this.mActivityThread = new ActivityThread(this);
+            for (let ele of Array.from(this.androidUIElement.children)) {
+                let tagName = ele.tagName;
+                if (tagName != 'ACTIVITY')
+                    continue;
+                let activityName = ele.getAttribute('name') || ele.getAttribute('android:name') || 'android.app.Activity';
+                let intent = new Intent(activityName);
+                this.mActivityThread.overrideNextWindowAnimation(null, null, null, null);
+                let activity = this.mActivityThread.handleLaunchActivity(intent);
+                if (activity) {
+                    this.androidUIElement.removeChild(ele);
+                    for (let element of Array.from(ele.children)) {
+                        android.view.LayoutInflater.from(activity).inflate(element, activity.getWindow().mContentParent, true);
+                    }
+                    let onCreateFunc = ele.getAttribute('oncreate');
+                    if (onCreateFunc && typeof window[onCreateFunc] === "function") {
+                        window[onCreateFunc].call(this, activity);
+                    }
+                }
+            }
+            this.mActivityThread.initWithPageStack();
+        }
+        initGlobalCrashHandle() {
+            window.onerror = (sMsg, sUrl, sLine) => {
+                if (window.confirm(android.R.string_.crash_catch_alert + '\n' + sMsg)) {
+                    window.location.reload();
+                }
+            };
+        }
+        refreshWindowBound() {
+            let boundLeft = this.androidUIElement.offsetLeft;
+            let boundTop = this.androidUIElement.offsetTop;
+            let parent = this.androidUIElement.parentElement;
+            if (parent) {
+                boundLeft += parent.offsetLeft;
+                boundTop += parent.offsetTop;
+                parent = parent.parentElement;
+            }
+            let boundRight = boundLeft + this.androidUIElement.offsetWidth;
+            let boundBottom = boundTop + this.androidUIElement.offsetHeight;
+            if (this._windowBound && this._windowBound.left == boundLeft && this._windowBound.top == boundTop
+                && this._windowBound.right == boundRight && this._windowBound.bottom == boundBottom) {
+                return false;
+            }
+            this._windowBound.set(boundLeft, boundTop, boundRight, boundBottom);
+            return true;
+        }
+        initAndroidUIElement() {
+            if (this.androidUIElement.style.display === 'none') {
+                this.androidUIElement.style.display = '';
+            }
+            this.androidUIElement.setAttribute('tabindex', '0');
+            this.androidUIElement.focus();
+        }
+        initEvent() {
+            this.initTouchEvent();
+            this.initMouseEvent();
+            this.initKeyEvent();
+            this.initGenericEvent();
+        }
+        initTouchEvent() {
+            this.androidUIElement.addEventListener('touchstart', (e) => {
+                this.touchAvailable = true;
+                this.refreshWindowBound();
+                if (e.target != document.activeElement || !this.androidUIElement.contains(document.activeElement)) {
+                    this.androidUIElement.focus();
+                }
+                this.touchEvent.initWithTouch(e, MotionEvent.ACTION_DOWN, this._windowBound);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+            this.androidUIElement.addEventListener('touchmove', (e) => {
+                this.touchEvent.initWithTouch(e, MotionEvent.ACTION_MOVE, this._windowBound);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+            this.androidUIElement.addEventListener('touchend', (e) => {
+                this.touchEvent.initWithTouch(e, MotionEvent.ACTION_UP, this._windowBound);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+            this.androidUIElement.addEventListener('touchcancel', (e) => {
+                this.touchEvent.initWithTouch(e, MotionEvent.ACTION_CANCEL, this._windowBound);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+        }
+        initMouseEvent() {
+            function mouseToTouchEvent(e) {
+                let touch = {
+                    identifier: 0,
+                    target: null,
+                    screenX: e.screenX,
+                    screenY: e.screenY,
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                    pageX: e.pageX,
+                    pageY: e.pageY
+                };
+                return {
+                    changedTouches: [touch],
+                    targetTouches: [touch],
+                    touches: e.type === 'mouseup' ? [] : [touch],
+                    timeStamp: e.timeStamp
+                };
+            }
+            let isMouseDown = false;
+            this.androidUIElement.addEventListener('mousedown', (e) => {
+                if (this.touchAvailable)
+                    return;
+                isMouseDown = true;
+                this.refreshWindowBound();
+                this.androidUIElement.focus();
+                this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+            this.androidUIElement.addEventListener('mousemove', (e) => {
+                if (this.touchAvailable)
+                    return;
+                if (!isMouseDown)
+                    return;
+                this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+            this.androidUIElement.addEventListener('mouseup', (e) => {
+                if (this.touchAvailable)
+                    return;
+                isMouseDown = false;
+                this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
+                if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+            this.androidUIElement.addEventListener('mouseleave', (e) => {
+                if (this.touchAvailable)
+                    return;
+                if (e.fromElement === this.androidUIElement) {
+                    isMouseDown = false;
+                    this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
+                    if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        return true;
+                    }
+                }
+            }, true);
+            let scrollEvent = new MotionEvent();
+            this.androidUIElement.addEventListener('mousewheel', (e) => {
+                scrollEvent.initWithMouseWheel(e);
+                if (this._viewRootImpl.dispatchInputEvent(scrollEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+        }
+        initKeyEvent() {
+            this.androidUIElement.addEventListener('keydown', (e) => {
+                this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_DOWN);
+                if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+            this.androidUIElement.addEventListener('keyup', (e) => {
+                this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_UP);
+                if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return true;
+                }
+            }, true);
+        }
+        initGenericEvent() {
+        }
+        initRootSizeChange() {
+            const _this = this;
+            window.addEventListener('resize', () => {
+                _this.notifyRootSizeChange();
+            });
+            let lastWidth = this.androidUIElement.offsetWidth;
+            let lastHeight = this.androidUIElement.offsetHeight;
+            if (lastWidth > 0 && lastHeight > 0)
+                this.notifyRootSizeChange();
+            setInterval(() => {
+                let width = _this.androidUIElement.offsetWidth;
+                let height = _this.androidUIElement.offsetHeight;
+                if (lastHeight !== height || lastWidth !== width) {
+                    lastWidth = width;
+                    lastHeight = height;
+                    _this.notifyRootSizeChange();
+                }
+            }, 500);
+        }
+        initBrowserVisibleChange() {
+            var eventName = 'visibilitychange';
+            if (document['webkitHidden'] != undefined) {
+                eventName = 'webkitvisibilitychange';
+            }
+            document.addEventListener(eventName, () => {
+                if (document['hidden'] || document['webkitHidden']) {
+                    this.mActivityThread.scheduleApplicationHide();
+                }
+                else {
+                    this.mActivityThread.scheduleApplicationShow();
+                    this._viewRootImpl.invalidate();
+                }
+            }, false);
+        }
+        notifyRootSizeChange() {
+            if (this.refreshWindowBound()) {
+                let density = android.content.res.Resources.getDisplayMetrics().density;
+                this.tempRect.set(this._windowBound.left * density, this._windowBound.top * density, this._windowBound.right * density, this._windowBound.bottom * density);
+                let width = this._windowBound.width();
+                let height = this._windowBound.height();
+                this._canvas.width = width * density;
+                this._canvas.height = height * density;
+                this._canvas.style.width = width + "px";
+                this._canvas.style.height = height + "px";
+                this._viewRootImpl.notifyResized(this.tempRect);
+            }
+        }
+        viewAttachedDependOnDebugLayout(view) {
+            this.viewsDependOnDebugLayout.add(view);
+            this.showDebugLayout();
+        }
+        viewDetachedDependOnDebugLayout(view) {
+            this.viewsDependOnDebugLayout.delete(view);
+            if (this.viewsDependOnDebugLayout.size == 0 && !this.showDebugLayoutDefault) {
+                this.hideDebugLayout();
+            }
+        }
+        setDebugEnable(enable = true) {
+            ViewRootImpl.DEBUG_FPS = enable;
+            this.setShowDebugLayout(enable);
+        }
+        setShowDebugLayout(showDebugLayoutDefault = true) {
+            this.showDebugLayoutDefault = showDebugLayoutDefault;
+            if (showDebugLayoutDefault) {
+                this.showDebugLayout();
+            }
+            else {
+                this.hideDebugLayout();
+            }
+        }
+        showDebugLayout() {
+            if (this.windowManager.getWindowsLayout().bindElement.parentNode === null) {
+                this.androidUIElement.appendChild(this.windowManager.getWindowsLayout().bindElement);
+            }
+        }
+        hideDebugLayout() {
+            if (this.windowManager.getWindowsLayout().bindElement.parentNode === this.androidUIElement) {
+                this.androidUIElement.removeChild(this.windowManager.getWindowsLayout().bindElement);
+            }
+        }
+        setUIClient(uiClient) {
+            this.uiClient = uiClient;
+        }
+        showAppClosed() {
+            AndroidUI.showAppClosed(this);
+        }
+        static showAppClosed(androidUI) {
+            androidUI.androidUIElement.parentNode.removeChild(androidUI.androidUIElement);
+            if (androidUI.uiClient && androidUI.uiClient.shouldShowAppClosed) {
+                androidUI.uiClient.shouldShowAppClosed(androidUI);
+            }
+        }
+    }
+    AndroidUI.BindToElementName = 'AndroidUI';
+    androidui.AndroidUI = AndroidUI;
+})(androidui || (androidui = {}));
 var android;
 (function (android) {
     var app;
@@ -28460,19 +28536,16 @@ var android;
         (function (LinearLayout) {
             class LayoutParams extends android.view.ViewGroup.MarginLayoutParams {
                 constructor(...args) {
-                    super();
+                    super(...(args.length == 3 ? [args[0], args[1]] : args));
                     this.weight = 0;
                     this.gravity = -1;
                     if (args.length === 1) {
                         if (args[0] instanceof LayoutParams) {
                             this.gravity = args[0].gravity;
                         }
-                        super(args[0]);
                     }
-                    else {
-                        let [width, height, weight = 0] = args;
-                        super(width, height);
-                        this.weight = weight;
+                    else if (args.length === 3) {
+                        this.weight = args[2] || 0;
                     }
                     let a = this._attrBinder;
                     a.addAttr('gravity', (value) => {
@@ -37494,18 +37567,11 @@ var android;
             AbsListView.AdapterDataSetObserver = AdapterDataSetObserver;
             class LayoutParams extends ViewGroup.LayoutParams {
                 constructor(...args) {
-                    super();
+                    super(...(args.length == 3 ? [args[0], args[1]] : args));
                     this.viewType = 0;
                     this.scrappedFromPosition = 0;
                     this.itemId = -1;
-                    if (args.length === 1) {
-                        super(args[0]);
-                    }
-                    else if (args.length === 2) {
-                        super(args[0], args[1]);
-                    }
-                    else if (args.length === 3) {
-                        super(args[0], args[1]);
+                    if (args.length === 3) {
                         this.viewType = args[2];
                     }
                 }
@@ -59331,6 +59397,9 @@ var androidui;
                     throw Error('canvas is not NativeCanvas');
                 }
             }
+            showFps(fps) {
+                native.NativeApi.surface.showFps(fps);
+            }
             static notifySurfaceReady(surfaceId) {
                 let surface = SurfaceInstances.get(surfaceId);
                 surface.viewRoot.scheduleTraversals();
@@ -59620,6 +59689,9 @@ var androidui;
                     JSBridge.batchCall(batchCall.toString());
                     batchCall.clear();
                 }
+                showFps(fps) {
+                    JSBridge.showJSFps(fps);
+                }
             }
             NativeApi.SurfaceApi = SurfaceApi;
             class CanvasApi {
@@ -59738,7 +59810,6 @@ var androidui;
             android.os.MessageQueue.requestNextLoop = () => {
                 setTimeout(android.os.MessageQueue.loop, 0);
             };
-            android.view.ViewRootImpl.prototype.trackFPS = () => { };
             androidui.AndroidUI.showAppClosed = () => {
                 JSBridge.closeApp();
             };
