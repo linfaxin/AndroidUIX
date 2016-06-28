@@ -60,5 +60,9 @@ module android.R{
         static get black():number{
             return Color.BLACK;
         }
+
+        static get transparent():number{
+            return Color.TRANSPARENT;
+        }
     }
 }

@@ -104,6 +104,16 @@ module androidui.attr {
 
         }
 
+        parseEnum(value, enumMap:Map<string,number>, defaultValue:number):number {
+            if(typeof value === "number"){
+                if(Number.isInteger(value)) return value;
+            }
+            if(enumMap.has(value)){
+                return enumMap.get(value);
+            }
+            return defaultValue;
+        }
+
         parseBoolean(value, defaultValue = true):boolean{
             if(value===false || value ==='false' || value === '0') return false;
             else if(value===true || value ==='true' || value === '1' || value === '') return true;

@@ -129,10 +129,13 @@ export class GridView extends AbsListView {
             this.setVerticalSpacing(this._attrBinder.parseNumber(value, 0));
         });
         this._attrBinder.addAttr('stretchMode', (value)=>{
-            let strechMode = this._attrBinder.parseNumber(value, -1);
-            if(strechMode >= 0 ){
-                this.setStretchMode(strechMode);
-            }
+            this.setStretchMode(this._attrBinder.parseEnum(value,
+                new Map<string, number>()
+                    .set("none", GridView.NO_STRETCH)
+                    .set("spacingWidth", GridView.STRETCH_SPACING)
+                    .set("columnWidth", GridView.STRETCH_COLUMN_WIDTH)
+                    .set("spacingWidthUniform", GridView.STRETCH_SPACING_UNIFORM),
+                GridView.STRETCH_COLUMN_WIDTH));
         });
         this._attrBinder.addAttr('columnWidth', (value)=>{
             let columnWidth = this._attrBinder.parseNumber(value, -1);

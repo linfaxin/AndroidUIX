@@ -711,8 +711,12 @@ module android.widget {
                 this.setScrollingCacheEnabled(this._attrBinder.parseBoolean(value, true));
             });
             this._attrBinder.addAttr('transcriptMode', (value)=>{
-                let transcriptMode:number = this._attrBinder.parseNumber(value, AbsListView.TRANSCRIPT_MODE_DISABLED);
-                this.setTranscriptMode(transcriptMode);
+                this.setTranscriptMode(this._attrBinder.parseEnum(value,
+                    new Map<string, number>()
+                        .set("disabled", AbsListView.TRANSCRIPT_MODE_DISABLED)
+                        .set("normal", AbsListView.TRANSCRIPT_MODE_NORMAL)
+                        .set("alwaysScroll", AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL),
+                    AbsListView.TRANSCRIPT_MODE_DISABLED));
             });
             this._attrBinder.addAttr('cacheColorHint', (value)=>{
                 let color:number = this._attrBinder.parseColor(value, 0);
@@ -731,7 +735,12 @@ module android.widget {
                 this.setSmoothScrollbarEnabled(smoothScrollbar);
             });
             this._attrBinder.addAttr('choiceMode', (value)=>{
-                this.setChoiceMode(this._attrBinder.parseNumber(value, AbsListView.CHOICE_MODE_NONE))
+                this.setChoiceMode(this._attrBinder.parseEnum(value,
+                    new Map<string, number>()
+                        .set("none", AbsListView.CHOICE_MODE_NONE)
+                        .set("singleChoice", AbsListView.CHOICE_MODE_SINGLE)
+                        .set("multipleChoice", AbsListView.CHOICE_MODE_MULTIPLE),
+                    AbsListView.CHOICE_MODE_NONE));
             });
 
         }
