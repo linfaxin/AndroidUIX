@@ -17,7 +17,7 @@ module sample.app {
     import Color = android.graphics.Color;
     import BaseAdapter = android.widget.BaseAdapter;
     import ListView = android.widget.ListView;
-    import R = sample.app.R;
+
 
 
     export class SampleGridViewActivity extends ActionBarActivity {

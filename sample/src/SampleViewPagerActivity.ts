@@ -13,7 +13,7 @@ module sample.app {
     import Log = android.util.Log;
     import Color = android.graphics.Color;
     import ViewPager = android.support.v4.view.ViewPager;
-    import R = sample.app.R;
+
 
     export class SampleViewPagerActivity extends ActionBarActivity {
         onCreate():void {

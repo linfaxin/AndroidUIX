@@ -17,7 +17,7 @@ module sample.app {
     import ListView = android.widget.ListView;
     import ExpandableListView = android.widget.ExpandableListView;
     import BaseExpandableListAdapter = android.widget.BaseExpandableListAdapter;
-    import R = sample.app.R;
+
 
 
     export class SampleExpandableListViewActivity extends ActionBarActivity {

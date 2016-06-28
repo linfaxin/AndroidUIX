@@ -14,7 +14,7 @@ module sample.app {
     import Color = android.graphics.Color;
     import ColorStateList = android.content.res.ColorStateList;
     import Animation = android.view.animation.Animation;
-    import R = sample.app.R;
+
 
 
     export class SampleAnimationActivity extends ActionBarActivity {

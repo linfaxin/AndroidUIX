@@ -4,7 +4,7 @@
 
 module sample.app {
     import Activity = android.app.Activity;
-    import R = sample.app.R;
+
 
     import ActionBarActivity = android.app.ActionBarActivity;
     export class SampleViewPagerGalleryActivity extends ActionBarActivity {

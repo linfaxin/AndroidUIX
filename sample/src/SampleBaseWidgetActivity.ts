@@ -11,7 +11,7 @@ module sample.app {
     import Toast = android.widget.Toast;
     import TextView = android.widget.TextView;
     import PopupWindow = android.widget.PopupWindow;
-    import R = sample.app.R;
+
 
     export class SampleBaseWidgetActivity extends ActionBarActivity {
         onCreate():void {

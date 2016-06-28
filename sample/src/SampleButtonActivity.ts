@@ -6,7 +6,7 @@ module sample.app {
     import ActionBarActivity = android.app.ActionBarActivity;
     import Button = android.widget.Button;
     import View = android.view.View;
-    import R = sample.app.R;
+
 
     export class SampleButtonActivity extends ActionBarActivity {
         onCreate():void {

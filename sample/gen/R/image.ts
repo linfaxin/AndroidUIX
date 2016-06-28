@@ -1,6 +1,6 @@
 ///<reference path="../../../dist/android-ui.d.ts"/>
 ///<reference path="image_base64.ts"/>
-module sample.app.R {
+module R {
     import NetDrawable = androidui.image.NetDrawable;
     import NinePatchDrawable = androidui.image.NinePatchDrawable;
 

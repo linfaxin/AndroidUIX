@@ -1,5 +1,5 @@
 ///<reference path="../../../dist/android-ui.d.ts"/>
-module sample.app.R {
+module R {
     import NetImage = androidui.image.NetImage;
 
     //index=ratio, index-0 alway null, index-3 = @x3

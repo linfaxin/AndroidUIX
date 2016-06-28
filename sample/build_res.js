@@ -1,7 +1,5 @@
 
-var args = process.argv.slice(2);
-var packageName = args[0];
-var SDKReferencePath = args[1];
+var SDKReferencePath = "../../../dist/android-ui.d.ts";
 
 var fs = require('fs');
 var jsdom = require('jsdom');
@@ -57,7 +55,7 @@ function buildImage(){
 
     var str =
         `///<reference path="${SDKReferencePath}"/>
-module ${packageName}.R {
+module R {
     import NetImage = androidui.image.NetImage;
 
     //index=ratio, index-0 alway null, index-3 = @x3
@@ -96,7 +94,7 @@ ${exportLines}
     var image_ts =
         `///<reference path="${SDKReferencePath}"/>
 ///<reference path="image_base64.ts"/>
-module ${packageName}.R {
+module R {
     import NetDrawable = androidui.image.NetDrawable;
     import NinePatchDrawable = androidui.image.NinePatchDrawable;
 
@@ -131,7 +129,7 @@ function buildLayout(){
     function travelElement(ele){
         if(ele){
             //android:id="@+id/xx" ==> id="xx",
-            var id = ele.getAttribute('android:id');
+            var id = ele.getAttribute('android:id') || ele.getAttribute('id');
             ele.removeAttribute('android:id');
             if(id){
                 if(id.startsWith('@+id/')) id = id.substring('@+id/'.length);
@@ -152,8 +150,7 @@ function buildLayout(){
 
     function writeToIdFile(){
         var str =
-            `///<reference path="${SDKReferencePath}"/>
-module ${packageName}.R {
+            `module R {
     export var id = ${JSON.stringify(definedIds, null, 8)};
 }`;
         fs.writeFile('gen/R/id.ts', str, 'utf-8');
@@ -185,7 +182,7 @@ module ${packageName}.R {
 
     var str =
         `///<reference path="${SDKReferencePath}"/>
-module ${packageName}.R {
+module R {
     const _layout_data = ${JSON.stringify(layoutData, null, 8)};
     const _tempDiv = document.createElement('div');
 
@@ -231,7 +228,7 @@ ${html}
     });
 
     var str = `///<reference path="${SDKReferencePath}"/>
-module ${packageName}.R {
+module R {
     android.content.res.Resources.buildResourcesElement.innerHTML = \`${allHtml}\`;
 }`;
 

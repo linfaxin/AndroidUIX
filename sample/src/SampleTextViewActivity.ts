@@ -5,7 +5,7 @@
 module sample.app {
     import Activity = android.app.Activity;
     import ActionBarActivity = android.app.ActionBarActivity;
-    import R = sample.app.R;
+
 
     export class SampleTextViewActivity extends ActionBarActivity {
         onCreate():void {

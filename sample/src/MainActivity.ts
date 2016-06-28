@@ -10,7 +10,7 @@ module sample.app {
     import Activity = android.app.Activity;
     import ActionBarActivity = android.app.ActionBarActivity;
     import AlertDialog = android.app.AlertDialog;
-    import R = sample.app.R;
+
 
     export class MainActivity extends ActionBarActivity {
 
@@ -58,7 +58,7 @@ module sample.app {
                 const activity = this;
                 this.confirmDialog = new android.app.AlertDialog.Builder(activity)
                     .setTitle('Promt')
-                    .setIcon(sample.app.R.image.icon_alert)
+                    .setIcon(R.image.icon_alert)
                     .setMessage('Exit confirm?')
                     .setNegativeButton(android.R.string_.cancel, null)
                     .setPositiveButton(android.R.string_.ok, {

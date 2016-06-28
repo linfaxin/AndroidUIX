@@ -1,5 +1,5 @@
 ///<reference path="../../../dist/android-ui.d.ts"/>
-module sample.app.R {
+module R {
     android.content.res.Resources.buildResourcesElement.innerHTML = `
 <!-- color.html -->
 <android-color id="white">white</android-color>

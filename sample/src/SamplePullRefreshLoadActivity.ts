@@ -16,7 +16,7 @@ module sample.app {
     import BaseAdapter = android.widget.BaseAdapter;
     import ListView = android.widget.ListView;
     import PullRefreshLoadLayout = androidui.widget.PullRefreshLoadLayout;
-    import R = sample.app.R;
+
 
 
     export class SamplePullRefreshLoadActivity extends ActionBarActivity {
