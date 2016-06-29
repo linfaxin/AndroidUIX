@@ -2457,7 +2457,53 @@ module android.view {
             return this.mChildTransformation;
         }
 
-        findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View {
+        protected findViewTraversal(id:string):View {
+            if (id == this.mID) {
+                return this;
+            }
+
+            let where:View[] = this.mChildren;
+            const len = this.mChildrenCount;
+
+            for (let i = 0; i < len; i++) {
+                let v = where[i];
+
+                if ((v.mPrivateFlags & View.PFLAG_IS_ROOT_NAMESPACE) == 0) {
+                    v = v.findViewById(id);
+
+                    if (v != null) {
+                        return v;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        protected findViewWithTagTraversal(tag:any):View {
+            if (tag != null && tag === this.mTag) {
+                return this;
+            }
+
+            let where:View[] = this.mChildren;
+            const len = this.mChildrenCount;
+
+            for (let i = 0; i < len; i++) {
+                let v = where[i];
+
+                if ((v.mPrivateFlags & View.PFLAG_IS_ROOT_NAMESPACE) == 0) {
+                    v = v.findViewWithTag(tag);
+
+                    if (v != null) {
+                        return v;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        protected findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View {
             if (predicate.apply(this)) {
                 return this;
             }

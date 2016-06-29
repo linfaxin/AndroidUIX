@@ -1312,14 +1312,8 @@ module android.view {
         static TEXT_ALIGNMENT_RESOLVED_DEFAULT:number = View.TEXT_ALIGNMENT_GRAVITY;
 
 
-        get mID():string{
-            if(this.bindElement){
-                let id = this.bindElement.id;
-                return id ? id : null;
-            }
-            return null;
-        }
-        private mTag:any;
+        protected mID:string;
+        protected mTag:any;
         mPrivateFlags = 0;
         private mPrivateFlags2 = 0;
         private mPrivateFlags3 = 0;
@@ -6791,25 +6785,34 @@ module android.view {
 
             return parent;
         }
-        findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View {
-            if (predicate.apply(this)) {
+        findViewById(id:string):View{
+            if(!id) return null;
+            return this.findViewTraversal(id);
+        }
+        findViewWithTag(tag:any):View{
+            if(!tag) return null;
+            return this.findViewWithTagTraversal(tag);
+        }
+        protected findViewTraversal(id:string):View  {
+            if (id == this.mID) {
                 return this;
             }
             return null;
         }
-        findViewById(id:string):View{
-            if(!id) return null;
-            if (id == this.bindElement.id) {
+        protected findViewWithTagTraversal(tag:any):View{
+            if (tag != null && tag === this.mTag) {
                 return this;
             }
-            return this.findViewTraversal(id);
-        }
-        findViewTraversal(id:string):View  {
-            let bindEle = this.bindElement.querySelector('#'+id);
-            return bindEle ? bindEle[View.AndroidViewProperty] : null;
+            return null;
         }
         findViewByPredicate(predicate:View.Predicate<View>) {
             return this.findViewByPredicateTraversal(predicate, null);
+        }
+        protected findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View {
+            if (predicate.apply(this)) {
+                return this;
+            }
+            return null;
         }
         findViewByPredicateInsideOut(start:View, predicate:View.Predicate<View>) {
             let childToSkip = null;
@@ -6829,7 +6832,7 @@ module android.view {
             }
         }
         setId(id:string) {
-            if(this.bindElement) this.bindElement.id = id;
+            this.mID = id;
         }
         getId():string {
             return this.mID;

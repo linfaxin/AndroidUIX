@@ -3062,7 +3062,7 @@ export class ListView extends AbsListView {
      * @see android.view.View#findViewById(int)
      * First look in our children, then in any header and footer views that may be scrolled off.
      */
-    findViewTraversal(id:string):View  {
+    protected findViewTraversal(id:string):View  {
         let v:View;
         v = super.findViewTraversal(id);
         if (v == null) {
@@ -3145,7 +3145,7 @@ export class ListView extends AbsListView {
      * @see android.view.View#findViewByPredicate(Predicate)
      * First look in our children, then in any header and footer views that may be scrolled off.
      */
-    findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View  {
+    protected findViewByPredicateTraversal(predicate:View.Predicate<View>, childToSkip:View):View  {
         let v:View;
         v = super.findViewByPredicateTraversal(predicate, childToSkip);
         if (v == null) {
