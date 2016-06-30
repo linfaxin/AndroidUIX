@@ -25,15 +25,15 @@
     android:background="@android:drawable/toast_frame">
 
     <TextView
-        android:id="message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_gravity="center_horizontal"
-        android:textColor="white"
-        android:shadowColor="#BB000000"
-        android:shadowRadius="2.75"
-        ></TextView>
+            android:id="message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="center_horizontal"
+            android:textColor="white"
+            android:shadowColor="#BB000000"
+            android:shadowRadius="2.75"
+    />
 
 </LinearLayout>
 

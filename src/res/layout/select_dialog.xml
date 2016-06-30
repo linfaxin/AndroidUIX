@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!--
 /*
 ** Copyright 2010, The Android Open Source Project
@@ -19,17 +18,16 @@
 
 <!--
     This layout file is used by the AlertDialog when displaying a list of items.
-    This layout file is inflated and used as the TextView to display individual
-    items.
+    This layout file is inflated and used as the ListView to display the items.
+    Assign an ID so its state will be saved/restored.
 -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="text1"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:minHeight="48dp"
-    android:textSize="18sp"
-    android:gravity="center_vertical"
-    android:paddingStart="16dip"
-    android:paddingEnd="16dip"
-    android:ellipsize="end"
-></TextView>
+<view class="android.app.AlertController.RecycleListView"
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:id="select_dialog_listview"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:cacheColorHint="@null"
+      android:divider="@android:drawable/list_divider"
+      android:scrollbars="vertical"
+      android:overScrollMode="ifContentScrolls"
+      android:textAlignment="viewStart"/>

@@ -1,4 +1,4 @@
-<merge>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
     <LinearLayout
             id="action_bar_center_layout"
             android:layout_marginLeft="60dp"
@@ -13,8 +13,7 @@
                 android:singleLine="true"
                 android:ellipsize="end"
                 android:textColor="@android:color/white"
-                android:textSize="18sp"
-                ></TextView>
+                android:textSize="18sp"/>
         <TextView
                 id="action_bar_sub_title"
                 android:visibility="gone"
@@ -24,8 +23,7 @@
                 android:singleLine="true"
                 android:ellipsize="end"
                 android:textColor="@android:color/white"
-                android:textSize="12sp"
-                ></TextView>
+                android:textSize="12sp"/>
     </LinearLayout>
     <Button
             id="action_bar_left"
@@ -39,8 +37,7 @@
             android:drawablePadding="4dp"
             android:minWidth="32dp"
             android:textSize="17sp"
-            android:singleLine="true"
-            ></Button>
+            android:singleLine="true"/>
     <Button
             id="action_bar_right"
             android:visibility="gone"
@@ -49,10 +46,9 @@
             android:background="@android:drawable/item_background"
             android:textColor="@android:color/white"
             android:paddingRight="6dp"
-            android:paddingRight="6dp"
+            android:paddingLeft="6dp"
             android:drawablePadding="4dp"
             android:minWidth="32dp"
             android:textSize="17sp"
-            android:singleLine="true"
-            ></Button>
+            android:singleLine="true"/>
 </merge>

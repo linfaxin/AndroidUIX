@@ -64,7 +64,8 @@ module android.content.res{
             if(refString == 'null') return null;
             //support like @android.R.drawable.xxx
             try {
-                return (<any>window).eval(refString);
+                throw Error('not support getObjectRef now.');
+                // return (<any>window).eval(refString);
             } catch (e) {
                 console.log(e);
             }

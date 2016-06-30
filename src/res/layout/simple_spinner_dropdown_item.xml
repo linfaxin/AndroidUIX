@@ -17,16 +17,16 @@
 ** limitations under the License.
 */
 -->
-<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android" 
-    android:id="text1"
+<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:id="text1"
 
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-    android:textColor="@android:color/primary_text_light_disable_only"
+                 android:paddingStart="8dp"
+                 android:paddingEnd="8dp"
+                 android:textColor="@android:color/primary_text_light_disable_only"
 
-    android:gravity="center_vertical"
-    android:singleLine="true"
-    android:layout_width="match_parent"
-    android:layout_height="48dp"
-    android:ellipsize="end"
-    android:textAlignment="inherit"></CheckedTextView>
+                 android:gravity="center_vertical"
+                 android:singleLine="true"
+                 android:layout_width="match_parent"
+                 android:layout_height="48dp"
+                 android:ellipsize="end"
+                 android:textAlignment="inherit"/>

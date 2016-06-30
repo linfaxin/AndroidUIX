@@ -122,6 +122,7 @@ function buildLayout(){
         });
         var document = doc.defaultView.document;
         travelElement(document.documentElement);
+        if(document.documentElement.tagName=='resources') return;
         return document.documentElement.outerHTML;
     }
 
@@ -150,7 +151,7 @@ function buildLayout(){
     function writeToIdFile(){
         var str =
             `module android.R {
-    export var id = ${JSON.stringify(definedIds, null, 8)};
+    export const id = ${JSON.stringify(definedIds, null, 8)};
 }`;
         fs.writeFile('android/R/id.ts', str, 'utf-8');
     }
@@ -166,6 +167,7 @@ function buildLayout(){
         if(fileSuffixes != 'html' && fileSuffixes != 'xml') return;//must end with '.html/.xml'
         var html = fs.readFileSync(path+'/'+fileName, 'utf-8');
         html = xml2html(html);
+        if(!html) return;
         var name = splits[0];
         layoutData[name] = html;
     });

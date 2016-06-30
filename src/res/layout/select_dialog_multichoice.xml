@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+
 <!-- Copyright (C) 2010 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,15 +14,16 @@
      limitations under the License.
 -->
 
-<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="text1"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:minHeight="48dp"
-    android:textSize="18sp"
-    android:gravity="center_vertical"
-    android:paddingStart="16dip"
-    android:paddingEnd="16dip"
-    android:checkMark="@android:drawable/btn_radio"
-    android:ellipsize="end"
-></CheckedTextView>
+<CheckedTextView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="text1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:textSize="18sp"
+        android:gravity="center_vertical"
+        android:paddingStart="16dip"
+        android:paddingEnd="16dip"
+        android:checkMark="@android:drawable/btn_check"
+        android:ellipsize="end"
+/>
