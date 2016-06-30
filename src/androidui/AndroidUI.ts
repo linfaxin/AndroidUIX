@@ -44,8 +44,6 @@ module androidui {
         private viewsDependOnDebugLayout = new Set<View>();
         private showDebugLayoutDefault = false;
 
-        private rootResourceElement:Element;
-
         private _windowBound = new android.graphics.Rect();
         private tempRect = new android.graphics.Rect();
         get windowBound():android.graphics.Rect{
@@ -68,10 +66,6 @@ module androidui {
         private init() {
             this.appName = document.title;
             this._viewRootImpl = new android.view.ViewRootImpl();
-
-            this.rootResourceElement = this.androidUIElement.querySelector('resources');
-            if(this.rootResourceElement) this.androidUIElement.removeChild(this.rootResourceElement)
-            else this.rootResourceElement = document.createElement('resources')
 
             this.initAndroidUIElement();
 

@@ -182,9 +182,8 @@ module android.content.res{
             }
 
         }
-        
 
-        private static emptySelectorNode = document.createElement('resources');
+
         static buildResourcesElement:HTMLElement = document.createElement('resources');
         static SDKResourcesElement:HTMLElement = document.createElement('resources');
         private getReference(refString:string, cloneNode=true):Element {
@@ -205,8 +204,7 @@ module android.content.res{
                 //@style/btn1/pressed => buildResourcesElement: resources android-style#btn1 #pressed
                 let q = 'resources '+tagName + '#' + (<any>refIds).join(' #');
 
-                let rootElement = this.context ? this.context.androidUI.rootResourceElement : Resources.emptySelectorNode;
-                let el = rootElement.querySelector(q) || resourcesElement.querySelector(q);
+                let el = resourcesElement.querySelector(q);
                 if(!el) return null;
                 return cloneNode ? <Element>el.cloneNode(true) : el;
             }
