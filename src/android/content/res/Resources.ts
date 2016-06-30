@@ -54,8 +54,9 @@ module android.content.res{
             displayMetrics.densityDpi = density * DisplayMetrics.DENSITY_DEFAULT;
             displayMetrics.scaledDensity = density;
 
-            displayMetrics.widthPixels = document.documentElement.offsetWidth * density;
-            displayMetrics.heightPixels = document.documentElement.offsetHeight * density;
+            let contentEle = this.context ? this.context.androidUI.androidUIElement : document.documentElement;
+            displayMetrics.widthPixels = contentEle.offsetWidth * density;
+            displayMetrics.heightPixels = contentEle.offsetHeight * density;
         }
 
         private getObjectRef(refString:string):any{
