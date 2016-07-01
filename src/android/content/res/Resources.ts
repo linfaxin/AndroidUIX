@@ -10,12 +10,19 @@
 module android.content.res{
     import DisplayMetrics = android.util.DisplayMetrics;
     import Drawable = android.graphics.drawable.Drawable;
+    import Color = android.graphics.Color;
+    import TypedValue = android.util.TypedValue;
 
     export class Resources{
         private static instance = new Resources();
 
         private displayMetrics:DisplayMetrics;
         private context:Context;
+
+        //value set in app's R.ts
+        static _AppBuildImageFileFinder: (refString:string)=>Drawable = null;
+        static _AppBuildXmlFinder: (refString:string)=>HTMLElement = null;
+        static _AppBuildValueFinder: (refString:string)=>HTMLElement = null;
 
         constructor(context?:Context) {
             this.context = context;
@@ -59,161 +66,338 @@ module android.content.res{
             displayMetrics.heightPixels = contentEle.offsetHeight * density;
         }
 
-        private getObjectRef(refString:string):any{
-            if(refString.startsWith('@')) refString = refString.substring(1);
-            if(refString == 'null') return null;
-            //support like @android.R.drawable.xxx
-            try {
-                throw Error('not support getObjectRef now.');
-                // return (<any>window).eval(refString);
-            } catch (e) {
-                console.log(e);
-            }
-        }
-
-        static buildAttrFinder: (refString:string)=>any;
-        getAttr(refString:string):any{
+        private getDefStyle(refString:string):any{
             if(refString.startsWith('@android:attr/')){
                 refString = refString.substring('@android:attr/'.length);
                 return android.R.attr[refString];
-
-            }else if(Resources.buildAttrFinder && refString.startsWith('@attr/')){
-                return Resources.buildAttrFinder(refString);
-
-            }else if(refString.startsWith('@')){
-                return this.getObjectRef(refString);
             }
-            return null;
         }
 
-        static buildDrawableFinder: (refString:string)=>Drawable;
         /**
-         * @param refString @drawable/xxx, @android:drawable/xxx, @android.R.drawable.xxx
+         * @param refString @drawable/xxx, @android:drawable/xxx
          */
         getDrawable(refString:string):Drawable {
             if(refString.startsWith('@android:drawable/')){
                 refString = refString.substring('@android:drawable/'.length);
                 return android.R.drawable[refString] || android.R.image[refString];
-
-            }else if(Resources.buildDrawableFinder && refString.startsWith('@drawable/')){
-                refString = refString.substring('@drawable/'.length);
-                return Resources.buildDrawableFinder(refString);
-
-            }else if(refString.startsWith('@')){
-                return this.getObjectRef(refString);
             }
+
+            if(Resources._AppBuildImageFileFinder){
+                let drawable = Resources._AppBuildImageFileFinder(refString);
+                if(drawable) return drawable;
+            }
+
+            if(!refString.startsWith('@drawable/')){
+                refString = '@drawable/' + refString;
+            }
+            let ele = this.getXml(refString);
+            if(ele){
+                return Drawable.createFromXml(this, ele);
+            }
+            ele = this.getValue(refString);
+            if(ele){
+                let text = ele.innerText;
+                if(text.startsWith('@android:drawable/') || text.startsWith('@drawable/')){
+                    return this.getDrawable(text);
+                }
+                return Drawable.createFromXml(this, ele);
+            }
+
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
 
+
+        /**
+         * @param refString @color/xxx @android:color/xxx
+         */
         getColor(refString:string):number {
-            let s = this.getString(refString);
-            return android.graphics.Color.parseColor(s);
+            if(refString.startsWith('@android:color/')){
+                refString = refString.substring('@android:color/'.length);
+                let color = android.R.color[refString];
+                if(color instanceof ColorStateList){
+                    color = (<ColorStateList>color).getDefaultColor();
+                }
+                return color;
+
+            }else{
+                if(!refString.startsWith('@color/')){
+                    refString = '@color/' + refString;
+                }
+                let ele = this.getValue(refString);
+                if(ele){
+                    let text = ele.innerText;
+                    if(text.startsWith('@android:color/') || text.startsWith('@color/')){
+                        return this.getColor(text);
+                    }
+                    return Color.parseColor(text);
+                }
+                ele = this.getXml(refString);
+                if(ele){
+                    let colorList = ColorStateList.createFromXml(this, ele);
+                    if(colorList) return colorList.getDefaultColor();
+                }
+            }
+
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
 
+        /**
+         * @param refString @color/xxx @android:color/xxx
+         */
         getColorStateList(refString:string):ColorStateList {
             if(refString.startsWith('@android:color/')){
                 refString = refString.substring('@android:color/'.length);
-                return android.R.color[refString];
+                let color = android.R.color[refString];
+                if(typeof color === "number"){
+                    color = ColorStateList.valueOf(color);
+                }
+                return color;
 
-            }else if(refString.startsWith('@')){
-                return this.getObjectRef(refString);
+            } else {
+                if(!refString.startsWith('@color/')){
+                    refString = '@color/' + refString;
+                }
+                let ele = this.getXml(refString);
+                if(ele){
+                    return ColorStateList.createFromXml(this, ele);
+                }
+                ele = this.getValue(refString);
+                if(ele){
+                    let text = ele.innerText;
+                    if(text.startsWith('@android:color/') || text.startsWith('@color/')){
+                        return this.getColorStateList(text);
+                    }
+                    return ColorStateList.valueOf(Color.parseColor(text));
+                }
             }
-            //TODO app color list defined
+
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
+        }
+
+        /**
+         * Retrieve a dimensional for a particular resource reference.  Unit
+         * conversions are based on the current {@link DisplayMetrics} associated
+         * with the resources.
+         *
+         * @return Resource dimension value multiplied by the appropriate
+         * metric.
+         *
+         * @throws NotFoundException Throws NotFoundException if the given ID does not exist.
+         *
+         * @see #getDimensionPixelOffset
+         * @see #getDimensionPixelSize
+         */
+        getDimension(refString:string, baseValue=0): number {
+            if(!refString.startsWith('@dimen/')) refString = '@dimen/' + refString;
+            let ele = this.getValue(refString);
+            if(ele){
+                let text = ele.innerText;
+                return TypedValue.complexToDimension(text, baseValue, this.getDisplayMetrics());
+            }
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
+        }
+
+        /**
+         * Retrieve a dimensional for a particular resource reference for use
+         * as an offset in raw pixels.  This is the same as
+         * {@link #getDimension}, except the returned value is converted to
+         * integer pixels for you.  An offset conversion involves simply
+         * truncating the base value to an integer.
+         *
+         * @return Resource dimension value multiplied by the appropriate
+         * metric and truncated to integer pixels.
+         *
+         * @throws NotFoundException Throws NotFoundException if the given ID does not exist.
+         *
+         * @see #getDimension
+         * @see #getDimensionPixelSize
+         */
+        getDimensionPixelOffset(refString:string, baseValue=0): number {
+            if(!refString.startsWith('@dimen/')) refString = '@dimen/' + refString;
+            let ele = this.getValue(refString);
+            if(ele){
+                let text = ele.innerText;
+                return TypedValue.complexToDimensionPixelOffset(text, baseValue, this.getDisplayMetrics());
+            }
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
+        }
+
+        getDimensionPixelSize(refString:string, baseValue=0): number {
+            if(!refString.startsWith('@dimen/')) refString = '@dimen/' + refString;
+            let ele = this.getValue(refString);
+            if(ele){
+                let text = ele.innerText;
+                return TypedValue.complexToDimensionPixelSize(text, baseValue, this.getDisplayMetrics());
+            }
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
+        }
+
+        getBoolean(refString:string):boolean {
+            if(!refString.startsWith('@bool/')) refString = '@bool/' + refString;
+            let ele = this.getValue(refString);
+            if(ele){
+                let text = ele.innerText;
+                return text == 'true'
+            }
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
+        }
+
+        getInteger(refString:string):number {
+            if(!refString.startsWith('@integer/')) refString = '@integer/' + refString;
+            let ele = this.getValue(refString);
+            if(ele){
+                return parseInt(ele.innerText);
+            }
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
+        }
+
+        getIntArray(refString:string):number[] {
+            if(!refString.startsWith('@array/')) refString = '@array/' + refString;
+            let ele = this.getValue(refString);
+            if(ele){
+                let intArray:number[] = [];
+                for(let child of Array.from(ele.children)){
+                    intArray.push(parseInt((<HTMLElement>child).innerText));
+                }
+                return intArray;
+            }
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
+        }
+
+        getFloat(refString:string):number {
+            return this.getDimension(refString);
         }
 
         /**
          * @param refString @string/xxx @android:string/xxx
          */
-        getString(refString:string, notFindValue=refString):string {
-            if(!refString || !refString.startsWith('@')) return notFindValue;
+        getString(refString:string):string {
             if(refString.startsWith('@android:string/')){
                 refString = refString.substring('@android:string/'.length);
                 return android.R.string_[refString];
             }
 
-            let referenceArray = [];
-            let attrValue = refString;
-            while(attrValue && attrValue.startsWith('@')){//ref value
-                let reference = this.getReference(attrValue, false);
-                if(!reference) return notFindValue;
-                if(referenceArray.indexOf(reference)>=0) throw Error('findReference Error: circle reference');
-                referenceArray.push(reference);
-
-                attrValue = (<HTMLElement>reference).innerText;
+            if(!refString.startsWith('@string/')) refString = '@string/' + refString;
+            let ele = this.getValue(refString);
+            if(ele){
+                return ele.innerText;
             }
-            return attrValue;
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
 
         /**
          * @param refString @array/xxx @android:array/xxx
          */
-        getTextArray(refString:string):string[] {
-            if(!refString || !refString.startsWith('@')) return null;
-            let reference = this.getReference(refString, false);
-            if(reference instanceof HTMLElement){
-                let array = [];
-                for(let ele of Array.from(reference.children)){
-                    if(ele instanceof HTMLElement) array.push(ele.innerText);
+        getStringArray(refString:string):string[] {
+            if(!refString.startsWith('@array/')) refString = '@array/' + refString;
+            let ele = this.getValue(refString);
+            if(ele){
+                let stringArray:string[] = [];
+                for(let child of Array.from(ele.children)){
+                    stringArray.push((<HTMLElement>child).innerText);
                 }
-                return array;
+                return stringArray;
             }
-            return null;
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
 
-
-
-        static buildLayoutFinder: (refString:string)=>HTMLElement;
         /**
-         * @param refString @layout/xxx, @android:layout/xxx, @android.R.layout.xxx
+         * @param refString @layout/xxx, @android:layout/xxx
          */
         getLayout(refString:string):HTMLElement {
             if(!refString || !refString.trim().startsWith('@')) return null;
 
-
-            //find in document
-            let reference = this.getReference(refString, true);
-            if(reference) return <HTMLElement>reference.firstElementChild;
-
             if(refString.startsWith('@android:layout/')){
+                refString = refString.substring('@android:layout/'.length);
                 return android.R.layout.getLayoutData(refString);
 
-            }else if(Resources.buildLayoutFinder && refString.startsWith('@layout/')){
-                return Resources.buildLayoutFinder(refString);
-
-            }else if(refString.startsWith('@')){
-                return this.getObjectRef(refString);
             }
 
+            if(!refString.startsWith('@layout/')) refString = '@layout/' + refString;
+            let ele = this.getXml(refString);
+            if(ele) return ele;
+            throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
 
+        private getStyleAsMap(refString:string):Map<string, string>{
+            if(!refString.startsWith('@style/')){
+                refString = '@style/' + refString;
+            }
+            let styleMap = new Map<string, string>();
 
-        static buildResourcesElement:HTMLElement = document.createElement('resources');
-        static SDKResourcesElement:HTMLElement = document.createElement('resources');
-        private getReference(refString:string, cloneNode=true):Element {
-            if(refString) refString = refString.trim();
-            if(refString && refString.startsWith('@')){
-                refString = refString.substring(1);
-                let [tagName, ...refIds] = refString.split('/');
-                if(!refIds || refIds.length===0) return null;
-
-                let resourcesElement = Resources.buildResourcesElement;
-                if(tagName.startsWith('android:')){
-                    tagName = tagName.substring('android:'.length);
-                    resourcesElement = Resources.SDKResourcesElement;
+            const parseStyle = (refString:string)=>{
+                let styleXml = this.getValue(refString);
+                if(!styleXml) return;
+                //merge attr 'parent'
+                let parent = styleXml.getAttribute('parent');
+                if(parent){
+                    if(!parent.startsWith('@style/')){
+                        parent = '@style/' + parent;
+                    }
+                    parseStyle(parent);
                 }
-                if(!tagName.startsWith('android-')) tagName = 'android-'+tagName;
 
-                //@android:style/btn1/pressed => SDKResourcesElement: resources android-style#btn1 #pressed
-                //@style/btn1/pressed => buildResourcesElement: resources android-style#btn1 #pressed
-                let q = 'resources '+tagName + '#' + (<any>refIds).join(' #');
+                //merge attr name's parent
+                let styleName = refString.substring('@style/'.length);
+                if(styleName.includes('.')){
+                    let parts = styleName.split('.');
+                    parts.shift();
+                    let nameParent = parts.join('.');
+                    parseStyle('@style/' + nameParent);
+                }
 
-                let el = resourcesElement.querySelector(q);
-                if(!el) return null;
-                return cloneNode ? <Element>el.cloneNode(true) : el;
-            }
-            return null;
+                for(let item of Array.from(styleXml.children)){
+                    let name = (<Element>item).getAttribute('name');
+                    if(name){
+                        styleMap.set(name, (<HTMLElement>item).innerText);
+                    }
+                }
+            };
+
+            parseStyle(refString);
+            return styleMap;
         }
 
+        /**
+         * Return an Xml file through which you can read a generic XML
+         * resource for the given resource.
+         * @param refString @layout/xxx, @drawable/xxx, @color/xxx
+         */
+        getXml(refString:string):HTMLElement {
+            if(Resources._AppBuildXmlFinder) return Resources._AppBuildXmlFinder(refString);
+        }
 
+        /**
+         * Return the raw data associated with a resource reference string.
+         * @param refString @string/xxx, @color/xxx, @array/xxx, ...
+         * @param resolveRefs If true, a resource that is a reference to another
+         *                    resource will be followed so that you receive the
+         *                    actual final resource data.  If false, the TypedValue
+         *                    will be filled in with the reference itself.
+         */
+        getValue(refString:string, resolveRefs=true):HTMLElement {
+            if(Resources._AppBuildValueFinder){
+                let ele = Resources._AppBuildValueFinder(refString);
+                if(!ele) return null;
+                if(resolveRefs && ele.children.length==0){
+                    let str = ele.innerText;
+                    if(str.startsWith('@')){
+                        return this.getValue(refString, true) || ele;
+                    }
+                }
+                return ele;
+            }
+        }
+
+        static set buildDrawableFinder(value){
+            throw Error('Error: old build tool not support. Please update your build_res.js file.');
+        }
+        static set buildLayoutFinder(value){
+            throw Error('Error: old build tool not support. Please update your build_res.js file.');
+        }
+        static get buildResourcesElement(){
+            throw Error('Error: old build tool not support. Please update your build_res.js file.');
+        }
 
     }
 }

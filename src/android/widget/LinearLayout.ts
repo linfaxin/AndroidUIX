@@ -1464,7 +1464,7 @@ module android.widget{
                     return this.gravity;
                 });
                 a.addAttr('weight', (value)=>{
-                    this.weight = a.parseNumber(value, this.weight);
+                    this.weight = a.parseFloat(value, this.weight);
                 }, ()=>{
                     return this.weight;
                 });

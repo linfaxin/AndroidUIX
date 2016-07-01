@@ -79,7 +79,7 @@ export abstract class AbsSpinner extends AdapterView<SpinnerAdapter> {
         this.initAbsSpinner();
         let a = this._attrBinder;
         a.addAttr('entries', (value)=>{
-            let entries:string[] = a.parseTextArray(value);
+            let entries:string[] = a.parseStringArray(value);
             if (entries != null) {
                 let adapter:ArrayAdapter<string> = new ArrayAdapter<string>(context, R.layout.simple_spinner_item, null, entries);
                 adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);

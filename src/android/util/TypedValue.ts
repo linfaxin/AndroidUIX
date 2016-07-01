@@ -58,7 +58,15 @@ module android.util{
 
         }
 
-        static complexToDimensionPixelSize(valueWithUnit:string, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()):number {
+        /**
+         * Converts a complex data value holding a dimension to its final floating
+         * point value. The given <var>data</var> must be structured as a
+         * {@link #TYPE_DIMENSION}.
+         *
+         * @return The complex floating point value multiplied by the appropriate
+         * metrics depending on its unit.
+         */
+        static complexToDimension(valueWithUnit:string, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()):number {
             if(this.initUnit) this.initUnit();
             if(valueWithUnit===undefined || valueWithUnit===null){
                 throw Error('complexToDimensionPixelSize error: valueWithUnit is '+valueWithUnit);
@@ -120,6 +128,44 @@ module android.util{
             let value = Number.parseFloat(valueWithUnit);
             if(Number.isNaN(value)) throw Error('complexToDimensionPixelSize error: '+valueWithUnit);
             return value * scale;
+        }
+
+        /**
+         * Converts a complex data value holding a dimension to its final value
+         * as an integer pixel offset.  This is the same as
+         * {@link #complexToDimension}, except the raw floating point value is
+         * truncated to an integer (pixel) value.
+         * The given <var>data</var> must be structured as a
+         * {@link #TYPE_DIMENSION}.
+         *
+         * @return The number of pixels specified by the data and its desired
+         * multiplier and units.
+         */
+        static complexToDimensionPixelOffset(valueWithUnit:string, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()):number {
+            let value = this.complexToDimension(valueWithUnit, baseValue, metrics);
+            return Math.floor(value);
+        }
+
+        /**
+         * Converts a complex data value holding a dimension to its final value
+         * as an integer pixel size.  This is the same as
+         * {@link #complexToDimension}, except the raw floating point value is
+         * converted to an integer (pixel) value for use as a size.  A size
+         * conversion involves rounding the base value, and ensuring that a
+         * non-zero base value is at least one pixel in size.
+         * The given <var>data</var> must be structured as a
+         * {@link #TYPE_DIMENSION}.
+         *
+         * @return The number of pixels specified by the data and its desired
+         * multiplier and units.
+         */
+        static complexToDimensionPixelSize(valueWithUnit:string, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()):number {
+            let value = this.complexToDimension(valueWithUnit, baseValue, metrics);
+            let res = Math.ceil(value);
+            if (res != 0) return res;
+            if (value == 0) return 0;
+            if (value > 0) return 1;
+            return -1;
         }
     }
 }

@@ -156,7 +156,7 @@ export class ListView extends AbsListView {
             if(footer) this.setOverscrollFooter(footer);
         })
         this._attrBinder.addAttr('dividerHeight', (value)=>{
-            let dividerHeight = this._attrBinder.parseNumber(value, -1);
+            let dividerHeight = this._attrBinder.parseNumberPixelSize(value, -1);
             if(dividerHeight >= 0 ){
                 this.setDividerHeight(dividerHeight);
             }

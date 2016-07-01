@@ -134,7 +134,7 @@ export class ImageView extends View {
             this.setBaselineAlignBottom(a.parseBoolean(value, this.mBaselineAlignBottom));
         });
         a.addAttr('baseline', (value)=>{
-            this.setBaseline(a.parseNumber(value, this.mBaseline));
+            this.setBaseline(a.parseNumberPixelSize(value, this.mBaseline));
         }, ()=>{
             return this.mBaseline;
         });
@@ -143,13 +143,13 @@ export class ImageView extends View {
         });
         a.addAttr('maxWidth', (value)=>{
             let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getWidth() : 0;
-            this.setMaxWidth(a.parseNumber(value, this.mMaxWidth, baseValue));
+            this.setMaxWidth(a.parseNumberPixelSize(value, this.mMaxWidth, baseValue));
         }, ()=>{
             return this.mMaxWidth;
         });
         a.addAttr('maxHeight', (value)=>{
             let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getHeight() : 0;
-            this.setMaxHeight(a.parseNumber(value, this.mMaxHeight, baseValue));
+            this.setMaxHeight(a.parseNumberPixelSize(value, this.mMaxHeight, baseValue));
         }, ()=>{
             return this.mMaxHeight;
         });
@@ -159,7 +159,7 @@ export class ImageView extends View {
             return this.mScaleType.toString();
         });
         a.addAttr('drawableAlpha', (value)=>{
-            this.setImageAlpha(a.parseNumber(value, this.mAlpha));
+            this.setImageAlpha(a.parseInt(value, this.mAlpha));
         }, ()=>{
             return this.mAlpha;
         });

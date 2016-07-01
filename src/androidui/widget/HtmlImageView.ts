@@ -46,13 +46,13 @@ module androidui.widget{
             });
             this._attrBinder.addAttr('maxWidth', (value)=>{
                 let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getWidth() : 0;
-                this.setMaxWidth(this._attrBinder.parseNumber(value, this.mMaxWidth, baseValue));
+                this.setMaxWidth(this._attrBinder.parseNumberPixelSize(value, this.mMaxWidth, baseValue));
             }, ()=>{
                 return this.mMaxWidth;
             });
             this._attrBinder.addAttr('maxHeight', (value)=>{
                 let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getHeight() : 0;
-                this.setMaxHeight(this._attrBinder.parseNumber(value, this.mMaxHeight, baseValue));
+                this.setMaxHeight(this._attrBinder.parseNumberPixelSize(value, this.mMaxHeight, baseValue));
             }, ()=>{
                 return this.mMaxHeight;
             });

@@ -62,28 +62,5 @@ module androidui.attr{
 
             return merge;
         }
-
-        static parseStateAttrName(stateDesc):Set<number>{
-            //attr with state
-            if(stateDesc.startsWith('android:')) stateDesc = stateDesc.substring('android:'.length);
-            if(stateDesc.startsWith('state_')) stateDesc = stateDesc.substring('state_'.length);
-            let stateSet = new Set<number>();
-            let stateParts = stateDesc.split('&');
-
-            for(let part of stateParts){
-                let sign = 1;
-                while(part.startsWith('!')){
-                    sign *= -1;
-                    part = part.substring(1);
-                }
-                let stateValue = android.view.View['VIEW_STATE_' + part.toUpperCase()];
-                if(stateValue!==undefined){
-                    stateSet.add(stateValue * sign);
-                }
-            }
-
-            return stateSet;
-        }
-
     }
 }

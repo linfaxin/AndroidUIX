@@ -163,7 +163,7 @@ module android.view{
             let defStyle;
             let styleAttrValue = domtree.getAttribute('style');//@android:attr/textView
             if(styleAttrValue){
-                defStyle = this.mContext.getResources().getAttr(styleAttrValue);
+                defStyle = this.mContext.getResources().getDefStyle(styleAttrValue);
             }
 
             let rootView:View;

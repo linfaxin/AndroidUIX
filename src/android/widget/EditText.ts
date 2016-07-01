@@ -99,7 +99,7 @@ export class EditText extends TextView {
             }
         });
         a.addAttr('maxLength', (value)=>{
-            this.mMaxLength = a.parseNumber(value, this.mMaxLength);
+            this.mMaxLength = a.parseInt(value, this.mMaxLength);
         });
 
         if(defStyle) this.applyDefaultAttributes(defStyle);

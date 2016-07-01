@@ -61,16 +61,16 @@ export class RatingBar extends AbsSeekBar {
 
         const a = this._attrBinder;
         a.addAttr('numStars', (value)=>{
-            this.setNumStars(a.parseNumber(value, this.mNumStars));
+            this.setNumStars(a.parseInt(value, this.mNumStars));
         }, ()=>this.mNumStars);
         a.addAttr('isIndicator', (value)=>{
             this.setIsIndicator(a.parseBoolean(value, !this.mIsUserSeekable));
         }, ()=>!this.mIsUserSeekable);
         a.addAttr('stepSize', (value)=>{
-            this.setStepSize(a.parseNumber(value, 0.5));
+            this.setStepSize(a.parseFloat(value, 0.5));
         }, ()=>this.getStepSize());
         a.addAttr('rating', (value)=>{
-            this.setRating(a.parseNumber(value, this.getRating()));
+            this.setRating(a.parseFloat(value, this.getRating()));
         }, ()=>this.getRating());
 
         if(defStyle) this.applyDefaultAttributes(defStyle);

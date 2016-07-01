@@ -29,6 +29,8 @@ module android.graphics.drawable {
     import Runnable = java.lang.Runnable;
     import StateSet = android.util.StateSet;
     import Canvas = android.graphics.Canvas;
+    import Resources = android.content.res.Resources;
+    import NetDrawable = androidui.image.NetDrawable;
 
     /**
      * A Drawable is a general abstraction for "something that can be drawn."  Most
@@ -636,6 +638,91 @@ module android.graphics.drawable {
          */
         getConstantState():Drawable.ConstantState {
             return null;
+        }
+
+        /**
+         * Create a drawable from an XML document. For more information on how to
+         * create resources in XML, see
+         * <a href="{@docRoot}guide/topics/resources/drawable-resource.html">Drawable Resources</a>.
+         */
+        static createFromXml(r:Resources, parser:HTMLElement):Drawable {
+            let drawable:Drawable;
+            let name = parser.tagName.toLowerCase();
+            switch (name) {
+                case "selector":
+                    drawable = new StateListDrawable();
+                    break;
+                // case "animated-selector":
+                //     drawable = new AnimatedStateListDrawable();
+                //     break;
+                // case "level-list":
+                //     drawable = new LevelListDrawable();
+                //     break;
+                case "layer-list":
+                    drawable = new LayerDrawable(null);
+                    break;
+                // case "transition":
+                //     drawable = new TransitionDrawable();
+                //     break;
+                // case "ripple":
+                //     drawable = new RippleDrawable();
+                //     break;
+                case "color":
+                    drawable = new ColorDrawable();
+                    break;
+                // case "shape":
+                //     drawable = new GradientDrawable();
+                //     break;
+                // case "vector":
+                //     drawable = new VectorDrawable();
+                //     break;
+                // case "animated-vector":
+                //     drawable = new AnimatedVectorDrawable();
+                //     break;
+                case "scale":
+                    drawable = new ScaleDrawable();
+                    break;
+                case "clip":
+                    drawable = new ClipDrawable();
+                    break;
+                case "rotate":
+                    drawable = new RotateDrawable();
+                    break;
+                // case "animated-rotate":
+                //     drawable = new AnimatedRotateDrawable();
+                //     break;
+                case "animation-list":
+                    drawable = new AnimationDrawable();
+                    break;
+                case "inset":
+                    drawable = new InsetDrawable(null, 0);
+                    break;
+                case "bitmap":
+                    drawable = r.getDrawable(parser.getAttribute('src'));
+                    break;
+                // case "bitmap":
+                //     drawable = new BitmapDrawable(r);
+                //     if (r != null) {
+                //         ((BitmapDrawable) drawable).setTargetDensity(r.getDisplayMetrics());
+                //     }
+                //     break;
+                // case "nine-patch":
+                //     drawable = new NinePatchDrawable();
+                //     if (r != null) {
+                //         ((NinePatchDrawable) drawable).setTargetDensity(r.getDisplayMetrics());
+                //     }
+                //     break;
+                default:
+                    throw Error("XmlPullParserException: invalid drawable tag " + name);
+
+            }
+            drawable.inflate(r, parser);
+            return drawable;
+        }
+
+        inflate(r:Resources, parser:HTMLElement):void {
+            this.mVisible = (parser.getAttribute('visible') !== 'false');
+            //TODO drawable should override this method inflate self
         }
     }
 

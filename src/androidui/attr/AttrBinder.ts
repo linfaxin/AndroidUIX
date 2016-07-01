@@ -144,7 +144,10 @@ module androidui.attr {
                 let refObj = this.getRefObject(s);
                 if(refObj) return refObj;
 
-                return Resources.getSystem().getDrawable(s);
+                try {
+                    return Resources.getSystem().getDrawable(s);
+                } catch (e) {
+                }
 
             }else if(s.startsWith('url(')){
                 s = s.substring('url('.length);
@@ -169,9 +172,6 @@ module androidui.attr {
                     return Resources.getSystem().getColor(value);
 
                 } else {
-                    if (value.startsWith('#') && value.length === 4) {//support parse #333
-                        value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
-                    }
                     return Color.parseColor(value);
                 }
 
@@ -202,9 +202,69 @@ module androidui.attr {
             return null;
         }
 
-        parseNumber(value, defaultValue = 0, baseValue = 0):number{
+        parseInt(value, defaultValue = 0):number{
             if(typeof value === 'string' && value.startsWith('@')){
-                value = Resources.getSystem().getString(value);
+                try {
+                    return Resources.getSystem().getInteger(value);
+                } catch (e) {
+                    return defaultValue;
+                }
+            }
+            let v = parseInt(value);
+            if(isNaN(v)) return defaultValue;
+            return v;
+        }
+
+        parseFloat(value, defaultValue = 0):number{
+            if(typeof value === 'string' && value.startsWith('@')){
+                try {
+                    return Resources.getSystem().getFloat(value);
+                } catch (e) {
+                    return defaultValue;
+                }
+            }
+            let v = parseFloat(value);
+            if(isNaN(v)) return defaultValue;
+            return v;
+        }
+
+        parseDimension(value, defaultValue = 0, baseValue = 0):number{
+            if(typeof value === 'string' && value.startsWith('@')){
+                try {
+                    return Resources.getSystem().getDimension(value, baseValue);
+                } catch (e) {
+                    return defaultValue;
+                }
+            }
+            try {
+                return TypedValue.complexToDimension(value, baseValue);
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+
+        parseNumberPixelOffset(value, defaultValue = 0, baseValue = 0):number{
+            if(typeof value === 'string' && value.startsWith('@')){
+                try {
+                    return Resources.getSystem().getDimensionPixelOffset(value, baseValue);
+                } catch (e) {
+                    return defaultValue;
+                }
+            }
+            try {
+                return TypedValue.complexToDimensionPixelOffset(value, baseValue);
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+
+        parseNumberPixelSize(value, defaultValue = 0, baseValue = 0):number{
+            if(typeof value === 'string' && value.startsWith('@')){
+                try {
+                    return Resources.getSystem().getDimensionPixelSize(value, baseValue);
+                } catch (e) {
+                    return defaultValue;
+                }
             }
             try {
                 return TypedValue.complexToDimensionPixelSize(value, baseValue);
@@ -216,17 +276,21 @@ module androidui.attr {
         parseString(value, defaultValue?:string):string{
             if(typeof value === 'string'){
                 if(value.startsWith('@')){
-                    return Resources.getSystem().getString(value);
+                    try {
+                        return Resources.getSystem().getString(value);
+                    } catch (e) {
+                        return defaultValue;
+                    }
                 }
                 return value;
             }
             return defaultValue;
         }
 
-        parseTextArray(value):string[] {
+        parseStringArray(value):string[] {
             value += '';
             if(value.startsWith('@')){
-                return Resources.getSystem().getTextArray(value);
+                return Resources.getSystem().getStringArray(value);
 
             }else{
                 try {

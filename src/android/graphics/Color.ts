@@ -119,15 +119,21 @@ module android.graphics{
          * Parse the color string, and return the corresponding color-int.
          * If the string cannot be parsed, throws an IllegalArgumentException
          * exception. Supported formats are:
+         * #RGB
          * #RRGGBB
          * #AARRGGBB
+         * rgb(r, g, b)
+         * rgba(r, g, b)
          * 'red', 'blue', 'green', 'black', 'white', 'gray', 'cyan', 'magenta',
          * 'yellow', 'lightgray', 'darkgray', 'grey', 'lightgrey', 'darkgrey',
          * 'aqua', 'fuschia', 'lime', 'maroon', 'navy', 'olive', 'purple',
-         * 'silver', 'teal'
+         * 'silver', 'teal', 'transparent'
          */
         static parseColor(colorString:string, defaultColor?:number):number {
             if (colorString.charAt(0) == '#') {
+                if (colorString.length === 4) {//support parse #333
+                    colorString = '#' + colorString[1] + colorString[1] + colorString[2] + colorString[2] + colorString[3] + colorString[3];
+                }
                 // Use a long to avoid rollovers on #ffXXXXXX
                 let color = parseInt(colorString.substring(1), 16);
                 if (colorString.length == 7) {
@@ -135,7 +141,7 @@ module android.graphics{
                     color |= 0x00000000ff000000;
                 } else if (colorString.length != 9) {
                     if(defaultColor!=null) return defaultColor;
-                    throw new Error("Unknown color");
+                    throw new Error("Unknown color : " + colorString);
                 }
                 return color;
 
@@ -157,7 +163,7 @@ module android.graphics{
                 }
             }
             if(defaultColor!=null) return defaultColor;
-            throw new Error("Unknown color");
+            throw new Error("Unknown color : " + colorString);
         }
 
         /**

@@ -242,12 +242,12 @@ export class ExpandableListView extends ListView {
             return this.mChildIndicator;
         });
         this._attrBinder.addAttr('indicatorLeft', (value)=>{
-            this.setIndicatorBounds(this._attrBinder.parseNumber(value, 0), this.mIndicatorRight);
+            this.setIndicatorBounds(this._attrBinder.parseNumberPixelOffset(value, 0), this.mIndicatorRight);
         }, ()=>{
             return this.mIndicatorLeft;
         });
         this._attrBinder.addAttr('indicatorRight', (value)=>{
-            let num = this._attrBinder.parseNumber(value, 0);
+            let num = this._attrBinder.parseNumberPixelOffset(value, 0);
             if (num == 0 && this.mGroupIndicator != null) {
                 num = this.mIndicatorLeft + this.mGroupIndicator.getIntrinsicWidth();
             }
@@ -256,12 +256,12 @@ export class ExpandableListView extends ListView {
             return this.mIndicatorRight;
         });
         this._attrBinder.addAttr('childIndicatorLeft', (value)=>{
-            this.setChildIndicatorBounds(this._attrBinder.parseNumber(value, ExpandableListView.CHILD_INDICATOR_INHERIT), this.mChildIndicatorRight);
+            this.setChildIndicatorBounds(this._attrBinder.parseNumberPixelOffset(value, ExpandableListView.CHILD_INDICATOR_INHERIT), this.mChildIndicatorRight);
         }, ()=>{
             return this.mChildIndicatorLeft;
         });
         this._attrBinder.addAttr('childIndicatorRight', (value)=>{
-            let num = this._attrBinder.parseNumber(value, ExpandableListView.CHILD_INDICATOR_INHERIT);
+            let num = this._attrBinder.parseNumberPixelOffset(value, ExpandableListView.CHILD_INDICATOR_INHERIT);
             if (num == 0 && this.mChildIndicator != null) {
                 num = this.mChildIndicatorLeft + this.mChildIndicator.getIntrinsicWidth();
             }

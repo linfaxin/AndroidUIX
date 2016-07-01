@@ -123,10 +123,10 @@ export class GridView extends AbsListView {
         super(context, bindElement, null);
 
         this._attrBinder.addAttr('horizontalSpacing', (value)=>{
-            this.setHorizontalSpacing(this._attrBinder.parseNumber(value, 0));
+            this.setHorizontalSpacing(this._attrBinder.parseNumberPixelOffset(value, 0));
         });
         this._attrBinder.addAttr('verticalSpacing', (value)=>{
-            this.setVerticalSpacing(this._attrBinder.parseNumber(value, 0));
+            this.setVerticalSpacing(this._attrBinder.parseNumberPixelOffset(value, 0));
         });
         this._attrBinder.addAttr('stretchMode', (value)=>{
             this.setStretchMode(this._attrBinder.parseEnum(value,
@@ -138,16 +138,16 @@ export class GridView extends AbsListView {
                 GridView.STRETCH_COLUMN_WIDTH));
         });
         this._attrBinder.addAttr('columnWidth', (value)=>{
-            let columnWidth = this._attrBinder.parseNumber(value, -1);
+            let columnWidth = this._attrBinder.parseNumberPixelOffset(value, -1);
             if(columnWidth > 0 ){
                 this.setColumnWidth(columnWidth);
             }
         });
         this._attrBinder.addAttr('numColumns', (value)=>{
-            this.setNumColumns(this._attrBinder.parseNumber(value, 1));
+            this.setNumColumns(this._attrBinder.parseInt(value, 1));
         });
         this._attrBinder.addAttr('gravity', (value)=>{
-            this.setNumColumns(this._attrBinder.parseNumber(value, 1));
+            this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
         });
 
         if(defStyle) this.applyDefaultAttributes(defStyle);

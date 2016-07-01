@@ -1499,44 +1499,44 @@ module android.view {
                 return this.mPaddingBottom;
             }),
             a.addAttr('scrollX', (value)=>{
-                value = Number.parseInt(value);
+                value = a.parseNumberPixelOffset(value);
                 if(Number.isInteger(value)) this.scrollTo(value, this.mScrollY);
             }, ()=>{
                 return this.getScrollX();
             }),
             a.addAttr('scrollY', (value)=>{
-                value = Number.parseInt(value);
+                value = a.parseNumberPixelOffset(value);
                 if(Number.isInteger(value)) this.scrollTo(this.mScrollX, value);
             }, ()=>{
                 return this.getScrollY();
             }),
             a.addAttr('alpha', (value)=>{
-                this.setAlpha(a.parseNumber(value, this.getAlpha()));
+                this.setAlpha(a.parseFloat(value, this.getAlpha()));
             }, ()=>{
                 return this.getAlpha();
             }),
             a.addAttr('transformPivotX', (value)=>{
-                this.setPivotX(a.parseNumber(value, this.getPivotX()));
+                this.setPivotX(a.parseNumberPixelOffset(value, this.getPivotX()));
             }, ()=>{
                 return this.getPivotX();
             }),
             a.addAttr('transformPivotY', (value)=>{
-                this.setPivotY(a.parseNumber(value, this.getPivotY()));
+                this.setPivotY(a.parseNumberPixelOffset(value, this.getPivotY()));
             }, ()=>{
                 return this.getPivotY();
             }),
             a.addAttr('translationX', (value)=>{
-                this.setTranslationX(a.parseNumber(value, this.getTranslationX()));
+                this.setTranslationX(a.parseNumberPixelOffset(value, this.getTranslationX()));
             }, ()=>{
                 return this.getTranslationX();
             }),
             a.addAttr('translationY', (value)=>{
-                this.setTranslationY(a.parseNumber(value, this.getTranslationY()));
+                this.setTranslationY(a.parseNumberPixelOffset(value, this.getTranslationY()));
             }, ()=>{
                 return this.getTranslationY();
             }),
             a.addAttr('rotation', (value)=>{
-                this.setRotation(a.parseNumber(value, this.getRotation()));
+                this.setRotation(a.parseFloat(value, this.getRotation()));
             }, ()=>{
                 return this.getRotation();
             }),
@@ -1547,12 +1547,12 @@ module android.view {
                 //TODO not support rotationY
             }),
             a.addAttr('scaleX', (value)=>{
-                this.setScaleX(a.parseNumber(value, this.getScaleX()));
+                this.setScaleX(a.parseFloat(value, this.getScaleX()));
             }, ()=>{
                 return this.getScaleX();
             }),
             a.addAttr('scaleY', (value)=>{
-                this.setScaleY(a.parseNumber(value, this.getScaleY()));
+                this.setScaleY(a.parseFloat(value, this.getScaleY()));
             }, ()=>{
                 return this.getScaleY();
             }),
@@ -1620,12 +1620,12 @@ module android.view {
                 }
             }),
             a.addAttr('minWidth', (value)=>{
-                this.setMinimumWidth(a.parseNumber(value, 0));
+                this.setMinimumWidth(a.parseNumberPixelSize(value, 0));
             }, ()=>{
                 return this.mMinWidth;
             }),
             a.addAttr('minHeight', (value)=>{
-                this.setMinimumHeight(a.parseNumber(value, 0));
+                this.setMinimumHeight(a.parseNumberPixelSize(value, 0));
             }, ()=>{
                 return this.mMinHeight;
             }),
@@ -1648,27 +1648,28 @@ module android.view {
             //CornerRadius
             a.addAttr('cornerRadius', (value)=>{
                 let [leftTop, topRight, rightBottom, bottomLeft] = a.parsePaddingMarginLTRB(value);
-                this.setCornerRadius(a.parseNumber(leftTop, 0), a.parseNumber(topRight, 0), a.parseNumber(rightBottom, 0), a.parseNumber(bottomLeft, 0));
+                this.setCornerRadius(a.parseNumberPixelSize(leftTop, 0), a.parseNumberPixelSize(topRight, 0),
+                    a.parseNumberPixelSize(rightBottom, 0), a.parseNumberPixelSize(bottomLeft, 0));
             }, ()=>{
                 return this.mCornerRadiusTopLeft + ' ' + this.mCornerRadiusTopRight + ' ' + this.mCornerRadiusBottomRight + ' ' + this.mCornerRadiusBottomLeft;
             });
             a.addAttr('cornerRadiusTopLeft', (value)=>{
-                this.setCornerRadiusTopLeft(a.parseNumber(value, this.mCornerRadiusTopLeft));
+                this.setCornerRadiusTopLeft(a.parseNumberPixelSize(value, this.mCornerRadiusTopLeft));
             }, ()=>{
                 return this.mCornerRadiusTopLeft;
             });
             a.addAttr('cornerRadiusTopRight', (value)=>{
-                this.setCornerRadiusTopRight(a.parseNumber(value, this.mCornerRadiusTopRight));
+                this.setCornerRadiusTopRight(a.parseNumberPixelSize(value, this.mCornerRadiusTopRight));
             }, ()=>{
                 return this.mCornerRadiusTopRight;
             });
             a.addAttr('cornerRadiusBottomLeft', (value)=>{
-                this.setCornerRadiusBottomLeft(a.parseNumber(value, this.mCornerRadiusBottomLeft));
+                this.setCornerRadiusBottomLeft(a.parseNumberPixelSize(value, this.mCornerRadiusBottomLeft));
             }, ()=>{
                 return this.mCornerRadiusBottomLeft;
             });
             a.addAttr('cornerRadiusBottomRight', (value)=>{
-                this.setCornerRadiusBottomRight(a.parseNumber(value, this.mCornerRadiusBottomRight));
+                this.setCornerRadiusBottomRight(a.parseNumberPixelSize(value, this.mCornerRadiusBottomRight));
             }, ()=>{
                 return this.mCornerRadiusBottomRight;
             });
@@ -1682,21 +1683,21 @@ module android.view {
             });
             a.addAttr('viewShadowDx', (value)=>{
                 if(!this.mShadowPaint) this.mShadowPaint = new Paint();
-                let dx = this._attrBinder.parseNumber(value, this.mShadowPaint.shadowDx);
+                let dx = this._attrBinder.parseNumberPixelSize(value, this.mShadowPaint.shadowDx);
                 this.setShadowView(this.mShadowPaint.shadowRadius, dx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
             }, ()=>{
                 if(this.mShadowPaint) return this.mShadowPaint.shadowDx;
             });
             a.addAttr('viewShadowDy', (value)=>{
                 if(!this.mShadowPaint) this.mShadowPaint = new Paint();
-                let dy = a.parseNumber(value, this.mShadowPaint.shadowDy);
+                let dy = a.parseNumberPixelSize(value, this.mShadowPaint.shadowDy);
                 this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, dy, this.mShadowPaint.shadowColor);
             }, ()=>{
                 if(this.mShadowPaint) return this.mShadowPaint.shadowDy;
             });
             a.addAttr('viewShadowRadius', (value)=>{
                 if(!this.mShadowPaint) this.mShadowPaint = new Paint();
-                let radius = this._attrBinder.parseNumber(value, this.mShadowPaint.shadowRadius);
+                let radius = this._attrBinder.parseNumberPixelSize(value, this.mShadowPaint.shadowRadius);
                 this.setShadowView(radius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
             }, ()=>{
                 if(this.mShadowPaint) return this.mShadowPaint.shadowRadius;

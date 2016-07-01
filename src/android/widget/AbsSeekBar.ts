@@ -73,10 +73,10 @@ export abstract class AbsSeekBar extends ProgressBar {
             this.setThumb(a.parseDrawable(value));
         }, ()=>this.mThumb);
         a.addAttr('thumbOffset', (value)=>{
-            this.setThumbOffset(a.parseNumber(value));
+            this.setThumbOffset(a.parseNumberPixelOffset(value));
         }, ()=>this.mThumbOffset);
         a.addAttr('disabledAlpha', (value)=>{
-            this.mDisabledAlpha = a.parseNumber(value, 0.5);
+            this.mDisabledAlpha = a.parseFloat(value, 0.5);
         }, ()=>this.mThumbOffset);
 
         if(defStyle) this.applyDefaultAttributes(defStyle);

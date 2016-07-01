@@ -278,27 +278,27 @@ export class ProgressBar extends View {
             return this.mProgressDrawable;
         });
         a.addAttr('indeterminateDuration', (value)=>{
-            this.mDuration = Math.floor(a.parseNumber(value, this.mDuration));
+            this.mDuration = Math.floor(a.parseInt(value, this.mDuration));
         }, ()=>{
             return this.mDuration;
         });
         a.addAttr('minWidth', (value)=>{
-            this.mMinWidth = Math.floor(a.parseNumber(value, this.mMinWidth));
+            this.mMinWidth = Math.floor(a.parseNumberPixelSize(value, this.mMinWidth));
         }, ()=>{
             return this.mMinWidth;
         });
         a.addAttr('maxWidth', (value)=>{
-            this.mMaxWidth = Math.floor(a.parseNumber(value, this.mMaxWidth));
+            this.mMaxWidth = Math.floor(a.parseNumberPixelSize(value, this.mMaxWidth));
         }, ()=>{
             return this.mMaxWidth;
         });
         a.addAttr('minHeight', (value)=>{
-            this.mMinHeight = Math.floor(a.parseNumber(value, this.mMinHeight));
+            this.mMinHeight = Math.floor(a.parseNumberPixelSize(value, this.mMinHeight));
         }, ()=>{
             return this.mMinHeight;
         });
         a.addAttr('maxHeight', (value)=>{
-            this.mMaxHeight = Math.floor(a.parseNumber(value, this.mMaxHeight));
+            this.mMaxHeight = Math.floor(a.parseNumberPixelSize(value, this.mMaxHeight));
         }, ()=>{
             return this.mMaxHeight;
         });
@@ -313,17 +313,17 @@ export class ProgressBar extends View {
         a.addAttr('interpolator', (value)=>{
         });
         a.addAttr('max', (value)=>{
-            this.setMax(a.parseNumber(value, this.mMax));
+            this.setMax(a.parseInt(value, this.mMax));
         }, ()=>{
             return this.mMax;
         });
         a.addAttr('progress', (value)=>{
-            this.setProgress(a.parseNumber(value, this.mProgress));
+            this.setProgress(a.parseInt(value, this.mProgress));
         }, ()=>{
             return this.mProgress;
         });
         a.addAttr('secondaryProgress', (value)=>{
-            this.setSecondaryProgress(a.parseNumber(value, this.mSecondaryProgress));
+            this.setSecondaryProgress(a.parseInt(value, this.mSecondaryProgress));
         }, ()=>{
             return this.mSecondaryProgress;
         });

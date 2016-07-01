@@ -497,7 +497,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return this.mHintTextColor;
         });
         a.addAttr('textSize', (value)=>{
-            let size = a.parseNumber(value, this.mTextPaint.getTextSize());
+            let size = a.parseNumberPixelSize(value, this.mTextPaint.getTextSize());
             this.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
         }, ()=>{
             return this.mTextPaint.getTextSize();
@@ -512,19 +512,19 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return this.getShadowColor();
         });
         a.addAttr('shadowDx', (value)=>{
-            let dx = a.parseNumber(value, this.mShadowDx);
+            let dx = a.parseNumberPixelSize(value, this.mShadowDx);
             this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
         }, ()=>{
             return this.getShadowDx();
         });
         a.addAttr('shadowDy', (value)=>{
-            let dy = a.parseNumber(value, this.mShadowDy);
+            let dy = a.parseNumberPixelSize(value, this.mShadowDy);
             this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
         }, ()=>{
             return this.getShadowDy();
         });
         a.addAttr('shadowRadius', (value)=>{
-            let radius = a.parseNumber(value, this.mShadowRadius);
+            let radius = a.parseNumberPixelSize(value, this.mShadowRadius);
             this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
         }, ()=>{
             return this.getShadowRadius();
@@ -559,7 +559,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return this.getCompoundDrawables()[3];
         });
         a.addAttr('drawablePadding', (value)=>{
-            this.setCompoundDrawablePadding(a.parseNumber(value));
+            this.setCompoundDrawablePadding(a.parseNumberPixelSize(value));
         }, ()=>{
             return this.getCompoundDrawablePadding();
         });
@@ -570,7 +570,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return this.getMaxLines();
         });
         a.addAttr('maxHeight', (value)=>{
-            this.setMaxHeight(a.parseNumber(value, this.getMaxHeight()));
+            this.setMaxHeight(a.parseNumberPixelSize(value, this.getMaxHeight()));
         }, ():any=>{
             return this.getMaxHeight();
         });
@@ -582,53 +582,53 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return null;
         });
         a.addAttr('height', (value)=>{
-            value = a.parseNumber(value, -1);
+            value = a.parseNumberPixelSize(value, -1);
             if(value>=0) this.setHeight(value);
         }, ()=>{
             if(this.getMaxHeight() === this.getMinimumHeight()) return this.getMaxHeight();
             return null;
         });
         a.addAttr('minLines', (value)=>{
-            this.setMinLines(a.parseNumber(value, this.getMinLines()));
+            this.setMinLines(a.parseInt(value, this.getMinLines()));
         }, ()=>{
             return this.getMinLines();
         });
         a.addAttr('minHeight', (value)=>{
-            this.setMinHeight(a.parseNumber(value, this.getMinHeight()));
+            this.setMinHeight(a.parseNumberPixelSize(value, this.getMinHeight()));
         }, ()=>{
             return this.getMinHeight();
         });
         a.addAttr('maxEms', (value)=>{
-            this.setMaxEms(a.parseNumber(value, this.getMaxEms()));
+            this.setMaxEms(a.parseInt(value, this.getMaxEms()));
         }, ()=>{
             return this.getMaxEms();
         });
         a.addAttr('maxWidth', (value)=>{
-            this.setMaxWidth(a.parseNumber(value, this.getMaxWidth()));
+            this.setMaxWidth(a.parseNumberPixelSize(value, this.getMaxWidth()));
         }, ()=>{
             return this.getMaxWidth();
         });
         a.addAttr('ems', (value)=>{
-            let ems = a.parseNumber(value, null);
+            let ems = a.parseInt(value, null);
             if(ems!=null) this.setEms(ems);
         }, ()=>{
             if(this.getMinEms() === this.getMaxEms()) return this.getMaxEms();
             return null;
         });
         a.addAttr('width', (value)=>{
-            value = a.parseNumber(value, -1);
+            value = a.parseNumberPixelSize(value, -1);
             if(value>=0) this.setWidth(value);
         }, ()=>{
             if(this.getMinWidth() === this.getMaxWidth()) return this.getMinWidth();
             return null;
         });
         a.addAttr('minEms', (value)=>{
-            this.setMinEms(a.parseNumber(value, this.getMinEms()));
+            this.setMinEms(a.parseInt(value, this.getMinEms()));
         }, ()=>{
             return this.getMinEms();
         });
         a.addAttr('minWidth', (value)=>{
-            this.setMinWidth(a.parseNumber(value, this.getMinWidth()));
+            this.setMinWidth(a.parseNumberPixelSize(value, this.getMinWidth()));
         }, ()=>{
             return this.getMinWidth();
         });
@@ -658,7 +658,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             if(ellipsize) this.setEllipsize(ellipsize);
         });
         a.addAttr('marqueeRepeatLimit', (value)=>{
-            let marqueeRepeatLimit = a.parseNumber(value, -1);
+            let marqueeRepeatLimit = a.parseInt(value, -1);
             if(marqueeRepeatLimit>=0) this.setMarqueeRepeatLimit(marqueeRepeatLimit);
         });
         a.addAttr('includeFontPadding', (value)=>{
@@ -670,12 +670,12 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return this.isEnabled();
         });
         a.addAttr('lineSpacingExtra', (value)=>{
-            this.setLineSpacing(a.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);
+            this.setLineSpacing(a.parseNumberPixelSize(value, this.mSpacingAdd), this.mSpacingMult);
         }, ()=>{
             return this.mSpacingAdd;
         });
         a.addAttr('lineSpacingMultiplier', (value)=>{
-            this.setLineSpacing(this.mSpacingAdd, a.parseNumber(value, this.mSpacingMult));
+            this.setLineSpacing(this.mSpacingAdd, a.parseFloat(value, this.mSpacingMult));
         }, ()=>{
             return this.mSpacingMult;
         });

@@ -149,19 +149,19 @@ export class Spinner extends AbsSpinner implements OnClickListener {
                     const popup:Spinner.DropdownPopup = new Spinner.DropdownPopup(context, defStyle, this);
 
                     a.addAttr('dropDownWidth', (value)=>{
-                        this.mDropDownWidth = a.parseNumber(value, ViewGroup.LayoutParams.WRAP_CONTENT);
+                        this.mDropDownWidth = a.parseNumberPixelSize(value, ViewGroup.LayoutParams.WRAP_CONTENT);
                     });
                     a.addAttr('popupBackground', (value)=>{
                         popup.setBackgroundDrawable(a.parseDrawable(value));
                     });
                     a.addAttr('dropDownVerticalOffset', (value)=>{
-                        const verticalOffset:number = a.parseNumber(value, 0);
+                        const verticalOffset:number = a.parseNumberPixelSize(value, 0);
                         if (verticalOffset != 0) {
                             popup.setVerticalOffset(verticalOffset);
                         }
                     });
                     a.addAttr('dropDownHorizontalOffset', (value)=>{
-                        const horizontalOffset:number = a.parseNumber(value, 0);
+                        const horizontalOffset:number = a.parseNumberPixelSize(value, 0);
                         if (horizontalOffset != 0) {
                             popup.setHorizontalOffset(horizontalOffset);
                         }
@@ -187,10 +187,9 @@ export class Spinner extends AbsSpinner implements OnClickListener {
                 }
         }
         a.addAttr('gravity', (value)=>{
-            this.mGravity = a.parseNumber(value, Gravity.CENTER);
+            this.mGravity = a.parseGravity(value, Gravity.CENTER);
         });
         a.addAttr('prompt', (value)=>{
-            this.mGravity = a.parseNumber(value, Gravity.CENTER);
             this.mPopup.setPromptText(a.parseString(value));
         });
         a.addAttr('disableChildrenWhenDisabled', (value)=>{

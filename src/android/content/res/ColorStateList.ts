@@ -96,6 +96,13 @@ module android.content.res{
         }
 
         /**
+         * Create a ColorStateList from an XML document, given a set of {@link Resources}.
+         */
+        static createFromXml(r:Resources, parser:HTMLElement):ColorStateList {
+            return null;//TODO create from xml
+        }
+
+        /**
          * Creates a new ColorStateList that has the same states and
          * colors as this one but where each color has the specified alpha value
          * (0-255).

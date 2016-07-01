@@ -469,27 +469,27 @@ module android.widget {
             this._attrBinder.addAttr('selectionDividerHeight', (value)=>{
                 const defSelectionDividerHeight = NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT
                     * this.getResources().getDisplayMetrics().density;
-                this.mSelectionDividerHeight = this._attrBinder.parseNumber(value, defSelectionDividerHeight);
+                this.mSelectionDividerHeight = this._attrBinder.parseNumberPixelSize(value, defSelectionDividerHeight);
             });
             this._attrBinder.addAttr('selectionDividersDistance', (value)=>{
                 const defSelectionDividerDistance = NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE
                     * this.getResources().getDisplayMetrics().density;
-                this.mSelectionDividersDistance = this._attrBinder.parseNumber(value, defSelectionDividerDistance);
+                this.mSelectionDividersDistance = this._attrBinder.parseNumberPixelSize(value, defSelectionDividerDistance);
             });
             this._attrBinder.addAttr('internalMinHeight', (value)=>{
-                this.mMinHeight_ = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                this.mMinHeight_ = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
             });
             this._attrBinder.addAttr('internalMaxHeight', (value)=>{
-                this.mMaxHeight = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                this.mMaxHeight = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
             });
             this._attrBinder.addAttr('internalMinWidth', (value)=>{
-                this.mMinWidth_ = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                this.mMinWidth_ = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
             });
             this._attrBinder.addAttr('internalMaxWidth', (value)=>{
-                this.mMaxWidth = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                this.mMaxWidth = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
             });
             this._attrBinder.addAttr('internalMaxWidth', (value)=>{
-                this.mMaxWidth = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                this.mMaxWidth = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
             });
             this._attrBinder.addAttr('virtualButtonPressedDrawable', (value)=>{
                 this.mVirtualButtonPressedDrawable = this._attrBinder.parseDrawable(value);
@@ -497,20 +497,20 @@ module android.widget {
 
             //androidui add
             this._attrBinder.addAttr('textSize', (value)=>{
-                this.mTextSize = this._attrBinder.parseNumber(value, this.mTextSize);
+                this.mTextSize = this._attrBinder.parseNumberPixelSize(value, this.mTextSize);
                 this.mSelectorWheelPaint.setTextSize(this.mTextSize);
             });
             this._attrBinder.addAttr('textColor', (value)=>{
                 this.mSelectorWheelPaint.setColor(this._attrBinder.parseColor(value, this.mSelectorWheelPaint.getColor()));
             });
             this._attrBinder.addAttr('minValue', (value)=>{
-                this.setMinValue(this._attrBinder.parseNumber(value, this.mMinValue));
+                this.setMinValue(this._attrBinder.parseInt(value, this.mMinValue));
             });
             this._attrBinder.addAttr('maxValue', (value)=>{
-                this.setMaxValue(this._attrBinder.parseNumber(value, this.mMaxValue));
+                this.setMaxValue(this._attrBinder.parseInt(value, this.mMaxValue));
             });
             this._attrBinder.addAttr('itemCount', (value)=>{
-                this.SELECTOR_WHEEL_ITEM_COUNT = this._attrBinder.parseNumber(value, this.SELECTOR_WHEEL_ITEM_COUNT);
+                this.SELECTOR_WHEEL_ITEM_COUNT = this._attrBinder.parseInt(value, this.SELECTOR_WHEEL_ITEM_COUNT);
                 this.SELECTOR_MIDDLE_ITEM_INDEX = Math.floor(this.SELECTOR_WHEEL_ITEM_COUNT / 2);
                 this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
             });

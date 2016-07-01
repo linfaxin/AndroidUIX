@@ -63,7 +63,7 @@ export class RotateDrawable extends Drawable implements Drawable.Callback {
      *
      * @param rotateState the state for this drawable
      */
-    constructor(rotateState:RotateDrawable.RotateState) {
+    constructor(rotateState?:RotateDrawable.RotateState) {
         super();
         this.mState = new RotateDrawable.RotateState(rotateState, this);
     }

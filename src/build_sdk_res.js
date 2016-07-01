@@ -185,11 +185,10 @@ function buildLayout(){
     const _tempDiv = document.createElement('div');
 
     export class layout{
-        static getLayoutData(layoutRef:string):HTMLElement{
-            if(!layoutRef) return null;
-            layoutRef = layoutRef.replace('/', '.').split('.').pop();
-            if(!_layout_data[layoutRef]) return null;
-            _tempDiv.innerHTML = _layout_data[layoutRef];
+        static getLayoutData(layoutName:string):HTMLElement{
+            if(!layoutName) return null;
+            if(!_layout_data[layoutName]) return null;
+            _tempDiv.innerHTML = _layout_data[layoutName];
             let data = <HTMLElement>_tempDiv.firstElementChild;
             _tempDiv.removeChild(data);
             return data;
