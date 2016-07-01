@@ -1,7 +1,6 @@
 
 ///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
-///<reference path="../gen/R/image.ts"/>
+///<reference path="../gen/R.ts"/>
 
 module sample.app {
     import Activity = android.app.Activity;
@@ -32,7 +31,7 @@ module sample.app {
                                 Toast.makeText(activity, android.R.string_.ok, Toast.LENGTH_SHORT).show();
                             }
                         })
-                        .setIcon(R.image.icon_alert)
+                        .setIcon(R.drawable.icon_alert)
                         //.setCancelable(false)
                         .setNegativeButton(android.R.string_.cancel, null)
                         .show();

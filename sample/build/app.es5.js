@@ -2,6 +2,8 @@
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -12,189 +14,445 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var R;
 (function (R) {
-    R.id = {
-        "android_tip": "android_tip",
-        "rotate_repeat": "rotate_repeat",
-        "translate_repeat": "translate_repeat",
-        "scale_repeat": "scale_repeat",
-        "alpha_repeat": "alpha_repeat",
-        "anim_set": "anim_set",
-        "btn_open_dialog": "btn_open_dialog",
-        "btn_show_popup": "btn_show_popup",
-        "btn_click": "btn_click",
-        "btn_long_click": "btn_long_click",
-        "open_activity_intent": "open_activity_intent",
-        "open_activity_result": "open_activity_result",
-        "console_tv": "console_tv",
-        "item_child_layout": "item_child_layout",
-        "item_child_text": "item_child_text",
-        "gridView": "gridView",
-        "item_layout": "item_layout",
-        "item_text": "item_text",
-        "open_activity_normal": "open_activity_normal",
-        "open_activity_float": "open_activity_float",
-        "listView": "listView",
-        "picker": "picker",
-        "prll": "prll",
-        "text1": "text1",
-        "text2": "text2",
-        "text3": "text3",
-        "text4": "text4",
-        "text5": "text5",
-        "text6": "text6",
-        "text7": "text7",
-        "alignLeft": "alignLeft",
-        "alignTop": "alignTop",
-        "viewPager": "viewPager",
-        "page_bg": "page_bg",
-        "page_text": "page_text"
+    R._res_data = {
+        "drawable": {
+            "icon_alert@3x": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAjVBMVEUAAAAzR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR198qNTWAAAALnRSTlMAsFf6A8T2D3vpgfBPMQbbnCMKzry2bY6JdWYsFeSUSuDW0cmhXEUnHjwaqEE2puKK5AAAA39JREFUeNrt2uey2jAQBeADcjcuGNNNb5eSff/Hy49MckMGw0oreyYz/p7goEXWam10Op2OkSI5RXd3lIWeile7Q5nPBxcHLfk6Hbf0ghrNNgWadl1n9IZygy805xJt6TN34aMRG5eYvHwI25z+iDSo+xJWDXakq2dxFYZjMuAFKaxIA4/MZGdYMNyTubUj3/ghSZQVZBaKZLIlBJw1icUbGPNLsmEOQ5eM7DimMPGIyZaDb/L7Y7KndKDLz8imNTQ5Jdm1gJ41WaYe0LEg68Ih+B6K7Nv54BqGxBLPBl/Fj8mYeMYOeNI9sYxv+KXPDByBJyCWGf6oMuJQS14BPOLYp/h2JRYXHMySJvjbjFhO+GxALDs8WRJL6OMTZ0csRzxxPFv/wz7xTPDMJZbYxwcj4unjWY94Ary3oYYDhAXecpsOQBO8c6HGA+zxTtR8AErwxraFAFPUu1ILAUIHtdZtBKAzamWtBJihzhe1EmCEOqd2ApCPGseWAgxqN6EsgHgjFtRSgBKvJW0FWMn+g/IAVOClSBpAehzcWwvQx0uuOICwJxjJA8j6skwYQHwahLIA8nmJ11qAHC+p1gIc8VIsmfmUFlZgJSljSPLTaEcaDuxehn9DPJAGr+JOtfjT45J09J4WICYLT8KctJzMx5obvDQnLSpw8MvFJT1DxmyEYzS4AemPyCM9ymHcTJlWe0XadnjNUdSOnmw6IhegxozacRXNZ+S8FDUKRW0YyyZEcnPGmJotG2eka4laX5pr+fAB+GeXDM5ReQ3CP4eBM/cEJ5HpqRre8O2HIi5V4Q3fM5z0RLLH4LfcsKtyRvzgbw0V8dwMi3fAB3fDK34iG898WxpWMlWCSbHBDWNq2NT3bb00K/GPSvTaTH9HxQ6ePey9OCy2JlOWwKhwgubUfV6CW8zZOj54cv2+asy7DjClLqeeffzhRJY/56m2xNC7/d44LnMowJd4xBDni6T4scg9YnBT6BiQZdsKegKyykug6042DaCtGJE9AQxULtkSwUiakxVeH6YmiuS2CcydY5JyK0hcMvnHjDL+WHgPFHNmikytNrBh6ZIRNfVhySkkfe4S9vhRTHr2fdjlByHxHQawr5jsiUX1zmhIMg3pk8OkQoOc82xEtbzxfInm+YNpuaJ/qF0vuKZoT5H0J8FsnR/zaTSfbIYOOp1Op9P5X/0Eg/+iUtRdaggAAAAASUVORK5CYII="
+        },
+        "layout": {
+            "activity_main": "<scrollview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <linearlayout android:orientation=\"vertical\" android:padding=\"12dp\" android:gravity=\"center\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n        <textview android:id=\"android_tip\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:text=\"NOTE:Suggest use Chrome for better experience\" android:visibility=\"gone\"></textview>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleBaseWidgetActivity')\" android:text=\"Base Widget\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleFrameLayoutActivity')\" android:text=\"FrameLayout\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleLinearLayoutActivity')\" android:text=\"LinearLayout\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleRelativeLayoutActivity')\" android:text=\"RelativeLayout\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleTextViewActivity')\" android:text=\"TextView\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleButtonActivity')\" android:text=\"Button\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleImageViewActivity')\" android:text=\"ImageView\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleEditTextActivity')\" android:text=\"EditText\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleListViewActivity')\" android:text=\"ListView\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleGridViewActivity')\" android:text=\"GridView\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleExpandableListViewActivity')\" android:text=\"ExpandableListView\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleViewPagerActivity')\" android:text=\"ViewPager\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleDrawerLayoutActivity')\" android:text=\"DrawerLayout\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleViewPagerGalleryActivity')\" android:text=\"ImageGallery&amp;Gesture\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SamplePullRefreshLoadActivity')\" android:text=\"List pull refresh &amp; pull load\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SamplePickerActivity')\" android:text=\"Picker\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleAnimationActivity')\" android:text=\"Animation\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleLifeCallbackActivity')\" android:text=\"Activity Life Circel\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleContacteActivity')\" android:text=\"Activity Start&amp;Result\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleWebViewActivity')\" android:text=\"WebView\"></button>\n        <button android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:onClick=\"this.getContext().startActivity('sample.app.SampleHtmlViewActivity')\" android:text=\"HtmlView\"></button>\n    </linearlayout>\n</scrollview>",
+            "sample_animation": "<scrollview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:padding=\"0 6dp\" android:gravity=\"center\" android:orientation=\"vertical\">\n        <textview android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:gravity=\"center\" android:text=\"Rotate:\"></textview>\n        <imageview android:id=\"rotate_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"20dp 12dp\"></imageview>\n        <textview android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:gravity=\"center\" android:text=\"Translate:\"></textview>\n        <imageview android:id=\"translate_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:text=\"Scale:\" android:gravity=\"center\"></textview>\n        <imageview android:id=\"scale_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:text=\"Alpha:\" android:gravity=\"center\"></textview>\n        <imageview android:id=\"alpha_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:text=\"Animation Set:\" android:gravity=\"center\"></textview>\n        <imageview android:id=\"anim_set\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n    </linearlayout>\n</scrollview>",
+            "sample_base_widget": "<scrollview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:orientation=\"vertical\" android:padding=\"12dp\" android:gravity=\"center\">\n        <textview android:text=\"TextView\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\"></textview>\n        <button android:text=\"Button\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\"></button>\n        <imageview android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:src=\"assets/images/logo_google_3.png\"></imageview>\n        <checkbox android:text=\"CheckBox\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginBottom=\"12dp\"></checkbox>\n        <radiogroup android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:gravity=\"center\" android:orientation=\"horizontal\" android:layout_marginBottom=\"12dp\">\n            <radiobutton android:text=\"Radio1\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\"></radiobutton>\n            <radiobutton android:text=\"Radio2\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\"></radiobutton>\n            <radiobutton android:text=\"Radio3\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\"></radiobutton>\n        </radiogroup>\n        <button android:id=\"btn_open_dialog\" android:text=\"OpenDialog\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\"></button>\n        <spinner android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:entries=\"@array/spinner_array\"></spinner>\n        <button android:id=\"btn_show_popup\" android:text=\"PopupWindow\" android:visibility=\"gone\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\"></button>\n\n        <progressbar android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginBottom=\"12dp\"></progressbar>\n        <progressbar android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginBottom=\"12dp\" style=\"@android:attr/progressBarStyleHorizontal\" android:max=\"100\" android:progress=\"50\" android:secondaryProgress=\"70\"></progressbar>\n\n        <seekbar android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginBottom=\"12dp\"></seekbar>\n\n        <ratingbar android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginBottom=\"12dp\"></ratingbar>\n\n    </linearlayout>\n</scrollview>",
+            "sample_button": "<scrollview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:orientation=\"vertical\" android:gravity=\"center\">\n        <button android:text=\"Button\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\"></button>\n        <button android:text=\"DisableButton\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:enabled=\"false\"></button>\n        <button android:id=\"btn_click\" android:text=\"ButtonClick\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></button>\n        <button android:text=\"ButtonClick2\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:onClick=\"this.setText('Click:'+new Date().getTime());\"></button>\n\n        <button android:id=\"btn_long_click\" android:text=\"ButtonLongClick\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></button>\n        <button android:text=\"ButtonStyled\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:style=\"@style/btn_custom1\"></button>\n        <button android:text=\"ButtonStyledDisable\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:style=\"@style/btn_custom1\" android:enabled=\"false\"></button>\n        <button android:text=\"ButtonStyled2\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textColor=\"@color/white\" android:cornerRadius=\"4dp\" android:background=\"#f00\" android:state_pressed=\"@style/btn_custom1_pressed\"></button>\n        <button android:text=\"ButtonStyled3\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textColor=\"@color/white\" android:cornerRadius=\"4dp\" android:background=\"#f00\" android:state_pressed=\"background:#f66;\"></button>\n    </linearlayout>\n</scrollview>",
+            "sample_contacte": "<linearlayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:orientation=\"vertical\">\n    <button android:id=\"open_activity_intent\" android:text=\"startActivity with intent\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></button>\n    <button android:id=\"open_activity_result\" android:text=\"startActivity with result\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></button>\n    <scrollview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n        <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:orientation=\"vertical\">\n            <textview android:id=\"console_tv\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:gravity=\"center\"></textview>\n        </linearlayout>\n    </scrollview>\n</linearlayout>",
+            "sample_drawerlayout": "<android.support.v4.widget.drawerlayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <linearlayout android:orientation=\"vertical\" android:gravity=\"center\" android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n        <button android:onClick=\"this.getParent().getParent().openDrawer(android.view.Gravity.LEFT);\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:text=\"Open left drawer\"></button>\n        <button android:onClick=\"this.getParent().getParent().openDrawer(android.view.Gravity.RIGHT);\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:text=\"Open right drawer\"></button>\n    </linearlayout>\n    <linearlayout android:layout_gravity=\"left\" android:background=\"white\" android:clickable=\"true\" android:layout_height=\"match_parent\" android:layout_width=\"220dp\">\n        <textview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:gravity=\"center\">Left drawer</textview>\n    </linearlayout>\n    <linearlayout android:layout_gravity=\"right\" android:background=\"white\" android:clickable=\"true\" android:layout_height=\"match_parent\" android:layout_width=\"220dp\">\n        <textview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:gravity=\"center\">Right drawer</textview>\n    </linearlayout>\n</android.support.v4.widget.drawerlayout>",
+            "sample_edittext": "<scrollview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:orientation=\"vertical\">\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Place Input\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textUri\" android:inputType=\"textUri\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textEmailAddress\" android:inputType=\"textEmailAddress\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textPassword\" android:inputType=\"textPassword\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: number\" android:inputType=\"number\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: numberPassword\" android:inputType=\"numberPassword\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: phone\" android:inputType=\"phone\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"maxLength11\" android:maxLength=\"11\" android:inputType=\"phone\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:maxLines=\"2\" android:padding=\"10dp\" android:text=\"maxLines=2\nmaxLines=2\nmaxLines=2\nmaxLines=2\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:minLines=\"2\" android:layout_width=\"match_parent\" android:gravity=\"center\" android:text=\"minLines=2\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:text=\"static height\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:gravity=\"center\" android:drawablePadding=\"12dp\" android:drawableLeft=\"url(assets/images/logo_android_1@2x.png)\" android:drawableTop=\"url(assets/images/logo_android_1@2x.png)\" android:drawableRight=\"url(assets/images/logo_android_1@2x.png)\" android:drawableBottom=\"url(assets/images/logo_android_1@2x.png)\" android:text=\"Image around EditText\" android:style=\"@style/editStyle\"></edittext>\n    </linearlayout>\n</scrollview>",
+            "sample_expand_listview_item": "<framelayout android:id=\"item_child_layout\" android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:padding=\"12dp\">\n    <textview android:id=\"item_child_text\" android:padding=\"12dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textColor=\"white\" android:layout_gravity=\"center\"></textview>\n</framelayout>",
+            "sample_framelayout": "<framelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n\n    <textview android:text=\"Text\" android:layout_gravity=\"left|top\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"right|top\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|right\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|left\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"center\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"left|center_vertical\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"right|center_vertical\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"top|center_horizontal\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|center_horizontal\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text MarginBottom50\" android:layout_marginBottom=\"50dp\" android:layout_gravity=\"center\" android:style=\"@style/textStyle\"></textview>\n</framelayout>",
+            "sample_gridview": "<gridview android:id=\"gridView\" android:numColumns=\"2\" android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n</gridview>",
+            "sample_gridview_item": "<framelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:id=\"item_layout\" android:padding=\"32dp\">\n    <textview android:id=\"item_text\" android:padding=\"16dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textColor=\"white\" android:layout_gravity=\"center\"></textview>\n</framelayout>",
+            "sample_htmlview": "<scrollview android:fillviewport=\"true\">\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:orientation=\"vertical\">\n        <htmlview>\n            <p style=\"font-size: 24px;text-align: center\">HtmlView</p>\n        </htmlview>\n        <htmlview style=\"padding:0 20px;box-sizing: border-box;line-height: 20px;\">\n            <p>HtmlView can wrap any <span style=\"color: red;font-weight: bold;\">HTML tag</span>, render with DOM, but too many HtmlView will reduce FPS.</p>\n            <p>HtmlView above on all Android Views</p>\n        </htmlview>\n        <textview android:gravity=\"center\">This is a Android View</textview>\n        <htmlview style=\"overflow: visible;text-align: center;\">\n            <p>This is a HtmlView</p>\n        </htmlview>\n    </linearlayout>\n</scrollview>",
+            "sample_imageview": "<scrollview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:padding=\"0 6dp\" android:orientation=\"vertical\">\n        <textview android:text=\"Default(FitCenter):\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></textview>\n        <linearlayout android:orientation=\"horizontal\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:layout_marginLeft=\"4dp\" android:layout_height=\"200dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"match_parent\" android:layout_marginLeft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview android:text=\"FitStart:\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></textview>\n        <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"fitStart\" android:layout_height=\"200dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"fitStart\" android:layout_width=\"match_parent\" android:layout_marginLeft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview android:text=\"FitEnd:\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></textview>\n        <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"fitEnd\" android:layout_height=\"200dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"fitEnd\" android:layout_width=\"match_parent\" android:layout_marginLeft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview android:text=\"FitXy:\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></textview>\n        <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"fitXy\" android:layout_height=\"200dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"fitXy\" android:layout_width=\"match_parent\" android:layout_marginLeft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview android:text=\"Center:\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></textview>\n        <linearlayout android:orientation=\"horizontal\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"center\" android:layout_height=\"80dp\" android:layout_width=\"80dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"center\" android:layout_height=\"180dp\" android:layout_width=\"180dp\" android:layout_marginLeft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview android:text=\"centerCrop:\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></textview>\n        <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"centerCrop\" android:layout_height=\"80dp\" android:layout_width=\"80dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"centerCrop\" android:layout_marginLeft=\"4dp\" android:layout_height=\"100dp\" android:layout_width=\"60dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"centerCrop\" android:layout_height=\"60dp\" android:layout_width=\"100dp\" android:layout_marginLeft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview android:text=\"centerInside:\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></textview>\n        <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"centerInside\" android:layout_height=\"80dp\" android:layout_width=\"80dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaleType=\"centerInside\" android:layout_height=\"180dp\" android:layout_width=\"180dp\" android:layout_marginLeft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n\n        <textview android:text=\"Background:\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></textview>\n        <framelayout android:style=\"@style/imageStyle\" android:background=\"url(assets/images/logo_android_1@2x.png)\"></framelayout>\n\n    </linearlayout>\n</scrollview>",
+            "sample_life_callback": "<linearlayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:orientation=\"vertical\">\n    <button android:id=\"open_activity_normal\" android:text=\"Open Normal Activity\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></button>\n    <button android:id=\"open_activity_float\" android:text=\"Open Floating Activity\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\"></button>\n    <scrollview android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\">\n        <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:orientation=\"vertical\">\n            <textview android:id=\"console_tv\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:gravity=\"center\"></textview>\n        </linearlayout>\n    </scrollview>\n</linearlayout>",
+            "sample_linearlayout": "<linearlayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:gravity=\"center_vertical\" android:orientation=\"vertical\">\n\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:orientation=\"vertical\">\n        <textview android:text=\"Vertical\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"Vertical\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginTop=\"12dp\" android:gravity=\"center\" android:orientation=\"vertical\">\n        <textview android:text=\"Vertical-Center\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"Vertical-Center\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginTop=\"12dp\" android:orientation=\"horizontal\">\n        <textview android:text=\"horizontal\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"linear\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"layout\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginTop=\"12dp\" android:gravity=\"center\" android:orientation=\"horizontal\">\n        <textview android:text=\"horizontal\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"linear\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"layout\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"-center\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginTop=\"12dp\" android:gravity=\"right\" android:orientation=\"horizontal\">\n        <textview android:text=\"horizontal\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"linear\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"layout\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"-right\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n\n    <textview android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginTop=\"12dp\" android:gravity=\"center\" android:text=\"more usage see Android's document\"></textview>\n\n</linearlayout>",
+            "sample_listview": "<framelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <listview android:id=\"listView\" android:layout_height=\"match_parent\" android:layout_width=\"match_parent\"></listview>\n</framelayout>",
+            "sample_listview_item": "<framelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:id=\"item_layout\" android:padding=\"32dp\">\n    <textview android:id=\"item_text\" android:padding=\"16dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textColor=\"white\" android:layout_gravity=\"center\"></textview>\n</framelayout>",
+            "sample_picker": "<linearlayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:orientation=\"vertical\" android:gravity=\"center\">\n    <numberpicker android:id=\"picker\" android:layout_height=\"280dp\" android:layout_width=\"match_parent\" android:itemCount=\"5\" android:minValue=\"1\" android:maxValue=\"9\">\n\n        <androidui.widget.htmldatapickeradapter>\n            <item>1</item>\n            <item>2</item>\n            <item>3</item>\n            <item>4</item>\n            <item>5</item>\n            <item>6</item>\n            <item>7</item>\n            <item>8</item>\n            <item>9</item>\n        </androidui.widget.htmldatapickeradapter>\n    </numberpicker>\n</linearlayout>",
+            "sample_pullrefreshload": "<androidui.widget.pullrefreshloadlayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:id=\"prll\">\n    <listview android:id=\"listView\" android:layout_height=\"match_parent\" android:layout_width=\"match_parent\"></listview>\n</androidui.widget.pullrefreshloadlayout>",
+            "sample_pullrefreshload_item": "<framelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:id=\"item_layout\" android:padding=\"32dp\">\n    <textview android:id=\"item_text\" android:padding=\"16dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textColor=\"white\" android:layout_gravity=\"center\"></textview>\n</framelayout>",
+            "sample_relativelayout": "<relativelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <textview android:id=\"text1\" android:style=\"@style/textStyle\" android:text=\"Left&amp;Top\"></textview>\n    <textview android:id=\"text2\" android:style=\"@style/textStyle\" android:text=\"Right&amp;Top\" android:layout_alignParentRight=\"true\"></textview>\n    <textview android:id=\"text3\" android:style=\"@style/textStyle\" android:text=\"Left&amp;Bottom\" android:layout_alignParentBottom=\"true\"></textview>\n    <textview android:id=\"text4\" android:style=\"@style/textStyle\" android:text=\"Right&amp;Bottom\" android:layout_alignParentRight=\"true\" android:layout_alignParentBottom=\"true\"></textview>\n    <textview android:id=\"text5\" android:style=\"@style/textStyle\" android:text=\"VerticalCenter\" android:layout_centerVertical=\"true\"></textview>\n    <textview android:id=\"text6\" android:style=\"@style/textStyle\" android:text=\"HorizontalCenter\" android:layout_centerHorizontal=\"true\"></textview>\n    <textview android:id=\"text7\" android:style=\"@style/textStyle\" android:text=\"Center\" android:layout_centerInParent=\"true\"></textview>\n\n    <textview android:style=\"@style/textStyle\" android:text=\"below\" android:layout_marginTop=\"4dp\" android:layout_below=\"text1\"></textview>\n\n    <textview android:style=\"@style/textStyle\" android:text=\"toRightOf\" android:layout_marginLeft=\"4dp\" android:layout_toRightOf=\"text3\" android:layout_alignParentBottom=\"true\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"above\" android:layout_marginBottom=\"4dp\" android:layout_above=\"text3\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"toLeftOf\" android:layout_marginRight=\"4dp\" android:layout_toLeftOf=\"text4\" android:layout_alignParentBottom=\"true\"></textview>\n\n    <textview android:id=\"alignLeft\" android:style=\"@style/textStyle\" android:text=\"  alignLeft  \" android:layout_marginTop=\"4dp\" android:layout_alignLeft=\"text6\" android:layout_below=\"text2\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"  alignRight  \" android:layout_marginTop=\"4dp\" android:layout_alignRight=\"text6\" android:layout_below=\"alignLeft\"></textview>\n    <textview android:id=\"alignTop\" android:style=\"@style/textStyle\" android:text=\"alignTop\" android:maxWidth=\"46dp\" android:layout_marginLeft=\"4dp\" android:layout_alignTop=\"text7\" android:layout_toRightOf=\"text7\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"alignBottom\" android:maxWidth=\"52dp\" android:layout_marginLeft=\"4dp\" android:layout_alignBottom=\"text7\" android:layout_toRightOf=\"alignTop\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"above&amp;toLeftOf\" android:layout_above=\"text7\" android:layout_toLeftOf=\"text7\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"toRightOf &amp; toLeftOf &amp; below\" android:layout_below=\"text7\" android:layout_toLeftOf=\"text7\" android:layout_toRightOf=\"text5\"></textview>\n</relativelayout>",
+            "sample_textview": "<scrollview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <linearlayout android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:orientation=\"vertical\">\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:text=\"Text\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:padding=\"10dp\" android:text=\"Text Padding10\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:padding=\"10dp\" android:text=\"Line1\nLine2\nLine3\nLine4\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:maxLines=\"2\" android:ellipsize=\"end\" android:padding=\"10dp\" android:text=\"maxLines=2\nmaxLines=2\nmaxLines=2\nmaxLines=2\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center\" android:text=\"Text Center\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:minLines=\"2\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center\" android:text=\"Text minLines=2\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"right\" android:text=\"Text Right\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center\" android:text=\"Text Center\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"bottom\" android:text=\"Text Bottom\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center_vertical\" android:text=\"Text center vertical\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center_horizontal\" android:text=\"Text center horizontal\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"right|bottom\" android:text=\"Text right&amp;bottom\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:padding=\"10dp\" android:gravity=\"center\" android:drawablePadding=\"12dp\" android:drawableLeft=\"url(assets/images/logo_android_1@2x.png)\" android:drawableTop=\"url(assets/images/logo_android_1@2x.png)\" android:drawableRight=\"url(assets/images/logo_android_1@2x.png)\" android:drawableBottom=\"url(assets/images/logo_android_1@2x.png)\" android:text=\"Image around text\" android:style=\"@style/textStyle\"></textview>\n    </linearlayout>\n</scrollview>",
+            "sample_viewpager": "<framelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <android.support.v4.view.viewpager android:id=\"viewPager\" android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    </android.support.v4.view.viewpager>\n</framelayout>",
+            "sample_viewpager_gallery": "<framelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n    <android.support.v4.view.viewpager android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:background=\"#88000000\">\n        <androidui.widget.htmldatapageradapter>\n            <uk.co.senab.photoview.photoview android:src=\"assets/images/logo_android_3.png\">\n            </uk.co.senab.photoview.photoview>\n            <uk.co.senab.photoview.photoview android:src=\"assets/images/logo_android_2.png\">\n            </uk.co.senab.photoview.photoview>\n            <uk.co.senab.photoview.photoview android:src=\"assets/images/logo_google_1.jpg\">\n            </uk.co.senab.photoview.photoview>\n            <uk.co.senab.photoview.photoview android:src=\"assets/images/logo_google_2.png\">\n            </uk.co.senab.photoview.photoview>\n        </androidui.widget.htmldatapageradapter>\n    </android.support.v4.view.viewpager>\n    <linearlayout android:padding=\"4dp 12dp\" android:orientation=\"horizontal\" android:layout_gravity=\"bottom\" android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:background=\"#55000000\">\n        <textview android:text=\"Support gesture event, port from\" android:layout_height=\"match_parent\" android:layout_width=\"wrap_content\" android:textColor=\"white\"></textview>\n        <textview android:text=\"PhotoView\" android:layout_height=\"match_parent\" android:layout_width=\"wrap_content\" android:textColor=\"#FF0000cc\" android:padding=\"4dp\" android:state_pressed=\"background:#66ffffff\" android:onClick=\"location.href = 'https://github.com/chrisbanes/PhotoView'\"></textview>\n    </linearlayout>\n</framelayout>",
+            "sample_viewpager_page": "<framelayout android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:id=\"page_bg\">\n    <textview android:id=\"page_text\" android:padding=\"12dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textColor=\"white\" android:layout_gravity=\"center\"></textview>\n</framelayout>"
+        },
+        "values": {
+            "color": {
+                "white": "<color name=\"white\">white</color>",
+                "light_gray": "<color name=\"light_gray\">#999</color>",
+                "red": "<color name=\"red\">#fb3b00</color>",
+                "red_press": "<color name=\"red_press\">#8A2000</color>",
+                "green": "<color name=\"green\">#5fcf53</color>",
+                "green_press": "<color name=\"green_press\">#45963C</color>"
+            },
+            "array": {
+                "spinner_array": "<string-array name=\"spinner_array\">\n        <item>Item1</item>\n        <item>Item2</item>\n        <item>Item3</item>\n        <item>Item4</item>\n        <item>Item5</item>\n        <item>Item6</item>\n        <item>Item7</item>\n    </string-array>"
+            },
+            "style": {
+                "page_text": "<android-style name=\"page_text\">\n       <item name=\"android:padding\">12dp</item>\n       <item name=\"android:layout_width\">wrap_content</item>\n       <item name=\"android:layout_height\">wrap_content</item>\n       <item name=\"android:background\">#</item>5000000\"\n       <item name=\"android:textColor\">white</item>\n       <item name=\"android:layout_gravity\">center</item>\n    </android-style>",
+                "btn_custom1": "<android-style name=\"btn_custom1\">\n       <item name=\"android:padding\">8dp</item>\n       <item name=\"android:layout_margin\">6dp</item>\n       <item name=\"android:textColor\">@color/white</item>\n       <item name=\"android:cornerRadius\">4dp</item>\n       <item name=\"android:background\">#f00</item>\n       <item name=\"android:state_pressed\">@style/btn_custom1_pressed</item>\n       <item name=\"android:state_disable\">@style/btn_custom1_disable</item>\n    </android-style>",
+                "btn_custom1_pressed": "<android-style name=\"btn_custom1_pressed\">\n        <item name=\"android:background\">#f66</item>\n    </android-style>",
+                "btn_custom1_disable": "<android-style name=\"btn_custom1_disable\">\n       <item name=\"android:textColor\">@color/light_gray</item>\n       <item name=\"android:background\">#faa</item>\n    </android-style>",
+                "line_spit": "<android-style name=\"line_spit\">\n       <item name=\"android:layout_height\">4dp</item>\n       <item name=\"android:layout_width\">match_parent</item>\n    </android-style>",
+                "textStyle": "<android-style name=\"textStyle\">\n       <item name=\"android:textSize\">12sp</item>\n       <item name=\"android:padding\">8dp</item>\n       <item name=\"android:textColor\">#333</item>\n       <item name=\"android:background\">#eee</item>\n       <item name=\"android:layout_width\">wrap_content</item>\n       <item name=\"android:layout_height\">wrap_content</item>\n    </android-style>",
+                "editStyle": "<android-style name=\"editStyle\">\n       <item name=\"android:textColor\">#333</item>\n       <item name=\"android:layout_width\">wrap_content</item>\n       <item name=\"android:layout_height\">wrap_content</item>\n    </android-style>",
+                "imageStyle": "<android-style name=\"imageStyle\">\n       <item name=\"android:background\">#eee</item>\n       <item name=\"android:layout_width\">wrap_content</item>\n       <item name=\"android:layout_height\">wrap_content</item>\n       <item name=\"android:layout_marginBottom\">12dp</item>\n    </android-style>"
+            }
+        }
     };
 })(R || (R = {}));
 var R;
 (function (R) {
-    var NetImage = androidui.image.NetImage;
-    var data = {
-        "icon_alert": [null, null, null, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAjVBMVEUAAAAzR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR18zR198qNTWAAAALnRSTlMAsFf6A8T2D3vpgfBPMQbbnCMKzry2bY6JdWYsFeSUSuDW0cmhXEUnHjwaqEE2puKK5AAAA39JREFUeNrt2uey2jAQBeADcjcuGNNNb5eSff/Hy49MckMGw0oreyYz/p7goEXWam10Op2OkSI5RXd3lIWeile7Q5nPBxcHLfk6Hbf0ghrNNgWadl1n9IZygy805xJt6TN34aMRG5eYvHwI25z+iDSo+xJWDXakq2dxFYZjMuAFKaxIA4/MZGdYMNyTubUj3/ghSZQVZBaKZLIlBJw1icUbGPNLsmEOQ5eM7DimMPGIyZaDb/L7Y7KndKDLz8imNTQ5Jdm1gJ41WaYe0LEg68Ih+B6K7Nv54BqGxBLPBl/Fj8mYeMYOeNI9sYxv+KXPDByBJyCWGf6oMuJQS14BPOLYp/h2JRYXHMySJvjbjFhO+GxALDs8WRJL6OMTZ0csRzxxPFv/wz7xTPDMJZbYxwcj4unjWY94Ary3oYYDhAXecpsOQBO8c6HGA+zxTtR8AErwxraFAFPUu1ILAUIHtdZtBKAzamWtBJihzhe1EmCEOqd2ApCPGseWAgxqN6EsgHgjFtRSgBKvJW0FWMn+g/IAVOClSBpAehzcWwvQx0uuOICwJxjJA8j6skwYQHwahLIA8nmJ11qAHC+p1gIc8VIsmfmUFlZgJSljSPLTaEcaDuxehn9DPJAGr+JOtfjT45J09J4WICYLT8KctJzMx5obvDQnLSpw8MvFJT1DxmyEYzS4AemPyCM9ymHcTJlWe0XadnjNUdSOnmw6IhegxozacRXNZ+S8FDUKRW0YyyZEcnPGmJotG2eka4laX5pr+fAB+GeXDM5ReQ3CP4eBM/cEJ5HpqRre8O2HIi5V4Q3fM5z0RLLH4LfcsKtyRvzgbw0V8dwMi3fAB3fDK34iG898WxpWMlWCSbHBDWNq2NT3bb00K/GPSvTaTH9HxQ6ePey9OCy2JlOWwKhwgubUfV6CW8zZOj54cv2+asy7DjClLqeeffzhRJY/56m2xNC7/d44LnMowJd4xBDni6T4scg9YnBT6BiQZdsKegKyykug6042DaCtGJE9AQxULtkSwUiakxVeH6YmiuS2CcydY5JyK0hcMvnHjDL+WHgPFHNmikytNrBh6ZIRNfVhySkkfe4S9vhRTHr2fdjlByHxHQawr5jsiUX1zmhIMg3pk8OkQoOc82xEtbzxfInm+YNpuaJ/qF0vuKZoT5H0J8FsnR/zaTSfbIYOOp1Op9P5X/0Eg/+iUtRdaggAAAAASUVORK5CYII="]
-    };
-    var imageCache = {
-        icon_alert: null
-    };
-    function findRatioImage(array) {
-        if (array[window.devicePixelRatio]) return new NetImage(array[window.devicePixelRatio], window.devicePixelRatio);
-        for (var i = array.length; i >= 0; i--) {
-            if (array[i]) {
-                return new NetImage(array[i], i);
-            }
-        }
-        throw Error('Not find radio image. May something error in build.');
-    }
-
-    var image_base64 = function () {
-        function image_base64() {
-            _classCallCheck(this, image_base64);
-        }
-
-        _createClass(image_base64, null, [{
-            key: "icon_alert",
-            get: function get() {
-                return imageCache.icon_alert || (imageCache.icon_alert = findRatioImage(data.icon_alert));
-            }
-        }]);
-
-        return image_base64;
-    }();
-
-    R.image_base64 = image_base64;
-})(R || (R = {}));
-var R;
-(function (R) {
+    var Resources = android.content.res.Resources;
     var NetDrawable = androidui.image.NetDrawable;
+    var NinePatchDrawable = androidui.image.NinePatchDrawable;
+    R.id = {
+        android_tip: 'android_tip',
+        rotate_repeat: 'rotate_repeat',
+        translate_repeat: 'translate_repeat',
+        scale_repeat: 'scale_repeat',
+        alpha_repeat: 'alpha_repeat',
+        anim_set: 'anim_set',
+        btn_open_dialog: 'btn_open_dialog',
+        btn_show_popup: 'btn_show_popup',
+        btn_click: 'btn_click',
+        btn_long_click: 'btn_long_click',
+        open_activity_intent: 'open_activity_intent',
+        open_activity_result: 'open_activity_result',
+        console_tv: 'console_tv',
+        item_child_layout: 'item_child_layout',
+        item_child_text: 'item_child_text',
+        gridView: 'gridView',
+        item_layout: 'item_layout',
+        item_text: 'item_text',
+        open_activity_normal: 'open_activity_normal',
+        open_activity_float: 'open_activity_float',
+        listView: 'listView',
+        picker: 'picker',
+        prll: 'prll',
+        text1: 'text1',
+        text2: 'text2',
+        text3: 'text3',
+        text4: 'text4',
+        text5: 'text5',
+        text6: 'text6',
+        text7: 'text7',
+        alignLeft: 'alignLeft',
+        alignTop: 'alignTop',
+        viewPager: 'viewPager',
+        page_bg: 'page_bg',
+        page_text: 'page_text'
+    };
+    R.layout = {
+        activity_main: '@layout/activity_main',
+        sample_animation: '@layout/sample_animation',
+        sample_base_widget: '@layout/sample_base_widget',
+        sample_button: '@layout/sample_button',
+        sample_contacte: '@layout/sample_contacte',
+        sample_drawerlayout: '@layout/sample_drawerlayout',
+        sample_edittext: '@layout/sample_edittext',
+        sample_expand_listview_item: '@layout/sample_expand_listview_item',
+        sample_framelayout: '@layout/sample_framelayout',
+        sample_gridview: '@layout/sample_gridview',
+        sample_gridview_item: '@layout/sample_gridview_item',
+        sample_htmlview: '@layout/sample_htmlview',
+        sample_imageview: '@layout/sample_imageview',
+        sample_life_callback: '@layout/sample_life_callback',
+        sample_linearlayout: '@layout/sample_linearlayout',
+        sample_listview: '@layout/sample_listview',
+        sample_listview_item: '@layout/sample_listview_item',
+        sample_picker: '@layout/sample_picker',
+        sample_pullrefreshload: '@layout/sample_pullrefreshload',
+        sample_pullrefreshload_item: '@layout/sample_pullrefreshload_item',
+        sample_relativelayout: '@layout/sample_relativelayout',
+        sample_textview: '@layout/sample_textview',
+        sample_viewpager: '@layout/sample_viewpager',
+        sample_viewpager_gallery: '@layout/sample_viewpager_gallery',
+        sample_viewpager_page: '@layout/sample_viewpager_page'
+    };
+    R.style = {
+        page_text: '@style/page_text',
+        btn_custom1: '@style/btn_custom1',
+        btn_custom1_pressed: '@style/btn_custom1_pressed',
+        btn_custom1_disable: '@style/btn_custom1_disable',
+        line_spit: '@style/line_spit',
+        textStyle: '@style/textStyle',
+        editStyle: '@style/editStyle',
+        imageStyle: '@style/imageStyle'
+    };
+    R.color = {
+        white: '@color/white',
+        light_gray: '@color/light_gray',
+        red: '@color/red',
+        red_press: '@color/red_press',
+        green: '@color/green',
+        green_press: '@color/green_press'
+    };
+    R.array = {
+        spinner_array: '@array/spinner_array'
+    };
+    R.integer = {};
+    R.fraction = {};
 
-    var image = function () {
-        function image() {
-            _classCallCheck(this, image);
+    var drawable = function () {
+        function drawable() {
+            _classCallCheck(this, drawable);
         }
 
-        _createClass(image, null, [{
+        _createClass(drawable, null, [{
             key: "icon_alert",
             get: function get() {
-                return new NetDrawable(R.image_base64.icon_alert);
+                return Resources.getSystem().getDrawable('icon_alert');
             }
         }]);
 
-        return image;
+        return drawable;
     }();
 
-    R.image = image;
-    android.content.res.Resources.buildDrawableFinder = function (refString) {
-        return image[refString];
-    };
-})(R || (R = {}));
-var R;
-(function (R) {
-    var _layout_data = {
-        "activity_main": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:padding=\"12dp\" android:gravity=\"center\">\n        <textview id=\"android_tip\" android:visibility=\"gone\">NOTE:Suggest use Chrome for better experience</textview>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleBaseWidgetActivity')\">Base Widget</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleFrameLayoutActivity')\">FrameLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleLinearLayoutActivity')\">LinearLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleRelativeLayoutActivity')\">RelativeLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleTextViewActivity')\">TextView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleButtonActivity')\">Button</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleImageViewActivity')\">ImageView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleEditTextActivity')\">EditText</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleListViewActivity')\">ListView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleGridViewActivity')\">GridView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleExpandableListViewActivity')\">ExpandableListView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleViewPagerActivity')\">ViewPager</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleDrawerLayoutActivity')\">DrawerLayout</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleViewPagerGalleryActivity')\">ImageGallery&amp;Gesture</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SamplePullRefreshLoadActivity')\">List pull refresh &amp; pull load</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SamplePickerActivity')\">Picker</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleAnimationActivity')\">Animation</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleLifeCallbackActivity')\">Activity Life Circel</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleContacteActivity')\">Activity Start&amp;Result</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleWebViewActivity')\">WebView</button>\n        <button onclick=\"this.getContext().startActivity('sample.app.SampleHtmlViewActivity')\">HtmlView</button>\n    </linearlayout>\n</scrollview>",
-        "sample_animation": "<scrollview>\n    <linearlayout android:padding=\"0 6dp\" gravity=\"center\" android:orientation=\"vertical\">\n        <textview gravity=\"center\">Rotate:</textview>\n        <imageview id=\"rotate_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"20dp 12dp\"></imageview>\n        <textview gravity=\"center\">Translate:</textview>\n        <imageview id=\"translate_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Scale:</textview>\n        <imageview id=\"scale_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Alpha:</textview>\n        <imageview id=\"alpha_repeat\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n        <textview gravity=\"center\">Animation Set:</textview>\n        <imageview id=\"anim_set\" android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"56dp\" android:layout_height=\"56dp\" android:layout_margin=\"12dp\"></imageview>\n    </linearlayout>\n</scrollview>",
-        "sample_base_widget": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:padding=\"12dp\" android:gravity=\"center\">\n        <textview android:layout_width=\"wrap_content\">\n            TextView\n        </textview>\n        <button android:layout_width=\"wrap_content\">\n            Button\n        </button>\n        <imageview android:src=\"assets/images/logo_google_3.png\">\n        </imageview>\n        <checkbox android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\">\n            CheckBox\n        </checkbox>\n        <radiogroup android:gravity=\"center\" android:orientation=\"HORIZONTAL\" android:layout_marginbottom=\"12dp\">\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio1\n            </radiobutton>\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio2\n            </radiobutton>\n            <radiobutton android:layout_width=\"wrap_content\">\n                Radio3\n            </radiobutton>\n        </radiogroup>\n        <button id=\"btn_open_dialog\" android:layout_width=\"wrap_content\">\n            OpenDialog\n        </button>\n        <spinner android:layout_width=\"wrap_content\" android:entries=\"[&quot;Item1&quot;, &quot;Item2&quot;, &quot;Item3&quot;, &quot;Item4&quot;, &quot;Item5&quot;, &quot;Item6&quot;, &quot;Item7&quot;]\">\n        </spinner>\n        <button id=\"btn_show_popup\" android:visibility=\"gone\" android:layout_width=\"wrap_content\">\n            PopupWindow\n        </button>\n\n        <progressbar android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\"></progressbar>\n        <progressbar android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginbottom=\"12dp\" style=\"@android:attr/progressBarStyleHorizontal\" android:max=\"100\" android:progress=\"50\" android:secondaryprogress=\"70\"></progressbar>\n\n        <seekbar android:layout_height=\"wrap_content\" android:layout_width=\"match_parent\" android:layout_marginbottom=\"12dp\"></seekbar>\n\n        <ratingbar android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:layout_marginbottom=\"12dp\"></ratingbar>\n\n    </linearlayout>\n</scrollview>",
-        "sample_button": "<scrollview>\n    <linearlayout android:orientation=\"vertical\" android:gravity=\"center\">\n        <button android:layout_width=\"wrap_content\">\n            Button\n        </button>\n        <button android:layout_width=\"wrap_content\" android:enabled=\"false\">\n            DisableButton\n        </button>\n        <button id=\"btn_click\">\n            ButtonClick\n        </button>\n        <button android:layout_width=\"wrap_content\" onclick=\"this.setText('Click:'+new Date().getTime());\">\n            ButtonClick2\n        </button>\n        <button id=\"btn_long_click\">\n            ButtonLongClick\n        </button>\n        <button android:style=\"@style/btn_custom1\">\n            ButtonStyled\n        </button>\n        <button android:style=\"@style/btn_custom1\" android:enabled=\"false\">\n            ButtonStyledDisable\n        </button>\n        <button android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textcolor=\"@color/white\" android:cornerradius=\"4dp\" android:background=\"#f00\" android:state_pressed=\"@style/btn_custom1/pressed\">\n            ButtonStyled2\n        </button>\n        <button android:padding=\"8dp\" android:layout_margin=\"6dp\" android:textcolor=\"@color/white\" android:cornerradius=\"4dp\" android:background=\"#f00\" android:state_pressed=\"background:#f66;\">\n            ButtonStyled3\n        </button>\n    </linearlayout>\n</scrollview>",
-        "sample_contacte": "<linearlayout android:orientation=\"vertical\">\n    <button id=\"open_activity_intent\">\n        startActivity with intent\n    </button>\n    <button id=\"open_activity_result\">\n        startActivity with result\n    </button>\n    <scrollview>\n        <linearlayout android:orientation=\"vertical\">\n            <textview id=\"console_tv\" android:gravity=\"center\">\n            </textview>\n        </linearlayout>\n    </scrollview>\n</linearlayout>",
-        "sample_drawerlayout": "<android.support.v4.widget.drawerlayout>\n    <linearlayout android:orientation=\"vertical\" android:gravity=\"center\" android:layout_height=\"match_parent\" android:layout_width=\"match_parent\">\n        <button onclick=\"this.getParent().getParent().openDrawer(android.view.Gravity.LEFT);\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\">Open left drawer</button>\n        <button onclick=\"this.getParent().getParent().openDrawer(android.view.Gravity.RIGHT);\" android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\">Open right drawer</button>\n    </linearlayout>\n    <linearlayout android:layout_gravity=\"left\" android:background=\"white\" android:clickable=\"true\" android:layout_height=\"match_parent\" android:layout_width=\"220dp\">\n        <textview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:gravity=\"center\">Left drawer</textview>\n    </linearlayout>\n    <linearlayout android:layout_gravity=\"right\" android:background=\"white\" android:clickable=\"true\" android:layout_height=\"match_parent\" android:layout_width=\"220dp\">\n        <textview android:layout_height=\"match_parent\" android:layout_width=\"match_parent\" android:gravity=\"center\">Right drawer</textview>\n    </linearlayout>\n</android.support.v4.widget.drawerlayout>",
-        "sample_edittext": "<scrollview>\n    <linearlayout android:orientation=\"vertical\">\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Place Input\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textUri\" android:inputtype=\"textUri\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textEmailAddress\" android:inputtype=\"textEmailAddress\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: textPassword\" android:inputtype=\"textPassword\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: number\" android:inputtype=\"number\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: numberPassword\" android:inputtype=\"numberPassword\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"Input Type: phone\" android:inputtype=\"phone\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:hint=\"maxLength11\" android:maxlength=\"11\" android:inputtype=\"phone\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:maxlines=\"2\" android:padding=\"10dp\" android:text=\"maxLines=2\nmaxLines=2\nmaxLines=2\nmaxLines=2\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:minlines=\"2\" android:layout_width=\"match_parent\" android:gravity=\"center\" android:text=\"minLines=2\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:text=\"static height\" android:style=\"@style/editStyle\"></edittext>\n        <view android:style=\"@style/line_spit\"></view>\n        <edittext android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:gravity=\"center\" android:drawablepadding=\"12dp\" android:drawableleft=\"url(assets/images/logo_android_1@2x.png)\" android:drawabletop=\"url(assets/images/logo_android_1@2x.png)\" android:drawableright=\"url(assets/images/logo_android_1@2x.png)\" android:drawablebottom=\"url(assets/images/logo_android_1@2x.png)\" android:text=\"Image around EditText\" android:style=\"@style/editStyle\"></edittext>\n    </linearlayout>\n</scrollview>",
-        "sample_expand_listview_item": "<framelayout id=\"item_child_layout\" android:layout_width=\"match_parent\" android:padding=\"12dp\">\n    <textview id=\"item_child_text\" android:padding=\"12dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textcolor=\"white\" android:layout_gravity=\"center\">\n    </textview>\n</framelayout>",
-        "sample_framelayout": "<framelayout>\n\n    <textview android:text=\"Text\" android:layout_gravity=\"left|top\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"right|top\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|right\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|left\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"center\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"left|center_vertical\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"right|center_vertical\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"top|center_horizontal\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text\" android:layout_gravity=\"bottom|center_horizontal\" android:style=\"@style/textStyle\"></textview>\n    <textview android:text=\"Text MarginBottom50\" android:layout_marginbottom=\"50dp\" android:layout_gravity=\"center\" android:style=\"@style/textStyle\"></textview>\n</framelayout>",
-        "sample_gridview": "<framelayout>\n    <gridview id=\"gridView\" android:numcolumns=\"2\">\n    </gridview>\n</framelayout>",
-        "sample_gridview_item": "<framelayout id=\"item_layout\" android:layout_width=\"match_parent\" android:padding=\"32dp\">\n    <textview id=\"item_text\" android:padding=\"16dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textcolor=\"white\" android:layout_gravity=\"center\">\n    </textview>\n</framelayout>",
-        "sample_htmlview": "<scrollview android:fillviewport=\"true\">\n    <linearlayout android:orientation=\"vertical\">\n        <htmlview>\n            <p style=\"font-size: 24px;text-align: center\">HtmlView</p>\n        </htmlview>\n        <htmlview style=\"padding:0 20px;box-sizing: border-box;line-height: 20px;\">\n            <p>HtmlView can wrap any <span style=\"color: red;font-weight: bold;\">HTML tag</span>, render with DOM, but too many HtmlView will reduce FPS.</p>\n            <p>HtmlView above on all Android Views</p>\n        </htmlview>\n        <textview android:gravity=\"center\">This is a Android View</textview>\n        <htmlview style=\"overflow: visible;text-align: center;\">\n            <p>This is a HtmlView</p>\n        </htmlview>\n    </linearlayout>\n</scrollview>",
-        "sample_imageview": "<scrollview>\n    <linearlayout android:padding=\"0 6dp\" android:orientation=\"vertical\">\n        <textview>Default(FitCenter):</textview>\n        <linearlayout>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:layout_marginleft=\"4dp\" android:layout_height=\"200dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:layout_width=\"match_parent\" android:layout_marginleft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview>FitStart:</textview>\n        <linearlayout>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"fitStart\" android:layout_height=\"200dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"fitStart\" android:layout_width=\"match_parent\" android:layout_marginleft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview>FitEnd:</textview>\n        <linearlayout>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"fitEnd\" android:layout_height=\"200dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"fitEnd\" android:layout_width=\"match_parent\" android:layout_marginleft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview>FitXy:</textview>\n        <linearlayout>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"fitXy\" android:layout_height=\"200dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"fitXy\" android:layout_width=\"match_parent\" android:layout_marginleft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview>Center:</textview>\n        <linearlayout>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"center\" android:layout_height=\"80dp\" android:layout_width=\"80dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"center\" android:layout_height=\"180dp\" android:layout_width=\"180dp\" android:layout_marginleft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview>centerCrop:</textview>\n        <linearlayout>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"centerCrop\" android:layout_height=\"80dp\" android:layout_width=\"80dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"centerCrop\" android:layout_marginleft=\"4dp\" android:layout_height=\"100dp\" android:layout_width=\"60dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"centerCrop\" android:layout_height=\"60dp\" android:layout_width=\"100dp\" android:layout_marginleft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n        <textview>centerInside:</textview>\n        <linearlayout>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"centerInside\" android:layout_height=\"80dp\" android:layout_width=\"80dp\" android:style=\"@style/imageStyle\"></imageview>\n            <imageview android:src=\"assets/images/logo_android_1@2x.png\" android:scaletype=\"centerInside\" android:layout_height=\"180dp\" android:layout_width=\"180dp\" android:layout_marginleft=\"4dp\" android:style=\"@style/imageStyle\"></imageview>\n        </linearlayout>\n\n        <textview>Background:</textview>\n        <framelayout android:style=\"@style/imageStyle\" android:background=\"url(assets/images/logo_android_1@2x.png)\"></framelayout>\n\n    </linearlayout>\n</scrollview>",
-        "sample_life_callback": "<linearlayout android:orientation=\"vertical\">\n    <button id=\"open_activity_normal\">\n        Open Normal Activity\n    </button>\n    <button id=\"open_activity_float\">\n        Open Floating Activity\n    </button>\n    <scrollview>\n        <linearlayout android:orientation=\"vertical\">\n            <textview id=\"console_tv\" android:gravity=\"center\">\n            </textview>\n        </linearlayout>\n    </scrollview>\n</linearlayout>",
-        "sample_linearlayout": "<linearlayout android:gravity=\"center_vertical\" android:orientation=\"vertical\">\n\n    <linearlayout android:orientation=\"vertical\">\n        <textview android:text=\"Vertical\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"Vertical\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n    <linearlayout android:layout_margintop=\"12dp\" android:gravity=\"center\" android:orientation=\"vertical\">\n        <textview android:text=\"Vertical-Center\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"Vertical-Center\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n\n    <linearlayout android:layout_margintop=\"12dp\" android:orientation=\"horizontal\">\n        <textview android:text=\"horizontal\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"linear\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"layout\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n    <linearlayout android:layout_margintop=\"12dp\" android:gravity=\"center\" android:orientation=\"horizontal\">\n        <textview android:text=\"horizontal\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"linear\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"layout\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"-center\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n    <linearlayout android:layout_margintop=\"12dp\" android:gravity=\"right\" android:orientation=\"horizontal\">\n        <textview android:text=\"horizontal\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"linear\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"layout\" android:style=\"@style/textStyle\"></textview>\n        <textview android:text=\"-right\" android:style=\"@style/textStyle\"></textview>\n\n    </linearlayout>\n\n    <textview android:layout_margintop=\"12dp\" android:gravity=\"center\" android:text=\"more usage see Android's document\"></textview>\n\n</linearlayout>",
-        "sample_listview": "<framelayout>\n    <listview id=\"listView\">\n    </listview>\n</framelayout>",
-        "sample_listview_item": "<framelayout id=\"item_layout\" android:layout_width=\"match_parent\" android:padding=\"32dp\">\n    <textview id=\"item_text\" android:padding=\"16dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textcolor=\"white\" android:layout_gravity=\"center\">\n    </textview>\n</framelayout>",
-        "sample_picker": "<linearlayout android:orientation=\"vertical\" android:gravity=\"center\">\n    <numberpicker id=\"picker\" android:layout_height=\"280dp\" android:itemcount=\"5\" android:minvalue=\"1\" android:maxvalue=\"9\">\n        <androidui.widget.htmldatapickeradapter>\n            <item>1</item>\n            <item>2</item>\n            <item>3</item>\n            <item>4</item>\n            <item>5</item>\n            <item>6</item>\n            <item>7</item>\n            <item>8</item>\n            <item>9</item>\n        </androidui.widget.htmldatapickeradapter>\n    </numberpicker>\n</linearlayout>",
-        "sample_pullrefreshload": "<androidui.widget.pullrefreshloadlayout id=\"prll\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n    <listview id=\"listView\">\n    </listview>\n</androidui.widget.pullrefreshloadlayout>",
-        "sample_pullrefreshload_item": "<framelayout id=\"item_layout\" android:layout_width=\"match_parent\" android:padding=\"32dp\">\n    <textview id=\"item_text\" android:padding=\"16dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textcolor=\"white\" android:layout_gravity=\"center\">\n    </textview>\n</framelayout>",
-        "sample_relativelayout": "<relativelayout>\n    <textview id=\"text1\" android:style=\"@style/textStyle\" android:text=\"Left&amp;Top\"></textview>\n    <textview id=\"text2\" android:style=\"@style/textStyle\" android:text=\"Right&amp;Top\" android:layout_alignparentright=\"true\"></textview>\n    <textview id=\"text3\" android:style=\"@style/textStyle\" android:text=\"Left&amp;Bottom\" android:layout_alignparentbottom=\"true\"></textview>\n    <textview id=\"text4\" android:style=\"@style/textStyle\" android:text=\"Right&amp;Bottom\" android:layout_alignparentright=\"true\" android:layout_alignparentbottom=\"true\"></textview>\n    <textview id=\"text5\" android:style=\"@style/textStyle\" android:text=\"VerticalCenter\" android:layout_centervertical=\"true\"></textview>\n    <textview id=\"text6\" android:style=\"@style/textStyle\" android:text=\"HorizontalCenter\" android:layout_centerhorizontal=\"true\"></textview>\n    <textview id=\"text7\" android:style=\"@style/textStyle\" android:text=\"Center\" android:layout_centerinparent=\"true\"></textview>\n\n    <textview android:style=\"@style/textStyle\" android:text=\"below\" android:layout_margintop=\"4dp\" android:layout_below=\"text1\"></textview>\n\n    <textview android:style=\"@style/textStyle\" android:text=\"toRightOf\" android:layout_marginleft=\"4dp\" android:layout_torightof=\"text3\" android:layout_alignparentbottom=\"true\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"above\" android:layout_marginbottom=\"4dp\" android:layout_above=\"text3\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"toLeftOf\" android:layout_marginright=\"4dp\" android:layout_toleftof=\"text4\" android:layout_alignparentbottom=\"true\"></textview>\n\n    <textview id=\"alignLeft\" android:style=\"@style/textStyle\" android:text=\"  alignLeft  \" android:layout_margintop=\"4dp\" android:layout_alignleft=\"text6\" android:layout_below=\"text2\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"  alignRight  \" android:layout_margintop=\"4dp\" android:layout_alignright=\"text6\" android:layout_below=\"alignLeft\"></textview>\n    <textview id=\"alignTop\" android:style=\"@style/textStyle\" android:text=\"alignTop\" android:maxwidth=\"46dp\" android:layout_marginleft=\"4dp\" android:layout_aligntop=\"text7\" android:layout_torightof=\"text7\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"alignBottom\" android:maxwidth=\"52dp\" android:layout_marginleft=\"4dp\" android:layout_alignbottom=\"text7\" android:layout_torightof=\"alignTop\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"above&amp;toLeftOf\" android:layout_above=\"text7\" android:layout_toleftof=\"text7\"></textview>\n    <textview android:style=\"@style/textStyle\" android:text=\"toRightOf &amp; toLeftOf &amp; below\" android:layout_below=\"text7\" android:layout_toleftof=\"text7\" android:layout_torightof=\"text5\"></textview>\n</relativelayout>",
-        "sample_textview": "<scrollview>\n    <linearlayout android:orientation=\"vertical\">\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:text=\"Text\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:padding=\"10dp\" android:text=\"Text Padding10\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:padding=\"10dp\" android:text=\"Line1\nLine2\nLine3\nLine4\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:maxlines=\"2\" android:ellipsize=\"END\" android:padding=\"10dp\" android:text=\"maxLines=2\nmaxLines=2\nmaxLines=2\nmaxLines=2\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center\" android:text=\"Text Center\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:minlines=\"2\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center\" android:text=\"Text minLines=2\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"right\" android:text=\"Text Right\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center\" android:text=\"Text Center\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"bottom\" android:text=\"Text Bottom\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center_vertical\" android:text=\"Text center vertical\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"center_horizontal\" android:text=\"Text center horizontal\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"100dp\" android:layout_width=\"match_parent\" android:padding=\"10dp\" android:gravity=\"right|bottom\" android:text=\"Text right&amp;bottom\" android:style=\"@style/textStyle\"></textview>\n        <view android:style=\"@style/line_spit\"></view>\n        <textview android:layout_height=\"wrap_content\" android:layout_width=\"wrap_content\" android:padding=\"10dp\" android:gravity=\"center\" android:drawablepadding=\"12dp\" android:drawableleft=\"url(assets/images/logo_android_1@2x.png)\" android:drawabletop=\"url(assets/images/logo_android_1@2x.png)\" android:drawableright=\"url(assets/images/logo_android_1@2x.png)\" android:drawablebottom=\"url(assets/images/logo_android_1@2x.png)\" android:text=\"Image around text\" android:style=\"@style/textStyle\"></textview>\n    </linearlayout>\n</scrollview>",
-        "sample_viewpager": "<framelayout>\n    <android.support.v4.view.viewpager id=\"viewPager\">\n    </android.support.v4.view.viewpager>\n</framelayout>",
-        "sample_viewpager_gallery": "<framelayout>\n    <android.support.v4.view.viewpager android:background=\"#88000000\">\n        <androidui.widget.htmldatapageradapter>\n            <uk.co.senab.photoview.photoview android:src=\"assets/images/logo_android_3.png\">\n            </uk.co.senab.photoview.photoview>\n            <uk.co.senab.photoview.photoview android:src=\"assets/images/logo_android_2.png\">\n            </uk.co.senab.photoview.photoview>\n            <uk.co.senab.photoview.photoview android:src=\"assets/images/logo_google_1.jpg\">\n            </uk.co.senab.photoview.photoview>\n            <uk.co.senab.photoview.photoview android:src=\"assets/images/logo_google_2.png\">\n            </uk.co.senab.photoview.photoview>\n        </androidui.widget.htmldatapageradapter>\n    </android.support.v4.view.viewpager>\n    <linearlayout android:padding=\"4dp 12dp\" android:layout_gravity=\"bottom\" android:layout_height=\"wrap_content\" android:background=\"#55000000\">\n        <textview android:textcolor=\"white\">\n            Support gesture event, from\n        </textview>\n        <textview android:textcolor=\"#FF0000cc\" android:padding=\"4dp\" android:state_pressed=\"background:#66ffffff\" onclick=\"location.href = 'https://github.com/chrisbanes/PhotoView'\">\n            PhotoView\n        </textview>\n    </linearlayout>\n</framelayout>",
-        "sample_viewpager_page": "<framelayout id=\"page_bg\">\n    <textview id=\"page_text\" android:padding=\"12dp\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:background=\"#55000000\" android:textcolor=\"white\" android:layout_gravity=\"center\">\n    </textview>\n</framelayout>"
-    };
-    var _tempDiv = document.createElement('div');
+    R.drawable = drawable;
 
-    var layout = function () {
-        function layout() {
-            _classCallCheck(this, layout);
+    var string_ = function string_() {
+        _classCallCheck(this, string_);
+    };
+
+    R.string_ = string_;
+
+    var bool = function bool() {
+        _classCallCheck(this, bool);
+    };
+
+    R.bool = bool;
+    var res_data = R._res_data;
+    function resDirSpecMatch(spec) {
+        var ratio = window.devicePixelRatio;
+        if (ratio === 0.75 && spec === 'ldpi') return true;
+        if (ratio === 1 && spec === 'mdpi') return true;
+        if (ratio === 1.5 && spec === 'hdpi') return true;
+        if (ratio === 2 && spec === 'xdpi') return true;
+        if (ratio === 3 && spec === 'xxdpi') return true;
+        if (ratio === 4 && spec === 'xxxdpi') return true;
+        var dpi = ratio * 160;
+        if (spec === dpi + 'dpi') return true;
+        var xdp = document.documentElement.offsetWidth;
+        var ydp = document.documentElement.offsetHeight;
+        var minDP = Math.min(xdp, ydp);
+        var maxDP = Math.max(xdp, ydp);
+        if (spec === 'xlarge' && maxDP > 960 && minDP > 720) return true;
+        if (spec === 'large' && maxDP > 640 && minDP > 480) return true;
+        if (spec === 'normal' && maxDP > 470 && minDP > 320) return true;
+        if (spec === 'small' && maxDP > 426 && minDP > 320) return true;
+        if (spec === 'port' && ydp > xdp) return true;
+        if (spec === 'land' && xdp > ydp) return true;
+        if (spec === xdp + 'x' + ydp || spec === ydp + 'x' + xdp) return true;
+        var swMatch = spec.match(/sw(d*)dp/);
+        if (swMatch && parseInt(swMatch[1]) >= minDP) return true;
+        var wMatch = spec.match(/w(d*)dp/);
+        if (wMatch && parseInt(wMatch[1]) >= xdp) return true;
+        var hMatch = spec.match(/h(d*)dp/);
+        if (hMatch && parseInt(hMatch[1]) >= ydp) return true;
+        var lang = navigator.language.split('-')[0].toLowerCase();
+        if (lang === spec) return true;
+    }
+    var matchDirNamesCache = {};
+    function findMatchDirNames(baseDirName) {
+        if (matchDirNamesCache[baseDirName]) return matchDirNamesCache[baseDirName];
+        var matchDirNames = [];
+        for (var dirName in res_data) {
+            if (dirName == baseDirName || dirName.startsWith(baseDirName + '-')) {
+                matchDirNames.push(dirName);
+            }
         }
+        matchDirNames = matchDirNames.sort(function (a, b) {
+            var bSplits = b.split('-');
+            bSplits.shift();
+            var bMatchTimes = 0;
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
 
-        _createClass(layout, null, [{
-            key: "getLayoutData",
-            value: function getLayoutData(layoutRef) {
-                if (!layoutRef) return null;
-                layoutRef = layoutRef.replace('/', '.').split('.').pop();
-                if (!_layout_data[layoutRef]) return null;
-                _tempDiv.innerHTML = _layout_data[layoutRef];
-                var data = _tempDiv.firstElementChild;
-                _tempDiv.removeChild(data);
-                return data;
+            try {
+                for (var _iterator = bSplits[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var split = _step.value;
+
+                    if (resDirSpecMatch(split)) bMatchTimes++;
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
             }
-        }]);
 
-        return layout;
-    }();
+            var aSplits = a.split('-');
+            aSplits.shift();
+            var aMatchTimes = 0;
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
 
-    layout.activity_main = '@layout/activity_main';
-    layout.sample_animation = '@layout/sample_animation';
-    layout.sample_base_widget = '@layout/sample_base_widget';
-    layout.sample_button = '@layout/sample_button';
-    layout.sample_contacte = '@layout/sample_contacte';
-    layout.sample_drawerlayout = '@layout/sample_drawerlayout';
-    layout.sample_edittext = '@layout/sample_edittext';
-    layout.sample_expand_listview_item = '@layout/sample_expand_listview_item';
-    layout.sample_framelayout = '@layout/sample_framelayout';
-    layout.sample_gridview = '@layout/sample_gridview';
-    layout.sample_gridview_item = '@layout/sample_gridview_item';
-    layout.sample_htmlview = '@layout/sample_htmlview';
-    layout.sample_imageview = '@layout/sample_imageview';
-    layout.sample_life_callback = '@layout/sample_life_callback';
-    layout.sample_linearlayout = '@layout/sample_linearlayout';
-    layout.sample_listview = '@layout/sample_listview';
-    layout.sample_listview_item = '@layout/sample_listview_item';
-    layout.sample_picker = '@layout/sample_picker';
-    layout.sample_pullrefreshload = '@layout/sample_pullrefreshload';
-    layout.sample_pullrefreshload_item = '@layout/sample_pullrefreshload_item';
-    layout.sample_relativelayout = '@layout/sample_relativelayout';
-    layout.sample_textview = '@layout/sample_textview';
-    layout.sample_viewpager = '@layout/sample_viewpager';
-    layout.sample_viewpager_gallery = '@layout/sample_viewpager_gallery';
-    layout.sample_viewpager_page = '@layout/sample_viewpager_page';
-    R.layout = layout;
-    android.content.res.Resources.buildLayoutFinder = function (refString) {
-        return layout.getLayoutData(refString);
-    };
-})(R || (R = {}));
-var R;
-(function (R) {
-    android.content.res.Resources.buildResourcesElement.innerHTML = "\n<!-- color.html -->\n<android-color id=\"white\">white</android-color>\n<android-color id=\"light_gray\">#999</android-color>\n<android-color id=\"red\">#fb3b00</android-color>\n<android-color id=\"red_press\">#8A2000</android-color>\n<android-color id=\"green\">#5fcf53</android-color>\n<android-color id=\"green_press\">#45963C</android-color>\n\n\n<!-- styles.html -->\n<android-style id=\"page_text\"\n               android:padding=\"12dp\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n               android:background=\"#55000000\"\n               android:textColor=\"white\"\n               android:layout_gravity=\"center\"></android-style>\n\n<android-style id=\"btn_custom1\"\n               android:padding=\"8dp\"\n               android:layout_margin=\"6dp\"\n               android:textColor=\"@color/white\"\n               android:cornerRadius=\"4dp\"\n               android:background=\"#f00\"\n               android:state_pressed=\"@style/btn_custom1/pressed\"\n               android:state_disable=\"@style/btn_custom1/disable\">\n    <android-style id=\"pressed\"\n                   android:background=\"#f66\">\n    </android-style>\n    <android-style id=\"disable\"\n                   android:textColor=\"@color/light_gray\"\n                   android:background=\"#faa\">\n    </android-style>\n</android-style>\n<android-style id=\"line_spit\"\n               android:layout_height=\"4dp\"\n               android:layout_width=\"match_parent\"\n        ></android-style>\n<android-style id=\"textStyle\"\n               android:textSize=\"12sp\"\n               android:padding=\"8dp\"\n               android:textColor=\"#333\"\n               android:background=\"#eee\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n        ></android-style>\n\n<android-style id=\"editStyle\"\n               android:textColor=\"#333\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n        ></android-style>\n\n<android-style id=\"imageStyle\"\n               android:background=\"#eee\"\n               android:layout_width=\"wrap_content\"\n               android:layout_height=\"wrap_content\"\n               android:layout_marginBottom=\"12dp\"\n        ></android-style>\n\n";
+            try {
+                for (var _iterator2 = aSplits[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    var _split = _step2.value;
+
+                    if (resDirSpecMatch(_split)) aMatchTimes++;
+                }
+            } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                        _iterator2.return();
+                    }
+                } finally {
+                    if (_didIteratorError2) {
+                        throw _iteratorError2;
+                    }
+                }
+            }
+
+            return bMatchTimes - aMatchTimes;
+        });
+        matchDirNamesCache[baseDirName] = matchDirNames;
+        return matchDirNames;
+    }
+    function findImageFile(fileName) {
+        var _iteratorNormalCompletion3 = true;
+        var _didIteratorError3 = false;
+        var _iteratorError3 = undefined;
+
+        try {
+            var _loop = function _loop() {
+                var dirName = _step3.value;
+
+                var dir = res_data[dirName];
+                if (dirName === 'drawable') {
+                    var findImageWithRatioName = function findImageWithRatioName(ratio) {
+                        var fileStr = dir[fileName + '@' + ratio + 'x'];
+                        if (fileStr && fileStr.startsWith('data:image')) {
+                            return new NetDrawable(fileStr, null, ratio);
+                        }
+                        var fileNameWithNinePatch = fileName + '@' + ratio + 'x' + '.9';
+                        fileStr = dir[fileNameWithNinePatch];
+                        if (fileStr && fileStr.startsWith('data:image')) {
+                            return new NinePatchDrawable(fileStr, null, ratio);
+                        }
+                    };
+
+                    var ratioDrawable = findImageWithRatioName(window.devicePixelRatio) || findImageWithRatioName(6) || findImageWithRatioName(5) || findImageWithRatioName(4) || findImageWithRatioName(3) || findImageWithRatioName(2) || findImageWithRatioName(1);
+                    if (ratioDrawable) return {
+                            v: ratioDrawable
+                        };
+                }
+                var ratio = 1;
+                if (dirName.includes('-')) {
+                    if (dirName.includes('-ldpi')) ratio = 0.75;else if (dirName.includes('-mdpi')) ratio = 1;else if (dirName.includes('-hdpi')) ratio = 1.5;else if (dirName.includes('-xdpi')) ratio = 2;else if (dirName.includes('-xxdpi')) ratio = 3;else if (dirName.includes('-xxxdpi')) ratio = 4;
+                }
+                var fileStr = dir[fileName];
+                if (fileStr && fileStr.startsWith('data:image')) {
+                    return {
+                        v: new NetDrawable(fileStr, null, ratio)
+                    };
+                }
+                var fileNameWithNinePatch = fileName + '.9';
+                fileStr = dir[fileNameWithNinePatch];
+                if (fileStr && fileStr.startsWith('data:image')) {
+                    return {
+                        v: new NinePatchDrawable(fileStr, null, ratio)
+                    };
+                }
+            };
+
+            for (var _iterator3 = findMatchDirNames('drawable')[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                var _ret = _loop();
+
+                if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+            }
+        } catch (err) {
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                    _iterator3.return();
+                }
+            } finally {
+                if (_didIteratorError3) {
+                    throw _iteratorError3;
+                }
+            }
+        }
+    }
+    var _tempDiv = document.createElement('div');
+    function findXmlFile(baseDirName, fileName) {
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
+
+        try {
+            for (var _iterator4 = findMatchDirNames(baseDirName)[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                var _dirName = _step4.value;
+
+                var _dir = res_data[_dirName];
+                if (_dir[fileName]) {
+                    _tempDiv.innerHTML = _dir[fileName];
+                    var data = _tempDiv.firstElementChild;
+                    _tempDiv.removeChild(data);
+                    return data;
+                }
+            }
+        } catch (err) {
+            _didIteratorError4 = true;
+            _iteratorError4 = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                    _iterator4.return();
+                }
+            } finally {
+                if (_didIteratorError4) {
+                    throw _iteratorError4;
+                }
+            }
+        }
+    }
+    function findResourcesValue(valueType, valueName) {
+        var _iteratorNormalCompletion5 = true;
+        var _didIteratorError5 = false;
+        var _iteratorError5 = undefined;
+
+        try {
+            for (var _iterator5 = findMatchDirNames('values')[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+                var _dirName2 = _step5.value;
+
+                var _dir2 = res_data[_dirName2];
+                if (_dir2[valueType] && _dir2[valueType][valueName]) {
+                    _tempDiv.innerHTML = _dir2[valueType][valueName];
+                    var data = _tempDiv.firstElementChild;
+                    _tempDiv.removeChild(data);
+                    return data;
+                }
+            }
+        } catch (err) {
+            _didIteratorError5 = true;
+            _iteratorError5 = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                    _iterator5.return();
+                }
+            } finally {
+                if (_didIteratorError5) {
+                    throw _iteratorError5;
+                }
+            }
+        }
+    }
+    if ('_AppBuildValueFinder' in android.content.res.Resources) {
+        android.content.res.Resources._AppBuildImageFileFinder = function (refString) {
+            if (refString.startsWith('@drawable/')) {
+                refString = refString.substring('@drawable/'.length);
+            }
+            return findImageFile(refString);
+        };
+        android.content.res.Resources._AppBuildXmlFinder = function (refString) {
+            if (!refString.startsWith('@')) {
+                throw Error('refString must starts with @, current: ' + refString);
+            }
+            refString = refString.substring(1);
+            var splits = refString.split('/');
+            if (splits.length != 2) throw Error('refString must have one \'/\', current: ' + refString);
+            return findXmlFile(splits[0], splits[1]);
+        };
+        android.content.res.Resources._AppBuildValueFinder = function (refString) {
+            if (!refString.startsWith('@')) {
+                throw Error('refString must starts with @, current: ' + refString);
+            }
+            refString = refString.substring(1);
+            var splits = refString.split('/');
+            if (splits.length != 2) throw Error('refString must have one \'/\', current: ' + refString);
+            return findResourcesValue(splits[0], splits[1]);
+        };
+    } else {
+        throw Error('Error: sdk version is too old. Please update your androidui sdk.');
+    }
 })(R || (R = {}));
 var sample;
 (function (sample) {
@@ -248,7 +506,7 @@ var sample;
                     if (!this.confirmDialog) {
                         (function () {
                             var activity = _this2;
-                            _this2.confirmDialog = new android.app.AlertDialog.Builder(activity).setTitle('Promt').setIcon(R.image.icon_alert).setMessage('Exit confirm?').setNegativeButton(android.R.string_.cancel, null).setPositiveButton(android.R.string_.ok, {
+                            _this2.confirmDialog = new android.app.AlertDialog.Builder(activity).setTitle('Promt').setIcon(R.drawable.icon_alert).setMessage('Exit confirm?').setNegativeButton(android.R.string_.cancel, null).setPositiveButton(android.R.string_.ok, {
                                 onClick: function onClick(dialog, which) {
                                     activity.finish();
                                 }
@@ -361,7 +619,7 @@ var sample;
                                 onClick: function onClick(dialog, which) {
                                     Toast.makeText(activity, android.R.string_.ok, Toast.LENGTH_SHORT).show();
                                 }
-                            }).setIcon(R.image.icon_alert).setNegativeButton(android.R.string_.cancel, null).show();
+                            }).setIcon(R.drawable.icon_alert).setNegativeButton(android.R.string_.cancel, null).show();
                         }
                     });
                     var popupContent = new TextView(this);

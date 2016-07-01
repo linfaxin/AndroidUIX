@@ -1,0 +1,28 @@
+<LinearLayout
+        xmlns="android" xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:orientation="vertical">
+    <Button
+            android:id="open_activity_intent"
+            android:text="startActivity with intent"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent" />
+    <Button android:id="open_activity_result"
+            android:text="startActivity with result"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent" />
+    <ScrollView
+            android:layout_height="match_parent"
+            android:layout_width="match_parent">
+        <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:orientation="vertical">
+            <TextView android:id="console_tv"
+                      android:layout_height="wrap_content"
+                      android:layout_width="match_parent"
+                      android:gravity="center" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

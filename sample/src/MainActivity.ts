@@ -3,8 +3,7 @@
  */
 
 ///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
-///<reference path="../gen/R/image.ts"/>
+///<reference path="../gen/R.ts"/>
 
 module sample.app {
     import Activity = android.app.Activity;
@@ -58,7 +57,7 @@ module sample.app {
                 const activity = this;
                 this.confirmDialog = new android.app.AlertDialog.Builder(activity)
                     .setTitle('Promt')
-                    .setIcon(R.image.icon_alert)
+                    .setIcon(R.drawable.icon_alert)
                     .setMessage('Exit confirm?')
                     .setNegativeButton(android.R.string_.cancel, null)
                     .setPositiveButton(android.R.string_.ok, {

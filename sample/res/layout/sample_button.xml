@@ -1,0 +1,66 @@
+<ScrollView
+        xmlns="android" xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+    <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+        <Button
+                android:text="Button"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"/>
+        <Button
+                android:text="DisableButton"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:enabled="false"/>
+        <Button
+                android:id="btn_click"
+                android:text="ButtonClick"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"/>
+        <Button
+                android:text="ButtonClick2"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:onClick="this.setText('Click:'+new Date().getTime());"/>
+
+        <Button android:id="btn_long_click"
+                android:text="ButtonLongClick"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <Button
+                android:text="ButtonStyled"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:style="@style/btn_custom1" />
+        <Button
+                android:text="ButtonStyledDisable"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:style="@style/btn_custom1"
+                android:enabled="false" />
+        <Button
+                android:text="ButtonStyled2"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:padding="8dp"
+                android:layout_margin="6dp"
+                android:textColor="@color/white"
+                android:cornerRadius="4dp"
+                android:background="#f00"
+                android:state_pressed="@style/btn_custom1_pressed" />
+        <Button
+                android:text="ButtonStyled3"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:padding="8dp"
+                android:layout_margin="6dp"
+                android:textColor="@color/white"
+                android:cornerRadius="4dp"
+                android:background="#f00"
+                android:state_pressed="background:#f66;" />
+    </LinearLayout>
+</ScrollView>

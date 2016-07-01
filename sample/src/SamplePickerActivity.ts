@@ -1,6 +1,6 @@
 
 ///<reference path="../../dist/android-ui.d.ts"/>
-///<reference path="../gen/R/layout.ts"/>
+///<reference path="../gen/R.ts"/>
 
 module sample.app {
     import Activity = android.app.Activity;

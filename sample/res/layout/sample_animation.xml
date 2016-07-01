@@ -1,0 +1,67 @@
+<ScrollView
+        xmlns="android" xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+    <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:padding="0 6dp"
+            android:gravity="center"
+            android:orientation="vertical">
+        <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:text="Rotate:" />
+        <ImageView
+                android:id="rotate_repeat"
+                android:src="assets/images/logo_android_1@2x.png"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="20dp 12dp" />
+        <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:text="Translate:" />
+        <ImageView
+                android:id="translate_repeat"
+                android:src="assets/images/logo_android_1@2x.png"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="12dp" />
+        <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:text="Scale:"
+                android:gravity="center" />
+        <ImageView
+                android:id="scale_repeat"
+                android:src="assets/images/logo_android_1@2x.png"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="12dp" />
+        <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:text="Alpha:"
+                android:gravity="center" />
+        <ImageView
+                android:id="alpha_repeat"
+                android:src="assets/images/logo_android_1@2x.png"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="12dp" />
+        <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:text="Animation Set:"
+                android:gravity="center" />
+        <ImageView
+                android:id="anim_set"
+                android:src="assets/images/logo_android_1@2x.png"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="12dp" />
+    </LinearLayout>
+</ScrollView>

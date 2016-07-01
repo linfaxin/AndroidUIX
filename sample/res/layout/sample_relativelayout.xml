@@ -1,0 +1,97 @@
+<RelativeLayout
+        xmlns="android" xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+    <TextView android:id="text1"
+              android:style="@style/textStyle"
+              android:text="Left&amp;Top"/>
+    <TextView android:id="text2"
+              android:style="@style/textStyle"
+              android:text="Right&amp;Top"
+              android:layout_alignParentRight="true"/>
+    <TextView android:id="text3"
+              android:style="@style/textStyle"
+              android:text="Left&amp;Bottom"
+              android:layout_alignParentBottom="true"/>
+    <TextView android:id="text4"
+              android:style="@style/textStyle"
+              android:text="Right&amp;Bottom"
+              android:layout_alignParentRight="true"
+              android:layout_alignParentBottom="true"/>
+    <TextView android:id="text5"
+              android:style="@style/textStyle"
+              android:text="VerticalCenter"
+              android:layout_centerVertical="true"/>
+    <TextView android:id="text6"
+              android:style="@style/textStyle"
+              android:text="HorizontalCenter"
+              android:layout_centerHorizontal="true"/>
+    <TextView android:id="text7"
+              android:style="@style/textStyle"
+              android:text="Center"
+              android:layout_centerInParent="true"/>
+
+    <TextView
+            android:style="@style/textStyle"
+            android:text="below"
+            android:layout_marginTop="4dp"
+            android:layout_below="text1"/>
+
+    <TextView
+            android:style="@style/textStyle"
+            android:text="toRightOf"
+            android:layout_marginLeft="4dp"
+            android:layout_toRightOf="text3"
+            android:layout_alignParentBottom="true"/>
+    <TextView
+            android:style="@style/textStyle"
+            android:text="above"
+            android:layout_marginBottom="4dp"
+            android:layout_above="text3"/>
+    <TextView
+            android:style="@style/textStyle"
+            android:text="toLeftOf"
+            android:layout_marginRight="4dp"
+            android:layout_toLeftOf="text4"
+            android:layout_alignParentBottom="true"/>
+
+    <TextView
+            android:id="alignLeft"
+            android:style="@style/textStyle"
+            android:text="  alignLeft  "
+            android:layout_marginTop="4dp"
+            android:layout_alignLeft="text6"
+            android:layout_below="text2"/>
+    <TextView
+            android:style="@style/textStyle"
+            android:text="  alignRight  "
+            android:layout_marginTop="4dp"
+            android:layout_alignRight="text6"
+            android:layout_below="alignLeft"/>
+    <TextView
+            android:id="alignTop"
+            android:style="@style/textStyle"
+            android:text="alignTop"
+            android:maxWidth="46dp"
+            android:layout_marginLeft="4dp"
+            android:layout_alignTop="text7"
+            android:layout_toRightOf="text7"/>
+    <TextView
+            android:style="@style/textStyle"
+            android:text="alignBottom"
+            android:maxWidth="52dp"
+            android:layout_marginLeft="4dp"
+            android:layout_alignBottom="text7"
+            android:layout_toRightOf="alignTop"/>
+    <TextView
+            android:style="@style/textStyle"
+            android:text="above&amp;toLeftOf"
+            android:layout_above="text7"
+            android:layout_toLeftOf="text7"/>
+    <TextView
+            android:style="@style/textStyle"
+            android:text="toRightOf &amp; toLeftOf &amp; below"
+            android:layout_below="text7"
+            android:layout_toLeftOf="text7"
+            android:layout_toRightOf="text5"/>
+</RelativeLayout>
