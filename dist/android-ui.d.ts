@@ -679,6 +679,7 @@ declare module android.graphics.drawable {
     import WeakReference = java.lang.ref.WeakReference;
     import Runnable = java.lang.Runnable;
     import Canvas = android.graphics.Canvas;
+    import Resources = android.content.res.Resources;
     abstract class Drawable {
         private static ZERO_BOUNDS_RECT;
         mBounds: Rect;
@@ -726,6 +727,8 @@ declare module android.graphics.drawable {
         getPadding(padding: Rect): boolean;
         mutate(): Drawable;
         getConstantState(): Drawable.ConstantState;
+        static createFromXml(r: Resources, parser: HTMLElement): Drawable;
+        inflate(r: Resources, parser: HTMLElement): void;
     }
     module Drawable {
         interface Callback {
@@ -1040,11 +1043,10 @@ declare module android.content {
 }
 declare module android.R {
     class layout {
-        static getLayoutData(layoutRef: string): HTMLElement;
+        static getLayoutData(layoutName: string): HTMLElement;
         static action_bar: string;
         static alert_dialog: string;
         static alert_dialog_progress: string;
-        static id: string;
         static popup_menu_item_layout: string;
         static select_dialog: string;
         static select_dialog_item: string;
@@ -1062,27 +1064,35 @@ declare module android.content.res {
         private static instance;
         private displayMetrics;
         private context;
+        static _AppBuildImageFileFinder: (refString: string) => Drawable;
+        static _AppBuildXmlFinder: (refString: string) => HTMLElement;
+        static _AppBuildValueFinder: (refString: string) => HTMLElement;
         constructor(context?: Context);
         static getSystem(): Resources;
         private static from(context);
         static getDisplayMetrics(): DisplayMetrics;
         getDisplayMetrics(): DisplayMetrics;
         private fillDisplayMetrics(displayMetrics);
-        private getObjectRef(refString);
-        static buildAttrFinder: (refString: string) => any;
-        getAttr(refString: string): any;
-        static buildDrawableFinder: (refString: string) => Drawable;
+        private getDefStyle(refString);
         getDrawable(refString: string): Drawable;
         getColor(refString: string): number;
         getColorStateList(refString: string): ColorStateList;
-        getString(refString: string, notFindValue?: string): string;
-        getTextArray(refString: string): string[];
-        static buildLayoutFinder: (refString: string) => HTMLElement;
+        getDimension(refString: string, baseValue?: number): number;
+        getDimensionPixelOffset(refString: string, baseValue?: number): number;
+        getDimensionPixelSize(refString: string, baseValue?: number): number;
+        getBoolean(refString: string): boolean;
+        getInteger(refString: string): number;
+        getIntArray(refString: string): number[];
+        getFloat(refString: string): number;
+        getString(refString: string): string;
+        getStringArray(refString: string): string[];
         getLayout(refString: string): HTMLElement;
-        private static emptySelectorNode;
-        static buildResourcesElement: HTMLElement;
-        static SDKResourcesElement: HTMLElement;
-        private getReference(refString, cloneNode?);
+        private getStyleAsMap(refString);
+        getXml(refString: string): HTMLElement;
+        getValue(refString: string, resolveRefs?: boolean): HTMLElement;
+        static buildDrawableFinder: any;
+        static buildLayoutFinder: any;
+        static buildResourcesElement: void;
     }
 }
 declare module android.view {
@@ -1344,6 +1354,7 @@ declare module android.content.res {
         private static sCache;
         constructor(states: Array<Array<number>>, colors: Array<number>);
         static valueOf(color: number): ColorStateList;
+        static createFromXml(r: Resources, parser: HTMLElement): ColorStateList;
         withAlpha(alpha: number): ColorStateList;
         isStateful(): boolean;
         getColorForState(stateSet: Array<number>, defaultColor: number): number;
@@ -1369,6 +1380,8 @@ declare module android.util {
         private static initUnit();
         static applyDimension(unit: string, size: number, dm: DisplayMetrics): number;
         static isDynamicUnitValue(valueWithUnit: string): boolean;
+        static complexToDimension(valueWithUnit: string, baseValue?: number, metrics?: DisplayMetrics): number;
+        static complexToDimensionPixelOffset(valueWithUnit: string, baseValue?: number, metrics?: DisplayMetrics): number;
         static complexToDimensionPixelSize(valueWithUnit: string, baseValue?: number, metrics?: DisplayMetrics): number;
     }
 }
@@ -1416,7 +1429,6 @@ declare module androidui.attr {
         isStateEquals(state: number[]): boolean;
         isStateMatch(state: number[]): boolean;
         createDiffKeyAsNullValueAttrMap(another: StateAttr): Map<string, string>;
-        static parseStateAttrName(stateDesc: any): Set<number>;
     }
 }
 declare module androidui.attr {
@@ -1426,8 +1438,8 @@ declare module androidui.attr {
         private matchedAttrCache;
         private mView;
         constructor(view: View);
-        private _initStyleAttributes(ele, inParseState);
-        private _initStyleAttr(attr, ele, inParseState);
+        private _initStyleAttributes(attrMap, inParseState);
+        private _initStyleAttr(attrName, attrValue, inParseState);
         getDefaultStateAttr(): StateAttr;
         private getStateAttr(state);
         private optStateAttr(state);
@@ -1454,14 +1466,19 @@ declare module androidui.attr {
         private getRefObject(ref);
         private setRefObject(obj);
         parsePaddingMarginLTRB(value: any): string[];
+        parseEnum(value: any, enumMap: Map<string, number>, defaultValue: number): number;
         parseBoolean(value: any, defaultValue?: boolean): boolean;
         parseGravity(s: string, defaultValue?: number): number;
         parseDrawable(s: string): Drawable;
         parseColor(value: string, defaultValue?: number): number;
         parseColorList(value: string): ColorStateList;
-        parseNumber(value: any, defaultValue?: number, baseValue?: number): number;
+        parseInt(value: any, defaultValue?: number): number;
+        parseFloat(value: any, defaultValue?: number): number;
+        parseDimension(value: any, defaultValue?: number, baseValue?: number): number;
+        parseNumberPixelOffset(value: any, defaultValue?: number, baseValue?: number): number;
+        parseNumberPixelSize(value: any, defaultValue?: number, baseValue?: number): number;
         parseString(value: any, defaultValue?: string): string;
-        parseTextArray(value: any): string[];
+        parseStringArray(value: any): string[];
     }
 }
 declare module androidui.util {
@@ -1807,7 +1824,7 @@ declare module android.graphics.drawable {
         private static MAX_LEVEL;
         private mState;
         private mMutated;
-        constructor(rotateState: RotateDrawable.RotateState);
+        constructor(rotateState?: RotateDrawable.RotateState);
         draw(canvas: Canvas): void;
         getDrawable(): Drawable;
         setAlpha(alpha: number): void;
@@ -2062,37 +2079,37 @@ declare module android.graphics.drawable {
     }
 }
 declare module android.R {
-    var id: {
+    const id: {
+        "content": string;
+        "background": string;
+        "secondaryProgress": string;
+        "progress": string;
+        "contentPanel": string;
+        "topPanel": string;
+        "buttonPanel": string;
+        "customPanel": string;
+        "custom": string;
+        "titleDivider": string;
+        "titleDividerTop": string;
+        "title_template": string;
+        "icon": string;
+        "alertTitle": string;
+        "scrollView": string;
+        "message": string;
+        "button1": string;
+        "button2": string;
+        "button3": string;
+        "leftSpacer": string;
+        "rightSpacer": string;
+        "text1": string;
         "action_bar_center_layout": string;
         "action_bar_title": string;
         "action_bar_sub_title": string;
         "action_bar_left": string;
         "action_bar_right": string;
         "parentPanel": string;
-        "topPanel": string;
-        "titleDividerTop": string;
-        "title_template": string;
-        "icon": string;
-        "alertTitle": string;
-        "titleDivider": string;
-        "contentPanel": string;
-        "scrollView": string;
-        "message": string;
-        "customPanel": string;
-        "custom": string;
-        "buttonPanel": string;
-        "button2": string;
-        "button3": string;
-        "button1": string;
-        "progress": string;
         "progress_percent": string;
         "progress_number": string;
-        "content": string;
-        "background": string;
-        "secondaryProgress": string;
-        "leftSpacer": string;
-        "rightSpacer": string;
-        "text1": string;
         "title": string;
         "shortcut": string;
         "select_dialog_listview": string;
@@ -2314,6 +2331,7 @@ declare module android.R {
         static primary_text_dark_disable_only: ColorStateList;
         static white: number;
         static black: number;
+        static transparent: number;
     }
 }
 declare module goog.math {
@@ -2963,8 +2981,8 @@ declare module android.view {
         static TEXT_ALIGNMENT_VIEW_END: number;
         private static TEXT_ALIGNMENT_DEFAULT;
         static TEXT_ALIGNMENT_RESOLVED_DEFAULT: number;
-        mID: string;
-        private mTag;
+        protected mID: string;
+        protected mTag: any;
         mPrivateFlags: number;
         private mPrivateFlags2;
         private mPrivateFlags3;
@@ -3413,10 +3431,12 @@ declare module android.view {
         debug(depth?: number): void;
         toString(): String;
         getRootView(): View;
-        findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
         findViewById(id: string): View;
-        findViewTraversal(id: string): View;
+        findViewWithTag(tag: any): View;
+        protected findViewTraversal(id: string): View;
+        protected findViewWithTagTraversal(tag: any): View;
         findViewByPredicate(predicate: View.Predicate<View>): View;
+        protected findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
         findViewByPredicateInsideOut(start: View, predicate: View.Predicate<View>): View;
         setId(id: string): void;
         getId(): string;
@@ -4002,7 +4022,9 @@ declare module android.view {
         invalidateChildInParentFast(left: number, top: number, dirty: Rect): ViewParent;
         protected getChildStaticTransformation(child: View, t: Transformation): boolean;
         getChildTransformation(): Transformation;
-        findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
+        protected findViewTraversal(id: string): View;
+        protected findViewWithTagTraversal(tag: any): View;
+        protected findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
         requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
         shouldDelayChildPressedState(): boolean;
         onSetLayoutParams(child: View, layoutParams: ViewGroup.LayoutParams): void;
@@ -5156,7 +5178,6 @@ declare module androidui {
         private uiClient;
         private viewsDependOnDebugLayout;
         private showDebugLayoutDefault;
-        private rootResourceElement;
         private _windowBound;
         private tempRect;
         windowBound: android.graphics.Rect;
@@ -7524,9 +7545,9 @@ declare module android.widget {
         getOverscrollFooter(): Drawable;
         onFocusChanged(gainFocus: boolean, direction: number, previouslyFocusedRect: Rect): void;
         protected onFinishInflate(): void;
-        findViewTraversal(id: string): View;
+        protected findViewTraversal(id: string): View;
         findViewInHeadersOrFooters(where: ArrayList<ListView.FixedViewInfo>, id: string): View;
-        findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
+        protected findViewByPredicateTraversal(predicate: View.Predicate<View>, childToSkip: View): View;
         findViewByPredicateInHeadersOrFooters(where: ArrayList<ListView.FixedViewInfo>, predicate: View.Predicate<View>, childToSkip: View): View;
         getCheckItemIds(): number[];
     }

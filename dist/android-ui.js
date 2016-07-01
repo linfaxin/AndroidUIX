@@ -1,5 +1,5 @@
 /**
- * AndroidUI-WebApp v0.5.10
+ * AndroidUI-WebApp v0.6.0
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -974,6 +974,9 @@ var android;
             }
             static parseColor(colorString, defaultColor) {
                 if (colorString.charAt(0) == '#') {
+                    if (colorString.length === 4) {
+                        colorString = '#' + colorString[1] + colorString[1] + colorString[2] + colorString[2] + colorString[3] + colorString[3];
+                    }
                     let color = parseInt(colorString.substring(1), 16);
                     if (colorString.length == 7) {
                         color |= 0x00000000ff000000;
@@ -981,7 +984,7 @@ var android;
                     else if (colorString.length != 9) {
                         if (defaultColor != null)
                             return defaultColor;
-                        throw new Error("Unknown color");
+                        throw new Error("Unknown color : " + colorString);
                     }
                     return color;
                 }
@@ -1003,7 +1006,7 @@ var android;
                 }
                 if (defaultColor != null)
                     return defaultColor;
-                throw new Error("Unknown color");
+                throw new Error("Unknown color : " + colorString);
             }
             static toARGBHex(color) {
                 let r = Color.red(color);
@@ -2880,7 +2883,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable) {
+        (function (drawable_1) {
             var Rect = android.graphics.Rect;
             var PixelFormat = android.graphics.PixelFormat;
             var WeakReference = java.lang.ref.WeakReference;
@@ -3060,9 +3063,49 @@ var android;
                 getConstantState() {
                     return null;
                 }
+                static createFromXml(r, parser) {
+                    let drawable;
+                    let name = parser.tagName.toLowerCase();
+                    switch (name) {
+                        case "selector":
+                            drawable = new drawable_1.StateListDrawable();
+                            break;
+                        case "layer-list":
+                            drawable = new drawable_1.LayerDrawable(null);
+                            break;
+                        case "color":
+                            drawable = new drawable_1.ColorDrawable();
+                            break;
+                        case "scale":
+                            drawable = new drawable_1.ScaleDrawable();
+                            break;
+                        case "clip":
+                            drawable = new drawable_1.ClipDrawable();
+                            break;
+                        case "rotate":
+                            drawable = new drawable_1.RotateDrawable();
+                            break;
+                        case "animation-list":
+                            drawable = new drawable_1.AnimationDrawable();
+                            break;
+                        case "inset":
+                            drawable = new drawable_1.InsetDrawable(null, 0);
+                            break;
+                        case "bitmap":
+                            drawable = r.getDrawable(parser.getAttribute('src'));
+                            break;
+                        default:
+                            throw Error("XmlPullParserException: invalid drawable tag " + name);
+                    }
+                    drawable.inflate(r, parser);
+                    return drawable;
+                }
+                inflate(r, parser) {
+                    this.mVisible = (parser.getAttribute('visible') !== 'false');
+                }
             }
             Drawable.ZERO_BOUNDS_RECT = new Rect();
-            drawable.Drawable = Drawable;
+            drawable_1.Drawable = Drawable;
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -3324,8 +3367,8 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_1) {
-            class InsetDrawable extends drawable_1.Drawable {
+        (function (drawable_2) {
+            class InsetDrawable extends drawable_2.Drawable {
                 constructor(drawable, insetLeft, insetTop = insetLeft, insetRight = insetTop, insetBottom = insetRight) {
                     super();
                     this.mTmpRect = new graphics.Rect();
@@ -3434,7 +3477,7 @@ var android;
                     return this.mInsetState.mDrawable;
                 }
             }
-            drawable_1.InsetDrawable = InsetDrawable;
+            drawable_2.InsetDrawable = InsetDrawable;
             class InsetState {
                 constructor(orig, owner) {
                     this.mInsetLeft = 0;
@@ -3472,8 +3515,8 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_2) {
-            class ShadowDrawable extends drawable_2.Drawable {
+        (function (drawable_3) {
+            class ShadowDrawable extends drawable_3.Drawable {
                 constructor(drawable, radius, dx, dy, color) {
                     super();
                     this.mMutated = false;
@@ -3577,7 +3620,7 @@ var android;
                     return this.mState.mDrawable;
                 }
             }
-            drawable_2.ShadowDrawable = ShadowDrawable;
+            drawable_3.ShadowDrawable = ShadowDrawable;
             class DrawableState {
                 constructor(orig, owner) {
                     this.shadowDx = 0;
@@ -4239,7 +4282,7 @@ var android;
                 let defStyle;
                 let styleAttrValue = domtree.getAttribute('style');
                 if (styleAttrValue) {
-                    defStyle = this.mContext.getResources().getAttr(styleAttrValue);
+                    defStyle = this.mContext.getResources().getDefStyle(styleAttrValue);
                 }
                 let rootView;
                 if (styleAttrValue)
@@ -4306,11 +4349,10 @@ var android;
     var R;
     (function (R) {
         const _layout_data = {
-            "action_bar": "<merge>\n    <linearlayout id=\"action_bar_center_layout\" android:layout_marginLeft=\"60dp\" android:layout_marginRight=\"60dp\" android:minHeight=\"48dp\" android:gravity=\"center\" android:orientation=\"vertical\">\n        <textview id=\"action_bar_title\" android:gravity=\"center\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"18sp\"></textview>\n        <textview id=\"action_bar_sub_title\" android:visibility=\"gone\" android:gravity=\"center\" android:layout_marginTop=\"4dp\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"12sp\"></textview>\n    </linearlayout>\n    <button id=\"action_bar_left\" android:visibility=\"gone\" android:layout_gravity=\"left|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingLeft=\"6dp\" android:paddingRight=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\"></button>\n    <button id=\"action_bar_right\" android:visibility=\"gone\" android:layout_gravity=\"right|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingRight=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\"></button>\n</merge>",
+            "action_bar": "<merge>\n    <linearlayout id=\"action_bar_center_layout\" android:layout_marginLeft=\"60dp\" android:layout_marginRight=\"60dp\" android:minHeight=\"48dp\" android:gravity=\"center\" android:orientation=\"vertical\">\n        <textview id=\"action_bar_title\" android:gravity=\"center\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"18sp\"></textview>\n        <textview id=\"action_bar_sub_title\" android:visibility=\"gone\" android:gravity=\"center\" android:layout_marginTop=\"4dp\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"12sp\"></textview>\n    </linearlayout>\n    <button id=\"action_bar_left\" android:visibility=\"gone\" android:layout_gravity=\"left|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingLeft=\"6dp\" android:paddingRight=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\"></button>\n    <button id=\"action_bar_right\" android:visibility=\"gone\" android:layout_gravity=\"right|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingRight=\"6dp\" android:paddingLeft=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\"></button>\n</merge>",
             "alert_dialog": "<linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_marginStart=\"8dip\" android:layout_marginEnd=\"8dip\" android:orientation=\"vertical\" id=\"parentPanel\">\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"vertical\" id=\"topPanel\">\n        <view android:layout_width=\"match_parent\" android:layout_height=\"1dip\" android:visibility=\"gone\" android:background=\"#aaa\" id=\"titleDividerTop\"></view>\n        <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"horizontal\" android:gravity=\"center_vertical|start\" android:minHeight=\"64dp\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" id=\"title_template\">\n            <imageview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingEnd=\"8dip\" id=\"icon\"></imageview>\n            <textview android:maxLines=\"1\" android:scrollHorizontally=\"true\" android:textSize=\"22sp\" android:textColor=\"#333\" android:singleLine=\"true\" android:ellipsize=\"end\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:textAlignment=\"viewStart\" id=\"alertTitle\"></textview>\n        </linearlayout>\n        <view android:layout_width=\"match_parent\" android:layout_height=\"1dip\" android:visibility=\"gone\" android:background=\"#aaa\" id=\"titleDivider\"></view>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </linearlayout>\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_weight=\"1\" android:orientation=\"vertical\" android:minHeight=\"64dp\" id=\"contentPanel\">\n        <scrollview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:clipToPadding=\"false\" id=\"scrollView\">\n            <textview android:textSize=\"18sp\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:paddingStart=\"16dip\" android:paddingEnd=\"16dip\" android:paddingTop=\"8dip\" android:paddingBottom=\"8dip\" id=\"message\"></textview>\n        </scrollview>\n    </linearlayout>\n\n    <framelayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_weight=\"1\" android:minHeight=\"64dp\" id=\"customPanel\">\n        <framelayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" id=\"custom\"></framelayout>\n    </framelayout>\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:minHeight=\"48dip\" android:orientation=\"vertical\" android:divider=\"@android:drawable/divider_horizontal\" android:showDividers=\"beginning\" android:dividerPadding=\"0dip\" id=\"buttonPanel\">\n        <linearlayout android:divider=\"@android:drawable/divider_vertical\" android:showDividers=\"middle\" android:dividerPadding=\"0dp\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"horizontal\" android:layoutDirection=\"locale\" android:measureWithLargestChild=\"true\">\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"start\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button2\"></button>\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"center_horizontal\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button3\"></button>\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"end\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button1\"></button>\n        </linearlayout>\n     </linearlayout>\n</linearlayout>",
-            "alert_dialog_progress": "<relativelayout android:layout_width=\"wrap_content\" android:layout_height=\"match_parent\">\n        <progressbar style=\"@android:attr/progressBarStyleHorizontal\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_marginTop=\"16dip\" android:layout_marginBottom=\"1dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_centerHorizontal=\"true\" id=\"progress\"></progressbar>\n        <textview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingBottom=\"16dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_alignParentStart=\"true\" android:layout_below=\"progress\" id=\"progress_percent\"></textview>\n        <textview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingBottom=\"16dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_alignParentEnd=\"true\" android:layout_below=\"progress\" id=\"progress_number\"></textview>\n</relativelayout>",
-            "id": "<resources>\n    <item id=\"content\"></item>\n    <item id=\"background\"></item>\n    <item id=\"secondaryProgress\"></item>\n    <item id=\"progress\"></item>\n    <item id=\"contentPanel\"></item>\n    <item id=\"topPanel\"></item>\n    <item id=\"buttonPanel\"></item>\n    <item id=\"customPanel\"></item>\n    <item id=\"custom\"></item>\n    <item id=\"titleDivider\"></item>\n    <item id=\"titleDividerTop\"></item>\n    <item id=\"title_template\"></item>\n    <item id=\"icon\"></item>\n    <item id=\"alertTitle\"></item>\n    <item id=\"scrollView\"></item>\n    <item id=\"message\"></item>\n    <item id=\"button1\"></item>\n    <item id=\"button2\"></item>\n    <item id=\"button3\"></item>\n    <item id=\"leftSpacer\"></item>\n    <item id=\"rightSpacer\"></item>\n    <item id=\"text1\"></item>\n</resources>",
-            "popup_menu_item_layout": "<linearlayout android:layout_width=\"match_parent\" android:layout_height=\"48dp\" android:minWidth=\"196dip\" android:paddingEnd=\"16dip\">\n\n    <imageview android:visibility=\"gone\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:layout_gravity=\"center_vertical\" android:layout_marginStart=\"8dip\" android:layout_marginEnd=\"-8dip\" android:layout_marginTop=\"8dip\" android:layout_marginBottom=\"8dip\" android:scaleType=\"centerInside\" android:duplicateParentState=\"true\" id=\"icon\"></imageview>\n    \n    <!-- The title and summary have some gap between them, and this 'group' should be centered vertically. -->\n    <relativelayout android:layout_width=\"0dip\" android:layout_weight=\"1\" android:layout_height=\"wrap_content\" android:layout_gravity=\"center_vertical\" android:layout_marginStart=\"16dip\" android:duplicateParentState=\"true\">\n        \n        <textview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_alignParentTop=\"true\" android:layout_alignParentStart=\"true\" android:textColor=\"@android:color/primary_text_dark_disable_only\" android:textSize=\"18sp\" android:singleLine=\"true\" android:duplicateParentState=\"true\" android:ellipsize=\"marquee\" android:fadingEdge=\"horizontal\" android:textAlignment=\"viewStart\" id=\"title\"></textview>\n\n        <textview android:visibility=\"gone\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:layout_below=\"title\" android:layout_alignParentStart=\"true\" android:textColor=\"@android:color/primary_text_dark_disable_only\" android:textSize=\"12sp\" android:singleLine=\"true\" android:duplicateParentState=\"true\" android:textAlignment=\"viewStart\" id=\"shortcut\"></textview>\n\n    </relativelayout>\n\n    <!-- Checkbox, and/or radio button will be inserted here. -->\n    \n</linearlayout>",
+            "alert_dialog_progress": "<relativelayout android:layout_width=\"wrap_content\" android:layout_height=\"match_parent\">\n    <progressbar style=\"@android:attr/progressBarStyleHorizontal\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_marginTop=\"16dip\" android:layout_marginBottom=\"1dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_centerHorizontal=\"true\" id=\"progress\"></progressbar>\n    <textview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingBottom=\"16dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_alignParentStart=\"true\" android:layout_below=\"progress\" id=\"progress_percent\"></textview>\n    <textview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingBottom=\"16dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_alignParentEnd=\"true\" android:layout_below=\"progress\" id=\"progress_number\"></textview>\n</relativelayout>",
+            "popup_menu_item_layout": "<linearlayout android:layout_width=\"match_parent\" android:layout_height=\"48dp\" android:minWidth=\"196dip\" android:paddingEnd=\"16dip\">\n\n    <imageview android:visibility=\"gone\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:layout_gravity=\"center_vertical\" android:layout_marginStart=\"8dip\" android:layout_marginEnd=\"-8dip\" android:layout_marginTop=\"8dip\" android:layout_marginBottom=\"8dip\" android:scaleType=\"centerInside\" android:duplicateParentState=\"true\" id=\"icon\"></imageview>\n    \n    <!-- The title and summary have some gap between them, and this 'group' should be centered vertically. -->\n    <relativelayout android:layout_width=\"0dip\" android:layout_weight=\"1\" android:layout_height=\"wrap_content\" android:layout_gravity=\"center_vertical\" android:layout_marginStart=\"16dip\" android:duplicateParentState=\"true\">\n\n        <textview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_alignParentTop=\"true\" android:layout_alignParentStart=\"true\" android:textColor=\"@android:color/primary_text_dark_disable_only\" android:textSize=\"18sp\" android:singleLine=\"true\" android:duplicateParentState=\"true\" android:ellipsize=\"marquee\" android:fadingEdge=\"horizontal\" android:textAlignment=\"viewStart\" id=\"title\"></textview>\n\n        <textview android:visibility=\"gone\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:layout_below=\"title\" android:layout_alignParentStart=\"true\" android:textColor=\"@android:color/primary_text_dark_disable_only\" android:textSize=\"12sp\" android:singleLine=\"true\" android:duplicateParentState=\"true\" android:textAlignment=\"viewStart\" id=\"shortcut\"></textview>\n\n    </relativelayout>\n\n    <!-- Checkbox, and/or radio button will be inserted here. -->\n    \n</linearlayout>",
             "select_dialog": "<view class=\"android.app.AlertController.RecycleListView\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\" android:cacheColorHint=\"@null\" android:divider=\"@android:drawable/list_divider\" android:scrollbars=\"vertical\" android:overScrollMode=\"ifContentScrolls\" android:textAlignment=\"viewStart\" id=\"select_dialog_listview\"></view>",
             "select_dialog_item": "<textview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:minHeight=\"48dp\" android:textSize=\"18sp\" android:gravity=\"center_vertical\" android:paddingStart=\"16dip\" android:paddingEnd=\"16dip\" android:ellipsize=\"end\" id=\"text1\"></textview>",
             "select_dialog_multichoice": "<checkedtextview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:minHeight=\"48dp\" android:textSize=\"18sp\" android:gravity=\"center_vertical\" android:paddingStart=\"16dip\" android:paddingEnd=\"16dip\" android:checkMark=\"@android:drawable/btn_check\" android:ellipsize=\"end\" id=\"text1\"></checkedtextview>",
@@ -4321,13 +4363,12 @@ var android;
         };
         const _tempDiv = document.createElement('div');
         class layout {
-            static getLayoutData(layoutRef) {
-                if (!layoutRef)
+            static getLayoutData(layoutName) {
+                if (!layoutName)
                     return null;
-                layoutRef = layoutRef.replace('/', '.').split('.').pop();
-                if (!_layout_data[layoutRef])
+                if (!_layout_data[layoutName])
                     return null;
-                _tempDiv.innerHTML = _layout_data[layoutRef];
+                _tempDiv.innerHTML = _layout_data[layoutName];
                 let data = _tempDiv.firstElementChild;
                 _tempDiv.removeChild(data);
                 return data;
@@ -4336,7 +4377,6 @@ var android;
         layout.action_bar = '@android:layout/action_bar';
         layout.alert_dialog = '@android:layout/alert_dialog';
         layout.alert_dialog_progress = '@android:layout/alert_dialog_progress';
-        layout.id = '@android:layout/id';
         layout.popup_menu_item_layout = '@android:layout/popup_menu_item_layout';
         layout.select_dialog = '@android:layout/select_dialog';
         layout.select_dialog_item = '@android:layout/select_dialog_item';
@@ -4355,6 +4395,9 @@ var android;
         var res;
         (function (res) {
             var DisplayMetrics = android.util.DisplayMetrics;
+            var Drawable = android.graphics.drawable.Drawable;
+            var Color = android.graphics.Color;
+            var TypedValue = android.util.TypedValue;
             class Resources {
                 constructor(context) {
                     this.context = context;
@@ -4387,139 +4430,271 @@ var android;
                     displayMetrics.density = density;
                     displayMetrics.densityDpi = density * DisplayMetrics.DENSITY_DEFAULT;
                     displayMetrics.scaledDensity = density;
-                    displayMetrics.widthPixels = document.documentElement.offsetWidth * density;
-                    displayMetrics.heightPixels = document.documentElement.offsetHeight * density;
+                    let contentEle = this.context ? this.context.androidUI.androidUIElement : document.documentElement;
+                    displayMetrics.widthPixels = contentEle.offsetWidth * density;
+                    displayMetrics.heightPixels = contentEle.offsetHeight * density;
                 }
-                getObjectRef(refString) {
-                    if (refString.startsWith('@'))
-                        refString = refString.substring(1);
-                    if (refString == 'null')
-                        return null;
-                    try {
-                        return window.eval(refString);
-                    }
-                    catch (e) {
-                        console.log(e);
-                    }
-                }
-                getAttr(refString) {
+                getDefStyle(refString) {
                     if (refString.startsWith('@android:attr/')) {
                         refString = refString.substring('@android:attr/'.length);
                         return android.R.attr[refString];
                     }
-                    else if (Resources.buildAttrFinder && refString.startsWith('@attr/')) {
-                        return Resources.buildAttrFinder(refString);
-                    }
-                    else if (refString.startsWith('@')) {
-                        return this.getObjectRef(refString);
-                    }
-                    return null;
                 }
                 getDrawable(refString) {
                     if (refString.startsWith('@android:drawable/')) {
                         refString = refString.substring('@android:drawable/'.length);
                         return android.R.drawable[refString] || android.R.image[refString];
                     }
-                    else if (Resources.buildDrawableFinder && refString.startsWith('@drawable/')) {
-                        refString = refString.substring('@drawable/'.length);
-                        return Resources.buildDrawableFinder(refString);
+                    if (Resources._AppBuildImageFileFinder) {
+                        let drawable = Resources._AppBuildImageFileFinder(refString);
+                        if (drawable)
+                            return drawable;
                     }
-                    else if (refString.startsWith('@')) {
-                        return this.getObjectRef(refString);
+                    if (!refString.startsWith('@drawable/')) {
+                        refString = '@drawable/' + refString;
                     }
+                    let ele = this.getXml(refString);
+                    if (ele) {
+                        return Drawable.createFromXml(this, ele);
+                    }
+                    ele = this.getValue(refString);
+                    if (ele) {
+                        let text = ele.innerText;
+                        if (text.startsWith('@android:drawable/') || text.startsWith('@drawable/')) {
+                            return this.getDrawable(text);
+                        }
+                        return Drawable.createFromXml(this, ele);
+                    }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
                 getColor(refString) {
-                    let s = this.getString(refString);
-                    return android.graphics.Color.parseColor(s);
+                    if (refString.startsWith('@android:color/')) {
+                        refString = refString.substring('@android:color/'.length);
+                        let color = android.R.color[refString];
+                        if (color instanceof res.ColorStateList) {
+                            color = color.getDefaultColor();
+                        }
+                        return color;
+                    }
+                    else {
+                        if (!refString.startsWith('@color/')) {
+                            refString = '@color/' + refString;
+                        }
+                        let ele = this.getValue(refString);
+                        if (ele) {
+                            let text = ele.innerText;
+                            if (text.startsWith('@android:color/') || text.startsWith('@color/')) {
+                                return this.getColor(text);
+                            }
+                            return Color.parseColor(text);
+                        }
+                        ele = this.getXml(refString);
+                        if (ele) {
+                            let colorList = res.ColorStateList.createFromXml(this, ele);
+                            if (colorList)
+                                return colorList.getDefaultColor();
+                        }
+                    }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
                 getColorStateList(refString) {
                     if (refString.startsWith('@android:color/')) {
                         refString = refString.substring('@android:color/'.length);
-                        return android.R.color[refString];
+                        let color = android.R.color[refString];
+                        if (typeof color === "number") {
+                            color = res.ColorStateList.valueOf(color);
+                        }
+                        return color;
                     }
-                    else if (refString.startsWith('@')) {
-                        return this.getObjectRef(refString);
+                    else {
+                        if (!refString.startsWith('@color/')) {
+                            refString = '@color/' + refString;
+                        }
+                        let ele = this.getXml(refString);
+                        if (ele) {
+                            return res.ColorStateList.createFromXml(this, ele);
+                        }
+                        ele = this.getValue(refString);
+                        if (ele) {
+                            let text = ele.innerText;
+                            if (text.startsWith('@android:color/') || text.startsWith('@color/')) {
+                                return this.getColorStateList(text);
+                            }
+                            return res.ColorStateList.valueOf(Color.parseColor(text));
+                        }
                     }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
-                getString(refString, notFindValue = refString) {
-                    if (!refString || !refString.startsWith('@'))
-                        return notFindValue;
+                getDimension(refString, baseValue = 0) {
+                    if (!refString.startsWith('@dimen/'))
+                        refString = '@dimen/' + refString;
+                    let ele = this.getValue(refString);
+                    if (ele) {
+                        let text = ele.innerText;
+                        return TypedValue.complexToDimension(text, baseValue, this.getDisplayMetrics());
+                    }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
+                }
+                getDimensionPixelOffset(refString, baseValue = 0) {
+                    if (!refString.startsWith('@dimen/'))
+                        refString = '@dimen/' + refString;
+                    let ele = this.getValue(refString);
+                    if (ele) {
+                        let text = ele.innerText;
+                        return TypedValue.complexToDimensionPixelOffset(text, baseValue, this.getDisplayMetrics());
+                    }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
+                }
+                getDimensionPixelSize(refString, baseValue = 0) {
+                    if (!refString.startsWith('@dimen/'))
+                        refString = '@dimen/' + refString;
+                    let ele = this.getValue(refString);
+                    if (ele) {
+                        let text = ele.innerText;
+                        return TypedValue.complexToDimensionPixelSize(text, baseValue, this.getDisplayMetrics());
+                    }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
+                }
+                getBoolean(refString) {
+                    if (!refString.startsWith('@bool/'))
+                        refString = '@bool/' + refString;
+                    let ele = this.getValue(refString);
+                    if (ele) {
+                        let text = ele.innerText;
+                        return text == 'true';
+                    }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
+                }
+                getInteger(refString) {
+                    if (!refString.startsWith('@integer/'))
+                        refString = '@integer/' + refString;
+                    let ele = this.getValue(refString);
+                    if (ele) {
+                        return parseInt(ele.innerText);
+                    }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
+                }
+                getIntArray(refString) {
+                    if (!refString.startsWith('@array/'))
+                        refString = '@array/' + refString;
+                    let ele = this.getValue(refString);
+                    if (ele) {
+                        let intArray = [];
+                        for (let child of Array.from(ele.children)) {
+                            intArray.push(parseInt(child.innerText));
+                        }
+                        return intArray;
+                    }
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
+                }
+                getFloat(refString) {
+                    return this.getDimension(refString);
+                }
+                getString(refString) {
                     if (refString.startsWith('@android:string/')) {
                         refString = refString.substring('@android:string/'.length);
                         return android.R.string_[refString];
                     }
-                    let referenceArray = [];
-                    let attrValue = refString;
-                    while (attrValue && attrValue.startsWith('@')) {
-                        let reference = this.getReference(attrValue, false);
-                        if (!reference)
-                            return notFindValue;
-                        if (referenceArray.indexOf(reference) >= 0)
-                            throw Error('findReference Error: circle reference');
-                        referenceArray.push(reference);
-                        attrValue = reference.innerText;
+                    if (!refString.startsWith('@string/'))
+                        refString = '@string/' + refString;
+                    let ele = this.getValue(refString);
+                    if (ele) {
+                        return ele.innerText;
                     }
-                    return attrValue;
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
-                getTextArray(refString) {
-                    if (!refString || !refString.startsWith('@'))
-                        return null;
-                    let reference = this.getReference(refString, false);
-                    if (reference instanceof HTMLElement) {
-                        let array = [];
-                        for (let ele of Array.from(reference.children)) {
-                            if (ele instanceof HTMLElement)
-                                array.push(ele.innerText);
+                getStringArray(refString) {
+                    if (!refString.startsWith('@array/'))
+                        refString = '@array/' + refString;
+                    let ele = this.getValue(refString);
+                    if (ele) {
+                        let stringArray = [];
+                        for (let child of Array.from(ele.children)) {
+                            stringArray.push(child.innerText);
                         }
-                        return array;
+                        return stringArray;
                     }
-                    return null;
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
                 getLayout(refString) {
                     if (!refString || !refString.trim().startsWith('@'))
                         return null;
-                    let reference = this.getReference(refString, true);
-                    if (reference)
-                        return reference.firstElementChild;
                     if (refString.startsWith('@android:layout/')) {
+                        refString = refString.substring('@android:layout/'.length);
                         return android.R.layout.getLayoutData(refString);
                     }
-                    else if (Resources.buildLayoutFinder && refString.startsWith('@layout/')) {
-                        return Resources.buildLayoutFinder(refString);
+                    if (!refString.startsWith('@layout/'))
+                        refString = '@layout/' + refString;
+                    let ele = this.getXml(refString);
+                    if (ele)
+                        return ele;
+                    throw new Error("NotFoundException: Resource " + refString + " is not found");
+                }
+                getStyleAsMap(refString) {
+                    if (!refString.startsWith('@style/')) {
+                        refString = '@style/' + refString;
                     }
-                    else if (refString.startsWith('@')) {
-                        return this.getObjectRef(refString);
+                    let styleMap = new Map();
+                    const parseStyle = (refString) => {
+                        let styleXml = this.getValue(refString);
+                        if (!styleXml)
+                            return;
+                        let parent = styleXml.getAttribute('parent');
+                        if (parent) {
+                            if (!parent.startsWith('@style/')) {
+                                parent = '@style/' + parent;
+                            }
+                            parseStyle(parent);
+                        }
+                        let styleName = refString.substring('@style/'.length);
+                        if (styleName.includes('.')) {
+                            let parts = styleName.split('.');
+                            parts.shift();
+                            let nameParent = parts.join('.');
+                            parseStyle('@style/' + nameParent);
+                        }
+                        for (let item of Array.from(styleXml.children)) {
+                            let name = item.getAttribute('name');
+                            if (name) {
+                                styleMap.set(name, item.innerText);
+                            }
+                        }
+                    };
+                    parseStyle(refString);
+                    return styleMap;
+                }
+                getXml(refString) {
+                    if (Resources._AppBuildXmlFinder)
+                        return Resources._AppBuildXmlFinder(refString);
+                }
+                getValue(refString, resolveRefs = true) {
+                    if (Resources._AppBuildValueFinder) {
+                        let ele = Resources._AppBuildValueFinder(refString);
+                        if (!ele)
+                            return null;
+                        if (resolveRefs && ele.children.length == 0) {
+                            let str = ele.innerText;
+                            if (str.startsWith('@')) {
+                                return this.getValue(refString, true) || ele;
+                            }
+                        }
+                        return ele;
                     }
                 }
-                getReference(refString, cloneNode = true) {
-                    if (refString)
-                        refString = refString.trim();
-                    if (refString && refString.startsWith('@')) {
-                        refString = refString.substring(1);
-                        let [tagName, ...refIds] = refString.split('/');
-                        if (!refIds || refIds.length === 0)
-                            return null;
-                        let resourcesElement = Resources.buildResourcesElement;
-                        if (tagName.startsWith('android:')) {
-                            tagName = tagName.substring('android:'.length);
-                            resourcesElement = Resources.SDKResourcesElement;
-                        }
-                        if (!tagName.startsWith('android-'))
-                            tagName = 'android-' + tagName;
-                        let q = 'resources ' + tagName + '#' + refIds.join(' #');
-                        let rootElement = this.context ? this.context.androidUI.rootResourceElement : Resources.emptySelectorNode;
-                        let el = rootElement.querySelector(q) || resourcesElement.querySelector(q);
-                        if (!el)
-                            return null;
-                        return cloneNode ? el.cloneNode(true) : el;
-                    }
-                    return null;
+                static set buildDrawableFinder(value) {
+                    throw Error('Error: old build tool not support. Please update your build_res.js file.');
+                }
+                static set buildLayoutFinder(value) {
+                    throw Error('Error: old build tool not support. Please update your build_res.js file.');
+                }
+                static get buildResourcesElement() {
+                    throw Error('Error: old build tool not support. Please update your build_res.js file.');
                 }
             }
             Resources.instance = new Resources();
-            Resources.emptySelectorNode = document.createElement('resources');
-            Resources.buildResourcesElement = document.createElement('resources');
-            Resources.SDKResourcesElement = document.createElement('resources');
+            Resources._AppBuildImageFileFinder = null;
+            Resources._AppBuildXmlFinder = null;
+            Resources._AppBuildValueFinder = null;
             res.Resources = Resources;
         })(res = content.res || (content.res = {}));
     })(content = android.content || (android.content = {}));
@@ -5466,6 +5641,9 @@ var android;
                     ColorStateList.sCache.put(color, new WeakReference(csl));
                     return csl;
                 }
+                static createFromXml(r, parser) {
+                    return null;
+                }
                 withAlpha(alpha) {
                     let colors = androidui.util.ArrayCreator.newNumberArray(this.mColors.length);
                     let len = colors.length;
@@ -5539,7 +5717,7 @@ var android;
                     return false;
                 return valueWithUnit.match(`${TypedValue.COMPLEX_UNIT_VH}$|${TypedValue.COMPLEX_UNIT_VW}$|${TypedValue.COMPLEX_UNIT_FRACTION}$`) != null;
             }
-            static complexToDimensionPixelSize(valueWithUnit, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()) {
+            static complexToDimension(valueWithUnit, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()) {
                 if (this.initUnit)
                     this.initUnit();
                 if (valueWithUnit === undefined || valueWithUnit === null) {
@@ -5604,6 +5782,21 @@ var android;
                 if (Number.isNaN(value))
                     throw Error('complexToDimensionPixelSize error: ' + valueWithUnit);
                 return value * scale;
+            }
+            static complexToDimensionPixelOffset(valueWithUnit, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()) {
+                let value = this.complexToDimension(valueWithUnit, baseValue, metrics);
+                return Math.floor(value);
+            }
+            static complexToDimensionPixelSize(valueWithUnit, baseValue = 0, metrics = android.content.res.Resources.getDisplayMetrics()) {
+                let value = this.complexToDimension(valueWithUnit, baseValue, metrics);
+                let res = Math.ceil(value);
+                if (res != 0)
+                    return res;
+                if (value == 0)
+                    return 0;
+                if (value > 0)
+                    return 1;
+                return -1;
             }
         }
         TypedValue.COMPLEX_UNIT_PX = 'px';
@@ -5763,26 +5956,6 @@ var androidui;
                     merge.set(key, null);
                 return merge;
             }
-            static parseStateAttrName(stateDesc) {
-                if (stateDesc.startsWith('android:'))
-                    stateDesc = stateDesc.substring('android:'.length);
-                if (stateDesc.startsWith('state_'))
-                    stateDesc = stateDesc.substring('state_'.length);
-                let stateSet = new Set();
-                let stateParts = stateDesc.split('&');
-                for (let part of stateParts) {
-                    let sign = 1;
-                    while (part.startsWith('!')) {
-                        sign *= -1;
-                        part = part.substring(1);
-                    }
-                    let stateValue = android.view.View['VIEW_STATE_' + part.toUpperCase()];
-                    if (stateValue !== undefined) {
-                        stateSet.add(stateValue * sign);
-                    }
-                }
-                return stateSet;
-            }
         }
         attr.StateAttr = StateAttr;
     })(attr = androidui.attr || (androidui.attr = {}));
@@ -5797,63 +5970,61 @@ var androidui;
                 this.matchedAttrCache = [];
                 this.mView = view;
                 this.optStateAttr([]);
-                this._initStyleAttributes(view.bindElement, []);
+                let attrMap = new Map();
+                let attributes = Array.from(view.bindElement.attributes);
+                for (let attr of attributes) {
+                    attrMap.set(attr.name, attr.value);
+                }
+                this._initStyleAttributes(attrMap, []);
             }
-            _initStyleAttributes(ele, inParseState) {
-                let attributes = Array.from(ele.attributes);
-                attributes.forEach((attr) => {
-                    if (attr.name === 'style' || attr.name === 'android:style') {
-                        this._initStyleAttr(attr, ele, inParseState);
+            _initStyleAttributes(attrMap, inParseState) {
+                let refStyleValue = attrMap.get('android:style');
+                if (refStyleValue) {
+                    attrMap.delete('android:style');
+                    this._initStyleAttr('android:style', refStyleValue, inParseState);
+                }
+                for (let [key, value] of attrMap.entries()) {
+                    if (key.startsWith('android:state_')) {
+                        continue;
                     }
-                });
-                attributes.forEach((attr) => {
-                    if (attr.name === 'style' || attr.name === 'android:style') {
-                        return;
+                    this._initStyleAttr(key, value, inParseState);
+                }
+                for (let [key, value] of attrMap.entries()) {
+                    if (key.startsWith('android:state_')) {
+                        this._initStyleAttr(key, value, inParseState);
                     }
-                    if (attr.name.startsWith('android:state_') || attr.name.startsWith('state_')) {
-                        return;
-                    }
-                    this._initStyleAttr(attr, ele, inParseState);
-                });
-                attributes.forEach((attr) => {
-                    if (attr.name.startsWith('android:state_') || attr.name.startsWith('state_')) {
-                        this._initStyleAttr(attr, ele, inParseState);
-                    }
-                });
+                }
             }
-            _initStyleAttr(attr, ele, inParseState) {
-                let attrName = attr.name;
+            _initStyleAttr(attrName, attrValue, inParseState) {
                 if (!attrName.startsWith('android:'))
                     return;
                 attrName = attrName.substring('android:'.length);
                 if (attrName === 'id')
                     return;
-                let attrValue = attr.value;
                 if (attrName.startsWith('state_')) {
-                    let newStateSet = attr_1.StateAttr.parseStateAttrName(attrName);
-                    for (let state of inParseState) {
-                        newStateSet.add(state);
+                    let state = attrName.substring('state_'.length);
+                    let stateValue = android.view.View['VIEW_STATE_' + state.toUpperCase()];
+                    if (typeof stateValue === "number") {
+                        inParseState = inParseState.concat(stateValue).sort();
                     }
-                    inParseState = Array.from(newStateSet).sort();
                 }
                 let _stateAttr = this.optStateAttr(inParseState);
                 if (attrName.startsWith('state_') || attrName === 'style') {
-                    if (attrValue.startsWith('@')) {
-                        let reference = this.mView.getResources().getReference(attrValue, false);
-                        if (reference)
-                            this._initStyleAttributes(reference, inParseState);
+                    if (attrValue.startsWith('@style/')) {
+                        let styleMap = this.mView.getResources().getStyleAsMap(attrValue);
+                        if (styleMap && styleMap.size > 0) {
+                            this._initStyleAttributes(styleMap, inParseState);
+                        }
                     }
                     else {
                         for (let part of attrValue.split(';')) {
                             let [name, value] = part.split(':');
-                            value = value ? this.mView.getResources().getString(value) : '';
                             if (name)
                                 _stateAttr.setAttr(name.trim().toLowerCase(), value);
                         }
                     }
                 }
                 else {
-                    attrValue = this.mView.getResources().getString(attrValue);
                     _stateAttr.setAttr(attrName, attrValue);
                 }
             }
@@ -5993,6 +6164,16 @@ var androidui;
                 }
                 throw Error('not a padding or margin value : ' + value);
             }
+            parseEnum(value, enumMap, defaultValue) {
+                if (typeof value === "number") {
+                    if (Number.isInteger(value))
+                        return value;
+                }
+                if (enumMap.has(value)) {
+                    return enumMap.get(value);
+                }
+                return defaultValue;
+            }
             parseBoolean(value, defaultValue = true) {
                 if (value === false || value === 'false' || value === '0')
                     return false;
@@ -6030,7 +6211,11 @@ var androidui;
                     let refObj = this.getRefObject(s);
                     if (refObj)
                         return refObj;
-                    return Resources.getSystem().getDrawable(s);
+                    try {
+                        return Resources.getSystem().getDrawable(s);
+                    }
+                    catch (e) {
+                    }
                 }
                 else if (s.startsWith('url(')) {
                     s = s.substring('url('.length);
@@ -6057,9 +6242,6 @@ var androidui;
                         return Resources.getSystem().getColor(value);
                     }
                     else {
-                        if (value.startsWith('#') && value.length === 4) {
-                            value = '#' + value[1] + value[1] + value[2] + value[2] + value[2] + value[2];
-                        }
                         return Color.parseColor(value);
                     }
                 }
@@ -6093,9 +6275,74 @@ var androidui;
                 }
                 return null;
             }
-            parseNumber(value, defaultValue = 0, baseValue = 0) {
+            parseInt(value, defaultValue = 0) {
                 if (typeof value === 'string' && value.startsWith('@')) {
-                    value = Resources.getSystem().getString(value);
+                    try {
+                        return Resources.getSystem().getInteger(value);
+                    }
+                    catch (e) {
+                        return defaultValue;
+                    }
+                }
+                let v = parseInt(value);
+                if (isNaN(v))
+                    return defaultValue;
+                return v;
+            }
+            parseFloat(value, defaultValue = 0) {
+                if (typeof value === 'string' && value.startsWith('@')) {
+                    try {
+                        return Resources.getSystem().getFloat(value);
+                    }
+                    catch (e) {
+                        return defaultValue;
+                    }
+                }
+                let v = parseFloat(value);
+                if (isNaN(v))
+                    return defaultValue;
+                return v;
+            }
+            parseDimension(value, defaultValue = 0, baseValue = 0) {
+                if (typeof value === 'string' && value.startsWith('@')) {
+                    try {
+                        return Resources.getSystem().getDimension(value, baseValue);
+                    }
+                    catch (e) {
+                        return defaultValue;
+                    }
+                }
+                try {
+                    return TypedValue.complexToDimension(value, baseValue);
+                }
+                catch (e) {
+                    return defaultValue;
+                }
+            }
+            parseNumberPixelOffset(value, defaultValue = 0, baseValue = 0) {
+                if (typeof value === 'string' && value.startsWith('@')) {
+                    try {
+                        return Resources.getSystem().getDimensionPixelOffset(value, baseValue);
+                    }
+                    catch (e) {
+                        return defaultValue;
+                    }
+                }
+                try {
+                    return TypedValue.complexToDimensionPixelOffset(value, baseValue);
+                }
+                catch (e) {
+                    return defaultValue;
+                }
+            }
+            parseNumberPixelSize(value, defaultValue = 0, baseValue = 0) {
+                if (typeof value === 'string' && value.startsWith('@')) {
+                    try {
+                        return Resources.getSystem().getDimensionPixelSize(value, baseValue);
+                    }
+                    catch (e) {
+                        return defaultValue;
+                    }
                 }
                 try {
                     return TypedValue.complexToDimensionPixelSize(value, baseValue);
@@ -6107,16 +6354,21 @@ var androidui;
             parseString(value, defaultValue) {
                 if (typeof value === 'string') {
                     if (value.startsWith('@')) {
-                        return Resources.getSystem().getString(value);
+                        try {
+                            return Resources.getSystem().getString(value);
+                        }
+                        catch (e) {
+                            return defaultValue;
+                        }
                     }
                     return value;
                 }
                 return defaultValue;
             }
-            parseTextArray(value) {
+            parseStringArray(value) {
                 value += '';
                 if (value.startsWith('@')) {
-                    return Resources.getSystem().getTextArray(value);
+                    return Resources.getSystem().getStringArray(value);
                 }
                 else {
                     try {
@@ -6816,7 +7068,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_3) {
+        (function (drawable_4) {
             var PixelFormat = android.graphics.PixelFormat;
             var Rect = android.graphics.Rect;
             var System = java.lang.System;
@@ -7150,7 +7402,7 @@ var android;
                     return this;
                 }
             }
-            drawable_3.LayerDrawable = LayerDrawable;
+            drawable_4.LayerDrawable = LayerDrawable;
             (function (LayerDrawable) {
                 class ChildDrawable {
                     constructor() {
@@ -7243,7 +7495,7 @@ var android;
                     }
                 }
                 LayerDrawable.LayerState = LayerState;
-            })(LayerDrawable = drawable_3.LayerDrawable || (drawable_3.LayerDrawable = {}));
+            })(LayerDrawable = drawable_4.LayerDrawable || (drawable_4.LayerDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -7409,7 +7661,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_4) {
+        (function (drawable_5) {
             var Rect = android.graphics.Rect;
             var Gravity = android.view.Gravity;
             var Drawable = android.graphics.drawable.Drawable;
@@ -7531,7 +7783,7 @@ var android;
                     return this;
                 }
             }
-            drawable_4.ScaleDrawable = ScaleDrawable;
+            drawable_5.ScaleDrawable = ScaleDrawable;
             (function (ScaleDrawable) {
                 class ScaleState {
                     constructor(orig, owner) {
@@ -7560,7 +7812,7 @@ var android;
                     }
                 }
                 ScaleDrawable.ScaleState = ScaleState;
-            })(ScaleDrawable = drawable_4.ScaleDrawable || (drawable_4.ScaleDrawable = {}));
+            })(ScaleDrawable = drawable_5.ScaleDrawable || (drawable_5.ScaleDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -8350,11 +8602,11 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_5) {
+        (function (drawable_6) {
             const DEBUG = android.util.Log.DBG_StateListDrawable;
             const TAG = "StateListDrawable";
             const DEFAULT_DITHER = true;
-            class StateListDrawable extends drawable_5.DrawableContainer {
+            class StateListDrawable extends drawable_6.DrawableContainer {
                 constructor() {
                     super();
                     this.initWithState(null);
@@ -8415,8 +8667,8 @@ var android;
                     return this;
                 }
             }
-            drawable_5.StateListDrawable = StateListDrawable;
-            class StateListState extends drawable_5.DrawableContainer.DrawableContainerState {
+            drawable_6.StateListDrawable = StateListDrawable;
+            class StateListState extends drawable_6.DrawableContainer.DrawableContainerState {
                 constructor(orig, owner) {
                     super(orig, owner);
                     if (orig != null) {
@@ -8455,36 +8707,36 @@ var android;
     var R;
     (function (R) {
         R.id = {
+            "content": "content",
+            "background": "background",
+            "secondaryProgress": "secondaryProgress",
+            "progress": "progress",
+            "contentPanel": "contentPanel",
+            "topPanel": "topPanel",
+            "buttonPanel": "buttonPanel",
+            "customPanel": "customPanel",
+            "custom": "custom",
+            "titleDivider": "titleDivider",
+            "titleDividerTop": "titleDividerTop",
+            "title_template": "title_template",
+            "icon": "icon",
+            "alertTitle": "alertTitle",
+            "scrollView": "scrollView",
+            "message": "message",
+            "button1": "button1",
+            "button2": "button2",
+            "button3": "button3",
+            "leftSpacer": "leftSpacer",
+            "rightSpacer": "rightSpacer",
+            "text1": "text1",
             "action_bar_center_layout": "action_bar_center_layout",
             "action_bar_title": "action_bar_title",
             "action_bar_sub_title": "action_bar_sub_title",
             "action_bar_left": "action_bar_left",
             "action_bar_right": "action_bar_right",
             "parentPanel": "parentPanel",
-            "topPanel": "topPanel",
-            "titleDividerTop": "titleDividerTop",
-            "title_template": "title_template",
-            "icon": "icon",
-            "alertTitle": "alertTitle",
-            "titleDivider": "titleDivider",
-            "contentPanel": "contentPanel",
-            "scrollView": "scrollView",
-            "message": "message",
-            "customPanel": "customPanel",
-            "custom": "custom",
-            "buttonPanel": "buttonPanel",
-            "button2": "button2",
-            "button3": "button3",
-            "button1": "button1",
-            "progress": "progress",
             "progress_percent": "progress_percent",
             "progress_number": "progress_number",
-            "content": "content",
-            "background": "background",
-            "secondaryProgress": "secondaryProgress",
-            "leftSpacer": "leftSpacer",
-            "rightSpacer": "rightSpacer",
-            "text1": "text1",
             "title": "title",
             "shortcut": "shortcut",
             "select_dialog_listview": "select_dialog_listview"
@@ -9881,13 +10133,10 @@ var android;
                 }
                 return new DefaultStyleTextColor();
             }
-            static get white() {
-                return Color.WHITE;
-            }
-            static get black() {
-                return Color.BLACK;
-            }
         }
+        color.white = Color.WHITE;
+        color.black = Color.BLACK;
+        color.transparent = Color.TRANSPARENT;
         R.color = color;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
@@ -11181,13 +11430,6 @@ var android;
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
             }
-            get mID() {
-                if (this.bindElement) {
-                    let id = this.bindElement.id;
-                    return id ? id : null;
-                }
-                return null;
-            }
             get mLeft() { return this._mLeft; }
             set mLeft(value) {
                 this._mLeft = Math.floor(value);
@@ -11275,46 +11517,46 @@ var android;
                         return this.mPaddingBottom;
                     }),
                     a.addAttr('scrollX', (value) => {
-                        value = Number.parseInt(value);
+                        value = a.parseNumberPixelOffset(value);
                         if (Number.isInteger(value))
                             this.scrollTo(value, this.mScrollY);
                     }, () => {
                         return this.getScrollX();
                     }),
                     a.addAttr('scrollY', (value) => {
-                        value = Number.parseInt(value);
+                        value = a.parseNumberPixelOffset(value);
                         if (Number.isInteger(value))
                             this.scrollTo(this.mScrollX, value);
                     }, () => {
                         return this.getScrollY();
                     }),
                     a.addAttr('alpha', (value) => {
-                        this.setAlpha(a.parseNumber(value, this.getAlpha()));
+                        this.setAlpha(a.parseFloat(value, this.getAlpha()));
                     }, () => {
                         return this.getAlpha();
                     }),
                     a.addAttr('transformPivotX', (value) => {
-                        this.setPivotX(a.parseNumber(value, this.getPivotX()));
+                        this.setPivotX(a.parseNumberPixelOffset(value, this.getPivotX()));
                     }, () => {
                         return this.getPivotX();
                     }),
                     a.addAttr('transformPivotY', (value) => {
-                        this.setPivotY(a.parseNumber(value, this.getPivotY()));
+                        this.setPivotY(a.parseNumberPixelOffset(value, this.getPivotY()));
                     }, () => {
                         return this.getPivotY();
                     }),
                     a.addAttr('translationX', (value) => {
-                        this.setTranslationX(a.parseNumber(value, this.getTranslationX()));
+                        this.setTranslationX(a.parseNumberPixelOffset(value, this.getTranslationX()));
                     }, () => {
                         return this.getTranslationX();
                     }),
                     a.addAttr('translationY', (value) => {
-                        this.setTranslationY(a.parseNumber(value, this.getTranslationY()));
+                        this.setTranslationY(a.parseNumberPixelOffset(value, this.getTranslationY()));
                     }, () => {
                         return this.getTranslationY();
                     }),
                     a.addAttr('rotation', (value) => {
-                        this.setRotation(a.parseNumber(value, this.getRotation()));
+                        this.setRotation(a.parseFloat(value, this.getRotation()));
                     }, () => {
                         return this.getRotation();
                     }),
@@ -11323,12 +11565,12 @@ var android;
                     a.addAttr('rotationY', (value) => {
                     }),
                     a.addAttr('scaleX', (value) => {
-                        this.setScaleX(a.parseNumber(value, this.getScaleX()));
+                        this.setScaleX(a.parseFloat(value, this.getScaleX()));
                     }, () => {
                         return this.getScaleX();
                     }),
                     a.addAttr('scaleY', (value) => {
-                        this.setScaleY(a.parseNumber(value, this.getScaleY()));
+                        this.setScaleY(a.parseFloat(value, this.getScaleY()));
                     }, () => {
                         return this.getScaleY();
                     }),
@@ -11397,12 +11639,12 @@ var android;
                         }
                     }),
                     a.addAttr('minWidth', (value) => {
-                        this.setMinimumWidth(a.parseNumber(value, 0));
+                        this.setMinimumWidth(a.parseNumberPixelSize(value, 0));
                     }, () => {
                         return this.mMinWidth;
                     }),
                     a.addAttr('minHeight', (value) => {
-                        this.setMinimumHeight(a.parseNumber(value, 0));
+                        this.setMinimumHeight(a.parseNumberPixelSize(value, 0));
                     }, () => {
                         return this.mMinHeight;
                     }),
@@ -11426,27 +11668,27 @@ var android;
                     });
                 a.addAttr('cornerRadius', (value) => {
                     let [leftTop, topRight, rightBottom, bottomLeft] = a.parsePaddingMarginLTRB(value);
-                    this.setCornerRadius(a.parseNumber(leftTop, 0), a.parseNumber(topRight, 0), a.parseNumber(rightBottom, 0), a.parseNumber(bottomLeft, 0));
+                    this.setCornerRadius(a.parseNumberPixelSize(leftTop, 0), a.parseNumberPixelSize(topRight, 0), a.parseNumberPixelSize(rightBottom, 0), a.parseNumberPixelSize(bottomLeft, 0));
                 }, () => {
                     return this.mCornerRadiusTopLeft + ' ' + this.mCornerRadiusTopRight + ' ' + this.mCornerRadiusBottomRight + ' ' + this.mCornerRadiusBottomLeft;
                 });
                 a.addAttr('cornerRadiusTopLeft', (value) => {
-                    this.setCornerRadiusTopLeft(a.parseNumber(value, this.mCornerRadiusTopLeft));
+                    this.setCornerRadiusTopLeft(a.parseNumberPixelSize(value, this.mCornerRadiusTopLeft));
                 }, () => {
                     return this.mCornerRadiusTopLeft;
                 });
                 a.addAttr('cornerRadiusTopRight', (value) => {
-                    this.setCornerRadiusTopRight(a.parseNumber(value, this.mCornerRadiusTopRight));
+                    this.setCornerRadiusTopRight(a.parseNumberPixelSize(value, this.mCornerRadiusTopRight));
                 }, () => {
                     return this.mCornerRadiusTopRight;
                 });
                 a.addAttr('cornerRadiusBottomLeft', (value) => {
-                    this.setCornerRadiusBottomLeft(a.parseNumber(value, this.mCornerRadiusBottomLeft));
+                    this.setCornerRadiusBottomLeft(a.parseNumberPixelSize(value, this.mCornerRadiusBottomLeft));
                 }, () => {
                     return this.mCornerRadiusBottomLeft;
                 });
                 a.addAttr('cornerRadiusBottomRight', (value) => {
-                    this.setCornerRadiusBottomRight(a.parseNumber(value, this.mCornerRadiusBottomRight));
+                    this.setCornerRadiusBottomRight(a.parseNumberPixelSize(value, this.mCornerRadiusBottomRight));
                 }, () => {
                     return this.mCornerRadiusBottomRight;
                 });
@@ -11461,7 +11703,7 @@ var android;
                 a.addAttr('viewShadowDx', (value) => {
                     if (!this.mShadowPaint)
                         this.mShadowPaint = new Paint();
-                    let dx = this._attrBinder.parseNumber(value, this.mShadowPaint.shadowDx);
+                    let dx = this._attrBinder.parseNumberPixelSize(value, this.mShadowPaint.shadowDx);
                     this.setShadowView(this.mShadowPaint.shadowRadius, dx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
                 }, () => {
                     if (this.mShadowPaint)
@@ -11470,7 +11712,7 @@ var android;
                 a.addAttr('viewShadowDy', (value) => {
                     if (!this.mShadowPaint)
                         this.mShadowPaint = new Paint();
-                    let dy = a.parseNumber(value, this.mShadowPaint.shadowDy);
+                    let dy = a.parseNumberPixelSize(value, this.mShadowPaint.shadowDy);
                     this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, dy, this.mShadowPaint.shadowColor);
                 }, () => {
                     if (this.mShadowPaint)
@@ -11479,7 +11721,7 @@ var android;
                 a.addAttr('viewShadowRadius', (value) => {
                     if (!this.mShadowPaint)
                         this.mShadowPaint = new Paint();
-                    let radius = this._attrBinder.parseNumber(value, this.mShadowPaint.shadowRadius);
+                    let radius = this._attrBinder.parseNumberPixelSize(value, this.mShadowPaint.shadowRadius);
                     this.setShadowView(radius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
                 }, () => {
                     if (this.mShadowPaint)
@@ -14802,26 +15044,36 @@ var android;
                 }
                 return parent;
             }
+            findViewById(id) {
+                if (!id)
+                    return null;
+                return this.findViewTraversal(id);
+            }
+            findViewWithTag(tag) {
+                if (!tag)
+                    return null;
+                return this.findViewWithTagTraversal(tag);
+            }
+            findViewTraversal(id) {
+                if (id == this.mID) {
+                    return this;
+                }
+                return null;
+            }
+            findViewWithTagTraversal(tag) {
+                if (tag != null && tag === this.mTag) {
+                    return this;
+                }
+                return null;
+            }
+            findViewByPredicate(predicate) {
+                return this.findViewByPredicateTraversal(predicate, null);
+            }
             findViewByPredicateTraversal(predicate, childToSkip) {
                 if (predicate.apply(this)) {
                     return this;
                 }
                 return null;
-            }
-            findViewById(id) {
-                if (!id)
-                    return null;
-                if (id == this.bindElement.id) {
-                    return this;
-                }
-                return this.findViewTraversal(id);
-            }
-            findViewTraversal(id) {
-                let bindEle = this.bindElement.querySelector('#' + id);
-                return bindEle ? bindEle[View.AndroidViewProperty] : null;
-            }
-            findViewByPredicate(predicate) {
-                return this.findViewByPredicateTraversal(predicate, null);
             }
             findViewByPredicateInsideOut(start, predicate) {
                 let childToSkip = null;
@@ -14839,8 +15091,7 @@ var android;
                 }
             }
             setId(id) {
-                if (this.bindElement)
-                    this.bindElement.id = id;
+                this.mID = id;
             }
             getId() {
                 return this.mID;
@@ -18772,6 +19023,40 @@ var android;
                     this.mChildTransformation = new Transformation();
                 }
                 return this.mChildTransformation;
+            }
+            findViewTraversal(id) {
+                if (id == this.mID) {
+                    return this;
+                }
+                let where = this.mChildren;
+                const len = this.mChildrenCount;
+                for (let i = 0; i < len; i++) {
+                    let v = where[i];
+                    if ((v.mPrivateFlags & view_5.View.PFLAG_IS_ROOT_NAMESPACE) == 0) {
+                        v = v.findViewById(id);
+                        if (v != null) {
+                            return v;
+                        }
+                    }
+                }
+                return null;
+            }
+            findViewWithTagTraversal(tag) {
+                if (tag != null && tag === this.mTag) {
+                    return this;
+                }
+                let where = this.mChildren;
+                const len = this.mChildrenCount;
+                for (let i = 0; i < len; i++) {
+                    let v = where[i];
+                    if ((v.mPrivateFlags & view_5.View.PFLAG_IS_ROOT_NAMESPACE) == 0) {
+                        v = v.findViewWithTag(tag);
+                        if (v != null) {
+                            return v;
+                        }
+                    }
+                }
+                return null;
             }
             findViewByPredicateTraversal(predicate, childToSkip) {
                 if (predicate.apply(this)) {
@@ -24485,11 +24770,6 @@ var androidui;
         init() {
             this.appName = document.title;
             this._viewRootImpl = new android.view.ViewRootImpl();
-            this.rootResourceElement = this.androidUIElement.querySelector('resources');
-            if (this.rootResourceElement)
-                this.androidUIElement.removeChild(this.rootResourceElement);
-            else
-                this.rootResourceElement = document.createElement('resources');
             this.initAndroidUIElement();
             this.initApplication();
             this.androidUIElement.appendChild(this._canvas);
@@ -28554,7 +28834,7 @@ var android;
                         return this.gravity;
                     });
                     a.addAttr('weight', (value) => {
-                        this.weight = a.parseNumber(value, this.weight);
+                        this.weight = a.parseFloat(value, this.weight);
                     }, () => {
                         return this.weight;
                     });
@@ -31364,7 +31644,7 @@ var android;
                     return this.mHintTextColor;
                 });
                 a.addAttr('textSize', (value) => {
-                    let size = a.parseNumber(value, this.mTextPaint.getTextSize());
+                    let size = a.parseNumberPixelSize(value, this.mTextPaint.getTextSize());
                     this.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
                 }, () => {
                     return this.mTextPaint.getTextSize();
@@ -31378,19 +31658,19 @@ var android;
                     return this.getShadowColor();
                 });
                 a.addAttr('shadowDx', (value) => {
-                    let dx = a.parseNumber(value, this.mShadowDx);
+                    let dx = a.parseNumberPixelSize(value, this.mShadowDx);
                     this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
                 }, () => {
                     return this.getShadowDx();
                 });
                 a.addAttr('shadowDy', (value) => {
-                    let dy = a.parseNumber(value, this.mShadowDy);
+                    let dy = a.parseNumberPixelSize(value, this.mShadowDy);
                     this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
                 }, () => {
                     return this.getShadowDy();
                 });
                 a.addAttr('shadowRadius', (value) => {
-                    let radius = a.parseNumber(value, this.mShadowRadius);
+                    let radius = a.parseNumberPixelSize(value, this.mShadowRadius);
                     this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
                 }, () => {
                     return this.getShadowRadius();
@@ -31424,7 +31704,7 @@ var android;
                     return this.getCompoundDrawables()[3];
                 });
                 a.addAttr('drawablePadding', (value) => {
-                    this.setCompoundDrawablePadding(a.parseNumber(value));
+                    this.setCompoundDrawablePadding(a.parseNumberPixelSize(value));
                 }, () => {
                     return this.getCompoundDrawablePadding();
                 });
@@ -31436,7 +31716,7 @@ var android;
                     return this.getMaxLines();
                 });
                 a.addAttr('maxHeight', (value) => {
-                    this.setMaxHeight(a.parseNumber(value, this.getMaxHeight()));
+                    this.setMaxHeight(a.parseNumberPixelSize(value, this.getMaxHeight()));
                 }, () => {
                     return this.getMaxHeight();
                 });
@@ -31450,7 +31730,7 @@ var android;
                     return null;
                 });
                 a.addAttr('height', (value) => {
-                    value = a.parseNumber(value, -1);
+                    value = a.parseNumberPixelSize(value, -1);
                     if (value >= 0)
                         this.setHeight(value);
                 }, () => {
@@ -31459,27 +31739,27 @@ var android;
                     return null;
                 });
                 a.addAttr('minLines', (value) => {
-                    this.setMinLines(a.parseNumber(value, this.getMinLines()));
+                    this.setMinLines(a.parseInt(value, this.getMinLines()));
                 }, () => {
                     return this.getMinLines();
                 });
                 a.addAttr('minHeight', (value) => {
-                    this.setMinHeight(a.parseNumber(value, this.getMinHeight()));
+                    this.setMinHeight(a.parseNumberPixelSize(value, this.getMinHeight()));
                 }, () => {
                     return this.getMinHeight();
                 });
                 a.addAttr('maxEms', (value) => {
-                    this.setMaxEms(a.parseNumber(value, this.getMaxEms()));
+                    this.setMaxEms(a.parseInt(value, this.getMaxEms()));
                 }, () => {
                     return this.getMaxEms();
                 });
                 a.addAttr('maxWidth', (value) => {
-                    this.setMaxWidth(a.parseNumber(value, this.getMaxWidth()));
+                    this.setMaxWidth(a.parseNumberPixelSize(value, this.getMaxWidth()));
                 }, () => {
                     return this.getMaxWidth();
                 });
                 a.addAttr('ems', (value) => {
-                    let ems = a.parseNumber(value, null);
+                    let ems = a.parseInt(value, null);
                     if (ems != null)
                         this.setEms(ems);
                 }, () => {
@@ -31488,7 +31768,7 @@ var android;
                     return null;
                 });
                 a.addAttr('width', (value) => {
-                    value = a.parseNumber(value, -1);
+                    value = a.parseNumberPixelSize(value, -1);
                     if (value >= 0)
                         this.setWidth(value);
                 }, () => {
@@ -31497,12 +31777,12 @@ var android;
                     return null;
                 });
                 a.addAttr('minEms', (value) => {
-                    this.setMinEms(a.parseNumber(value, this.getMinEms()));
+                    this.setMinEms(a.parseInt(value, this.getMinEms()));
                 }, () => {
                     return this.getMinEms();
                 });
                 a.addAttr('minWidth', (value) => {
-                    this.setMinWidth(a.parseNumber(value, this.getMinWidth()));
+                    this.setMinWidth(a.parseNumberPixelSize(value, this.getMinWidth()));
                 }, () => {
                     return this.getMinWidth();
                 });
@@ -31533,7 +31813,7 @@ var android;
                         this.setEllipsize(ellipsize);
                 });
                 a.addAttr('marqueeRepeatLimit', (value) => {
-                    let marqueeRepeatLimit = a.parseNumber(value, -1);
+                    let marqueeRepeatLimit = a.parseInt(value, -1);
                     if (marqueeRepeatLimit >= 0)
                         this.setMarqueeRepeatLimit(marqueeRepeatLimit);
                 });
@@ -31546,12 +31826,12 @@ var android;
                     return this.isEnabled();
                 });
                 a.addAttr('lineSpacingExtra', (value) => {
-                    this.setLineSpacing(a.parseNumber(value, this.mSpacingAdd), this.mSpacingMult);
+                    this.setLineSpacing(a.parseNumberPixelSize(value, this.mSpacingAdd), this.mSpacingMult);
                 }, () => {
                     return this.mSpacingAdd;
                 });
                 a.addAttr('lineSpacingMultiplier', (value) => {
-                    this.setLineSpacing(this.mSpacingAdd, a.parseNumber(value, this.mSpacingMult));
+                    this.setLineSpacing(this.mSpacingAdd, a.parseFloat(value, this.mSpacingMult));
                 }, () => {
                     return this.mSpacingMult;
                 });
@@ -34554,8 +34834,10 @@ var android;
                     this.setScrollingCacheEnabled(this._attrBinder.parseBoolean(value, true));
                 });
                 this._attrBinder.addAttr('transcriptMode', (value) => {
-                    let transcriptMode = this._attrBinder.parseNumber(value, AbsListView.TRANSCRIPT_MODE_DISABLED);
-                    this.setTranscriptMode(transcriptMode);
+                    this.setTranscriptMode(this._attrBinder.parseEnum(value, new Map()
+                        .set("disabled", AbsListView.TRANSCRIPT_MODE_DISABLED)
+                        .set("normal", AbsListView.TRANSCRIPT_MODE_NORMAL)
+                        .set("alwaysScroll", AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL), AbsListView.TRANSCRIPT_MODE_DISABLED));
                 });
                 this._attrBinder.addAttr('cacheColorHint', (value) => {
                     let color = this._attrBinder.parseColor(value, 0);
@@ -34574,7 +34856,10 @@ var android;
                     this.setSmoothScrollbarEnabled(smoothScrollbar);
                 });
                 this._attrBinder.addAttr('choiceMode', (value) => {
-                    this.setChoiceMode(this._attrBinder.parseNumber(value, AbsListView.CHOICE_MODE_NONE));
+                    this.setChoiceMode(this._attrBinder.parseEnum(value, new Map()
+                        .set("none", AbsListView.CHOICE_MODE_NONE)
+                        .set("singleChoice", AbsListView.CHOICE_MODE_SINGLE)
+                        .set("multipleChoice", AbsListView.CHOICE_MODE_MULTIPLE), AbsListView.CHOICE_MODE_NONE));
                 });
             }
             get mOverflingDistance() {
@@ -38226,7 +38511,7 @@ var android;
                         this.setOverscrollFooter(footer);
                 });
                 this._attrBinder.addAttr('dividerHeight', (value) => {
-                    let dividerHeight = this._attrBinder.parseNumber(value, -1);
+                    let dividerHeight = this._attrBinder.parseNumberPixelSize(value, -1);
                     if (dividerHeight >= 0) {
                         this.setDividerHeight(dividerHeight);
                     }
@@ -42342,7 +42627,7 @@ var android;
                     }
                 });
                 a.addAttr('maxLength', (value) => {
-                    this.mMaxLength = a.parseNumber(value, this.mMaxLength);
+                    this.mMaxLength = a.parseInt(value, this.mMaxLength);
                 });
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
@@ -42772,7 +43057,7 @@ var android;
                     this.setBaselineAlignBottom(a.parseBoolean(value, this.mBaselineAlignBottom));
                 });
                 a.addAttr('baseline', (value) => {
-                    this.setBaseline(a.parseNumber(value, this.mBaseline));
+                    this.setBaseline(a.parseNumberPixelSize(value, this.mBaseline));
                 }, () => {
                     return this.mBaseline;
                 });
@@ -42781,13 +43066,13 @@ var android;
                 });
                 a.addAttr('maxWidth', (value) => {
                     let baseValue = this.getParent() instanceof View ? this.getParent().getWidth() : 0;
-                    this.setMaxWidth(a.parseNumber(value, this.mMaxWidth, baseValue));
+                    this.setMaxWidth(a.parseNumberPixelSize(value, this.mMaxWidth, baseValue));
                 }, () => {
                     return this.mMaxWidth;
                 });
                 a.addAttr('maxHeight', (value) => {
                     let baseValue = this.getParent() instanceof View ? this.getParent().getHeight() : 0;
-                    this.setMaxHeight(a.parseNumber(value, this.mMaxHeight, baseValue));
+                    this.setMaxHeight(a.parseNumberPixelSize(value, this.mMaxHeight, baseValue));
                 }, () => {
                     return this.mMaxHeight;
                 });
@@ -42797,7 +43082,7 @@ var android;
                     return this.mScaleType.toString();
                 });
                 a.addAttr('drawableAlpha', (value) => {
-                    this.setImageAlpha(a.parseNumber(value, this.mAlpha));
+                    this.setImageAlpha(a.parseInt(value, this.mAlpha));
                 }, () => {
                     return this.mAlpha;
                 });
@@ -43364,28 +43649,29 @@ var android;
                 this.mGravity = Gravity.LEFT;
                 this.mTempRect = new Rect();
                 this._attrBinder.addAttr('horizontalSpacing', (value) => {
-                    this.setHorizontalSpacing(this._attrBinder.parseNumber(value, 0));
+                    this.setHorizontalSpacing(this._attrBinder.parseNumberPixelOffset(value, 0));
                 });
                 this._attrBinder.addAttr('verticalSpacing', (value) => {
-                    this.setVerticalSpacing(this._attrBinder.parseNumber(value, 0));
+                    this.setVerticalSpacing(this._attrBinder.parseNumberPixelOffset(value, 0));
                 });
                 this._attrBinder.addAttr('stretchMode', (value) => {
-                    let strechMode = this._attrBinder.parseNumber(value, -1);
-                    if (strechMode >= 0) {
-                        this.setStretchMode(strechMode);
-                    }
+                    this.setStretchMode(this._attrBinder.parseEnum(value, new Map()
+                        .set("none", GridView.NO_STRETCH)
+                        .set("spacingWidth", GridView.STRETCH_SPACING)
+                        .set("columnWidth", GridView.STRETCH_COLUMN_WIDTH)
+                        .set("spacingWidthUniform", GridView.STRETCH_SPACING_UNIFORM), GridView.STRETCH_COLUMN_WIDTH));
                 });
                 this._attrBinder.addAttr('columnWidth', (value) => {
-                    let columnWidth = this._attrBinder.parseNumber(value, -1);
+                    let columnWidth = this._attrBinder.parseNumberPixelOffset(value, -1);
                     if (columnWidth > 0) {
                         this.setColumnWidth(columnWidth);
                     }
                 });
                 this._attrBinder.addAttr('numColumns', (value) => {
-                    this.setNumColumns(this._attrBinder.parseNumber(value, 1));
+                    this.setNumColumns(this._attrBinder.parseInt(value, 1));
                 });
                 this._attrBinder.addAttr('gravity', (value) => {
-                    this.setNumColumns(this._attrBinder.parseNumber(value, 1));
+                    this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
                 });
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
@@ -44819,46 +45105,46 @@ var android;
                 this._attrBinder.addAttr('selectionDividerHeight', (value) => {
                     const defSelectionDividerHeight = NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT
                         * this.getResources().getDisplayMetrics().density;
-                    this.mSelectionDividerHeight = this._attrBinder.parseNumber(value, defSelectionDividerHeight);
+                    this.mSelectionDividerHeight = this._attrBinder.parseNumberPixelSize(value, defSelectionDividerHeight);
                 });
                 this._attrBinder.addAttr('selectionDividersDistance', (value) => {
                     const defSelectionDividerDistance = NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE
                         * this.getResources().getDisplayMetrics().density;
-                    this.mSelectionDividersDistance = this._attrBinder.parseNumber(value, defSelectionDividerDistance);
+                    this.mSelectionDividersDistance = this._attrBinder.parseNumberPixelSize(value, defSelectionDividerDistance);
                 });
                 this._attrBinder.addAttr('internalMinHeight', (value) => {
-                    this.mMinHeight_ = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                    this.mMinHeight_ = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
                 });
                 this._attrBinder.addAttr('internalMaxHeight', (value) => {
-                    this.mMaxHeight = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                    this.mMaxHeight = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
                 });
                 this._attrBinder.addAttr('internalMinWidth', (value) => {
-                    this.mMinWidth_ = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                    this.mMinWidth_ = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
                 });
                 this._attrBinder.addAttr('internalMaxWidth', (value) => {
-                    this.mMaxWidth = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                    this.mMaxWidth = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
                 });
                 this._attrBinder.addAttr('internalMaxWidth', (value) => {
-                    this.mMaxWidth = this._attrBinder.parseNumber(value, NumberPicker.SIZE_UNSPECIFIED);
+                    this.mMaxWidth = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
                 });
                 this._attrBinder.addAttr('virtualButtonPressedDrawable', (value) => {
                     this.mVirtualButtonPressedDrawable = this._attrBinder.parseDrawable(value);
                 });
                 this._attrBinder.addAttr('textSize', (value) => {
-                    this.mTextSize = this._attrBinder.parseNumber(value, this.mTextSize);
+                    this.mTextSize = this._attrBinder.parseNumberPixelSize(value, this.mTextSize);
                     this.mSelectorWheelPaint.setTextSize(this.mTextSize);
                 });
                 this._attrBinder.addAttr('textColor', (value) => {
                     this.mSelectorWheelPaint.setColor(this._attrBinder.parseColor(value, this.mSelectorWheelPaint.getColor()));
                 });
                 this._attrBinder.addAttr('minValue', (value) => {
-                    this.setMinValue(this._attrBinder.parseNumber(value, this.mMinValue));
+                    this.setMinValue(this._attrBinder.parseInt(value, this.mMinValue));
                 });
                 this._attrBinder.addAttr('maxValue', (value) => {
-                    this.setMaxValue(this._attrBinder.parseNumber(value, this.mMaxValue));
+                    this.setMaxValue(this._attrBinder.parseInt(value, this.mMaxValue));
                 });
                 this._attrBinder.addAttr('itemCount', (value) => {
-                    this.SELECTOR_WHEEL_ITEM_COUNT = this._attrBinder.parseNumber(value, this.SELECTOR_WHEEL_ITEM_COUNT);
+                    this.SELECTOR_WHEEL_ITEM_COUNT = this._attrBinder.parseInt(value, this.SELECTOR_WHEEL_ITEM_COUNT);
                     this.SELECTOR_MIDDLE_ITEM_INDEX = Math.floor(this.SELECTOR_WHEEL_ITEM_COUNT / 2);
                     this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
                 });
@@ -45793,7 +46079,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_6) {
+        (function (drawable_7) {
             var Rect = android.graphics.Rect;
             var Gravity = android.view.Gravity;
             var Drawable = android.graphics.drawable.Drawable;
@@ -45911,7 +46197,7 @@ var android;
             }
             ClipDrawable.HORIZONTAL = 1;
             ClipDrawable.VERTICAL = 2;
-            drawable_6.ClipDrawable = ClipDrawable;
+            drawable_7.ClipDrawable = ClipDrawable;
             (function (ClipDrawable) {
                 class ClipState {
                     constructor(orig, owner) {
@@ -45937,7 +46223,7 @@ var android;
                     }
                 }
                 ClipDrawable.ClipState = ClipState;
-            })(ClipDrawable = drawable_6.ClipDrawable || (drawable_6.ClipDrawable = {}));
+            })(ClipDrawable = drawable_7.ClipDrawable || (drawable_7.ClipDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -45986,27 +46272,27 @@ var android;
                     return this.mProgressDrawable;
                 });
                 a.addAttr('indeterminateDuration', (value) => {
-                    this.mDuration = Math.floor(a.parseNumber(value, this.mDuration));
+                    this.mDuration = Math.floor(a.parseInt(value, this.mDuration));
                 }, () => {
                     return this.mDuration;
                 });
                 a.addAttr('minWidth', (value) => {
-                    this.mMinWidth = Math.floor(a.parseNumber(value, this.mMinWidth));
+                    this.mMinWidth = Math.floor(a.parseNumberPixelSize(value, this.mMinWidth));
                 }, () => {
                     return this.mMinWidth;
                 });
                 a.addAttr('maxWidth', (value) => {
-                    this.mMaxWidth = Math.floor(a.parseNumber(value, this.mMaxWidth));
+                    this.mMaxWidth = Math.floor(a.parseNumberPixelSize(value, this.mMaxWidth));
                 }, () => {
                     return this.mMaxWidth;
                 });
                 a.addAttr('minHeight', (value) => {
-                    this.mMinHeight = Math.floor(a.parseNumber(value, this.mMinHeight));
+                    this.mMinHeight = Math.floor(a.parseNumberPixelSize(value, this.mMinHeight));
                 }, () => {
                     return this.mMinHeight;
                 });
                 a.addAttr('maxHeight', (value) => {
-                    this.mMaxHeight = Math.floor(a.parseNumber(value, this.mMaxHeight));
+                    this.mMaxHeight = Math.floor(a.parseNumberPixelSize(value, this.mMaxHeight));
                 }, () => {
                     return this.mMaxHeight;
                 });
@@ -46021,17 +46307,17 @@ var android;
                 a.addAttr('interpolator', (value) => {
                 });
                 a.addAttr('max', (value) => {
-                    this.setMax(a.parseNumber(value, this.mMax));
+                    this.setMax(a.parseInt(value, this.mMax));
                 }, () => {
                     return this.mMax;
                 });
                 a.addAttr('progress', (value) => {
-                    this.setProgress(a.parseNumber(value, this.mProgress));
+                    this.setProgress(a.parseInt(value, this.mProgress));
                 }, () => {
                     return this.mProgress;
                 });
                 a.addAttr('secondaryProgress', (value) => {
-                    this.setSecondaryProgress(a.parseNumber(value, this.mSecondaryProgress));
+                    this.setSecondaryProgress(a.parseInt(value, this.mSecondaryProgress));
                 }, () => {
                     return this.mSecondaryProgress;
                 });
@@ -47011,10 +47297,10 @@ var android;
                     this.setThumb(a.parseDrawable(value));
                 }, () => this.mThumb);
                 a.addAttr('thumbOffset', (value) => {
-                    this.setThumbOffset(a.parseNumber(value));
+                    this.setThumbOffset(a.parseNumberPixelOffset(value));
                 }, () => this.mThumbOffset);
                 a.addAttr('disabledAlpha', (value) => {
-                    this.mDisabledAlpha = a.parseNumber(value, 0.5);
+                    this.mDisabledAlpha = a.parseFloat(value, 0.5);
                 }, () => this.mThumbOffset);
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
@@ -47344,16 +47630,16 @@ var android;
                 this.mProgressOnStartTracking = 0;
                 const a = this._attrBinder;
                 a.addAttr('numStars', (value) => {
-                    this.setNumStars(a.parseNumber(value, this.mNumStars));
+                    this.setNumStars(a.parseInt(value, this.mNumStars));
                 }, () => this.mNumStars);
                 a.addAttr('isIndicator', (value) => {
                     this.setIsIndicator(a.parseBoolean(value, !this.mIsUserSeekable));
                 }, () => !this.mIsUserSeekable);
                 a.addAttr('stepSize', (value) => {
-                    this.setStepSize(a.parseNumber(value, 0.5));
+                    this.setStepSize(a.parseFloat(value, 0.5));
                 }, () => this.getStepSize());
                 a.addAttr('rating', (value) => {
-                    this.setRating(a.parseNumber(value, this.getRating()));
+                    this.setRating(a.parseFloat(value, this.getRating()));
                 }, () => this.getRating());
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
@@ -48081,12 +48367,12 @@ var android;
                     return this.mChildIndicator;
                 });
                 this._attrBinder.addAttr('indicatorLeft', (value) => {
-                    this.setIndicatorBounds(this._attrBinder.parseNumber(value, 0), this.mIndicatorRight);
+                    this.setIndicatorBounds(this._attrBinder.parseNumberPixelOffset(value, 0), this.mIndicatorRight);
                 }, () => {
                     return this.mIndicatorLeft;
                 });
                 this._attrBinder.addAttr('indicatorRight', (value) => {
-                    let num = this._attrBinder.parseNumber(value, 0);
+                    let num = this._attrBinder.parseNumberPixelOffset(value, 0);
                     if (num == 0 && this.mGroupIndicator != null) {
                         num = this.mIndicatorLeft + this.mGroupIndicator.getIntrinsicWidth();
                     }
@@ -48095,12 +48381,12 @@ var android;
                     return this.mIndicatorRight;
                 });
                 this._attrBinder.addAttr('childIndicatorLeft', (value) => {
-                    this.setChildIndicatorBounds(this._attrBinder.parseNumber(value, ExpandableListView.CHILD_INDICATOR_INHERIT), this.mChildIndicatorRight);
+                    this.setChildIndicatorBounds(this._attrBinder.parseNumberPixelOffset(value, ExpandableListView.CHILD_INDICATOR_INHERIT), this.mChildIndicatorRight);
                 }, () => {
                     return this.mChildIndicatorLeft;
                 });
                 this._attrBinder.addAttr('childIndicatorRight', (value) => {
-                    let num = this._attrBinder.parseNumber(value, ExpandableListView.CHILD_INDICATOR_INHERIT);
+                    let num = this._attrBinder.parseNumberPixelOffset(value, ExpandableListView.CHILD_INDICATOR_INHERIT);
                     if (num == 0 && this.mChildIndicator != null) {
                         num = this.mChildIndicatorLeft + this.mChildIndicator.getIntrinsicWidth();
                     }
@@ -50017,7 +50303,7 @@ var android;
                 this.initAbsSpinner();
                 let a = this._attrBinder;
                 a.addAttr('entries', (value) => {
-                    let entries = a.parseTextArray(value);
+                    let entries = a.parseStringArray(value);
                     if (entries != null) {
                         let adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, null, entries);
                         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -51741,19 +52027,19 @@ var android;
                         {
                             const popup = new Spinner.DropdownPopup(context, defStyle, this);
                             a.addAttr('dropDownWidth', (value) => {
-                                this.mDropDownWidth = a.parseNumber(value, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                this.mDropDownWidth = a.parseNumberPixelSize(value, ViewGroup.LayoutParams.WRAP_CONTENT);
                             });
                             a.addAttr('popupBackground', (value) => {
                                 popup.setBackgroundDrawable(a.parseDrawable(value));
                             });
                             a.addAttr('dropDownVerticalOffset', (value) => {
-                                const verticalOffset = a.parseNumber(value, 0);
+                                const verticalOffset = a.parseNumberPixelSize(value, 0);
                                 if (verticalOffset != 0) {
                                     popup.setVerticalOffset(verticalOffset);
                                 }
                             });
                             a.addAttr('dropDownHorizontalOffset', (value) => {
-                                const horizontalOffset = a.parseNumber(value, 0);
+                                const horizontalOffset = a.parseNumberPixelSize(value, 0);
                                 if (horizontalOffset != 0) {
                                     popup.setHorizontalOffset(horizontalOffset);
                                 }
@@ -51763,10 +52049,9 @@ var android;
                         }
                 }
                 a.addAttr('gravity', (value) => {
-                    this.mGravity = a.parseNumber(value, Gravity.CENTER);
+                    this.mGravity = a.parseGravity(value, Gravity.CENTER);
                 });
                 a.addAttr('prompt', (value) => {
-                    this.mGravity = a.parseNumber(value, Gravity.CENTER);
                     this.mPopup.setPromptText(a.parseString(value));
                 });
                 a.addAttr('disableChildrenWhenDisabled', (value) => {
@@ -58038,13 +58323,13 @@ var androidui;
                 });
                 this._attrBinder.addAttr('maxWidth', (value) => {
                     let baseValue = this.getParent() instanceof View ? this.getParent().getWidth() : 0;
-                    this.setMaxWidth(this._attrBinder.parseNumber(value, this.mMaxWidth, baseValue));
+                    this.setMaxWidth(this._attrBinder.parseNumberPixelSize(value, this.mMaxWidth, baseValue));
                 }, () => {
                     return this.mMaxWidth;
                 });
                 this._attrBinder.addAttr('maxHeight', (value) => {
                     let baseValue = this.getParent() instanceof View ? this.getParent().getHeight() : 0;
-                    this.setMaxHeight(this._attrBinder.parseNumber(value, this.mMaxHeight, baseValue));
+                    this.setMaxHeight(this._attrBinder.parseNumberPixelSize(value, this.mMaxHeight, baseValue));
                 }, () => {
                     return this.mMaxHeight;
                 });
