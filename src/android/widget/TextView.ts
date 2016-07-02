@@ -537,6 +537,13 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         }, ()=>{
             return this.getCompoundDrawables()[0];
         });
+        a.addAttr('drawableStart', (value)=>{
+            let dr = this.mDrawables || <TextView.Drawables>{};
+            let drawable = a.parseDrawable(value);
+            this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+        }, ()=>{
+            return this.getCompoundDrawables()[0];
+        });
         a.addAttr('drawableTop', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = a.parseDrawable(value);
@@ -545,6 +552,13 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             return this.getCompoundDrawables()[1];
         });
         a.addAttr('drawableRight', (value)=>{
+            let dr = this.mDrawables || <TextView.Drawables>{};
+            let drawable = a.parseDrawable(value);
+            this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+        }, ()=>{
+            return this.getCompoundDrawables()[2];
+        });
+        a.addAttr('drawableEnd', (value)=>{
             let dr = this.mDrawables || <TextView.Drawables>{};
             let drawable = a.parseDrawable(value);
             this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
