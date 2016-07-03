@@ -123,6 +123,26 @@ module android.graphics.drawable{
             return PixelFormat.TRANSLUCENT;
         }
 
+
+        inflate(r:android.content.res.Resources, parser:HTMLElement):void {
+            super.inflate(r, parser);
+
+            let state:ColorState = this.mState;
+
+            //TODO TypedValue
+            let colorStr = parser.getAttribute('color');
+            try {
+                state.mBaseColor = Color.parseColor(colorStr);
+            } catch (e) {
+                try {
+                    state.mBaseColor = r.getColor(colorStr);
+                } catch (e) {
+                    state.mBaseColor = r.getColorStateList(colorStr).getDefaultColor();
+                }
+            }
+            state.mUseColor = state.mBaseColor;
+        }
+
         getConstantState():Drawable.ConstantState {
             return this.mState;
         }

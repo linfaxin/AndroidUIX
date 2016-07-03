@@ -50,7 +50,7 @@
                 android:layout_margin="6dp"
                 android:textColor="@color/white"
                 android:cornerRadius="4dp"
-                android:background="#f00"
+                android:background="@color/red"
                 android:state_pressed="@style/btn_custom1_pressed" />
         <Button
                 android:text="ButtonStyled3"
@@ -60,7 +60,7 @@
                 android:layout_margin="6dp"
                 android:textColor="@color/white"
                 android:cornerRadius="4dp"
-                android:background="#f00"
-                android:state_pressed="background:#f66;" />
+                android:background="@color/red"
+                android:state_pressed="background:@color/red_press;" />
     </LinearLayout>
 </ScrollView>

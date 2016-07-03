@@ -4,7 +4,7 @@
        <item name="android:padding">12dp</item>
        <item name="android:layout_width">wrap_content</item>
        <item name="android:layout_height">wrap_content</item>
-       <item name="android:background">#</item>5000000"
+       <item name="android:background">#5000000</item>
        <item name="android:textColor">white</item>
        <item name="android:layout_gravity">center</item>
     </style>
@@ -14,12 +14,12 @@
        <item name="android:layout_margin">6dp</item>
        <item name="android:textColor">@color/white</item>
        <item name="android:cornerRadius">4dp</item>
-       <item name="android:background">#f00</item>
+       <item name="android:background">@color/red</item>
        <item name="android:state_pressed">@style/btn_custom1_pressed</item>
        <item name="android:state_disable">@style/btn_custom1_disable</item>
     </style>
     <style name="btn_custom1_pressed">
-        <item name="android:background">#f66</item>
+        <item name="android:background">@color/red_press</item>
     </style>
     <style name="btn_custom1_disable">
        <item name="android:textColor">@color/light_gray</item>

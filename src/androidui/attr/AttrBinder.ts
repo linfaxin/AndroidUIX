@@ -148,6 +148,10 @@ module androidui.attr {
                     return Resources.getSystem().getDrawable(s);
                 } catch (e) {
                 }
+                try {
+                    return new ColorDrawable(Resources.getSystem().getColor(s));
+                } catch (e) {
+                }
 
             }else if(s.startsWith('url(')){
                 s = s.substring('url('.length);
