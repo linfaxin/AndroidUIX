@@ -127,20 +127,11 @@ module android.graphics.drawable{
         inflate(r:android.content.res.Resources, parser:HTMLElement):void {
             super.inflate(r, parser);
 
-            let state:ColorState = this.mState;
-
-            //TODO TypedValue
-            let colorStr = parser.getAttribute('color');
-            try {
-                state.mBaseColor = Color.parseColor(colorStr);
-            } catch (e) {
-                try {
-                    state.mBaseColor = r.getColor(colorStr);
-                } catch (e) {
-                    state.mBaseColor = r.getColorStateList(colorStr).getDefaultColor();
-                }
-            }
+            const a = r.obtainAttributes(parser);
+            let state = this.mState;
+            state.mBaseColor = a.getColor("color", state.mBaseColor);
             state.mUseColor = state.mBaseColor;
+            a.recycle();
         }
 
         getConstantState():Drawable.ConstantState {

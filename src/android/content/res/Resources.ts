@@ -6,15 +6,20 @@
 ///<reference path="../../content/Context.ts"/>
 ///<reference path="../../graphics/drawable/Drawable.ts"/>
 ///<reference path="../../R/layout.ts"/>
+///<reference path="TypedArray.ts"/>
 
 module android.content.res{
     import DisplayMetrics = android.util.DisplayMetrics;
     import Drawable = android.graphics.drawable.Drawable;
     import Color = android.graphics.Color;
     import TypedValue = android.util.TypedValue;
+    import SynchronizedPool = android.util.Pools.SynchronizedPool;
+    import ColorDrawable = android.graphics.drawable.ColorDrawable;
 
     export class Resources{
         private static instance = new Resources();
+        // Pool of TypedArrays targeted to this Resources object.
+        private mTypedArrayPool:SynchronizedPool<TypedArray> = new SynchronizedPool<TypedArray>(5);
 
         private displayMetrics:DisplayMetrics;
         private context:Context;
@@ -81,6 +86,14 @@ module android.content.res{
                 refString = refString.substring('@android:drawable/'.length);
                 return android.R.drawable[refString] || android.R.image[refString];
             }
+            if(refString.startsWith('@android:color/')){
+                refString = refString.substring('@android:color/'.length);
+                let color = android.R.color[refString];
+                if(color instanceof ColorStateList){
+                    color = (<ColorStateList>color).getDefaultColor();
+                }
+                return new ColorDrawable(color);
+            }
 
             if(Resources._AppBuildImageFileFinder){
                 let drawable = Resources._AppBuildImageFileFinder(refString);
@@ -97,7 +110,8 @@ module android.content.res{
             ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
-                if(text.startsWith('@android:drawable/') || text.startsWith('@drawable/')){
+                if(text.startsWith('@android:drawable/') || text.startsWith('@drawable/')
+                    || text.startsWith('@android:color/') || text.startsWith('@color/')){
                     return this.getDrawable(text);
                 }
                 return Drawable.createFromXml(this, ele);
@@ -388,6 +402,25 @@ module android.content.res{
                 return ele;
             }
         }
+
+
+
+        /**
+         * Retrieve a set of basic attribute values from an AttributeSet, not
+         * performing styling of them using a theme and/or style resources.
+         *
+         * @param attrs The specific attributes to be retrieved.
+         * @return Returns a TypedArray holding an array of the attribute values.
+         * Be sure to call {@link TypedArray#recycle() TypedArray.recycle()}
+         * when done with it.
+         *
+         * @see Theme#obtainStyledAttributes(AttributeSet, int[], int, int)
+         */
+        public obtainAttributes(attrs:HTMLElement):TypedArray {
+            return TypedArray.obtain(this, attrs);
+        }
+
+
 
         static set buildDrawableFinder(value){
             throw Error('Error: old build tool not support. Please update your build_res.js file.');
