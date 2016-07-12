@@ -105,8 +105,8 @@ module androidui.attr {
         }
 
         parseEnum(value, enumMap:Map<string,number>, defaultValue:number):number {
-            if(typeof value === "number"){
-                if(Number.isInteger(value)) return value;
+            if(Number.isInteger(value)){
+                return value;
             }
             if(enumMap.has(value)){
                 return enumMap.get(value);
@@ -117,8 +117,15 @@ module androidui.attr {
         parseBoolean(value, defaultValue = true):boolean{
             if(value===false || value ==='false' || value === '0') return false;
             else if(value===true || value ==='true' || value === '1' || value === '') return true;
+            try {
+                if (typeof value === "string" && value.startsWith('@')) {
+                    return Resources.getSystem().getBoolean(value);
+                }
+            } catch (e) {
+            }
             return defaultValue;
         }
+
         parseGravity(s:string, defaultValue=Gravity.NO_GRAVITY):number {
             let gravity = Number.parseInt(s);
             if(Number.isInteger(gravity)) return gravity;
@@ -136,6 +143,7 @@ module androidui.attr {
             if(Number.isNaN(gravity) || gravity===Gravity.NO_GRAVITY) gravity = defaultValue;
             return gravity;
         }
+
         parseDrawable(s:string):Drawable{
             if(!s) return null;
             if((<any>s) instanceof Drawable) return <Drawable><any>s;
@@ -167,6 +175,7 @@ module androidui.attr {
             }
             return null;
         }
+
         parseColor(value:string, defaultValue?:number):number{
             let color = Number.parseInt(value);
             if(Number.isInteger(color)) return color;
@@ -185,6 +194,7 @@ module androidui.attr {
             }
             return defaultValue;
         }
+
         parseColorList(value:string):ColorStateList{
             if(!value) return null;
             if((<any>value) instanceof ColorStateList) return <ColorStateList><any>value;
