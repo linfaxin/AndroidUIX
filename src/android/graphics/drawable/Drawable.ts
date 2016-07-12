@@ -698,7 +698,9 @@ module android.graphics.drawable {
                     drawable = new InsetDrawable(null, 0);
                     break;
                 case "bitmap":
-                    drawable = r.getDrawable(parser.getAttribute('src'));
+                    let srcAttr = parser.getAttribute('src');
+                    if(!srcAttr) throw Error("XmlPullParserException: bitmap tag must have 'src' attribute");
+                    drawable = r.getDrawable(srcAttr);
                     break;
                 // case "bitmap":
                 //     drawable = new BitmapDrawable(r);
