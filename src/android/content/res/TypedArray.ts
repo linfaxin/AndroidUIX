@@ -98,7 +98,7 @@ class TypedArray {
     public getString(attrName:string):string {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseString(this.mResources, value);
+        return AttrValueParser.parseString(this.mResources, value, null);
     }
 
 
@@ -271,9 +271,7 @@ class TypedArray {
     public getDrawable(attrName:string):Drawable {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        let d = AttrValueParser.parseDrawable(this.mResources, value);
-        if(d==null) console.warn('not found Drawable : ' + attrName);
-        return d;
+        return AttrValueParser.parseDrawable(this.mResources, value);
     }
 
     /**

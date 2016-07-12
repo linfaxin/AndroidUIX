@@ -138,10 +138,8 @@ module android.graphics.drawable{
                         }
                     }
                 }
-                if(!dr){
-                    if(item.children[0] instanceof HTMLElement){
-                        dr = Drawable.createFromXml(r, <HTMLElement>item.children[0]);
-                    }
+                if(!dr && item.children[0] instanceof HTMLElement){
+                    dr = Drawable.createFromXml(r, <HTMLElement>item.children[0]);
                 }
                 if(!dr){
                     throw new Error(": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
