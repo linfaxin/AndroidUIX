@@ -12,11 +12,9 @@
     <style name="btn_custom1">
        <item name="android:padding">8dp</item>
        <item name="android:layout_margin">6dp</item>
-       <item name="android:textColor">@color/btn_color</item>
        <item name="android:cornerRadius">4dp</item>
-       <item name="android:background">@color/red</item>
-       <item name="android:state_pressed">@style/btn_custom1_pressed</item>
-       <item name="android:state_disable">@style/btn_custom1_disable</item>
+       <item name="android:textColor">@color/btn_color</item>
+       <item name="android:background">@drawable/btn_bg</item>
     </style>
     <style name="btn_custom1_pressed">
         <item name="android:background">@color/red_press</item>

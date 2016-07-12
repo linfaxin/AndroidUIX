@@ -9,6 +9,7 @@ module androidui.attr {
     export class AttrValueParser {
 
         static parseString(r:android.content.res.Resources, value:string, defValue=value):string {
+            if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
                     return r.getString(value);
@@ -21,6 +22,7 @@ module androidui.attr {
 
 
         static parseBoolean(r:android.content.res.Resources, value:string, defValue:boolean):boolean {
+            if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
                     return r.getBoolean(value);
@@ -34,6 +36,7 @@ module androidui.attr {
         }
 
         static parseInt(r:android.content.res.Resources, value:string, defValue:number):number {
+            if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
                     return r.getInteger(value);
@@ -48,6 +51,7 @@ module androidui.attr {
 
 
         static parseFloat(r:android.content.res.Resources, value:string, defValue:number):number {
+            if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
                     return r.getFloat(value);
@@ -61,6 +65,7 @@ module androidui.attr {
         }
 
         static parseColor(r:android.content.res.Resources, value:string, defValue:number):number {
+            if(value==null) return defValue;
             try {
                 if(value.startsWith('@')) {
                     return r.getColor(value);
@@ -74,6 +79,7 @@ module androidui.attr {
         }
 
         static parseColorStateList(r:android.content.res.Resources, value:string):android.content.res.ColorStateList {
+            if(value==null) return null;
             if(value.startsWith('@')){
                 return r.getColorStateList(value);
 
@@ -89,6 +95,7 @@ module androidui.attr {
         }
 
         static parseDimension(r:android.content.res.Resources, value:string, defValue:number):number {
+            if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
                     return r.getDimension(value);
@@ -106,6 +113,7 @@ module androidui.attr {
         }
 
         static parseDimensionPixelOffset(r:android.content.res.Resources, value:string, defValue:number):number {
+            if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
                     return r.getDimensionPixelOffset(value);
@@ -123,6 +131,7 @@ module androidui.attr {
         }
 
         static parseDimensionPixelSize(r:android.content.res.Resources, value:string, defValue:number):number {
+            if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
                     return r.getDimensionPixelSize(value);
@@ -140,6 +149,7 @@ module androidui.attr {
         }
 
         static parseDrawable(r:android.content.res.Resources, value:string):android.graphics.drawable.Drawable {
+            if(value==null) return null;
             if(value.startsWith('@')){
                 try {
                     return r.getDrawable(value);
@@ -163,6 +173,7 @@ module androidui.attr {
         }
 
         static parseTextArray(r:android.content.res.Resources, value:string):string[] {
+            if(value==null) return null;
             if(value.startsWith('@')){
                 return r.getStringArray(value);
 

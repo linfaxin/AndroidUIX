@@ -721,9 +721,9 @@ module android.graphics.drawable {
         }
 
         inflate(r:Resources, parser:HTMLElement):void {
-            this.mVisible = (parser.getAttribute('visible') !== 'false');
-            //TODO drawable should override this method inflate self
+            this.mVisible = (parser.getAttribute('android:visible') !== 'false');
         }
+
     }
 
     export module Drawable{

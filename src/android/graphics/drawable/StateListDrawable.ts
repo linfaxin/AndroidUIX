@@ -101,9 +101,60 @@ module android.graphics.drawable{
             }
             return super.onStateChange(stateSet);
         }
-        //getStateListState():StateListState {
-        //    return this.mStateListState;
-        //}
+
+        inflate(r:android.content.res.Resources, parser:HTMLElement):void {
+            super.inflate(r, parser);
+            let a = r.obtainAttributes(parser);
+
+            const state = this.mStateListState;
+            //parse attribute
+            state.mVariablePadding = a.getBoolean("android:variablePadding", state.mVariablePadding);
+            state.mConstantSize = a.getBoolean("android:constantSize", state.mConstantSize);
+            state.mEnterFadeDuration = a.getInt("android:enterFadeDuration", state.mEnterFadeDuration);
+            state.mExitFadeDuration = a.getInt("android:exitFadeDuration", state.mExitFadeDuration);
+            state.mDither = a.getBoolean("android:dither", state.mDither);
+            state.mAutoMirrored = a.getBoolean("android:autoMirrored", state.mAutoMirrored);
+            a.recycle();
+
+            //parse children
+            for(let child of Array.from(parser.children)){
+                let item = <HTMLElement>child;
+                if(item.tagName.toLowerCase() !== 'item'){
+                    continue;
+                }
+                let dr:Drawable;
+                let stateSpec:number[] = [];
+                let typedArray = r.obtainAttributes(item);
+                for(let attr of Array.from(item.attributes)){
+                    let attrName = attr.name;
+                    if(attrName === 'android:drawable'){
+                        dr = typedArray.getDrawable(attrName);
+
+                    }else if(attrName.startsWith('android:state_')){
+                        let state = attrName.substring('android:state_'.length);
+                        let stateValue = android.view.View['VIEW_STATE_' + state.toUpperCase()];
+                        if(typeof stateValue === "number"){
+                            stateSpec.push(typedArray.getBoolean(attrName, true) ? stateValue : -stateValue);
+                        }
+                    }
+                }
+                if(!dr){
+                    if(item.children[0] instanceof HTMLElement){
+                        dr = Drawable.createFromXml(r, <HTMLElement>item.children[0]);
+                    }
+                }
+                if(!dr){
+                    throw new Error(": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
+                }
+                state.addStateSet(stateSpec, dr);
+            }
+
+            this.onStateChange(this.getState());
+        }
+
+        private getStateListState():StateListState {
+           return this.mStateListState;
+        }
         /**
          * Gets the number of states contained in this drawable.
          *
