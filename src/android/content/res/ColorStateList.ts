@@ -68,7 +68,7 @@ module android.content.res{
             this.mStateSpecs = states;
             this.mColors = colors;
 
-            if (states.length > 0) {
+            if (states && states.length > 0) {
                 this.mDefaultColor = colors[0];
 
                 for (let i = 0; i < states.length; i++) {
@@ -99,7 +99,62 @@ module android.content.res{
          * Create a ColorStateList from an XML document, given a set of {@link Resources}.
          */
         static createFromXml(r:Resources, parser:HTMLElement):ColorStateList {
-            return null;//TODO create from xml
+            let colorStateList:ColorStateList;
+            let name = parser.tagName.toLowerCase();
+            if (name == "selector") {
+                //Fill in this object based on the contents of an XML "selector" element.
+                const stateSpecList:Array<Array<number>> = [];
+                const colorList:Array<number> = [];
+
+                for(let child of Array.from(parser.children)){
+                    let item = <HTMLElement>child;
+                    if(item.tagName.toLowerCase() !== 'item'){
+                        continue;
+                    }
+                    let alpha = 1.0;
+                    let color = 0xffff0000;
+                    let haveColor = false;
+                    let stateSpec:number[] = [];
+
+                    let typedArray = r.obtainAttributes(item);
+                    for(let attr of Array.from(item.attributes)){
+                        let attrName = attr.name;
+                        if(attrName === 'android:alpha'){
+                            alpha = typedArray.getFloat(attrName, alpha);
+
+                        }else if(attrName === 'android:color'){
+                            color = typedArray.getColor(attrName, color);
+                            haveColor = true;
+
+                        }else if(attrName.startsWith('android:state_')){
+                            let state = attrName.substring('android:state_'.length);
+                            let stateValue = android.view.View['VIEW_STATE_' + state.toUpperCase()];
+                            if(typeof stateValue === "number"){
+                                stateSpec.push(typedArray.getBoolean(attrName, true) ? stateValue : -stateValue);
+                            }
+                        }
+                    }
+
+                    if (!haveColor) {
+                        throw new Error(`<item> tag requires a 'android:color' attribute.`);
+                    }
+
+                    // Apply alpha modulation.
+                    let alphaMod = Math.floor(Color.alpha(color) * alpha);
+                    alphaMod = Math.min(alphaMod, 255);
+                    alphaMod = Math.max(alphaMod, 0);
+                    color = (color & 0xFFFFFF) | (alphaMod << 24);
+
+                    colorList.push(color);
+                    stateSpecList.push(stateSpec);
+                }
+                colorStateList = new ColorStateList(stateSpecList, colorList);
+
+            } else {
+                throw new Error(`XmlPullParserException(invalid drawable tag: ${name}`);
+            }
+
+            return colorStateList;
         }
 
         /**

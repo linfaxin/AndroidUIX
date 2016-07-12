@@ -48,7 +48,7 @@
                 android:layout_width="match_parent"
                 android:padding="8dp"
                 android:layout_margin="6dp"
-                android:textColor="@color/white"
+                android:textColor="@color/btn_color"
                 android:cornerRadius="4dp"
                 android:background="@color/red"
                 android:state_pressed="@style/btn_custom1_pressed" />
@@ -58,7 +58,7 @@
                 android:layout_width="match_parent"
                 android:padding="8dp"
                 android:layout_margin="6dp"
-                android:textColor="@color/white"
+                android:textColor="@color/btn_color"
                 android:cornerRadius="4dp"
                 android:background="@color/red"
                 android:state_pressed="background:@color/red_press;" />

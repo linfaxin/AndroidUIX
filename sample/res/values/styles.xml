@@ -12,7 +12,7 @@
     <style name="btn_custom1">
        <item name="android:padding">8dp</item>
        <item name="android:layout_margin">6dp</item>
-       <item name="android:textColor">@color/white</item>
+       <item name="android:textColor">@color/btn_color</item>
        <item name="android:cornerRadius">4dp</item>
        <item name="android:background">@color/red</item>
        <item name="android:state_pressed">@style/btn_custom1_pressed</item>
@@ -22,7 +22,6 @@
         <item name="android:background">@color/red_press</item>
     </style>
     <style name="btn_custom1_disable">
-       <item name="android:textColor">@color/light_gray</item>
        <item name="android:background">#faa</item>
     </style>
     <style name="line_spit">
