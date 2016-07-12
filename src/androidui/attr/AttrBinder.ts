@@ -130,18 +130,7 @@ module androidui.attr {
             let gravity = Number.parseInt(s);
             if(Number.isInteger(gravity)) return gravity;
 
-            gravity = Gravity.NO_GRAVITY;
-            try {
-                let parts = s.split("|");
-                parts.forEach((part)=> {
-                    let g = Gravity[part.toUpperCase()];
-                    if (Number.isInteger(g)) gravity |= g;
-                });
-            } catch (e) {
-                console.error(e);
-            }
-            if(Number.isNaN(gravity) || gravity===Gravity.NO_GRAVITY) gravity = defaultValue;
-            return gravity;
+            return Gravity.parseGravity(s, defaultValue);
         }
 
         parseDrawable(s:string):Drawable{

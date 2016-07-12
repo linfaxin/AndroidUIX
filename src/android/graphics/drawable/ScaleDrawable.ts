@@ -99,36 +99,34 @@ export class ScaleDrawable extends Drawable implements Drawable.Callback {
     //    }
     //    return -1;
     //}
-    //
-    //inflate(r:Resources, parser:XmlPullParser, attrs:AttributeSet):void  {
-    //    super.inflate(r, parser, attrs);
-    //    let type:number;
-    //    let a:TypedArray = r.obtainAttributes(attrs, com.android.internal.R.styleable.ScaleDrawable);
-    //    let sw:number = ScaleDrawable.getPercent(a, com.android.internal.R.styleable.ScaleDrawable_scaleWidth);
-    //    let sh:number = ScaleDrawable.getPercent(a, com.android.internal.R.styleable.ScaleDrawable_scaleHeight);
-    //    let g:number = a.getInt(com.android.internal.R.styleable.ScaleDrawable_scaleGravity, Gravity.LEFT);
-    //    let min:boolean = a.getBoolean(com.android.internal.R.styleable.ScaleDrawable_useIntrinsicSizeAsMinimum, false);
-    //    let dr:Drawable = a.getDrawable(com.android.internal.R.styleable.ScaleDrawable_drawable);
-    //    a.recycle();
-    //    const outerDepth:number = parser.getDepth();
-    //    while ((type = parser.next()) != XmlPullParser.END_DOCUMENT && (type != XmlPullParser.END_TAG || parser.getDepth() > outerDepth)) {
-    //        if (type != XmlPullParser.START_TAG) {
-    //            continue;
-    //        }
-    //        dr = Drawable.createFromXmlInner(r, parser, attrs);
-    //    }
-    //    if (dr == null) {
-    //        throw Error(`new IllegalArgumentException("No drawable specified for <scale>")`);
-    //    }
-    //    this.mScaleState.mDrawable = dr;
-    //    this.mScaleState.mScaleWidth = sw;
-    //    this.mScaleState.mScaleHeight = sh;
-    //    this.mScaleState.mGravity = g;
-    //    this.mScaleState.mUseIntrinsicSizeAsMin = min;
-    //    if (dr != null) {
-    //        dr.setCallback(this);
-    //    }
-    //}
+
+    inflate(r:Resources, parser:HTMLElement):void  {
+       super.inflate(r, parser);
+       let a:TypedArray = r.obtainAttributes(parser);
+       let sw:number = a.getFloat("android:scaleWidth", 1);
+       let sh:number = a.getFloat("android:scaleHeight", 1);
+       let gStr:string = a.getString("android:scaleGravity");
+        let g = Gravity.parseGravity(gStr, Gravity.LEFT);
+       let min:boolean = a.getBoolean("android:useIntrinsicSizeAsMinimum", false);
+       let dr:Drawable = a.getDrawable("android:drawable");
+       a.recycle();
+
+
+        if(!dr && parser.children[0] instanceof HTMLElement){
+            dr = Drawable.createFromXml(r, <HTMLElement>parser.children[0]);
+        }
+       if (dr == null) {
+           throw Error(`new IllegalArgumentException("No drawable specified for <scale>")`);
+       }
+       this.mScaleState.mDrawable = dr;
+       this.mScaleState.mScaleWidth = sw;
+       this.mScaleState.mScaleHeight = sh;
+       this.mScaleState.mGravity = g;
+       this.mScaleState.mUseIntrinsicSizeAsMin = min;
+       if (dr != null) {
+           dr.setCallback(this);
+       }
+    }
 
     // overrides from Drawable.Callback
 

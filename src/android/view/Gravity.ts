@@ -236,6 +236,21 @@ module android.view{
         static getAbsoluteGravity(gravity:number, layoutDirection?:number):number {
             return gravity;//no need parse.
         }
-        
+
+        static parseGravity(gravityStr:string, defaultGravity=Gravity.NO_GRAVITY):number {
+            if(!gravityStr) return defaultGravity;
+            let gravity = null;
+            try {
+                let parts = gravityStr.split("|");
+                for(let part of parts){
+                    let g = Gravity[part.toUpperCase()];
+                    if (Number.isInteger(g)) gravity |= g;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            if(Number.isNaN(gravity)) return defaultGravity;
+            return gravity;
+        }
     }
 }

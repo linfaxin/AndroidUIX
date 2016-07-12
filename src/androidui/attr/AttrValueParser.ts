@@ -61,6 +61,7 @@ module androidui.attr {
             }
             let v = parseFloat(value);
             if(isNaN(v)) return defValue;
+            if(value.endsWith('%')) v/=100;
             return v;
         }
 
