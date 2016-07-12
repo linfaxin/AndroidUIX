@@ -100,7 +100,7 @@ module android.content.res{
                 if(drawable) return drawable;
             }
 
-            if(!refString.startsWith('@drawable/')){
+            if(!refString.startsWith('@')){
                 refString = '@drawable/' + refString;
             }
             let ele = this.getXml(refString);

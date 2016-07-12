@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+///<reference path="../../../androidui/attr/AttrValueParser.ts"/>
+
 import DisplayMetrics = android.util.DisplayMetrics;
 import Color = android.graphics.Color;
 import TypedValue = android.util.TypedValue;
 import Drawable = android.graphics.drawable.Drawable;
 import ColorDrawable = android.graphics.drawable.ColorDrawable;
+import AttrValueParser = androidui.attr.AttrValueParser;
 /**
  * Container for an array of values that were retrieved with
  * {@link Resources.Theme#obtainStyledAttributes(AttributeSet, int[], int, int)}
@@ -80,7 +83,7 @@ class TypedArray {
      * @return CharSequence holding string data.  May be styled.  Returns
      *         null if the attribute is not defined.
      */
-    public getText(attrName:string):String {
+    public getText(attrName:string):string {
         return this.getString(attrName);
     }
 
@@ -92,16 +95,10 @@ class TypedArray {
      * @return String holding string data.  Any styling information is
      * removed.  Returns null if the attribute is not defined.
      */
-    public getString(attrName:string):String {
+    public getString(attrName:string):string {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            try {
-                return this.mResources.getString(value);
-            } catch (e) {
-            }
-        }
-        return value;
+        return AttrValueParser.parseString(this.mResources, value);
     }
 
 
@@ -116,18 +113,8 @@ class TypedArray {
     public getBoolean(attrName:string, defValue:boolean):boolean {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            try {
-                return this.mResources.getBoolean(value);
-            } catch (e) {
-                console.warn(e);
-            }
-        }
-        if(value ==='false' || value === '0') return false;
-        else if(value ==='true' || value === '1' || value === '') return true;
-        return defValue;
+        return AttrValueParser.parseBoolean(this.mResources, value, defValue);
     }
-
 
     /**
      * Retrieve the integer value for the attribute at <var>index</var>.
@@ -140,17 +127,9 @@ class TypedArray {
     public getInt(attrName:string, defValue:number):number {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            try {
-                return this.mResources.getInteger(value);
-            } catch (e) {
-                console.warn(e);
-            }
-        }
-        let v = parseInt(value);
-        if(isNaN(v)) return defValue;
-        return v;
+        return AttrValueParser.parseInt(this.mResources, value, defValue);
     }
+
 
     /**
      * Retrieve the float value for the attribute at <var>index</var>.
@@ -163,18 +142,8 @@ class TypedArray {
     public getFloat(attrName:string, defValue:number):number {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            try {
-                return this.mResources.getFloat(value);
-            } catch (e) {
-                console.warn(e);
-            }
-        }
-        let v = parseFloat(value);
-        if(isNaN(v)) return defValue;
-        return v;
+        return AttrValueParser.parseFloat(this.mResources, value, defValue);
     }
-
 
     /**
      * Retrieve the color value for the attribute at <var>index</var>.  If
@@ -191,16 +160,7 @@ class TypedArray {
     public getColor(attrName:string, defValue:number):number {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        try {
-            if(value.startsWith('@')) {
-                return this.mResources.getColor(value);
-            } else {
-                return Color.parseColor(value);
-            }
-        } catch (e) {
-            console.warn(e);
-        }
-        return defValue;
+        return AttrValueParser.parseColor(this.mResources, value, defValue);
     }
 
     /**
@@ -215,18 +175,7 @@ class TypedArray {
     public getColorStateList(attrName:string):android.content.res.ColorStateList {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            return this.mResources.getColorStateList(value);
-
-        }else {
-            try {
-                let color = Color.parseColor(value);
-                return android.content.res.ColorStateList.valueOf(color);
-            } catch (e) {
-                console.warn(e);
-            }
-        }
-        return null;
+        return AttrValueParser.parseColorStateList(this.mResources, value);
     }
 
     /**
@@ -261,20 +210,7 @@ class TypedArray {
     public getDimension(attrName:string, defValue:number):number {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            try {
-                return this.mResources.getDimension(value);
-            } catch (e) {
-                console.warn(e);
-                return defValue;
-            }
-        }
-        try {
-            return TypedValue.complexToDimension(value);
-        } catch (e) {
-            console.warn(e);
-        }
-        return defValue;
+        return AttrValueParser.parseDimension(this.mResources, value, defValue);
     }
 
     /**
@@ -297,20 +233,7 @@ class TypedArray {
     public getDimensionPixelOffset(attrName:string, defValue:number):number {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            try {
-                return this.mResources.getDimensionPixelOffset(value);
-            } catch (e) {
-                console.warn(e);
-                return defValue;
-            }
-        }
-        try {
-            return TypedValue.complexToDimensionPixelOffset(value);
-        } catch (e) {
-            console.warn(e);
-        }
-        return defValue;
+        return AttrValueParser.parseDimensionPixelOffset(this.mResources, value, defValue);
     }
 
 
@@ -335,20 +258,7 @@ class TypedArray {
     public getDimensionPixelSize(attrName:string, defValue:number):number {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            try {
-                return this.mResources.getDimensionPixelSize(value);
-            } catch (e) {
-                console.warn(e);
-                return defValue;
-            }
-        }
-        try {
-            return TypedValue.complexToDimensionPixelSize(value);
-        } catch (e) {
-            console.warn(e);
-        }
-        return defValue;
+        return AttrValueParser.parseDimensionPixelSize(this.mResources, value, defValue);
     }
 
     /**
@@ -361,29 +271,10 @@ class TypedArray {
     public getDrawable(attrName:string):Drawable {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            try {
-                return this.mResources.getDrawable(value);
-            } catch (e) {
-                console.warn(e);
-            }
-
-        }else if(value.startsWith('url(')){
-            value = value.substring('url('.length);
-            if(value.endsWith(')')) value = value.substring(0, value.length-1);
-            return new androidui.image.NetDrawable(value);
-
-        }else{
-            try {
-                let color = Color.parseColor(value);
-                return new ColorDrawable(color);
-            } catch (e) {
-            }
-        }
-        console.warn('not found Drawable : ' + attrName);
-        return null;
+        let d = AttrValueParser.parseDrawable(this.mResources, value);
+        if(d==null) console.warn('not found Drawable : ' + attrName);
+        return d;
     }
-
 
     /**
      * Retrieve the CharSequence[] for the attribute at <var>index</var>.
@@ -398,17 +289,7 @@ class TypedArray {
     public getTextArray(attrName:string):string[] {
         this.checkRecycled();
         let value = this.mXml.getAttribute(attrName);
-        if(value.startsWith('@')){
-            return this.mResources.getStringArray(value);
-
-        }else{
-            try {
-                let json = JSON.parse(value);
-                if(json instanceof Array) return json;
-            } catch (e) {
-            }
-        }
-        return null;
+        return AttrValueParser.parseTextArray(this.mResources, value);
     }
 
     /**

@@ -8,6 +8,8 @@
 ///<reference path="../../android/content/res/ColorStateList.ts"/>
 ///<reference path="../../android/content/res/Resources.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
+///<reference path="AttrValueParser.ts"/>
+
 
 module androidui.attr {
     import View = android.view.View;
@@ -115,13 +117,11 @@ module androidui.attr {
         }
 
         parseBoolean(value, defaultValue = true):boolean{
-            if(value===false || value ==='false' || value === '0') return false;
-            else if(value===true || value ==='true' || value === '1' || value === '') return true;
-            try {
-                if (typeof value === "string" && value.startsWith('@')) {
-                    return Resources.getSystem().getBoolean(value);
-                }
-            } catch (e) {
+            if(value===false) return false;
+            else if(value===true) return true;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            if (typeof value === "string") {
+                return AttrValueParser.parseBoolean(res, value, defaultValue);
             }
             return defaultValue;
         }
@@ -147,171 +147,84 @@ module androidui.attr {
         parseDrawable(s:string):Drawable{
             if(!s) return null;
             if((<any>s) instanceof Drawable) return <Drawable><any>s;
-            s = (s + '').trim();
-            if(s.startsWith('@')){
+            if(s.startsWith('@ref/')){
                 let refObj = this.getRefObject(s);
                 if(refObj) return refObj;
-
-                try {
-                    return Resources.getSystem().getDrawable(s);
-                } catch (e) {
-                }
-                try {
-                    return new ColorDrawable(Resources.getSystem().getColor(s));
-                } catch (e) {
-                }
-
-            }else if(s.startsWith('url(')){
-                s = s.substring('url('.length);
-                if(s.endsWith(')')) s = s.substring(0, s.length-1);
-                return new androidui.image.NetDrawable(s);
-
-            }else{
-                try {
-                    let color = this.parseColor(s);
-                    return new ColorDrawable(color);
-                } catch (e) {
-                }
             }
-            return null;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            s = (s + '').trim();
+            return AttrValueParser.parseDrawable(res, s);
         }
 
         parseColor(value:string, defaultValue?:number):number{
             let color = Number.parseInt(value);
             if(Number.isInteger(color)) return color;
-
-            try {
-                if(value.startsWith('@')) {
-                    return Resources.getSystem().getColor(value);
-
-                } else {
-                    return Color.parseColor(value);
-                }
-
-
-            } catch (e) {
-                if(defaultValue==null) throw e;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            color = AttrValueParser.parseColor(res, value, defaultValue);
+            if(isNaN(color)){
+                return Color.BLACK;
             }
-            return defaultValue;
+            return color;
         }
 
         parseColorList(value:string):ColorStateList{
             if(!value) return null;
             if((<any>value) instanceof ColorStateList) return <ColorStateList><any>value;
             if(typeof value == 'number') return ColorStateList.valueOf(<number><any>value);
-            if(value.startsWith('@')){
+            if(value.startsWith('@ref/')){
                 let refObj = this.getRefObject(value);
                 if(refObj) return refObj;
-
-                return Resources.getSystem().getColorStateList(value);
-
-            }else {
-                try {
-                    let color = this.parseColor(value);
-                    return ColorStateList.valueOf(color);
-                } catch (e) {
-                    console.log(e);
-                }
             }
-            return null;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            return AttrValueParser.parseColorStateList(res, value);
         }
 
         parseInt(value, defaultValue = 0):number{
-            if(typeof value === 'string' && value.startsWith('@')){
-                try {
-                    return Resources.getSystem().getInteger(value);
-                } catch (e) {
-                    return defaultValue;
-                }
-            }
-            let v = parseInt(value);
-            if(isNaN(v)) return defaultValue;
-            return v;
+            if(typeof value == 'number') return <number><any>value;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            return AttrValueParser.parseInt(res, value, defaultValue);
         }
 
         parseFloat(value, defaultValue = 0):number{
-            if(typeof value === 'string' && value.startsWith('@')){
-                try {
-                    return Resources.getSystem().getFloat(value);
-                } catch (e) {
-                    return defaultValue;
-                }
-            }
-            let v = parseFloat(value);
-            if(isNaN(v)) return defaultValue;
-            return v;
+            if(typeof value == 'number') return <number><any>value;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            return AttrValueParser.parseFloat(res, value, defaultValue);
         }
 
         parseDimension(value, defaultValue = 0, baseValue = 0):number{
-            if(typeof value === 'string' && value.startsWith('@')){
-                try {
-                    return Resources.getSystem().getDimension(value, baseValue);
-                } catch (e) {
-                    return defaultValue;
-                }
-            }
-            try {
-                return TypedValue.complexToDimension(value, baseValue);
-            } catch (e) {
-                return defaultValue;
-            }
+            if(typeof value == 'number') return <number><any>value;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            return AttrValueParser.parseDimension(res, value, defaultValue);
         }
 
         parseNumberPixelOffset(value, defaultValue = 0, baseValue = 0):number{
-            if(typeof value === 'string' && value.startsWith('@')){
-                try {
-                    return Resources.getSystem().getDimensionPixelOffset(value, baseValue);
-                } catch (e) {
-                    return defaultValue;
-                }
-            }
-            try {
-                return TypedValue.complexToDimensionPixelOffset(value, baseValue);
-            } catch (e) {
-                return defaultValue;
-            }
+            if(typeof value == 'number') return <number><any>value;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            return AttrValueParser.parseDimensionPixelOffset(res, value, defaultValue);
         }
 
         parseNumberPixelSize(value, defaultValue = 0, baseValue = 0):number{
-            if(typeof value === 'string' && value.startsWith('@')){
-                try {
-                    return Resources.getSystem().getDimensionPixelSize(value, baseValue);
-                } catch (e) {
-                    return defaultValue;
-                }
-            }
-            try {
-                return TypedValue.complexToDimensionPixelSize(value, baseValue);
-            } catch (e) {
-                return defaultValue;
-            }
+            if(typeof value == 'number') return <number><any>value;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            return AttrValueParser.parseDimensionPixelSize(res, value, defaultValue);
         }
 
         parseString(value, defaultValue?:string):string{
-            if(typeof value === 'string'){
-                if(value.startsWith('@')){
-                    try {
-                        return Resources.getSystem().getString(value);
-                    } catch (e) {
-                        return defaultValue;
-                    }
-                }
-                return value;
+            let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+            if(typeof value === 'string') {
+                return AttrValueParser.parseString(res, value, defaultValue);
             }
             return defaultValue;
         }
 
         parseStringArray(value):string[] {
-            value += '';
-            if(value.startsWith('@')){
-                return Resources.getSystem().getStringArray(value);
-
-            }else{
-                try {
-                    let json = JSON.parse(value);
-                    if(json instanceof Array) return json;
-                } catch (e) {
+            if(typeof value === 'string') {
+                if(value.startsWith('@ref/')){
+                    let refObj = this.getRefObject(value);
+                    if(refObj) return refObj;
                 }
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                return AttrValueParser.parseTextArray(res, value);
             }
             return null;
         }

@@ -127,11 +127,9 @@ module android.graphics.drawable{
         inflate(r:android.content.res.Resources, parser:HTMLElement):void {
             super.inflate(r, parser);
 
-            const a = r.obtainAttributes(parser);
             let state = this.mState;
-            state.mBaseColor = a.getColor("color", state.mBaseColor);
+            state.mBaseColor = AttrValueParser.parseColor(r, parser.innerText, state.mBaseColor);
             state.mUseColor = state.mBaseColor;
-            a.recycle();
         }
 
         getConstantState():Drawable.ConstantState {
