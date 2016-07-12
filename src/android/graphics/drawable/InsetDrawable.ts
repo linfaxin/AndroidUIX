@@ -17,8 +17,9 @@
 ///<reference path="../Canvas.ts"/>
 
 
-module android.graphics.drawable{
+module android.graphics.drawable {
     import Canvas = android.graphics.Canvas;
+    import Integer = java.lang.Integer;
 
     /**
      * A Drawable that insets another Drawable by a specified distance.
@@ -36,13 +37,13 @@ module android.graphics.drawable{
      * @attr ref android.R.styleable#InsetDrawable_insetTop
      * @attr ref android.R.styleable#InsetDrawable_insetBottom
      */
-    export class InsetDrawable extends Drawable implements Drawable.Callback{
+    export class InsetDrawable extends Drawable implements Drawable.Callback {
         // Most of this is copied from ScaleDrawable.
         private mInsetState:InsetState;
         private mTmpRect = new Rect();
         private mMutated = false;
 
-        constructor(drawable:Drawable, insetLeft:number, insetTop=insetLeft, insetRight=insetTop, insetBottom=insetRight) {
+        constructor(drawable:Drawable, insetLeft:number, insetTop = insetLeft, insetRight = insetTop, insetBottom = insetRight) {
             super();
             this.mInsetState = new InsetState(null, this);
             this.mInsetState.mDrawable = drawable;
@@ -54,6 +55,37 @@ module android.graphics.drawable{
             if (drawable != null) {
                 drawable.setCallback(this);
             }
+        }
+
+
+        inflate(r:android.content.res.Resources, parser:HTMLElement):void {
+            super.inflate(r, parser);
+
+            // Reset mDrawable to preserve old multiple-inflate behavior. This is
+            // silly, but we have CTS tests that rely on it.
+            this.mInsetState.mDrawable = null;
+            let state = this.mInsetState;
+
+            let a = r.obtainAttributes(parser);
+            let dr = a.getDrawable("android:drawable");
+            if (!dr && parser.children[0] instanceof HTMLElement) {
+                dr = Drawable.createFromXml(r, <HTMLElement>parser.children[0]);
+            }
+            if (!dr) {
+                throw Error("<inset> tag requires a 'drawable' attribute or child tag defining a drawable");
+            }
+
+            let inset = a.getDimensionPixelOffset("android:inset", Integer.MIN_VALUE);
+            if (inset != Integer.MIN_VALUE) {
+                state.mInsetLeft = inset;
+                state.mInsetTop = inset;
+                state.mInsetRight = inset;
+                state.mInsetBottom = inset;
+            }
+            state.mInsetLeft = a.getDimensionPixelOffset("android:insetLeft", state.mInsetLeft);
+            state.mInsetTop = a.getDimensionPixelOffset("android:insetTop", state.mInsetTop);
+            state.mInsetRight = a.getDimensionPixelOffset("android:insetRight", state.mInsetRight);
+            state.mInsetBottom = a.getDimensionPixelOffset("android:insetBottom", state.mInsetBottom);
         }
 
         drawableSizeChange(who:android.graphics.drawable.Drawable):any {
@@ -152,6 +184,7 @@ module android.graphics.drawable{
         getIntrinsicHeight():number {
             return this.mInsetState.mDrawable.getIntrinsicHeight();
         }
+
         getConstantState():Drawable.ConstantState {
             if (this.mInsetState.canConstantState()) {
                 //this.mInsetState.mChangingConfigurations = getChangingConfigurations();
@@ -159,6 +192,7 @@ module android.graphics.drawable{
             }
             return null;
         }
+
         mutate():Drawable {
             if (!this.mMutated && super.mutate() == this) {
                 this.mInsetState.mDrawable.mutate();
@@ -166,6 +200,7 @@ module android.graphics.drawable{
             }
             return this;
         }
+
         /**
          * Returns the drawable wrapped by this InsetDrawable. May be null.
          */
@@ -174,7 +209,7 @@ module android.graphics.drawable{
         }
     }
 
-    class InsetState implements Drawable.ConstantState{
+    class InsetState implements Drawable.ConstantState {
         mDrawable:Drawable;
         mInsetLeft = 0;
         mInsetTop = 0;
