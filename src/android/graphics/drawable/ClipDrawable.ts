@@ -82,29 +82,25 @@ export class ClipDrawable extends Drawable implements Drawable.Callback {
         }
     }
 
-    //inflate(r:Resources, parser:XmlPullParser, attrs:AttributeSet):void  {
-    //    super.inflate(r, parser, attrs);
-    //    let type:number;
-    //    let a:TypedArray = r.obtainAttributes(attrs, com.android.internal.R.styleable.ClipDrawable);
-    //    let orientation:number = a.getInt(com.android.internal.R.styleable.ClipDrawable_clipOrientation, ClipDrawable.HORIZONTAL);
-    //    let g:number = a.getInt(com.android.internal.R.styleable.ClipDrawable_gravity, Gravity.LEFT);
-    //    let dr:Drawable = a.getDrawable(com.android.internal.R.styleable.ClipDrawable_drawable);
-    //    a.recycle();
-    //    const outerDepth:number = parser.getDepth();
-    //    while ((type = parser.next()) != XmlPullParser.END_DOCUMENT && (type != XmlPullParser.END_TAG || parser.getDepth() > outerDepth)) {
-    //        if (type != XmlPullParser.START_TAG) {
-    //            continue;
-    //        }
-    //        dr = Drawable.createFromXmlInner(r, parser, attrs);
-    //    }
-    //    if (dr == null) {
-    //        throw Error(`new IllegalArgumentException("No drawable specified for <clip>")`);
-    //    }
-    //    this.mClipState.mDrawable = dr;
-    //    this.mClipState.mOrientation = orientation;
-    //    this.mClipState.mGravity = g;
-    //    dr.setCallback(this);
-    //}
+    inflate(r:Resources, parser:HTMLElement):void  {
+       super.inflate(r, parser);
+       let a:TypedArray = r.obtainAttributes(parser);
+       let orientation:number = a.getInt("android:clipOrientation", ClipDrawable.HORIZONTAL);
+        let gStr:string = a.getString("android:gravity");
+        let g = Gravity.parseGravity(gStr, Gravity.LEFT);
+       let dr:Drawable = a.getDrawable("android:drawable");
+       a.recycle();
+        if (!dr && parser.children[0] instanceof HTMLElement) {
+            dr = Drawable.createFromXml(r, <HTMLElement>parser.children[0]);
+        }
+       if (dr == null) {
+           throw Error(`new IllegalArgumentException("No drawable specified for <clip>")`);
+       }
+       this.mClipState.mDrawable = dr;
+       this.mClipState.mOrientation = orientation;
+       this.mClipState.mGravity = g;
+       dr.setCallback(this);
+    }
 
 
     drawableSizeChange(who:android.graphics.drawable.Drawable):void {
