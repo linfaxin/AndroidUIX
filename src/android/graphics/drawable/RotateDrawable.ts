@@ -183,6 +183,55 @@ export class RotateDrawable extends Drawable implements Drawable.Callback {
         return null;
     }
 
+
+    inflate(r:Resources, parser:HTMLElement):void  {
+        super.inflate(r, parser);
+        let a:TypedArray = r.obtainAttributes(parser);
+
+        let tv:string = a.getString("android:pivotX");
+        let pivotXRel:boolean;
+        let pivotX:number;
+        if (tv == null) {
+            pivotXRel = true;
+            pivotX = 0.5;
+        } else {
+            pivotXRel = tv.endsWith('%');
+            pivotX = a.getFloat('android:pivotX', 0.5);
+        }
+        tv = a.getString("android:pivotY");
+        let pivotYRel:boolean;
+        let pivotY:number;
+        if (tv == null) {
+            pivotYRel = true;
+            pivotY = 0.5;
+        } else {
+            pivotYRel = tv.endsWith('%');
+            pivotY = a.getFloat('android:pivotY', 0.5);
+        }
+        let fromDegrees:number = a.getFloat("android:fromDegrees", 0.0);
+        let toDegrees:number = a.getFloat("android:toDegrees", 360.0);
+        let drawable:Drawable = a.getDrawable("android:drawable");
+        a.recycle();
+
+        if (!drawable && parser.children[0] instanceof HTMLElement) {
+            drawable = Drawable.createFromXml(r, <HTMLElement>parser.children[0]);
+        }
+        if (drawable == null) {
+            Log.w("drawable", "No drawable specified for <rotate>");
+        }
+        this.mState.mDrawable = drawable;
+        this.mState.mPivotXRel = pivotXRel;
+        this.mState.mPivotX = pivotX;
+        this.mState.mPivotYRel = pivotYRel;
+        this.mState.mPivotY = pivotY;
+        this.mState.mFromDegrees = this.mState.mCurrentDegrees = fromDegrees;
+        this.mState.mToDegrees = toDegrees;
+        if (drawable != null) {
+            drawable.setCallback(this);
+        }
+    }
+
+
     mutate():Drawable  {
         if (!this.mMutated && super.mutate() == this) {
             this.mState.mDrawable.mutate();
