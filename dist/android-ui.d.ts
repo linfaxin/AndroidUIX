@@ -145,6 +145,7 @@ declare module android.view {
         static DISPLAY_CLIP_HORIZONTAL: number;
         static apply(gravity: number, w: number, h: number, container: Rect, outRect: Rect, layoutDirection?: number): void;
         static getAbsoluteGravity(gravity: number, layoutDirection?: number): number;
+        static parseGravity(gravityStr: string, defaultGravity?: number): number;
     }
 }
 declare module android.util {
@@ -756,6 +757,7 @@ declare module android.graphics.drawable {
         getAlpha(): number;
         setAlpha(alpha: number): void;
         getOpacity(): number;
+        inflate(r: android.content.res.Resources, parser: HTMLElement): void;
         getConstantState(): Drawable.ConstantState;
     }
 }
@@ -803,6 +805,7 @@ declare module android.graphics.drawable {
         private mTmpRect;
         private mMutated;
         constructor(drawable: Drawable, insetLeft: number, insetTop?: number, insetRight?: number, insetBottom?: number);
+        inflate(r: android.content.res.Resources, parser: HTMLElement): void;
         drawableSizeChange(who: android.graphics.drawable.Drawable): any;
         invalidateDrawable(who: android.graphics.drawable.Drawable): void;
         scheduleDrawable(who: android.graphics.drawable.Drawable, what: java.lang.Runnable, when: number): void;
@@ -1057,11 +1060,59 @@ declare module android.R {
         static transient_notification: string;
     }
 }
+declare module androidui.attr {
+    class AttrValueParser {
+        static parseString(r: android.content.res.Resources, value: string, defValue?: string): string;
+        static parseBoolean(r: android.content.res.Resources, value: string, defValue: boolean): boolean;
+        static parseInt(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseFloat(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseColor(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseColorStateList(r: android.content.res.Resources, value: string): android.content.res.ColorStateList;
+        static parseDimension(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseDimensionPixelOffset(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseDimensionPixelSize(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseDrawable(r: android.content.res.Resources, value: string): android.graphics.drawable.Drawable;
+        static parseTextArray(r: android.content.res.Resources, value: string): string[];
+    }
+}
+import DisplayMetrics = android.util.DisplayMetrics;
+import Color = android.graphics.Color;
+import TypedValue = android.util.TypedValue;
+import Drawable = android.graphics.drawable.Drawable;
+import ColorDrawable = android.graphics.drawable.ColorDrawable;
+import AttrValueParser = androidui.attr.AttrValueParser;
+declare class TypedArray {
+    static obtain(res: android.content.res.Resources, xml: HTMLElement): TypedArray;
+    private mResources;
+    private mXml;
+    private mRecycled;
+    constructor(res: android.content.res.Resources, xml: HTMLElement);
+    private checkRecycled();
+    length(): number;
+    getResources(): android.content.res.Resources;
+    getText(attrName: string): string;
+    getString(attrName: string): string;
+    getBoolean(attrName: string, defValue: boolean): boolean;
+    getInt(attrName: string, defValue: number): number;
+    getFloat(attrName: string, defValue: number): number;
+    getColor(attrName: string, defValue: number): number;
+    getColorStateList(attrName: string): android.content.res.ColorStateList;
+    getInteger(attrName: string, defValue: number): number;
+    getDimension(attrName: string, defValue: number): number;
+    getDimensionPixelOffset(attrName: string, defValue: number): number;
+    getDimensionPixelSize(attrName: string, defValue: number): number;
+    getDrawable(attrName: string): Drawable;
+    getTextArray(attrName: string): string[];
+    hasValue(attrName: string): boolean;
+    hasValueOrEmpty(attrName: string): boolean;
+    recycle(): void;
+}
 declare module android.content.res {
     import DisplayMetrics = android.util.DisplayMetrics;
     import Drawable = android.graphics.drawable.Drawable;
     class Resources {
         private static instance;
+        private mTypedArrayPool;
         private displayMetrics;
         private context;
         static _AppBuildImageFileFinder: (refString: string) => Drawable;
@@ -1090,6 +1141,7 @@ declare module android.content.res {
         private getStyleAsMap(refString);
         getXml(refString: string): HTMLElement;
         getValue(refString: string, resolveRefs?: boolean): HTMLElement;
+        obtainAttributes(attrs: HTMLElement): TypedArray;
         static buildDrawableFinder: any;
         static buildLayoutFinder: any;
         static buildResourcesElement: void;
@@ -1740,6 +1792,7 @@ declare module android.view {
     }
 }
 declare module android.graphics.drawable {
+    import Resources = android.content.res.Resources;
     import Canvas = android.graphics.Canvas;
     import Rect = android.graphics.Rect;
     import Runnable = java.lang.Runnable;
@@ -1755,6 +1808,7 @@ declare module android.graphics.drawable {
         private mMutated;
         constructor(layers: Drawable[], state?: LayerDrawable.LayerState);
         createConstantState(state: LayerDrawable.LayerState): LayerDrawable.LayerState;
+        inflate(r: Resources, parser: HTMLElement): void;
         private addLayer(layer, id, left?, top?, right?, bottom?);
         findDrawableByLayerId(id: string): Drawable;
         setId(index: number, id: string): void;
@@ -1818,6 +1872,7 @@ declare module android.graphics.drawable {
 declare module android.graphics.drawable {
     import Canvas = android.graphics.Canvas;
     import Rect = android.graphics.Rect;
+    import Resources = android.content.res.Resources;
     import Drawable = android.graphics.drawable.Drawable;
     import Runnable = java.lang.Runnable;
     class RotateDrawable extends Drawable implements Drawable.Callback {
@@ -1843,6 +1898,7 @@ declare module android.graphics.drawable {
         getIntrinsicWidth(): number;
         getIntrinsicHeight(): number;
         getConstantState(): Drawable.ConstantState;
+        inflate(r: Resources, parser: HTMLElement): void;
         mutate(): Drawable;
     }
     module RotateDrawable {
@@ -1873,6 +1929,7 @@ declare module java.lang {
 declare module android.graphics.drawable {
     import Canvas = android.graphics.Canvas;
     import Rect = android.graphics.Rect;
+    import Resources = android.content.res.Resources;
     import Runnable = java.lang.Runnable;
     import Drawable = android.graphics.drawable.Drawable;
     class ScaleDrawable extends Drawable implements Drawable.Callback {
@@ -1882,6 +1939,7 @@ declare module android.graphics.drawable {
         constructor(drawable: Drawable, gravity: number, scaleWidth: number, scaleHeight: number);
         constructor(state?: ScaleDrawable.ScaleState);
         getDrawable(): Drawable;
+        inflate(r: Resources, parser: HTMLElement): void;
         drawableSizeChange(who: android.graphics.drawable.Drawable): void;
         invalidateDrawable(who: Drawable): void;
         scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
@@ -2029,6 +2087,7 @@ declare module android.graphics.drawable {
     }
 }
 declare module android.graphics.drawable {
+    import Resources = android.content.res.Resources;
     import Runnable = java.lang.Runnable;
     import Animatable = android.graphics.drawable.Animatable;
     import Drawable = android.graphics.drawable.Drawable;
@@ -2051,6 +2110,7 @@ declare module android.graphics.drawable {
         addFrame(frame: Drawable, duration: number): void;
         private nextFrame(unschedule);
         private setFrame(frame, unschedule, animate);
+        inflate(r: Resources, parser: HTMLElement): void;
         mutate(): Drawable;
     }
     module AnimationDrawable {
@@ -2071,6 +2131,8 @@ declare module android.graphics.drawable {
         addState(stateSet: Array<number>, drawable: Drawable): void;
         isStateful(): boolean;
         protected onStateChange(stateSet: Array<number>): boolean;
+        inflate(r: android.content.res.Resources, parser: HTMLElement): void;
+        private getStateListState();
         getStateCount(): number;
         getStateSet(index: number): Array<number>;
         getStateDrawable(index: number): Drawable;
@@ -7926,7 +7988,7 @@ declare module android.widget {
 declare module android.widget {
     class ImageButton extends ImageView {
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            background: graphics.drawable.Drawable;
+            background: Drawable;
             focusable: boolean;
             clickable: boolean;
             gravity: number;
@@ -7957,7 +8019,7 @@ declare module android.widget {
         private mGravity;
         private mTempRect;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            listSelector: graphics.drawable.Drawable;
+            listSelector: Drawable;
             numColumns: number;
         });
         getAdapter(): ListAdapter;
@@ -8230,6 +8292,7 @@ declare module android.widget {
 declare module android.graphics.drawable {
     import Canvas = android.graphics.Canvas;
     import Rect = android.graphics.Rect;
+    import Resources = android.content.res.Resources;
     import Drawable = android.graphics.drawable.Drawable;
     import Runnable = java.lang.Runnable;
     class ClipDrawable extends Drawable implements Drawable.Callback {
@@ -8239,6 +8302,7 @@ declare module android.graphics.drawable {
         static VERTICAL: number;
         constructor(state?: ClipDrawable.ClipState);
         constructor(drawable: Drawable, gravity: number, orientation: number);
+        inflate(r: Resources, parser: HTMLElement): void;
         drawableSizeChange(who: android.graphics.drawable.Drawable): void;
         invalidateDrawable(who: Drawable): void;
         scheduleDrawable(who: Drawable, what: Runnable, when: number): void;
@@ -8414,7 +8478,7 @@ declare module android.widget {
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
-            background: graphics.drawable.Drawable;
+            background: Drawable;
             focusable: boolean;
             clickable: boolean;
             minHeight: string;
@@ -8423,7 +8487,7 @@ declare module android.widget {
             gravity: number;
         } & {
             background: any;
-            button: graphics.drawable.Drawable;
+            button: Drawable;
         });
     }
 }
@@ -8436,7 +8500,7 @@ declare module android.widget {
             textColor: content.res.ColorStateList;
             textColorHint: number;
         } & {
-            background: graphics.drawable.Drawable;
+            background: Drawable;
             focusable: boolean;
             clickable: boolean;
             minHeight: string;
@@ -8445,7 +8509,7 @@ declare module android.widget {
             gravity: number;
         } & {
             background: any;
-            button: graphics.drawable.Drawable;
+            button: Drawable;
         });
         toggle(): void;
     }
@@ -8573,11 +8637,11 @@ declare module android.widget {
         private mOnSeekBarChangeListener;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             indeterminateOnly: boolean;
-            progressDrawable: graphics.drawable.Drawable;
-            indeterminateDrawable: graphics.drawable.Drawable;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
             minHeight: string;
             maxHeight: string;
-            thumb: graphics.drawable.Drawable;
+            thumb: Drawable;
             thumbOffset: string;
             focusable: boolean;
             paddingLeft: string;
@@ -8605,8 +8669,8 @@ declare module android.widget {
         private mOnRatingBarChangeListener;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
             indeterminateOnly: boolean;
-            progressDrawable: graphics.drawable.Drawable;
-            indeterminateDrawable: graphics.drawable.Drawable;
+            progressDrawable: Drawable;
+            indeterminateDrawable: Drawable;
             minHeight: string;
             maxHeight: string;
             numStars: string;

@@ -1,5 +1,5 @@
 /**
- * AndroidUI-WebApp v0.6.0
+ * AndroidUI-WebApp v0.6.1
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -536,6 +536,25 @@ var android;
                 }
             }
             static getAbsoluteGravity(gravity, layoutDirection) {
+                return gravity;
+            }
+            static parseGravity(gravityStr, defaultGravity = Gravity.NO_GRAVITY) {
+                if (!gravityStr)
+                    return defaultGravity;
+                let gravity = null;
+                try {
+                    let parts = gravityStr.split("|");
+                    for (let part of parts) {
+                        let g = Gravity[part.toUpperCase()];
+                        if (Number.isInteger(g))
+                            gravity |= g;
+                    }
+                }
+                catch (e) {
+                    console.error(e);
+                }
+                if (Number.isNaN(gravity))
+                    return defaultGravity;
                 return gravity;
             }
         }
@@ -3092,7 +3111,10 @@ var android;
                             drawable = new drawable_1.InsetDrawable(null, 0);
                             break;
                         case "bitmap":
-                            drawable = r.getDrawable(parser.getAttribute('src'));
+                            let srcAttr = parser.getAttribute('src');
+                            if (!srcAttr)
+                                throw Error("XmlPullParserException: bitmap tag must have 'src' attribute");
+                            drawable = r.getDrawable(srcAttr);
                             break;
                         default:
                             throw Error("XmlPullParserException: invalid drawable tag " + name);
@@ -3101,7 +3123,7 @@ var android;
                     return drawable;
                 }
                 inflate(r, parser) {
-                    this.mVisible = (parser.getAttribute('visible') !== 'false');
+                    this.mVisible = (parser.getAttribute('android:visible') !== 'false');
                 }
             }
             Drawable.ZERO_BOUNDS_RECT = new Rect();
@@ -3171,6 +3193,12 @@ var android;
                             return graphics.PixelFormat.TRANSPARENT;
                     }
                     return graphics.PixelFormat.TRANSLUCENT;
+                }
+                inflate(r, parser) {
+                    super.inflate(r, parser);
+                    let state = this.mState;
+                    state.mBaseColor = AttrValueParser.parseColor(r, parser.innerText, state.mBaseColor);
+                    state.mUseColor = state.mBaseColor;
                 }
                 getConstantState() {
                     return this.mState;
@@ -3368,6 +3396,7 @@ var android;
     (function (graphics) {
         var drawable;
         (function (drawable_2) {
+            var Integer = java.lang.Integer;
             class InsetDrawable extends drawable_2.Drawable {
                 constructor(drawable, insetLeft, insetTop = insetLeft, insetRight = insetTop, insetBottom = insetRight) {
                     super();
@@ -3382,6 +3411,30 @@ var android;
                     if (drawable != null) {
                         drawable.setCallback(this);
                     }
+                }
+                inflate(r, parser) {
+                    super.inflate(r, parser);
+                    this.mInsetState.mDrawable = null;
+                    let state = this.mInsetState;
+                    let a = r.obtainAttributes(parser);
+                    let dr = a.getDrawable("android:drawable");
+                    if (!dr && parser.children[0] instanceof HTMLElement) {
+                        dr = drawable_2.Drawable.createFromXml(r, parser.children[0]);
+                    }
+                    if (!dr) {
+                        throw Error("<inset> tag requires a 'drawable' attribute or child tag defining a drawable");
+                    }
+                    let inset = a.getDimensionPixelOffset("android:inset", Integer.MIN_VALUE);
+                    if (inset != Integer.MIN_VALUE) {
+                        state.mInsetLeft = inset;
+                        state.mInsetTop = inset;
+                        state.mInsetRight = inset;
+                        state.mInsetBottom = inset;
+                    }
+                    state.mInsetLeft = a.getDimensionPixelOffset("android:insetLeft", state.mInsetLeft);
+                    state.mInsetTop = a.getDimensionPixelOffset("android:insetTop", state.mInsetTop);
+                    state.mInsetRight = a.getDimensionPixelOffset("android:insetRight", state.mInsetRight);
+                    state.mInsetBottom = a.getDimensionPixelOffset("android:insetBottom", state.mInsetBottom);
                 }
                 drawableSizeChange(who) {
                     const callback = this.getCallback();
@@ -4388,6 +4441,323 @@ var android;
         R.layout = layout;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
+var androidui;
+(function (androidui) {
+    var attr;
+    (function (attr) {
+        class AttrValueParser {
+            static parseString(r, value, defValue = value) {
+                if (value == null)
+                    return defValue;
+                if (value.startsWith('@')) {
+                    try {
+                        return r.getString(value);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                    }
+                }
+                return defValue;
+            }
+            static parseBoolean(r, value, defValue) {
+                if (value == null)
+                    return defValue;
+                if (value.startsWith('@')) {
+                    try {
+                        return r.getBoolean(value);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                    }
+                }
+                if (value === 'false' || value === '0')
+                    return false;
+                else if (value === 'true' || value === '1' || value === '')
+                    return true;
+                return defValue;
+            }
+            static parseInt(r, value, defValue) {
+                if (value == null)
+                    return defValue;
+                if (value.startsWith('@')) {
+                    try {
+                        return r.getInteger(value);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                    }
+                }
+                let v = parseInt(value);
+                if (isNaN(v))
+                    return defValue;
+                return v;
+            }
+            static parseFloat(r, value, defValue) {
+                if (value == null)
+                    return defValue;
+                if (value.startsWith('@')) {
+                    try {
+                        return r.getFloat(value);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                    }
+                }
+                let v = parseFloat(value);
+                if (isNaN(v))
+                    return defValue;
+                if (value.endsWith('%'))
+                    v /= 100;
+                return v;
+            }
+            static parseColor(r, value, defValue) {
+                if (value == null)
+                    return defValue;
+                try {
+                    if (value.startsWith('@')) {
+                        return r.getColor(value);
+                    }
+                    else {
+                        return android.graphics.Color.parseColor(value);
+                    }
+                }
+                catch (e) {
+                    console.warn(e);
+                }
+                return defValue;
+            }
+            static parseColorStateList(r, value) {
+                if (value == null)
+                    return null;
+                if (value.startsWith('@')) {
+                    return r.getColorStateList(value);
+                }
+                else {
+                    try {
+                        let color = android.graphics.Color.parseColor(value);
+                        return android.content.res.ColorStateList.valueOf(color);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                    }
+                }
+                return null;
+            }
+            static parseDimension(r, value, defValue) {
+                if (value == null)
+                    return defValue;
+                if (value.startsWith('@')) {
+                    try {
+                        return r.getDimension(value);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                        return defValue;
+                    }
+                }
+                try {
+                    return android.util.TypedValue.complexToDimension(value);
+                }
+                catch (e) {
+                    console.warn(e);
+                }
+                return defValue;
+            }
+            static parseDimensionPixelOffset(r, value, defValue) {
+                if (value == null)
+                    return defValue;
+                if (value.startsWith('@')) {
+                    try {
+                        return r.getDimensionPixelOffset(value);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                        return defValue;
+                    }
+                }
+                try {
+                    return android.util.TypedValue.complexToDimensionPixelOffset(value);
+                }
+                catch (e) {
+                    console.warn(e);
+                }
+                return defValue;
+            }
+            static parseDimensionPixelSize(r, value, defValue) {
+                if (value == null)
+                    return defValue;
+                if (value.startsWith('@')) {
+                    try {
+                        return r.getDimensionPixelSize(value);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                        return defValue;
+                    }
+                }
+                try {
+                    return android.util.TypedValue.complexToDimensionPixelSize(value);
+                }
+                catch (e) {
+                    console.warn(e);
+                }
+                return defValue;
+            }
+            static parseDrawable(r, value) {
+                if (value == null)
+                    return null;
+                if (value.startsWith('@')) {
+                    try {
+                        return r.getDrawable(value);
+                    }
+                    catch (e) {
+                        console.warn(e);
+                    }
+                }
+                else if (value.startsWith('url(')) {
+                    value = value.substring('url('.length);
+                    if (value.endsWith(')'))
+                        value = value.substring(0, value.length - 1);
+                    return new androidui.image.NetDrawable(value);
+                }
+                else {
+                    try {
+                        let color = android.graphics.Color.parseColor(value);
+                        return new android.graphics.drawable.ColorDrawable(color);
+                    }
+                    catch (e) {
+                    }
+                }
+                return null;
+            }
+            static parseTextArray(r, value) {
+                if (value == null)
+                    return null;
+                if (value.startsWith('@')) {
+                    return r.getStringArray(value);
+                }
+                else {
+                    try {
+                        let json = JSON.parse(value);
+                        if (json instanceof Array)
+                            return json;
+                    }
+                    catch (e) {
+                    }
+                }
+                return null;
+            }
+        }
+        attr.AttrValueParser = AttrValueParser;
+    })(attr = androidui.attr || (androidui.attr = {}));
+})(androidui || (androidui = {}));
+var DisplayMetrics = android.util.DisplayMetrics;
+var Color = android.graphics.Color;
+var TypedValue = android.util.TypedValue;
+var Drawable = android.graphics.drawable.Drawable;
+var ColorDrawable = android.graphics.drawable.ColorDrawable;
+var AttrValueParser = androidui.attr.AttrValueParser;
+class TypedArray {
+    constructor(res, xml) {
+        this.mResources = res;
+        this.mXml = xml;
+    }
+    static obtain(res, xml) {
+        const attrs = res.mTypedArrayPool.acquire();
+        if (attrs != null) {
+            attrs.mRecycled = false;
+            attrs.mXml = xml;
+            return attrs;
+        }
+        return new TypedArray(res, xml);
+    }
+    checkRecycled() {
+        if (this.mRecycled) {
+            throw new Error("RuntimeException : Cannot make calls to a recycled instance!");
+        }
+    }
+    length() {
+        this.checkRecycled();
+        return this.mXml.attributes.length;
+    }
+    getResources() {
+        return this.mResources;
+    }
+    getText(attrName) {
+        return this.getString(attrName);
+    }
+    getString(attrName) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseString(this.mResources, value, null);
+    }
+    getBoolean(attrName, defValue) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseBoolean(this.mResources, value, defValue);
+    }
+    getInt(attrName, defValue) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseInt(this.mResources, value, defValue);
+    }
+    getFloat(attrName, defValue) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseFloat(this.mResources, value, defValue);
+    }
+    getColor(attrName, defValue) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseColor(this.mResources, value, defValue);
+    }
+    getColorStateList(attrName) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseColorStateList(this.mResources, value);
+    }
+    getInteger(attrName, defValue) {
+        return this.getInt(attrName, defValue);
+    }
+    getDimension(attrName, defValue) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseDimension(this.mResources, value, defValue);
+    }
+    getDimensionPixelOffset(attrName, defValue) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseDimensionPixelOffset(this.mResources, value, defValue);
+    }
+    getDimensionPixelSize(attrName, defValue) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseDimensionPixelSize(this.mResources, value, defValue);
+    }
+    getDrawable(attrName) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseDrawable(this.mResources, value);
+    }
+    getTextArray(attrName) {
+        this.checkRecycled();
+        let value = this.mXml.getAttribute(attrName);
+        return AttrValueParser.parseTextArray(this.mResources, value);
+    }
+    hasValue(attrName) {
+        this.checkRecycled();
+        return this.mXml.getAttribute(attrName) != null;
+    }
+    hasValueOrEmpty(attrName) {
+        this.checkRecycled();
+        return this.mXml.hasAttribute(attrName);
+    }
+    recycle() {
+        this.mRecycled = true;
+        this.mXml = null;
+        this.mResources.mTypedArrayPool.release(this);
+    }
+}
 var android;
 (function (android) {
     var content;
@@ -4398,8 +4768,11 @@ var android;
             var Drawable = android.graphics.drawable.Drawable;
             var Color = android.graphics.Color;
             var TypedValue = android.util.TypedValue;
+            var SynchronizedPool = android.util.Pools.SynchronizedPool;
+            var ColorDrawable = android.graphics.drawable.ColorDrawable;
             class Resources {
                 constructor(context) {
+                    this.mTypedArrayPool = new SynchronizedPool(5);
                     this.context = context;
                     window.addEventListener('resize', () => {
                         if (this.displayMetrics) {
@@ -4445,12 +4818,20 @@ var android;
                         refString = refString.substring('@android:drawable/'.length);
                         return android.R.drawable[refString] || android.R.image[refString];
                     }
+                    if (refString.startsWith('@android:color/')) {
+                        refString = refString.substring('@android:color/'.length);
+                        let color = android.R.color[refString];
+                        if (color instanceof res.ColorStateList) {
+                            color = color.getDefaultColor();
+                        }
+                        return new ColorDrawable(color);
+                    }
                     if (Resources._AppBuildImageFileFinder) {
                         let drawable = Resources._AppBuildImageFileFinder(refString);
                         if (drawable)
                             return drawable;
                     }
-                    if (!refString.startsWith('@drawable/')) {
+                    if (!refString.startsWith('@')) {
                         refString = '@drawable/' + refString;
                     }
                     let ele = this.getXml(refString);
@@ -4460,7 +4841,8 @@ var android;
                     ele = this.getValue(refString);
                     if (ele) {
                         let text = ele.innerText;
-                        if (text.startsWith('@android:drawable/') || text.startsWith('@drawable/')) {
+                        if (text.startsWith('@android:drawable/') || text.startsWith('@drawable/')
+                            || text.startsWith('@android:color/') || text.startsWith('@color/')) {
                             return this.getDrawable(text);
                         }
                         return Drawable.createFromXml(this, ele);
@@ -4680,6 +5062,9 @@ var android;
                         }
                         return ele;
                     }
+                }
+                obtainAttributes(attrs) {
+                    return TypedArray.obtain(this, attrs);
                 }
                 static set buildDrawableFinder(value) {
                     throw Error('Error: old build tool not support. Please update your build_res.js file.');
@@ -5622,7 +6007,7 @@ var android;
                     this.mDefaultColor = 0xffff0000;
                     this.mStateSpecs = states;
                     this.mColors = colors;
-                    if (states.length > 0) {
+                    if (states && states.length > 0) {
                         this.mDefaultColor = colors[0];
                         for (let i = 0; i < states.length; i++) {
                             if (states[i].length == 0) {
@@ -5642,7 +6027,54 @@ var android;
                     return csl;
                 }
                 static createFromXml(r, parser) {
-                    return null;
+                    let colorStateList;
+                    let name = parser.tagName.toLowerCase();
+                    if (name == "selector") {
+                        const stateSpecList = [];
+                        const colorList = [];
+                        for (let child of Array.from(parser.children)) {
+                            let item = child;
+                            if (item.tagName.toLowerCase() !== 'item') {
+                                continue;
+                            }
+                            let alpha = 1.0;
+                            let color = 0xffff0000;
+                            let haveColor = false;
+                            let stateSpec = [];
+                            let typedArray = r.obtainAttributes(item);
+                            for (let attr of Array.from(item.attributes)) {
+                                let attrName = attr.name;
+                                if (attrName === 'android:alpha') {
+                                    alpha = typedArray.getFloat(attrName, alpha);
+                                }
+                                else if (attrName === 'android:color') {
+                                    color = typedArray.getColor(attrName, color);
+                                    haveColor = true;
+                                }
+                                else if (attrName.startsWith('android:state_')) {
+                                    let state = attrName.substring('android:state_'.length);
+                                    let stateValue = android.view.View['VIEW_STATE_' + state.toUpperCase()];
+                                    if (typeof stateValue === "number") {
+                                        stateSpec.push(typedArray.getBoolean(attrName, true) ? stateValue : -stateValue);
+                                    }
+                                }
+                            }
+                            if (!haveColor) {
+                                throw new Error(`<item> tag requires a 'android:color' attribute.`);
+                            }
+                            let alphaMod = Math.floor(Color.alpha(color) * alpha);
+                            alphaMod = Math.min(alphaMod, 255);
+                            alphaMod = Math.max(alphaMod, 0);
+                            color = (color & 0xFFFFFF) | (alphaMod << 24);
+                            colorList.push(color);
+                            stateSpecList.push(stateSpec);
+                        }
+                        colorStateList = new ColorStateList(stateSpecList, colorList);
+                    }
+                    else {
+                        throw new Error(`XmlPullParserException(invalid drawable tag: ${name}`);
+                    }
+                    return colorStateList;
                 }
                 withAlpha(alpha) {
                     let colors = androidui.util.ArrayCreator.newNumberArray(this.mColors.length);
@@ -6084,11 +6516,9 @@ var androidui;
     (function (attr) {
         var Gravity = android.view.Gravity;
         var Drawable = android.graphics.drawable.Drawable;
-        var ColorDrawable = android.graphics.drawable.ColorDrawable;
         var Color = android.graphics.Color;
         var ColorStateList = android.content.res.ColorStateList;
         var Resources = android.content.res.Resources;
-        var TypedValue = android.util.TypedValue;
         class AttrBinder {
             constructor(host) {
                 this.attrChangeMap = new Map();
@@ -6165,9 +6595,8 @@ var androidui;
                 throw Error('not a padding or margin value : ' + value);
             }
             parseEnum(value, enumMap, defaultValue) {
-                if (typeof value === "number") {
-                    if (Number.isInteger(value))
-                        return value;
+                if (Number.isInteger(value)) {
+                    return value;
                 }
                 if (enumMap.has(value)) {
                     return enumMap.get(value);
@@ -6175,81 +6604,46 @@ var androidui;
                 return defaultValue;
             }
             parseBoolean(value, defaultValue = true) {
-                if (value === false || value === 'false' || value === '0')
+                if (value === false)
                     return false;
-                else if (value === true || value === 'true' || value === '1' || value === '')
+                else if (value === true)
                     return true;
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                if (typeof value === "string") {
+                    return attr.AttrValueParser.parseBoolean(res, value, defaultValue);
+                }
                 return defaultValue;
             }
             parseGravity(s, defaultValue = Gravity.NO_GRAVITY) {
                 let gravity = Number.parseInt(s);
                 if (Number.isInteger(gravity))
                     return gravity;
-                gravity = Gravity.NO_GRAVITY;
-                try {
-                    let parts = s.split("|");
-                    parts.forEach((part) => {
-                        let g = Gravity[part.toUpperCase()];
-                        if (Number.isInteger(g))
-                            gravity |= g;
-                    });
-                }
-                catch (e) {
-                    console.error(e);
-                }
-                if (Number.isNaN(gravity) || gravity === Gravity.NO_GRAVITY)
-                    gravity = defaultValue;
-                return gravity;
+                return Gravity.parseGravity(s, defaultValue);
             }
             parseDrawable(s) {
                 if (!s)
                     return null;
                 if (s instanceof Drawable)
                     return s;
-                s = (s + '').trim();
-                if (s.startsWith('@')) {
+                if (s.startsWith('@ref/')) {
                     let refObj = this.getRefObject(s);
                     if (refObj)
                         return refObj;
-                    try {
-                        return Resources.getSystem().getDrawable(s);
-                    }
-                    catch (e) {
-                    }
                 }
-                else if (s.startsWith('url(')) {
-                    s = s.substring('url('.length);
-                    if (s.endsWith(')'))
-                        s = s.substring(0, s.length - 1);
-                    return new androidui.image.NetDrawable(s);
-                }
-                else {
-                    try {
-                        let color = this.parseColor(s);
-                        return new ColorDrawable(color);
-                    }
-                    catch (e) {
-                    }
-                }
-                return null;
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                s = (s + '').trim();
+                return attr.AttrValueParser.parseDrawable(res, s);
             }
             parseColor(value, defaultValue) {
                 let color = Number.parseInt(value);
                 if (Number.isInteger(color))
                     return color;
-                try {
-                    if (value.startsWith('@')) {
-                        return Resources.getSystem().getColor(value);
-                    }
-                    else {
-                        return Color.parseColor(value);
-                    }
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                color = attr.AttrValueParser.parseColor(res, value, defaultValue);
+                if (isNaN(color)) {
+                    return Color.BLACK;
                 }
-                catch (e) {
-                    if (defaultValue == null)
-                        throw e;
-                }
-                return defaultValue;
+                return color;
             }
             parseColorList(value) {
                 if (!value)
@@ -6258,126 +6652,60 @@ var androidui;
                     return value;
                 if (typeof value == 'number')
                     return ColorStateList.valueOf(value);
-                if (value.startsWith('@')) {
+                if (value.startsWith('@ref/')) {
                     let refObj = this.getRefObject(value);
                     if (refObj)
                         return refObj;
-                    return Resources.getSystem().getColorStateList(value);
                 }
-                else {
-                    try {
-                        let color = this.parseColor(value);
-                        return ColorStateList.valueOf(color);
-                    }
-                    catch (e) {
-                        console.log(e);
-                    }
-                }
-                return null;
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                return attr.AttrValueParser.parseColorStateList(res, value);
             }
             parseInt(value, defaultValue = 0) {
-                if (typeof value === 'string' && value.startsWith('@')) {
-                    try {
-                        return Resources.getSystem().getInteger(value);
-                    }
-                    catch (e) {
-                        return defaultValue;
-                    }
-                }
-                let v = parseInt(value);
-                if (isNaN(v))
-                    return defaultValue;
-                return v;
+                if (typeof value == 'number')
+                    return value;
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                return attr.AttrValueParser.parseInt(res, value, defaultValue);
             }
             parseFloat(value, defaultValue = 0) {
-                if (typeof value === 'string' && value.startsWith('@')) {
-                    try {
-                        return Resources.getSystem().getFloat(value);
-                    }
-                    catch (e) {
-                        return defaultValue;
-                    }
-                }
-                let v = parseFloat(value);
-                if (isNaN(v))
-                    return defaultValue;
-                return v;
+                if (typeof value == 'number')
+                    return value;
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                return attr.AttrValueParser.parseFloat(res, value, defaultValue);
             }
             parseDimension(value, defaultValue = 0, baseValue = 0) {
-                if (typeof value === 'string' && value.startsWith('@')) {
-                    try {
-                        return Resources.getSystem().getDimension(value, baseValue);
-                    }
-                    catch (e) {
-                        return defaultValue;
-                    }
-                }
-                try {
-                    return TypedValue.complexToDimension(value, baseValue);
-                }
-                catch (e) {
-                    return defaultValue;
-                }
+                if (typeof value == 'number')
+                    return value;
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                return attr.AttrValueParser.parseDimension(res, value, defaultValue);
             }
             parseNumberPixelOffset(value, defaultValue = 0, baseValue = 0) {
-                if (typeof value === 'string' && value.startsWith('@')) {
-                    try {
-                        return Resources.getSystem().getDimensionPixelOffset(value, baseValue);
-                    }
-                    catch (e) {
-                        return defaultValue;
-                    }
-                }
-                try {
-                    return TypedValue.complexToDimensionPixelOffset(value, baseValue);
-                }
-                catch (e) {
-                    return defaultValue;
-                }
+                if (typeof value == 'number')
+                    return value;
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                return attr.AttrValueParser.parseDimensionPixelOffset(res, value, defaultValue);
             }
             parseNumberPixelSize(value, defaultValue = 0, baseValue = 0) {
-                if (typeof value === 'string' && value.startsWith('@')) {
-                    try {
-                        return Resources.getSystem().getDimensionPixelSize(value, baseValue);
-                    }
-                    catch (e) {
-                        return defaultValue;
-                    }
-                }
-                try {
-                    return TypedValue.complexToDimensionPixelSize(value, baseValue);
-                }
-                catch (e) {
-                    return defaultValue;
-                }
+                if (typeof value == 'number')
+                    return value;
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                return attr.AttrValueParser.parseDimensionPixelSize(res, value, defaultValue);
             }
             parseString(value, defaultValue) {
+                let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
                 if (typeof value === 'string') {
-                    if (value.startsWith('@')) {
-                        try {
-                            return Resources.getSystem().getString(value);
-                        }
-                        catch (e) {
-                            return defaultValue;
-                        }
-                    }
-                    return value;
+                    return attr.AttrValueParser.parseString(res, value, defaultValue);
                 }
                 return defaultValue;
             }
             parseStringArray(value) {
-                value += '';
-                if (value.startsWith('@')) {
-                    return Resources.getSystem().getStringArray(value);
-                }
-                else {
-                    try {
-                        let json = JSON.parse(value);
-                        if (json instanceof Array)
-                            return json;
+                if (typeof value === 'string') {
+                    if (value.startsWith('@ref/')) {
+                        let refObj = this.getRefObject(value);
+                        if (refObj)
+                            return refObj;
                     }
-                    catch (e) {
-                    }
+                    let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
+                    return attr.AttrValueParser.parseTextArray(res, value);
                 }
                 return null;
             }
@@ -7099,6 +7427,36 @@ var android;
                 createConstantState(state) {
                     return new LayerDrawable.LayerState(state, this);
                 }
+                inflate(r, parser) {
+                    super.inflate(r, parser);
+                    let a = r.obtainAttributes(parser);
+                    this.mOpacityOverride = a.getInt("android:opacity", PixelFormat.UNKNOWN);
+                    this.setAutoMirrored(a.getBoolean("android:autoMirrored", false));
+                    a.recycle();
+                    for (let child of Array.from(parser.children)) {
+                        let item = child;
+                        if (item.tagName.toLowerCase() !== 'item') {
+                            continue;
+                        }
+                        a = r.obtainAttributes(item);
+                        let left = a.getDimensionPixelOffset("android:left", 0);
+                        let top = a.getDimensionPixelOffset("android:top", 0);
+                        let right = a.getDimensionPixelOffset("android:right", 0);
+                        let bottom = a.getDimensionPixelOffset("android:bottom", 0);
+                        let dr = a.getDrawable("android:drawable");
+                        let id = a.getString("android:id");
+                        a.recycle();
+                        if (!dr && item.children[0] instanceof HTMLElement) {
+                            dr = Drawable.createFromXml(r, item.children[0]);
+                        }
+                        if (!dr) {
+                            throw Error(`new XmlPullParserException(<item> tag requires a 'drawable' attribute or child tag defining a drawable)`);
+                        }
+                        this.addLayer(dr, id, left, top, right, bottom);
+                    }
+                    this.ensurePadding();
+                    this.onStateChange(this.getState());
+                }
                 addLayer(layer, id, left = 0, top = 0, right = 0, bottom = 0) {
                     const st = this.mLayerState;
                     let N = st.mChildren != null ? st.mChildren.length : 0;
@@ -7504,7 +7862,8 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable) {
+        (function (drawable_5) {
+            var Log = android.util.Log;
             var Drawable = android.graphics.drawable.Drawable;
             class RotateDrawable extends Drawable {
                 constructor(rotateState) {
@@ -7596,6 +7955,52 @@ var android;
                     }
                     return null;
                 }
+                inflate(r, parser) {
+                    super.inflate(r, parser);
+                    let a = r.obtainAttributes(parser);
+                    let tv = a.getString("android:pivotX");
+                    let pivotXRel;
+                    let pivotX;
+                    if (tv == null) {
+                        pivotXRel = true;
+                        pivotX = 0.5;
+                    }
+                    else {
+                        pivotXRel = tv.endsWith('%');
+                        pivotX = a.getFloat('android:pivotX', 0.5);
+                    }
+                    tv = a.getString("android:pivotY");
+                    let pivotYRel;
+                    let pivotY;
+                    if (tv == null) {
+                        pivotYRel = true;
+                        pivotY = 0.5;
+                    }
+                    else {
+                        pivotYRel = tv.endsWith('%');
+                        pivotY = a.getFloat('android:pivotY', 0.5);
+                    }
+                    let fromDegrees = a.getFloat("android:fromDegrees", 0.0);
+                    let toDegrees = a.getFloat("android:toDegrees", 360.0);
+                    let drawable = a.getDrawable("android:drawable");
+                    a.recycle();
+                    if (!drawable && parser.children[0] instanceof HTMLElement) {
+                        drawable = Drawable.createFromXml(r, parser.children[0]);
+                    }
+                    if (drawable == null) {
+                        Log.w("drawable", "No drawable specified for <rotate>");
+                    }
+                    this.mState.mDrawable = drawable;
+                    this.mState.mPivotXRel = pivotXRel;
+                    this.mState.mPivotX = pivotX;
+                    this.mState.mPivotYRel = pivotYRel;
+                    this.mState.mPivotY = pivotY;
+                    this.mState.mFromDegrees = this.mState.mCurrentDegrees = fromDegrees;
+                    this.mState.mToDegrees = toDegrees;
+                    if (drawable != null) {
+                        drawable.setCallback(this);
+                    }
+                }
                 mutate() {
                     if (!this.mMutated && super.mutate() == this) {
                         this.mState.mDrawable.mutate();
@@ -7605,7 +8010,7 @@ var android;
                 }
             }
             RotateDrawable.MAX_LEVEL = 10000.0;
-            drawable.RotateDrawable = RotateDrawable;
+            drawable_5.RotateDrawable = RotateDrawable;
             (function (RotateDrawable) {
                 class RotateState {
                     constructor(source, owner) {
@@ -7638,7 +8043,7 @@ var android;
                     }
                 }
                 RotateDrawable.RotateState = RotateState;
-            })(RotateDrawable = drawable.RotateDrawable || (drawable.RotateDrawable = {}));
+            })(RotateDrawable = drawable_5.RotateDrawable || (drawable_5.RotateDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -7661,7 +8066,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_5) {
+        (function (drawable_6) {
             var Rect = android.graphics.Rect;
             var Gravity = android.view.Gravity;
             var Drawable = android.graphics.drawable.Drawable;
@@ -7688,6 +8093,31 @@ var android;
                 }
                 getDrawable() {
                     return this.mScaleState.mDrawable;
+                }
+                inflate(r, parser) {
+                    super.inflate(r, parser);
+                    let a = r.obtainAttributes(parser);
+                    let sw = a.getFloat("android:scaleWidth", 1);
+                    let sh = a.getFloat("android:scaleHeight", 1);
+                    let gStr = a.getString("android:scaleGravity");
+                    let g = Gravity.parseGravity(gStr, Gravity.LEFT);
+                    let min = a.getBoolean("android:useIntrinsicSizeAsMinimum", false);
+                    let dr = a.getDrawable("android:drawable");
+                    a.recycle();
+                    if (!dr && parser.children[0] instanceof HTMLElement) {
+                        dr = Drawable.createFromXml(r, parser.children[0]);
+                    }
+                    if (dr == null) {
+                        throw Error(`new IllegalArgumentException("No drawable specified for <scale>")`);
+                    }
+                    this.mScaleState.mDrawable = dr;
+                    this.mScaleState.mScaleWidth = sw;
+                    this.mScaleState.mScaleHeight = sh;
+                    this.mScaleState.mGravity = g;
+                    this.mScaleState.mUseIntrinsicSizeAsMin = min;
+                    if (dr != null) {
+                        dr.setCallback(this);
+                    }
                 }
                 drawableSizeChange(who) {
                     const callback = this.getCallback();
@@ -7783,7 +8213,7 @@ var android;
                     return this;
                 }
             }
-            drawable_5.ScaleDrawable = ScaleDrawable;
+            drawable_6.ScaleDrawable = ScaleDrawable;
             (function (ScaleDrawable) {
                 class ScaleState {
                     constructor(orig, owner) {
@@ -7812,7 +8242,7 @@ var android;
                     }
                 }
                 ScaleDrawable.ScaleState = ScaleState;
-            })(ScaleDrawable = drawable_5.ScaleDrawable || (drawable_5.ScaleDrawable = {}));
+            })(ScaleDrawable = drawable_6.ScaleDrawable || (drawable_6.ScaleDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
@@ -8475,6 +8905,7 @@ var android;
         var drawable;
         (function (drawable) {
             var SystemClock = android.os.SystemClock;
+            var Drawable = android.graphics.drawable.Drawable;
             var DrawableContainer = android.graphics.drawable.DrawableContainer;
             class AnimationDrawable extends DrawableContainer {
                 constructor(state) {
@@ -8562,6 +8993,37 @@ var android;
                         this.scheduleSelf(this, SystemClock.uptimeMillis() + this.mAnimationState.mDurations[frame]);
                     }
                 }
+                inflate(r, parser) {
+                    super.inflate(r, parser);
+                    let a = r.obtainAttributes(parser);
+                    this.mAnimationState.setVariablePadding(a.getBoolean("android:variablePadding", false));
+                    this.mAnimationState.mOneShot = a.getBoolean("android:oneshot", false);
+                    a.recycle();
+                    for (let child of Array.from(parser.children)) {
+                        let item = child;
+                        if (item.tagName.toLowerCase() !== 'item') {
+                            continue;
+                        }
+                        a = r.obtainAttributes(item);
+                        let duration = a.getInt("android:duration", -1);
+                        if (duration < 0) {
+                            throw Error(`new XmlPullParserException(parser.getPositionDescription() + ": <item> tag requires a 'duration' attribute")`);
+                        }
+                        let dr = a.getDrawable("android:drawable");
+                        a.recycle();
+                        if (!dr && item.children[0] instanceof HTMLElement) {
+                            dr = Drawable.createFromXml(r, item.children[0]);
+                        }
+                        if (!dr) {
+                            throw Error(`new XmlPullParserException(<item> tag requires a 'drawable' attribute or child tag defining a drawable)`);
+                        }
+                        this.mAnimationState.addFrame(dr, duration);
+                        if (dr != null) {
+                            dr.setCallback(this);
+                        }
+                    }
+                    this.setFrame(0, true, false);
+                }
                 mutate() {
                     if (!this.mMutated && super.mutate() == this) {
                         this.mAnimationState.mDurations = [...this.mAnimationState.mDurations];
@@ -8602,11 +9064,11 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_6) {
+        (function (drawable_7) {
             const DEBUG = android.util.Log.DBG_StateListDrawable;
             const TAG = "StateListDrawable";
             const DEFAULT_DITHER = true;
-            class StateListDrawable extends drawable_6.DrawableContainer {
+            class StateListDrawable extends drawable_7.DrawableContainer {
                 constructor() {
                     super();
                     this.initWithState(null);
@@ -8639,6 +9101,51 @@ var android;
                     }
                     return super.onStateChange(stateSet);
                 }
+                inflate(r, parser) {
+                    super.inflate(r, parser);
+                    let a = r.obtainAttributes(parser);
+                    const state = this.mStateListState;
+                    state.mVariablePadding = a.getBoolean("android:variablePadding", state.mVariablePadding);
+                    state.mConstantSize = a.getBoolean("android:constantSize", state.mConstantSize);
+                    state.mEnterFadeDuration = a.getInt("android:enterFadeDuration", state.mEnterFadeDuration);
+                    state.mExitFadeDuration = a.getInt("android:exitFadeDuration", state.mExitFadeDuration);
+                    state.mDither = a.getBoolean("android:dither", state.mDither);
+                    state.mAutoMirrored = a.getBoolean("android:autoMirrored", state.mAutoMirrored);
+                    a.recycle();
+                    for (let child of Array.from(parser.children)) {
+                        let item = child;
+                        if (item.tagName.toLowerCase() !== 'item') {
+                            continue;
+                        }
+                        let dr;
+                        let stateSpec = [];
+                        let typedArray = r.obtainAttributes(item);
+                        for (let attr of Array.from(item.attributes)) {
+                            let attrName = attr.name;
+                            if (attrName === 'android:drawable') {
+                                dr = typedArray.getDrawable(attrName);
+                            }
+                            else if (attrName.startsWith('android:state_')) {
+                                let state = attrName.substring('android:state_'.length);
+                                let stateValue = android.view.View['VIEW_STATE_' + state.toUpperCase()];
+                                if (typeof stateValue === "number") {
+                                    stateSpec.push(typedArray.getBoolean(attrName, true) ? stateValue : -stateValue);
+                                }
+                            }
+                        }
+                        if (!dr && item.children[0] instanceof HTMLElement) {
+                            dr = drawable_7.Drawable.createFromXml(r, item.children[0]);
+                        }
+                        if (!dr) {
+                            throw new Error(": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
+                        }
+                        state.addStateSet(stateSpec, dr);
+                    }
+                    this.onStateChange(this.getState());
+                }
+                getStateListState() {
+                    return this.mStateListState;
+                }
                 getStateCount() {
                     return this.mStateListState.getChildCount();
                 }
@@ -8667,8 +9174,8 @@ var android;
                     return this;
                 }
             }
-            drawable_6.StateListDrawable = StateListDrawable;
-            class StateListState extends drawable_6.DrawableContainer.DrawableContainerState {
+            drawable_7.StateListDrawable = StateListDrawable;
+            class StateListState extends drawable_7.DrawableContainer.DrawableContainerState {
                 constructor(orig, owner) {
                     super(orig, owner);
                     if (orig != null) {
@@ -31682,6 +32189,13 @@ var android;
                 }, () => {
                     return this.getCompoundDrawables()[0];
                 });
+                a.addAttr('drawableStart', (value) => {
+                    let dr = this.mDrawables || {};
+                    let drawable = a.parseDrawable(value);
+                    this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+                }, () => {
+                    return this.getCompoundDrawables()[0];
+                });
                 a.addAttr('drawableTop', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = a.parseDrawable(value);
@@ -31690,6 +32204,13 @@ var android;
                     return this.getCompoundDrawables()[1];
                 });
                 a.addAttr('drawableRight', (value) => {
+                    let dr = this.mDrawables || {};
+                    let drawable = a.parseDrawable(value);
+                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+                }, () => {
+                    return this.getCompoundDrawables()[2];
+                });
+                a.addAttr('drawableEnd', (value) => {
                     let dr = this.mDrawables || {};
                     let drawable = a.parseDrawable(value);
                     this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
@@ -46079,7 +46600,7 @@ var android;
     var graphics;
     (function (graphics) {
         var drawable;
-        (function (drawable_7) {
+        (function (drawable_8) {
             var Rect = android.graphics.Rect;
             var Gravity = android.view.Gravity;
             var Drawable = android.graphics.drawable.Drawable;
@@ -46102,6 +46623,25 @@ var android;
                             drawable.setCallback(this);
                         }
                     }
+                }
+                inflate(r, parser) {
+                    super.inflate(r, parser);
+                    let a = r.obtainAttributes(parser);
+                    let orientation = a.getInt("android:clipOrientation", ClipDrawable.HORIZONTAL);
+                    let gStr = a.getString("android:gravity");
+                    let g = Gravity.parseGravity(gStr, Gravity.LEFT);
+                    let dr = a.getDrawable("android:drawable");
+                    a.recycle();
+                    if (!dr && parser.children[0] instanceof HTMLElement) {
+                        dr = Drawable.createFromXml(r, parser.children[0]);
+                    }
+                    if (dr == null) {
+                        throw Error(`new IllegalArgumentException("No drawable specified for <clip>")`);
+                    }
+                    this.mClipState.mDrawable = dr;
+                    this.mClipState.mOrientation = orientation;
+                    this.mClipState.mGravity = g;
+                    dr.setCallback(this);
                 }
                 drawableSizeChange(who) {
                     const callback = this.getCallback();
@@ -46197,7 +46737,7 @@ var android;
             }
             ClipDrawable.HORIZONTAL = 1;
             ClipDrawable.VERTICAL = 2;
-            drawable_7.ClipDrawable = ClipDrawable;
+            drawable_8.ClipDrawable = ClipDrawable;
             (function (ClipDrawable) {
                 class ClipState {
                     constructor(orig, owner) {
@@ -46223,7 +46763,7 @@ var android;
                     }
                 }
                 ClipDrawable.ClipState = ClipState;
-            })(ClipDrawable = drawable_7.ClipDrawable || (drawable_7.ClipDrawable = {}));
+            })(ClipDrawable = drawable_8.ClipDrawable || (drawable_8.ClipDrawable = {}));
         })(drawable = graphics.drawable || (graphics.drawable = {}));
     })(graphics = android.graphics || (android.graphics = {}));
 })(android || (android = {}));
