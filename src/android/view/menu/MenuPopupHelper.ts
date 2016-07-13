@@ -212,6 +212,10 @@ export class MenuPopupHelper implements AdapterView.OnItemClickListener, View.On
                 this.dismiss();
             } else if (this.isShowing()) {
                 // Recompute window size and position
+                try {
+                    this.mPopup.setContentWidth(Math.min(this.measureContentWidth(this.mAdapter), this.mPopupMaxWidth));
+                } catch (e) {
+                }
                 this.mPopup.show();
             }
         }
