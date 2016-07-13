@@ -1,7 +1,8 @@
 # AndroidUI For Web
 
 移植Android的UI组件到Web端, 以Android的方式来制作高性能优体验的WebApp
-[查看SampleApp](http://linfaxin.com/AndroidUI-WebApp/sample/main.html)
+
+网站: http://androiduix.com
 
 
 ### 特点
@@ -29,7 +30,7 @@ Android开发者可以从[这篇文章](README_for_Androids_cn.md)快速起步�
 
 ### Sample
 
-* [Sample App](http://linfaxin.com/AndroidUI-WebApp/sample/main.html)
+* [Sample App](http://linfaxin.com/AndroidUIX/sample/main.html)
 * [干货WebApp](http://linfaxin.com/GankWebApp)
 
 ### 支持
