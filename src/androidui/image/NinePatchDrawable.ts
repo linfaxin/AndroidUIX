@@ -34,9 +34,18 @@ module androidui.image {
             let imageRatio = image.getImageRatio();
             this.mImageWidth = Math.floor( (image.width-2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
             this.mImageHeight = Math.floor( (image.height-2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
-            this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(this.mState.mImage.src);
+            this.initNinePatchBorderInfo(image);
         }
 
+        private initNinePatchBorderInfo(image:NetImage){
+            this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(image.src);
+            if(!this.mNinePatchBorderInfo){
+                image.getBorderPixels((leftBorder:number[], topBorder:number[], rightBorder:number[], bottomBorder:number[])=>{
+                    this.mNinePatchBorderInfo = new NinePatchBorderInfo(leftBorder, topBorder, rightBorder, bottomBorder);
+                    NinePatchDrawable.GlobalBorderInfoCache.set(image.src, ninePatchBorderInfo);
+                });
+            }
+        }
 
         protected onLoad():void {
             //parse nine patch border now.
