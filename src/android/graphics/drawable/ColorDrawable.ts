@@ -19,7 +19,6 @@
 ///<reference path="../Paint.ts"/>
 
 module android.graphics.drawable{
-    import AttrValueParser = androidui.attr.AttrValueParser;
     /**
      * A specialized Drawable that fills the Canvas with a specified color.
      * Note that a ColorDrawable ignores the ColorFilter.
@@ -129,7 +128,7 @@ module android.graphics.drawable{
             super.inflate(r, parser);
 
             let state = this.mState;
-            state.mBaseColor = AttrValueParser.parseColor(r, parser.innerText, state.mBaseColor);
+            state.mBaseColor = androidui.attr.AttrValueParser.parseColor(r, parser.innerText, state.mBaseColor);
             state.mUseColor = state.mBaseColor;
         }
 
