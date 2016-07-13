@@ -32,6 +32,7 @@ module android.graphics.drawable {
     import System = java.lang.System;
     import Runnable = java.lang.Runnable;
     import Drawable = android.graphics.drawable.Drawable;
+    import TypedArray = android.content.res.TypedArray;
     /**
      * A Drawable that manages an array of other Drawables. These are drawn in array
      * order, so the element with the largest index will be drawn on top.

@@ -34,6 +34,7 @@ module android.graphics.drawable {
     import Runnable = java.lang.Runnable;
     import Float = java.lang.Float;
     import Drawable = android.graphics.drawable.Drawable;
+    import TypedArray = android.content.res.TypedArray;
     /**
      * A Drawable that changes the size of another Drawable based on its current
      * level value.  You can control how much the child Drawable changes in width

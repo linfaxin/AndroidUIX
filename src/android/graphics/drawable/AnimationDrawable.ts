@@ -30,6 +30,7 @@ module android.graphics.drawable {
     import Animatable = android.graphics.drawable.Animatable;
     import Drawable = android.graphics.drawable.Drawable;
     import DrawableContainer = android.graphics.drawable.DrawableContainer;
+    import TypedArray = android.content.res.TypedArray;
     /**
      *
      * An object used to create frame-by-frame animations, defined by a series of Drawable objects,

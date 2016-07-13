@@ -30,6 +30,7 @@ import TypedValue = android.util.TypedValue;
 import Log = android.util.Log;
 import Drawable = android.graphics.drawable.Drawable;
 import Runnable = java.lang.Runnable;
+    import TypedArray = android.content.res.TypedArray;
 
 /**
  * <p>A Drawable that can rotate another Drawable based on the current level

@@ -28,6 +28,7 @@ import Resources = android.content.res.Resources;
 import Gravity = android.view.Gravity;
 import Drawable = android.graphics.drawable.Drawable;
 import Runnable = java.lang.Runnable;
+    import TypedArray = android.content.res.TypedArray;
 /**
  * A Drawable that clips another Drawable based on this Drawable's current
  * level value.  You can control how much the child Drawable gets clipped in width

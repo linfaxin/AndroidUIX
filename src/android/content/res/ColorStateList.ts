@@ -24,6 +24,7 @@ module android.content.res{
     import SparseArray = android.util.SparseArray;
     import StateSet = android.util.StateSet;
     import WeakReference = java.lang.ref.WeakReference;
+    import Color = android.graphics.Color;
 
     /**
      *
