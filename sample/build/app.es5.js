@@ -502,9 +502,9 @@ var sample;
                     menu.setCallback({
                         onMenuItemSelected: function onMenuItemSelected(menu, item) {
                             if (item == forkItem) {
-                                window.location.href = 'https://github.com/linfaxin/AndroidUI-WebApp';
+                                window.location.href = 'https://github.com/linfaxin/AndroidUIX';
                             } else if (item == aboutItem) {
-                                new android.app.AlertDialog.Builder(activity).setTitle('About').setMessage('AndroidUI-WebApp by LinFaXin.').setPositiveButton(android.R.string_.ok, null).show();
+                                new android.app.AlertDialog.Builder(activity).setTitle('About').setMessage('AndroidUIX by LinFaXin.').setPositiveButton(android.R.string_.ok, null).show();
                             }
                             return true;
                         }

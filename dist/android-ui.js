@@ -1,6 +1,6 @@
 /**
- * AndroidUI-WebApp v0.6.2
- * https://github.com/linfaxin/AndroidUI-WebApp
+ * AndroidUIX v0.6.2
+ * https://github.com/linfaxin/AndroidUIX
  */
 var java;
 (function (java) {
