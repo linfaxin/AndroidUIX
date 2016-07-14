@@ -2,7 +2,7 @@ var fs = require('fs');
 var packageJson = require('../package');
 
 var versionInfo = `/**
- * AndroidUI-WebApp v${packageJson.version}
+ * AndroidUIX v${packageJson.version}
  * ${packageJson.repository.url}
  */`;
 

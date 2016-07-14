@@ -30,12 +30,12 @@ module sample.app {
             menu.setCallback({
                 onMenuItemSelected : function(menu, item){
                     if(item == forkItem){
-                        window.location.href = 'https://github.com/linfaxin/AndroidUI-WebApp';
+                        window.location.href = 'https://github.com/linfaxin/AndroidUIX';
 
                     }else if(item == aboutItem){
                         new android.app.AlertDialog.Builder(activity)
                             .setTitle('About')
-                            .setMessage('AndroidUI-WebApp by LinFaXin.')
+                            .setMessage('AndroidUIX by LinFaXin.')
                             .setPositiveButton(android.R.string_.ok, null)
                             .show();
                     }

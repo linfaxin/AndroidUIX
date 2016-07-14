@@ -31,7 +31,7 @@ You can test Sample on your device.
 
 ### Sample
 
-* [Sample App](http://linfaxin.com/AndroidUI-WebApp/sample/main.html)
+* [Sample App](http://linfaxin.com/AndroidUIX/sample/main.html)
 * [GankWebApp](https://github.com/linfaxin/GankWebApp)
 
 
