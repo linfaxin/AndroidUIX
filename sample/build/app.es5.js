@@ -209,9 +209,9 @@ var R;
         if (ratio === 0.75 && spec === 'ldpi') return true;
         if (ratio === 1 && spec === 'mdpi') return true;
         if (ratio === 1.5 && spec === 'hdpi') return true;
-        if (ratio === 2 && spec === 'xdpi') return true;
-        if (ratio === 3 && spec === 'xxdpi') return true;
-        if (ratio === 4 && spec === 'xxxdpi') return true;
+        if (ratio === 2 && spec === 'xhdpi') return true;
+        if (ratio === 3 && spec === 'xxhdpi') return true;
+        if (ratio === 4 && spec === 'xxxhdpi') return true;
         var dpi = ratio * 160;
         if (spec === dpi + 'dpi') return true;
         var xdp = document.documentElement.offsetWidth;
@@ -335,7 +335,7 @@ var R;
                 }
                 var ratio = 1;
                 if (dirName.includes('-')) {
-                    if (dirName.includes('-ldpi')) ratio = 0.75;else if (dirName.includes('-mdpi')) ratio = 1;else if (dirName.includes('-hdpi')) ratio = 1.5;else if (dirName.includes('-xdpi')) ratio = 2;else if (dirName.includes('-xxdpi')) ratio = 3;else if (dirName.includes('-xxxdpi')) ratio = 4;
+                    if (dirName.includes('-ldpi')) ratio = 0.75;else if (dirName.includes('-mdpi')) ratio = 1;else if (dirName.includes('-hdpi')) ratio = 1.5;else if (dirName.includes('-xhdpi')) ratio = 2;else if (dirName.includes('-xxhdpi')) ratio = 3;else if (dirName.includes('-xxxhdpi')) ratio = 4;
                 }
                 var fileStr = dir[fileName];
                 if (fileStr && fileStr.startsWith('data:image')) {

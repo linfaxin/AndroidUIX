@@ -175,11 +175,11 @@ var R;
             return true;
         if (ratio === 1.5 && spec === 'hdpi')
             return true;
-        if (ratio === 2 && spec === 'xdpi')
+        if (ratio === 2 && spec === 'xhdpi')
             return true;
-        if (ratio === 3 && spec === 'xxdpi')
+        if (ratio === 3 && spec === 'xxhdpi')
             return true;
-        if (ratio === 4 && spec === 'xxxdpi')
+        if (ratio === 4 && spec === 'xxxhdpi')
             return true;
         let dpi = ratio * 160;
         if (spec === dpi + 'dpi')
@@ -274,11 +274,11 @@ var R;
                     ratio = 1;
                 else if (dirName.includes('-hdpi'))
                     ratio = 1.5;
-                else if (dirName.includes('-xdpi'))
+                else if (dirName.includes('-xhdpi'))
                     ratio = 2;
-                else if (dirName.includes('-xxdpi'))
+                else if (dirName.includes('-xxhdpi'))
                     ratio = 3;
-                else if (dirName.includes('-xxxdpi'))
+                else if (dirName.includes('-xxxhdpi'))
                     ratio = 4;
             }
             let fileStr = dir[fileName];
