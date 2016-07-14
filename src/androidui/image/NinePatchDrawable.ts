@@ -42,7 +42,7 @@ module androidui.image {
             if(!this.mNinePatchBorderInfo){
                 image.getBorderPixels((leftBorder:number[], topBorder:number[], rightBorder:number[], bottomBorder:number[])=>{
                     this.mNinePatchBorderInfo = new NinePatchBorderInfo(leftBorder, topBorder, rightBorder, bottomBorder);
-                    NinePatchDrawable.GlobalBorderInfoCache.set(image.src, ninePatchBorderInfo);
+                    NinePatchDrawable.GlobalBorderInfoCache.set(image.src, this.mNinePatchBorderInfo);
                 });
             }
         }

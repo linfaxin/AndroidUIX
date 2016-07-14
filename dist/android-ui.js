@@ -1,5 +1,5 @@
 /**
- * AndroidUI-WebApp v0.6.1
+ * AndroidUI-WebApp v0.6.2
  * https://github.com/linfaxin/AndroidUI-WebApp
  */
 var java;
@@ -3197,7 +3197,7 @@ var android;
                 inflate(r, parser) {
                     super.inflate(r, parser);
                     let state = this.mState;
-                    state.mBaseColor = AttrValueParser.parseColor(r, parser.innerText, state.mBaseColor);
+                    state.mBaseColor = androidui.attr.AttrValueParser.parseColor(r, parser.innerText, state.mBaseColor);
                     state.mUseColor = state.mBaseColor;
                 }
                 getConstantState() {
@@ -4651,113 +4651,118 @@ var androidui;
         attr.AttrValueParser = AttrValueParser;
     })(attr = androidui.attr || (androidui.attr = {}));
 })(androidui || (androidui = {}));
-var DisplayMetrics = android.util.DisplayMetrics;
-var Color = android.graphics.Color;
-var TypedValue = android.util.TypedValue;
-var Drawable = android.graphics.drawable.Drawable;
-var ColorDrawable = android.graphics.drawable.ColorDrawable;
-var AttrValueParser = androidui.attr.AttrValueParser;
-class TypedArray {
-    constructor(res, xml) {
-        this.mResources = res;
-        this.mXml = xml;
-    }
-    static obtain(res, xml) {
-        const attrs = res.mTypedArrayPool.acquire();
-        if (attrs != null) {
-            attrs.mRecycled = false;
-            attrs.mXml = xml;
-            return attrs;
-        }
-        return new TypedArray(res, xml);
-    }
-    checkRecycled() {
-        if (this.mRecycled) {
-            throw new Error("RuntimeException : Cannot make calls to a recycled instance!");
-        }
-    }
-    length() {
-        this.checkRecycled();
-        return this.mXml.attributes.length;
-    }
-    getResources() {
-        return this.mResources;
-    }
-    getText(attrName) {
-        return this.getString(attrName);
-    }
-    getString(attrName) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseString(this.mResources, value, null);
-    }
-    getBoolean(attrName, defValue) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseBoolean(this.mResources, value, defValue);
-    }
-    getInt(attrName, defValue) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseInt(this.mResources, value, defValue);
-    }
-    getFloat(attrName, defValue) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseFloat(this.mResources, value, defValue);
-    }
-    getColor(attrName, defValue) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseColor(this.mResources, value, defValue);
-    }
-    getColorStateList(attrName) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseColorStateList(this.mResources, value);
-    }
-    getInteger(attrName, defValue) {
-        return this.getInt(attrName, defValue);
-    }
-    getDimension(attrName, defValue) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseDimension(this.mResources, value, defValue);
-    }
-    getDimensionPixelOffset(attrName, defValue) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseDimensionPixelOffset(this.mResources, value, defValue);
-    }
-    getDimensionPixelSize(attrName, defValue) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseDimensionPixelSize(this.mResources, value, defValue);
-    }
-    getDrawable(attrName) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseDrawable(this.mResources, value);
-    }
-    getTextArray(attrName) {
-        this.checkRecycled();
-        let value = this.mXml.getAttribute(attrName);
-        return AttrValueParser.parseTextArray(this.mResources, value);
-    }
-    hasValue(attrName) {
-        this.checkRecycled();
-        return this.mXml.getAttribute(attrName) != null;
-    }
-    hasValueOrEmpty(attrName) {
-        this.checkRecycled();
-        return this.mXml.hasAttribute(attrName);
-    }
-    recycle() {
-        this.mRecycled = true;
-        this.mXml = null;
-        this.mResources.mTypedArrayPool.release(this);
-    }
-}
+var android;
+(function (android) {
+    var content;
+    (function (content) {
+        var res;
+        (function (res_1) {
+            var AttrValueParser = androidui.attr.AttrValueParser;
+            class TypedArray {
+                constructor(res, xml) {
+                    this.mResources = res;
+                    this.mXml = xml;
+                }
+                static obtain(res, xml) {
+                    const attrs = res.mTypedArrayPool.acquire();
+                    if (attrs != null) {
+                        attrs.mRecycled = false;
+                        attrs.mXml = xml;
+                        return attrs;
+                    }
+                    return new TypedArray(res, xml);
+                }
+                checkRecycled() {
+                    if (this.mRecycled) {
+                        throw new Error("RuntimeException : Cannot make calls to a recycled instance!");
+                    }
+                }
+                length() {
+                    this.checkRecycled();
+                    return this.mXml.attributes.length;
+                }
+                getResources() {
+                    return this.mResources;
+                }
+                getText(attrName) {
+                    return this.getString(attrName);
+                }
+                getString(attrName) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseString(this.mResources, value, null);
+                }
+                getBoolean(attrName, defValue) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseBoolean(this.mResources, value, defValue);
+                }
+                getInt(attrName, defValue) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseInt(this.mResources, value, defValue);
+                }
+                getFloat(attrName, defValue) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseFloat(this.mResources, value, defValue);
+                }
+                getColor(attrName, defValue) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseColor(this.mResources, value, defValue);
+                }
+                getColorStateList(attrName) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseColorStateList(this.mResources, value);
+                }
+                getInteger(attrName, defValue) {
+                    return this.getInt(attrName, defValue);
+                }
+                getDimension(attrName, defValue) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseDimension(this.mResources, value, defValue);
+                }
+                getDimensionPixelOffset(attrName, defValue) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseDimensionPixelOffset(this.mResources, value, defValue);
+                }
+                getDimensionPixelSize(attrName, defValue) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseDimensionPixelSize(this.mResources, value, defValue);
+                }
+                getDrawable(attrName) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseDrawable(this.mResources, value);
+                }
+                getTextArray(attrName) {
+                    this.checkRecycled();
+                    let value = this.mXml.getAttribute(attrName);
+                    return AttrValueParser.parseTextArray(this.mResources, value);
+                }
+                hasValue(attrName) {
+                    this.checkRecycled();
+                    return this.mXml.getAttribute(attrName) != null;
+                }
+                hasValueOrEmpty(attrName) {
+                    this.checkRecycled();
+                    return this.mXml.hasAttribute(attrName);
+                }
+                recycle() {
+                    this.mRecycled = true;
+                    this.mXml = null;
+                    this.mResources.mTypedArrayPool.release(this);
+                }
+            }
+            res_1.TypedArray = TypedArray;
+        })(res = content.res || (content.res = {}));
+    })(content = android.content || (android.content = {}));
+})(android || (android = {}));
 var android;
 (function (android) {
     var content;
@@ -5064,7 +5069,7 @@ var android;
                     }
                 }
                 obtainAttributes(attrs) {
-                    return TypedArray.obtain(this, attrs);
+                    return res.TypedArray.obtain(this, attrs);
                 }
                 static set buildDrawableFinder(value) {
                     throw Error('Error: old build tool not support. Please update your build_res.js file.');
@@ -6002,6 +6007,7 @@ var android;
             var SparseArray = android.util.SparseArray;
             var StateSet = android.util.StateSet;
             var WeakReference = java.lang.ref.WeakReference;
+            var Color = android.graphics.Color;
             class ColorStateList {
                 constructor(states, colors) {
                     this.mDefaultColor = 0xffff0000;
@@ -9561,7 +9567,16 @@ var androidui;
                 let imageRatio = image.getImageRatio();
                 this.mImageWidth = Math.floor((image.width - 2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
                 this.mImageHeight = Math.floor((image.height - 2) / imageRatio * android.content.res.Resources.getDisplayMetrics().density);
-                this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(this.mState.mImage.src);
+                this.initNinePatchBorderInfo(image);
+            }
+            initNinePatchBorderInfo(image) {
+                this.mNinePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(image.src);
+                if (!this.mNinePatchBorderInfo) {
+                    image.getBorderPixels((leftBorder, topBorder, rightBorder, bottomBorder) => {
+                        this.mNinePatchBorderInfo = new NinePatchBorderInfo(leftBorder, topBorder, rightBorder, bottomBorder);
+                        NinePatchDrawable.GlobalBorderInfoCache.set(image.src, this.mNinePatchBorderInfo);
+                    });
+                }
             }
             onLoad() {
                 let image = this.mState.mImage;
@@ -53664,6 +53679,11 @@ var android;
                             this.dismiss();
                         }
                         else if (this.isShowing()) {
+                            try {
+                                this.mPopup.setContentWidth(Math.min(this.measureContentWidth(this.mAdapter), this.mPopupMaxWidth));
+                            }
+                            catch (e) {
+                            }
                             this.mPopup.show();
                         }
                     }
