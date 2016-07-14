@@ -205,6 +205,7 @@ var R;
     R.bool = bool;
     var res_data = R._res_data;
     function resDirSpecMatch(spec) {
+        spec = spec.toLocaleLowerCase();
         var ratio = window.devicePixelRatio;
         if (ratio === 0.75 && spec === 'ldpi') return true;
         if (ratio === 1 && spec === 'mdpi') return true;
@@ -231,8 +232,13 @@ var R;
         if (wMatch && parseInt(wMatch[1]) >= xdp) return true;
         var hMatch = spec.match(/h(d*)dp/);
         if (hMatch && parseInt(hMatch[1]) >= ydp) return true;
-        var lang = navigator.language.split('-')[0].toLowerCase();
+        var lang = navigator.language.toLocaleLowerCase().split('-')[0];
         if (lang === spec) return true;
+        if (spec.startsWith('r')) {
+            var specArea = spec.substring(1);
+            var langArea = navigator.language.toLocaleLowerCase().split('-')[1];
+            if (langArea === specArea) return true;
+        }
     }
     var matchDirNamesCache = {};
     function findMatchDirNames(baseDirName) {

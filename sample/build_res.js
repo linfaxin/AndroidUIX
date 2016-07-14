@@ -134,6 +134,7 @@ module R {
 
     const res_data = R._res_data;
     function resDirSpecMatch(spec:string):boolean {
+        spec = spec.toLocaleLowerCase();
 
         let ratio = window.devicePixelRatio;
         if(ratio===0.75 && spec==='ldpi') return true;
@@ -169,9 +170,15 @@ module R {
         let hMatch = spec.match(/h(d*)dp/);
         if(hMatch && parseInt(hMatch[1]) >= ydp) return true;
 
-        const lang = navigator.language.split('-')[0].toLowerCase();
+        const lang = navigator.language.toLocaleLowerCase().split('-')[0];
         if(lang === spec) return true;
+        if(spec.startsWith('r')){//rCN
+            const specArea = spec.substring(1);
+            const langArea = navigator.language.toLocaleLowerCase().split('-')[1];
+            if(langArea === specArea) return true;
+        }
     }
+    
     const matchDirNamesCache = {};
     function findMatchDirNames(baseDirName:string):string[] {
         if(matchDirNamesCache[baseDirName]) return matchDirNamesCache[baseDirName];
