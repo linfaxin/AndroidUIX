@@ -92,6 +92,9 @@ module android.app{
 
         private mResultData:Intent = null;
 
+        private mMenu:android.view.Menu;
+        private mMenuPopuoHelper:android.view.menu.MenuPopupHelper;
+
         //mHandler:Handler = new Handler();
 
         /** Return the intent that started this activity. */
@@ -991,6 +994,134 @@ module android.app{
 
 
         /**
+         * Declare that the options menu has changed, so should be recreated.
+         * The {@link #onCreateOptionsMenu(Menu)} method will be called the next
+         * time it needs to be displayed.
+         */
+        private invalidateOptionsMenu():void {
+            let menu = new android.view.Menu(this);
+            if(this.onCreateOptionsMenu(menu)){
+                menu.setCallback({
+                    onMenuItemSelected : (menu, item)=>{
+                        let handle = this.onOptionsItemSelected(item);
+                        this.onOptionsMenuClosed(menu);
+                        return handle;
+                    }
+                });
+                this.mMenu = menu;
+                this.mMenuPopuoHelper = this.invalidateOptionsMenuPopupHelper(menu);
+            }
+        }
+
+        protected invalidateOptionsMenuPopupHelper(menu:android.view.Menu):android.view.menu.MenuPopupHelper {
+            //TODO support menu for fullscreen activity
+            return null;
+            // this.mMenuPopuoHelper = new android.view.menu.MenuPopupHelper(this, menu, this.getActionBar().mActionRight);
+        }
+
+        /**
+         * Initialize the contents of the Activity's standard options menu.  You
+         * should place your menu items in to <var>menu</var>.
+         *
+         * <p>This is only called once, the first time the options menu is
+         * displayed.  To update the menu every time it is displayed, see
+         * {@link #onPrepareOptionsMenu}.
+         *
+         * <p>The default implementation populates the menu with standard system
+         * menu items.  These are placed in the {@link Menu#CATEGORY_SYSTEM} group so that
+         * they will be correctly ordered with application-defined menu items.
+         * Deriving classes should always call through to the base implementation.
+         *
+         * <p>You can safely hold on to <var>menu</var> (and any items created
+         * from it), making modifications to it as desired, until the next
+         * time onCreateOptionsMenu() is called.
+         *
+         * <p>When you add items to the menu, you can implement the Activity's
+         * {@link #onOptionsItemSelected} method to handle them there.
+         *
+         * @param menu The options menu in which you place your items.
+         *
+         * @return You must return true for the menu to be displayed;
+         *         if you return false it will not be shown.
+         *
+         * @see #onPrepareOptionsMenu
+         * @see #onOptionsItemSelected
+         */
+        onCreateOptionsMenu(menu:android.view.Menu):boolean  {
+            return true;
+        }
+
+        /**
+         * Prepare the Screen's standard options menu to be displayed.  This is
+         * called right before the menu is shown, every time it is shown.  You can
+         * use this method to efficiently enable/disable items or otherwise
+         * dynamically modify the contents.
+         *
+         * <p>The default implementation updates the system menu items based on the
+         * activity's state.  Deriving classes should always call through to the
+         * base class implementation.
+         *
+         * @param menu The options menu as last shown or first initialized by
+         *             onCreateOptionsMenu().
+         *
+         * @return You must return true for the menu to be displayed;
+         *         if you return false it will not be shown.
+         *
+         * @see #onCreateOptionsMenu
+         */
+        onPrepareOptionsMenu(menu:android.view.Menu):boolean  {
+            return true;
+        }
+
+        /**
+         * This hook is called whenever an item in your options menu is selected.
+         * The default implementation simply returns false to have the normal
+         * processing happen (calling the item's Runnable or sending a message to
+         * its Handler as appropriate).  You can use this method for any items
+         * for which you would like to do processing without those other
+         * facilities.
+         *
+         * <p>Derived classes should call through to the base class for it to
+         * perform the default menu handling.</p>
+         *
+         * @param item The menu item that was selected.
+         *
+         * @return boolean Return false to allow normal menu processing to
+         *         proceed, true to consume it here.
+         *
+         * @see #onCreateOptionsMenu
+         */
+        onOptionsItemSelected(item:android.view.MenuItem):boolean  {
+            return false;
+        }
+
+        /**
+         * This hook is called whenever the options menu is being closed (either by the user canceling
+         * the menu with the back/menu button, or when an item is selected).
+         *
+         * @param menu The options menu as last shown or first initialized by
+         *             onCreateOptionsMenu().
+         */
+        onOptionsMenuClosed(menu:android.view.Menu):void  {
+        }
+
+        /**
+         * Programmatically opens the options menu. If the options menu is already
+         * open, this method does nothing.
+         */
+        openOptionsMenu():void {
+            if(this.mMenuPopuoHelper) this.mMenuPopuoHelper.show();
+        }
+
+        /**
+         * Progammatically closes the options menu. If the options menu is already
+         * closed, this method does nothing.
+         */
+        closeOptionsMenu():void  {
+            if(this.mMenuPopuoHelper) this.mMenuPopuoHelper.dismiss();
+        }
+
+        /**
          * Launch an activity for which you would like a result when it finished.
          * When this activity exits, your
          * onActivityResult() method will be called with the given requestCode.
@@ -1446,6 +1577,7 @@ module android.app{
 
         private performCreate(icicle:Bundle):void  {
             this.onCreate(icicle);
+            this.invalidateOptionsMenu();
             //this.mVisibleFromClient = !this.mWindow.getWindowStyle().getBoolean(com.android.internal.R.styleable.Window_windowNoDisplay, false);
             //this.mFragments.dispatchActivityCreated();
         }
