@@ -1,5 +1,5 @@
 /**
- * AndroidUIX v0.6.2
+ * AndroidUIX v0.6.3
  * https://github.com/linfaxin/AndroidUIX
  */
 var java;
@@ -25813,6 +25813,42 @@ var android;
             takeKeyEvents(_get) {
                 this.getWindow().takeKeyEvents(_get);
             }
+            invalidateOptionsMenu() {
+                let menu = new android.view.Menu(this);
+                if (this.onCreateOptionsMenu(menu)) {
+                    menu.setCallback({
+                        onMenuItemSelected: (menu, item) => {
+                            let handle = this.onOptionsItemSelected(item);
+                            this.onOptionsMenuClosed(menu);
+                            return handle;
+                        }
+                    });
+                    this.mMenu = menu;
+                    this.mMenuPopuoHelper = this.invalidateOptionsMenuPopupHelper(menu);
+                }
+            }
+            invalidateOptionsMenuPopupHelper(menu) {
+                return null;
+            }
+            onCreateOptionsMenu(menu) {
+                return true;
+            }
+            onPrepareOptionsMenu(menu) {
+                return true;
+            }
+            onOptionsItemSelected(item) {
+                return false;
+            }
+            onOptionsMenuClosed(menu) {
+            }
+            openOptionsMenu() {
+                if (this.mMenuPopuoHelper)
+                    this.mMenuPopuoHelper.show();
+            }
+            closeOptionsMenu() {
+                if (this.mMenuPopuoHelper)
+                    this.mMenuPopuoHelper.dismiss();
+            }
             startActivityForResult(intent, requestCode, options) {
                 if (typeof intent === 'string')
                     intent = new Intent(intent);
@@ -25918,6 +25954,7 @@ var android;
             }
             performCreate(icicle) {
                 this.onCreate(icicle);
+                this.invalidateOptionsMenu();
             }
             performStart() {
                 this.mCalled = false;
@@ -53417,6 +53454,7 @@ var android;
                 const ordering = 0;
                 const item = new MenuItem(this, group, id, categoryOrder, ordering, title);
                 this.mItems.add(item);
+                this.onItemsChanged(true);
                 return item;
             }
             removeItem(id) {
@@ -58780,6 +58818,17 @@ var android;
                         }
                     }
                 };
+            }
+            invalidateOptionsMenuPopupHelper(menu) {
+                let menuPopuoHelper = new android.view.menu.MenuPopupHelper(this, menu, this.getActionBar().mActionRight);
+                if (menu.hasVisibleItems()) {
+                    this.getActionBar().setActionRight('', android.R.image.ic_menu_moreoverflow_normal_holo_dark, {
+                        onClick: function (view) {
+                            menuPopuoHelper.show();
+                        }
+                    });
+                }
+                return menuPopuoHelper;
             }
             getActionBar() {
                 return this.mActionBar;

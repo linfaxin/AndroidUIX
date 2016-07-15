@@ -56,11 +56,13 @@ module android.app {
 
         protected invalidateOptionsMenuPopupHelper(menu:android.view.Menu):android.view.menu.MenuPopupHelper {
             let menuPopuoHelper = new android.view.menu.MenuPopupHelper(this, menu, this.getActionBar().mActionRight);
-            this.getActionBar().setActionRight('', android.R.image.ic_menu_moreoverflow_normal_holo_dark, {
-                onClick: function (view) {
-                    menuPopuoHelper.show();
-                }
-            });
+            if(menu.hasVisibleItems()){
+                this.getActionBar().setActionRight('', android.R.image.ic_menu_moreoverflow_normal_holo_dark, {
+                    onClick: function (view) {
+                        menuPopuoHelper.show();
+                    }
+                });
+            }
             return menuPopuoHelper;
         }
 

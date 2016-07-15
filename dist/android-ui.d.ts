@@ -5306,6 +5306,8 @@ declare module android.app {
         private mVisibleFromClient;
         private mResultCode;
         private mResultData;
+        private mMenu;
+        private mMenuPopuoHelper;
         getIntent(): Intent;
         setIntent(newIntent: Intent): void;
         getApplication(): android.app.Application;
@@ -5349,6 +5351,14 @@ declare module android.app {
         dispatchTouchEvent(ev: MotionEvent): boolean;
         dispatchGenericMotionEvent(ev: MotionEvent): boolean;
         takeKeyEvents(_get: boolean): void;
+        private invalidateOptionsMenu();
+        protected invalidateOptionsMenuPopupHelper(menu: android.view.Menu): android.view.menu.MenuPopupHelper;
+        onCreateOptionsMenu(menu: android.view.Menu): boolean;
+        onPrepareOptionsMenu(menu: android.view.Menu): boolean;
+        onOptionsItemSelected(item: android.view.MenuItem): boolean;
+        onOptionsMenuClosed(menu: android.view.Menu): void;
+        openOptionsMenu(): void;
+        closeOptionsMenu(): void;
         startActivityForResult(intent: Intent | string, requestCode: number, options?: Bundle): void;
         startActivities(intents: Intent[], options?: Bundle): void;
         startActivity(intent: Intent | string, options?: Bundle): void;
@@ -10931,6 +10941,7 @@ declare module android.app {
         private initActionBar();
         private initDefaultBackFinish();
         setActionBar(actionBar: ActionBar): void;
+        protected invalidateOptionsMenuPopupHelper(menu: android.view.Menu): android.view.menu.MenuPopupHelper;
         getActionBar(): ActionBar;
         protected onTitleChanged(title: string, color: number): void;
     }

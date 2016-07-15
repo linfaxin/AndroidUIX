@@ -144,7 +144,7 @@ export class Menu {
         //    item.setMenuInfo(this.mCurrentMenuInfo);
         //}
         this.mItems.add(/*MenuBuilder.findInsertIndex(this.mItems, ordering), */item);
-        //this.onItemsChanged(true);
+        this.onItemsChanged(true);
         return item;
     }
     ///**
