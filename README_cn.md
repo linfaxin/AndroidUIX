@@ -1,4 +1,4 @@
-# AndroidUI For Web
+# AndroidUIX
 
 移植Android的UI组件到Web端, 以Android的方式来制作高性能优体验的WebApp
 
