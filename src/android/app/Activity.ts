@@ -1667,7 +1667,7 @@ module android.app{
                 this.onPause();
                 this.mResumed = false;
                 if (!this.mCalled) {
-                    throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPause()")`);
+                    throw Error(`new SuperNotCalledException("Activity ${this.constructor.name} did not call through to super.onPause()")`);
                 }
                 this.mResumed = false;
             }

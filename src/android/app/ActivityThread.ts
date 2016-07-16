@@ -98,14 +98,18 @@ module android.app{
             return this.overrideHideAnimation;
         }
 
+        private scheduleApplicationHideTimeout;
         scheduleApplicationHide():void {
-            let visibleActivities = this.getVisibleToUserActivities();
-            if(visibleActivities.length==0) return;
+            if(this.scheduleApplicationHideTimeout) clearTimeout(this.scheduleApplicationHideTimeout);
+            this.scheduleApplicationHideTimeout = setTimeout(()=>{
+                let visibleActivities = this.getVisibleToUserActivities();
+                if(visibleActivities.length==0) return;
 
-            this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
-            for(let visibleActivity of visibleActivities){
-                this.handleStopActivity(visibleActivity, true);
-            }
+                this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
+                for(let visibleActivity of visibleActivities){
+                    this.handleStopActivity(visibleActivity, true);
+                }
+            }, 0);
         }
 
         scheduleApplicationShow():void {
@@ -119,7 +123,7 @@ module android.app{
             this.scheduleLaunchActivity(callActivity, intent, options);
         }
 
-        activityResumeTimeout;
+        private activityResumeTimeout;
         scheduleActivityResume():void {
             if(this.activityResumeTimeout) clearTimeout(this.activityResumeTimeout);
             this.activityResumeTimeout = setTimeout(()=>{
@@ -235,12 +239,7 @@ module android.app{
             //}
 
             // Now we are idle.
-            activity.mCalled = false;
             activity.performPause();
-            if (!activity.mCalled) {
-                throw new Error(
-                    "Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onPause()");
-            }
         }
 
         private handleStopActivity(activity:Activity, show=false):void {
