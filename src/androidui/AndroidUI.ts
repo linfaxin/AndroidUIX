@@ -50,7 +50,6 @@ module androidui {
             return this._windowBound;
         }
         private touchEvent = new MotionEvent();
-        private touchAvailable = false;
         private ketEvent = new KeyEvent();
 
         constructor(androidUIElement:AndroidUIElement) {
@@ -176,7 +175,6 @@ module androidui {
 
         private initTouchEvent() {
             this.androidUIElement.addEventListener('touchstart', (e)=> {
-                this.touchAvailable = true;
                 this.refreshWindowBound();
 
                 if(e.target!=document.activeElement || !this.androidUIElement.contains(<HTMLElement>document.activeElement)){
@@ -240,7 +238,6 @@ module androidui {
             let isMouseDown = false;
 
             this.androidUIElement.addEventListener('mousedown', (e:MouseEvent)=> {
-                if(this.touchAvailable) return;
                 isMouseDown = true;
                 this.refreshWindowBound();
 
@@ -255,7 +252,6 @@ module androidui {
             }, true);
 
             this.androidUIElement.addEventListener('mousemove', (e)=> {
-                if(this.touchAvailable) return;
                 if(!isMouseDown) return;
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
@@ -266,7 +262,6 @@ module androidui {
             }, true);
 
             this.androidUIElement.addEventListener('mouseup', (e)=> {
-                if(this.touchAvailable) return;
                 isMouseDown = false;
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
@@ -277,7 +272,6 @@ module androidui {
             }, true);
 
             this.androidUIElement.addEventListener('mouseleave', (e)=> {
-                if(this.touchAvailable) return;
                 if(e.fromElement === this.androidUIElement){
                     isMouseDown = false;
                     this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
