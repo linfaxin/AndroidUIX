@@ -1,0 +1,121 @@
+<ScrollView
+        xmlns="android" xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_height="match_parent" android:layout_width="match_parent">
+    <LinearLayout
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent">
+        <TextView android:id="android_tip"
+                  android:layout_height="wrap_content"
+                  android:layout_width="match_parent"
+                  android:text="NOTE:Suggest use Chrome for better experience"
+                  android:visibility="gone" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleBaseWidgetActivity')"
+                android:text="Base Widget" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleFrameLayoutActivity')"
+                android:text="FrameLayout" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleLinearLayoutActivity')"
+                android:text="LinearLayout" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleRelativeLayoutActivity')"
+                android:text="RelativeLayout" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleTextViewActivity')"
+                android:text="TextView" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleButtonActivity')"
+                android:text="Button" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleImageViewActivity')"
+                android:text="ImageView" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleEditTextActivity')"
+                android:text="EditText" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleListViewActivity')"
+                android:text="ListView" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleGridViewActivity')"
+                android:text="GridView" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleExpandableListViewActivity')"
+                android:text="ExpandableListView" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleViewPagerActivity')"
+                android:text="ViewPager" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleDrawerLayoutActivity')"
+                android:text="DrawerLayout" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleViewPagerGalleryActivity')"
+                android:text="ImageGallery&amp;Gesture" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SamplePullRefreshLoadActivity')"
+                android:text="List pull refresh &amp; pull load" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SamplePickerActivity')"
+                android:text="Picker" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleAnimationActivity')"
+                android:text="Animation" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleLifeCallbackActivity')"
+                android:text="Activity Life Circel" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleContacteActivity')"
+                android:text="Activity Start&amp;Result" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleWebViewActivity')"
+                android:text="WebView" />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:onClick="this.getContext().startActivity('sample.app.SampleHtmlViewActivity')"
+                android:text="HtmlView" />
+    </LinearLayout>
+</ScrollView>

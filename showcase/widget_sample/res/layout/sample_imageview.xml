@@ -1,0 +1,170 @@
+<ScrollView
+        xmlns="android" xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+    <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:padding="0 6dp"
+            android:orientation="vertical">
+        <TextView
+                android:text="Default(FitCenter):"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:style="@style/imageStyle" />
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:layout_marginLeft="4dp"
+                    android:layout_height="200dp"
+                    android:style="@style/imageStyle" />
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:layout_width="match_parent"
+                    android:layout_marginLeft="4dp"
+                    android:style="@style/imageStyle" />
+        </LinearLayout>
+        <TextView
+                android:text="FitStart:"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" >
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="fitStart"
+                    android:layout_height="200dp"
+                    android:style="@style/imageStyle" />
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="fitStart"
+                    android:layout_width="match_parent"
+                    android:layout_marginLeft="4dp"
+                    android:style="@style/imageStyle" />
+        </LinearLayout>
+        <TextView
+                android:text="FitEnd:"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="fitEnd"
+                    android:layout_height="200dp"
+                    android:style="@style/imageStyle" />
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="fitEnd"
+                    android:layout_width="match_parent"
+                    android:layout_marginLeft="4dp"
+                    android:style="@style/imageStyle" />
+        </LinearLayout>
+        <TextView
+                android:text="FitXy:"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="fitXy"
+                    android:layout_height="200dp"
+                    android:style="@style/imageStyle" />
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="fitXy"
+                    android:layout_width="match_parent"
+                    android:layout_marginLeft="4dp"
+                    android:style="@style/imageStyle" />
+        </LinearLayout>
+        <TextView
+                android:text="Center:"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="center"
+                    android:layout_height="80dp"
+                    android:layout_width="80dp"
+                    android:style="@style/imageStyle" />
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="center"
+                    android:layout_height="180dp"
+                    android:layout_width="180dp"
+                    android:layout_marginLeft="4dp"
+                    android:style="@style/imageStyle" />
+        </LinearLayout>
+        <TextView
+                android:text="centerCrop:"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" >
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="centerCrop"
+                    android:layout_height="80dp"
+                    android:layout_width="80dp"
+                    android:style="@style/imageStyle" />
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="centerCrop"
+                    android:layout_marginLeft="4dp"
+                    android:layout_height="100dp"
+                    android:layout_width="60dp"
+                    android:style="@style/imageStyle"/>
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="centerCrop"
+                    android:layout_height="60dp"
+                    android:layout_width="100dp"
+                    android:layout_marginLeft="4dp"
+                    android:style="@style/imageStyle" />
+        </LinearLayout>
+        <TextView
+                android:text="centerInside:"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="centerInside"
+                    android:layout_height="80dp"
+                    android:layout_width="80dp"
+                    android:style="@style/imageStyle" />
+            <ImageView
+                    android:src="assets/images/logo_android_1@2x.png"
+                    android:scaleType="centerInside"
+                    android:layout_height="180dp"
+                    android:layout_width="180dp"
+                    android:layout_marginLeft="4dp"
+                    android:style="@style/imageStyle" />
+        </LinearLayout>
+
+        <TextView
+                android:text="Background:"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
+        <FrameLayout
+                android:style="@style/imageStyle"
+                android:background="url(assets/images/logo_android_1@2x.png)" />
+
+    </LinearLayout>
+</ScrollView>

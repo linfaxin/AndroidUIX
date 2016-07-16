@@ -1,0 +1,47 @@
+<FrameLayout
+        xmlns="android" xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+
+    <TextView
+            android:text="Text"
+            android:layout_gravity="left|top"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text"
+            android:layout_gravity="right|top"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text"
+            android:layout_gravity="bottom|right"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text"
+            android:layout_gravity="bottom|left"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text"
+            android:layout_gravity="center"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text"
+            android:layout_gravity="left|center_vertical"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text"
+            android:layout_gravity="right|center_vertical"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text"
+            android:layout_gravity="top|center_horizontal"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text"
+            android:layout_gravity="bottom|center_horizontal"
+            android:style="@style/textStyle"/>
+    <TextView
+            android:text="Text MarginBottom50"
+            android:layout_marginBottom="50dp"
+            android:layout_gravity="center"
+            android:style="@style/textStyle"/>
+</FrameLayout>

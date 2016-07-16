@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "removeComments": true,
+    "target":"ES6",
+    "outFile": "build/app.js",
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules",
+    "androidui-sdk"
+  ]
+}
