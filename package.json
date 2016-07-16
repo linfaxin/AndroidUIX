@@ -26,8 +26,7 @@
     "babel-preset-es2015": "^6.3.13"
   },
   "scripts": {
-    "build" : "npm install && npm run buildSrc && npm run buildSample",
-    "buildSrc" : "cd src && node build_sdk_res.js && \"../buildtool/typescript/bin/tsc\" -p ./ && node insert_sdk_version_dist.js && babel ../dist/android-ui.js -o ../dist/android-ui.es5.js -s --presets=es2015",
-    "buildSample" : "cd sample && node build_res.js && \"../buildtool/typescript/bin/tsc\" -p ./ && babel build/app.js -o build/app.es5.js -s --presets=es2015"
+    "build" : "npm install && npm run buildSrc",
+    "buildSrc" : "cd src && node build_sdk_res.js && \"../buildtool/typescript/bin/tsc\" -p ./ && node insert_sdk_version_dist.js && babel ../dist/android-ui.js -o ../dist/android-ui.es5.js -s --presets=es2015"
   }
 }

@@ -5168,10 +5168,11 @@ declare module android.app {
         getOverrideExitAnimation(): Animation;
         getOverrideResumeAnimation(): Animation;
         getOverrideHideAnimation(): Animation;
+        private scheduleApplicationHideTimeout;
         scheduleApplicationHide(): void;
         scheduleApplicationShow(): void;
         execStartActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
-        activityResumeTimeout: any;
+        private activityResumeTimeout;
         scheduleActivityResume(): void;
         scheduleLaunchActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
         scheduleDestroyActivityByRequestCode(requestCode: number): void;
@@ -5242,7 +5243,6 @@ declare module androidui {
         private tempRect;
         windowBound: android.graphics.Rect;
         private touchEvent;
-        private touchAvailable;
         private ketEvent;
         constructor(androidUIElement: AndroidUIElement);
         private init();

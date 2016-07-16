@@ -24848,13 +24848,17 @@ var android;
                 return this.overrideHideAnimation;
             }
             scheduleApplicationHide() {
-                let visibleActivities = this.getVisibleToUserActivities();
-                if (visibleActivities.length == 0)
-                    return;
-                this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
-                for (let visibleActivity of visibleActivities) {
-                    this.handleStopActivity(visibleActivity, true);
-                }
+                if (this.scheduleApplicationHideTimeout)
+                    clearTimeout(this.scheduleApplicationHideTimeout);
+                this.scheduleApplicationHideTimeout = setTimeout(() => {
+                    let visibleActivities = this.getVisibleToUserActivities();
+                    if (visibleActivities.length == 0)
+                        return;
+                    this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
+                    for (let visibleActivity of visibleActivities) {
+                        this.handleStopActivity(visibleActivity, true);
+                    }
+                }, 0);
             }
             scheduleApplicationShow() {
                 this.scheduleActivityResume();
@@ -24963,11 +24967,7 @@ var android;
                 this.performPauseActivity(activity);
             }
             performPauseActivity(activity) {
-                activity.mCalled = false;
                 activity.performPause();
-                if (!activity.mCalled) {
-                    throw new Error("Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onPause()");
-                }
             }
             handleStopActivity(activity, show = false) {
                 this.performStopActivity(activity, true);
@@ -25274,7 +25274,6 @@ var androidui;
             this._windowBound = new android.graphics.Rect();
             this.tempRect = new android.graphics.Rect();
             this.touchEvent = new MotionEvent();
-            this.touchAvailable = false;
             this.ketEvent = new KeyEvent();
             this.androidUIElement = androidUIElement;
             if (androidUIElement[AndroidUI.BindToElementName]) {
@@ -25370,7 +25369,6 @@ var androidui;
         }
         initTouchEvent() {
             this.androidUIElement.addEventListener('touchstart', (e) => {
-                this.touchAvailable = true;
                 this.refreshWindowBound();
                 if (e.target != document.activeElement || !this.androidUIElement.contains(document.activeElement)) {
                     this.androidUIElement.focus();
@@ -25428,8 +25426,6 @@ var androidui;
             }
             let isMouseDown = false;
             this.androidUIElement.addEventListener('mousedown', (e) => {
-                if (this.touchAvailable)
-                    return;
                 isMouseDown = true;
                 this.refreshWindowBound();
                 this.androidUIElement.focus();
@@ -25441,8 +25437,6 @@ var androidui;
                 }
             }, true);
             this.androidUIElement.addEventListener('mousemove', (e) => {
-                if (this.touchAvailable)
-                    return;
                 if (!isMouseDown)
                     return;
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
@@ -25453,8 +25447,6 @@ var androidui;
                 }
             }, true);
             this.androidUIElement.addEventListener('mouseup', (e) => {
-                if (this.touchAvailable)
-                    return;
                 isMouseDown = false;
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
@@ -25464,8 +25456,6 @@ var androidui;
                 }
             }, true);
             this.androidUIElement.addEventListener('mouseleave', (e) => {
-                if (this.touchAvailable)
-                    return;
                 if (e.fromElement === this.androidUIElement) {
                     isMouseDown = false;
                     this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
@@ -25994,7 +25984,7 @@ var android;
                     this.onPause();
                     this.mResumed = false;
                     if (!this.mCalled) {
-                        throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPause()")`);
+                        throw Error(`new SuperNotCalledException("Activity ${this.constructor.name} did not call through to super.onPause()")`);
                     }
                     this.mResumed = false;
                 }
@@ -41653,7 +41643,7 @@ var android;
                             {
                                 if (!this.mIsBeingDragged) {
                                     let hscroll;
-                                    hscroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+                                    hscroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
                                     if (hscroll != 0) {
                                         const delta = Math.floor((hscroll * this.getHorizontalScrollFactor()));
                                         const range = this.getScrollRange();

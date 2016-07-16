@@ -26,13 +26,12 @@ Look wiki: [Getting Started](https://github.com/linfaxin/AndroidUIX/wiki/1.Getti
 2. Android Chrome: 50fps
 3. Android WebView(with [Runtime](https://github.com/linfaxin/AndroidUIRuntimeAndroid)): 50fps
 
-You can test Sample on your device.
+You can test [Showcase](http://androiduix.com/showcase/index.html) on your device.
 
 
-### Sample
+### Showcase
 
-* [Sample App](http://linfaxin.com/AndroidUIX/sample/main.html)
-* [GankWebApp](https://github.com/linfaxin/GankWebApp)
+* [Showcase](http://androiduix.com/showcase/index.html)
 
 
 
