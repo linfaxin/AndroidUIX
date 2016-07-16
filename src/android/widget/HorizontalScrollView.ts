@@ -655,9 +655,9 @@ export class HorizontalScrollView extends FrameLayout {
                         if (!this.mIsBeingDragged) {
                             let hscroll:number;
                             //if ((event.getMetaState() & KeyEvent.META_SHIFT_ON) != 0) {
-                            //    hscroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+                               hscroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
                             //} else {
-                                hscroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+                            //     hscroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
                             //}
                             if (hscroll != 0) {
                                 const delta:number = Math.floor((hscroll * this.getHorizontalScrollFactor()));
