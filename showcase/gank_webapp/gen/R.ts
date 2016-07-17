@@ -44,6 +44,7 @@ module R {
     export class drawable {
         static get icon_github():Drawable {return Resources.getSystem().getDrawable('icon_github')}
         static get icon_menu():Drawable {return Resources.getSystem().getDrawable('icon_menu')}
+        static get list_item_bg():Drawable {return Resources.getSystem().getDrawable('list_item_bg')}
     }
     
     export class string_ {
