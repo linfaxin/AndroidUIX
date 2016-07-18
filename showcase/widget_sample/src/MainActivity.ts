@@ -21,7 +21,7 @@ module sample.app {
             this.setContentView(R.layout.activity_main);
 
             if(navigator.userAgent.match('Android')){
-                this.findViewById('android_tip').setVisibility(android.view.View.VISIBLE);
+                this.findViewById(R.id.android_tip).setVisibility(android.view.View.VISIBLE);
             }
 
         }
@@ -40,7 +40,7 @@ module sample.app {
                 case 2:
                     new android.app.AlertDialog.Builder(this)
                         .setTitle('About')
-                        .setMessage('AndroidUIX by LinFaXin.')
+                        .setMessage('Make a high-performance Web App with Android UI!')
                         .setPositiveButton(android.R.string_.ok, null)
                         .show();
             }
