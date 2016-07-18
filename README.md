@@ -15,7 +15,7 @@ Site: http://androiduix.com
 
 ### Getting Started 
 
-Look wiki: [Getting Started](https://github.com/linfaxin/AndroidUIX/wiki/1.Getting-Started)
+Look wiki: [Getting Started](https://github.com/linfaxin/AndroidUIX/wiki/1.-Getting-Started)
 
 
 ### 60fps
