@@ -97,7 +97,6 @@ module android.view {
     import Resources = android.content.res.Resources;
     import ColorStateList = android.content.res.ColorStateList;
     import Pools = android.util.Pools;
-    import TypedValue = android.util.TypedValue;
     import LinearInterpolator = android.view.animation.LinearInterpolator;
     import AnimationUtils = android.view.animation.AnimationUtils;
     import StateAttrList = androidui.attr.StateAttrList;
@@ -1778,27 +1777,27 @@ module android.view {
 
         private _setPaddingWithUnit(left, top, right, bottom){
             let view = this;
-            let dm = Resources.getDisplayMetrics();
             let width = view.getWidth();
             let height = view.getHeight();
-            let padLeft = TypedValue.complexToDimensionPixelSize(left, width, dm);
-            let padTop = TypedValue.complexToDimensionPixelSize(top, height, dm);
-            let padRight = TypedValue.complexToDimensionPixelSize(right, width, dm);
-            let padBottom = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+            let a = this._attrBinder;
+            let padLeft = a.parseDimension(left, 0, width);
+            let padTop = a.parseDimension(top, 0, height);
+            let padRight = a.parseDimension(right, 0, width);
+            let padBottom = a.parseDimension(bottom, 0, height);
             view.setPadding(padLeft, padTop, padRight, padBottom);
 
             //FRACTION unit should layout again
-            let unit = TypedValue.COMPLEX_UNIT_FRACTION;
+            let unit = android.util.TypedValue.COMPLEX_UNIT_FRACTION;
             if( (typeof left === 'string' && left.endsWith(unit)) || (typeof top === 'string' && top.endsWith(unit))
                 || (typeof right === 'string' && right.endsWith(unit)) || (typeof bottom === 'string' && bottom.endsWith(unit))){
                 view.post({
                     run:()=>{
                         let width = view.getWidth();
                         let height = view.getHeight();
-                        let padLeftN = TypedValue.complexToDimensionPixelSize(left, width, dm);
-                        let padTopN = TypedValue.complexToDimensionPixelSize(top, height, dm);
-                        let padRightN = TypedValue.complexToDimensionPixelSize(right, width, dm);
-                        let padBottomN = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+                        let padLeftN = a.parseDimension(left, 0, width);
+                        let padTopN = a.parseDimension(top, 0, height);
+                        let padRightN = a.parseDimension(right, 0, width);
+                        let padBottomN = a.parseDimension(bottom, 0, height);
                         view.setPadding(padLeftN, padTopN, padRightN, padBottomN);
                     }
                 });

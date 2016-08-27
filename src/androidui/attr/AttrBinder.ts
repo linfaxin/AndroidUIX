@@ -96,11 +96,16 @@ module androidui.attr {
             for(let part of value.split(' ')){
                 if(part) parts.push(part);
             }
+            let ltrb: Array<any>;
             switch (parts.length){
-                case 1 : return [parts[0], parts[0], parts[0], parts[0]];
-                case 2 : return [parts[1], parts[0], parts[1], parts[0]];
-                case 3 : return [parts[1], parts[0], parts[1], parts[2]];
-                case 4 : return [parts[3], parts[0], parts[1], parts[2]];
+                case 1 : ltrb = [parts[0], parts[0], parts[0], parts[0]]; break;
+                case 2 : ltrb = [parts[1], parts[0], parts[1], parts[0]]; break;
+                case 3 : ltrb = [parts[1], parts[0], parts[1], parts[2]]; break;
+                case 4 : ltrb = [parts[3], parts[0], parts[1], parts[2]]; break;
+            }
+            if (ltrb) {
+                ltrb = ltrb.map((v) => this.parseDimension(v));
+                return ltrb;
             }
             throw Error('not a padding or margin value : '+value);
 
@@ -183,19 +188,19 @@ module androidui.attr {
         parseDimension(value, defaultValue = 0, baseValue = 0):number{
             if(typeof value == 'number') return <number><any>value;
             let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-            return AttrValueParser.parseDimension(res, value, defaultValue);
+            return AttrValueParser.parseDimension(res, value, defaultValue, baseValue);
         }
 
         parseNumberPixelOffset(value, defaultValue = 0, baseValue = 0):number{
             if(typeof value == 'number') return <number><any>value;
             let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-            return AttrValueParser.parseDimensionPixelOffset(res, value, defaultValue);
+            return AttrValueParser.parseDimensionPixelOffset(res, value, defaultValue, baseValue);
         }
 
         parseNumberPixelSize(value, defaultValue = 0, baseValue = 0):number{
             if(typeof value == 'number') return <number><any>value;
             let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-            return AttrValueParser.parseDimensionPixelSize(res, value, defaultValue);
+            return AttrValueParser.parseDimensionPixelSize(res, value, defaultValue, baseValue);
         }
 
         parseString(value, defaultValue?:string):string{

@@ -95,43 +95,43 @@ module androidui.attr {
             return null;
         }
 
-        static parseDimension(r:android.content.res.Resources, value:string, defValue:number):number {
+        static parseDimension(r:android.content.res.Resources, value:string, defValue:number, baseValue=0):number {
             if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
-                    return r.getDimension(value);
+                    return r.getDimension(value, baseValue);
                 } catch (e) {
                     console.warn(e);
                     return defValue;
                 }
             }
             try {
-                return android.util.TypedValue.complexToDimension(value);
+                return android.util.TypedValue.complexToDimension(value, baseValue);
             } catch (e) {
                 console.warn(e);
             }
             return defValue;
         }
 
-        static parseDimensionPixelOffset(r:android.content.res.Resources, value:string, defValue:number):number {
+        static parseDimensionPixelOffset(r:android.content.res.Resources, value:string, defValue:number, baseValue=0):number {
             if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
-                    return r.getDimensionPixelOffset(value);
+                    return r.getDimensionPixelOffset(value, baseValue);
                 } catch (e) {
                     console.warn(e);
                     return defValue;
                 }
             }
             try {
-                return android.util.TypedValue.complexToDimensionPixelOffset(value);
+                return android.util.TypedValue.complexToDimensionPixelOffset(value, baseValue);
             } catch (e) {
                 console.warn(e);
             }
             return defValue;
         }
 
-        static parseDimensionPixelSize(r:android.content.res.Resources, value:string, defValue:number):number {
+        static parseDimensionPixelSize(r:android.content.res.Resources, value:string, defValue:number, baseValue=0):number {
             if(value==null) return defValue;
             if(value.startsWith('@')){
                 try {
@@ -142,7 +142,7 @@ module androidui.attr {
                 }
             }
             try {
-                return android.util.TypedValue.complexToDimensionPixelSize(value);
+                return android.util.TypedValue.complexToDimensionPixelSize(value, baseValue);
             } catch (e) {
                 console.warn(e);
             }

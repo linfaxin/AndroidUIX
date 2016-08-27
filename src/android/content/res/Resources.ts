@@ -12,7 +12,6 @@ module android.content.res{
     import DisplayMetrics = android.util.DisplayMetrics;
     import Drawable = android.graphics.drawable.Drawable;
     import Color = android.graphics.Color;
-    import TypedValue = android.util.TypedValue;
     import SynchronizedPool = android.util.Pools.SynchronizedPool;
     import ColorDrawable = android.graphics.drawable.ColorDrawable;
 
@@ -206,7 +205,7 @@ module android.content.res{
             let ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
-                return TypedValue.complexToDimension(text, baseValue, this.getDisplayMetrics());
+                return android.util.TypedValue.complexToDimension(text, baseValue, this.getDisplayMetrics());
             }
             throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
@@ -231,7 +230,7 @@ module android.content.res{
             let ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
-                return TypedValue.complexToDimensionPixelOffset(text, baseValue, this.getDisplayMetrics());
+                return android.util.TypedValue.complexToDimensionPixelOffset(text, baseValue, this.getDisplayMetrics());
             }
             throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
@@ -241,7 +240,7 @@ module android.content.res{
             let ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
-                return TypedValue.complexToDimensionPixelSize(text, baseValue, this.getDisplayMetrics());
+                return android.util.TypedValue.complexToDimensionPixelSize(text, baseValue, this.getDisplayMetrics());
             }
             throw new Error("NotFoundException: Resource " + refString + " is not found");
         }

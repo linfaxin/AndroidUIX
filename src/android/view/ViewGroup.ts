@@ -42,7 +42,6 @@ module android.view {
     import RectF = android.graphics.RectF;
     import Matrix = android.graphics.Matrix;
     import SystemClock = android.os.SystemClock;
-    import TypedValue = android.util.TypedValue;
     import Context = android.content.Context;
     import System = java.lang.System;
     import ArrayList = java.util.ArrayList;
@@ -2552,7 +2551,6 @@ module android.view {
     }
 
     export module ViewGroup {
-        import TypedValue = android.util.TypedValue;
         export class LayoutParams {
             static FILL_PARENT = -1;
             static MATCH_PARENT = -1;
@@ -2570,10 +2568,9 @@ module android.view {
                 else{
                     let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(
-                            <any>this._width, parentWidth, this._measuringMeasureSpec);
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._width, 0, parentWidth);
                         //not save if dynamic, next get will compute again
-                        if(TypedValue.isDynamicUnitValue(<any>this._width)){
+                        if(android.util.TypedValue.isDynamicUnitValue(<any>this._width)){
                             return parsedValue;
                         }
                         this._width = parsedValue;
@@ -2597,10 +2594,9 @@ module android.view {
                 else{
                     let parentHeight = View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(
-                            <any>this._height, parentHeight, this._measuringMeasureSpec);
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._height, 0, parentHeight);
                         //not save if dynamic, next get will compute again
-                        if(TypedValue.isDynamicUnitValue(<any>this._height)){
+                        if(android.util.TypedValue.isDynamicUnitValue(<any>this._height)){
                             return parsedValue;
                         }
                         this._height = parsedValue;
@@ -2678,10 +2674,9 @@ module android.view {
                 if(typeof this._leftMargin === 'number') return this._leftMargin;
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                 try {
-                    let parsedValue = TypedValue.complexToDimensionPixelSize(
-                        <any>this._leftMargin, parentWidth, this._measuringMeasureSpec);
+                    let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._leftMargin, 0, parentWidth);
                     //not save if dynamic, next get will compute again
-                    if(TypedValue.isDynamicUnitValue(<any>this._leftMargin)){
+                    if(android.util.TypedValue.isDynamicUnitValue(<any>this._leftMargin)){
                         return parsedValue;
                     }
                     this._leftMargin = parsedValue;
@@ -2696,10 +2691,9 @@ module android.view {
                 //topMargin with percent will use parent's width
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                 try {
-                    let parsedValue = TypedValue.complexToDimensionPixelSize(
-                        <any>this._topMargin, parentWidth, this._measuringMeasureSpec);
+                    let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._topMargin, 0, parentWidth);
                     //not save if dynamic, next get will compute again
-                    if(TypedValue.isDynamicUnitValue(<any>this._topMargin)){
+                    if(android.util.TypedValue.isDynamicUnitValue(<any>this._topMargin)){
                         return parsedValue;
                     }
                     this._topMargin = parsedValue;
@@ -2713,10 +2707,9 @@ module android.view {
                 if(typeof this._rightMargin === 'number') return this._rightMargin;
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                 try {
-                    let parsedValue = TypedValue.complexToDimensionPixelSize(
-                        <any>this._rightMargin, parentWidth, this._measuringMeasureSpec);
+                    let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._rightMargin, 0, parentWidth);
                     //not save if dynamic, next get will compute again
-                    if(TypedValue.isDynamicUnitValue(<any>this._rightMargin)){
+                    if(android.util.TypedValue.isDynamicUnitValue(<any>this._rightMargin)){
                         return parsedValue;
                     }
                     this._rightMargin = parsedValue;
@@ -2731,10 +2724,9 @@ module android.view {
                 //topMargin with percent will use parent's width
                 let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                 try {
-                    let parsedValue = TypedValue.complexToDimensionPixelSize(
-                        <any>this._bottomMargin, parentWidth, this._measuringMeasureSpec);
+                    let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._bottomMargin, 0, parentWidth);
                     //not save if dynamic, next get will compute again
-                    if(TypedValue.isDynamicUnitValue(<any>this._bottomMargin)){
+                    if(android.util.TypedValue.isDynamicUnitValue(<any>this._bottomMargin)){
                         return parsedValue;
                     }
                     this._bottomMargin = parsedValue;
