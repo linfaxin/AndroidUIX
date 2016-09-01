@@ -6,16 +6,19 @@ module java.lang{
     let hashCodeGenerator = 0;
     export class JavaObject{
         static get class():Class {
-            return new Class(this.name);
+            return new Class(this);
         }
 
         private hash = hashCodeGenerator++;
-        private _class = new Class(this.constructor.name);
+        private _class:Class;
         hashCode():number{
             return this.hash;
         }
 
         getClass():Class {
+            if (!this._class) {
+                this._class = new Class(this.constructor);
+            }
             return this._class;
         }
 
@@ -26,17 +29,17 @@ module java.lang{
     }
 
     export class Class{
-        name:string;
+        clazz:Function;
 
-        constructor(name:string) {
-            this.name = name;
+        constructor(clazz:Function) {
+            this.clazz = clazz;
         }
 
         getName():string {
-            return this.name;
+            return this.clazz.name;
         }
         getSimpleName():string {
-            return this.name;
+            return this.clazz.name;
         }
     }
 }
