@@ -87,7 +87,16 @@ module androidui {
         }
 
         private initApplication() {
-            this.mApplication = new android.app.Application(this);
+            const appName = this.androidUIElement.getAttribute('appName');
+            let appClazz;
+            if (appName) {
+                try {
+                    appClazz = eval(appName);
+                } catch (e) {
+                }
+            }
+            appClazz = appClazz || android.app.Application;
+            this.mApplication = new appClazz(this);
             this.mApplication.onCreate();
         }
 
@@ -106,6 +115,7 @@ module androidui {
                 if (activity) {
                     this.androidUIElement.removeChild(ele);
 
+                    // show layout defined in activity tag
                     for(let element of Array.from((<HTMLElement>ele).children)){
                         android.view.LayoutInflater.from(activity).inflate(<HTMLElement>element, activity.getWindow().mContentParent, true);
                     }
