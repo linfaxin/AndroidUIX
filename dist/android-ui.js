@@ -3806,15 +3806,17 @@ var java;
         class JavaObject {
             constructor() {
                 this.hash = hashCodeGenerator++;
-                this._class = new Class(this.constructor.name);
             }
             static get class() {
-                return new Class(this.name);
+                return new Class(this);
             }
             hashCode() {
                 return this.hash;
             }
             getClass() {
+                if (!this._class) {
+                    this._class = new Class(this.constructor);
+                }
                 return this._class;
             }
             equals(o) {
@@ -3823,14 +3825,14 @@ var java;
         }
         lang.JavaObject = JavaObject;
         class Class {
-            constructor(name) {
-                this.name = name;
+            constructor(clazz) {
+                this.clazz = clazz;
             }
             getName() {
-                return this.name;
+                return this.clazz.name;
             }
             getSimpleName() {
-                return this.name;
+                return this.clazz.name;
             }
         }
         lang.Class = Class;
@@ -4543,12 +4545,12 @@ var androidui;
                 }
                 return null;
             }
-            static parseDimension(r, value, defValue) {
+            static parseDimension(r, value, defValue, baseValue = 0) {
                 if (value == null)
                     return defValue;
                 if (value.startsWith('@')) {
                     try {
-                        return r.getDimension(value);
+                        return r.getDimension(value, baseValue);
                     }
                     catch (e) {
                         console.warn(e);
@@ -4556,19 +4558,19 @@ var androidui;
                     }
                 }
                 try {
-                    return android.util.TypedValue.complexToDimension(value);
+                    return android.util.TypedValue.complexToDimension(value, baseValue);
                 }
                 catch (e) {
                     console.warn(e);
                 }
                 return defValue;
             }
-            static parseDimensionPixelOffset(r, value, defValue) {
+            static parseDimensionPixelOffset(r, value, defValue, baseValue = 0) {
                 if (value == null)
                     return defValue;
                 if (value.startsWith('@')) {
                     try {
-                        return r.getDimensionPixelOffset(value);
+                        return r.getDimensionPixelOffset(value, baseValue);
                     }
                     catch (e) {
                         console.warn(e);
@@ -4576,14 +4578,14 @@ var androidui;
                     }
                 }
                 try {
-                    return android.util.TypedValue.complexToDimensionPixelOffset(value);
+                    return android.util.TypedValue.complexToDimensionPixelOffset(value, baseValue);
                 }
                 catch (e) {
                     console.warn(e);
                 }
                 return defValue;
             }
-            static parseDimensionPixelSize(r, value, defValue) {
+            static parseDimensionPixelSize(r, value, defValue, baseValue = 0) {
                 if (value == null)
                     return defValue;
                 if (value.startsWith('@')) {
@@ -4596,7 +4598,7 @@ var androidui;
                     }
                 }
                 try {
-                    return android.util.TypedValue.complexToDimensionPixelSize(value);
+                    return android.util.TypedValue.complexToDimensionPixelSize(value, baseValue);
                 }
                 catch (e) {
                     console.warn(e);
@@ -4772,7 +4774,6 @@ var android;
             var DisplayMetrics = android.util.DisplayMetrics;
             var Drawable = android.graphics.drawable.Drawable;
             var Color = android.graphics.Color;
-            var TypedValue = android.util.TypedValue;
             var SynchronizedPool = android.util.Pools.SynchronizedPool;
             var ColorDrawable = android.graphics.drawable.ColorDrawable;
             class Resources {
@@ -4918,7 +4919,7 @@ var android;
                     let ele = this.getValue(refString);
                     if (ele) {
                         let text = ele.innerText;
-                        return TypedValue.complexToDimension(text, baseValue, this.getDisplayMetrics());
+                        return android.util.TypedValue.complexToDimension(text, baseValue, this.getDisplayMetrics());
                     }
                     throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
@@ -4928,7 +4929,7 @@ var android;
                     let ele = this.getValue(refString);
                     if (ele) {
                         let text = ele.innerText;
-                        return TypedValue.complexToDimensionPixelOffset(text, baseValue, this.getDisplayMetrics());
+                        return android.util.TypedValue.complexToDimensionPixelOffset(text, baseValue, this.getDisplayMetrics());
                     }
                     throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
@@ -4938,7 +4939,7 @@ var android;
                     let ele = this.getValue(refString);
                     if (ele) {
                         let text = ele.innerText;
-                        return TypedValue.complexToDimensionPixelSize(text, baseValue, this.getDisplayMetrics());
+                        return android.util.TypedValue.complexToDimensionPixelSize(text, baseValue, this.getDisplayMetrics());
                     }
                     throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
@@ -6592,11 +6593,24 @@ var androidui;
                     if (part)
                         parts.push(part);
                 }
+                let ltrb;
                 switch (parts.length) {
-                    case 1: return [parts[0], parts[0], parts[0], parts[0]];
-                    case 2: return [parts[1], parts[0], parts[1], parts[0]];
-                    case 3: return [parts[1], parts[0], parts[1], parts[2]];
-                    case 4: return [parts[3], parts[0], parts[1], parts[2]];
+                    case 1:
+                        ltrb = [parts[0], parts[0], parts[0], parts[0]];
+                        break;
+                    case 2:
+                        ltrb = [parts[1], parts[0], parts[1], parts[0]];
+                        break;
+                    case 3:
+                        ltrb = [parts[1], parts[0], parts[1], parts[2]];
+                        break;
+                    case 4:
+                        ltrb = [parts[3], parts[0], parts[1], parts[2]];
+                        break;
+                }
+                if (ltrb) {
+                    ltrb = ltrb.map((v) => this.parseDimension(v));
+                    return ltrb;
                 }
                 throw Error('not a padding or margin value : ' + value);
             }
@@ -6682,19 +6696,19 @@ var androidui;
                 if (typeof value == 'number')
                     return value;
                 let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-                return attr.AttrValueParser.parseDimension(res, value, defaultValue);
+                return attr.AttrValueParser.parseDimension(res, value, defaultValue, baseValue);
             }
             parseNumberPixelOffset(value, defaultValue = 0, baseValue = 0) {
                 if (typeof value == 'number')
                     return value;
                 let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-                return attr.AttrValueParser.parseDimensionPixelOffset(res, value, defaultValue);
+                return attr.AttrValueParser.parseDimensionPixelOffset(res, value, defaultValue, baseValue);
             }
             parseNumberPixelSize(value, defaultValue = 0, baseValue = 0) {
                 if (typeof value == 'number')
                     return value;
                 let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-                return attr.AttrValueParser.parseDimensionPixelSize(res, value, defaultValue);
+                return attr.AttrValueParser.parseDimensionPixelSize(res, value, defaultValue, baseValue);
             }
             parseString(value, defaultValue) {
                 let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
@@ -7010,7 +7024,7 @@ var android;
                 if (keyIdentifier) {
                     this.mIsTypingKey = keyIdentifier.startsWith('U+');
                     if (this.mIsTypingKey) {
-                        this.mKeyCode = Number.parseInt(keyIdentifier.substr(2), 16);
+                        this.mKeyCode = Number.parseInt(keyIdentifier.substr(2), 16) || this.mKeyCode;
                     }
                 }
                 if (this.mKeyCode >= KeyEvent.KEYCODE_Key_a && this.mKeyCode <= KeyEvent.KEYCODE_Key_z
@@ -7035,6 +7049,15 @@ var android;
                         this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.alt[this.mKeyCode] || this.mKeyCode;
                     }
                 }
+                this.mKeyCode = KeyEvent.FIX_MAP_KEYCODE[this.mKeyCode] || this.mKeyCode;
+                var eventInfo = {};
+                for (var key in keyEvent) {
+                    var value = keyEvent[key];
+                    if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
+                        eventInfo[key] = value;
+                    }
+                }
+                alert(this.mKeyCode + '\n' + JSON.stringify(eventInfo));
                 if (action === KeyEvent.ACTION_DOWN) {
                     this.mDownTime = SystemClock.uptimeMillis();
                     let keyEvents = this._downingKeyEventMap.get(keyEvent.keyCode);
@@ -7322,6 +7345,29 @@ var android;
             },
             ctrl: {},
             alt: {}
+        };
+        KeyEvent.FIX_MAP_KEYCODE = {
+            186: KeyEvent.KEYCODE_Semicolon,
+            187: KeyEvent.KEYCODE_Equal,
+            188: KeyEvent.KEYCODE_Comma,
+            189: KeyEvent.KEYCODE_Minus,
+            190: KeyEvent.KEYCODE_Period,
+            191: KeyEvent.KEYCODE_Slash,
+            192: KeyEvent.KEYCODE_Backquote,
+            219: KeyEvent.KEYCODE_LeftBracket,
+            220: KeyEvent.KEYCODE_Backslash,
+            221: KeyEvent.KEYCODE_RightBracket,
+            222: KeyEvent.KEYCODE_Quotation,
+            96: KeyEvent.KEYCODE_Digit0,
+            97: KeyEvent.KEYCODE_Digit1,
+            98: KeyEvent.KEYCODE_Digit2,
+            99: KeyEvent.KEYCODE_Digit3,
+            100: KeyEvent.KEYCODE_Digit4,
+            101: KeyEvent.KEYCODE_Digit5,
+            102: KeyEvent.KEYCODE_Digit6,
+            103: KeyEvent.KEYCODE_Digit7,
+            104: KeyEvent.KEYCODE_Digit8,
+            105: KeyEvent.KEYCODE_Digit9
         };
         KeyEvent.ACTION_DOWN = 0;
         KeyEvent.ACTION_UP = 1;
@@ -11894,7 +11940,6 @@ var android;
         var ArrayList = java.util.ArrayList;
         var Resources = android.content.res.Resources;
         var Pools = android.util.Pools;
-        var TypedValue = android.util.TypedValue;
         var LinearInterpolator = android.view.animation.LinearInterpolator;
         var AnimationUtils = android.view.animation.AnimationUtils;
         var StateAttrList = androidui.attr.StateAttrList;
@@ -12322,25 +12367,25 @@ var android;
             }
             _setPaddingWithUnit(left, top, right, bottom) {
                 let view = this;
-                let dm = Resources.getDisplayMetrics();
                 let width = view.getWidth();
                 let height = view.getHeight();
-                let padLeft = TypedValue.complexToDimensionPixelSize(left, width, dm);
-                let padTop = TypedValue.complexToDimensionPixelSize(top, height, dm);
-                let padRight = TypedValue.complexToDimensionPixelSize(right, width, dm);
-                let padBottom = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+                let a = this._attrBinder;
+                let padLeft = a.parseDimension(left, 0, width);
+                let padTop = a.parseDimension(top, 0, height);
+                let padRight = a.parseDimension(right, 0, width);
+                let padBottom = a.parseDimension(bottom, 0, height);
                 view.setPadding(padLeft, padTop, padRight, padBottom);
-                let unit = TypedValue.COMPLEX_UNIT_FRACTION;
+                let unit = android.util.TypedValue.COMPLEX_UNIT_FRACTION;
                 if ((typeof left === 'string' && left.endsWith(unit)) || (typeof top === 'string' && top.endsWith(unit))
                     || (typeof right === 'string' && right.endsWith(unit)) || (typeof bottom === 'string' && bottom.endsWith(unit))) {
                     view.post({
                         run: () => {
                             let width = view.getWidth();
                             let height = view.getHeight();
-                            let padLeftN = TypedValue.complexToDimensionPixelSize(left, width, dm);
-                            let padTopN = TypedValue.complexToDimensionPixelSize(top, height, dm);
-                            let padRightN = TypedValue.complexToDimensionPixelSize(right, width, dm);
-                            let padBottomN = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+                            let padLeftN = a.parseDimension(left, 0, width);
+                            let padTopN = a.parseDimension(top, 0, height);
+                            let padRightN = a.parseDimension(right, 0, width);
+                            let padBottomN = a.parseDimension(bottom, 0, height);
                             view.setPadding(padLeftN, padTopN, padRightN, padBottomN);
                         }
                     });
@@ -19652,7 +19697,6 @@ var android;
         ViewGroup.CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
         view_5.ViewGroup = ViewGroup;
         (function (ViewGroup) {
-            var TypedValue = android.util.TypedValue;
             class LayoutParams {
                 constructor(...args) {
                     this._width = 0;
@@ -19698,8 +19742,8 @@ var android;
                     else {
                         let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                         try {
-                            let parsedValue = TypedValue.complexToDimensionPixelSize(this._width, parentWidth, this._measuringMeasureSpec);
-                            if (TypedValue.isDynamicUnitValue(this._width)) {
+                            let parsedValue = this._attrBinder.parseNumberPixelSize(this._width, 0, parentWidth);
+                            if (android.util.TypedValue.isDynamicUnitValue(this._width)) {
                                 return parsedValue;
                             }
                             this._width = parsedValue;
@@ -19725,8 +19769,8 @@ var android;
                     else {
                         let parentHeight = view_5.View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
                         try {
-                            let parsedValue = TypedValue.complexToDimensionPixelSize(this._height, parentHeight, this._measuringMeasureSpec);
-                            if (TypedValue.isDynamicUnitValue(this._height)) {
+                            let parsedValue = this._attrBinder.parseNumberPixelSize(this._height, 0, parentHeight);
+                            if (android.util.TypedValue.isDynamicUnitValue(this._height)) {
                                 return parsedValue;
                             }
                             this._height = parsedValue;
@@ -19829,8 +19873,8 @@ var android;
                         return this._leftMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._leftMargin, parentWidth, this._measuringMeasureSpec);
-                        if (TypedValue.isDynamicUnitValue(this._leftMargin)) {
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(this._leftMargin, 0, parentWidth);
+                        if (android.util.TypedValue.isDynamicUnitValue(this._leftMargin)) {
                             return parsedValue;
                         }
                         this._leftMargin = parsedValue;
@@ -19846,8 +19890,8 @@ var android;
                         return this._topMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._topMargin, parentWidth, this._measuringMeasureSpec);
-                        if (TypedValue.isDynamicUnitValue(this._topMargin)) {
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(this._topMargin, 0, parentWidth);
+                        if (android.util.TypedValue.isDynamicUnitValue(this._topMargin)) {
                             return parsedValue;
                         }
                         this._topMargin = parsedValue;
@@ -19863,8 +19907,8 @@ var android;
                         return this._rightMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._rightMargin, parentWidth, this._measuringMeasureSpec);
-                        if (TypedValue.isDynamicUnitValue(this._rightMargin)) {
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(this._rightMargin, 0, parentWidth);
+                        if (android.util.TypedValue.isDynamicUnitValue(this._rightMargin)) {
                             return parsedValue;
                         }
                         this._rightMargin = parsedValue;
@@ -19880,8 +19924,8 @@ var android;
                         return this._bottomMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._bottomMargin, parentWidth, this._measuringMeasureSpec);
-                        if (TypedValue.isDynamicUnitValue(this._bottomMargin)) {
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(this._bottomMargin, 0, parentWidth);
+                        if (android.util.TypedValue.isDynamicUnitValue(this._bottomMargin)) {
                             return parsedValue;
                         }
                         this._bottomMargin = parsedValue;
@@ -25303,7 +25347,17 @@ var androidui;
             this.initGlobalCrashHandle();
         }
         initApplication() {
-            this.mApplication = new android.app.Application(this);
+            const appName = this.androidUIElement.getAttribute('appName');
+            let appClazz;
+            if (appName) {
+                try {
+                    appClazz = eval(appName);
+                }
+                catch (e) {
+                }
+            }
+            appClazz = appClazz || android.app.Application;
+            this.mApplication = new appClazz(this);
             this.mApplication.onCreate();
         }
         initLaunchActivity() {
@@ -25480,6 +25534,7 @@ var androidui;
             this.androidUIElement.addEventListener('keydown', (e) => {
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_DOWN);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
+                    alert('preventDefault keydown');
                     e.stopPropagation();
                     e.preventDefault();
                     return true;
@@ -25488,6 +25543,7 @@ var androidui;
             this.androidUIElement.addEventListener('keyup', (e) => {
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_UP);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
+                    alert('preventDefault keyup');
                     e.stopPropagation();
                     e.preventDefault();
                     return true;
@@ -29884,6 +29940,7 @@ var android;
             ];
             LimitCode.TYPE_NUMBER_SIGNED = [
                 KeyEvent.KEYCODE_Minus,
+                KeyEvent.KEYCODE_Add,
                 KeyEvent.KEYCODE_Digit0,
                 KeyEvent.KEYCODE_Digit1,
                 KeyEvent.KEYCODE_Digit2,
@@ -43177,9 +43234,13 @@ var android;
                             this.setInputType(InputType.TYPE_TEXT_VISIBLE_PASSWORD);
                             break;
                         case 'number':
-                        case 'numberSigned':
-                        case 'numberDecimal':
                             this.setInputType(InputType.TYPE_CLASS_NUMBER);
+                            break;
+                        case 'numberSigned':
+                            this.setInputType(InputType.TYPE_NUMBER_SIGNED);
+                            break;
+                        case 'numberDecimal':
+                            this.setInputType(InputType.TYPE_NUMBER_DECIMAL);
                             break;
                         case 'numberPassword':
                             this.setInputType(InputType.TYPE_NUMBER_PASSWORD);
@@ -43204,7 +43265,7 @@ var android;
                 let filterText = '';
                 for (let i = 0, length = text.length; i < length; i++) {
                     let c = text.codePointAt(i);
-                    if (!this.filterKeyCode(c) && filterText.length < this.mMaxLength) {
+                    if (!this.filterKeyCodeOnValueChange(c) && filterText.length < this.mMaxLength) {
                         filterText += text[i];
                     }
                 }
@@ -43212,7 +43273,7 @@ var android;
                     text = filterText;
                     this.inputElement.value = text;
                 }
-                if (!text || text.length == 0) {
+                if (!text || text.length === 0) {
                     this.setForceDisableDrawText(false);
                 }
                 else {
@@ -43362,17 +43423,36 @@ var android;
                     if (this.getText().length >= this.mMaxLength) {
                         return true;
                     }
-                    return this.filterKeyCode(keyCode);
+                    return this.filterKeyCodeOnInput(keyCode);
                 }
                 return false;
             }
-            filterKeyCode(keyCode) {
+            filterKeyCodeOnValueChange(keyCode) {
+                switch (this.mInputType) {
+                    case InputType.TYPE_NUMBER_SIGNED:
+                        return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
+                    case InputType.TYPE_NUMBER_DECIMAL:
+                        return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
+                    case InputType.TYPE_CLASS_NUMBER:
+                        return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
+                    case InputType.TYPE_NUMBER_PASSWORD:
+                        return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
+                    case InputType.TYPE_CLASS_PHONE:
+                        return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+                }
+                return false;
+            }
+            filterKeyCodeOnInput(keyCode) {
                 switch (this.mInputType) {
                     case InputType.TYPE_NUMBER_SIGNED:
                         if (keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0)
                             return true;
+                        if (keyCode === android.view.KeyEvent.KEYCODE_Add && this.getText().length > 0)
+                            return true;
                         return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
                     case InputType.TYPE_NUMBER_DECIMAL:
+                        if (keyCode === android.view.KeyEvent.KEYCODE_Period && this.getText().includes('.'))
+                            return true;
                         return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
                     case InputType.TYPE_CLASS_NUMBER:
                         return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
@@ -43437,10 +43517,12 @@ var android;
                 switch (type) {
                     case InputType.TYPE_NULL:
                         this.switchToMultilineInputElement();
+                        this.inputElement.removeAttribute('type');
                         this.setSingleLine(false);
                         break;
                     case InputType.TYPE_CLASS_TEXT:
                         this.switchToMultilineInputElement();
+                        this.inputElement.removeAttribute('type');
                         this.setSingleLine(false);
                         break;
                     case InputType.TYPE_CLASS_URI:

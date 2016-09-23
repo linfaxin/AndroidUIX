@@ -878,8 +878,8 @@ declare module java.lang {
         equals(o: any): boolean;
     }
     class Class {
-        name: string;
-        constructor(name: string);
+        clazz: Function;
+        constructor(clazz: Function);
         getName(): string;
         getSimpleName(): string;
     }
@@ -1068,9 +1068,9 @@ declare module androidui.attr {
         static parseFloat(r: android.content.res.Resources, value: string, defValue: number): number;
         static parseColor(r: android.content.res.Resources, value: string, defValue: number): number;
         static parseColorStateList(r: android.content.res.Resources, value: string): android.content.res.ColorStateList;
-        static parseDimension(r: android.content.res.Resources, value: string, defValue: number): number;
-        static parseDimensionPixelOffset(r: android.content.res.Resources, value: string, defValue: number): number;
-        static parseDimensionPixelSize(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseDimension(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
+        static parseDimensionPixelOffset(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
+        static parseDimensionPixelSize(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
         static parseDrawable(r: android.content.res.Resources, value: string): android.graphics.drawable.Drawable;
         static parseTextArray(r: android.content.res.Resources, value: string): string[];
     }
@@ -1723,6 +1723,7 @@ declare module android.view {
             ctrl: {};
             alt: {};
         };
+        private static FIX_MAP_KEYCODE;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
         static META_MASK_SHIFT: number;
@@ -7886,7 +7887,8 @@ declare module android.widget {
         protected updateTextColors(): void;
         onTouchEvent(event: android.view.MotionEvent): boolean;
         private filterKeyEvent(event);
-        private filterKeyCode(keyCode);
+        private filterKeyCodeOnValueChange(keyCode);
+        private filterKeyCodeOnInput(keyCode);
         private checkFilterKeyEventToDom(event);
         onKeyDown(keyCode: number, event: android.view.KeyEvent): boolean;
         onKeyUp(keyCode: number, event: android.view.KeyEvent): boolean;

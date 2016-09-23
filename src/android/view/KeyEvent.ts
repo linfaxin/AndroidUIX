@@ -258,6 +258,30 @@ module android.view{
             //TODO more code
         };
 
+        private static FIX_MAP_KEYCODE = {
+            186: KeyEvent.KEYCODE_Semicolon, // ;
+            187: KeyEvent.KEYCODE_Equal, // =
+            188: KeyEvent.KEYCODE_Comma, // ,
+            189: KeyEvent.KEYCODE_Minus, // -
+            190: KeyEvent.KEYCODE_Period, // .
+            191: KeyEvent.KEYCODE_Slash, // /
+            192: KeyEvent.KEYCODE_Backquote, // `
+            219: KeyEvent.KEYCODE_LeftBracket, // [
+            220: KeyEvent.KEYCODE_Backslash, // \
+            221: KeyEvent.KEYCODE_RightBracket, // ]
+            222: KeyEvent.KEYCODE_Quotation, // '
+            //numeric keypad
+            96: KeyEvent.KEYCODE_Digit0,
+            97: KeyEvent.KEYCODE_Digit1,
+            98: KeyEvent.KEYCODE_Digit2,
+            99: KeyEvent.KEYCODE_Digit3,
+            100: KeyEvent.KEYCODE_Digit4,
+            101: KeyEvent.KEYCODE_Digit5,
+            102: KeyEvent.KEYCODE_Digit6,
+            103: KeyEvent.KEYCODE_Digit7,
+            104: KeyEvent.KEYCODE_Digit8,
+            105: KeyEvent.KEYCODE_Digit9
+        };
 
 
 
@@ -336,9 +360,10 @@ module android.view{
             if(keyIdentifier){
                 this.mIsTypingKey = keyIdentifier.startsWith('U+');//use for check should level touch mode
                 if(this.mIsTypingKey){
-                    this.mKeyCode = Number.parseInt(keyIdentifier.substr(2), 16);
+                    this.mKeyCode = Number.parseInt(keyIdentifier.substr(2), 16) || this.mKeyCode;
                 }
             }
+
             //TODO check caps lock
             //a ==> A, b ==> B, ...
             if(this.mKeyCode>=KeyEvent.KEYCODE_Key_a && this.mKeyCode<=KeyEvent.KEYCODE_Key_z
@@ -367,7 +392,8 @@ module android.view{
                 }
             }
 
-
+            // fix map key code
+            this.mKeyCode = KeyEvent.FIX_MAP_KEYCODE[this.mKeyCode] || this.mKeyCode;
 
             if(action === KeyEvent.ACTION_DOWN){
                 this.mDownTime = SystemClock.uptimeMillis();

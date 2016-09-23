@@ -86,11 +86,15 @@ export class EditText extends TextView {
                     this.setInputType(InputType.TYPE_TEXT_VISIBLE_PASSWORD);
                     break;
                 case 'number':
-                case 'numberSigned':
-                case 'numberDecimal':
                     this.setInputType(InputType.TYPE_CLASS_NUMBER);
                     break;
-                case 'numberPassword'://androidui add :)
+                case 'numberSigned':
+                    this.setInputType(InputType.TYPE_NUMBER_SIGNED);
+                    break;
+                case 'numberDecimal':
+                    this.setInputType(InputType.TYPE_NUMBER_DECIMAL);
+                    break;
+                case 'numberPassword': // androidui add :)
                     this.setInputType(InputType.TYPE_NUMBER_PASSWORD);
                     break;
                 case 'phone':
@@ -116,7 +120,7 @@ export class EditText extends TextView {
         let filterText = '';
         for(let i = 0, length = text.length; i<length; i++){
             let c = text.codePointAt(i);
-            if(!this.filterKeyCode(c) && filterText.length < this.mMaxLength){
+            if(!this.filterKeyCodeOnValueChange(c) && filterText.length < this.mMaxLength){
                 filterText += text[i];
             }
         }
@@ -125,7 +129,7 @@ export class EditText extends TextView {
             this.inputElement.value = text;
         }
 
-        if (!text || text.length == 0) {
+        if (!text || text.length === 0) {
             this.setForceDisableDrawText(false);
         } else {
             this.setForceDisableDrawText(true);
@@ -281,17 +285,35 @@ export class EditText extends TextView {
             if(this.getText().length >= this.mMaxLength) {
                 return true;
             }
-            return this.filterKeyCode(keyCode);
+            return this.filterKeyCodeOnInput(keyCode);
         }
         return false;
     }
 
-    private filterKeyCode(keyCode:number):boolean {
+    private filterKeyCodeOnValueChange(keyCode:number):boolean {
         switch (this.mInputType) {
             case InputType.TYPE_NUMBER_SIGNED:
-                if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length>0) return true;
                 return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
             case InputType.TYPE_NUMBER_DECIMAL:
+                return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
+            case InputType.TYPE_CLASS_NUMBER:
+                return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
+            case InputType.TYPE_NUMBER_PASSWORD:
+                return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
+            case InputType.TYPE_CLASS_PHONE:
+                return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+        }
+        return false;
+    }
+
+    private filterKeyCodeOnInput(keyCode:number):boolean {
+        switch (this.mInputType) {
+            case InputType.TYPE_NUMBER_SIGNED:
+                if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0) return true;
+                if(keyCode === android.view.KeyEvent.KEYCODE_Add && this.getText().length > 0) return true;
+                return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
+            case InputType.TYPE_NUMBER_DECIMAL:
+                if (keyCode === android.view.KeyEvent.KEYCODE_Period && this.getText().includes('.')) return true;
                 return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
             case InputType.TYPE_CLASS_NUMBER:
                 return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
@@ -381,10 +403,12 @@ export class EditText extends TextView {
         switch (type){
             case InputType.TYPE_NULL:
                 this.switchToMultilineInputElement();
+                this.inputElement.removeAttribute('type');
                 this.setSingleLine(false);
                 break;
             case InputType.TYPE_CLASS_TEXT:
                 this.switchToMultilineInputElement();
+                this.inputElement.removeAttribute('type');
                 this.setSingleLine(false);
                 break;
             case InputType.TYPE_CLASS_URI:
