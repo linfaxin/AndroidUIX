@@ -878,8 +878,8 @@ declare module java.lang {
         equals(o: any): boolean;
     }
     class Class {
-        name: string;
-        constructor(name: string);
+        clazz: Function;
+        constructor(clazz: Function);
         getName(): string;
         getSimpleName(): string;
     }
@@ -1068,9 +1068,9 @@ declare module androidui.attr {
         static parseFloat(r: android.content.res.Resources, value: string, defValue: number): number;
         static parseColor(r: android.content.res.Resources, value: string, defValue: number): number;
         static parseColorStateList(r: android.content.res.Resources, value: string): android.content.res.ColorStateList;
-        static parseDimension(r: android.content.res.Resources, value: string, defValue: number): number;
-        static parseDimensionPixelOffset(r: android.content.res.Resources, value: string, defValue: number): number;
-        static parseDimensionPixelSize(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseDimension(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
+        static parseDimensionPixelOffset(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
+        static parseDimensionPixelSize(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
         static parseDrawable(r: android.content.res.Resources, value: string): android.graphics.drawable.Drawable;
         static parseTextArray(r: android.content.res.Resources, value: string): string[];
     }
@@ -1723,6 +1723,7 @@ declare module android.view {
             ctrl: {};
             alt: {};
         };
+        private static FIX_MAP_KEYCODE;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
         static META_MASK_SHIFT: number;
@@ -5168,10 +5169,11 @@ declare module android.app {
         getOverrideExitAnimation(): Animation;
         getOverrideResumeAnimation(): Animation;
         getOverrideHideAnimation(): Animation;
+        private scheduleApplicationHideTimeout;
         scheduleApplicationHide(): void;
         scheduleApplicationShow(): void;
         execStartActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
-        activityResumeTimeout: any;
+        private activityResumeTimeout;
         scheduleActivityResume(): void;
         scheduleLaunchActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
         scheduleDestroyActivityByRequestCode(requestCode: number): void;
@@ -5953,27 +5955,50 @@ declare module android.os {
     }
 }
 declare module android.text {
-    enum InputType {
-        TYPE_NULL = 0,
-        TYPE_CLASS_TEXT = 1,
-        TYPE_CLASS_URI = 2,
-        TYPE_CLASS_EMAIL_ADDRESS = 3,
-        TYPE_CLASS_NUMBER = 4,
-        TYPE_CLASS_PHONE = 5,
-        TYPE_PASSWORD = 6,
-        TYPE_TEXT_PASSWORD = 7,
-        TYPE_TEXT_VISIBLE_PASSWORD = 8,
-        TYPE_NUMBER_PASSWORD = 9,
-        TYPE_NUMBER_SIGNED = 10,
-        TYPE_NUMBER_DECIMAL = 11,
+    class InputType {
+        static TYPE_MASK_CLASS: number;
+        static TYPE_MASK_VARIATION: number;
+        static TYPE_MASK_FLAGS: number;
+        static TYPE_NULL: number;
+        static TYPE_CLASS_TEXT: number;
+        static TYPE_TEXT_FLAG_CAP_CHARACTERS: number;
+        static TYPE_TEXT_FLAG_CAP_WORDS: number;
+        static TYPE_TEXT_FLAG_CAP_SENTENCES: number;
+        static TYPE_TEXT_FLAG_AUTO_CORRECT: number;
+        static TYPE_TEXT_FLAG_AUTO_COMPLETE: number;
+        static TYPE_TEXT_FLAG_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_IME_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_NO_SUGGESTIONS: number;
+        static TYPE_TEXT_VARIATION_NORMAL: number;
+        static TYPE_TEXT_VARIATION_URI: number;
+        static TYPE_TEXT_VARIATION_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_EMAIL_SUBJECT: number;
+        static TYPE_TEXT_VARIATION_SHORT_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_LONG_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_PERSON_NAME: number;
+        static TYPE_TEXT_VARIATION_POSTAL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_VISIBLE_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_WEB_EDIT_TEXT: number;
+        static TYPE_TEXT_VARIATION_FILTER: number;
+        static TYPE_TEXT_VARIATION_PHONETIC: number;
+        static TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_WEB_PASSWORD: number;
+        static TYPE_CLASS_NUMBER: number;
+        static TYPE_NUMBER_FLAG_SIGNED: number;
+        static TYPE_NUMBER_FLAG_DECIMAL: number;
+        static TYPE_NUMBER_VARIATION_NORMAL: number;
+        static TYPE_NUMBER_VARIATION_PASSWORD: number;
+        static TYPE_CLASS_PHONE: number;
+        static TYPE_CLASS_DATETIME: number;
+        static TYPE_DATETIME_VARIATION_NORMAL: number;
+        static TYPE_DATETIME_VARIATION_DATE: number;
+        static TYPE_DATETIME_VARIATION_TIME: number;
     }
     module InputType {
         class LimitCode {
             static TYPE_CLASS_NUMBER: number[];
             static TYPE_CLASS_PHONE: number[];
-            static TYPE_NUMBER_PASSWORD: number[];
-            static TYPE_NUMBER_SIGNED: number[];
-            static TYPE_NUMBER_DECIMAL: number[];
         }
     }
 }
@@ -7866,15 +7891,17 @@ declare module android.widget {
     class EditText extends TextView {
         private inputElement;
         private mSingleLineInputElement;
-        private mMultilineInputElement;
+        private mMultiLineInputElement;
         private mInputType;
         private mForceDisableDraw;
         private mMaxLength;
         constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
         protected initBindElement(bindElement: HTMLElement): void;
-        protected onInputValueChange(): void;
+        protected onInputValueChange(e: any): void;
+        private onDomTextInput(e);
+        private switchToInputElement(inputElement);
         private switchToSingleLineInputElement();
-        protected switchToMultilineInputElement(): void;
+        protected switchToMultiLineInputElement(): void;
         protected tryShowInputElement(): void;
         protected tryDismissInputElement(): void;
         protected onInputElementFocusChanged(focused: boolean): void;
@@ -7885,7 +7912,8 @@ declare module android.widget {
         protected updateTextColors(): void;
         onTouchEvent(event: android.view.MotionEvent): boolean;
         private filterKeyEvent(event);
-        private filterKeyCode(keyCode);
+        protected filterKeyCodeByInputType(keyCode: number): boolean;
+        protected filterKeyCodeOnInput(keyCode: number): boolean;
         private checkFilterKeyEventToDom(event);
         onKeyDown(keyCode: number, event: android.view.KeyEvent): boolean;
         onKeyUp(keyCode: number, event: android.view.KeyEvent): boolean;
@@ -7894,6 +7922,7 @@ declare module android.widget {
         protected onTextChanged(text: String, start: number, lengthBefore: number, lengthAfter: number): void;
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         setGravity(gravity: number): void;
+        setSingleLine(singleLine?: boolean): void;
         setInputType(type: number): void;
         getInputType(): number;
         private syncTextBoundInfoToInputElement();

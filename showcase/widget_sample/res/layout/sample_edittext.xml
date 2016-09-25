@@ -32,6 +32,11 @@
                 android:style="@style/editStyle"/>
         <View android:style="@style/line_spit"/>
         <EditText
+                android:hint="Input Type: numberDecimal"
+                android:inputType="numberDecimal"
+                android:style="@style/editStyle"/>
+        <View android:style="@style/line_spit"/>
+        <EditText
                 android:hint="Input Type: numberPassword"
                 android:inputType="numberPassword"
                 android:style="@style/editStyle"/>

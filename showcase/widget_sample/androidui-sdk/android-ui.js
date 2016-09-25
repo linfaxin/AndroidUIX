@@ -1,5 +1,5 @@
 /**
- * AndroidUIX v0.6.3
+ * AndroidUIX v0.6.4
  * https://github.com/linfaxin/AndroidUIX
  */
 var java;
@@ -3806,15 +3806,17 @@ var java;
         class JavaObject {
             constructor() {
                 this.hash = hashCodeGenerator++;
-                this._class = new Class(this.constructor.name);
             }
             static get class() {
-                return new Class(this.name);
+                return new Class(this);
             }
             hashCode() {
                 return this.hash;
             }
             getClass() {
+                if (!this._class) {
+                    this._class = new Class(this.constructor);
+                }
                 return this._class;
             }
             equals(o) {
@@ -3823,14 +3825,14 @@ var java;
         }
         lang.JavaObject = JavaObject;
         class Class {
-            constructor(name) {
-                this.name = name;
+            constructor(clazz) {
+                this.clazz = clazz;
             }
             getName() {
-                return this.name;
+                return this.clazz.name;
             }
             getSimpleName() {
-                return this.name;
+                return this.clazz.name;
             }
         }
         lang.Class = Class;
@@ -4543,12 +4545,12 @@ var androidui;
                 }
                 return null;
             }
-            static parseDimension(r, value, defValue) {
+            static parseDimension(r, value, defValue, baseValue = 0) {
                 if (value == null)
                     return defValue;
                 if (value.startsWith('@')) {
                     try {
-                        return r.getDimension(value);
+                        return r.getDimension(value, baseValue);
                     }
                     catch (e) {
                         console.warn(e);
@@ -4556,19 +4558,19 @@ var androidui;
                     }
                 }
                 try {
-                    return android.util.TypedValue.complexToDimension(value);
+                    return android.util.TypedValue.complexToDimension(value, baseValue);
                 }
                 catch (e) {
                     console.warn(e);
                 }
                 return defValue;
             }
-            static parseDimensionPixelOffset(r, value, defValue) {
+            static parseDimensionPixelOffset(r, value, defValue, baseValue = 0) {
                 if (value == null)
                     return defValue;
                 if (value.startsWith('@')) {
                     try {
-                        return r.getDimensionPixelOffset(value);
+                        return r.getDimensionPixelOffset(value, baseValue);
                     }
                     catch (e) {
                         console.warn(e);
@@ -4576,14 +4578,14 @@ var androidui;
                     }
                 }
                 try {
-                    return android.util.TypedValue.complexToDimensionPixelOffset(value);
+                    return android.util.TypedValue.complexToDimensionPixelOffset(value, baseValue);
                 }
                 catch (e) {
                     console.warn(e);
                 }
                 return defValue;
             }
-            static parseDimensionPixelSize(r, value, defValue) {
+            static parseDimensionPixelSize(r, value, defValue, baseValue = 0) {
                 if (value == null)
                     return defValue;
                 if (value.startsWith('@')) {
@@ -4596,7 +4598,7 @@ var androidui;
                     }
                 }
                 try {
-                    return android.util.TypedValue.complexToDimensionPixelSize(value);
+                    return android.util.TypedValue.complexToDimensionPixelSize(value, baseValue);
                 }
                 catch (e) {
                     console.warn(e);
@@ -4772,7 +4774,6 @@ var android;
             var DisplayMetrics = android.util.DisplayMetrics;
             var Drawable = android.graphics.drawable.Drawable;
             var Color = android.graphics.Color;
-            var TypedValue = android.util.TypedValue;
             var SynchronizedPool = android.util.Pools.SynchronizedPool;
             var ColorDrawable = android.graphics.drawable.ColorDrawable;
             class Resources {
@@ -4918,7 +4919,7 @@ var android;
                     let ele = this.getValue(refString);
                     if (ele) {
                         let text = ele.innerText;
-                        return TypedValue.complexToDimension(text, baseValue, this.getDisplayMetrics());
+                        return android.util.TypedValue.complexToDimension(text, baseValue, this.getDisplayMetrics());
                     }
                     throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
@@ -4928,7 +4929,7 @@ var android;
                     let ele = this.getValue(refString);
                     if (ele) {
                         let text = ele.innerText;
-                        return TypedValue.complexToDimensionPixelOffset(text, baseValue, this.getDisplayMetrics());
+                        return android.util.TypedValue.complexToDimensionPixelOffset(text, baseValue, this.getDisplayMetrics());
                     }
                     throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
@@ -4938,7 +4939,7 @@ var android;
                     let ele = this.getValue(refString);
                     if (ele) {
                         let text = ele.innerText;
-                        return TypedValue.complexToDimensionPixelSize(text, baseValue, this.getDisplayMetrics());
+                        return android.util.TypedValue.complexToDimensionPixelSize(text, baseValue, this.getDisplayMetrics());
                     }
                     throw new Error("NotFoundException: Resource " + refString + " is not found");
                 }
@@ -6592,11 +6593,24 @@ var androidui;
                     if (part)
                         parts.push(part);
                 }
+                let ltrb;
                 switch (parts.length) {
-                    case 1: return [parts[0], parts[0], parts[0], parts[0]];
-                    case 2: return [parts[1], parts[0], parts[1], parts[0]];
-                    case 3: return [parts[1], parts[0], parts[1], parts[2]];
-                    case 4: return [parts[3], parts[0], parts[1], parts[2]];
+                    case 1:
+                        ltrb = [parts[0], parts[0], parts[0], parts[0]];
+                        break;
+                    case 2:
+                        ltrb = [parts[1], parts[0], parts[1], parts[0]];
+                        break;
+                    case 3:
+                        ltrb = [parts[1], parts[0], parts[1], parts[2]];
+                        break;
+                    case 4:
+                        ltrb = [parts[3], parts[0], parts[1], parts[2]];
+                        break;
+                }
+                if (ltrb) {
+                    ltrb = ltrb.map((v) => this.parseDimension(v));
+                    return ltrb;
                 }
                 throw Error('not a padding or margin value : ' + value);
             }
@@ -6682,19 +6696,19 @@ var androidui;
                 if (typeof value == 'number')
                     return value;
                 let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-                return attr.AttrValueParser.parseDimension(res, value, defaultValue);
+                return attr.AttrValueParser.parseDimension(res, value, defaultValue, baseValue);
             }
             parseNumberPixelOffset(value, defaultValue = 0, baseValue = 0) {
                 if (typeof value == 'number')
                     return value;
                 let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-                return attr.AttrValueParser.parseDimensionPixelOffset(res, value, defaultValue);
+                return attr.AttrValueParser.parseDimensionPixelOffset(res, value, defaultValue, baseValue);
             }
             parseNumberPixelSize(value, defaultValue = 0, baseValue = 0) {
                 if (typeof value == 'number')
                     return value;
                 let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
-                return attr.AttrValueParser.parseDimensionPixelSize(res, value, defaultValue);
+                return attr.AttrValueParser.parseDimensionPixelSize(res, value, defaultValue, baseValue);
             }
             parseString(value, defaultValue) {
                 let res = this.mContext ? this.mContext.getResources() : Resources.getSystem();
@@ -7010,7 +7024,7 @@ var android;
                 if (keyIdentifier) {
                     this.mIsTypingKey = keyIdentifier.startsWith('U+');
                     if (this.mIsTypingKey) {
-                        this.mKeyCode = Number.parseInt(keyIdentifier.substr(2), 16);
+                        this.mKeyCode = Number.parseInt(keyIdentifier.substr(2), 16) || this.mKeyCode;
                     }
                 }
                 if (this.mKeyCode >= KeyEvent.KEYCODE_Key_a && this.mKeyCode <= KeyEvent.KEYCODE_Key_z
@@ -7035,6 +7049,7 @@ var android;
                         this.mKeyCode = KeyEvent.KEYCODE_CHANGE_ANDROID_CHROME.alt[this.mKeyCode] || this.mKeyCode;
                     }
                 }
+                this.mKeyCode = KeyEvent.FIX_MAP_KEYCODE[this.mKeyCode] || this.mKeyCode;
                 if (action === KeyEvent.ACTION_DOWN) {
                     this.mDownTime = SystemClock.uptimeMillis();
                     let keyEvents = this._downingKeyEventMap.get(keyEvent.keyCode);
@@ -7322,6 +7337,29 @@ var android;
             },
             ctrl: {},
             alt: {}
+        };
+        KeyEvent.FIX_MAP_KEYCODE = {
+            186: KeyEvent.KEYCODE_Semicolon,
+            187: KeyEvent.KEYCODE_Equal,
+            188: KeyEvent.KEYCODE_Comma,
+            189: KeyEvent.KEYCODE_Minus,
+            190: KeyEvent.KEYCODE_Period,
+            191: KeyEvent.KEYCODE_Slash,
+            192: KeyEvent.KEYCODE_Backquote,
+            219: KeyEvent.KEYCODE_LeftBracket,
+            220: KeyEvent.KEYCODE_Backslash,
+            221: KeyEvent.KEYCODE_RightBracket,
+            222: KeyEvent.KEYCODE_Quotation,
+            96: KeyEvent.KEYCODE_Digit0,
+            97: KeyEvent.KEYCODE_Digit1,
+            98: KeyEvent.KEYCODE_Digit2,
+            99: KeyEvent.KEYCODE_Digit3,
+            100: KeyEvent.KEYCODE_Digit4,
+            101: KeyEvent.KEYCODE_Digit5,
+            102: KeyEvent.KEYCODE_Digit6,
+            103: KeyEvent.KEYCODE_Digit7,
+            104: KeyEvent.KEYCODE_Digit8,
+            105: KeyEvent.KEYCODE_Digit9
         };
         KeyEvent.ACTION_DOWN = 0;
         KeyEvent.ACTION_UP = 1;
@@ -11894,7 +11932,6 @@ var android;
         var ArrayList = java.util.ArrayList;
         var Resources = android.content.res.Resources;
         var Pools = android.util.Pools;
-        var TypedValue = android.util.TypedValue;
         var LinearInterpolator = android.view.animation.LinearInterpolator;
         var AnimationUtils = android.view.animation.AnimationUtils;
         var StateAttrList = androidui.attr.StateAttrList;
@@ -12322,25 +12359,25 @@ var android;
             }
             _setPaddingWithUnit(left, top, right, bottom) {
                 let view = this;
-                let dm = Resources.getDisplayMetrics();
                 let width = view.getWidth();
                 let height = view.getHeight();
-                let padLeft = TypedValue.complexToDimensionPixelSize(left, width, dm);
-                let padTop = TypedValue.complexToDimensionPixelSize(top, height, dm);
-                let padRight = TypedValue.complexToDimensionPixelSize(right, width, dm);
-                let padBottom = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+                let a = this._attrBinder;
+                let padLeft = a.parseDimension(left, 0, width);
+                let padTop = a.parseDimension(top, 0, height);
+                let padRight = a.parseDimension(right, 0, width);
+                let padBottom = a.parseDimension(bottom, 0, height);
                 view.setPadding(padLeft, padTop, padRight, padBottom);
-                let unit = TypedValue.COMPLEX_UNIT_FRACTION;
+                let unit = android.util.TypedValue.COMPLEX_UNIT_FRACTION;
                 if ((typeof left === 'string' && left.endsWith(unit)) || (typeof top === 'string' && top.endsWith(unit))
                     || (typeof right === 'string' && right.endsWith(unit)) || (typeof bottom === 'string' && bottom.endsWith(unit))) {
                     view.post({
                         run: () => {
                             let width = view.getWidth();
                             let height = view.getHeight();
-                            let padLeftN = TypedValue.complexToDimensionPixelSize(left, width, dm);
-                            let padTopN = TypedValue.complexToDimensionPixelSize(top, height, dm);
-                            let padRightN = TypedValue.complexToDimensionPixelSize(right, width, dm);
-                            let padBottomN = TypedValue.complexToDimensionPixelSize(bottom, height, dm);
+                            let padLeftN = a.parseDimension(left, 0, width);
+                            let padTopN = a.parseDimension(top, 0, height);
+                            let padRightN = a.parseDimension(right, 0, width);
+                            let padBottomN = a.parseDimension(bottom, 0, height);
                             view.setPadding(padLeftN, padTopN, padRightN, padBottomN);
                         }
                     });
@@ -19652,7 +19689,6 @@ var android;
         ViewGroup.CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
         view_5.ViewGroup = ViewGroup;
         (function (ViewGroup) {
-            var TypedValue = android.util.TypedValue;
             class LayoutParams {
                 constructor(...args) {
                     this._width = 0;
@@ -19698,8 +19734,8 @@ var android;
                     else {
                         let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                         try {
-                            let parsedValue = TypedValue.complexToDimensionPixelSize(this._width, parentWidth, this._measuringMeasureSpec);
-                            if (TypedValue.isDynamicUnitValue(this._width)) {
+                            let parsedValue = this._attrBinder.parseNumberPixelSize(this._width, 0, parentWidth);
+                            if (android.util.TypedValue.isDynamicUnitValue(this._width)) {
                                 return parsedValue;
                             }
                             this._width = parsedValue;
@@ -19725,8 +19761,8 @@ var android;
                     else {
                         let parentHeight = view_5.View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
                         try {
-                            let parsedValue = TypedValue.complexToDimensionPixelSize(this._height, parentHeight, this._measuringMeasureSpec);
-                            if (TypedValue.isDynamicUnitValue(this._height)) {
+                            let parsedValue = this._attrBinder.parseNumberPixelSize(this._height, 0, parentHeight);
+                            if (android.util.TypedValue.isDynamicUnitValue(this._height)) {
                                 return parsedValue;
                             }
                             this._height = parsedValue;
@@ -19829,8 +19865,8 @@ var android;
                         return this._leftMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._leftMargin, parentWidth, this._measuringMeasureSpec);
-                        if (TypedValue.isDynamicUnitValue(this._leftMargin)) {
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(this._leftMargin, 0, parentWidth);
+                        if (android.util.TypedValue.isDynamicUnitValue(this._leftMargin)) {
                             return parsedValue;
                         }
                         this._leftMargin = parsedValue;
@@ -19846,8 +19882,8 @@ var android;
                         return this._topMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._topMargin, parentWidth, this._measuringMeasureSpec);
-                        if (TypedValue.isDynamicUnitValue(this._topMargin)) {
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(this._topMargin, 0, parentWidth);
+                        if (android.util.TypedValue.isDynamicUnitValue(this._topMargin)) {
                             return parsedValue;
                         }
                         this._topMargin = parsedValue;
@@ -19863,8 +19899,8 @@ var android;
                         return this._rightMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._rightMargin, parentWidth, this._measuringMeasureSpec);
-                        if (TypedValue.isDynamicUnitValue(this._rightMargin)) {
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(this._rightMargin, 0, parentWidth);
+                        if (android.util.TypedValue.isDynamicUnitValue(this._rightMargin)) {
                             return parsedValue;
                         }
                         this._rightMargin = parsedValue;
@@ -19880,8 +19916,8 @@ var android;
                         return this._bottomMargin;
                     let parentWidth = view_5.View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
                     try {
-                        let parsedValue = TypedValue.complexToDimensionPixelSize(this._bottomMargin, parentWidth, this._measuringMeasureSpec);
-                        if (TypedValue.isDynamicUnitValue(this._bottomMargin)) {
+                        let parsedValue = this._attrBinder.parseNumberPixelSize(this._bottomMargin, 0, parentWidth);
+                        if (android.util.TypedValue.isDynamicUnitValue(this._bottomMargin)) {
                             return parsedValue;
                         }
                         this._bottomMargin = parsedValue;
@@ -24848,13 +24884,17 @@ var android;
                 return this.overrideHideAnimation;
             }
             scheduleApplicationHide() {
-                let visibleActivities = this.getVisibleToUserActivities();
-                if (visibleActivities.length == 0)
-                    return;
-                this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
-                for (let visibleActivity of visibleActivities) {
-                    this.handleStopActivity(visibleActivity, true);
-                }
+                if (this.scheduleApplicationHideTimeout)
+                    clearTimeout(this.scheduleApplicationHideTimeout);
+                this.scheduleApplicationHideTimeout = setTimeout(() => {
+                    let visibleActivities = this.getVisibleToUserActivities();
+                    if (visibleActivities.length == 0)
+                        return;
+                    this.handlePauseActivity(visibleActivities[visibleActivities.length - 1]);
+                    for (let visibleActivity of visibleActivities) {
+                        this.handleStopActivity(visibleActivity, true);
+                    }
+                }, 0);
             }
             scheduleApplicationShow() {
                 this.scheduleActivityResume();
@@ -24963,11 +25003,7 @@ var android;
                 this.performPauseActivity(activity);
             }
             performPauseActivity(activity) {
-                activity.mCalled = false;
                 activity.performPause();
-                if (!activity.mCalled) {
-                    throw new Error("Activity " + ActivityThread.getActivityName(activity) + " did not call through to super.onPause()");
-                }
             }
             handleStopActivity(activity, show = false) {
                 this.performStopActivity(activity, true);
@@ -25303,7 +25339,17 @@ var androidui;
             this.initGlobalCrashHandle();
         }
         initApplication() {
-            this.mApplication = new android.app.Application(this);
+            const appName = this.androidUIElement.getAttribute('appName');
+            let appClazz;
+            if (appName) {
+                try {
+                    appClazz = eval(appName);
+                }
+                catch (e) {
+                }
+            }
+            appClazz = appClazz || android.app.Application;
+            this.mApplication = new appClazz(this);
             this.mApplication.onCreate();
         }
         initLaunchActivity() {
@@ -25428,7 +25474,9 @@ var androidui;
             this.androidUIElement.addEventListener('mousedown', (e) => {
                 isMouseDown = true;
                 this.refreshWindowBound();
-                this.androidUIElement.focus();
+                if (e.target != document.activeElement || !this.androidUIElement.contains(document.activeElement)) {
+                    this.androidUIElement.focus();
+                }
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
                     e.stopPropagation();
@@ -25984,7 +26032,7 @@ var android;
                     this.onPause();
                     this.mResumed = false;
                     if (!this.mCalled) {
-                        throw Error(`new SuperNotCalledException("Activity " + this.mComponent.toShortString() + " did not call through to super.onPause()")`);
+                        throw Error(`new SuperNotCalledException("Activity ${this.constructor.name} did not call through to super.onPause()")`);
                     }
                     this.mResumed = false;
                 }
@@ -29814,22 +29862,47 @@ var android;
     var text;
     (function (text) {
         var KeyEvent = android.view.KeyEvent;
-        (function (InputType) {
-            InputType[InputType["TYPE_NULL"] = 0] = "TYPE_NULL";
-            InputType[InputType["TYPE_CLASS_TEXT"] = 1] = "TYPE_CLASS_TEXT";
-            InputType[InputType["TYPE_CLASS_URI"] = 2] = "TYPE_CLASS_URI";
-            InputType[InputType["TYPE_CLASS_EMAIL_ADDRESS"] = 3] = "TYPE_CLASS_EMAIL_ADDRESS";
-            InputType[InputType["TYPE_CLASS_NUMBER"] = 4] = "TYPE_CLASS_NUMBER";
-            InputType[InputType["TYPE_CLASS_PHONE"] = 5] = "TYPE_CLASS_PHONE";
-            InputType[InputType["TYPE_PASSWORD"] = 6] = "TYPE_PASSWORD";
-            InputType[InputType["TYPE_TEXT_PASSWORD"] = 7] = "TYPE_TEXT_PASSWORD";
-            InputType[InputType["TYPE_TEXT_VISIBLE_PASSWORD"] = 8] = "TYPE_TEXT_VISIBLE_PASSWORD";
-            InputType[InputType["TYPE_NUMBER_PASSWORD"] = 9] = "TYPE_NUMBER_PASSWORD";
-            InputType[InputType["TYPE_NUMBER_SIGNED"] = 10] = "TYPE_NUMBER_SIGNED";
-            InputType[InputType["TYPE_NUMBER_DECIMAL"] = 11] = "TYPE_NUMBER_DECIMAL";
-        })(text.InputType || (text.InputType = {}));
-        var InputType = text.InputType;
-        var InputType;
+        class InputType {
+        }
+        InputType.TYPE_MASK_CLASS = 0x0000000f;
+        InputType.TYPE_MASK_VARIATION = 0x00000ff0;
+        InputType.TYPE_MASK_FLAGS = 0x00fff000;
+        InputType.TYPE_NULL = 0x00000000;
+        InputType.TYPE_CLASS_TEXT = 0x00000001;
+        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS = 0x00001000;
+        InputType.TYPE_TEXT_FLAG_CAP_WORDS = 0x00002000;
+        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES = 0x00004000;
+        InputType.TYPE_TEXT_FLAG_AUTO_CORRECT = 0x00008000;
+        InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE = 0x00010000;
+        InputType.TYPE_TEXT_FLAG_MULTI_LINE = 0x00020000;
+        InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE = 0x00040000;
+        InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS = 0x00080000;
+        InputType.TYPE_TEXT_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_TEXT_VARIATION_URI = 0x00000010;
+        InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
+        InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT = 0x00000030;
+        InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE = 0x00000040;
+        InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE = 0x00000050;
+        InputType.TYPE_TEXT_VARIATION_PERSON_NAME = 0x00000060;
+        InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS = 0x00000070;
+        InputType.TYPE_TEXT_VARIATION_PASSWORD = 0x00000080;
+        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD = 0x00000090;
+        InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT = 0x000000a0;
+        InputType.TYPE_TEXT_VARIATION_FILTER = 0x000000b0;
+        InputType.TYPE_TEXT_VARIATION_PHONETIC = 0x000000c0;
+        InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS = 0x000000d0;
+        InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD = 0x000000e0;
+        InputType.TYPE_CLASS_NUMBER = 0x00000002;
+        InputType.TYPE_NUMBER_FLAG_SIGNED = 0x00001000;
+        InputType.TYPE_NUMBER_FLAG_DECIMAL = 0x00002000;
+        InputType.TYPE_NUMBER_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_NUMBER_VARIATION_PASSWORD = 0x00000010;
+        InputType.TYPE_CLASS_PHONE = 0x00000003;
+        InputType.TYPE_CLASS_DATETIME = 0x00000004;
+        InputType.TYPE_DATETIME_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_DATETIME_VARIATION_DATE = 0x00000010;
+        InputType.TYPE_DATETIME_VARIATION_TIME = 0x00000020;
+        text.InputType = InputType;
         (function (InputType) {
             class LimitCode {
             }
@@ -29858,44 +29931,6 @@ var android;
                 KeyEvent.KEYCODE_SPACE,
                 KeyEvent.KEYCODE_Add,
                 KeyEvent.KEYCODE_Minus,
-                KeyEvent.KEYCODE_Period,
-                KeyEvent.KEYCODE_Digit0,
-                KeyEvent.KEYCODE_Digit1,
-                KeyEvent.KEYCODE_Digit2,
-                KeyEvent.KEYCODE_Digit3,
-                KeyEvent.KEYCODE_Digit4,
-                KeyEvent.KEYCODE_Digit5,
-                KeyEvent.KEYCODE_Digit6,
-                KeyEvent.KEYCODE_Digit7,
-                KeyEvent.KEYCODE_Digit8,
-                KeyEvent.KEYCODE_Digit9,
-            ];
-            LimitCode.TYPE_NUMBER_PASSWORD = [
-                KeyEvent.KEYCODE_Digit0,
-                KeyEvent.KEYCODE_Digit1,
-                KeyEvent.KEYCODE_Digit2,
-                KeyEvent.KEYCODE_Digit3,
-                KeyEvent.KEYCODE_Digit4,
-                KeyEvent.KEYCODE_Digit5,
-                KeyEvent.KEYCODE_Digit6,
-                KeyEvent.KEYCODE_Digit7,
-                KeyEvent.KEYCODE_Digit8,
-                KeyEvent.KEYCODE_Digit9,
-            ];
-            LimitCode.TYPE_NUMBER_SIGNED = [
-                KeyEvent.KEYCODE_Minus,
-                KeyEvent.KEYCODE_Digit0,
-                KeyEvent.KEYCODE_Digit1,
-                KeyEvent.KEYCODE_Digit2,
-                KeyEvent.KEYCODE_Digit3,
-                KeyEvent.KEYCODE_Digit4,
-                KeyEvent.KEYCODE_Digit5,
-                KeyEvent.KEYCODE_Digit6,
-                KeyEvent.KEYCODE_Digit7,
-                KeyEvent.KEYCODE_Digit8,
-                KeyEvent.KEYCODE_Digit9,
-            ];
-            LimitCode.TYPE_NUMBER_DECIMAL = [
                 KeyEvent.KEYCODE_Period,
                 KeyEvent.KEYCODE_Digit0,
                 KeyEvent.KEYCODE_Digit1,
@@ -34559,6 +34594,8 @@ var android;
                 }
             }
             setSingleLine(singleLine = true) {
+                if (this.mSingleLine == singleLine)
+                    return;
                 this.setInputTypeSingleLine(singleLine);
                 this.applySingleLine(singleLine, true, true);
             }
@@ -41643,7 +41680,7 @@ var android;
                             {
                                 if (!this.mIsBeingDragged) {
                                     let hscroll;
-                                    hscroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+                                    hscroll = -event.getAxisValue(MotionEvent.AXIS_VSCROLL);
                                     if (hscroll != 0) {
                                         const delta = Math.floor((hscroll * this.getHorizontalScrollFactor()));
                                         const range = this.getScrollRange();
@@ -43165,27 +43202,40 @@ var android;
                             this.setInputType(InputType.TYPE_CLASS_TEXT);
                             break;
                         case 'textUri':
-                            this.setInputType(InputType.TYPE_CLASS_URI);
+                            this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
                             break;
                         case 'textEmailAddress':
-                            this.setInputType(InputType.TYPE_CLASS_EMAIL_ADDRESS);
+                            this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
                             break;
                         case 'textPassword':
-                            this.setInputType(InputType.TYPE_TEXT_PASSWORD);
+                            this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                             break;
                         case 'textVisiblePassword':
-                            this.setInputType(InputType.TYPE_TEXT_VISIBLE_PASSWORD);
+                            this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                             break;
                         case 'number':
-                        case 'numberSigned':
-                        case 'numberDecimal':
                             this.setInputType(InputType.TYPE_CLASS_NUMBER);
                             break;
+                        case 'numberSigned':
+                            this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+                            break;
+                        case 'numberDecimal':
+                            this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                            break;
                         case 'numberPassword':
-                            this.setInputType(InputType.TYPE_NUMBER_PASSWORD);
+                            this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
                             break;
                         case 'phone':
                             this.setInputType(InputType.TYPE_CLASS_PHONE);
+                            break;
+                        case 'datetime':
+                            this.setInputType(InputType.TYPE_CLASS_DATETIME);
+                            break;
+                        case 'date':
+                            this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
+                            break;
+                        case 'time':
+                            this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
                             break;
                     }
                 });
@@ -43197,14 +43247,14 @@ var android;
             }
             initBindElement(bindElement) {
                 super.initBindElement(bindElement);
-                this.switchToMultilineInputElement();
+                this.switchToMultiLineInputElement();
             }
-            onInputValueChange() {
+            onInputValueChange(e) {
                 let text = this.inputElement.value;
                 let filterText = '';
                 for (let i = 0, length = text.length; i < length; i++) {
                     let c = text.codePointAt(i);
-                    if (!this.filterKeyCode(c) && filterText.length < this.mMaxLength) {
+                    if (!this.filterKeyCodeByInputType(c) && filterText.length < this.mMaxLength) {
                         filterText += text[i];
                     }
                 }
@@ -43212,13 +43262,48 @@ var android;
                     text = filterText;
                     this.inputElement.value = text;
                 }
-                if (!text || text.length == 0) {
+                if (!text || text.length === 0) {
                     this.setForceDisableDrawText(false);
                 }
                 else {
                     this.setForceDisableDrawText(true);
                 }
                 this.setText(text);
+            }
+            onDomTextInput(e) {
+                let text = e['data'];
+                for (let i = 0, length = text.length; i < length; i++) {
+                    let c = text.codePointAt(i);
+                    if (!this.filterKeyCodeOnInput(c)) {
+                        return;
+                    }
+                }
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            switchToInputElement(inputElement) {
+                if (this.inputElement === inputElement)
+                    return;
+                inputElement.onblur = () => {
+                    inputElement.style.opacity = '0';
+                    this.setForceDisableDrawText(false);
+                    this.onInputElementFocusChanged(false);
+                };
+                inputElement.onfocus = () => {
+                    inputElement.style.opacity = '1';
+                    if (this.getText().length > 0) {
+                        this.setForceDisableDrawText(true);
+                    }
+                    this.onInputElementFocusChanged(true);
+                };
+                inputElement.oninput = (e) => this.onInputValueChange(e);
+                inputElement.removeEventListener('textInput', (e) => this.onDomTextInput(e));
+                inputElement.addEventListener('textInput', (e) => this.onDomTextInput(e));
+                if (this.inputElement && this.inputElement.parentElement) {
+                    this.bindElement.removeChild(this.inputElement);
+                    this.bindElement.appendChild(inputElement);
+                }
+                this.inputElement = inputElement;
             }
             switchToSingleLineInputElement() {
                 if (!this.mSingleLineInputElement) {
@@ -43229,60 +43314,22 @@ var android;
                     this.mSingleLineInputElement.style.overflow = 'auto';
                     this.mSingleLineInputElement.style.background = 'transparent';
                     this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
-                    this.mSingleLineInputElement.onblur = () => {
-                        this.mSingleLineInputElement.style.opacity = '0';
-                        this.setForceDisableDrawText(false);
-                        this.onInputElementFocusChanged(false);
-                    };
-                    this.mSingleLineInputElement.onfocus = () => {
-                        this.mSingleLineInputElement.style.opacity = '1';
-                        if (this.getText().length > 0) {
-                            this.setForceDisableDrawText(true);
-                        }
-                        this.onInputElementFocusChanged(true);
-                    };
-                    this.mSingleLineInputElement.oninput = () => this.onInputValueChange();
                 }
-                if (this.inputElement === this.mSingleLineInputElement)
-                    return;
-                if (this.inputElement && this.inputElement.parentElement) {
-                    this.bindElement.removeChild(this.inputElement);
-                    this.bindElement.appendChild(this.mSingleLineInputElement);
-                }
-                this.inputElement = this.mSingleLineInputElement;
+                this.switchToInputElement(this.mSingleLineInputElement);
             }
-            switchToMultilineInputElement() {
-                if (!this.mMultilineInputElement) {
-                    this.mMultilineInputElement = document.createElement('textarea');
-                    this.mMultilineInputElement.style.position = 'absolute';
-                    this.mMultilineInputElement.style['webkitAppearance'] = 'none';
-                    this.mMultilineInputElement.style['resize'] = 'none';
-                    this.mMultilineInputElement.style.borderRadius = '0';
-                    this.mMultilineInputElement.style.overflow = 'auto';
-                    this.mMultilineInputElement.style.background = 'transparent';
-                    this.mMultilineInputElement.style.boxSizing = 'border-box';
-                    this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
-                    this.mMultilineInputElement.onblur = () => {
-                        this.mMultilineInputElement.style.opacity = '0';
-                        this.setForceDisableDrawText(false);
-                        this.onInputElementFocusChanged(false);
-                    };
-                    this.mMultilineInputElement.onfocus = () => {
-                        this.mMultilineInputElement.style.opacity = '1';
-                        if (this.getText().length > 0) {
-                            this.setForceDisableDrawText(true);
-                        }
-                        this.onInputElementFocusChanged(true);
-                    };
-                    this.mMultilineInputElement.oninput = () => this.onInputValueChange();
+            switchToMultiLineInputElement() {
+                if (!this.mMultiLineInputElement) {
+                    this.mMultiLineInputElement = document.createElement('textarea');
+                    this.mMultiLineInputElement.style.position = 'absolute';
+                    this.mMultiLineInputElement.style['webkitAppearance'] = 'none';
+                    this.mMultiLineInputElement.style['resize'] = 'none';
+                    this.mMultiLineInputElement.style.borderRadius = '0';
+                    this.mMultiLineInputElement.style.overflow = 'auto';
+                    this.mMultiLineInputElement.style.background = 'transparent';
+                    this.mMultiLineInputElement.style.boxSizing = 'border-box';
+                    this.mMultiLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
                 }
-                if (this.inputElement === this.mMultilineInputElement)
-                    return;
-                if (this.inputElement && this.inputElement.parentElement) {
-                    this.bindElement.removeChild(this.inputElement);
-                    this.bindElement.appendChild(this.mMultilineInputElement);
-                }
-                this.inputElement = this.mMultilineInputElement;
+                this.switchToInputElement(this.mMultiLineInputElement);
             }
             tryShowInputElement() {
                 if (!this.isInputElementShowed()) {
@@ -43341,13 +43388,15 @@ var android;
                 }
             }
             onTouchEvent(event) {
+                const superResult = super.onTouchEvent(event);
                 if (this.isInputElementShowed()) {
                     event[android.view.ViewRootImpl.ContinueEventToDom] = true;
                     if (this.inputElement.scrollHeight > this.inputElement.offsetHeight || this.inputElement.scrollWidth > this.inputElement.offsetWidth) {
                         this.getParent().requestDisallowInterceptTouchEvent(true);
                     }
+                    return true;
                 }
-                return super.onTouchEvent(event) || this.isInputElementShowed();
+                return superResult;
             }
             filterKeyEvent(event) {
                 let keyCode = event.getKeyCode();
@@ -43362,26 +43411,45 @@ var android;
                     if (this.getText().length >= this.mMaxLength) {
                         return true;
                     }
-                    return this.filterKeyCode(keyCode);
+                    return this.filterKeyCodeOnInput(keyCode);
                 }
                 return false;
             }
-            filterKeyCode(keyCode) {
-                switch (this.mInputType) {
-                    case InputType.TYPE_NUMBER_SIGNED:
-                        if (keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0)
-                            return true;
-                        return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
-                    case InputType.TYPE_NUMBER_DECIMAL:
-                        return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
-                    case InputType.TYPE_CLASS_NUMBER:
-                        return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
-                    case InputType.TYPE_NUMBER_PASSWORD:
-                        return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
-                    case InputType.TYPE_CLASS_PHONE:
-                        return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+            filterKeyCodeByInputType(keyCode) {
+                let filter = false;
+                const inputType = this.mInputType;
+                const typeClass = inputType & InputType.TYPE_MASK_CLASS;
+                if (typeClass === InputType.TYPE_CLASS_NUMBER) {
+                    filter = InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
+                    if ((inputType & InputType.TYPE_NUMBER_FLAG_SIGNED) === InputType.TYPE_NUMBER_FLAG_SIGNED) {
+                        filter = filter && keyCode !== android.view.KeyEvent.KEYCODE_Minus;
+                    }
+                    if ((inputType & InputType.TYPE_NUMBER_FLAG_DECIMAL) === InputType.TYPE_NUMBER_FLAG_DECIMAL) {
+                        filter = filter && keyCode !== android.view.KeyEvent.KEYCODE_Period;
+                    }
                 }
-                return false;
+                else if (typeClass === InputType.TYPE_CLASS_PHONE) {
+                    filter = InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+                }
+                return filter;
+            }
+            filterKeyCodeOnInput(keyCode) {
+                let filter = false;
+                const inputType = this.mInputType;
+                const typeClass = inputType & InputType.TYPE_MASK_CLASS;
+                if (typeClass === InputType.TYPE_CLASS_NUMBER) {
+                    if ((inputType & InputType.TYPE_NUMBER_FLAG_SIGNED) === InputType.TYPE_NUMBER_FLAG_SIGNED) {
+                        if (keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0) {
+                            filter = true;
+                        }
+                    }
+                    if ((inputType & InputType.TYPE_NUMBER_FLAG_DECIMAL) === InputType.TYPE_NUMBER_FLAG_DECIMAL) {
+                        if (keyCode === android.view.KeyEvent.KEYCODE_Period && (this.getText().includes('.') || this.getText().length === 0)) {
+                            filter = true;
+                        }
+                    }
+                }
+                return filter || this.filterKeyCodeByInputType(keyCode);
             }
             checkFilterKeyEventToDom(event) {
                 if (this.isInputElementShowed()) {
@@ -43391,15 +43459,17 @@ var android;
                     else {
                         event[android.view.ViewRootImpl.ContinueEventToDom] = true;
                     }
+                    return true;
                 }
+                return false;
             }
             onKeyDown(keyCode, event) {
-                this.checkFilterKeyEventToDom(event);
-                return super.onKeyDown(keyCode, event) || event.mIsTypingKey;
+                const filter = this.checkFilterKeyEventToDom(event);
+                return super.onKeyDown(keyCode, event) || filter;
             }
             onKeyUp(keyCode, event) {
-                this.checkFilterKeyEventToDom(event);
-                return super.onKeyUp(keyCode, event) || event.mIsTypingKey;
+                const filter = this.checkFilterKeyEventToDom(event);
+                return super.onKeyUp(keyCode, event) || filter;
             }
             requestSyncBoundToElement(immediately = false) {
                 if (this.inputElement.parentNode && this.inputElement.style.opacity != '0') {
@@ -43430,58 +43500,71 @@ var android;
                     this.syncTextBoundInfoToInputElement();
                 }
             }
+            setSingleLine(singleLine = true) {
+                if (singleLine) {
+                    this.switchToSingleLineInputElement();
+                }
+                else {
+                    this.switchToMultiLineInputElement();
+                }
+                super.setSingleLine(singleLine);
+            }
             setInputType(type) {
                 this.mInputType = type;
+                const typeClass = type & InputType.TYPE_MASK_CLASS;
                 this.inputElement.style['webkitTextSecurity'] = '';
                 this.setTransformationMethod(null);
-                switch (type) {
+                switch (typeClass) {
                     case InputType.TYPE_NULL:
-                        this.switchToMultilineInputElement();
                         this.setSingleLine(false);
+                        this.inputElement.removeAttribute('type');
                         break;
                     case InputType.TYPE_CLASS_TEXT:
-                        this.switchToMultilineInputElement();
-                        this.setSingleLine(false);
+                        if ((type & InputType.TYPE_TEXT_VARIATION_URI) === InputType.TYPE_TEXT_VARIATION_URI) {
+                            this.setSingleLine(true);
+                            this.inputElement.setAttribute('type', 'url');
+                        }
+                        else if ((type & InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS) === InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS) {
+                            this.setSingleLine(true);
+                            this.inputElement.setAttribute('type', 'email');
+                        }
+                        else if ((type & InputType.TYPE_TEXT_VARIATION_PASSWORD) === InputType.TYPE_TEXT_VARIATION_PASSWORD) {
+                            this.setSingleLine(true);
+                            this.inputElement.setAttribute('type', 'password');
+                            this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        }
+                        else if ((type & InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) === InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
+                            this.setSingleLine(true);
+                            this.inputElement.setAttribute('type', 'email');
+                        }
+                        else {
+                            this.setSingleLine(false);
+                            this.inputElement.removeAttribute('type');
+                        }
                         break;
-                    case InputType.TYPE_CLASS_URI:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'url');
-                        this.setSingleLine(true);
-                        break;
-                    case InputType.TYPE_CLASS_EMAIL_ADDRESS:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'email');
-                        this.setSingleLine(true);
-                        break;
-                    case InputType.TYPE_NUMBER_SIGNED:
-                    case InputType.TYPE_NUMBER_DECIMAL:
                     case InputType.TYPE_CLASS_NUMBER:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'number');
                         this.setSingleLine(true);
-                        break;
-                    case InputType.TYPE_NUMBER_PASSWORD:
-                        this.switchToSingleLineInputElement();
                         this.inputElement.setAttribute('type', 'number');
-                        this.inputElement.style['webkitTextSecurity'] = 'disc';
-                        this.setSingleLine(true);
-                        this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        if ((type & InputType.TYPE_NUMBER_VARIATION_PASSWORD) === InputType.TYPE_NUMBER_VARIATION_PASSWORD) {
+                            this.inputElement.style['webkitTextSecurity'] = 'disc';
+                            this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        }
                         break;
                     case InputType.TYPE_CLASS_PHONE:
-                        this.switchToSingleLineInputElement();
+                        this.setSingleLine(true);
                         this.inputElement.setAttribute('type', 'tel');
-                        this.setSingleLine(true);
                         break;
-                    case InputType.TYPE_TEXT_PASSWORD:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'password');
+                    case InputType.TYPE_CLASS_DATETIME:
                         this.setSingleLine(true);
-                        this.setTransformationMethod(PasswordTransformationMethod.getInstance());
-                        break;
-                    case InputType.TYPE_TEXT_VISIBLE_PASSWORD:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'email');
-                        this.setSingleLine(true);
+                        if ((type & InputType.TYPE_DATETIME_VARIATION_DATE) === InputType.TYPE_DATETIME_VARIATION_DATE) {
+                            this.inputElement.setAttribute('type', 'date');
+                        }
+                        else if ((type & InputType.TYPE_DATETIME_VARIATION_TIME) === InputType.TYPE_DATETIME_VARIATION_TIME) {
+                            this.inputElement.setAttribute('type', 'time');
+                        }
+                        else {
+                            this.inputElement.setAttribute('type', 'datetime');
+                        }
                         break;
                 }
             }
@@ -43553,7 +43636,7 @@ var android;
                     this.inputElement.value = text;
                 this.inputElement.style.fontSize = this.getTextSize() / density + 'px';
                 this.inputElement.style.color = Color.toRGBAFunc(this.getCurrentTextColor());
-                if (this.inputElement == this.mMultilineInputElement) {
+                if (this.inputElement == this.mMultiLineInputElement) {
                     this.inputElement.style.padding = (this.getTextSize() / density / 5).toFixed(1) + 'px 0px 0px 0px';
                 }
                 else {
