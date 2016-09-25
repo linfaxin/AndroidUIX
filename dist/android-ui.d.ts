@@ -5999,9 +5999,6 @@ declare module android.text {
         class LimitCode {
             static TYPE_CLASS_NUMBER: number[];
             static TYPE_CLASS_PHONE: number[];
-            static TYPE_NUMBER_PASSWORD: number[];
-            static TYPE_NUMBER_SIGNED: number[];
-            static TYPE_NUMBER_DECIMAL: number[];
         }
     }
 }

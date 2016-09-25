@@ -1,6 +1,6 @@
 {
   "name": "androiduix",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Framework to make high-performance SPA/WebApp. Render with web canvas.",
   "keywords": [
     "webapp",

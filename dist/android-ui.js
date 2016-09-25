@@ -1,3 +1,7 @@
+/**
+ * AndroidUIX v0.6.4
+ * https://github.com/linfaxin/AndroidUIX
+ */
 var java;
 (function (java) {
     var util;
@@ -29939,44 +29943,6 @@ var android;
                 KeyEvent.KEYCODE_Digit8,
                 KeyEvent.KEYCODE_Digit9,
             ];
-            LimitCode.TYPE_NUMBER_PASSWORD = [
-                KeyEvent.KEYCODE_Digit0,
-                KeyEvent.KEYCODE_Digit1,
-                KeyEvent.KEYCODE_Digit2,
-                KeyEvent.KEYCODE_Digit3,
-                KeyEvent.KEYCODE_Digit4,
-                KeyEvent.KEYCODE_Digit5,
-                KeyEvent.KEYCODE_Digit6,
-                KeyEvent.KEYCODE_Digit7,
-                KeyEvent.KEYCODE_Digit8,
-                KeyEvent.KEYCODE_Digit9,
-            ];
-            LimitCode.TYPE_NUMBER_SIGNED = [
-                KeyEvent.KEYCODE_Minus,
-                KeyEvent.KEYCODE_Digit0,
-                KeyEvent.KEYCODE_Digit1,
-                KeyEvent.KEYCODE_Digit2,
-                KeyEvent.KEYCODE_Digit3,
-                KeyEvent.KEYCODE_Digit4,
-                KeyEvent.KEYCODE_Digit5,
-                KeyEvent.KEYCODE_Digit6,
-                KeyEvent.KEYCODE_Digit7,
-                KeyEvent.KEYCODE_Digit8,
-                KeyEvent.KEYCODE_Digit9,
-            ];
-            LimitCode.TYPE_NUMBER_DECIMAL = [
-                KeyEvent.KEYCODE_Period,
-                KeyEvent.KEYCODE_Digit0,
-                KeyEvent.KEYCODE_Digit1,
-                KeyEvent.KEYCODE_Digit2,
-                KeyEvent.KEYCODE_Digit3,
-                KeyEvent.KEYCODE_Digit4,
-                KeyEvent.KEYCODE_Digit5,
-                KeyEvent.KEYCODE_Digit6,
-                KeyEvent.KEYCODE_Digit7,
-                KeyEvent.KEYCODE_Digit8,
-                KeyEvent.KEYCODE_Digit9,
-            ];
             InputType.LimitCode = LimitCode;
         })(InputType = text.InputType || (text.InputType = {}));
     })(text = android.text || (android.text = {}));
@@ -43254,7 +43220,7 @@ var android;
                             this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
                             break;
                         case 'numberDecimal':
-                            this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
+                            this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
                             break;
                         case 'numberPassword':
                             this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
@@ -43463,7 +43429,7 @@ var android;
                     }
                 }
                 else if (typeClass === InputType.TYPE_CLASS_PHONE) {
-                    filter = InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
+                    filter = InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
                 }
                 return filter;
             }
