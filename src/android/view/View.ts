@@ -1382,38 +1382,50 @@ module android.view {
         private _mRight = 0;
         private _mTop = 0;
         private _mBottom = 0;
-        get mLeft():number{return this._mLeft;}
-        set mLeft(value:number){
+        get mLeft():number {
+            return this._mLeft;
+        }
+        set mLeft(value:number) {
             this._mLeft = Math.floor(value);
             this.requestSyncBoundToElement();
         }
-        get mRight():number{return this._mRight;}
-        set mRight(value:number){
+        get mRight():number {
+            return this._mRight;
+        }
+        set mRight(value:number) {
             this._mRight = Math.floor(value);
             this.requestSyncBoundToElement();
         }
-        get mTop():number{return this._mTop;}
-        set mTop(value:number){
+        get mTop():number {
+            return this._mTop;
+        }
+        set mTop(value:number) {
             this._mTop = Math.floor(value);
             this.requestSyncBoundToElement();
         }
-        get mBottom():number{return this._mBottom;}
-        set mBottom(value:number){
+        get mBottom():number {
+            return this._mBottom;
+        }
+        set mBottom(value:number) {
             this._mBottom = Math.floor(value);
             this.requestSyncBoundToElement();
         }
 
         private _mScrollX = 0;
         private _mScrollY = 0;
-        get mScrollX():number{return this._mScrollX;}
-        set mScrollX(value:number){this._mScrollX = Math.floor(value);}
-        get mScrollY():number{return this._mScrollY;}
-        set mScrollY(value:number){
-            if(Number.isNaN(value) || value == null){
-                console.error('set mScrollY value is ' + value);
-                value = 0;
-            }
+        get mScrollX():number {
+            return this._mScrollX;
+        }
+        set mScrollX(value:number) {
+            this._mScrollX = Math.floor(value);
+            this.requestSyncBoundToElement();
+        }
+        get mScrollY():number {
+            return this._mScrollY;
+        }
+        set mScrollY(value:number) {
             this._mScrollY = Math.floor(value);
+            this.requestSyncBoundToElement();
         }
 
         private mPaddingLeft = 0;
@@ -6947,6 +6959,7 @@ module android.view {
         private _lastSyncHeight:number;
         private _lastSyncScrollX:number;
         private _lastSyncScrollY:number;
+        // sync bound to element from rootView
         protected _syncBoundAndScrollToElement():void {
             if(!this.isAttachedToWindow()){
                 return;
@@ -6974,17 +6987,20 @@ module android.view {
                 const density = this.getResources().getDisplayMetrics().density;
                 let bind = this.bindElement;
 
-                bind.style.left = (left-pScrollX)/density + 'px';
-                bind.style.top = (top-pScrollY)/density + 'px';
-
                 bind.style.width = width / density + 'px';
                 bind.style.height = height / density + 'px';
 
-                this.getMatrix();
+                bind.style.left = (left-pScrollX)/density + 'px';
+                bind.style.top = (top-pScrollY)/density + 'px';
+
+                if (bind.parentElement) { // some case browser will do scroll to show input element. reset it.
+                    bind.parentElement.scrollTop = 0;
+                }
+
+                this.getMatrix(); // sync matrix to element
             }
 
-            //this._syncScrollToElement();
-
+            // children sync bound
             if(this instanceof ViewGroup){
                 const group = <ViewGroup><View>this;
                 for (var i = 0 ,  count = group.getChildCount(); i<count; i++){
@@ -7006,32 +7022,6 @@ module android.view {
                 this._lastSyncTransform = this.bindElement.style.transform = this.bindElement.style.webkitTransform = transfrom;
             }
         }
-
-        //protected _syncScrollToElement() {
-        //    //scroll
-        //    let sx = this.mScrollX;
-        //    let sy = this.mScrollY;
-        //
-        //    if(this._lastSyncScrollX !== sx || this._lastSyncScrollY !== sy) {
-        //        this._lastSyncScrollX = sx;
-        //        this._lastSyncScrollY = sy;
-        //
-        //        if (this instanceof ViewGroup) {
-        //            let group = <ViewGroup><any>this;
-        //            for (let i = 0, count = group.getChildCount(); i < count; i++) {
-        //                let child = group.getChildAt(i);
-        //                let item = child.bindElement;
-        //
-        //                const density = this.getResources().getDisplayMetrics().density;
-        //                let tx = (child.mLeft - sx) / density;
-        //                let ty = (child.mTop - sy) / density;
-        //
-        //                //item.style.transform = item.style.webkitTransform = `translate3d(${child.mLeft - sx}px, ${child.mTop - sy}px, 0px)`;
-        //                item.style.transform = item.style.webkitTransform = `translate(${tx}px, ${ty}px)`;
-        //            }
-        //        }
-        //    }
-        //}
 
         syncVisibleToElement(){
             let visibility = this.getVisibility();

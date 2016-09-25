@@ -363,7 +363,7 @@ export class EditText extends TextView {
     }
 
     requestSyncBoundToElement(immediately = false):void {
-        if(this.inputElement.parentNode && this.inputElement.style.opacity != '0'){
+        if(this.isInputElementShowed()){
             immediately = true;
         }
         super.requestSyncBoundToElement(immediately);
