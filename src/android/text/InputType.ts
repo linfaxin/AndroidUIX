@@ -70,7 +70,6 @@ module android.text {
             ];
             static TYPE_NUMBER_SIGNED = [
                 KeyEvent.KEYCODE_Minus,
-                KeyEvent.KEYCODE_Add,
                 KeyEvent.KEYCODE_Digit0,
                 KeyEvent.KEYCODE_Digit1,
                 KeyEvent.KEYCODE_Digit2,

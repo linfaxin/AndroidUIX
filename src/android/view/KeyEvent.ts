@@ -220,7 +220,6 @@ module android.view{
         static KEYCODE_Underline        = 0x5f;//KeyEvent.KEYCODE_Minus & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'_'(shift + '－')
         static KEYCODE_Add              = 0x2b;//KeyEvent.KEYCODE_Equal & (KeyEvent.META_SHIFT_ON << KeyEvent.META_MASK_SHIFT);//'+'(shift + '=')
 
-
         //can't listen back on browser
         static KEYCODE_BACK          = -1;
         //can't listen menu on browser

@@ -251,7 +251,9 @@ module androidui {
                 isMouseDown = true;
                 this.refreshWindowBound();
 
-                this.androidUIElement.focus();
+                if(e.target!=document.activeElement || !this.androidUIElement.contains(<HTMLElement>document.activeElement)){
+                    this.androidUIElement.focus();
+                }
 
                 this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){

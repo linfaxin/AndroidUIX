@@ -55,7 +55,7 @@ import Platform = androidui.util.Platform;
 export class EditText extends TextView {
     private inputElement:HTMLTextAreaElement|HTMLInputElement;
     private mSingleLineInputElement:HTMLInputElement;
-    private mMultilineInputElement:HTMLTextAreaElement;
+    private mMultiLineInputElement:HTMLTextAreaElement;
 
     private mInputType = InputType.TYPE_NULL;
     private mForceDisableDraw = false;
@@ -112,15 +112,15 @@ export class EditText extends TextView {
 
     protected initBindElement(bindElement:HTMLElement):void {
         super.initBindElement(bindElement);
-        this.switchToMultilineInputElement();//default
+        this.switchToMultiLineInputElement();//default
     }
 
-    protected onInputValueChange(){
+    protected onInputValueChange(e){
         let text = this.inputElement.value;//innerText;
         let filterText = '';
         for(let i = 0, length = text.length; i<length; i++){
             let c = text.codePointAt(i);
-            if(!this.filterKeyCodeOnValueChange(c) && filterText.length < this.mMaxLength){
+            if(!this.filterKeyCode(c) && filterText.length < this.mMaxLength){
                 filterText += text[i];
             }
         }
@@ -136,6 +136,44 @@ export class EditText extends TextView {
         }
         this.setText(text);
     }
+
+    private onDomTextInput(e) {
+        let text = e['data'];
+        for(let i = 0, length = text.length; i<length; i++){
+            let c = text.codePointAt(i);
+            if(!this.filterKeyCodeOnInput(c)){
+                return;
+            }
+        }
+        // prevent
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    private switchToInputElement(inputElement: HTMLInputElement|HTMLTextAreaElement) {
+        if(this.inputElement === inputElement) return;
+        inputElement.onblur = ()=>{
+            inputElement.style.opacity = '0';
+            this.setForceDisableDrawText(false);
+            this.onInputElementFocusChanged(false);
+        };
+        inputElement.onfocus = ()=>{
+            inputElement.style.opacity = '1';
+            if(this.getText().length>0){
+                this.setForceDisableDrawText(true);
+            }
+            this.onInputElementFocusChanged(true);
+        };
+        inputElement.oninput = (e) => this.onInputValueChange(e);
+        inputElement.removeEventListener('textInput', (e) => this.onDomTextInput(e));
+        inputElement.addEventListener('textInput', (e) => this.onDomTextInput(e));
+
+        if(this.inputElement && this.inputElement.parentElement){
+            this.bindElement.removeChild(this.inputElement);
+            this.bindElement.appendChild(inputElement);
+        }
+        this.inputElement = inputElement;
+    }
     private switchToSingleLineInputElement(){
         if(!this.mSingleLineInputElement){
             this.mSingleLineInputElement = document.createElement('input');
@@ -145,58 +183,22 @@ export class EditText extends TextView {
             this.mSingleLineInputElement.style.overflow = 'auto';
             this.mSingleLineInputElement.style.background = 'transparent';
             this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
-            this.mSingleLineInputElement.onblur = ()=>{
-                this.mSingleLineInputElement.style.opacity = '0';
-                this.setForceDisableDrawText(false);
-                this.onInputElementFocusChanged(false);
-            };
-            this.mSingleLineInputElement.onfocus = ()=>{
-                this.mSingleLineInputElement.style.opacity = '1';
-                if(this.getText().length>0){
-                    this.setForceDisableDrawText(true);
-                }
-                this.onInputElementFocusChanged(true);
-            };
-            this.mSingleLineInputElement.oninput = ()=>this.onInputValueChange();
         }
-        if(this.inputElement === this.mSingleLineInputElement) return;
-        if(this.inputElement && this.inputElement.parentElement){
-            this.bindElement.removeChild(this.inputElement);
-            this.bindElement.appendChild(this.mSingleLineInputElement);
-        }
-        this.inputElement = this.mSingleLineInputElement;
+        this.switchToInputElement(this.mSingleLineInputElement);
     }
-    protected switchToMultilineInputElement(){
-        if(!this.mMultilineInputElement) {
-            this.mMultilineInputElement = document.createElement('textarea');
-            this.mMultilineInputElement.style.position = 'absolute';
-            this.mMultilineInputElement.style['webkitAppearance'] = 'none';
-            this.mMultilineInputElement.style['resize'] = 'none';
-            this.mMultilineInputElement.style.borderRadius = '0';
-            this.mMultilineInputElement.style.overflow = 'auto';
-            this.mMultilineInputElement.style.background = 'transparent';
-            this.mMultilineInputElement.style.boxSizing = 'border-box';
-            this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
-            this.mMultilineInputElement.onblur = ()=>{
-                this.mMultilineInputElement.style.opacity = '0';
-                this.setForceDisableDrawText(false);
-                this.onInputElementFocusChanged(false);
-            };
-            this.mMultilineInputElement.onfocus = ()=>{
-                this.mMultilineInputElement.style.opacity = '1';
-                if(this.getText().length>0){
-                    this.setForceDisableDrawText(true);
-                }
-                this.onInputElementFocusChanged(true);
-            };
-            this.mMultilineInputElement.oninput = ()=>this.onInputValueChange();
+    protected switchToMultiLineInputElement(){
+        if(!this.mMultiLineInputElement) {
+            this.mMultiLineInputElement = document.createElement('textarea');
+            this.mMultiLineInputElement.style.position = 'absolute';
+            this.mMultiLineInputElement.style['webkitAppearance'] = 'none';
+            this.mMultiLineInputElement.style['resize'] = 'none';
+            this.mMultiLineInputElement.style.borderRadius = '0';
+            this.mMultiLineInputElement.style.overflow = 'auto';
+            this.mMultiLineInputElement.style.background = 'transparent';
+            this.mMultiLineInputElement.style.boxSizing = 'border-box';
+            this.mMultiLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
         }
-        if(this.inputElement === this.mMultilineInputElement) return;
-        if(this.inputElement && this.inputElement.parentElement){
-            this.bindElement.removeChild(this.inputElement);
-            this.bindElement.appendChild(this.mMultilineInputElement);
-        }
-        this.inputElement = this.mMultilineInputElement;
+        this.switchToInputElement(this.mMultiLineInputElement);
     }
     protected tryShowInputElement(){
         if(!this.isInputElementShowed()){
@@ -259,17 +261,19 @@ export class EditText extends TextView {
     }
 
     onTouchEvent(event:android.view.MotionEvent):boolean {
+        const superResult:boolean = super.onTouchEvent(event);
         if(this.isInputElementShowed()){
             event[android.view.ViewRootImpl.ContinueEventToDom] = true;
 
+            // touch scroll in dom
             //TODO check touch direction
             if(this.inputElement.scrollHeight>this.inputElement.offsetHeight || this.inputElement.scrollWidth>this.inputElement.offsetWidth){
                 this.getParent().requestDisallowInterceptTouchEvent(true);
             }
 
-            //return true;
+            return true;
         }
-        return super.onTouchEvent(event) || this.isInputElementShowed();
+        return superResult;
     }
 
     private filterKeyEvent(event:android.view.KeyEvent):boolean {
@@ -290,7 +294,7 @@ export class EditText extends TextView {
         return false;
     }
 
-    private filterKeyCodeOnValueChange(keyCode:number):boolean {
+    private filterKeyCode(keyCode:number):boolean {
         switch (this.mInputType) {
             case InputType.TYPE_NUMBER_SIGNED:
                 return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
@@ -310,10 +314,9 @@ export class EditText extends TextView {
         switch (this.mInputType) {
             case InputType.TYPE_NUMBER_SIGNED:
                 if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0) return true;
-                if(keyCode === android.view.KeyEvent.KEYCODE_Add && this.getText().length > 0) return true;
                 return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
             case InputType.TYPE_NUMBER_DECIMAL:
-                if (keyCode === android.view.KeyEvent.KEYCODE_Period && this.getText().includes('.')) return true;
+                if (keyCode === android.view.KeyEvent.KEYCODE_Period && (this.getText().includes('.') || this.getText().length === 0)) return true;
                 return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
             case InputType.TYPE_CLASS_NUMBER:
                 return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
@@ -325,24 +328,26 @@ export class EditText extends TextView {
         return false;
     }
 
-    private checkFilterKeyEventToDom(event:android.view.KeyEvent):void {
+    private checkFilterKeyEventToDom(event:android.view.KeyEvent):boolean {
         if(this.isInputElementShowed()){
             if(this.filterKeyEvent(event)){
                 event[android.view.ViewRootImpl.ContinueEventToDom] = false;
             }else{
                 event[android.view.ViewRootImpl.ContinueEventToDom] = true;
             }
+            return true;
         }
+        return false;
     }
 
     onKeyDown(keyCode:number, event:android.view.KeyEvent):boolean {
-        this.checkFilterKeyEventToDom(event);
-        return super.onKeyDown(keyCode, event) || event.mIsTypingKey;
+        const filter = this.checkFilterKeyEventToDom(event);
+        return super.onKeyDown(keyCode, event) || filter;
     }
 
     onKeyUp(keyCode:number, event:android.view.KeyEvent):boolean {
-        this.checkFilterKeyEventToDom(event);
-        return super.onKeyUp(keyCode, event) || event.mIsTypingKey;
+        const filter = this.checkFilterKeyEventToDom(event);
+        return super.onKeyUp(keyCode, event) || filter;
     }
 
     requestSyncBoundToElement(immediately = false):void {
@@ -402,12 +407,12 @@ export class EditText extends TextView {
         this.setTransformationMethod(null);
         switch (type){
             case InputType.TYPE_NULL:
-                this.switchToMultilineInputElement();
+                this.switchToMultiLineInputElement();
                 this.inputElement.removeAttribute('type');
                 this.setSingleLine(false);
                 break;
             case InputType.TYPE_CLASS_TEXT:
-                this.switchToMultilineInputElement();
+                this.switchToMultiLineInputElement();
                 this.inputElement.removeAttribute('type');
                 this.setSingleLine(false);
                 break;
@@ -537,7 +542,7 @@ export class EditText extends TextView {
         this.inputElement.style.fontSize = this.getTextSize() / density + 'px';
         this.inputElement.style.color = Color.toRGBAFunc(this.getCurrentTextColor());
 
-        if(this.inputElement == this.mMultilineInputElement){
+        if(this.inputElement == this.mMultiLineInputElement){
             this.inputElement.style.padding = (this.getTextSize()/density/5).toFixed(1) + 'px 0px 0px 0px';//textarea baseline adjust
         }else{
             this.inputElement.style.padding = '0px';
