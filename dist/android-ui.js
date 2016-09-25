@@ -1,7 +1,3 @@
-/**
- * AndroidUIX v0.6.3
- * https://github.com/linfaxin/AndroidUIX
- */
 var java;
 (function (java) {
     var util;
@@ -7050,14 +7046,6 @@ var android;
                     }
                 }
                 this.mKeyCode = KeyEvent.FIX_MAP_KEYCODE[this.mKeyCode] || this.mKeyCode;
-                var eventInfo = {};
-                for (var key in keyEvent) {
-                    var value = keyEvent[key];
-                    if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
-                        eventInfo[key] = value;
-                    }
-                }
-                alert(this.mKeyCode + '\n' + JSON.stringify(eventInfo));
                 if (action === KeyEvent.ACTION_DOWN) {
                     this.mDownTime = SystemClock.uptimeMillis();
                     let keyEvents = this._downingKeyEventMap.get(keyEvent.keyCode);
@@ -25482,7 +25470,9 @@ var androidui;
             this.androidUIElement.addEventListener('mousedown', (e) => {
                 isMouseDown = true;
                 this.refreshWindowBound();
-                this.androidUIElement.focus();
+                if (e.target != document.activeElement || !this.androidUIElement.contains(document.activeElement)) {
+                    this.androidUIElement.focus();
+                }
                 this.touchEvent.initWithTouch(mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
                 if (this._viewRootImpl.dispatchInputEvent(this.touchEvent)) {
                     e.stopPropagation();
@@ -25534,7 +25524,6 @@ var androidui;
             this.androidUIElement.addEventListener('keydown', (e) => {
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_DOWN);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
-                    alert('preventDefault keydown');
                     e.stopPropagation();
                     e.preventDefault();
                     return true;
@@ -25543,7 +25532,6 @@ var androidui;
             this.androidUIElement.addEventListener('keyup', (e) => {
                 this.ketEvent.initKeyEvent(e, KeyEvent.ACTION_UP);
                 if (this._viewRootImpl.dispatchInputEvent(this.ketEvent)) {
-                    alert('preventDefault keyup');
                     e.stopPropagation();
                     e.preventDefault();
                     return true;
@@ -29870,22 +29858,47 @@ var android;
     var text;
     (function (text) {
         var KeyEvent = android.view.KeyEvent;
-        (function (InputType) {
-            InputType[InputType["TYPE_NULL"] = 0] = "TYPE_NULL";
-            InputType[InputType["TYPE_CLASS_TEXT"] = 1] = "TYPE_CLASS_TEXT";
-            InputType[InputType["TYPE_CLASS_URI"] = 2] = "TYPE_CLASS_URI";
-            InputType[InputType["TYPE_CLASS_EMAIL_ADDRESS"] = 3] = "TYPE_CLASS_EMAIL_ADDRESS";
-            InputType[InputType["TYPE_CLASS_NUMBER"] = 4] = "TYPE_CLASS_NUMBER";
-            InputType[InputType["TYPE_CLASS_PHONE"] = 5] = "TYPE_CLASS_PHONE";
-            InputType[InputType["TYPE_PASSWORD"] = 6] = "TYPE_PASSWORD";
-            InputType[InputType["TYPE_TEXT_PASSWORD"] = 7] = "TYPE_TEXT_PASSWORD";
-            InputType[InputType["TYPE_TEXT_VISIBLE_PASSWORD"] = 8] = "TYPE_TEXT_VISIBLE_PASSWORD";
-            InputType[InputType["TYPE_NUMBER_PASSWORD"] = 9] = "TYPE_NUMBER_PASSWORD";
-            InputType[InputType["TYPE_NUMBER_SIGNED"] = 10] = "TYPE_NUMBER_SIGNED";
-            InputType[InputType["TYPE_NUMBER_DECIMAL"] = 11] = "TYPE_NUMBER_DECIMAL";
-        })(text.InputType || (text.InputType = {}));
-        var InputType = text.InputType;
-        var InputType;
+        class InputType {
+        }
+        InputType.TYPE_MASK_CLASS = 0x0000000f;
+        InputType.TYPE_MASK_VARIATION = 0x00000ff0;
+        InputType.TYPE_MASK_FLAGS = 0x00fff000;
+        InputType.TYPE_NULL = 0x00000000;
+        InputType.TYPE_CLASS_TEXT = 0x00000001;
+        InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS = 0x00001000;
+        InputType.TYPE_TEXT_FLAG_CAP_WORDS = 0x00002000;
+        InputType.TYPE_TEXT_FLAG_CAP_SENTENCES = 0x00004000;
+        InputType.TYPE_TEXT_FLAG_AUTO_CORRECT = 0x00008000;
+        InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE = 0x00010000;
+        InputType.TYPE_TEXT_FLAG_MULTI_LINE = 0x00020000;
+        InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE = 0x00040000;
+        InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS = 0x00080000;
+        InputType.TYPE_TEXT_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_TEXT_VARIATION_URI = 0x00000010;
+        InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
+        InputType.TYPE_TEXT_VARIATION_EMAIL_SUBJECT = 0x00000030;
+        InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE = 0x00000040;
+        InputType.TYPE_TEXT_VARIATION_LONG_MESSAGE = 0x00000050;
+        InputType.TYPE_TEXT_VARIATION_PERSON_NAME = 0x00000060;
+        InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS = 0x00000070;
+        InputType.TYPE_TEXT_VARIATION_PASSWORD = 0x00000080;
+        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD = 0x00000090;
+        InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT = 0x000000a0;
+        InputType.TYPE_TEXT_VARIATION_FILTER = 0x000000b0;
+        InputType.TYPE_TEXT_VARIATION_PHONETIC = 0x000000c0;
+        InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS = 0x000000d0;
+        InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD = 0x000000e0;
+        InputType.TYPE_CLASS_NUMBER = 0x00000002;
+        InputType.TYPE_NUMBER_FLAG_SIGNED = 0x00001000;
+        InputType.TYPE_NUMBER_FLAG_DECIMAL = 0x00002000;
+        InputType.TYPE_NUMBER_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_NUMBER_VARIATION_PASSWORD = 0x00000010;
+        InputType.TYPE_CLASS_PHONE = 0x00000003;
+        InputType.TYPE_CLASS_DATETIME = 0x00000004;
+        InputType.TYPE_DATETIME_VARIATION_NORMAL = 0x00000000;
+        InputType.TYPE_DATETIME_VARIATION_DATE = 0x00000010;
+        InputType.TYPE_DATETIME_VARIATION_TIME = 0x00000020;
+        text.InputType = InputType;
         (function (InputType) {
             class LimitCode {
             }
@@ -29940,7 +29953,6 @@ var android;
             ];
             LimitCode.TYPE_NUMBER_SIGNED = [
                 KeyEvent.KEYCODE_Minus,
-                KeyEvent.KEYCODE_Add,
                 KeyEvent.KEYCODE_Digit0,
                 KeyEvent.KEYCODE_Digit1,
                 KeyEvent.KEYCODE_Digit2,
@@ -34616,6 +34628,8 @@ var android;
                 }
             }
             setSingleLine(singleLine = true) {
+                if (this.mSingleLine == singleLine)
+                    return;
                 this.setInputTypeSingleLine(singleLine);
                 this.applySingleLine(singleLine, true, true);
             }
@@ -43222,31 +43236,40 @@ var android;
                             this.setInputType(InputType.TYPE_CLASS_TEXT);
                             break;
                         case 'textUri':
-                            this.setInputType(InputType.TYPE_CLASS_URI);
+                            this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
                             break;
                         case 'textEmailAddress':
-                            this.setInputType(InputType.TYPE_CLASS_EMAIL_ADDRESS);
+                            this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
                             break;
                         case 'textPassword':
-                            this.setInputType(InputType.TYPE_TEXT_PASSWORD);
+                            this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                             break;
                         case 'textVisiblePassword':
-                            this.setInputType(InputType.TYPE_TEXT_VISIBLE_PASSWORD);
+                            this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                             break;
                         case 'number':
                             this.setInputType(InputType.TYPE_CLASS_NUMBER);
                             break;
                         case 'numberSigned':
-                            this.setInputType(InputType.TYPE_NUMBER_SIGNED);
+                            this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
                             break;
                         case 'numberDecimal':
-                            this.setInputType(InputType.TYPE_NUMBER_DECIMAL);
+                            this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
                             break;
                         case 'numberPassword':
-                            this.setInputType(InputType.TYPE_NUMBER_PASSWORD);
+                            this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
                             break;
                         case 'phone':
                             this.setInputType(InputType.TYPE_CLASS_PHONE);
+                            break;
+                        case 'datetime':
+                            this.setInputType(InputType.TYPE_CLASS_DATETIME);
+                            break;
+                        case 'date':
+                            this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
+                            break;
+                        case 'time':
+                            this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
                             break;
                     }
                 });
@@ -43258,14 +43281,14 @@ var android;
             }
             initBindElement(bindElement) {
                 super.initBindElement(bindElement);
-                this.switchToMultilineInputElement();
+                this.switchToMultiLineInputElement();
             }
-            onInputValueChange() {
+            onInputValueChange(e) {
                 let text = this.inputElement.value;
                 let filterText = '';
                 for (let i = 0, length = text.length; i < length; i++) {
                     let c = text.codePointAt(i);
-                    if (!this.filterKeyCodeOnValueChange(c) && filterText.length < this.mMaxLength) {
+                    if (!this.filterKeyCodeByInputType(c) && filterText.length < this.mMaxLength) {
                         filterText += text[i];
                     }
                 }
@@ -43281,6 +43304,41 @@ var android;
                 }
                 this.setText(text);
             }
+            onDomTextInput(e) {
+                let text = e['data'];
+                for (let i = 0, length = text.length; i < length; i++) {
+                    let c = text.codePointAt(i);
+                    if (!this.filterKeyCodeOnInput(c)) {
+                        return;
+                    }
+                }
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            switchToInputElement(inputElement) {
+                if (this.inputElement === inputElement)
+                    return;
+                inputElement.onblur = () => {
+                    inputElement.style.opacity = '0';
+                    this.setForceDisableDrawText(false);
+                    this.onInputElementFocusChanged(false);
+                };
+                inputElement.onfocus = () => {
+                    inputElement.style.opacity = '1';
+                    if (this.getText().length > 0) {
+                        this.setForceDisableDrawText(true);
+                    }
+                    this.onInputElementFocusChanged(true);
+                };
+                inputElement.oninput = (e) => this.onInputValueChange(e);
+                inputElement.removeEventListener('textInput', (e) => this.onDomTextInput(e));
+                inputElement.addEventListener('textInput', (e) => this.onDomTextInput(e));
+                if (this.inputElement && this.inputElement.parentElement) {
+                    this.bindElement.removeChild(this.inputElement);
+                    this.bindElement.appendChild(inputElement);
+                }
+                this.inputElement = inputElement;
+            }
             switchToSingleLineInputElement() {
                 if (!this.mSingleLineInputElement) {
                     this.mSingleLineInputElement = document.createElement('input');
@@ -43290,60 +43348,22 @@ var android;
                     this.mSingleLineInputElement.style.overflow = 'auto';
                     this.mSingleLineInputElement.style.background = 'transparent';
                     this.mSingleLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
-                    this.mSingleLineInputElement.onblur = () => {
-                        this.mSingleLineInputElement.style.opacity = '0';
-                        this.setForceDisableDrawText(false);
-                        this.onInputElementFocusChanged(false);
-                    };
-                    this.mSingleLineInputElement.onfocus = () => {
-                        this.mSingleLineInputElement.style.opacity = '1';
-                        if (this.getText().length > 0) {
-                            this.setForceDisableDrawText(true);
-                        }
-                        this.onInputElementFocusChanged(true);
-                    };
-                    this.mSingleLineInputElement.oninput = () => this.onInputValueChange();
                 }
-                if (this.inputElement === this.mSingleLineInputElement)
-                    return;
-                if (this.inputElement && this.inputElement.parentElement) {
-                    this.bindElement.removeChild(this.inputElement);
-                    this.bindElement.appendChild(this.mSingleLineInputElement);
-                }
-                this.inputElement = this.mSingleLineInputElement;
+                this.switchToInputElement(this.mSingleLineInputElement);
             }
-            switchToMultilineInputElement() {
-                if (!this.mMultilineInputElement) {
-                    this.mMultilineInputElement = document.createElement('textarea');
-                    this.mMultilineInputElement.style.position = 'absolute';
-                    this.mMultilineInputElement.style['webkitAppearance'] = 'none';
-                    this.mMultilineInputElement.style['resize'] = 'none';
-                    this.mMultilineInputElement.style.borderRadius = '0';
-                    this.mMultilineInputElement.style.overflow = 'auto';
-                    this.mMultilineInputElement.style.background = 'transparent';
-                    this.mMultilineInputElement.style.boxSizing = 'border-box';
-                    this.mMultilineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
-                    this.mMultilineInputElement.onblur = () => {
-                        this.mMultilineInputElement.style.opacity = '0';
-                        this.setForceDisableDrawText(false);
-                        this.onInputElementFocusChanged(false);
-                    };
-                    this.mMultilineInputElement.onfocus = () => {
-                        this.mMultilineInputElement.style.opacity = '1';
-                        if (this.getText().length > 0) {
-                            this.setForceDisableDrawText(true);
-                        }
-                        this.onInputElementFocusChanged(true);
-                    };
-                    this.mMultilineInputElement.oninput = () => this.onInputValueChange();
+            switchToMultiLineInputElement() {
+                if (!this.mMultiLineInputElement) {
+                    this.mMultiLineInputElement = document.createElement('textarea');
+                    this.mMultiLineInputElement.style.position = 'absolute';
+                    this.mMultiLineInputElement.style['webkitAppearance'] = 'none';
+                    this.mMultiLineInputElement.style['resize'] = 'none';
+                    this.mMultiLineInputElement.style.borderRadius = '0';
+                    this.mMultiLineInputElement.style.overflow = 'auto';
+                    this.mMultiLineInputElement.style.background = 'transparent';
+                    this.mMultiLineInputElement.style.boxSizing = 'border-box';
+                    this.mMultiLineInputElement.style.fontFamily = Canvas.getMeasureTextFontFamily();
                 }
-                if (this.inputElement === this.mMultilineInputElement)
-                    return;
-                if (this.inputElement && this.inputElement.parentElement) {
-                    this.bindElement.removeChild(this.inputElement);
-                    this.bindElement.appendChild(this.mMultilineInputElement);
-                }
-                this.inputElement = this.mMultilineInputElement;
+                this.switchToInputElement(this.mMultiLineInputElement);
             }
             tryShowInputElement() {
                 if (!this.isInputElementShowed()) {
@@ -43402,13 +43422,15 @@ var android;
                 }
             }
             onTouchEvent(event) {
+                const superResult = super.onTouchEvent(event);
                 if (this.isInputElementShowed()) {
                     event[android.view.ViewRootImpl.ContinueEventToDom] = true;
                     if (this.inputElement.scrollHeight > this.inputElement.offsetHeight || this.inputElement.scrollWidth > this.inputElement.offsetWidth) {
                         this.getParent().requestDisallowInterceptTouchEvent(true);
                     }
+                    return true;
                 }
-                return super.onTouchEvent(event) || this.isInputElementShowed();
+                return superResult;
             }
             filterKeyEvent(event) {
                 let keyCode = event.getKeyCode();
@@ -43427,41 +43449,41 @@ var android;
                 }
                 return false;
             }
-            filterKeyCodeOnValueChange(keyCode) {
-                switch (this.mInputType) {
-                    case InputType.TYPE_NUMBER_SIGNED:
-                        return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
-                    case InputType.TYPE_NUMBER_DECIMAL:
-                        return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
-                    case InputType.TYPE_CLASS_NUMBER:
-                        return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
-                    case InputType.TYPE_NUMBER_PASSWORD:
-                        return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
-                    case InputType.TYPE_CLASS_PHONE:
-                        return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+            filterKeyCodeByInputType(keyCode) {
+                let filter = false;
+                const inputType = this.mInputType;
+                const typeClass = inputType & InputType.TYPE_MASK_CLASS;
+                if (typeClass === InputType.TYPE_CLASS_NUMBER) {
+                    filter = InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
+                    if ((inputType & InputType.TYPE_NUMBER_FLAG_SIGNED) === InputType.TYPE_NUMBER_FLAG_SIGNED) {
+                        filter = filter && keyCode !== android.view.KeyEvent.KEYCODE_Minus;
+                    }
+                    if ((inputType & InputType.TYPE_NUMBER_FLAG_DECIMAL) === InputType.TYPE_NUMBER_FLAG_DECIMAL) {
+                        filter = filter && keyCode !== android.view.KeyEvent.KEYCODE_Period;
+                    }
                 }
-                return false;
+                else if (typeClass === InputType.TYPE_CLASS_PHONE) {
+                    filter = InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
+                }
+                return filter;
             }
             filterKeyCodeOnInput(keyCode) {
-                switch (this.mInputType) {
-                    case InputType.TYPE_NUMBER_SIGNED:
-                        if (keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0)
-                            return true;
-                        if (keyCode === android.view.KeyEvent.KEYCODE_Add && this.getText().length > 0)
-                            return true;
-                        return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
-                    case InputType.TYPE_NUMBER_DECIMAL:
-                        if (keyCode === android.view.KeyEvent.KEYCODE_Period && this.getText().includes('.'))
-                            return true;
-                        return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
-                    case InputType.TYPE_CLASS_NUMBER:
-                        return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
-                    case InputType.TYPE_NUMBER_PASSWORD:
-                        return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
-                    case InputType.TYPE_CLASS_PHONE:
-                        return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+                let filter = false;
+                const inputType = this.mInputType;
+                const typeClass = inputType & InputType.TYPE_MASK_CLASS;
+                if (typeClass === InputType.TYPE_CLASS_NUMBER) {
+                    if ((inputType & InputType.TYPE_NUMBER_FLAG_SIGNED) === InputType.TYPE_NUMBER_FLAG_SIGNED) {
+                        if (keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0) {
+                            filter = true;
+                        }
+                    }
+                    if ((inputType & InputType.TYPE_NUMBER_FLAG_DECIMAL) === InputType.TYPE_NUMBER_FLAG_DECIMAL) {
+                        if (keyCode === android.view.KeyEvent.KEYCODE_Period && (this.getText().includes('.') || this.getText().length === 0)) {
+                            filter = true;
+                        }
+                    }
                 }
-                return false;
+                return filter || this.filterKeyCodeByInputType(keyCode);
             }
             checkFilterKeyEventToDom(event) {
                 if (this.isInputElementShowed()) {
@@ -43471,15 +43493,17 @@ var android;
                     else {
                         event[android.view.ViewRootImpl.ContinueEventToDom] = true;
                     }
+                    return true;
                 }
+                return false;
             }
             onKeyDown(keyCode, event) {
-                this.checkFilterKeyEventToDom(event);
-                return super.onKeyDown(keyCode, event) || event.mIsTypingKey;
+                const filter = this.checkFilterKeyEventToDom(event);
+                return super.onKeyDown(keyCode, event) || filter;
             }
             onKeyUp(keyCode, event) {
-                this.checkFilterKeyEventToDom(event);
-                return super.onKeyUp(keyCode, event) || event.mIsTypingKey;
+                const filter = this.checkFilterKeyEventToDom(event);
+                return super.onKeyUp(keyCode, event) || filter;
             }
             requestSyncBoundToElement(immediately = false) {
                 if (this.inputElement.parentNode && this.inputElement.style.opacity != '0') {
@@ -43510,60 +43534,71 @@ var android;
                     this.syncTextBoundInfoToInputElement();
                 }
             }
+            setSingleLine(singleLine = true) {
+                if (singleLine) {
+                    this.switchToSingleLineInputElement();
+                }
+                else {
+                    this.switchToMultiLineInputElement();
+                }
+                super.setSingleLine(singleLine);
+            }
             setInputType(type) {
                 this.mInputType = type;
+                const typeClass = type & InputType.TYPE_MASK_CLASS;
                 this.inputElement.style['webkitTextSecurity'] = '';
                 this.setTransformationMethod(null);
-                switch (type) {
+                switch (typeClass) {
                     case InputType.TYPE_NULL:
-                        this.switchToMultilineInputElement();
-                        this.inputElement.removeAttribute('type');
                         this.setSingleLine(false);
+                        this.inputElement.removeAttribute('type');
                         break;
                     case InputType.TYPE_CLASS_TEXT:
-                        this.switchToMultilineInputElement();
-                        this.inputElement.removeAttribute('type');
-                        this.setSingleLine(false);
+                        if ((type & InputType.TYPE_TEXT_VARIATION_URI) === InputType.TYPE_TEXT_VARIATION_URI) {
+                            this.setSingleLine(true);
+                            this.inputElement.setAttribute('type', 'url');
+                        }
+                        else if ((type & InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS) === InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS) {
+                            this.setSingleLine(true);
+                            this.inputElement.setAttribute('type', 'email');
+                        }
+                        else if ((type & InputType.TYPE_TEXT_VARIATION_PASSWORD) === InputType.TYPE_TEXT_VARIATION_PASSWORD) {
+                            this.setSingleLine(true);
+                            this.inputElement.setAttribute('type', 'password');
+                            this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        }
+                        else if ((type & InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) === InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
+                            this.setSingleLine(true);
+                            this.inputElement.setAttribute('type', 'email');
+                        }
+                        else {
+                            this.setSingleLine(false);
+                            this.inputElement.removeAttribute('type');
+                        }
                         break;
-                    case InputType.TYPE_CLASS_URI:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'url');
-                        this.setSingleLine(true);
-                        break;
-                    case InputType.TYPE_CLASS_EMAIL_ADDRESS:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'email');
-                        this.setSingleLine(true);
-                        break;
-                    case InputType.TYPE_NUMBER_SIGNED:
-                    case InputType.TYPE_NUMBER_DECIMAL:
                     case InputType.TYPE_CLASS_NUMBER:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'number');
                         this.setSingleLine(true);
-                        break;
-                    case InputType.TYPE_NUMBER_PASSWORD:
-                        this.switchToSingleLineInputElement();
                         this.inputElement.setAttribute('type', 'number');
-                        this.inputElement.style['webkitTextSecurity'] = 'disc';
-                        this.setSingleLine(true);
-                        this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        if ((type & InputType.TYPE_NUMBER_VARIATION_PASSWORD) === InputType.TYPE_NUMBER_VARIATION_PASSWORD) {
+                            this.inputElement.style['webkitTextSecurity'] = 'disc';
+                            this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                        }
                         break;
                     case InputType.TYPE_CLASS_PHONE:
-                        this.switchToSingleLineInputElement();
+                        this.setSingleLine(true);
                         this.inputElement.setAttribute('type', 'tel');
-                        this.setSingleLine(true);
                         break;
-                    case InputType.TYPE_TEXT_PASSWORD:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'password');
+                    case InputType.TYPE_CLASS_DATETIME:
                         this.setSingleLine(true);
-                        this.setTransformationMethod(PasswordTransformationMethod.getInstance());
-                        break;
-                    case InputType.TYPE_TEXT_VISIBLE_PASSWORD:
-                        this.switchToSingleLineInputElement();
-                        this.inputElement.setAttribute('type', 'email');
-                        this.setSingleLine(true);
+                        if ((type & InputType.TYPE_DATETIME_VARIATION_DATE) === InputType.TYPE_DATETIME_VARIATION_DATE) {
+                            this.inputElement.setAttribute('type', 'date');
+                        }
+                        else if ((type & InputType.TYPE_DATETIME_VARIATION_TIME) === InputType.TYPE_DATETIME_VARIATION_TIME) {
+                            this.inputElement.setAttribute('type', 'time');
+                        }
+                        else {
+                            this.inputElement.setAttribute('type', 'datetime');
+                        }
                         break;
                 }
             }
@@ -43635,7 +43670,7 @@ var android;
                     this.inputElement.value = text;
                 this.inputElement.style.fontSize = this.getTextSize() / density + 'px';
                 this.inputElement.style.color = Color.toRGBAFunc(this.getCurrentTextColor());
-                if (this.inputElement == this.mMultilineInputElement) {
+                if (this.inputElement == this.mMultiLineInputElement) {
                     this.inputElement.style.padding = (this.getTextSize() / density / 5).toFixed(1) + 'px 0px 0px 0px';
                 }
                 else {
