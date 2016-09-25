@@ -74,31 +74,40 @@ export class EditText extends TextView {
                     this.setInputType(InputType.TYPE_CLASS_TEXT);
                     break;
                 case 'textUri':
-                    this.setInputType(InputType.TYPE_CLASS_URI);
+                    this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
                     break;
                 case 'textEmailAddress':
-                    this.setInputType(InputType.TYPE_CLASS_EMAIL_ADDRESS);
+                    this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
                     break;
                 case 'textPassword':
-                    this.setInputType(InputType.TYPE_TEXT_PASSWORD);
+                    this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                     break;
                 case 'textVisiblePassword':
-                    this.setInputType(InputType.TYPE_TEXT_VISIBLE_PASSWORD);
+                    this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                     break;
                 case 'number':
                     this.setInputType(InputType.TYPE_CLASS_NUMBER);
                     break;
                 case 'numberSigned':
-                    this.setInputType(InputType.TYPE_NUMBER_SIGNED);
+                    this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
                     break;
                 case 'numberDecimal':
-                    this.setInputType(InputType.TYPE_NUMBER_DECIMAL);
+                    this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
                     break;
-                case 'numberPassword': // androidui add :)
-                    this.setInputType(InputType.TYPE_NUMBER_PASSWORD);
+                case 'numberPassword':
+                    this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
                     break;
                 case 'phone':
                     this.setInputType(InputType.TYPE_CLASS_PHONE);
+                    break;
+                case 'datetime':
+                    this.setInputType(InputType.TYPE_CLASS_DATETIME);
+                    break;
+                case 'date':
+                    this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
+                    break;
+                case 'time':
+                    this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
                     break;
             }
         });
@@ -120,7 +129,7 @@ export class EditText extends TextView {
         let filterText = '';
         for(let i = 0, length = text.length; i<length; i++){
             let c = text.codePointAt(i);
-            if(!this.filterKeyCode(c) && filterText.length < this.mMaxLength){
+            if(!this.filterKeyCodeByInputType(c) && filterText.length < this.mMaxLength){
                 filterText += text[i];
             }
         }
@@ -294,38 +303,41 @@ export class EditText extends TextView {
         return false;
     }
 
-    private filterKeyCode(keyCode:number):boolean {
-        switch (this.mInputType) {
-            case InputType.TYPE_NUMBER_SIGNED:
-                return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
-            case InputType.TYPE_NUMBER_DECIMAL:
-                return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
-            case InputType.TYPE_CLASS_NUMBER:
-                return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
-            case InputType.TYPE_NUMBER_PASSWORD:
-                return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
-            case InputType.TYPE_CLASS_PHONE:
-                return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+    protected filterKeyCodeByInputType(keyCode:number):boolean {
+        let filter = false;
+        const inputType = this.mInputType;
+        const typeClass = inputType & InputType.TYPE_MASK_CLASS;
+        if (typeClass === InputType.TYPE_CLASS_NUMBER) {
+            filter = InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
+            if ((inputType & InputType.TYPE_NUMBER_FLAG_SIGNED) === InputType.TYPE_NUMBER_FLAG_SIGNED) {
+                filter = filter && keyCode !== android.view.KeyEvent.KEYCODE_Minus;
+            }
+            if ((inputType & InputType.TYPE_NUMBER_FLAG_DECIMAL) === InputType.TYPE_NUMBER_FLAG_DECIMAL) {
+                filter = filter && keyCode !== android.view.KeyEvent.KEYCODE_Period;
+            }
+        } else if (typeClass === InputType.TYPE_CLASS_PHONE) {
+            filter = InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
         }
-        return false;
+        return filter;
     }
 
-    private filterKeyCodeOnInput(keyCode:number):boolean {
-        switch (this.mInputType) {
-            case InputType.TYPE_NUMBER_SIGNED:
-                if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0) return true;
-                return InputType.LimitCode.TYPE_NUMBER_SIGNED.indexOf(keyCode) === -1;
-            case InputType.TYPE_NUMBER_DECIMAL:
-                if (keyCode === android.view.KeyEvent.KEYCODE_Period && (this.getText().includes('.') || this.getText().length === 0)) return true;
-                return InputType.LimitCode.TYPE_NUMBER_DECIMAL.indexOf(keyCode) === -1;
-            case InputType.TYPE_CLASS_NUMBER:
-                return InputType.LimitCode.TYPE_CLASS_NUMBER.indexOf(keyCode) === -1;
-            case InputType.TYPE_NUMBER_PASSWORD:
-                return InputType.LimitCode.TYPE_NUMBER_PASSWORD.indexOf(keyCode) === -1;
-            case InputType.TYPE_CLASS_PHONE:
-                return InputType.LimitCode.TYPE_CLASS_PHONE.indexOf(keyCode) === -1;
+    protected filterKeyCodeOnInput(keyCode:number):boolean {
+        let filter = false;
+        const inputType = this.mInputType;
+        const typeClass = inputType & InputType.TYPE_MASK_CLASS;
+        if (typeClass === InputType.TYPE_CLASS_NUMBER) {
+            if ((inputType & InputType.TYPE_NUMBER_FLAG_SIGNED) === InputType.TYPE_NUMBER_FLAG_SIGNED) {
+                if(keyCode === android.view.KeyEvent.KEYCODE_Minus && this.getText().length > 0) {
+                    filter = true;
+                }
+            }
+            if ((inputType & InputType.TYPE_NUMBER_FLAG_DECIMAL) === InputType.TYPE_NUMBER_FLAG_DECIMAL) {
+                if (keyCode === android.view.KeyEvent.KEYCODE_Period && (this.getText().includes('.') || this.getText().length === 0)) {
+                    filter = true;
+                }
+            }
         }
-        return false;
+        return filter || this.filterKeyCodeByInputType(keyCode);
     }
 
     private checkFilterKeyEventToDom(event:android.view.KeyEvent):boolean {
@@ -386,6 +398,15 @@ export class EditText extends TextView {
         }
     }
 
+    setSingleLine(singleLine = true):void {
+        if (singleLine) {
+            this.switchToSingleLineInputElement();
+        } else {
+            this.switchToMultiLineInputElement();
+        }
+        super.setSingleLine(singleLine);
+    }
+
     /**
      * Set the type of the content with a constant as defined for {@link EditorInfo#inputType}. This
      * will take care of changing the key listener, by calling {@link #setKeyListener(KeyListener)},
@@ -403,59 +424,55 @@ export class EditText extends TextView {
      */
     setInputType(type:number):void  {
         this.mInputType = type;
+        const typeClass = type & InputType.TYPE_MASK_CLASS;
         this.inputElement.style['webkitTextSecurity'] = '';
         this.setTransformationMethod(null);
-        switch (type){
+
+        switch (typeClass){
             case InputType.TYPE_NULL:
-                this.switchToMultiLineInputElement();
-                this.inputElement.removeAttribute('type');
                 this.setSingleLine(false);
+                this.inputElement.removeAttribute('type');
                 break;
             case InputType.TYPE_CLASS_TEXT:
-                this.switchToMultiLineInputElement();
-                this.inputElement.removeAttribute('type');
-                this.setSingleLine(false);
+                if ((type & InputType.TYPE_TEXT_VARIATION_URI) === InputType.TYPE_TEXT_VARIATION_URI) {
+                    this.setSingleLine(true);
+                    this.inputElement.setAttribute('type', 'url');
+                } else if ((type & InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS) === InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS) {
+                    this.setSingleLine(true);
+                    this.inputElement.setAttribute('type', 'email');
+                } else if ((type & InputType.TYPE_TEXT_VARIATION_PASSWORD) === InputType.TYPE_TEXT_VARIATION_PASSWORD) {
+                    this.setSingleLine(true);
+                    this.inputElement.setAttribute('type', 'password');
+                    this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                } else if ((type & InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) === InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
+                    this.setSingleLine(true);
+                    this.inputElement.setAttribute('type', 'email');//use email type as visible password
+                } else {
+                    this.setSingleLine(false);
+                    this.inputElement.removeAttribute('type');
+                }
                 break;
-            case InputType.TYPE_CLASS_URI:
-                this.switchToSingleLineInputElement();
-                this.inputElement.setAttribute('type', 'url');
-                this.setSingleLine(true);
-                break;
-            case InputType.TYPE_CLASS_EMAIL_ADDRESS:
-                this.switchToSingleLineInputElement();
-                this.inputElement.setAttribute('type', 'email');
-                this.setSingleLine(true);
-                break;
-            case InputType.TYPE_NUMBER_SIGNED:
-            case InputType.TYPE_NUMBER_DECIMAL:
             case InputType.TYPE_CLASS_NUMBER:
-                this.switchToSingleLineInputElement();
-                this.inputElement.setAttribute('type', 'number');
                 this.setSingleLine(true);
-                break;
-            case InputType.TYPE_NUMBER_PASSWORD:
-                this.switchToSingleLineInputElement();
                 this.inputElement.setAttribute('type', 'number');
-                this.inputElement.style['webkitTextSecurity'] = 'disc';
-                this.setSingleLine(true);
-                //TODO hide input
-                this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                if ((type & InputType.TYPE_NUMBER_VARIATION_PASSWORD) === InputType.TYPE_NUMBER_VARIATION_PASSWORD) {
+                    this.inputElement.style['webkitTextSecurity'] = 'disc';
+                    this.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                }
                 break;
             case InputType.TYPE_CLASS_PHONE:
-                this.switchToSingleLineInputElement();
+                this.setSingleLine(true);
                 this.inputElement.setAttribute('type', 'tel');
-                this.setSingleLine(true);
                 break;
-            case InputType.TYPE_TEXT_PASSWORD:
-                this.switchToSingleLineInputElement();
-                this.inputElement.setAttribute('type', 'password');
+            case InputType.TYPE_CLASS_DATETIME:
                 this.setSingleLine(true);
-                this.setTransformationMethod(PasswordTransformationMethod.getInstance());
-                break;
-            case InputType.TYPE_TEXT_VISIBLE_PASSWORD:
-                this.switchToSingleLineInputElement();
-                this.inputElement.setAttribute('type', 'email');//use email type as visible password
-                this.setSingleLine(true);
+                if ((type & InputType.TYPE_DATETIME_VARIATION_DATE) === InputType.TYPE_DATETIME_VARIATION_DATE) {
+                    this.inputElement.setAttribute('type', 'date');
+                } else if ((type & InputType.TYPE_DATETIME_VARIATION_TIME) === InputType.TYPE_DATETIME_VARIATION_TIME) {
+                    this.inputElement.setAttribute('type', 'time');
+                } else {
+                    this.inputElement.setAttribute('type', 'datetime');
+                }
                 break;
         }
     }
@@ -489,7 +506,7 @@ export class EditText extends TextView {
         if(maxHeight<=0 || maxHeight>textHeight){
             maxHeight = textHeight;
         }
-        let layout:android.text.Layout = this.mLayout
+        let layout:android.text.Layout = this.mLayout;
         if (this.mHint != null && this.mText.length == 0) {
             layout = this.mHintLayout;
         }

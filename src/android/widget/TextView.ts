@@ -5678,9 +5678,9 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
      *
      * @attr ref android.R.styleable#TextView_singleLine
      */
-    setSingleLine(singleLine=true):void  {
+    setSingleLine(singleLine = true):void  {
         // Could be used, but may break backward compatibility.
-        // if (mSingleLine == singleLine) return;
+        if (this.mSingleLine == singleLine) return;
         this.setInputTypeSingleLine(singleLine);
         this.applySingleLine(singleLine, true, true);
     }
