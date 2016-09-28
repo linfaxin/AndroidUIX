@@ -75,7 +75,8 @@ export class WindowManager {
         let fakeAttachInfo = new View.AttachInfo(viewRootImpl, viewRootImpl.mHandler);
         fakeAttachInfo.mRootView = this.mWindowsLayout;
         this.mWindowsLayout.dispatchAttachedToWindow(fakeAttachInfo, 0);
-        this.mWindowsLayout.mGroupFlags |= ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;//make attachInfo not handle when addWindow
+        this.mWindowsLayout.mGroupFlags |= ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW; // make attachInfo not handle when addWindow
+        this.mWindowsLayout.mGroupFlags |= ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE; // activity animation should use cache
     }
 
     getWindowsLayout():ViewGroup {

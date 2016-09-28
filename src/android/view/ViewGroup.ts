@@ -198,7 +198,7 @@ module android.view {
             this.mGroupFlags |= ViewGroup.FLAG_CLIP_CHILDREN;
             this.mGroupFlags |= ViewGroup.FLAG_CLIP_TO_PADDING;
             this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_DONE;
-            this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_CACHE;
+            // this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_CACHE;
             this.mGroupFlags |= ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE;
 
             this.mGroupFlags |= ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
@@ -2222,7 +2222,7 @@ module android.view {
 
 
 
-        invalidateChild(child:View, dirty:Rect) {
+        invalidateChild(child:View, dirty:Rect):void {
             let parent = this;
 
             const attachInfo = this.mAttachInfo;
@@ -2342,7 +2342,7 @@ module android.view {
 
                     if (this.mLayerType != View.LAYER_TYPE_NONE) {
                         this.mPrivateFlags |= View.PFLAG_INVALIDATED;
-                    //    this.mLocalDirtyRect.union(dirty);
+                       this.mLocalDirtyRect.union(dirty);
                     }
 
                     return this.mParent;
@@ -2361,7 +2361,7 @@ module android.view {
 
                     if (this.mLayerType != View.LAYER_TYPE_NONE) {
                         this.mPrivateFlags |= View.PFLAG_INVALIDATED;
-                        //mLocalDirtyRect.union(dirty);
+                        this.mLocalDirtyRect.union(dirty);
                     }
 
                     return this.mParent;
@@ -2375,9 +2375,9 @@ module android.view {
 
             const attachInfo = this.mAttachInfo;
             if (attachInfo != null) {
-                //if (child.mLayerType != LAYER_TYPE_NONE) {
-                //    child.mLocalDirtyRect.union(dirty);
-                //}
+                if (child.mLayerType != View.LAYER_TYPE_NONE) {
+                   child.mLocalDirtyRect.union(dirty);
+                }
 
                 let left = child.mLeft;
                 let top = child.mTop;
@@ -2420,7 +2420,7 @@ module android.view {
                     dirty.intersect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop)) {
 
                     if (this.mLayerType != View.LAYER_TYPE_NONE) {
-                        //mLocalDirtyRect.union(dirty);
+                        this.mLocalDirtyRect.union(dirty);
                     }
                     if (!this.getMatrix().isIdentity()) {
                         this.transformRect(dirty);

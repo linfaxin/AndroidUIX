@@ -1485,6 +1485,10 @@ export interface Callback {
 
     class DecorView extends FrameLayout {
         Window_this : Window;
+        private _ignoreRequestLayoutInAnimation = true;
+        private _pendingRequestLayoutOnAnimationEnd = false;
+        private _ignoreInvalidateInAnimation = true;
+        private _pendingInvalidateOnAnimationEnd = false;
 
         constructor(window:android.view.Window) {
             super(window.mContext);
@@ -1492,6 +1496,66 @@ export interface Callback {
             this.bindElement.classList.add(window.mContext.constructor.name);
             this.setBackgroundColor(android.graphics.Color.WHITE);//default window bg
             this.setIsRootNamespace(true);//window's decor view is root.
+        }
+
+        invalidate();
+        invalidate(invalidateCache:boolean);
+        invalidate(dirty:android.graphics.Rect);
+        invalidate(l:number, t:number, r:number, b:number);
+        invalidate(...args){
+            if (this._ignoreInvalidateInAnimation && this.getAnimation()) {
+                this._pendingInvalidateOnAnimationEnd = true;
+                return null;
+            }
+            super.invalidate.call(this, ...args);
+        }
+
+        invalidateChild(child:android.view.View, dirty:android.graphics.Rect):void {
+            if (this._ignoreInvalidateInAnimation && this.getAnimation()) {
+                this._pendingInvalidateOnAnimationEnd = true;
+                return null;
+            }
+            super.invalidateChild(child, dirty);
+        }
+
+        invalidateChildFast(child:android.view.View, dirty:android.graphics.Rect):void {
+            if (this._ignoreInvalidateInAnimation && this.getAnimation()) {
+                this._pendingInvalidateOnAnimationEnd = true;
+                return null;
+            }
+            super.invalidateChildFast(child, dirty);
+        }
+
+        requestLayout():void {
+            if (this._ignoreRequestLayoutInAnimation && this.getAnimation()) {
+                this._pendingRequestLayoutOnAnimationEnd = true;
+                return null;
+            }
+            super.requestLayout();
+        }
+
+        protected onAnimationStart():void {
+            super.onAnimationStart();
+            this.setDrawingCacheEnabled(true);
+            this.buildDrawingCache(true);
+        }
+
+        protected onAnimationEnd():void {
+            super.onAnimationEnd();
+            this.setDrawingCacheEnabled(false);
+            if (this._pendingInvalidateOnAnimationEnd) {
+                this._pendingInvalidateOnAnimationEnd = false;
+                this.invalidate();
+            }
+            if (this._pendingRequestLayoutOnAnimationEnd) {
+                this._pendingRequestLayoutOnAnimationEnd = false;
+                this.requestLayout();
+            }
+        }
+
+        buildDrawingCache(autoScale:boolean = false):void {
+            if (this.getAnimation() && this.mUnscaledDrawingCache) return; // force keep cache when animation
+            super.buildDrawingCache(autoScale);
         }
 
         protected drawFromParent(canvas:android.graphics.Canvas, parent:ViewGroup, drawingTime:number):boolean {

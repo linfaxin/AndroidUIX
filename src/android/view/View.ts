@@ -4375,7 +4375,7 @@ module android.view {
             let viewRoot:ViewRootImpl = this.getViewRootImpl();
             return (viewRoot != null && viewRoot.isInLayout());
         }
-        requestLayout() {
+        requestLayout():void {
             if (this.mMeasureCache != null) this.mMeasureCache.clear();
 
             if (this.mAttachInfo != null && this.mAttachInfo.mViewRequestingLayout == null) {
@@ -5894,9 +5894,9 @@ module android.view {
                 const restoreCount:number = canvas.save();
                 canvas.translate(-this.mScrollX, -this.mScrollY);
                 this.mPrivateFlags |= View.PFLAG_DRAWN;
-                //if (this.mAttachInfo == null || !this.mAttachInfo.mHardwareAccelerated || this.mLayerType != View.LAYER_TYPE_NONE) {
+                if (this.mAttachInfo == null || /*!this.mAttachInfo.mHardwareAccelerated ||*/ this.mLayerType != View.LAYER_TYPE_NONE) {
                     this.mPrivateFlags |= View.PFLAG_DRAWING_CACHE_VALID;
-                //}
+                }
 
                 // Fast path for layouts with no backgrounds
                 if ((this.mPrivateFlags & View.PFLAG_SKIP_DRAW) == View.PFLAG_SKIP_DRAW) {
