@@ -73,10 +73,10 @@ module android.graphics {
             this.mHeight = height;
             this.mCurrentClip = Canvas.obtainRect();
             this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
-            this.initImpl();
+            this.initCanvasImpl();
         }
 
-        protected initImpl():void {
+        protected initCanvasImpl():void {
             this.mCanvasElement = document.createElement("canvas");
             this.mCanvasElement.width = this.mWidth;
             this.mCanvasElement.height = this.mHeight;

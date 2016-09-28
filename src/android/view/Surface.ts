@@ -127,7 +127,7 @@ module android.view{
             this._mCanvasContent = this.mCanvasElement.getContext("2d");
         }
 
-        protected initImpl():void {
+        protected initCanvasImpl():void {
         }
 
     }

@@ -16,7 +16,7 @@ module androidui.native {
     export class NativeCanvas extends Canvas {
         private canvasId:number;
 
-        protected initImpl():void {
+        protected initCanvasImpl():void {
             this.canvasId = ++sNextID;
             this.createCanvasImpl();
         }

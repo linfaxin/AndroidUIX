@@ -1341,6 +1341,7 @@ module android.view {
         private mPendingCheckForLongPress:CheckForLongPress;
         private mPendingCheckForTap:CheckForTap;
         private mPerformClick:PerformClick;
+        private mPerformClickAfterPressDraw:PerformClickAfterPressDraw;
         private mUnsetPressedState:UnsetPressedState;
         private mHasPerformedLongPress = false;
         mMinWidth = 0;
@@ -3914,7 +3915,14 @@ module android.view {
                                     if (this.mPerformClick == null) {
                                         this.mPerformClick = new PerformClick(this);
                                     }
-                                    if (!this.post(this.mPerformClick)) {
+
+                                    if (prepressed) { // androidui add: do click actions after press state draw to canvas.
+                                        if (this.mPerformClickAfterPressDraw == null) {
+                                            this.mPerformClickAfterPressDraw = new PerformClickAfterPressDraw(this);
+                                        }
+                                        this.post(this.mPerformClickAfterPressDraw);
+
+                                    } else if (!this.post(this.mPerformClick)) {
                                         this.performClick(event);
                                     }
                                 }
@@ -4058,6 +4066,9 @@ module android.view {
         private removePerformClickCallback() {
             if (this.mPerformClick != null) {
                 this.removeCallbacks(this.mPerformClick);
+            }
+            if (this.mPerformClickAfterPressDraw != null) {
+                this.removeCallbacks(this.mPerformClickAfterPressDraw);
             }
         }
         private removeUnsetPressCallback() {
@@ -7508,6 +7519,15 @@ module android.view {
         }
         run() {
             this.View_this.performClick();
+        }
+    }
+    class PerformClickAfterPressDraw implements Runnable {
+        private View_this : any;
+        constructor(View_this:View) {
+            this.View_this = View_this;
+        }
+        run() {
+            this.View_this.post(this.View_this.mPerformClick);
         }
     }
     class UnsetPressedState implements Runnable {
