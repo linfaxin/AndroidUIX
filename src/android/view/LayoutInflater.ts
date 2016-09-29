@@ -164,7 +164,7 @@ module android.view{
             if(styleAttrValue) rootView = new rootViewClass(this.mContext, domtree, defStyle);
             else rootView = new rootViewClass(this.mContext, domtree);
 
-            //support for HtmlDataAdapter
+            // androidui add: support for HtmlDataAdapter
             if(rootView['onInflateAdapter']){//inflate a adapter.
                 (<HtmlDataAdapter><any>rootView).onInflateAdapter(domtree, this.mContext, viewParent);
                 domtree.parentNode.removeChild(domtree);

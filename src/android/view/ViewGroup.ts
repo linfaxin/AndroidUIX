@@ -2653,8 +2653,10 @@ module android.view {
 
             parseAttributeFrom(node:Node, context:Context):void {
                 Array.from(node.attributes).forEach((attr:Attr)=>{
-                    let layoutParamFiled = attr.name.split("layout_")[1];
-                    this._attrBinder.onAttrChange(layoutParamFiled, attr.value, context);
+                    let layoutParamFiled = attr.name.startsWith('layout_') && attr.name.substring('layout_'.length);
+                    if (layoutParamFiled) {
+                        this._attrBinder.onAttrChange(layoutParamFiled, attr.value, context);
+                    }
                 });
             }
         }
