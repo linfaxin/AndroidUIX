@@ -147,14 +147,8 @@ module android.view{
                 if(overrideClass) className = overrideClass;
             }
 
-            let rootViewClass = ClassFinder.findClass(className, android.view);
-            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android['widget']);
-            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, androidui['widget']);
-            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className);
+            let rootViewClass = ClassFinder.findViewClass(className);
             if(!rootViewClass){
-                if(document.createElement(className) instanceof HTMLUnknownElement){
-                    console.warn('inflate: not find class ' + className);
-                }
                 return null;
             }
 

@@ -2,7 +2,7 @@
  * Created by linfaxin on 15/11/6.
  */
 module androidui.util{
-    export class ClassFinder{
+    export class ClassFinder {
         /**
          * @param classFullName com.xxx.xxx.MyView
          * @param findInRoot root obj to find
@@ -35,6 +35,23 @@ module androidui.util{
                 return null;
             }
             return finding;
+        }
+
+        static _findViewClassCache = {};
+        static findViewClass(className:string) {
+            let rootViewClass = ClassFinder._findViewClassCache[className];
+            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android.view);
+            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, android['widget']);
+            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className, androidui['widget']);
+            if(!rootViewClass) rootViewClass = ClassFinder.findClass(className);
+            if(!rootViewClass){
+                if(document.createElement(className) instanceof HTMLUnknownElement){
+                    console.warn('inflate: not find class ' + className);
+                }
+                return null;
+            }
+            ClassFinder._findViewClassCache[className] = rootViewClass;
+            return rootViewClass;
         }
     }
 }
