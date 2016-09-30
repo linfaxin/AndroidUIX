@@ -4,22 +4,18 @@
 module java.lang{
 
     let hashCodeGenerator = 0;
-    export class JavaObject{
+    export class JavaObject {
         static get class():Class {
-            return new Class(this);
+            return Class.getClass(this);
         }
 
         private hash = hashCodeGenerator++;
-        private _class:Class;
         hashCode():number{
             return this.hash;
         }
 
         getClass():Class {
-            if (!this._class) {
-                this._class = new Class(this.constructor);
-            }
-            return this._class;
+            return Class.getClass(this.constructor);
         }
 
         equals(o):boolean {
@@ -29,8 +25,17 @@ module java.lang{
     }
 
     export class Class{
-        clazz:Function;
+        private static classCache = new Map();
+        private static getClass(clazz:Function) {
+            let c = Class.classCache.get(clazz);
+            if (!c) {
+                c = new Class(clazz);
+                Class.classCache.set(clazz, c);
+            }
+            return c;
+        }
 
+        clazz:Function;
         constructor(clazz:Function) {
             this.clazz = clazz;
         }
