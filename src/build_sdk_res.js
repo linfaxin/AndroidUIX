@@ -108,6 +108,19 @@ ${exportImage_tsLines}
         static get rate_star_small_half_holo_light(){ return new ChangeImageSizeDrawable(image.rate_star_big_off_holo_light, 16 * density, 16 * density)}
         static get rate_star_small_on_holo_light(){ return new ChangeImageSizeDrawable(image.rate_star_big_on_holo_light, 16 * density, 16 * density)}
     }
+    
+    // load these image when init
+    image_base64.actionbar_ic_back_white;
+    image_base64.btn_default_normal_holo_light;
+    image_base64.dropdown_background_dark;
+    image_base64.editbox_background_normal;
+    image_base64.ic_menu_moreoverflow_normal_holo_dark;
+    image_base64.menu_panel_holo_dark;
+    image_base64.menu_panel_holo_light;
+    image_base64.popup_bottom_bright;
+    image_base64.popup_center_bright;
+    image_base64.popup_full_bright;
+    image_base64.popup_top_bright;
 }`;
     fs.writeFile('android/R/image.ts', image_ts, 'utf-8');
 }
