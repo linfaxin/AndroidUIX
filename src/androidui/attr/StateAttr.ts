@@ -7,12 +7,18 @@
 
 module androidui.attr{
 
-    export class StateAttr{
+    export class StateAttr {
         private stateSpec:number[];
         private attributes = new Map<string,string>();
 
         constructor(state:number[]) {
             this.stateSpec = state.concat().sort();
+        }
+
+        clone():StateAttr {
+            let stateAttr = new StateAttr(this.stateSpec);
+            stateAttr.attributes = new Map<string, string>(this.attributes);
+            return stateAttr;
         }
 
         setAttr(name:string, value:string){

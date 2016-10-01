@@ -8,21 +8,38 @@
 module androidui.attr{
     import View = android.view.View;
 
-    export class StateAttrList{
+    export class StateAttrList {
+        private static CacheMap = new Map<string, Array<StateAttr>>(); // <attr json, clone state attr>
         private list:Array<StateAttr> = [];
         private matchedAttrCache:Array<StateAttr> = [];
         private mView:View;
 
         constructor(view:View){
             this.mView = view;
-            this.optStateAttr([]);//ensure default stateAttr
 
             let attrMap = new Map<string, string>();
             let attributes = Array.from(view.bindElement.attributes);
             for(let attr of attributes){
                 attrMap.set(attr.name, attr.value);
             }
-            this._initStyleAttributes(attrMap, []);
+            let attrMapJSON = JSON.stringify(attrMap);
+
+            // find in cache first
+            let cachedAttrArray = StateAttrList.CacheMap.get(attrMapJSON);
+            if (cachedAttrArray) {
+                for(let stateAttr of cachedAttrArray) {
+                    this.list.push(stateAttr.clone());
+                }
+            } else {
+                this.optStateAttr([]);//ensure default stateAttr
+                this._initStyleAttributes(attrMap, []);
+                // save to cache
+                let cachedAttrArray:Array<StateAttr> = [];
+                for(let stateAttr of this.list) {
+                    cachedAttrArray.push(stateAttr.clone());
+                }
+                StateAttrList.CacheMap.set(attrMapJSON, cachedAttrArray);
+            }
         }
 
         private _initStyleAttributes(attrMap:Map<string,string>, inParseState:number[]){
