@@ -20,21 +20,20 @@ module sample.app {
             let activity = this;
             this.setContentView(R.layout.sample_base_widget);
 
-            let btnOpenDialog = this.findViewById('btn_open_dialog');
-            btnOpenDialog.setOnClickListener({
+            const dialog = new AlertDialog.Builder(activity)
+                .setTitle('Title')
+                .setMessage('ContentContent')
+                .setPositiveButton(android.R.string_.ok, {
+                    onClick(dialog:android.content.DialogInterface, which:number):void{
+                        Toast.makeText(activity, android.R.string_.ok, Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setIcon(R.drawable.icon_alert)
+                .setNegativeButton(android.R.string_.cancel, null)
+                .create();
+            this.findViewById(R.id.btn_open_dialog).setOnClickListener({
                 onClick(view:android.view.View){
-                    new AlertDialog.Builder(view.getContext())
-                        .setTitle('Title')
-                        .setMessage('ContentContent')
-                        .setPositiveButton(android.R.string_.ok, {
-                            onClick(dialog:android.content.DialogInterface, which:number):void{
-                                Toast.makeText(activity, android.R.string_.ok, Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .setIcon(R.drawable.icon_alert)
-                        //.setCancelable(false)
-                        .setNegativeButton(android.R.string_.cancel, null)
-                        .show();
+                    dialog.show();
                 }
             });
 
@@ -43,7 +42,7 @@ module sample.app {
             popupContent.setText('PopupWindow');
             popupContent.setBackgroundColor(0xffcccccc);
             let popWindow = new PopupWindow(popupContent, -2, 40 * this.getResources().getDisplayMetrics().density, true);
-            let btnShowPopup = this.findViewById('btn_show_popup');
+            let btnShowPopup = this.findViewById(R.id.btn_show_popup);
             btnShowPopup.setOnClickListener({
                 onClick(view:android.view.View){
                     popWindow.showAsDropDown(view);

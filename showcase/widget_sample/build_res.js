@@ -111,6 +111,7 @@ module R {
     import Drawable = android.graphics.drawable.Drawable;
     import NetDrawable = androidui.image.NetDrawable;
     import NinePatchDrawable = androidui.image.NinePatchDrawable;
+    import NetImage = androidui.image.NetImage;
     
     export const id = ${idObjStr};
     
@@ -210,29 +211,49 @@ module R {
         return matchDirNames;
     }
     
+    const imageFileCache = new Map<String, NetImage>();
     function findImageFile(fileName:string):Drawable {
 
         //find in drawable dir
         for(let dirName of findMatchDirNames('drawable')) {
             let dir = res_data[dirName];
-
-            if (dirName === 'drawable'){//find ratio image first :  xxx@2x.png, xxx@3x.png
+            if (dirName === 'drawable'){ // find ratio image first :  xxx@2x.png, xxx@3x.png
                 function findImageWithRatioName(ratio:number){
-                    let fileStr = dir[fileName + '@' + ratio + 'x'];
-                    if(fileStr && fileStr.startsWith('data:image')) {
-                        return new NetDrawable(fileStr, null, ratio);
+                    let fileNameWithRatio = fileName + '@' + ratio + 'x';
+                    let key = dirName + '/' + fileNameWithRatio;
+                    let netImage = imageFileCache.get(key);
+                    if (!netImage) {
+                        let fileStr = dir[fileNameWithRatio];
+                        if(fileStr && fileStr.startsWith('data:image')) {
+                            netImage = new NetImage(fileStr, ratio);
+                            imageFileCache.set(key, netImage);
+                        }
                     }
+                    if (netImage) return new NetDrawable(netImage);
+
+                    // nine patch image
                     let fileNameWithNinePatch = fileName + '@' + ratio + 'x' + '.9';
-                    fileStr = dir[fileNameWithNinePatch];
-                    if(fileStr && fileStr.startsWith('data:image')) {
-                        return new NinePatchDrawable(fileStr, null, ratio);
+                    key = dirName + '/' + fileNameWithNinePatch;
+                    netImage = imageFileCache.get(key);
+                    if (!netImage) {
+                        let fileStr = dir[fileNameWithNinePatch];
+                        if (fileStr && fileStr.startsWith('data:image')) {
+                            netImage = new NetImage(fileStr, ratio);
+                            imageFileCache.set(key, netImage);
+                        }
                     }
+                    if (netImage) return new NinePatchDrawable(netImage);
+                    return null;
                 }
 
-                let ratioDrawable = findImageWithRatioName(window.devicePixelRatio) || findImageWithRatioName(6)
-                    || findImageWithRatioName(5) || findImageWithRatioName(4)|| findImageWithRatioName(3)
-                    || findImageWithRatioName(2)|| findImageWithRatioName(1);
-                if(ratioDrawable) return ratioDrawable;
+                let ratioDrawable = findImageWithRatioName(window.devicePixelRatio);
+                if (!ratioDrawable && window.devicePixelRatio !== 3) ratioDrawable = findImageWithRatioName(3);
+                if (!ratioDrawable && window.devicePixelRatio !== 2) ratioDrawable = findImageWithRatioName(2);
+                if (!ratioDrawable && window.devicePixelRatio !== 4) ratioDrawable = findImageWithRatioName(4);
+                if (!ratioDrawable && window.devicePixelRatio !== 1) ratioDrawable = findImageWithRatioName(1);
+                if (!ratioDrawable && window.devicePixelRatio !== 5) ratioDrawable = findImageWithRatioName(5);
+                if (!ratioDrawable && window.devicePixelRatio !== 6) ratioDrawable = findImageWithRatioName(6);
+                return ratioDrawable;
             }
 
             let ratio = 1;
@@ -243,19 +264,30 @@ module R {
                 else if (dirName.includes('-xhdpi')) ratio = 2;
                 else if (dirName.includes('-xxhdpi')) ratio = 3;
                 else if (dirName.includes('-xxxhdpi')) ratio = 4;
-
             }
 
-            let fileStr = dir[fileName];
-            if(fileStr && fileStr.startsWith('data:image')) {
-                return new NetDrawable(fileStr, null, ratio);
+            let key = dirName + '/' + fileName;
+            let netImage = imageFileCache.get(key);
+            if (!netImage) {
+                let fileStr = dir[fileName];
+                if(fileStr && fileStr.startsWith('data:image')) {
+                    netImage = new NetImage(fileStr, ratio);
+                    imageFileCache.set(key, netImage);
+                }
             }
+            if (netImage) return new NetDrawable(netImage);
+
             let fileNameWithNinePatch = fileName+'.9';
-            fileStr = dir[fileNameWithNinePatch];
-            if(fileStr && fileStr.startsWith('data:image')) {
-                return new NinePatchDrawable(fileStr, null, ratio);
+            key = dirName + '/' + fileNameWithNinePatch;
+            netImage = imageFileCache.get(key);
+            if (!netImage) {
+                let fileStr = dir[fileNameWithNinePatch];
+                if (fileStr && fileStr.startsWith('data:image')) {
+                    netImage = new NetImage(fileStr, ratio);
+                    imageFileCache.set(key, netImage);
+                }
             }
-
+            if (netImage) return new NinePatchDrawable(netImage);
         }
     }
 
