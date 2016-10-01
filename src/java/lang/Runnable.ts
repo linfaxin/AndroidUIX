@@ -5,4 +5,11 @@ module java.lang{
     export interface Runnable{
         run();
     }
+    export module Runnable {
+        export function of(func:()=>any): Runnable {
+            return {
+                run: func
+            }
+        }
+    }
 }

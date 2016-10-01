@@ -90,7 +90,7 @@ module android.os {
          */
         dispatchMessage(msg:Message) {
             if (msg.callback != null) {
-                msg.callback.run.call(msg.callback);
+                msg.callback.run();
             } else {
                 if (this.mCallback != null) {
                     if (this.mCallback.handleMessage(msg)) {

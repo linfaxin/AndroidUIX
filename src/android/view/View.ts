@@ -1313,7 +1313,7 @@ module android.view {
 
         protected mID:string;
         protected mTag:any;
-        mPrivateFlags = 0;
+        protected mPrivateFlags = 0;
         private mPrivateFlags2 = 0;
         private mPrivateFlags3 = 0;
 
