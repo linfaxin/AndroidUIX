@@ -1,5 +1,5 @@
 /**
- * AndroidUIX v0.6.5
+ * AndroidUIX v0.6.6
  * https://github.com/linfaxin/AndroidUIX
  */
 var java;
@@ -6799,17 +6799,21 @@ var androidui;
         }
         attr.AttrBinder = AttrBinder;
         (function (AttrBinder) {
-            class ClassBinderMap extends Map {
+            class ClassBinderMap {
+                constructor() {
+                    this.binderMap = new Map();
+                }
                 set(key, value) {
-                    return super.set(key ? key.toLowerCase() : key, value);
+                    this.binderMap.set(key.toLowerCase(), value);
+                    return this;
                 }
                 get(key) {
-                    return super.get(key ? key.toLowerCase() : key);
+                    return this.binderMap.get(key.toLowerCase());
                 }
                 callSetter(attrName, host, attrValue) {
                     if (!attrName)
                         return;
-                    let value = this.get(attrName.toLowerCase());
+                    let value = this.get(attrName);
                     if (value) {
                         value.setter(host, attrValue);
                     }
@@ -6817,7 +6821,7 @@ var androidui;
                 callGetter(attrName, host) {
                     if (!attrName)
                         return;
-                    let value = this.get(attrName.toLowerCase());
+                    let value = this.get(attrName);
                     if (value) {
                         return value.getter(host);
                     }
