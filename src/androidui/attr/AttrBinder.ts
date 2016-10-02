@@ -81,7 +81,8 @@ module androidui.attr {
                 value = getAttrCall.call(this.host);
             } else {
                 for(let classAttrBind of this.classAttrBindList) {
-                    classAttrBind.callGetter(attrName, this.host);
+                    value = classAttrBind.callGetter(attrName, this.host);
+                    if (value) break;
                 }
             }
             if(value == null) return null;
