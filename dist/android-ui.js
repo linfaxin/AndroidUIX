@@ -1,5 +1,5 @@
 /**
- * AndroidUIX v0.6.4
+ * AndroidUIX v0.6.5
  * https://github.com/linfaxin/AndroidUIX
  */
 var java;
@@ -758,6 +758,21 @@ var java;
             }
             ref.WeakReference = WeakReference;
         })(ref = lang.ref || (lang.ref = {}));
+    })(lang = java.lang || (java.lang = {}));
+})(java || (java = {}));
+var java;
+(function (java) {
+    var lang;
+    (function (lang) {
+        var Runnable;
+        (function (Runnable) {
+            function of(func) {
+                return {
+                    run: func
+                };
+            }
+            Runnable.of = of;
+        })(Runnable = lang.Runnable || (lang.Runnable = {}));
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
 var java;
@@ -2301,7 +2316,7 @@ var android;
                 this.mHeight = height;
                 this.mCurrentClip = Canvas.obtainRect();
                 this.mCurrentClip.set(0, 0, this.mWidth, this.mHeight);
-                this.initImpl();
+                this.initCanvasImpl();
             }
             static obtainRect(copy) {
                 let rect = Canvas.sRectPool.acquire();
@@ -2315,7 +2330,7 @@ var android;
                 rect.setEmpty();
                 Canvas.sRectPool.release(rect);
             }
-            initImpl() {
+            initCanvasImpl() {
                 this.mCanvasElement = document.createElement("canvas");
                 this.mCanvasElement.width = this.mWidth;
                 this.mCanvasElement.height = this.mHeight;
@@ -3808,16 +3823,13 @@ var java;
                 this.hash = hashCodeGenerator++;
             }
             static get class() {
-                return new Class(this);
+                return Class.getClass(this);
             }
             hashCode() {
                 return this.hash;
             }
             getClass() {
-                if (!this._class) {
-                    this._class = new Class(this.constructor);
-                }
-                return this._class;
+                return Class.getClass(this.constructor);
             }
             equals(o) {
                 return this === o;
@@ -3828,6 +3840,14 @@ var java;
             constructor(clazz) {
                 this.clazz = clazz;
             }
+            static getClass(clazz) {
+                let c = Class.classCache.get(clazz);
+                if (!c) {
+                    c = new Class(clazz);
+                    Class.classCache.set(clazz, c);
+                }
+                return c;
+            }
             getName() {
                 return this.clazz.name;
             }
@@ -3835,6 +3855,7 @@ var java;
                 return this.clazz.name;
             }
         }
+        Class.classCache = new Map();
         lang.Class = Class;
     })(lang = java.lang || (java.lang = {}));
 })(java || (java = {}));
@@ -4257,7 +4278,27 @@ var androidui;
                 }
                 return finding;
             }
+            static findViewClass(className) {
+                let rootViewClass = ClassFinder._findViewClassCache[className];
+                if (!rootViewClass)
+                    rootViewClass = ClassFinder.findClass(className, android.view);
+                if (!rootViewClass)
+                    rootViewClass = ClassFinder.findClass(className, android['widget']);
+                if (!rootViewClass)
+                    rootViewClass = ClassFinder.findClass(className, androidui['widget']);
+                if (!rootViewClass)
+                    rootViewClass = ClassFinder.findClass(className);
+                if (!rootViewClass) {
+                    if (document.createElement(className) instanceof HTMLUnknownElement) {
+                        console.warn('inflate: not find class ' + className);
+                    }
+                    return null;
+                }
+                ClassFinder._findViewClassCache[className] = rootViewClass;
+                return rootViewClass;
+            }
         }
+        ClassFinder._findViewClassCache = {};
         util.ClassFinder = ClassFinder;
     })(util = androidui.util || (androidui.util = {}));
 })(androidui || (androidui = {}));
@@ -4320,17 +4361,8 @@ var android;
                     if (overrideClass)
                         className = overrideClass;
                 }
-                let rootViewClass = ClassFinder.findClass(className, android.view);
-                if (!rootViewClass)
-                    rootViewClass = ClassFinder.findClass(className, android['widget']);
-                if (!rootViewClass)
-                    rootViewClass = ClassFinder.findClass(className, androidui['widget']);
-                if (!rootViewClass)
-                    rootViewClass = ClassFinder.findClass(className);
+                let rootViewClass = ClassFinder.findViewClass(className);
                 if (!rootViewClass) {
-                    if (document.createElement(className) instanceof HTMLUnknownElement) {
-                        console.warn('inflate: not find class ' + className);
-                    }
                     return null;
                 }
                 let children = Array.from(domtree.children);
@@ -4404,7 +4436,7 @@ var android;
     var R;
     (function (R) {
         const _layout_data = {
-            "action_bar": "<merge>\n    <linearlayout id=\"action_bar_center_layout\" android:layout_marginLeft=\"60dp\" android:layout_marginRight=\"60dp\" android:minHeight=\"48dp\" android:gravity=\"center\" android:orientation=\"vertical\">\n        <textview id=\"action_bar_title\" android:gravity=\"center\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"18sp\"></textview>\n        <textview id=\"action_bar_sub_title\" android:visibility=\"gone\" android:gravity=\"center\" android:layout_marginTop=\"4dp\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"12sp\"></textview>\n    </linearlayout>\n    <button id=\"action_bar_left\" android:visibility=\"gone\" android:layout_gravity=\"left|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingLeft=\"6dp\" android:paddingRight=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\"></button>\n    <button id=\"action_bar_right\" android:visibility=\"gone\" android:layout_gravity=\"right|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingRight=\"6dp\" android:paddingLeft=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\"></button>\n</merge>",
+            "action_bar": "<merge>\n    <linearlayout android:layout_marginLeft=\"60dp\" android:layout_marginRight=\"60dp\" android:minHeight=\"48dp\" android:gravity=\"center\" android:orientation=\"vertical\" id=\"action_bar_center_layout\">\n        <textview android:gravity=\"center\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"18sp\" id=\"action_bar_title\"></textview>\n        <textview android:visibility=\"gone\" android:gravity=\"center\" android:layout_marginTop=\"4dp\" android:drawablePadding=\"4dp\" android:singleLine=\"true\" android:ellipsize=\"end\" android:textColor=\"@android:color/white\" android:textSize=\"12sp\" id=\"action_bar_sub_title\"></textview>\n    </linearlayout>\n    <button android:visibility=\"gone\" android:layout_gravity=\"left|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingLeft=\"6dp\" android:paddingRight=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\" id=\"action_bar_left\"></button>\n    <button android:visibility=\"gone\" android:layout_gravity=\"right|center_vertical\" android:layout_width=\"wrap_content\" android:background=\"@android:drawable/item_background\" android:textColor=\"@android:color/white\" android:paddingRight=\"6dp\" android:paddingLeft=\"6dp\" android:drawablePadding=\"4dp\" android:minWidth=\"32dp\" android:textSize=\"17sp\" android:singleLine=\"true\" id=\"action_bar_right\"></button>\n</merge>",
             "alert_dialog": "<linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_marginStart=\"8dip\" android:layout_marginEnd=\"8dip\" android:orientation=\"vertical\" id=\"parentPanel\">\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"vertical\" id=\"topPanel\">\n        <view android:layout_width=\"match_parent\" android:layout_height=\"1dip\" android:visibility=\"gone\" android:background=\"#aaa\" id=\"titleDividerTop\"></view>\n        <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"horizontal\" android:gravity=\"center_vertical|start\" android:minHeight=\"64dp\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" id=\"title_template\">\n            <imageview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingEnd=\"8dip\" id=\"icon\"></imageview>\n            <textview android:maxLines=\"1\" android:scrollHorizontally=\"true\" android:textSize=\"22sp\" android:textColor=\"#333\" android:singleLine=\"true\" android:ellipsize=\"end\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:textAlignment=\"viewStart\" id=\"alertTitle\"></textview>\n        </linearlayout>\n        <view android:layout_width=\"match_parent\" android:layout_height=\"1dip\" android:visibility=\"gone\" android:background=\"#aaa\" id=\"titleDivider\"></view>\n        <!-- If the client uses a customTitle, it will be added here. -->\n    </linearlayout>\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_weight=\"1\" android:orientation=\"vertical\" android:minHeight=\"64dp\" id=\"contentPanel\">\n        <scrollview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:clipToPadding=\"false\" id=\"scrollView\">\n            <textview android:textSize=\"18sp\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:paddingStart=\"16dip\" android:paddingEnd=\"16dip\" android:paddingTop=\"8dip\" android:paddingBottom=\"8dip\" id=\"message\"></textview>\n        </scrollview>\n    </linearlayout>\n\n    <framelayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_weight=\"1\" android:minHeight=\"64dp\" id=\"customPanel\">\n        <framelayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" id=\"custom\"></framelayout>\n    </framelayout>\n\n    <linearlayout android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:minHeight=\"48dip\" android:orientation=\"vertical\" android:divider=\"@android:drawable/divider_horizontal\" android:showDividers=\"beginning\" android:dividerPadding=\"0dip\" id=\"buttonPanel\">\n        <linearlayout android:divider=\"@android:drawable/divider_vertical\" android:showDividers=\"middle\" android:dividerPadding=\"0dp\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:orientation=\"horizontal\" android:layoutDirection=\"locale\" android:measureWithLargestChild=\"true\">\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"start\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button2\"></button>\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"center_horizontal\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button3\"></button>\n            <button android:layout_width=\"wrap_content\" android:layout_gravity=\"end\" android:layout_weight=\"1\" android:maxLines=\"2\" android:paddingStart=\"4dp\" android:paddingEnd=\"4dp\" android:background=\"@android:drawable/item_background\" android:textSize=\"14sp\" android:minHeight=\"48dp\" android:layout_height=\"wrap_content\" id=\"button1\"></button>\n        </linearlayout>\n     </linearlayout>\n</linearlayout>",
             "alert_dialog_progress": "<relativelayout android:layout_width=\"wrap_content\" android:layout_height=\"match_parent\">\n    <progressbar style=\"@android:attr/progressBarStyleHorizontal\" android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_marginTop=\"16dip\" android:layout_marginBottom=\"1dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_centerHorizontal=\"true\" id=\"progress\"></progressbar>\n    <textview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingBottom=\"16dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_alignParentStart=\"true\" android:layout_below=\"progress\" id=\"progress_percent\"></textview>\n    <textview android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:paddingBottom=\"16dip\" android:layout_marginStart=\"16dip\" android:layout_marginEnd=\"16dip\" android:layout_alignParentEnd=\"true\" android:layout_below=\"progress\" id=\"progress_number\"></textview>\n</relativelayout>",
             "popup_menu_item_layout": "<linearlayout android:layout_width=\"match_parent\" android:layout_height=\"48dp\" android:minWidth=\"196dip\" android:paddingEnd=\"16dip\">\n\n    <imageview android:visibility=\"gone\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:layout_gravity=\"center_vertical\" android:layout_marginStart=\"8dip\" android:layout_marginEnd=\"-8dip\" android:layout_marginTop=\"8dip\" android:layout_marginBottom=\"8dip\" android:scaleType=\"centerInside\" android:duplicateParentState=\"true\" id=\"icon\"></imageview>\n    \n    <!-- The title and summary have some gap between them, and this 'group' should be centered vertically. -->\n    <relativelayout android:layout_width=\"0dip\" android:layout_weight=\"1\" android:layout_height=\"wrap_content\" android:layout_gravity=\"center_vertical\" android:layout_marginStart=\"16dip\" android:duplicateParentState=\"true\">\n\n        <textview android:layout_width=\"match_parent\" android:layout_height=\"wrap_content\" android:layout_alignParentTop=\"true\" android:layout_alignParentStart=\"true\" android:textColor=\"@android:color/primary_text_dark_disable_only\" android:textSize=\"18sp\" android:singleLine=\"true\" android:duplicateParentState=\"true\" android:ellipsize=\"marquee\" android:fadingEdge=\"horizontal\" android:textAlignment=\"viewStart\" id=\"title\"></textview>\n\n        <textview android:visibility=\"gone\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:layout_below=\"title\" android:layout_alignParentStart=\"true\" android:textColor=\"@android:color/primary_text_dark_disable_only\" android:textSize=\"12sp\" android:singleLine=\"true\" android:duplicateParentState=\"true\" android:textAlignment=\"viewStart\" id=\"shortcut\"></textview>\n\n    </relativelayout>\n\n    <!-- Checkbox, and/or radio button will be inserted here. -->\n    \n</linearlayout>",
@@ -5788,6 +5820,8 @@ var android;
                 return window.setTimeout(callback, 1000 / 60);
             };
         }
+        if (!window.requestAnimationFrame)
+            window.requestAnimationFrame = requestAnimationFrame;
         class MessageQueue {
             static getMessages(h, args, object) {
                 let msgs = [];
@@ -5903,7 +5937,7 @@ var android;
             }
             dispatchMessage(msg) {
                 if (msg.callback != null) {
-                    msg.callback.run.call(msg.callback);
+                    msg.callback.run();
                 }
                 else {
                     if (this.mCallback != null) {
@@ -6359,6 +6393,11 @@ var androidui;
                 this.attributes = new Map();
                 this.stateSpec = state.concat().sort();
             }
+            clone() {
+                let stateAttr = new StateAttr(this.stateSpec);
+                stateAttr.attributes = new Map(this.attributes);
+                return stateAttr;
+            }
             setAttr(name, value) {
                 this.attributes.set(name, value);
             }
@@ -6408,13 +6447,27 @@ var androidui;
                 this.list = [];
                 this.matchedAttrCache = [];
                 this.mView = view;
-                this.optStateAttr([]);
                 let attrMap = new Map();
                 let attributes = Array.from(view.bindElement.attributes);
                 for (let attr of attributes) {
                     attrMap.set(attr.name, attr.value);
                 }
-                this._initStyleAttributes(attrMap, []);
+                let attrMapJSON = JSON.stringify(attrMap);
+                let cachedAttrArray = StateAttrList.CacheMap.get(attrMapJSON);
+                if (cachedAttrArray) {
+                    for (let stateAttr of cachedAttrArray) {
+                        this.list.push(stateAttr.clone());
+                    }
+                }
+                else {
+                    this.optStateAttr([]);
+                    this._initStyleAttributes(attrMap, []);
+                    let cachedAttrArray = [];
+                    for (let stateAttr of this.list) {
+                        cachedAttrArray.push(stateAttr.clone());
+                    }
+                    StateAttrList.CacheMap.set(attrMapJSON, cachedAttrArray);
+                }
             }
             _initStyleAttributes(attrMap, inParseState) {
                 let refStyleValue = attrMap.get('android:style');
@@ -6435,11 +6488,9 @@ var androidui;
                 }
             }
             _initStyleAttr(attrName, attrValue, inParseState) {
-                if (!attrName.startsWith('android:'))
-                    return;
-                attrName = attrName.substring('android:'.length);
-                if (attrName === 'id')
-                    return;
+                if (attrName.startsWith('android:')) {
+                    attrName = attrName.substring('android:'.length);
+                }
                 if (attrName.startsWith('state_')) {
                     let state = attrName.substring('state_'.length);
                     let stateValue = android.view.View['VIEW_STATE_' + state.toUpperCase()];
@@ -6514,6 +6565,7 @@ var androidui;
                 }
             }
         }
+        StateAttrList.CacheMap = new Map();
         attr_1.StateAttrList = StateAttrList;
     })(attr = androidui.attr || (androidui.attr = {}));
 })(androidui || (androidui = {}));
@@ -6528,47 +6580,62 @@ var androidui;
         var Resources = android.content.res.Resources;
         class AttrBinder {
             constructor(host) {
-                this.attrChangeMap = new Map();
-                this.attrStashMap = new Map();
+                this.classAttrBindList = [];
                 this.objectRefs = [];
                 this.host = host;
+            }
+            addClassAttrBind(classAttrBind) {
+                if (classAttrBind) {
+                    this.classAttrBindList.push(classAttrBind);
+                }
             }
             addAttr(attrName, onAttrChange, stashAttrValueWhenStateChange) {
                 if (!attrName)
                     return;
                 attrName = attrName.toLowerCase();
-                if (onAttrChange)
+                if (onAttrChange) {
+                    if (!this.attrChangeMap) {
+                        this.attrChangeMap = new Map();
+                    }
                     this.attrChangeMap.set(attrName, onAttrChange);
-                if (stashAttrValueWhenStateChange)
+                }
+                if (stashAttrValueWhenStateChange) {
+                    this.attrStashMap = new Map();
                     this.attrStashMap.set(attrName, stashAttrValueWhenStateChange);
+                }
             }
             onAttrChange(attrName, attrValue, context) {
                 this.mContext = context;
                 if (!attrName)
                     return;
                 attrName = attrName.toLowerCase();
-                let onAttrChangeCall = this.attrChangeMap.get(attrName);
-                if (onAttrChangeCall)
-                    onAttrChangeCall.call(this.host, attrValue);
+                let onAttrChangeCall = this.attrChangeMap && this.attrChangeMap.get(attrName);
+                if (onAttrChangeCall) {
+                    onAttrChangeCall.call(this.host, attrValue, this.host);
+                }
+                for (let classAttrBind of this.classAttrBindList) {
+                    classAttrBind.callSetter(attrName, this.host, attrValue);
+                }
             }
             getAttrValue(attrName) {
                 if (!attrName)
                     return undefined;
                 attrName = attrName.toLowerCase();
-                let getAttrCall = this.attrStashMap.get(attrName);
+                let getAttrCall = this.attrStashMap && this.attrStashMap.get(attrName);
+                let value;
                 if (getAttrCall) {
-                    let value = getAttrCall.call(this.host);
-                    if (value == null)
-                        return null;
-                    if (typeof value === "number")
-                        return value + '';
-                    if (typeof value === "boolean")
-                        return value + '';
-                    if (typeof value === "string")
-                        return value;
-                    return this.setRefObject(value);
+                    value = getAttrCall.call(this.host);
                 }
-                return undefined;
+                else {
+                    for (let classAttrBind of this.classAttrBindList) {
+                        classAttrBind.callGetter(attrName, this.host);
+                    }
+                }
+                if (value == null)
+                    return null;
+                if (typeof value === "number" || typeof value === "boolean" || typeof value === "string")
+                    return value + '';
+                return this.setRefObject(value);
             }
             getRefObject(ref) {
                 if (ref && ref.startsWith('@ref/')) {
@@ -6731,6 +6798,33 @@ var androidui;
             }
         }
         attr.AttrBinder = AttrBinder;
+        (function (AttrBinder) {
+            class ClassBinderMap extends Map {
+                set(key, value) {
+                    return super.set(key ? key.toLowerCase() : key, value);
+                }
+                get(key) {
+                    return super.get(key ? key.toLowerCase() : key);
+                }
+                callSetter(attrName, host, attrValue) {
+                    if (!attrName)
+                        return;
+                    let value = this.get(attrName.toLowerCase());
+                    if (value) {
+                        value.setter(host, attrValue);
+                    }
+                }
+                callGetter(attrName, host) {
+                    if (!attrName)
+                        return;
+                    let value = this.get(attrName.toLowerCase());
+                    if (value) {
+                        return value.getter(host);
+                    }
+                }
+            }
+            AttrBinder.ClassBinderMap = ClassBinderMap;
+        })(AttrBinder = attr.AttrBinder || (attr.AttrBinder = {}));
     })(attr = androidui.attr || (androidui.attr = {}));
 })(androidui || (androidui = {}));
 var androidui;
@@ -10654,6 +10748,17 @@ var android;
             static get rate_star_small_on_holo_light() { return new ChangeImageSizeDrawable(image.rate_star_big_on_holo_light, 16 * density, 16 * density); }
         }
         R.image = image;
+        R.image_base64.actionbar_ic_back_white;
+        R.image_base64.btn_default_normal_holo_light;
+        R.image_base64.dropdown_background_dark;
+        R.image_base64.editbox_background_normal;
+        R.image_base64.ic_menu_moreoverflow_normal_holo_dark;
+        R.image_base64.menu_panel_holo_dark;
+        R.image_base64.menu_panel_holo_light;
+        R.image_base64.popup_bottom_bright;
+        R.image_base64.popup_center_bright;
+        R.image_base64.popup_full_bright;
+        R.image_base64.popup_top_bright;
     })(R = android.R || (android.R = {}));
 })(android || (android = {}));
 var android;
@@ -11984,308 +12089,390 @@ var android;
                 this.mContext = context;
                 this.mTouchSlop = view_2.ViewConfiguration.get().getScaledTouchSlop();
                 this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-                this.initBindAttr(this._attrBinder);
+                this.initBindAttr();
                 this.initBindElement(bindElement);
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
             }
-            get mLeft() { return this._mLeft; }
+            get mLeft() {
+                return this._mLeft;
+            }
             set mLeft(value) {
                 this._mLeft = Math.floor(value);
                 this.requestSyncBoundToElement();
             }
-            get mRight() { return this._mRight; }
+            get mRight() {
+                return this._mRight;
+            }
             set mRight(value) {
                 this._mRight = Math.floor(value);
                 this.requestSyncBoundToElement();
             }
-            get mTop() { return this._mTop; }
+            get mTop() {
+                return this._mTop;
+            }
             set mTop(value) {
                 this._mTop = Math.floor(value);
                 this.requestSyncBoundToElement();
             }
-            get mBottom() { return this._mBottom; }
+            get mBottom() {
+                return this._mBottom;
+            }
             set mBottom(value) {
                 this._mBottom = Math.floor(value);
                 this.requestSyncBoundToElement();
             }
-            get mScrollX() { return this._mScrollX; }
-            set mScrollX(value) { this._mScrollX = Math.floor(value); }
-            get mScrollY() { return this._mScrollY; }
-            set mScrollY(value) {
-                if (Number.isNaN(value) || value == null) {
-                    console.error('set mScrollY value is ' + value);
-                    value = 0;
-                }
-                this._mScrollY = Math.floor(value);
+            get mScrollX() {
+                return this._mScrollX;
             }
-            initBindAttr(a) {
-                a.addAttr('background', (value) => {
-                    this.setBackground(a.parseDrawable(value));
-                }, () => {
-                    return this.mBackground;
-                });
-                a.addAttr('padding', (value) => {
-                    if (value == null)
-                        value = 0;
-                    let [left, top, right, bottom] = a.parsePaddingMarginLTRB(value);
-                    this._setPaddingWithUnit(left, top, right, bottom);
-                }, () => {
-                    return this.mPaddingTop + ' ' + this.mPaddingRight + ' ' + this.mPaddingBottom + ' ' + this.mPaddingLeft;
-                }),
-                    a.addAttr('paddingLeft', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
-                    }, () => {
-                        return this.mPaddingLeft;
-                    }),
-                    a.addAttr('paddingStart', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
-                    }, () => {
-                        return this.mPaddingLeft;
-                    }),
-                    a.addAttr('paddingTop', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
-                    }, () => {
-                        return this.mPaddingTop;
-                    }),
-                    a.addAttr('paddingRight', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
-                    }, () => {
-                        return this.mPaddingRight;
-                    }),
-                    a.addAttr('paddingEnd', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
-                    }, () => {
-                        return this.mPaddingRight;
-                    }),
-                    a.addAttr('paddingBottom', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
-                    }, () => {
-                        return this.mPaddingBottom;
-                    }),
-                    a.addAttr('scrollX', (value) => {
-                        value = a.parseNumberPixelOffset(value);
-                        if (Number.isInteger(value))
-                            this.scrollTo(value, this.mScrollY);
-                    }, () => {
-                        return this.getScrollX();
-                    }),
-                    a.addAttr('scrollY', (value) => {
-                        value = a.parseNumberPixelOffset(value);
-                        if (Number.isInteger(value))
-                            this.scrollTo(this.mScrollX, value);
-                    }, () => {
-                        return this.getScrollY();
-                    }),
-                    a.addAttr('alpha', (value) => {
-                        this.setAlpha(a.parseFloat(value, this.getAlpha()));
-                    }, () => {
-                        return this.getAlpha();
-                    }),
-                    a.addAttr('transformPivotX', (value) => {
-                        this.setPivotX(a.parseNumberPixelOffset(value, this.getPivotX()));
-                    }, () => {
-                        return this.getPivotX();
-                    }),
-                    a.addAttr('transformPivotY', (value) => {
-                        this.setPivotY(a.parseNumberPixelOffset(value, this.getPivotY()));
-                    }, () => {
-                        return this.getPivotY();
-                    }),
-                    a.addAttr('translationX', (value) => {
-                        this.setTranslationX(a.parseNumberPixelOffset(value, this.getTranslationX()));
-                    }, () => {
-                        return this.getTranslationX();
-                    }),
-                    a.addAttr('translationY', (value) => {
-                        this.setTranslationY(a.parseNumberPixelOffset(value, this.getTranslationY()));
-                    }, () => {
-                        return this.getTranslationY();
-                    }),
-                    a.addAttr('rotation', (value) => {
-                        this.setRotation(a.parseFloat(value, this.getRotation()));
-                    }, () => {
-                        return this.getRotation();
-                    }),
-                    a.addAttr('rotationX', (value) => {
-                    }),
-                    a.addAttr('rotationY', (value) => {
-                    }),
-                    a.addAttr('scaleX', (value) => {
-                        this.setScaleX(a.parseFloat(value, this.getScaleX()));
-                    }, () => {
-                        return this.getScaleX();
-                    }),
-                    a.addAttr('scaleY', (value) => {
-                        this.setScaleY(a.parseFloat(value, this.getScaleY()));
-                    }, () => {
-                        return this.getScaleY();
-                    }),
-                    a.addAttr('tag', (value) => {
-                        this.setTag(value);
-                    }),
-                    a.addAttr('id', (value) => {
-                        this.setId(value);
-                    }),
-                    a.addAttr('focusable', (value) => {
-                        if (a.parseBoolean(value, false)) {
-                            this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+            set mScrollX(value) {
+                this._mScrollX = Math.floor(value);
+                this.requestSyncBoundToElement();
+            }
+            get mScrollY() {
+                return this._mScrollY;
+            }
+            set mScrollY(value) {
+                this._mScrollY = Math.floor(value);
+                this.requestSyncBoundToElement();
+            }
+            initBindAttr() {
+                if (!View.ViewClassAttrBinder) {
+                    View.ViewClassAttrBinder = new AttrBinder.ClassBinderMap();
+                    View.ViewClassAttrBinder.set('background', {
+                        setter(v, value) { v.setBackground(v._attrBinder.parseDrawable(value)); },
+                        getter(v) { return v.mBackground; },
+                    }).set('padding', {
+                        setter(v, value) {
+                            if (value == null)
+                                value = 0;
+                            let [left, top, right, bottom] = v._attrBinder.parsePaddingMarginLTRB(value);
+                            v._setPaddingWithUnit(left, top, right, bottom);
+                        },
+                        getter(v) { return v.mPaddingTop + ' ' + v.mPaddingRight + ' ' + v.mPaddingBottom + ' ' + v.mPaddingLeft; },
+                    }).set('paddingLeft', {
+                        setter(v, value) {
+                            if (value == null)
+                                value = 0;
+                            v._setPaddingWithUnit(value, v.mPaddingTop, v.mPaddingRight, v.mPaddingBottom);
+                        },
+                        getter(v) { return v.mPaddingLeft; },
+                    }).set('paddingTop', {
+                        setter(v, value) {
+                            if (value == null)
+                                value = 0;
+                            v._setPaddingWithUnit(v.mPaddingLeft, value, v.mPaddingRight, v.mPaddingBottom);
+                        },
+                        getter(v) { return v.mPaddingTop; },
+                    }).set('paddingRight', {
+                        setter(v, value) {
+                            if (value == null)
+                                value = 0;
+                            v._setPaddingWithUnit(v.mPaddingLeft, v.mPaddingTop, value, v.mPaddingBottom);
+                        },
+                        getter(v) { return v.mPaddingRight; },
+                    }).set('paddingBottom', {
+                        setter(v, value) {
+                            if (value == null)
+                                value = 0;
+                            v._setPaddingWithUnit(v.mPaddingLeft, v.mPaddingTop, v.mPaddingRight, value);
+                        },
+                        getter(v) { return v.mPaddingBottom; },
+                    }).set('scrollX', {
+                        setter(v, value) {
+                            value = v._attrBinder.parseNumberPixelOffset(value);
+                            if (Number.isInteger(value))
+                                v.scrollTo(value, v.mScrollY);
+                        },
+                        getter(v) { v.getScrollX(); },
+                    }).set('scrollY', {
+                        setter(v, value) {
+                            value = v._attrBinder.parseNumberPixelOffset(value);
+                            if (Number.isInteger(value))
+                                v.scrollTo(v.mScrollX, value);
+                        },
+                        getter(v) { return v.getScrollY(); },
+                    }).set('alpha', {
+                        setter(v, value) {
+                            v.setAlpha(v._attrBinder.parseFloat(value, v.getAlpha()));
+                        },
+                        getter(v) { return v.getAlpha(); },
+                    }).set('transformPivotX', {
+                        setter(v, value) {
+                            v.setPivotX(v._attrBinder.parseNumberPixelOffset(value, v.getPivotX()));
+                        },
+                        getter(v) { return v.getPivotX(); },
+                    }).set('transformPivotY', {
+                        setter(v, value) {
+                            v.setPivotY(v._attrBinder.parseNumberPixelOffset(value, v.getPivotY()));
+                        },
+                        getter(v) { return v.getPivotY(); },
+                    }).set('translationX', {
+                        setter(v, value) {
+                            v.setTranslationX(v._attrBinder.parseNumberPixelOffset(value, v.getTranslationX()));
+                        },
+                        getter(v) {
+                            return v.getTranslationX();
+                        },
+                    }).set('translationY', {
+                        setter(v, value) {
+                            v.setTranslationY(v._attrBinder.parseNumberPixelOffset(value, v.getTranslationY()));
+                        },
+                        getter(v) {
+                            return v.getTranslationY();
+                        },
+                    }).set('rotation', {
+                        setter(v, value) {
+                            v.setRotation(v._attrBinder.parseFloat(value, v.getRotation()));
+                        },
+                        getter(v) {
+                            return v.getRotation();
+                        },
+                    }).set('scaleX', {
+                        setter(v, value) {
+                            v.setScaleX(v._attrBinder.parseFloat(value, v.getScaleX()));
+                        },
+                        getter(v) {
+                            return v.getScaleX();
+                        },
+                    }).set('scaleY', {
+                        setter(v, value) {
+                            v.setScaleY(v._attrBinder.parseFloat(value, v.getScaleY()));
+                        },
+                        getter(v) {
+                            return v.getScaleY();
+                        },
+                    }).set('tag', {
+                        setter(v, value) {
+                            v.setTag(value);
+                        },
+                        getter(v) {
+                            return v.getTag();
+                        },
+                    }).set('id', {
+                        setter(v, value) {
+                            v.setId(value);
+                        },
+                        getter(v) {
+                            return v.getId();
+                        },
+                    }).set('focusable', {
+                        setter(v, value) {
+                            if (v._attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                            }
+                        },
+                        getter(v) {
+                            return v.isFocusable();
+                        },
+                    }).set('focusableInTouchMode', {
+                        setter(v, value) {
+                            if (v._attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE, View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                            }
+                        },
+                        getter(v) {
+                            return v.isFocusableInTouchMode();
+                        },
+                    }).set('clickable', {
+                        setter(v, value) {
+                            if (v._attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.CLICKABLE, View.CLICKABLE);
+                            }
+                        },
+                        getter(v) {
+                            return v.isClickable();
+                        },
+                    }).set('longClickable', {
+                        setter(v, value) {
+                            if (v._attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
+                            }
+                        },
+                        getter(v) {
+                            return v.isLongClickable();
+                        },
+                    }).set('duplicateParentState', {
+                        setter(v, value) {
+                            if (v._attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
+                            }
+                        },
+                        getter(v) {
+                            return (v.mViewFlags & View.DUPLICATE_PARENT_STATE) == View.DUPLICATE_PARENT_STATE;
+                        },
+                    }).set('visibility', {
+                        setter(v, value) {
+                            if (value === 'gone')
+                                v.setVisibility(View.GONE);
+                            else if (value === 'invisible')
+                                v.setVisibility(View.INVISIBLE);
+                            else if (value === 'visible')
+                                v.setVisibility(View.VISIBLE);
+                        },
+                        getter(v) {
+                            return v.getVisibility();
+                        },
+                    }).set('scrollbars', {
+                        setter(v, value) {
+                            if (value === 'none') {
+                                v.setHorizontalScrollBarEnabled(false);
+                                v.setVerticalScrollBarEnabled(false);
+                            }
+                            else if (value === 'horizontal') {
+                                v.setHorizontalScrollBarEnabled(true);
+                                v.setVerticalScrollBarEnabled(false);
+                            }
+                            else if (value === 'vertical') {
+                                v.setHorizontalScrollBarEnabled(false);
+                                v.setVerticalScrollBarEnabled(true);
+                            }
+                        },
+                    }).set('isScrollContainer', {
+                        setter(v, value) {
+                            if (v._attrBinder.parseBoolean(value, false)) {
+                                v.setScrollContainer(true);
+                            }
+                        },
+                        getter(v) {
+                            return v.isScrollContainer();
+                        },
+                    }).set('minWidth', {
+                        setter(v, value) {
+                            v.setMinimumWidth(v._attrBinder.parseNumberPixelSize(value, 0));
+                        },
+                        getter(v) {
+                            return v.mMinWidth;
+                        },
+                    }).set('minHeight', {
+                        setter(v, value) {
+                            v.setMinimumHeight(v._attrBinder.parseNumberPixelSize(value, 0));
+                        },
+                        getter(v) {
+                            return v.mMinHeight;
+                        },
+                    }).set('onClick', {
+                        setter(v, value) {
+                            if (value && typeof value === 'string') {
+                                v.setOnClickListener((view) => {
+                                    try {
+                                        let activityClickMethod = view.getContext()[value];
+                                        if (typeof activityClickMethod === 'function') {
+                                            activityClickMethod.call(view.getContext(), view);
+                                            return;
+                                        }
+                                    }
+                                    catch (e) {
+                                    }
+                                    try {
+                                        new Function(value).call(view);
+                                    }
+                                    catch (e) {
+                                    }
+                                });
+                            }
+                            v.bindElement.removeAttribute('onclick');
+                        },
+                    }).set('overScrollMode', {
+                        setter(v, value) {
+                            let scrollMode = View[('OVER_SCROLL_' + value).toUpperCase()];
+                            if (scrollMode === undefined)
+                                scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                            v.setOverScrollMode(scrollMode);
                         }
-                    }, () => {
-                        return this.isFocusable();
-                    }),
-                    a.addAttr('focusableInTouchMode', (value) => {
-                        if (a.parseBoolean(value, false)) {
-                            this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE, View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                    }).set('layerType', {
+                        setter(v, value) {
+                            if ((value + '').toLowerCase() == 'software') {
+                                v.setLayerType(View.LAYER_TYPE_SOFTWARE);
+                            }
+                            else {
+                                v.setLayerType(View.LAYER_TYPE_NONE);
+                            }
                         }
-                    }, () => {
-                        return this.isFocusableInTouchMode();
-                    }),
-                    a.addAttr('clickable', (value) => {
-                        if (a.parseBoolean(value, false)) {
-                            this.setFlags(View.CLICKABLE, View.CLICKABLE);
-                        }
-                    }, () => {
-                        return this.isClickable();
-                    }),
-                    a.addAttr('longClickable', (value) => {
-                        if (a.parseBoolean(value, false)) {
-                            this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
-                        }
-                    }, () => {
-                        return this.isLongClickable();
-                    }),
-                    a.addAttr('saveEnabled', (value) => {
-                        if (a.parseBoolean(value, false)) {
-                        }
-                    }),
-                    a.addAttr('duplicateParentState', (value) => {
-                        if (a.parseBoolean(value, false)) {
-                            this.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
-                        }
-                    }),
-                    a.addAttr('visibility', (value) => {
-                        if (value === 'gone')
-                            this.setVisibility(View.GONE);
-                        else if (value === 'invisible')
-                            this.setVisibility(View.INVISIBLE);
-                        else if (value === 'visible')
-                            this.setVisibility(View.VISIBLE);
-                    }, () => {
-                        return this.getVisibility();
-                    }),
-                    a.addAttr('scrollbars', (value) => {
-                        if (value === 'none') {
-                            this.setHorizontalScrollBarEnabled(false);
-                            this.setVerticalScrollBarEnabled(false);
-                        }
-                    }),
-                    a.addAttr('isScrollContainer', (value) => {
-                        if (a.parseBoolean(value, false)) {
-                            this.setScrollContainer(true);
-                        }
-                    }),
-                    a.addAttr('minWidth', (value) => {
-                        this.setMinimumWidth(a.parseNumberPixelSize(value, 0));
-                    }, () => {
-                        return this.mMinWidth;
-                    }),
-                    a.addAttr('minHeight', (value) => {
-                        this.setMinimumHeight(a.parseNumberPixelSize(value, 0));
-                    }, () => {
-                        return this.mMinHeight;
-                    }),
-                    a.addAttr('onClick', (value) => {
-                        if (a.parseBoolean(value))
-                            this.setClickable(true);
-                    }),
-                    a.addAttr('overScrollMode', (value) => {
-                        let scrollMode = View[('OVER_SCROLL_' + value).toUpperCase()];
-                        if (scrollMode === undefined)
-                            scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
-                        this.setOverScrollMode(scrollMode);
-                    }),
-                    a.addAttr('layerType', (value) => {
-                        if ((value + '').toLowerCase() == 'software') {
-                            this.setLayerType(View.LAYER_TYPE_SOFTWARE);
-                        }
-                        else {
-                            this.setLayerType(View.LAYER_TYPE_NONE);
-                        }
+                    }).set('cornerRadius', {
+                        setter(v, value) {
+                            let [leftTop, topRight, rightBottom, bottomLeft] = v._attrBinder.parsePaddingMarginLTRB(value);
+                            v.setCornerRadius(v._attrBinder.parseNumberPixelSize(leftTop, 0), v._attrBinder.parseNumberPixelSize(topRight, 0), v._attrBinder.parseNumberPixelSize(rightBottom, 0), v._attrBinder.parseNumberPixelSize(bottomLeft, 0));
+                        },
+                        getter(v) {
+                            return v.mCornerRadiusTopLeft + ' ' + v.mCornerRadiusTopRight + ' ' + v.mCornerRadiusBottomRight + ' ' + v.mCornerRadiusBottomLeft;
+                        },
+                    }).set('cornerRadiusTopLeft', {
+                        setter(v, value) {
+                            v.setCornerRadiusTopLeft(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusTopLeft));
+                        },
+                        getter(v) {
+                            return v.mCornerRadiusTopLeft;
+                        },
+                    }).set('cornerRadiusTopRight', {
+                        setter(v, value) {
+                            v.setCornerRadiusTopRight(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusTopRight));
+                        },
+                        getter(v) {
+                            return v.mCornerRadiusTopRight;
+                        },
+                    }).set('cornerRadiusBottomLeft', {
+                        setter(v, value) {
+                            v.setCornerRadiusBottomLeft(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusBottomLeft));
+                        },
+                        getter(v) {
+                            return v.mCornerRadiusBottomLeft;
+                        },
+                    }).set('cornerRadiusBottomRight', {
+                        setter(v, value) {
+                            v.setCornerRadiusBottomRight(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusBottomRight));
+                        },
+                        getter(v) {
+                            return v.mCornerRadiusBottomRight;
+                        },
+                    }).set('viewShadowColor', {
+                        setter(v, value) {
+                            if (!v.mShadowPaint)
+                                v.mShadowPaint = new Paint();
+                            v.setShadowView(v.mShadowPaint.shadowRadius, v.mShadowPaint.shadowDx, v.mShadowPaint.shadowDy, v._attrBinder.parseColor(value, v.mShadowPaint.shadowColor));
+                        },
+                        getter(v) {
+                            if (v.mShadowPaint)
+                                return v.mShadowPaint.shadowColor;
+                        },
+                    }).set('viewShadowDx', {
+                        setter(v, value) {
+                            if (!v.mShadowPaint)
+                                v.mShadowPaint = new Paint();
+                            let dx = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowDx);
+                            v.setShadowView(v.mShadowPaint.shadowRadius, dx, v.mShadowPaint.shadowDy, v.mShadowPaint.shadowColor);
+                        },
+                        getter(v) {
+                            if (v.mShadowPaint)
+                                return v.mShadowPaint.shadowDx;
+                        },
+                    }).set('viewShadowDy', {
+                        setter(v, value) {
+                            if (!v.mShadowPaint)
+                                v.mShadowPaint = new Paint();
+                            let dy = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowDy);
+                            v.setShadowView(v.mShadowPaint.shadowRadius, v.mShadowPaint.shadowDx, dy, v.mShadowPaint.shadowColor);
+                        },
+                        getter(v) {
+                            if (v.mShadowPaint)
+                                return v.mShadowPaint.shadowDy;
+                        },
+                    }).set('viewShadowRadius', {
+                        setter(v, value) {
+                            if (!v.mShadowPaint)
+                                v.mShadowPaint = new Paint();
+                            let radius = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowRadius);
+                            v.setShadowView(radius, v.mShadowPaint.shadowDx, v.mShadowPaint.shadowDy, v.mShadowPaint.shadowColor);
+                        },
+                        getter(v) {
+                            if (v.mShadowPaint)
+                                return v.mShadowPaint.shadowRadius;
+                        },
                     });
-                a.addAttr('cornerRadius', (value) => {
-                    let [leftTop, topRight, rightBottom, bottomLeft] = a.parsePaddingMarginLTRB(value);
-                    this.setCornerRadius(a.parseNumberPixelSize(leftTop, 0), a.parseNumberPixelSize(topRight, 0), a.parseNumberPixelSize(rightBottom, 0), a.parseNumberPixelSize(bottomLeft, 0));
-                }, () => {
-                    return this.mCornerRadiusTopLeft + ' ' + this.mCornerRadiusTopRight + ' ' + this.mCornerRadiusBottomRight + ' ' + this.mCornerRadiusBottomLeft;
-                });
-                a.addAttr('cornerRadiusTopLeft', (value) => {
-                    this.setCornerRadiusTopLeft(a.parseNumberPixelSize(value, this.mCornerRadiusTopLeft));
-                }, () => {
-                    return this.mCornerRadiusTopLeft;
-                });
-                a.addAttr('cornerRadiusTopRight', (value) => {
-                    this.setCornerRadiusTopRight(a.parseNumberPixelSize(value, this.mCornerRadiusTopRight));
-                }, () => {
-                    return this.mCornerRadiusTopRight;
-                });
-                a.addAttr('cornerRadiusBottomLeft', (value) => {
-                    this.setCornerRadiusBottomLeft(a.parseNumberPixelSize(value, this.mCornerRadiusBottomLeft));
-                }, () => {
-                    return this.mCornerRadiusBottomLeft;
-                });
-                a.addAttr('cornerRadiusBottomRight', (value) => {
-                    this.setCornerRadiusBottomRight(a.parseNumberPixelSize(value, this.mCornerRadiusBottomRight));
-                }, () => {
-                    return this.mCornerRadiusBottomRight;
-                });
-                a.addAttr('viewShadowColor', (value) => {
-                    if (!this.mShadowPaint)
-                        this.mShadowPaint = new Paint();
-                    this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy, a.parseColor(value, this.mShadowPaint.shadowColor));
-                }, () => {
-                    if (this.mShadowPaint)
-                        return this.mShadowPaint.shadowColor;
-                });
-                a.addAttr('viewShadowDx', (value) => {
-                    if (!this.mShadowPaint)
-                        this.mShadowPaint = new Paint();
-                    let dx = this._attrBinder.parseNumberPixelSize(value, this.mShadowPaint.shadowDx);
-                    this.setShadowView(this.mShadowPaint.shadowRadius, dx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
-                }, () => {
-                    if (this.mShadowPaint)
-                        return this.mShadowPaint.shadowDx;
-                });
-                a.addAttr('viewShadowDy', (value) => {
-                    if (!this.mShadowPaint)
-                        this.mShadowPaint = new Paint();
-                    let dy = a.parseNumberPixelSize(value, this.mShadowPaint.shadowDy);
-                    this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, dy, this.mShadowPaint.shadowColor);
-                }, () => {
-                    if (this.mShadowPaint)
-                        return this.mShadowPaint.shadowDy;
-                });
-                a.addAttr('viewShadowRadius', (value) => {
-                    if (!this.mShadowPaint)
-                        this.mShadowPaint = new Paint();
-                    let radius = this._attrBinder.parseNumberPixelSize(value, this.mShadowPaint.shadowRadius);
-                    this.setShadowView(radius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
-                }, () => {
-                    if (this.mShadowPaint)
-                        return this.mShadowPaint.shadowRadius;
-                });
+                    View.ViewClassAttrBinder.set('paddingStart', View.ViewClassAttrBinder.get('paddingLeft'));
+                    View.ViewClassAttrBinder.set('paddingEnd', View.ViewClassAttrBinder.get('paddingRight'));
+                }
+                this._attrBinder.addClassAttrBind(View.ViewClassAttrBinder);
             }
             getContext() {
                 if (this.mContext == null && this.mAttachInfo != null) {
@@ -13575,7 +13762,13 @@ var android;
                                         if (this.mPerformClick == null) {
                                             this.mPerformClick = new PerformClick(this);
                                         }
-                                        if (!this.post(this.mPerformClick)) {
+                                        if (prepressed) {
+                                            if (this.mPerformClickAfterPressDraw == null) {
+                                                this.mPerformClickAfterPressDraw = new PerformClickAfterPressDraw(this);
+                                            }
+                                            this.post(this.mPerformClickAfterPressDraw);
+                                        }
+                                        else if (!this.post(this.mPerformClick)) {
                                             this.performClick(event);
                                         }
                                     }
@@ -13661,6 +13854,9 @@ var android;
             removePerformClickCallback() {
                 if (this.mPerformClick != null) {
                     this.removeCallbacks(this.mPerformClick);
+                }
+                if (this.mPerformClickAfterPressDraw != null) {
+                    this.removeCallbacks(this.mPerformClickAfterPressDraw);
                 }
             }
             removeUnsetPressCallback() {
@@ -13751,16 +13947,12 @@ var android;
                 return false;
             }
             performClick(event) {
-                let handle = false;
-                if (this.bindElementOnClickAttr) {
-                    handle = eval(this.bindElementOnClickAttr);
-                }
                 let li = this.mListenerInfo;
                 if (li != null && li.mOnClickListener != null) {
                     li.mOnClickListener.onClick(this);
-                    handle = true;
+                    return true;
                 }
-                return handle;
+                return false;
             }
             callOnClick() {
                 let li = this.mListenerInfo;
@@ -14924,7 +15116,9 @@ var android;
                     const restoreCount = canvas.save();
                     canvas.translate(-this.mScrollX, -this.mScrollY);
                     this.mPrivateFlags |= View.PFLAG_DRAWN;
-                    this.mPrivateFlags |= View.PFLAG_DRAWING_CACHE_VALID;
+                    if (this.mAttachInfo == null || this.mLayerType != View.LAYER_TYPE_NONE) {
+                        this.mPrivateFlags |= View.PFLAG_DRAWING_CACHE_VALID;
+                    }
                     if ((this.mPrivateFlags & View.PFLAG_SKIP_DRAW) == View.PFLAG_SKIP_DRAW) {
                         this.mPrivateFlags &= ~View.PFLAG_DIRTY_MASK;
                         this.dispatchDraw(canvas);
@@ -15701,10 +15895,6 @@ var android;
                     this.bindElement[View.AndroidViewProperty] = null;
                 }
                 this.bindElement = bindElement || document.createElement(this.tagName());
-                this.bindElementOnClickAttr = this.bindElement.getAttribute('onclick') || this.bindElement.getAttribute('android:onclick');
-                this.bindElement.removeAttribute('onclick');
-                if (this.bindElementOnClickAttr)
-                    this.setClickable(true);
                 this.bindElement.style.position = 'absolute';
                 let oldBindView = this.bindElement[View.AndroidViewProperty];
                 if (oldBindView) {
@@ -15713,7 +15903,6 @@ var android;
                 }
                 this.bindElement[View.AndroidViewProperty] = this;
                 this._stateAttrList = new StateAttrList(this);
-                this._parseInitedAttribute();
                 this._initAttrObserver();
             }
             requestSyncBoundToElement(immediately = this.dependOnDebugLayout()) {
@@ -15765,10 +15954,13 @@ var android;
                     this._lastSyncScrollY = pScrollY;
                     const density = this.getResources().getDisplayMetrics().density;
                     let bind = this.bindElement;
-                    bind.style.left = (left - pScrollX) / density + 'px';
-                    bind.style.top = (top - pScrollY) / density + 'px';
                     bind.style.width = width / density + 'px';
                     bind.style.height = height / density + 'px';
+                    bind.style.left = (left - pScrollX) / density + 'px';
+                    bind.style.top = (top - pScrollY) / density + 'px';
+                    if (bind.parentElement) {
+                        bind.parentElement.scrollTop = 0;
+                    }
                     this.getMatrix();
                 }
                 if (this instanceof view_2.ViewGroup) {
@@ -15815,21 +16007,9 @@ var android;
                     this._AttrObserver.disconnect();
                 this._AttrObserver.observe(this.bindElement, { attributes: true, attributeOldValue: true });
             }
-            _parseInitedAttribute() {
-                for (let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()) {
-                    key = 'android:' + key;
-                    this.bindElement.removeAttribute(key);
-                    if (value != null) {
-                        this.bindElement.setAttribute(key, value);
-                    }
-                }
-                let id = this.bindElement.getAttribute('android:id');
-                if (id)
-                    this.bindElement.id = id;
-            }
             _fireInitedAttributeChange() {
-                for (let attr of Array.from(this.bindElement.attributes)) {
-                    this.onBindElementAttributeChanged(attr.name, null, attr.value);
+                for (let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()) {
+                    this.onBindElementAttributeChanged(key, null, value);
                 }
             }
             _fireStateChangeToAttribute(oldState, newState) {
@@ -15881,27 +16061,10 @@ var android;
                 }
                 this._attrBinder.onAttrChange(attrName, newVal, this.getContext());
             }
-            hasAttributeIgnoreCase(name) {
-                return this.getAttributeIgnoreCase(name) != null;
-            }
-            getAttributeIgnoreCase(name) {
-                if (!(typeof name === 'string'))
-                    return null;
-                name = name.toLowerCase();
-                if (name.startsWith('android:'))
-                    name = name.substring('android:'.length);
-                for (let attr of Array.from(this.bindElement.attributes)) {
-                    let attrName = attr.name.toLowerCase();
-                    if (attrName.startsWith('android:'))
-                        attrName = attrName.substring('android:'.length);
-                    if (attrName == name)
-                        return attr.value;
-                }
-                return null;
-            }
             applyDefaultAttributes(attrs) {
+                let initAttrMap = this._stateAttrList.getDefaultStateAttr().getAttrMap();
                 for (let key in attrs) {
-                    if (!this.hasAttributeIgnoreCase(key)) {
+                    if (!initAttrMap.has(key.toLowerCase())) {
                         this._attrBinder.onAttrChange(key, attrs[key], this.getContext());
                     }
                 }
@@ -16284,6 +16447,14 @@ var android;
                 this.View_this.performClick();
             }
         }
+        class PerformClickAfterPressDraw {
+            constructor(View_this) {
+                this.View_this = View_this;
+            }
+            run() {
+                this.View_this.post(this.View_this.mPerformClick);
+            }
+        }
         class UnsetPressedState {
             constructor(View_this) {
                 this.View_this = View_this;
@@ -16431,7 +16602,7 @@ var android;
                 this.mCanvasElement = canvasElement;
                 this._mCanvasContent = this.mCanvasElement.getContext("2d");
             }
-            initImpl() {
+            initCanvasImpl() {
             }
         }
     })(view = android.view || (android.view = {}));
@@ -17949,6 +18120,7 @@ var android;
         var ArrayList = java.util.ArrayList;
         var Integer = java.lang.Integer;
         var Transformation = view_5.animation.Transformation;
+        var AttrBinder = androidui.attr.AttrBinder;
         class ViewGroup extends view_5.View {
             constructor(context, bindElement, defStyle) {
                 super(context, bindElement, defStyle);
@@ -17963,57 +18135,73 @@ var android;
                 this.mLayoutCalledWhileSuppressed = false;
                 this.mChildCountWithTransientState = 0;
                 this.initViewGroup();
-                const a = this._attrBinder;
-                a.addAttr('clipChildren', (value) => {
-                    this.setClipChildren(a.parseBoolean(value));
-                }, () => {
-                    return this.getClipChildren();
-                });
-                a.addAttr('clipToPadding', (value) => {
-                    this.setClipToPadding(a.parseBoolean(value));
-                }, () => {
-                    return this.isClipToPadding();
-                });
-                a.addAttr('animationCache', (value) => {
-                    this.setAnimationCacheEnabled(a.parseBoolean(value, true));
-                });
-                a.addAttr('persistentDrawingCache', (value) => {
-                    if (value == 'none')
-                        this.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
-                    else if (value == 'animation')
-                        this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
-                    else if (value == 'scrolling')
-                        this.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
-                    else if (value == 'all')
-                        this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
-                });
-                a.addAttr('addStatesFromChildren', (value) => {
-                    this.setAddStatesFromChildren(a.parseBoolean(value, false));
-                });
-                a.addAttr('alwaysDrawnWithCache', (value) => {
-                    this.setAlwaysDrawnWithCacheEnabled(a.parseBoolean(value, true));
-                });
-                a.addAttr('descendantFocusability', (value) => {
-                    if (value == 'beforeDescendants')
-                        this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
-                    else if (value == 'afterDescendants')
-                        this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-                    else if (value == 'blocksDescendants')
-                        this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-                });
-                a.addAttr('splitMotionEvents', (value) => {
-                    this.setMotionEventSplittingEnabled(a.parseBoolean(value, false));
-                });
             }
             get mChildrenCount() {
                 return this.mChildren.length;
+            }
+            initBindAttr() {
+                super.initBindAttr();
+                if (!ViewGroup.ViewGroupClassAttrBind) {
+                    ViewGroup.ViewGroupClassAttrBind = new AttrBinder.ClassBinderMap();
+                    ViewGroup.ViewGroupClassAttrBind.set('clipChildren', {
+                        setter(v, value) {
+                            v.setClipChildren(v._attrBinder.parseBoolean(value));
+                        },
+                        getter(v) {
+                            return v.getClipChildren();
+                        }
+                    }).set('clipToPadding', {
+                        setter(v, value) {
+                            v.setClipToPadding(v._attrBinder.parseBoolean(value));
+                        },
+                        getter(v) {
+                            return v.isClipToPadding();
+                        }
+                    }).set('animationCache', {
+                        setter(v, value) {
+                            v.setAnimationCacheEnabled(v._attrBinder.parseBoolean(value, true));
+                        }
+                    }).set('persistentDrawingCache', {
+                        setter(v, value) {
+                            if (value === 'none')
+                                v.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
+                            else if (value === 'animation')
+                                v.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
+                            else if (value === 'scrolling')
+                                v.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
+                            else if (value === 'all')
+                                v.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
+                        }
+                    }).set('addStatesFromChildren', {
+                        setter(v, value) {
+                            v.setAddStatesFromChildren(v._attrBinder.parseBoolean(value, false));
+                        }
+                    }).set('alwaysDrawnWithCache', {
+                        setter(v, value) {
+                            v.setAlwaysDrawnWithCacheEnabled(v._attrBinder.parseBoolean(value, true));
+                        }
+                    }).set('descendantFocusability', {
+                        setter(v, value) {
+                            if (value == 'beforeDescendants')
+                                this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                            else if (value == 'afterDescendants')
+                                this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+                            else if (value == 'blocksDescendants')
+                                this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+                        }
+                    }).set('splitMotionEvents', {
+                        setter(v, value) {
+                            v.setMotionEventSplittingEnabled(v._attrBinder.parseBoolean(value, false));
+                        }
+                    });
+                }
+                this._attrBinder.addClassAttrBind(ViewGroup.ViewGroupClassAttrBind);
             }
             initViewGroup() {
                 this.setFlags(view_5.View.WILL_NOT_DRAW, view_5.View.DRAW_MASK);
                 this.mGroupFlags |= ViewGroup.FLAG_CLIP_CHILDREN;
                 this.mGroupFlags |= ViewGroup.FLAG_CLIP_TO_PADDING;
                 this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_DONE;
-                this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_CACHE;
                 this.mGroupFlags |= ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE;
                 this.mGroupFlags |= ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
                 this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
@@ -19503,6 +19691,7 @@ var android;
                         location[1] = top;
                         if (this.mLayerType != view_5.View.LAYER_TYPE_NONE) {
                             this.mPrivateFlags |= view_5.View.PFLAG_INVALIDATED;
+                            this.mLocalDirtyRect.union(dirty);
                         }
                         return this.mParent;
                     }
@@ -19518,6 +19707,7 @@ var android;
                         }
                         if (this.mLayerType != view_5.View.LAYER_TYPE_NONE) {
                             this.mPrivateFlags |= view_5.View.PFLAG_INVALIDATED;
+                            this.mLocalDirtyRect.union(dirty);
                         }
                         return this.mParent;
                     }
@@ -19528,6 +19718,9 @@ var android;
                 let parent = this;
                 const attachInfo = this.mAttachInfo;
                 if (attachInfo != null) {
+                    if (child.mLayerType != view_5.View.LAYER_TYPE_NONE) {
+                        child.mLocalDirtyRect.union(dirty);
+                    }
                     let left = child.mLeft;
                     let top = child.mTop;
                     if (!child.getMatrix().isIdentity()) {
@@ -19565,6 +19758,7 @@ var android;
                     if ((this.mGroupFlags & ViewGroup.FLAG_CLIP_CHILDREN) == 0 ||
                         dirty.intersect(0, 0, this.mRight - this.mLeft, this.mBottom - this.mTop)) {
                         if (this.mLayerType != view_5.View.LAYER_TYPE_NONE) {
+                            this.mLocalDirtyRect.union(dirty);
                         }
                         if (!this.getMatrix().isIdentity()) {
                             this.transformRect(dirty);
@@ -19689,6 +19883,7 @@ var android;
         ViewGroup.CLIP_TO_PADDING_MASK = ViewGroup.FLAG_CLIP_TO_PADDING | ViewGroup.FLAG_PADDING_NOT_NULL;
         view_5.ViewGroup = ViewGroup;
         (function (ViewGroup) {
+            var AttrBinder = androidui.attr.AttrBinder;
             class LayoutParams {
                 constructor(...args) {
                     this._width = 0;
@@ -19707,20 +19902,29 @@ var android;
                     }
                     if (!this._attrBinder) {
                         this._attrBinder = new androidui.attr.AttrBinder(this);
-                        this._attrBinder.addAttr('width', (value) => {
-                            if (value == null)
-                                value = -2;
-                            this.width = value;
-                        }, () => {
-                            return this._widthOrig;
-                        });
-                        this._attrBinder.addAttr('height', (value) => {
-                            if (value == null)
-                                value = -2;
-                            this.height = value;
-                        }, () => {
-                            return this._heightOrig;
-                        });
+                        if (!LayoutParams.ViewGroupParamClassAttrBind) {
+                            LayoutParams.ViewGroupParamClassAttrBind = new AttrBinder.ClassBinderMap();
+                            LayoutParams.ViewGroupParamClassAttrBind.set('width', {
+                                setter(host, value) {
+                                    if (value == null)
+                                        value = -2;
+                                    host.width = value;
+                                },
+                                getter(host) {
+                                    return host._widthOrig;
+                                }
+                            }).set('height', {
+                                setter(host, value) {
+                                    if (value == null)
+                                        value = -2;
+                                    host.height = value;
+                                },
+                                getter(host) {
+                                    return host._heightOrig;
+                                }
+                            });
+                        }
+                        this._attrBinder.addClassAttrBind(LayoutParams.ViewGroupParamClassAttrBind);
                     }
                 }
                 get width() {
@@ -19779,8 +19983,10 @@ var android;
                 }
                 parseAttributeFrom(node, context) {
                     Array.from(node.attributes).forEach((attr) => {
-                        let layoutParamFiled = attr.name.split("layout_")[1];
-                        this._attrBinder.onAttrChange(layoutParamFiled, attr.value, context);
+                        let layoutParamFiled = attr.name.startsWith('layout_') && attr.name.substring('layout_'.length);
+                        if (layoutParamFiled) {
+                            this._attrBinder.onAttrChange(layoutParamFiled, attr.value, context);
+                        }
                     });
                 }
             }
@@ -19808,57 +20014,75 @@ var android;
                             this.bottomMargin = src._bottomMargin;
                         }
                     }
-                    this._attrBinder.addAttr('marginLeft', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this.leftMargin = value;
-                    }, () => {
-                        return this._leftMarginOrig;
-                    });
-                    this._attrBinder.addAttr('marginStart', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this.leftMargin = value;
-                    }, () => {
-                        return this._leftMarginOrig;
-                    });
-                    this._attrBinder.addAttr('marginTop', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this.topMargin = value;
-                    }, () => {
-                        return this._topMarginOrig;
-                    });
-                    this._attrBinder.addAttr('marginRight', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this.rightMargin = value;
-                    }, () => {
-                        return this._rightMarginOrig;
-                    });
-                    this._attrBinder.addAttr('marginEnd', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this.rightMargin = value;
-                    }, () => {
-                        return this._rightMarginOrig;
-                    });
-                    this._attrBinder.addAttr('marginBottom', (value) => {
-                        if (value == null)
-                            value = 0;
-                        this.bottomMargin = value;
-                    }, () => {
-                        return this._bottomMargin;
-                    });
-                    this._attrBinder.addAttr('margin', (value) => {
-                        if (value == null)
-                            value = 0;
-                        let [left, top, right, bottom] = this._attrBinder.parsePaddingMarginLTRB(value);
-                        this.leftMargin = left;
-                        this.topMargin = top;
-                        this.rightMargin = right;
-                        this.bottomMargin = bottom;
-                    });
+                    if (!MarginLayoutParams.MarginLayoutParamsClassAttrBind) {
+                        MarginLayoutParams.MarginLayoutParamsClassAttrBind = new AttrBinder.ClassBinderMap();
+                        MarginLayoutParams.MarginLayoutParamsClassAttrBind.set('marginLeft', {
+                            setter(host, value) {
+                                if (value == null)
+                                    value = 0;
+                                host.leftMargin = value;
+                            },
+                            getter(host) {
+                                return host._leftMarginOrig;
+                            }
+                        }).set('marginStart', {
+                            setter(host, value) {
+                                if (value == null)
+                                    value = 0;
+                                host.leftMargin = value;
+                            },
+                            getter(host) {
+                                return host._leftMarginOrig;
+                            }
+                        }).set('marginTop', {
+                            setter(host, value) {
+                                if (value == null)
+                                    value = 0;
+                                host.topMargin = value;
+                            },
+                            getter(host) {
+                                return host._topMarginOrig;
+                            }
+                        }).set('marginRight', {
+                            setter(host, value) {
+                                if (value == null)
+                                    value = 0;
+                                host.rightMargin = value;
+                            },
+                            getter(host) {
+                                return host._rightMarginOrig;
+                            }
+                        }).set('marginEnd', {
+                            setter(host, value) {
+                                if (value == null)
+                                    value = 0;
+                                host.rightMargin = value;
+                            },
+                            getter(host) {
+                                return host._rightMarginOrig;
+                            }
+                        }).set('marginBottom', {
+                            setter(host, value) {
+                                if (value == null)
+                                    value = 0;
+                                host.bottomMargin = value;
+                            },
+                            getter(host) {
+                                return host._bottomMargin;
+                            }
+                        }).set('margin', {
+                            setter(host, value) {
+                                if (value == null)
+                                    value = 0;
+                                let [left, top, right, bottom] = host._attrBinder.parsePaddingMarginLTRB(value);
+                                host.leftMargin = left;
+                                host.topMargin = top;
+                                host.rightMargin = right;
+                                host.bottomMargin = bottom;
+                            }
+                        });
+                    }
+                    this._attrBinder.addClassAttrBind(MarginLayoutParams.MarginLayoutParamsClassAttrBind);
                 }
                 get leftMargin() {
                     if (typeof this._leftMargin === 'number')
@@ -22851,6 +23075,7 @@ var android;
                 fakeAttachInfo.mRootView = this.mWindowsLayout;
                 this.mWindowsLayout.dispatchAttachedToWindow(fakeAttachInfo, 0);
                 this.mWindowsLayout.mGroupFlags |= ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;
+                this.mWindowsLayout.mGroupFlags |= ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE;
             }
             getWindowsLayout() {
                 return this.mWindowsLayout;
@@ -24235,10 +24460,64 @@ var android;
         class DecorView extends FrameLayout {
             constructor(window) {
                 super(window.mContext);
+                this._ignoreRequestLayoutInAnimation = true;
+                this._pendingRequestLayoutOnAnimationEnd = false;
+                this._ignoreInvalidateInAnimation = true;
+                this._pendingInvalidateOnAnimationEnd = false;
                 this.Window_this = window;
                 this.bindElement.classList.add(window.mContext.constructor.name);
                 this.setBackgroundColor(android.graphics.Color.WHITE);
                 this.setIsRootNamespace(true);
+            }
+            invalidate(...args) {
+                if (this._ignoreInvalidateInAnimation && this.getAnimation()) {
+                    this._pendingInvalidateOnAnimationEnd = true;
+                    return null;
+                }
+                super.invalidate.call(this, ...args);
+            }
+            invalidateChild(child, dirty) {
+                if (this._ignoreInvalidateInAnimation && this.getAnimation()) {
+                    this._pendingInvalidateOnAnimationEnd = true;
+                    return null;
+                }
+                super.invalidateChild(child, dirty);
+            }
+            invalidateChildFast(child, dirty) {
+                if (this._ignoreInvalidateInAnimation && this.getAnimation()) {
+                    this._pendingInvalidateOnAnimationEnd = true;
+                    return null;
+                }
+                super.invalidateChildFast(child, dirty);
+            }
+            requestLayout() {
+                if (this._ignoreRequestLayoutInAnimation && this.getAnimation()) {
+                    this._pendingRequestLayoutOnAnimationEnd = true;
+                    return null;
+                }
+                super.requestLayout();
+            }
+            onAnimationStart() {
+                super.onAnimationStart();
+                this.setDrawingCacheEnabled(true);
+                this.buildDrawingCache(true);
+            }
+            onAnimationEnd() {
+                super.onAnimationEnd();
+                this.setDrawingCacheEnabled(false);
+                if (this._pendingInvalidateOnAnimationEnd) {
+                    this._pendingInvalidateOnAnimationEnd = false;
+                    this.invalidate();
+                }
+                if (this._pendingRequestLayoutOnAnimationEnd) {
+                    this._pendingRequestLayoutOnAnimationEnd = false;
+                    this.requestLayout();
+                }
+            }
+            buildDrawingCache(autoScale = false) {
+                if (this.getAnimation() && this.mUnscaledDrawingCache)
+                    return;
+                super.buildDrawingCache(autoScale);
             }
             drawFromParent(canvas, parent, drawingTime) {
                 let windowAnimation = this.getAnimation();
@@ -32159,6 +32438,7 @@ var android;
         var ArrayList = java.util.ArrayList;
         var Integer = java.lang.Integer;
         var System = java.lang.System;
+        var AttrBinder = androidui.attr.AttrBinder;
         class TextView extends View {
             constructor(context, bindElement, defStyle = android.R.attr.textViewStyle) {
                 super(context, bindElement, null);
@@ -32207,239 +32487,317 @@ var android;
                 this.mHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
                 this.mMovement = this.getDefaultMovementMethod();
                 this.mTransformation = null;
-                const a = this._attrBinder;
-                a.addAttr('textColorHighlight', (value) => {
-                    this.setHighlightColor(a.parseColor(value, this.mHighlightColor));
-                }, () => {
-                    return this.getHighlightColor();
-                });
-                a.addAttr('textColor', (value) => {
-                    let color = a.parseColorList(value);
-                    if (color)
-                        this.setTextColor(color);
-                }, () => {
-                    return this.mTextColor;
-                });
-                a.addAttr('textColorHint', (value) => {
-                    let color = a.parseColorList(value);
-                    if (color)
-                        this.setHintTextColor(color);
-                }, () => {
-                    return this.mHintTextColor;
-                });
-                a.addAttr('textSize', (value) => {
-                    let size = a.parseNumberPixelSize(value, this.mTextPaint.getTextSize());
-                    this.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
-                }, () => {
-                    return this.mTextPaint.getTextSize();
-                });
-                a.addAttr('textAllCaps', (value) => {
-                    this.setAllCaps(a.parseBoolean(value, true));
-                });
-                a.addAttr('shadowColor', (value) => {
-                    this.setShadowLayer(this.mShadowRadius, this.mShadowDx, this.mShadowDy, a.parseColor(value, this.mTextPaint.shadowColor));
-                }, () => {
-                    return this.getShadowColor();
-                });
-                a.addAttr('shadowDx', (value) => {
-                    let dx = a.parseNumberPixelSize(value, this.mShadowDx);
-                    this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
-                }, () => {
-                    return this.getShadowDx();
-                });
-                a.addAttr('shadowDy', (value) => {
-                    let dy = a.parseNumberPixelSize(value, this.mShadowDy);
-                    this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
-                }, () => {
-                    return this.getShadowDy();
-                });
-                a.addAttr('shadowRadius', (value) => {
-                    let radius = a.parseNumberPixelSize(value, this.mShadowRadius);
-                    this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
-                }, () => {
-                    return this.getShadowRadius();
-                });
-                a.addAttr('drawableLeft', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = a.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
-                }, () => {
-                    return this.getCompoundDrawables()[0];
-                });
-                a.addAttr('drawableStart', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = a.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
-                }, () => {
-                    return this.getCompoundDrawables()[0];
-                });
-                a.addAttr('drawableTop', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = a.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
-                }, () => {
-                    return this.getCompoundDrawables()[1];
-                });
-                a.addAttr('drawableRight', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = a.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
-                }, () => {
-                    return this.getCompoundDrawables()[2];
-                });
-                a.addAttr('drawableEnd', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = a.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
-                }, () => {
-                    return this.getCompoundDrawables()[2];
-                });
-                a.addAttr('drawableBottom', (value) => {
-                    let dr = this.mDrawables || {};
-                    let drawable = a.parseDrawable(value);
-                    this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
-                }, () => {
-                    return this.getCompoundDrawables()[3];
-                });
-                a.addAttr('drawablePadding', (value) => {
-                    this.setCompoundDrawablePadding(a.parseNumberPixelSize(value));
-                }, () => {
-                    return this.getCompoundDrawablePadding();
-                });
-                a.addAttr('maxLines', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setMaxLines(value);
-                }, () => {
-                    return this.getMaxLines();
-                });
-                a.addAttr('maxHeight', (value) => {
-                    this.setMaxHeight(a.parseNumberPixelSize(value, this.getMaxHeight()));
-                }, () => {
-                    return this.getMaxHeight();
-                });
-                a.addAttr('lines', (value) => {
-                    value = Number.parseInt(value);
-                    if (Number.isInteger(value))
-                        this.setLines(value);
-                }, () => {
-                    if (this.getMaxLines() === this.getMinLines())
-                        return this.getMaxLines();
-                    return null;
-                });
-                a.addAttr('height', (value) => {
-                    value = a.parseNumberPixelSize(value, -1);
-                    if (value >= 0)
-                        this.setHeight(value);
-                }, () => {
-                    if (this.getMaxHeight() === this.getMinimumHeight())
-                        return this.getMaxHeight();
-                    return null;
-                });
-                a.addAttr('minLines', (value) => {
-                    this.setMinLines(a.parseInt(value, this.getMinLines()));
-                }, () => {
-                    return this.getMinLines();
-                });
-                a.addAttr('minHeight', (value) => {
-                    this.setMinHeight(a.parseNumberPixelSize(value, this.getMinHeight()));
-                }, () => {
-                    return this.getMinHeight();
-                });
-                a.addAttr('maxEms', (value) => {
-                    this.setMaxEms(a.parseInt(value, this.getMaxEms()));
-                }, () => {
-                    return this.getMaxEms();
-                });
-                a.addAttr('maxWidth', (value) => {
-                    this.setMaxWidth(a.parseNumberPixelSize(value, this.getMaxWidth()));
-                }, () => {
-                    return this.getMaxWidth();
-                });
-                a.addAttr('ems', (value) => {
-                    let ems = a.parseInt(value, null);
-                    if (ems != null)
-                        this.setEms(ems);
-                }, () => {
-                    if (this.getMinEms() === this.getMaxEms())
-                        return this.getMaxEms();
-                    return null;
-                });
-                a.addAttr('width', (value) => {
-                    value = a.parseNumberPixelSize(value, -1);
-                    if (value >= 0)
-                        this.setWidth(value);
-                }, () => {
-                    if (this.getMinWidth() === this.getMaxWidth())
-                        return this.getMinWidth();
-                    return null;
-                });
-                a.addAttr('minEms', (value) => {
-                    this.setMinEms(a.parseInt(value, this.getMinEms()));
-                }, () => {
-                    return this.getMinEms();
-                });
-                a.addAttr('minWidth', (value) => {
-                    this.setMinWidth(a.parseNumberPixelSize(value, this.getMinWidth()));
-                }, () => {
-                    return this.getMinWidth();
-                });
-                a.addAttr('gravity', (value) => {
-                    this.setGravity(a.parseGravity(value, this.mGravity));
-                }, () => {
-                    return this.mGravity;
-                });
-                a.addAttr('hint', (value) => {
-                    this.setHint(a.parseString(value));
-                }, () => {
-                    return this.getHint();
-                });
-                a.addAttr('text', (value) => {
-                    this.setText(a.parseString(value));
-                }, () => {
-                    return this.getText();
-                });
-                a.addAttr('scrollHorizontally', (value) => {
-                    this.setHorizontallyScrolling(a.parseBoolean(value, false));
-                });
-                a.addAttr('singleLine', (value) => {
-                    this.setSingleLine(a.parseBoolean(value, false));
-                });
-                a.addAttr('ellipsize', (value) => {
-                    let ellipsize = TextUtils.TruncateAt[(value + '').toUpperCase()];
-                    if (ellipsize)
-                        this.setEllipsize(ellipsize);
-                });
-                a.addAttr('marqueeRepeatLimit', (value) => {
-                    let marqueeRepeatLimit = a.parseInt(value, -1);
-                    if (marqueeRepeatLimit >= 0)
-                        this.setMarqueeRepeatLimit(marqueeRepeatLimit);
-                });
-                a.addAttr('includeFontPadding', (value) => {
-                    this.setIncludeFontPadding(a.parseBoolean(value, false));
-                });
-                a.addAttr('enabled', (value) => {
-                    this.setEnabled(a.parseBoolean(value, this.isEnabled()));
-                }, () => {
-                    return this.isEnabled();
-                });
-                a.addAttr('lineSpacingExtra', (value) => {
-                    this.setLineSpacing(a.parseNumberPixelSize(value, this.mSpacingAdd), this.mSpacingMult);
-                }, () => {
-                    return this.mSpacingAdd;
-                });
-                a.addAttr('lineSpacingMultiplier', (value) => {
-                    this.setLineSpacing(this.mSpacingAdd, a.parseFloat(value, this.mSpacingMult));
-                }, () => {
-                    return this.mSpacingMult;
-                });
                 this.setTextSize(14);
                 if (defStyle)
                     this.applyDefaultAttributes(defStyle);
-                this.bindElement.innerHTML = this.bindElement.innerHTML.trim();
-                let text = this.mText || this.bindElement.innerText;
+                let text = this.mText || this.bindElement.innerText.trim();
                 this.bindElement.innerHTML = '';
                 this.setText(text, this.mBufferType);
+            }
+            initBindAttr() {
+                super.initBindAttr();
+                if (!TextView.TextViewClassAttrBind) {
+                    TextView.TextViewClassAttrBind = new AttrBinder.ClassBinderMap();
+                    TextView.TextViewClassAttrBind.set('textColorHighlight', {
+                        setter(v, value) {
+                            v.setHighlightColor(v._attrBinder.parseColor(value, v.mHighlightColor));
+                        },
+                        getter(v) {
+                            return v.getHighlightColor();
+                        }
+                    }).set('textColor', {
+                        setter(v, value) {
+                            let color = v._attrBinder.parseColorList(value);
+                            if (color)
+                                v.setTextColor(color);
+                        },
+                        getter(v) {
+                            return v.mTextColor;
+                        }
+                    }).set('textColorHint', {
+                        setter(v, value) {
+                            let color = v._attrBinder.parseColorList(value);
+                            if (color)
+                                v.setHintTextColor(color);
+                        },
+                        getter(v) {
+                            return v.mHintTextColor;
+                        }
+                    }).set('textSize', {
+                        setter(v, value) {
+                            let size = v._attrBinder.parseNumberPixelSize(value, v.mTextPaint.getTextSize());
+                            v.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+                        },
+                        getter(v) {
+                            return v.mTextPaint.getTextSize();
+                        }
+                    }).set('textAllCaps', {
+                        setter(v, value) {
+                            v.setAllCaps(v._attrBinder.parseBoolean(value, true));
+                        }
+                    }).set('shadowColor', {
+                        setter(v, value) {
+                            v.setShadowLayer(v.mShadowRadius, v.mShadowDx, v.mShadowDy, v._attrBinder.parseColor(value, v.mTextPaint.shadowColor));
+                        },
+                        getter(v) {
+                            return v.getShadowColor();
+                        }
+                    }).set('shadowDx', {
+                        setter(v, value) {
+                            let dx = v._attrBinder.parseNumberPixelSize(value, v.mShadowDx);
+                            v.setShadowLayer(v.mShadowRadius, dx, v.mShadowDy, v.mTextPaint.shadowColor);
+                        },
+                        getter(v) {
+                            return v.getShadowDx();
+                        }
+                    }).set('shadowDy', {
+                        setter(v, value) {
+                            let dy = v._attrBinder.parseNumberPixelSize(value, v.mShadowDy);
+                            v.setShadowLayer(v.mShadowRadius, v.mShadowDx, dy, v.mTextPaint.shadowColor);
+                        },
+                        getter(v) {
+                            return v.getShadowDy();
+                        }
+                    }).set('shadowRadius', {
+                        setter(v, value) {
+                            let radius = v._attrBinder.parseNumberPixelSize(value, v.mShadowRadius);
+                            v.setShadowLayer(radius, v.mShadowDx, v.mShadowDy, v.mTextPaint.shadowColor);
+                        },
+                        getter(v) {
+                            return v.getShadowRadius();
+                        }
+                    }).set('drawableLeft', {
+                        setter(v, value) {
+                            let dr = v.mDrawables || {};
+                            let drawable = v._attrBinder.parseDrawable(value);
+                            v.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+                        },
+                        getter(v) {
+                            return v.getCompoundDrawables()[0];
+                        }
+                    }).set('drawableStart', {
+                        setter(v, value) {
+                            let dr = v.mDrawables || {};
+                            let drawable = v._attrBinder.parseDrawable(value);
+                            v.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+                        },
+                        getter(v) {
+                            return v.getCompoundDrawables()[0];
+                        }
+                    }).set('drawableTop', {
+                        setter(v, value) {
+                            let dr = v.mDrawables || {};
+                            let drawable = v._attrBinder.parseDrawable(value);
+                            v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
+                        },
+                        getter(v) {
+                            return v.getCompoundDrawables()[1];
+                        }
+                    }).set('drawableRight', {
+                        setter(v, value) {
+                            let dr = v.mDrawables || {};
+                            let drawable = v._attrBinder.parseDrawable(value);
+                            v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+                        },
+                        getter(v) {
+                            return v.getCompoundDrawables()[2];
+                        }
+                    }).set('drawableEnd', {
+                        setter(v, value) {
+                            let dr = v.mDrawables || {};
+                            let drawable = v._attrBinder.parseDrawable(value);
+                            v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+                        },
+                        getter(v) {
+                            return v.getCompoundDrawables()[2];
+                        }
+                    }).set('drawableBottom', {
+                        setter(v, value) {
+                            let dr = v.mDrawables || {};
+                            let drawable = v._attrBinder.parseDrawable(value);
+                            v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
+                        },
+                        getter(v) {
+                            return v.getCompoundDrawables()[3];
+                        }
+                    }).set('drawablePadding', {
+                        setter(v, value) {
+                            v.setCompoundDrawablePadding(v._attrBinder.parseNumberPixelSize(value));
+                        },
+                        getter(v) {
+                            return v.getCompoundDrawablePadding();
+                        }
+                    }).set('maxLines', {
+                        setter(v, value) {
+                            value = Number.parseInt(value);
+                            if (Number.isInteger(value))
+                                v.setMaxLines(value);
+                        },
+                        getter(v) {
+                            return v.getMaxLines();
+                        }
+                    }).set('maxHeight', {
+                        setter(v, value) {
+                            v.setMaxHeight(v._attrBinder.parseNumberPixelSize(value, v.getMaxHeight()));
+                        },
+                        getter(v) {
+                            return v.getMaxHeight();
+                        }
+                    }).set('lines', {
+                        setter(v, value) {
+                            value = Number.parseInt(value);
+                            if (Number.isInteger(value))
+                                v.setLines(value);
+                        },
+                        getter(v) {
+                            if (v.getMaxLines() === v.getMinLines())
+                                return v.getMaxLines();
+                            return null;
+                        }
+                    }).set('height', {
+                        setter(v, value) {
+                            value = v._attrBinder.parseNumberPixelSize(value, -1);
+                            if (value >= 0)
+                                v.setHeight(value);
+                        },
+                        getter(v) {
+                            if (v.getMaxHeight() === v.getMinimumHeight())
+                                return v.getMaxHeight();
+                            return null;
+                        }
+                    }).set('minLines', {
+                        setter(v, value) {
+                            v.setMinLines(v._attrBinder.parseInt(value, v.getMinLines()));
+                        },
+                        getter(v) {
+                            return v.getMinLines();
+                        }
+                    }).set('minHeight', {
+                        setter(v, value) {
+                            v.setMinHeight(v._attrBinder.parseNumberPixelSize(value, v.getMinHeight()));
+                        },
+                        getter(v) {
+                            return v.getMinHeight();
+                        }
+                    }).set('maxEms', {
+                        setter(v, value) {
+                            v.setMaxEms(v._attrBinder.parseInt(value, v.getMaxEms()));
+                        },
+                        getter(v) {
+                            return v.getMaxEms();
+                        }
+                    }).set('maxWidth', {
+                        setter(v, value) {
+                            v.setMaxWidth(v._attrBinder.parseNumberPixelSize(value, v.getMaxWidth()));
+                        },
+                        getter(v) {
+                            return v.getMaxWidth();
+                        }
+                    }).set('ems', {
+                        setter(v, value) {
+                            let ems = v._attrBinder.parseInt(value, null);
+                            if (ems != null)
+                                v.setEms(ems);
+                        },
+                        getter(v) {
+                            if (v.getMinEms() === v.getMaxEms())
+                                return v.getMaxEms();
+                            return null;
+                        }
+                    }).set('width', {
+                        setter(v, value) {
+                            value = v._attrBinder.parseNumberPixelSize(value, -1);
+                            if (value >= 0)
+                                v.setWidth(value);
+                        },
+                        getter(v) {
+                            if (v.getMinWidth() === v.getMaxWidth())
+                                return v.getMinWidth();
+                            return null;
+                        }
+                    }).set('minEms', {
+                        setter(v, value) {
+                            v.setMinEms(v._attrBinder.parseInt(value, v.getMinEms()));
+                        },
+                        getter(v) {
+                            return v.getMinEms();
+                        }
+                    }).set('minWidth', {
+                        setter(v, value) {
+                            v.setMinWidth(v._attrBinder.parseNumberPixelSize(value, v.getMinWidth()));
+                        },
+                        getter(v) {
+                            return v.getMinWidth();
+                        }
+                    }).set('gravity', {
+                        setter(v, value) {
+                            v.setGravity(v._attrBinder.parseGravity(value, v.mGravity));
+                        },
+                        getter(v) {
+                            return v.mGravity;
+                        }
+                    }).set('hint', {
+                        setter(v, value) {
+                            v.setHint(v._attrBinder.parseString(value));
+                        },
+                        getter(v) {
+                            return v.getHint();
+                        }
+                    }).set('text', {
+                        setter(v, value) {
+                            v.setText(v._attrBinder.parseString(value));
+                        },
+                        getter(v) {
+                            return v.getText();
+                        }
+                    }).set('scrollHorizontally', {
+                        setter(v, value) {
+                            v.setHorizontallyScrolling(v._attrBinder.parseBoolean(value, false));
+                        }
+                    }).set('singleLine', {
+                        setter(v, value) {
+                            v.setSingleLine(v._attrBinder.parseBoolean(value, false));
+                        }
+                    }).set('ellipsize', {
+                        setter(v, value) {
+                            let ellipsize = TextUtils.TruncateAt[(value + '').toUpperCase()];
+                            if (ellipsize)
+                                v.setEllipsize(ellipsize);
+                        }
+                    }).set('marqueeRepeatLimit', {
+                        setter(v, value) {
+                            let marqueeRepeatLimit = v._attrBinder.parseInt(value, -1);
+                            if (marqueeRepeatLimit >= 0)
+                                v.setMarqueeRepeatLimit(marqueeRepeatLimit);
+                        }
+                    }).set('includeFontPadding', {
+                        setter(v, value) {
+                            v.setIncludeFontPadding(v._attrBinder.parseBoolean(value, false));
+                        }
+                    }).set('enabled', {
+                        setter(v, value) {
+                            v.setEnabled(v._attrBinder.parseBoolean(value, v.isEnabled()));
+                        },
+                        getter(v) {
+                            return v.isEnabled();
+                        }
+                    }).set('lineSpacingExtra', {
+                        setter(v, value) {
+                            v.setLineSpacing(v._attrBinder.parseNumberPixelSize(value, v.mSpacingAdd), v.mSpacingMult);
+                        },
+                        getter(v) {
+                            return v.mSpacingAdd;
+                        }
+                    }).set('lineSpacingMultiplier', {
+                        setter(v, value) {
+                            v.setLineSpacing(v.mSpacingAdd, v._attrBinder.parseFloat(value, v.mSpacingMult));
+                        },
+                        getter(v) {
+                            return v.mSpacingMult;
+                        }
+                    });
+                }
+                this._attrBinder.addClassAttrBind(TextView.TextViewClassAttrBind);
             }
             setTypefaceFromAttrs(familyName, typefaceIndex, styleIndex) {
             }
@@ -43472,7 +43830,7 @@ var android;
                 return super.onKeyUp(keyCode, event) || filter;
             }
             requestSyncBoundToElement(immediately = false) {
-                if (this.inputElement.parentNode && this.inputElement.style.opacity != '0') {
+                if (this.isInputElementShowed()) {
                     immediately = true;
                 }
                 super.requestSyncBoundToElement(immediately);
@@ -43666,6 +44024,7 @@ var android;
         var Integer = java.lang.Integer;
         var NetDrawable = androidui.image.NetDrawable;
         var LayoutParams = android.view.ViewGroup.LayoutParams;
+        var AttrBinder = androidui.attr.AttrBinder;
         class ImageView extends View {
             constructor(context, bindElement, defStyle) {
                 super(context, bindElement, defStyle);
@@ -43689,52 +44048,73 @@ var android;
                 this.mBaselineAlignBottom = false;
                 this.mAdjustViewBoundsCompat = false;
                 this.initImageView();
-                const a = this._attrBinder;
-                a.addAttr('src', (value) => {
-                    let d = a.parseDrawable(value);
-                    if (d)
-                        this.setImageDrawable(d);
-                    else
-                        this.setImageURI(value);
-                }, () => {
-                    return this.mDrawable;
-                });
-                a.addAttr('baselineAlignBottom', (value) => {
-                    this.setBaselineAlignBottom(a.parseBoolean(value, this.mBaselineAlignBottom));
-                });
-                a.addAttr('baseline', (value) => {
-                    this.setBaseline(a.parseNumberPixelSize(value, this.mBaseline));
-                }, () => {
-                    return this.mBaseline;
-                });
-                a.addAttr('adjustViewBounds', (value) => {
-                    this.setAdjustViewBounds(a.parseBoolean(value, false));
-                });
-                a.addAttr('maxWidth', (value) => {
-                    let baseValue = this.getParent() instanceof View ? this.getParent().getWidth() : 0;
-                    this.setMaxWidth(a.parseNumberPixelSize(value, this.mMaxWidth, baseValue));
-                }, () => {
-                    return this.mMaxWidth;
-                });
-                a.addAttr('maxHeight', (value) => {
-                    let baseValue = this.getParent() instanceof View ? this.getParent().getHeight() : 0;
-                    this.setMaxHeight(a.parseNumberPixelSize(value, this.mMaxHeight, baseValue));
-                }, () => {
-                    return this.mMaxHeight;
-                });
-                a.addAttr('scaleType', (value) => {
-                    this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
-                }, () => {
-                    return this.mScaleType.toString();
-                });
-                a.addAttr('drawableAlpha', (value) => {
-                    this.setImageAlpha(a.parseInt(value, this.mAlpha));
-                }, () => {
-                    return this.mAlpha;
-                });
-                a.addAttr('cropToPadding', (value) => {
-                    this.setCropToPadding(a.parseBoolean(value, false));
-                });
+            }
+            initBindAttr() {
+                super.initBindAttr();
+                if (!ImageView.ImageViewClassAttrBind) {
+                    ImageView.ImageViewClassAttrBind = new AttrBinder.ClassBinderMap();
+                    ImageView.ImageViewClassAttrBind.set('src', {
+                        setter(v, value) {
+                            let d = v._attrBinder.parseDrawable(value);
+                            if (d)
+                                v.setImageDrawable(d);
+                            else
+                                v.setImageURI(value);
+                        }, getter(v) {
+                            return v.mDrawable;
+                        }
+                    }).set('baselineAlignBottom', {
+                        setter(v, value) {
+                            v.setBaselineAlignBottom(v._attrBinder.parseBoolean(value, v.mBaselineAlignBottom));
+                        }
+                    }).set('baseline', {
+                        setter(v, value) {
+                            v.setBaseline(v._attrBinder.parseNumberPixelSize(value, v.mBaseline));
+                        }, getter(v) {
+                            return v.mBaseline;
+                        }
+                    }).set('adjustViewBounds', {
+                        setter(v, value) {
+                            v.setAdjustViewBounds(v._attrBinder.parseBoolean(value, false));
+                        }
+                    }).set('maxWidth', {
+                        setter(v, value) {
+                            let baseValue = v.getParent() instanceof View ? v.getParent().getWidth() : 0;
+                            v.setMaxWidth(v._attrBinder.parseNumberPixelSize(value, v.mMaxWidth, baseValue));
+                        }, getter(v) {
+                            return v.mMaxWidth;
+                        }
+                    }).set('maxHeight', {
+                        setter(v, value) {
+                            let baseValue = v.getParent() instanceof View ? v.getParent().getHeight() : 0;
+                            v.setMaxHeight(v._attrBinder.parseNumberPixelSize(value, v.mMaxHeight, baseValue));
+                        }, getter(v) {
+                            return v.mMaxHeight;
+                        }
+                    }).set('scaleType', {
+                        setter(v, value) {
+                            if (typeof value === 'number') {
+                                v.setScaleType(value);
+                            }
+                            else {
+                                v.setScaleType(ImageView.parseScaleType(value, v.mScaleType));
+                            }
+                        }, getter(v) {
+                            return v.mScaleType;
+                        }
+                    }).set('drawableAlpha', {
+                        setter(v, value) {
+                            v.setImageAlpha(v._attrBinder.parseInt(value, v.mAlpha));
+                        }, getter(v) {
+                            return v.mAlpha;
+                        }
+                    }).set('cropToPadding', {
+                        setter(v, value) {
+                            v.setCropToPadding(v._attrBinder.parseBoolean(value, false));
+                        }
+                    });
+                }
+                this._attrBinder.addClassAttrBind(ImageView.ImageViewClassAttrBind);
             }
             initImageView() {
                 this.mMatrix = new Matrix();
@@ -47665,6 +48045,7 @@ var android;
         var View = android.view.View;
         var LinearLayout = android.widget.LinearLayout;
         var RadioButton = android.widget.RadioButton;
+        var AttrBinder = androidui.attr.AttrBinder;
         class RadioGroup extends LinearLayout {
             constructor(context, bindElement, defStyle) {
                 super(context, bindElement, defStyle);
@@ -47672,9 +48053,18 @@ var android;
                 this.mProtectFromCheckedChange = false;
                 this.setOrientation(RadioGroup.VERTICAL);
                 this.init();
-                this._attrBinder.addAttr('checkedButton', (value) => {
-                    this.setCheckedId(value);
-                });
+            }
+            initBindAttr() {
+                super.initBindAttr();
+                if (!RadioGroup.RadioGroupClassAttrBind) {
+                    RadioGroup.RadioGroupClassAttrBind = new AttrBinder.ClassBinderMap();
+                    RadioGroup.RadioGroupClassAttrBind.set('checkedButton', {
+                        setter(v, value) {
+                            v.setCheckedId(value);
+                        }
+                    });
+                }
+                this._attrBinder.addClassAttrBind(RadioGroup.RadioGroupClassAttrBind);
             }
             init() {
                 this.mChildOnCheckedChangeListener = new RadioGroup.CheckedStateTracker(this);
@@ -60193,7 +60583,7 @@ var androidui;
         var Canvas = android.graphics.Canvas;
         let sNextID = 0;
         class NativeCanvas extends Canvas {
-            initImpl() {
+            initCanvasImpl() {
                 this.canvasId = ++sNextID;
                 this.createCanvasImpl();
             }
