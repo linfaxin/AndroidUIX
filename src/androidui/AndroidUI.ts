@@ -174,6 +174,9 @@ module androidui {
 
             this.androidUIElement.setAttribute('tabindex', '0');//let element could get focus. so the key event can handle.
             this.androidUIElement.focus();
+            this.androidUIElement.onblur = (e) => {
+                this._viewRootImpl.ensureTouchMode(true);
+            };
         }
 
         private initEvent(){
