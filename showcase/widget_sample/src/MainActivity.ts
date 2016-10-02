@@ -36,13 +36,14 @@ module sample.app {
             switch (item.getItemId()){
                 case 1:
                     window.location.href = 'https://github.com/linfaxin/AndroidUIX';
-
+                    break;
                 case 2:
                     new android.app.AlertDialog.Builder(this)
                         .setTitle('About')
                         .setMessage('Make a high-performance Web App with Android UI!')
                         .setPositiveButton(android.R.string_.ok, null)
                         .show();
+                    break;
             }
             return true;
         }

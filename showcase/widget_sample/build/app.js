@@ -418,12 +418,14 @@ var sample;
                 switch (item.getItemId()) {
                     case 1:
                         window.location.href = 'https://github.com/linfaxin/AndroidUIX';
+                        break;
                     case 2:
                         new android.app.AlertDialog.Builder(this)
                             .setTitle('About')
                             .setMessage('Make a high-performance Web App with Android UI!')
                             .setPositiveButton(android.R.string_.ok, null)
                             .show();
+                        break;
                 }
                 return true;
             }
@@ -540,130 +542,6 @@ var sample;
             }
         }
         app.SampleBaseWidgetActivity = SampleBaseWidgetActivity;
-    })(app = sample.app || (sample.app = {}));
-})(sample || (sample = {}));
-var sample;
-(function (sample) {
-    var app;
-    (function (app) {
-        var ActionBarActivity = android.app.ActionBarActivity;
-        var AlertDialog = android.app.AlertDialog;
-        var Toast = android.widget.Toast;
-        var TextView = android.widget.TextView;
-        var PopupWindow = android.widget.PopupWindow;
-        var View = android.view.View;
-        var ScrollView = android.widget.ScrollView;
-        var LinearLayout = android.widget.LinearLayout;
-        var Gravity = android.view.Gravity;
-        var Button = android.widget.Button;
-        var ImageView = android.widget.ImageView;
-        var CheckBox = android.widget.CheckBox;
-        var RadioGroup = android.widget.RadioGroup;
-        var RadioButton = android.widget.RadioButton;
-        var Spinner = android.widget.Spinner;
-        var ArrayAdapter = android.widget.ArrayAdapter;
-        var ProgressBar = android.widget.ProgressBar;
-        var MarginLayoutParams = android.view.ViewGroup.MarginLayoutParams;
-        var SeekBar = android.widget.SeekBar;
-        var RatingBar = android.widget.RatingBar;
-        class SampleBaseWidgetNoXMLActivity extends ActionBarActivity {
-            onCreate() {
-                super.onCreate();
-                this.setTitle('Base Widget No XML');
-                let activity = this;
-                this.setContentView(this.createLayout());
-                const dialog = new AlertDialog.Builder(activity)
-                    .setTitle('Title')
-                    .setMessage('ContentContent')
-                    .setPositiveButton(android.R.string_.ok, {
-                    onClick(dialog, which) {
-                        Toast.makeText(activity, android.R.string_.ok, Toast.LENGTH_SHORT).show();
-                    }
-                })
-                    .setIcon(R.drawable.icon_alert)
-                    .setNegativeButton(android.R.string_.cancel, null)
-                    .create();
-                this.findViewById(R.id.btn_open_dialog).setOnClickListener({
-                    onClick(view) {
-                        dialog.show();
-                    }
-                });
-                let popupContent = new TextView(this);
-                popupContent.setGravity(android.view.Gravity.CENTER);
-                popupContent.setText('PopupWindow');
-                popupContent.setBackgroundColor(0xffcccccc);
-                let popWindow = new PopupWindow(popupContent, -2, 40 * this.getResources().getDisplayMetrics().density, true);
-                let btnShowPopup = this.findViewById(R.id.btn_show_popup);
-                btnShowPopup.setOnClickListener({
-                    onClick(view) {
-                        popWindow.showAsDropDown(view);
-                    }
-                });
-            }
-            createLayout() {
-                const dp12 = this.getResources().getDisplayMetrics().density * 12;
-                const marginTop12fill = new MarginLayoutParams(-1, -2);
-                marginTop12fill.topMargin = dp12;
-                const marginTop12wrap = new MarginLayoutParams(-2, -2);
-                marginTop12wrap.topMargin = dp12;
-                const scrollView = new ScrollView(this);
-                const linear = new LinearLayout(this);
-                linear.setPadding(dp12, dp12, dp12, dp12);
-                linear.setGravity(Gravity.CENTER);
-                linear.setOrientation(LinearLayout.VERTICAL);
-                const textView = new TextView(this);
-                textView.setText('TextView');
-                linear.addView(textView, -2, -2);
-                const button = new Button(this);
-                button.setText('Button');
-                linear.addView(button, -2, -2);
-                const imageView = new ImageView(this);
-                imageView.setImageURI('assets/images/logo_google_3.png');
-                linear.addView(imageView, -1, -2);
-                const checkBox = new CheckBox(this);
-                checkBox.setText('CheckBox');
-                linear.addView(checkBox, marginTop12wrap);
-                const radioGroup = new RadioGroup(this);
-                radioGroup.setGravity(Gravity.CENTER);
-                radioGroup.setOrientation(LinearLayout.HORIZONTAL);
-                const radiobtn1 = new RadioButton(this);
-                radiobtn1.setText('Radio1');
-                radioGroup.addView(radiobtn1, -2, -2);
-                const radiobtn2 = new RadioButton(this);
-                radiobtn2.setText('Radio2');
-                radioGroup.addView(radiobtn2, -2, -2);
-                const radiobtn3 = new RadioButton(this);
-                radiobtn3.setText('Radio3');
-                radioGroup.addView(radiobtn3, -2, -2);
-                linear.addView(radioGroup, marginTop12wrap);
-                const openDialogButton = new Button(this);
-                openDialogButton.setText('OpenDialog');
-                openDialogButton.setId(R.id.btn_open_dialog);
-                linear.addView(openDialogButton, -2, -2);
-                const spinner = new Spinner(this);
-                spinner.setAdapter(new ArrayAdapter(this, android.R.layout.simple_spinner_item, null, this.getResources().getStringArray(R.array.spinner_array)));
-                linear.addView(spinner, -2, -2);
-                const showPopButton = new Button(this);
-                showPopButton.setText('PopupWindow');
-                showPopButton.setId(R.id.btn_show_popup);
-                showPopButton.setVisibility(View.GONE);
-                linear.addView(showPopButton, -2, -2);
-                const progressBar = new ProgressBar(this);
-                linear.addView(progressBar, marginTop12wrap);
-                const hProgressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-                hProgressBar.setMax(100);
-                hProgressBar.setSecondaryProgress(70);
-                hProgressBar.setProgress(50);
-                linear.addView(hProgressBar, marginTop12fill);
-                let seekBar = new SeekBar(this);
-                linear.addView(seekBar, marginTop12fill);
-                let ratingBar = new RatingBar(this);
-                linear.addView(ratingBar, marginTop12wrap);
-                scrollView.addView(linear);
-                return scrollView;
-            }
-        }
-        app.SampleBaseWidgetNoXMLActivity = SampleBaseWidgetNoXMLActivity;
     })(app = sample.app || (sample.app = {}));
 })(sample || (sample = {}));
 var sample;
