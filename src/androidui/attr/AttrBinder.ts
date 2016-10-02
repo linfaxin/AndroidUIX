@@ -248,26 +248,27 @@ module androidui.attr {
     }
 
     export module AttrBinder {
-        export class ClassBinderMap extends Map<string, ClassBinderValue>{
-
-            set(key:string, value?:androidui.attr.AttrBinder.ClassBinderValue):Map<string, androidui.attr.AttrBinder.ClassBinderValue> {
-                return super.set(key ? key.toLowerCase() : key, value);
+        export class ClassBinderMap {
+            binderMap = new Map<string, ClassBinderValue>();
+            set(key:string, value?:androidui.attr.AttrBinder.ClassBinderValue):ClassBinderMap {
+                this.binderMap.set(key.toLowerCase(), value);
+                return this;
             }
 
             get(key:string):androidui.attr.AttrBinder.ClassBinderValue {
-                return super.get(key ? key.toLowerCase() : key);
+                return this.binderMap.get(key.toLowerCase());
             }
 
             private callSetter(attrName:string, host:android.view.View|android.view.ViewGroup.LayoutParams, attrValue:any):void {
                 if (!attrName) return;
-                let value = this.get(attrName.toLowerCase());
+                let value = this.get(attrName);
                 if (value) {
                     value.setter(host, attrValue);
                 }
             }
             private callGetter(attrName:string, host:android.view.View|android.view.ViewGroup.LayoutParams): any {
                 if (!attrName) return;
-                let value = this.get(attrName.toLowerCase());
+                let value = this.get(attrName);
                 if (value) {
                     return value.getter(host);
                 }
