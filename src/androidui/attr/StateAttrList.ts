@@ -68,9 +68,9 @@ module androidui.attr{
         }
 
         private _initStyleAttr(attrName:string, attrValue:string, inParseState:number[]){
-            if(!attrName.startsWith('android:')) return;
-            attrName = attrName.substring('android:'.length);
-            if(attrName==='id') return;
+            if(attrName.startsWith('android:')) {
+                attrName = attrName.substring('android:'.length);
+            }
 
             if(attrName.startsWith('state_')){
                 let state = attrName.substring('state_'.length);

@@ -1444,277 +1444,339 @@ module android.view {
         private mShadowPaint:Paint;
         private mShadowDrawable:Drawable;
 
-        constructor(context?:Context, bindElement?:HTMLElement, defStyle=android.R.attr.viewStyle) {
+        constructor(context?:Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.viewStyle) {
             super();
             this.mContext = context;
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
             this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
 
-            this.initBindAttr(this._attrBinder);
+            this.initBindAttr();
 
             this.initBindElement(bindElement);
 
             if(defStyle) this.applyDefaultAttributes(defStyle);
         }
 
-        protected initBindAttr(a:AttrBinder){
-            a.addAttr('background', (value)=>{
-                this.setBackground(a.parseDrawable(value));
-            }, ()=>{
-                //if(this.mBackground instanceof ColorDrawable){
-                //    return Color.toRGBAFunc((<ColorDrawable>this.mBackground).getColor());
-                //}
-                //if(this.mBackground instanceof NetDrawable) return `url(${this.mBackground.getImage().src})`;
-                return this.mBackground;
-            });
-            a.addAttr('padding', (value)=>{
-                if(value==null) value = 0;
-                let [left, top, right, bottom] = a.parsePaddingMarginLTRB(value);
-                this._setPaddingWithUnit(left, top, right, bottom);
-            }, ()=>{
-                return this.mPaddingTop + ' ' + this.mPaddingRight + ' ' + this.mPaddingBottom + ' ' + this.mPaddingLeft;
-            }),
-            a.addAttr('paddingLeft', (value)=>{
-                if(value==null) value = 0;
-                this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
-            }, ()=>{
-                return this.mPaddingLeft;
-            }),
-            a.addAttr('paddingStart', (value)=>{
-                if(value==null) value = 0;
-                this._setPaddingWithUnit(value, this.mPaddingTop, this.mPaddingRight, this.mPaddingBottom);
-            }, ()=>{
-                return this.mPaddingLeft;
-            }),
-            a.addAttr('paddingTop', (value)=>{
-                if(value==null) value = 0;
-                this._setPaddingWithUnit(this.mPaddingLeft, value, this.mPaddingRight, this.mPaddingBottom);
-            }, ()=>{
-                return this.mPaddingTop;
-            }),
-            a.addAttr('paddingRight', (value)=>{
-                if(value==null) value = 0;
-                this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
-            }, ()=>{
-                return this.mPaddingRight;
-            }),
-            a.addAttr('paddingEnd', (value)=>{
-                if(value==null) value = 0;
-                this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, value, this.mPaddingBottom);
-            }, ()=>{
-                return this.mPaddingRight;
-            }),
-            a.addAttr('paddingBottom', (value)=>{
-                if(value==null) value = 0;
-                this._setPaddingWithUnit(this.mPaddingLeft, this.mPaddingTop, this.mPaddingRight, value);
-            }, ()=>{
-                return this.mPaddingBottom;
-            }),
-            a.addAttr('scrollX', (value)=>{
-                value = a.parseNumberPixelOffset(value);
-                if(Number.isInteger(value)) this.scrollTo(value, this.mScrollY);
-            }, ()=>{
-                return this.getScrollX();
-            }),
-            a.addAttr('scrollY', (value)=>{
-                value = a.parseNumberPixelOffset(value);
-                if(Number.isInteger(value)) this.scrollTo(this.mScrollX, value);
-            }, ()=>{
-                return this.getScrollY();
-            }),
-            a.addAttr('alpha', (value)=>{
-                this.setAlpha(a.parseFloat(value, this.getAlpha()));
-            }, ()=>{
-                return this.getAlpha();
-            }),
-            a.addAttr('transformPivotX', (value)=>{
-                this.setPivotX(a.parseNumberPixelOffset(value, this.getPivotX()));
-            }, ()=>{
-                return this.getPivotX();
-            }),
-            a.addAttr('transformPivotY', (value)=>{
-                this.setPivotY(a.parseNumberPixelOffset(value, this.getPivotY()));
-            }, ()=>{
-                return this.getPivotY();
-            }),
-            a.addAttr('translationX', (value)=>{
-                this.setTranslationX(a.parseNumberPixelOffset(value, this.getTranslationX()));
-            }, ()=>{
-                return this.getTranslationX();
-            }),
-            a.addAttr('translationY', (value)=>{
-                this.setTranslationY(a.parseNumberPixelOffset(value, this.getTranslationY()));
-            }, ()=>{
-                return this.getTranslationY();
-            }),
-            a.addAttr('rotation', (value)=>{
-                this.setRotation(a.parseFloat(value, this.getRotation()));
-            }, ()=>{
-                return this.getRotation();
-            }),
-            a.addAttr('rotationX', (value)=>{
-                //TODO not support rotationX
-            }),
-            a.addAttr('rotationY', (value)=>{
-                //TODO not support rotationY
-            }),
-            a.addAttr('scaleX', (value)=>{
-                this.setScaleX(a.parseFloat(value, this.getScaleX()));
-            }, ()=>{
-                return this.getScaleX();
-            }),
-            a.addAttr('scaleY', (value)=>{
-                this.setScaleY(a.parseFloat(value, this.getScaleY()));
-            }, ()=>{
-                return this.getScaleY();
-            }),
-            a.addAttr('tag', (value)=>{
-                this.setTag(value);
-            }),
-            a.addAttr('id', (value)=>{
-                this.setId(value);
-            }),
-            a.addAttr('focusable', (value)=>{
-                if(a.parseBoolean(value, false)){
-                    this.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
-                }
-            }, ()=>{
-                return this.isFocusable();
-            }),
-            a.addAttr('focusableInTouchMode', (value)=>{
-                if(a.parseBoolean(value, false)){
-                    this.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
-                        View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
-                }
-            }, ()=>{
-                return this.isFocusableInTouchMode();
-            }),
-            a.addAttr('clickable', (value)=>{
-                if(a.parseBoolean(value, false)){
-                    this.setFlags(View.CLICKABLE, View.CLICKABLE);
-                }
-            }, ()=>{
-                return this.isClickable();
-            }),
-            a.addAttr('longClickable', (value)=>{
-                if(a.parseBoolean(value, false)){
-                    this.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
-                }
-            }, ()=>{
-                return this.isLongClickable();
-            }),
-            a.addAttr('saveEnabled', (value)=>{
-                if(a.parseBoolean(value, false)){
-                    //this.setFlags(View.SAVE_DISABLED, View.SAVE_DISABLED_MASK);
-                }
-            }),
-            a.addAttr('duplicateParentState', (value)=>{
-                if(a.parseBoolean(value, false)){
-                    this.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
-                }
-            }),
-            a.addAttr('visibility', (value)=>{
-                if(value === 'gone') this.setVisibility(View.GONE);
-                else if(value === 'invisible') this.setVisibility(View.INVISIBLE);
-                else if(value === 'visible') this.setVisibility(View.VISIBLE);
-            }, ()=>{
-                return this.getVisibility();
-            }),
-            a.addAttr('scrollbars', (value)=>{
-                if(value==='none') {
-                    this.setHorizontalScrollBarEnabled(false);
-                    this.setVerticalScrollBarEnabled(false);
-                }
-            }),
-            a.addAttr('isScrollContainer', (value)=>{
-                if(a.parseBoolean(value, false)){
-                    this.setScrollContainer(true);
-                }
-            }),
-            a.addAttr('minWidth', (value)=>{
-                this.setMinimumWidth(a.parseNumberPixelSize(value, 0));
-            }, ()=>{
-                return this.mMinWidth;
-            }),
-            a.addAttr('minHeight', (value)=>{
-                this.setMinimumHeight(a.parseNumberPixelSize(value, 0));
-            }, ()=>{
-                return this.mMinHeight;
-            }),
-            a.addAttr('onClick', (value)=>{
-                if(a.parseBoolean(value)) this.setClickable(true);
-                //will fire on perform click
-            }),
-            a.addAttr('overScrollMode', (value)=>{
-                let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
-                if(scrollMode===undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
-                this.setOverScrollMode(scrollMode);
-            }),
-            a.addAttr('layerType', (value)=>{
-                if((value+'').toLowerCase() == 'software'){
-                    this.setLayerType(View.LAYER_TYPE_SOFTWARE);
-                }else{
-                    this.setLayerType(View.LAYER_TYPE_NONE);
-                }
-            });
-            //CornerRadius
-            a.addAttr('cornerRadius', (value)=>{
-                let [leftTop, topRight, rightBottom, bottomLeft] = a.parsePaddingMarginLTRB(value);
-                this.setCornerRadius(a.parseNumberPixelSize(leftTop, 0), a.parseNumberPixelSize(topRight, 0),
-                    a.parseNumberPixelSize(rightBottom, 0), a.parseNumberPixelSize(bottomLeft, 0));
-            }, ()=>{
-                return this.mCornerRadiusTopLeft + ' ' + this.mCornerRadiusTopRight + ' ' + this.mCornerRadiusBottomRight + ' ' + this.mCornerRadiusBottomLeft;
-            });
-            a.addAttr('cornerRadiusTopLeft', (value)=>{
-                this.setCornerRadiusTopLeft(a.parseNumberPixelSize(value, this.mCornerRadiusTopLeft));
-            }, ()=>{
-                return this.mCornerRadiusTopLeft;
-            });
-            a.addAttr('cornerRadiusTopRight', (value)=>{
-                this.setCornerRadiusTopRight(a.parseNumberPixelSize(value, this.mCornerRadiusTopRight));
-            }, ()=>{
-                return this.mCornerRadiusTopRight;
-            });
-            a.addAttr('cornerRadiusBottomLeft', (value)=>{
-                this.setCornerRadiusBottomLeft(a.parseNumberPixelSize(value, this.mCornerRadiusBottomLeft));
-            }, ()=>{
-                return this.mCornerRadiusBottomLeft;
-            });
-            a.addAttr('cornerRadiusBottomRight', (value)=>{
-                this.setCornerRadiusBottomRight(a.parseNumberPixelSize(value, this.mCornerRadiusBottomRight));
-            }, ()=>{
-                return this.mCornerRadiusBottomRight;
-            });
-            //box shadow
-            a.addAttr('viewShadowColor', (value)=>{
-                if(!this.mShadowPaint) this.mShadowPaint = new Paint();
-                this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy,
-                    a.parseColor(value, this.mShadowPaint.shadowColor));
-            }, ()=>{
-                if(this.mShadowPaint) return this.mShadowPaint.shadowColor;
-            });
-            a.addAttr('viewShadowDx', (value)=>{
-                if(!this.mShadowPaint) this.mShadowPaint = new Paint();
-                let dx = this._attrBinder.parseNumberPixelSize(value, this.mShadowPaint.shadowDx);
-                this.setShadowView(this.mShadowPaint.shadowRadius, dx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
-            }, ()=>{
-                if(this.mShadowPaint) return this.mShadowPaint.shadowDx;
-            });
-            a.addAttr('viewShadowDy', (value)=>{
-                if(!this.mShadowPaint) this.mShadowPaint = new Paint();
-                let dy = a.parseNumberPixelSize(value, this.mShadowPaint.shadowDy);
-                this.setShadowView(this.mShadowPaint.shadowRadius, this.mShadowPaint.shadowDx, dy, this.mShadowPaint.shadowColor);
-            }, ()=>{
-                if(this.mShadowPaint) return this.mShadowPaint.shadowDy;
-            });
-            a.addAttr('viewShadowRadius', (value)=>{
-                if(!this.mShadowPaint) this.mShadowPaint = new Paint();
-                let radius = this._attrBinder.parseNumberPixelSize(value, this.mShadowPaint.shadowRadius);
-                this.setShadowView(radius, this.mShadowPaint.shadowDx, this.mShadowPaint.shadowDy, this.mShadowPaint.shadowColor);
-            }, ()=>{
-                if(this.mShadowPaint) return this.mShadowPaint.shadowRadius;
-            });
+        protected initBindAttr():void {
+            if (!View.ViewClassAttrBinder) {
+                View.ViewClassAttrBinder = new AttrBinder.ClassBinderMap();
+                View.ViewClassAttrBinder.set('background', {
+                    setter(v:View, value:any) { v.setBackground(v._attrBinder.parseDrawable(value)); },
+                    getter(v:View) { return v.mBackground; },
+                }).set('padding', {
+                    setter(v:View, value:any) {
+                        if(value==null) value = 0;
+                        let [left, top, right, bottom] = v._attrBinder.parsePaddingMarginLTRB(value);
+                        v._setPaddingWithUnit(left, top, right, bottom);
+                    },
+                    getter(v:View) { return v.mPaddingTop + ' ' + v.mPaddingRight + ' ' + v.mPaddingBottom + ' ' + v.mPaddingLeft; },
+                }).set('paddingLeft', {
+                    setter(v:View, value:any) {
+                        if(value==null) value = 0;
+                        v._setPaddingWithUnit(value, v.mPaddingTop, v.mPaddingRight, v.mPaddingBottom);
+                    },
+                    getter(v:View) { return v.mPaddingLeft; },
+                }).set('paddingTop', {
+                    setter(v:View, value:any) {
+                        if(value==null) value = 0;
+                        v._setPaddingWithUnit(v.mPaddingLeft, value, v.mPaddingRight, v.mPaddingBottom);
+                    },
+                    getter(v:View) { return v.mPaddingTop; },
+                }).set('paddingRight', {
+                    setter(v:View, value:any) {
+                        if(value==null) value = 0;
+                        v._setPaddingWithUnit(v.mPaddingLeft, v.mPaddingTop, value, v.mPaddingBottom);
+                    },
+                    getter(v:View) { return v.mPaddingRight; },
+                }).set('paddingBottom', {
+                    setter(v:View, value:any) {
+                        if(value==null) value = 0;
+                        v._setPaddingWithUnit(v.mPaddingLeft, v.mPaddingTop, v.mPaddingRight, value);
+                    },
+                    getter(v:View) { return v.mPaddingBottom; },
+                }).set('scrollX', {
+                    setter(v:View, value:any) {
+                        value = v._attrBinder.parseNumberPixelOffset(value);
+                        if(Number.isInteger(value)) v.scrollTo(value, v.mScrollY);
+                    },
+                    getter(v:View) { v.getScrollX(); },
+                }).set('scrollY', {
+                    setter(v:View, value:any) {
+                        value = v._attrBinder.parseNumberPixelOffset(value);
+                        if(Number.isInteger(value)) v.scrollTo(v.mScrollX, value);
+                    },
+                    getter(v:View) { return v.getScrollY(); },
+                }).set('alpha', {
+                    setter(v:View, value:any) {
+                        v.setAlpha(v._attrBinder.parseFloat(value, v.getAlpha()));
+                    },
+                    getter(v:View) { return v.getAlpha(); },
+                }).set('transformPivotX', {
+                    setter(v:View, value:any) {
+                        v.setPivotX(v._attrBinder.parseNumberPixelOffset(value, v.getPivotX()));
+                    },
+                    getter(v:View) { return v.getPivotX(); },
+                }).set('transformPivotY', {
+                    setter(v:View, value:any) {
+                        v.setPivotY(v._attrBinder.parseNumberPixelOffset(value, v.getPivotY()));
+                    },
+                    getter(v:View) { return v.getPivotY(); },
+                }).set('translationX', {
+                    setter(v:View, value:any) {
+                        v.setTranslationX(v._attrBinder.parseNumberPixelOffset(value, v.getTranslationX()));
+                    },
+                    getter(v:View) {
+                        return v.getTranslationX();
+                    },
+                }).set('translationY', {
+                    setter(v:View, value:any) {
+                        v.setTranslationY(v._attrBinder.parseNumberPixelOffset(value, v.getTranslationY()));
+                    },
+                    getter(v:View) {
+                        return v.getTranslationY();
+                    },
+                }).set('rotation', {
+                    setter(v:View, value:any) {
+                        v.setRotation(v._attrBinder.parseFloat(value, v.getRotation()));
+                    },
+                    getter(v:View) {
+                        return v.getRotation();
+                    },
+                }).set('scaleX', {
+                    setter(v:View, value:any) {
+                        v.setScaleX(v._attrBinder.parseFloat(value, v.getScaleX()));
+                    },
+                    getter(v:View) {
+                        return v.getScaleX();
+                    },
+                }).set('scaleY', {
+                    setter(v:View, value:any) {
+                        v.setScaleY(v._attrBinder.parseFloat(value, v.getScaleY()));
+                    },
+                    getter(v:View) {
+                        return v.getScaleY();
+                    },
+                }).set('tag', {
+                    setter(v:View, value:any) {
+                        v.setTag(value);
+                    },
+                    getter(v:View) {
+                        return v.getTag();
+                    },
+                }).set('id', {
+                    setter(v:View, value:any) {
+                        v.setId(value);
+                    },
+                    getter(v:View) {
+                        return v.getId();
+                    },
+                }).set('focusable', {
+                    setter(v:View, value:any) {
+                        if(v._attrBinder.parseBoolean(value, false)){
+                            v.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                        }
+                    },
+                    getter(v:View) {
+                        return v.isFocusable();
+                    },
+                }).set('focusableInTouchMode', {
+                    setter(v:View, value:any) {
+                        if(v._attrBinder.parseBoolean(value, false)){
+                            v.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
+                                View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                        }
+                    },
+                    getter(v:View) {
+                        return v.isFocusableInTouchMode();
+                    },
+                }).set('clickable', {
+                    setter(v:View, value:any) {
+                        if(v._attrBinder.parseBoolean(value, false)){
+                            v.setFlags(View.CLICKABLE, View.CLICKABLE);
+                        }
+                    },
+                    getter(v:View) {
+                        return v.isClickable();
+                    },
+                }).set('longClickable', {
+                    setter(v:View, value:any) {
+                        if(v._attrBinder.parseBoolean(value, false)){
+                            v.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
+                        }
+                    },
+                    getter(v:View) {
+                        return v.isLongClickable();
+                    },
+                }).set('duplicateParentState', {
+                    setter(v:View, value:any) {
+                        if(v._attrBinder.parseBoolean(value, false)){
+                            v.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
+                        }
+                    },
+                    getter(v:View) {
+                        return (v.mViewFlags & View.DUPLICATE_PARENT_STATE) == View.DUPLICATE_PARENT_STATE;
+                    },
+                }).set('visibility', {
+                    setter(v:View, value:any) {
+                        if(value === 'gone') v.setVisibility(View.GONE);
+                        else if(value === 'invisible') v.setVisibility(View.INVISIBLE);
+                        else if(value === 'visible') v.setVisibility(View.VISIBLE);
+                    },
+                    getter(v:View) {
+                        return v.getVisibility();
+                    },
+                }).set('scrollbars', {
+                    setter(v:View, value:any) {
+                        if(value === 'none') {
+                            v.setHorizontalScrollBarEnabled(false);
+                            v.setVerticalScrollBarEnabled(false);
+                        } else if (value === 'horizontal') {
+                            v.setHorizontalScrollBarEnabled(true);
+                            v.setVerticalScrollBarEnabled(false);
+                        } else if (value === 'vertical') {
+                            v.setHorizontalScrollBarEnabled(false);
+                            v.setVerticalScrollBarEnabled(true);
+                        }
+                    },
+                }).set('isScrollContainer', {
+                    setter(v:View, value:any) {
+                        if(v._attrBinder.parseBoolean(value, false)){
+                            v.setScrollContainer(true);
+                        }
+                    },
+                    getter(v:View) {
+                        return v.isScrollContainer();
+                    },
+                }).set('minWidth', {
+                    setter(v:View, value:any) {
+                        v.setMinimumWidth(v._attrBinder.parseNumberPixelSize(value, 0));
+                    },
+                    getter(v:View) {
+                        return v.mMinWidth;
+                    },
+                }).set('minHeight', {
+                    setter(v:View, value:any) {
+                        v.setMinimumHeight(v._attrBinder.parseNumberPixelSize(value, 0));
+                    },
+                    getter(v:View) {
+                        return v.mMinHeight;
+                    },
+                }).set('onClick', {
+                    setter(v:View, value:any) {
+                        if (value && typeof value === 'string') {
+                            v.setOnClickListener((view:View) => {
+                                // call activity method
+                                try {
+                                    let activityClickMethod = view.getContext()[value];
+                                    if (typeof activityClickMethod === 'function') {
+                                        activityClickMethod.call(view.getContext(), view);
+                                        return;
+                                    }
+                                } catch (e) {
+                                }
 
+                                // eval js code
+                                try {
+                                    new Function(value).call(view);
+                                } catch (e) {
+                                }
+                            });
+                        }
+                        v.bindElement.removeAttribute('onclick'); // remove avoid when debug layout show, will trigger click twice on safari.
+                    },
+                }).set('overScrollMode', {
+                    setter(v:View, value:any) {
+                        let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
+                        if(scrollMode===undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                        v.setOverScrollMode(scrollMode);
+                    }
+                }).set('layerType', {
+                    setter(v:View, value:any) {
+                        if((value+'').toLowerCase() == 'software'){
+                            v.setLayerType(View.LAYER_TYPE_SOFTWARE);
+                        }else{
+                            v.setLayerType(View.LAYER_TYPE_NONE);
+                        }
+                    }
+                }).set('cornerRadius', { // androidui add
+                    setter(v:View, value:any) {
+                        let [leftTop, topRight, rightBottom, bottomLeft] = v._attrBinder.parsePaddingMarginLTRB(value);
+                        v.setCornerRadius(v._attrBinder.parseNumberPixelSize(leftTop, 0), v._attrBinder.parseNumberPixelSize(topRight, 0),
+                            v._attrBinder.parseNumberPixelSize(rightBottom, 0), v._attrBinder.parseNumberPixelSize(bottomLeft, 0));
+                    },
+                    getter(v:View) {
+                        return v.mCornerRadiusTopLeft + ' ' + v.mCornerRadiusTopRight + ' ' + v.mCornerRadiusBottomRight + ' ' + v.mCornerRadiusBottomLeft;
+                    },
+                }).set('cornerRadiusTopLeft', {
+                    setter(v:View, value:any) {
+                        v.setCornerRadiusTopLeft(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusTopLeft));
+                    },
+                    getter(v:View) {
+                        return v.mCornerRadiusTopLeft;
+                    },
+                }).set('cornerRadiusTopRight', {
+                    setter(v:View, value:any) {
+                        v.setCornerRadiusTopRight(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusTopRight));
+                    },
+                    getter(v:View) {
+                        return v.mCornerRadiusTopRight;
+                    },
+                }).set('cornerRadiusBottomLeft', {
+                    setter(v:View, value:any) {
+                        v.setCornerRadiusBottomLeft(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusBottomLeft));
+                    },
+                    getter(v:View) {
+                        return v.mCornerRadiusBottomLeft;
+                    },
+                }).set('cornerRadiusBottomRight', {
+                    setter(v:View, value:any) {
+                        v.setCornerRadiusBottomRight(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusBottomRight));
+                    },
+                    getter(v:View) {
+                        return v.mCornerRadiusBottomRight;
+                    },
+                }).set('viewShadowColor', {
+                    setter(v:View, value:any) {
+                        if(!v.mShadowPaint) v.mShadowPaint = new Paint();
+                        v.setShadowView(v.mShadowPaint.shadowRadius, v.mShadowPaint.shadowDx, v.mShadowPaint.shadowDy,
+                            v._attrBinder.parseColor(value, v.mShadowPaint.shadowColor));
+                    },
+                    getter(v:View) {
+                        if(v.mShadowPaint) return v.mShadowPaint.shadowColor;
+                    },
+                }).set('viewShadowDx', {
+                    setter(v:View, value:any) {
+                        if(!v.mShadowPaint) v.mShadowPaint = new Paint();
+                        let dx = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowDx);
+                        v.setShadowView(v.mShadowPaint.shadowRadius, dx, v.mShadowPaint.shadowDy, v.mShadowPaint.shadowColor);
+                    },
+                    getter(v:View) {
+                        if(v.mShadowPaint) return v.mShadowPaint.shadowDx;
+                    },
+                }).set('viewShadowDy', {
+                    setter(v:View, value:any) {
+                        if(!v.mShadowPaint) v.mShadowPaint = new Paint();
+                        let dy = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowDy);
+                        v.setShadowView(v.mShadowPaint.shadowRadius, v.mShadowPaint.shadowDx, dy, v.mShadowPaint.shadowColor);
+                    },
+                    getter(v:View) {
+                        if(v.mShadowPaint) return v.mShadowPaint.shadowDy;
+                    },
+                }).set('viewShadowRadius', {
+                    setter(v:View, value:any) {
+                        if(!v.mShadowPaint) v.mShadowPaint = new Paint();
+                        let radius = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowRadius);
+                        v.setShadowView(radius, v.mShadowPaint.shadowDx, v.mShadowPaint.shadowDy, v.mShadowPaint.shadowColor);
+                    },
+                    getter(v:View) {
+                        if(v.mShadowPaint) return v.mShadowPaint.shadowRadius;
+                    },
+                })
+                ;
+                View.ViewClassAttrBinder.set('paddingStart', View.ViewClassAttrBinder.get('paddingLeft'));
+                View.ViewClassAttrBinder.set('paddingEnd', View.ViewClassAttrBinder.get('paddingRight'));
+            }
+            this._attrBinder.addClassAttrBind(View.ViewClassAttrBinder);
         }
         getContext():Context {
             if(this.mContext == null && this.mAttachInfo!=null){
@@ -4172,18 +4234,12 @@ module android.view {
         }
 
         performClick(event?:MotionEvent):boolean {
-            let handle = false;
-            if(this.bindElementOnClickAttr){
-                handle = eval(this.bindElementOnClickAttr);
-            }
-
             let li = this.mListenerInfo;
             if (li != null && li.mOnClickListener != null) {
                 li.mOnClickListener.onClick(this);
-                handle = true;
+                return true;
             }
-
-            return handle;
+            return false;
         }
 
         callOnClick():boolean {
@@ -6892,10 +6948,10 @@ module android.view {
 
         //bind Element show the layout and extra info
         bindElement: HTMLElement;
-        private bindElementOnClickAttr:string;
         private _AttrObserver:MutationObserver;
         private _stateAttrList:StateAttrList;
         protected _attrBinder = new AttrBinder(this);
+        private static ViewClassAttrBinder:AttrBinder.ClassBinderMap;
         static AndroidViewProperty = 'AndroidView';
         private _AttrObserverCallBack(arr: MutationRecord[], observer: MutationObserver){
             arr.forEach((record)=>{
@@ -6915,10 +6971,6 @@ module android.view {
                 this.bindElement[View.AndroidViewProperty] = null;
             }
             this.bindElement = bindElement || document.createElement(this.tagName());
-            this.bindElementOnClickAttr = this.bindElement.getAttribute('onclick') || this.bindElement.getAttribute('android:onclick');
-            this.bindElement.removeAttribute('onclick');//remove avoid when debug layout show, will trigger click twice on safari.
-            if(this.bindElementOnClickAttr) this.setClickable(true);
-
             this.bindElement.style.position = 'absolute';
 
             let oldBindView:View = this.bindElement[View.AndroidViewProperty];
@@ -6928,7 +6980,6 @@ module android.view {
             this.bindElement[View.AndroidViewProperty]=this;
 
             this._stateAttrList = new StateAttrList(this);
-            this._parseInitedAttribute();
             this._initAttrObserver();
         }
 
@@ -7060,21 +7111,9 @@ module android.view {
             this._AttrObserver.observe(this.bindElement, {attributes : true, attributeOldValue : true});
         }
 
-        private _parseInitedAttribute():void{
-            for(let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()){
-                key = 'android:' + key;
-                //remove first, then set, so the order was same as AttrList
-                this.bindElement.removeAttribute(key);
-                if(value!=null){
-                    this.bindElement.setAttribute(key, value);
-                }
-            }
-            let id = this.bindElement.getAttribute('android:id');
-            if(id) this.bindElement.id = id;
-        }
         private _fireInitedAttributeChange(){
-            for(let attr of Array.from(this.bindElement.attributes)){
-                this.onBindElementAttributeChanged(attr.name, null, attr.value);
+            for(let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()){
+                this.onBindElementAttributeChanged(key, null, value);
             }
         }
         private  _fireStateChangeToAttribute(oldState:number[], newState:number[]){
@@ -7131,27 +7170,12 @@ module android.view {
             }
 
             this._attrBinder.onAttrChange(attrName, newVal, this.getContext());
-            
         }
 
-        hasAttributeIgnoreCase(name:string):boolean {
-            return this.getAttributeIgnoreCase(name)!=null;
-        }
-        getAttributeIgnoreCase(name:string):string {
-            if(!(typeof name === 'string')) return null;
-            name = name.toLowerCase();
-            if(name.startsWith('android:')) name = name.substring('android:'.length);
-            for(let attr of Array.from(this.bindElement.attributes)){
-                let attrName = attr.name.toLowerCase();
-                if(attrName.startsWith('android:')) attrName = attrName.substring('android:'.length);
-                if(attrName==name) return attr.value;
-            }
-            return null;
-        }
-
-        applyDefaultAttributes(attrs:any){
+        applyDefaultAttributes(attrs:any) {
+            let initAttrMap = this._stateAttrList.getDefaultStateAttr().getAttrMap();
             for(let key in attrs){
-                if(!this.hasAttributeIgnoreCase(key)){
+                if(!initAttrMap.has(key.toLowerCase())){ // filter defined attr in xml.
                     this._attrBinder.onAttrChange(key, attrs[key], this.getContext());
                 }
             }

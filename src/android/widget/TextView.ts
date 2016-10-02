@@ -124,6 +124,7 @@ import System = java.lang.System;
 import Runnable = java.lang.Runnable;
 import OverScroller = android.widget.OverScroller;
 import NetDrawable = androidui.image.NetDrawable;
+import AttrBinder = androidui.attr.AttrBinder;
 
 /**
  * Displays text to the user and optionally allows them to edit it.  A TextView
@@ -465,6 +466,8 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     //    p.measureText("H");
     //}
 
+    private static TextViewClassAttrBind:AttrBinder.ClassBinderMap;
+
     constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.textViewStyle){
         super(context, bindElement, null);
 
@@ -478,229 +481,307 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         this.mMovement = this.getDefaultMovementMethod();
         this.mTransformation = null;
 
-        const a = this._attrBinder;
-        a.addAttr('textColorHighlight', (value)=>{
-            this.setHighlightColor(a.parseColor(value, this.mHighlightColor));
-        }, ()=>{
-            return this.getHighlightColor();
-        });
-        a.addAttr('textColor', (value)=>{
-            let color = a.parseColorList(value);
-            if(color) this.setTextColor(color);
-        }, ()=>{
-            return this.mTextColor;
-        });
-        a.addAttr('textColorHint', (value)=>{
-            let color = a.parseColorList(value);
-            if(color) this.setHintTextColor(color);
-        }, ()=>{
-            return this.mHintTextColor;
-        });
-        a.addAttr('textSize', (value)=>{
-            let size = a.parseNumberPixelSize(value, this.mTextPaint.getTextSize());
-            this.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
-        }, ()=>{
-            return this.mTextPaint.getTextSize();
-        });
-        a.addAttr('textAllCaps', (value)=>{
-            this.setAllCaps(a.parseBoolean(value, true));
-        });
-        a.addAttr('shadowColor', (value)=>{
-            this.setShadowLayer(this.mShadowRadius, this.mShadowDx, this.mShadowDy,
-                a.parseColor(value, this.mTextPaint.shadowColor));
-        }, ()=>{
-            return this.getShadowColor();
-        });
-        a.addAttr('shadowDx', (value)=>{
-            let dx = a.parseNumberPixelSize(value, this.mShadowDx);
-            this.setShadowLayer(this.mShadowRadius, dx, this.mShadowDy, this.mTextPaint.shadowColor);
-        }, ()=>{
-            return this.getShadowDx();
-        });
-        a.addAttr('shadowDy', (value)=>{
-            let dy = a.parseNumberPixelSize(value, this.mShadowDy);
-            this.setShadowLayer(this.mShadowRadius, this.mShadowDx, dy, this.mTextPaint.shadowColor);
-        }, ()=>{
-            return this.getShadowDy();
-        });
-        a.addAttr('shadowRadius', (value)=>{
-            let radius = a.parseNumberPixelSize(value, this.mShadowRadius);
-            this.setShadowLayer(radius, this.mShadowDx, this.mShadowDy, this.mTextPaint.shadowColor);
-        }, ()=>{
-            return this.getShadowRadius();
-        });
-
-        a.addAttr('drawableLeft', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = a.parseDrawable(value);
-            this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
-        }, ()=>{
-            return this.getCompoundDrawables()[0];
-        });
-        a.addAttr('drawableStart', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = a.parseDrawable(value);
-            this.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
-        }, ()=>{
-            return this.getCompoundDrawables()[0];
-        });
-        a.addAttr('drawableTop', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = a.parseDrawable(value);
-            this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
-        }, ()=>{
-            return this.getCompoundDrawables()[1];
-        });
-        a.addAttr('drawableRight', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = a.parseDrawable(value);
-            this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
-        }, ()=>{
-            return this.getCompoundDrawables()[2];
-        });
-        a.addAttr('drawableEnd', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = a.parseDrawable(value);
-            this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
-        }, ()=>{
-            return this.getCompoundDrawables()[2];
-        });
-        a.addAttr('drawableBottom', (value)=>{
-            let dr = this.mDrawables || <TextView.Drawables>{};
-            let drawable = a.parseDrawable(value);
-            this.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
-        }, ()=>{
-            return this.getCompoundDrawables()[3];
-        });
-        a.addAttr('drawablePadding', (value)=>{
-            this.setCompoundDrawablePadding(a.parseNumberPixelSize(value));
-        }, ()=>{
-            return this.getCompoundDrawablePadding();
-        });
-        a.addAttr('maxLines', (value)=>{
-            value = Number.parseInt(value);
-            if(Number.isInteger(value)) this.setMaxLines(value);
-        }, ():any=>{
-            return this.getMaxLines();
-        });
-        a.addAttr('maxHeight', (value)=>{
-            this.setMaxHeight(a.parseNumberPixelSize(value, this.getMaxHeight()));
-        }, ():any=>{
-            return this.getMaxHeight();
-        });
-        a.addAttr('lines', (value)=>{
-            value = Number.parseInt(value);
-            if(Number.isInteger(value)) this.setLines(value);
-        }, ()=>{
-            if(this.getMaxLines() === this.getMinLines()) return this.getMaxLines();
-            return null;
-        });
-        a.addAttr('height', (value)=>{
-            value = a.parseNumberPixelSize(value, -1);
-            if(value>=0) this.setHeight(value);
-        }, ()=>{
-            if(this.getMaxHeight() === this.getMinimumHeight()) return this.getMaxHeight();
-            return null;
-        });
-        a.addAttr('minLines', (value)=>{
-            this.setMinLines(a.parseInt(value, this.getMinLines()));
-        }, ()=>{
-            return this.getMinLines();
-        });
-        a.addAttr('minHeight', (value)=>{
-            this.setMinHeight(a.parseNumberPixelSize(value, this.getMinHeight()));
-        }, ()=>{
-            return this.getMinHeight();
-        });
-        a.addAttr('maxEms', (value)=>{
-            this.setMaxEms(a.parseInt(value, this.getMaxEms()));
-        }, ()=>{
-            return this.getMaxEms();
-        });
-        a.addAttr('maxWidth', (value)=>{
-            this.setMaxWidth(a.parseNumberPixelSize(value, this.getMaxWidth()));
-        }, ()=>{
-            return this.getMaxWidth();
-        });
-        a.addAttr('ems', (value)=>{
-            let ems = a.parseInt(value, null);
-            if(ems!=null) this.setEms(ems);
-        }, ()=>{
-            if(this.getMinEms() === this.getMaxEms()) return this.getMaxEms();
-            return null;
-        });
-        a.addAttr('width', (value)=>{
-            value = a.parseNumberPixelSize(value, -1);
-            if(value>=0) this.setWidth(value);
-        }, ()=>{
-            if(this.getMinWidth() === this.getMaxWidth()) return this.getMinWidth();
-            return null;
-        });
-        a.addAttr('minEms', (value)=>{
-            this.setMinEms(a.parseInt(value, this.getMinEms()));
-        }, ()=>{
-            return this.getMinEms();
-        });
-        a.addAttr('minWidth', (value)=>{
-            this.setMinWidth(a.parseNumberPixelSize(value, this.getMinWidth()));
-        }, ()=>{
-            return this.getMinWidth();
-        });
-        a.addAttr('gravity', (value)=>{
-            this.setGravity(a.parseGravity(value, this.mGravity));
-        }, ()=>{
-            return this.mGravity;
-        });
-        a.addAttr('hint', (value)=>{
-            this.setHint(a.parseString(value));
-        }, ()=>{
-            return this.getHint();
-        });
-        a.addAttr('text', (value)=>{
-            this.setText(a.parseString(value));
-        }, ()=>{
-            return this.getText();
-        });
-        a.addAttr('scrollHorizontally', (value)=>{
-            this.setHorizontallyScrolling(a.parseBoolean(value, false));
-        });
-        a.addAttr('singleLine', (value)=>{
-            this.setSingleLine(a.parseBoolean(value, false));
-        });
-        a.addAttr('ellipsize', (value)=>{
-            let ellipsize = TextUtils.TruncateAt[(value+'').toUpperCase()];
-            if(ellipsize) this.setEllipsize(ellipsize);
-        });
-        a.addAttr('marqueeRepeatLimit', (value)=>{
-            let marqueeRepeatLimit = a.parseInt(value, -1);
-            if(marqueeRepeatLimit>=0) this.setMarqueeRepeatLimit(marqueeRepeatLimit);
-        });
-        a.addAttr('includeFontPadding', (value)=>{
-            this.setIncludeFontPadding(a.parseBoolean(value, false));
-        });
-        a.addAttr('enabled', (value)=>{
-            this.setEnabled(a.parseBoolean(value, this.isEnabled()));
-        }, ()=>{
-            return this.isEnabled();
-        });
-        a.addAttr('lineSpacingExtra', (value)=>{
-            this.setLineSpacing(a.parseNumberPixelSize(value, this.mSpacingAdd), this.mSpacingMult);
-        }, ()=>{
-            return this.mSpacingAdd;
-        });
-        a.addAttr('lineSpacingMultiplier', (value)=>{
-            this.setLineSpacing(this.mSpacingAdd, a.parseFloat(value, this.mSpacingMult));
-        }, ()=>{
-            return this.mSpacingMult;
-        });
-
         this.setTextSize(14);//init size
         if(defStyle) this.applyDefaultAttributes(defStyle);
 
-        this.bindElement.innerHTML = this.bindElement.innerHTML.trim();//trim space html
-        let text = this.mText || this.bindElement.innerText;
+        let text = this.mText || this.bindElement.innerText.trim();
         this.bindElement.innerHTML = '';
         this.setText(text, this.mBufferType);//ensure setText called
+    }
+
+
+    protected initBindAttr():void {
+        super.initBindAttr();
+        if (!TextView.TextViewClassAttrBind) {
+            TextView.TextViewClassAttrBind = new AttrBinder.ClassBinderMap();
+            TextView.TextViewClassAttrBind.set('textColorHighlight', {
+                setter(v:TextView, value:any){
+                    v.setHighlightColor(v._attrBinder.parseColor(value, v.mHighlightColor));
+                },
+                getter(v:TextView){
+                    return v.getHighlightColor();
+                }
+            }).set('textColor', {
+                setter(v:TextView, value:any){
+                    let color = v._attrBinder.parseColorList(value);
+                    if (color) v.setTextColor(color);
+                },
+                getter(v:TextView){
+                    return v.mTextColor;
+                }
+            }).set('textColorHint', {
+                setter(v:TextView, value:any){
+                    let color = v._attrBinder.parseColorList(value);
+                    if (color) v.setHintTextColor(color);
+                },
+                getter(v:TextView){
+                    return v.mHintTextColor;
+                }
+            }).set('textSize', {
+                setter(v:TextView, value:any){
+                    let size = v._attrBinder.parseNumberPixelSize(value, v.mTextPaint.getTextSize());
+                    v.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+                },
+                getter(v:TextView){
+                    return v.mTextPaint.getTextSize();
+                }
+            }).set('textAllCaps', {
+                setter(v:TextView, value:any){
+                    v.setAllCaps(v._attrBinder.parseBoolean(value, true));
+                }
+            }).set('shadowColor', {
+                setter(v:TextView, value:any){
+                    v.setShadowLayer(v.mShadowRadius, v.mShadowDx, v.mShadowDy,
+                        v._attrBinder.parseColor(value, v.mTextPaint.shadowColor));
+                },
+                getter(v:TextView){
+                    return v.getShadowColor();
+                }
+            }).set('shadowDx', {
+                setter(v:TextView, value:any){
+                    let dx = v._attrBinder.parseNumberPixelSize(value, v.mShadowDx);
+                    v.setShadowLayer(v.mShadowRadius, dx, v.mShadowDy, v.mTextPaint.shadowColor);
+                },
+                getter(v:TextView){
+                    return v.getShadowDx();
+                }
+            }).set('shadowDy', {
+                setter(v:TextView, value:any){
+                    let dy = v._attrBinder.parseNumberPixelSize(value, v.mShadowDy);
+                    v.setShadowLayer(v.mShadowRadius, v.mShadowDx, dy, v.mTextPaint.shadowColor);
+                },
+                getter(v:TextView){
+                    return v.getShadowDy();
+                }
+            }).set('shadowRadius', {
+                setter(v:TextView, value:any){
+                    let radius = v._attrBinder.parseNumberPixelSize(value, v.mShadowRadius);
+                    v.setShadowLayer(radius, v.mShadowDx, v.mShadowDy, v.mTextPaint.shadowColor);
+                },
+                getter(v:TextView){
+                    return v.getShadowRadius();
+                }
+            }).set('drawableLeft', {
+                setter(v:TextView, value:any){
+                    let dr = v.mDrawables || <TextView.Drawables>{};
+                    let drawable = v._attrBinder.parseDrawable(value);
+                    v.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+                },
+                getter(v:TextView){
+                    return v.getCompoundDrawables()[0];
+                }
+            }).set('drawableStart', {
+                setter(v:TextView, value:any){
+                    let dr = v.mDrawables || <TextView.Drawables>{};
+                    let drawable = v._attrBinder.parseDrawable(value);
+                    v.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
+                },
+                getter(v:TextView){
+                    return v.getCompoundDrawables()[0];
+                }
+            }).set('drawableTop', {
+                setter(v:TextView, value:any){
+                    let dr = v.mDrawables || <TextView.Drawables>{};
+                    let drawable = v._attrBinder.parseDrawable(value);
+                    v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
+                },
+                getter(v:TextView){
+                    return v.getCompoundDrawables()[1];
+                }
+            }).set('drawableRight', {
+                setter(v:TextView, value:any){
+                    let dr = v.mDrawables || <TextView.Drawables>{};
+                    let drawable = v._attrBinder.parseDrawable(value);
+                    v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+                },
+                getter(v:TextView){
+                    return v.getCompoundDrawables()[2];
+                }
+            }).set('drawableEnd', {
+                setter(v:TextView, value:any){
+                    let dr = v.mDrawables || <TextView.Drawables>{};
+                    let drawable = v._attrBinder.parseDrawable(value);
+                    v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
+                },
+                getter(v:TextView){
+                    return v.getCompoundDrawables()[2];
+                }
+            }).set('drawableBottom', {
+                setter(v:TextView, value:any){
+                    let dr = v.mDrawables || <TextView.Drawables>{};
+                    let drawable = v._attrBinder.parseDrawable(value);
+                    v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
+                },
+                getter(v:TextView){
+                    return v.getCompoundDrawables()[3];
+                }
+            }).set('drawablePadding', {
+                setter(v:TextView, value:any){
+                    v.setCompoundDrawablePadding(v._attrBinder.parseNumberPixelSize(value));
+                },
+                getter(v:TextView){
+                    return v.getCompoundDrawablePadding();
+                }
+            }).set('maxLines', {
+                setter(v:TextView, value:any){
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value)) v.setMaxLines(value);
+                },
+                getter(v:TextView){
+                    return v.getMaxLines();
+                }
+            }).set('maxHeight', {
+                setter(v:TextView, value:any){
+                    v.setMaxHeight(v._attrBinder.parseNumberPixelSize(value, v.getMaxHeight()));
+                },
+                getter(v:TextView){
+                    return v.getMaxHeight();
+                }
+            }).set('lines', {
+                setter(v:TextView, value:any){
+                    value = Number.parseInt(value);
+                    if (Number.isInteger(value)) v.setLines(value);
+                },
+                getter(v:TextView){
+                    if (v.getMaxLines() === v.getMinLines()) return v.getMaxLines();
+                    return null;
+                }
+            }).set('height', {
+                setter(v:TextView, value:any){
+                    value = v._attrBinder.parseNumberPixelSize(value, -1);
+                    if (value >= 0) v.setHeight(value);
+                },
+                getter(v:TextView){
+                    if (v.getMaxHeight() === v.getMinimumHeight()) return v.getMaxHeight();
+                    return null;
+                }
+            }).set('minLines', {
+                setter(v:TextView, value:any){
+                    v.setMinLines(v._attrBinder.parseInt(value, v.getMinLines()));
+                },
+                getter(v:TextView){
+                    return v.getMinLines();
+                }
+            }).set('minHeight', {
+                setter(v:TextView, value:any){
+                    v.setMinHeight(v._attrBinder.parseNumberPixelSize(value, v.getMinHeight()));
+                },
+                getter(v:TextView){
+                    return v.getMinHeight();
+                }
+            }).set('maxEms', {
+                setter(v:TextView, value:any){
+                    v.setMaxEms(v._attrBinder.parseInt(value, v.getMaxEms()));
+                },
+                getter(v:TextView){
+                    return v.getMaxEms();
+                }
+            }).set('maxWidth', {
+                setter(v:TextView, value:any){
+                    v.setMaxWidth(v._attrBinder.parseNumberPixelSize(value, v.getMaxWidth()));
+                },
+                getter(v:TextView){
+                    return v.getMaxWidth();
+                }
+            }).set('ems', {
+                setter(v:TextView, value:any){
+                    let ems = v._attrBinder.parseInt(value, null);
+                    if (ems != null) v.setEms(ems);
+                },
+                getter(v:TextView){
+                    if (v.getMinEms() === v.getMaxEms()) return v.getMaxEms();
+                    return null;
+                }
+            }).set('width', {
+                setter(v:TextView, value:any){
+                    value = v._attrBinder.parseNumberPixelSize(value, -1);
+                    if (value >= 0) v.setWidth(value);
+                },
+                getter(v:TextView){
+                    if (v.getMinWidth() === v.getMaxWidth()) return v.getMinWidth();
+                    return null;
+                }
+            }).set('minEms', {
+                setter(v:TextView, value:any){
+                    v.setMinEms(v._attrBinder.parseInt(value, v.getMinEms()));
+                },
+                getter(v:TextView){
+                    return v.getMinEms();
+                }
+            }).set('minWidth', {
+                setter(v:TextView, value:any){
+                    v.setMinWidth(v._attrBinder.parseNumberPixelSize(value, v.getMinWidth()));
+                },
+                getter(v:TextView){
+                    return v.getMinWidth();
+                }
+            }).set('gravity', {
+                setter(v:TextView, value:any){
+                    v.setGravity(v._attrBinder.parseGravity(value, v.mGravity));
+                },
+                getter(v:TextView){
+                    return v.mGravity;
+                }
+            }).set('hint', {
+                setter(v:TextView, value:any){
+                    v.setHint(v._attrBinder.parseString(value));
+                },
+                getter(v:TextView){
+                    return v.getHint();
+                }
+            }).set('text', {
+                setter(v:TextView, value:any){
+                    v.setText(v._attrBinder.parseString(value));
+                },
+                getter(v:TextView){
+                    return v.getText();
+                }
+            }).set('scrollHorizontally', {
+                setter(v:TextView, value:any){
+                    v.setHorizontallyScrolling(v._attrBinder.parseBoolean(value, false));
+                }
+            }).set('singleLine', {
+                setter(v:TextView, value:any){
+                    v.setSingleLine(v._attrBinder.parseBoolean(value, false));
+                }
+            }).set('ellipsize', {
+                setter(v:TextView, value:any){
+                    let ellipsize = TextUtils.TruncateAt[(value + '').toUpperCase()];
+                    if (ellipsize) v.setEllipsize(ellipsize);
+                }
+            }).set('marqueeRepeatLimit', {
+                setter(v:TextView, value:any){
+                    let marqueeRepeatLimit = v._attrBinder.parseInt(value, -1);
+                    if (marqueeRepeatLimit >= 0) v.setMarqueeRepeatLimit(marqueeRepeatLimit);
+                }
+            }).set('includeFontPadding', {
+                setter(v:TextView, value:any){
+                    v.setIncludeFontPadding(v._attrBinder.parseBoolean(value, false));
+                }
+            }).set('enabled', {
+                setter(v:TextView, value:any){
+                    v.setEnabled(v._attrBinder.parseBoolean(value, v.isEnabled()));
+                },
+                getter(v:TextView){
+                    return v.isEnabled();
+                }
+            }).set('lineSpacingExtra', {
+                setter(v:TextView, value:any){
+                    v.setLineSpacing(v._attrBinder.parseNumberPixelSize(value, v.mSpacingAdd), v.mSpacingMult);
+                },
+                getter(v:TextView){
+                    return v.mSpacingAdd;
+                }
+            }).set('lineSpacingMultiplier', {
+                setter(v:TextView, value:any){
+                    v.setLineSpacing(v.mSpacingAdd, v._attrBinder.parseFloat(value, v.mSpacingMult));
+                },
+                getter(v:TextView){
+                    return v.mSpacingMult;
+                }
+            });
+        }
+        this._attrBinder.addClassAttrBind(TextView.TextViewClassAttrBind);
     }
 
     private setTypefaceFromAttrs(familyName:string, typefaceIndex:number, styleIndex:number):void  {

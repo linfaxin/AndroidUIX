@@ -48,6 +48,7 @@ module android.view {
     import Integer = java.lang.Integer;
     import Animation = animation.Animation;
     import Transformation = animation.Transformation;
+    import AttrBinder = androidui.attr.AttrBinder;
 
     export abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN = 0x1;
@@ -145,51 +146,69 @@ module android.view {
         mSuppressLayout = false;
         private mLayoutCalledWhileSuppressed = false;
         private mChildCountWithTransientState = 0;
+        private static ViewGroupClassAttrBind:AttrBinder.ClassBinderMap;
 
         constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
             super(context, bindElement, defStyle);
             this.initViewGroup();
+        }
 
-            const a = this._attrBinder;
-            a.addAttr('clipChildren', (value)=>{
-                this.setClipChildren(a.parseBoolean(value));
-            }, ()=>{
-                return this.getClipChildren();
-            });
-            a.addAttr('clipToPadding', (value)=>{
-                this.setClipToPadding(a.parseBoolean(value));
-            }, ()=>{
-                return this.isClipToPadding();
-            });
-            a.addAttr('animationCache', (value)=>{
-                this.setAnimationCacheEnabled(a.parseBoolean(value, true));
-            });
-            a.addAttr('persistentDrawingCache', (value)=>{
-                if(value == 'none') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
-                else if(value == 'animation') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
-                else if(value == 'scrolling') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
-                else if(value == 'all') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
-            });
-            a.addAttr('addStatesFromChildren', (value)=>{
-                this.setAddStatesFromChildren(a.parseBoolean(value, false));
-            });
-            a.addAttr('alwaysDrawnWithCache', (value)=>{
-                this.setAlwaysDrawnWithCacheEnabled(a.parseBoolean(value, true));
-            });
-            //a.addAttr('layoutAnimation', (value)=>{//TODO when layout support
-            //});
-            a.addAttr('descendantFocusability', (value)=>{
-                if(value == 'beforeDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
-                else if(value == 'afterDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-                else if(value == 'blocksDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-            });
-            a.addAttr('splitMotionEvents', (value)=>{
-                this.setMotionEventSplittingEnabled(a.parseBoolean(value, false));
-            });
-            //a.addAttr('animateLayoutChanges', (value)=>{//TODO when layout transition support
-            //});
-            //a.addAttr('layoutMode', (value)=>{//TODO when more layout mode support
-            //});
+        protected initBindAttr():void {
+            super.initBindAttr();
+            if (!ViewGroup.ViewGroupClassAttrBind) {
+                ViewGroup.ViewGroupClassAttrBind = new AttrBinder.ClassBinderMap();
+                ViewGroup.ViewGroupClassAttrBind.set('clipChildren', {
+                    setter(v:ViewGroup, value:any) {
+                        v.setClipChildren(v._attrBinder.parseBoolean(value));
+                    },
+                    getter(v:ViewGroup) {
+                        return v.getClipChildren();
+                    }
+                }).set('clipToPadding', {
+                    setter(v:ViewGroup, value:any) {
+                        v.setClipToPadding(v._attrBinder.parseBoolean(value));
+                    },
+                    getter(v:ViewGroup) {
+                        return v.isClipToPadding();
+                    }
+                }).set('animationCache', {
+                    setter(v:ViewGroup, value:any) {
+                        v.setAnimationCacheEnabled(v._attrBinder.parseBoolean(value, true));
+                    }
+                }).set('persistentDrawingCache', {
+                    setter(v:ViewGroup, value:any) {
+                        if(value === 'none') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
+                        else if(value === 'animation') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
+                        else if(value === 'scrolling') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
+                        else if(value === 'all') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
+                    }
+                }).set('addStatesFromChildren', {
+                    setter(v:ViewGroup, value:any) {
+                        v.setAddStatesFromChildren(v._attrBinder.parseBoolean(value, false));
+                    }
+                }).set('alwaysDrawnWithCache', {
+                    setter(v:ViewGroup, value:any) {
+                        v.setAlwaysDrawnWithCacheEnabled(v._attrBinder.parseBoolean(value, true));
+                    }
+                }).set('descendantFocusability', {
+                    setter(v:ViewGroup, value:any) {
+                        if(value == 'beforeDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                        else if(value == 'afterDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+                        else if(value == 'blocksDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+                    }
+                }).set('splitMotionEvents', {
+                    setter(v:ViewGroup, value:any) {
+                        v.setMotionEventSplittingEnabled(v._attrBinder.parseBoolean(value, false));
+                    }
+                });
+                //a.addAttr('layoutAnimation', (value)=>{//TODO when layout support
+                //});
+                //a.addAttr('animateLayoutChanges', (value)=>{//TODO when layout transition support
+                //});
+                //a.addAttr('layoutMode', (value)=>{//TODO when more layout mode support
+                //});
+            }
+            this._attrBinder.addClassAttrBind(ViewGroup.ViewGroupClassAttrBind);
         }
 
         private initViewGroup() {
@@ -2551,6 +2570,7 @@ module android.view {
     }
 
     export module ViewGroup {
+        import AttrBinder = androidui.attr.AttrBinder;
         export class LayoutParams {
             static FILL_PARENT = -1;
             static MATCH_PARENT = -1;
@@ -2617,6 +2637,7 @@ module android.view {
             _measuringMeasureSpec:android.util.DisplayMetrics;
             _attrBinder:androidui.attr.AttrBinder;
 
+            private static ViewGroupParamClassAttrBind:AttrBinder.ClassBinderMap;
 
             constructor();
             constructor(src:LayoutParams);
@@ -2635,19 +2656,27 @@ module android.view {
 
                 if(!this._attrBinder) {
                     this._attrBinder = new androidui.attr.AttrBinder(this);
-
-                    this._attrBinder.addAttr('width', (value)=>{
-                        if(value==null) value = -2;
-                        this.width = value;
-                    }, ()=>{
-                        return this._widthOrig;
-                    });
-                    this._attrBinder.addAttr('height', (value)=>{
-                        if(value==null) value = -2;
-                        this.height = value;
-                    }, ()=>{
-                        return this._heightOrig;
-                    })
+                    if (!LayoutParams.ViewGroupParamClassAttrBind) {
+                        LayoutParams.ViewGroupParamClassAttrBind = new AttrBinder.ClassBinderMap();
+                        LayoutParams.ViewGroupParamClassAttrBind.set('width', {
+                            setter(host:LayoutParams, value:any) {
+                                if(value==null) value = -2;
+                                host.width = value;
+                            },
+                            getter(host:LayoutParams) {
+                                return host._widthOrig;
+                            }
+                        }).set('height', {
+                            setter(host:LayoutParams, value:any) {
+                                if(value==null) value = -2;
+                                host.height = value;
+                            },
+                            getter(host:LayoutParams) {
+                                return host._heightOrig;
+                            }
+                        });
+                    }
+                    this._attrBinder.addClassAttrBind(LayoutParams.ViewGroupParamClassAttrBind);
                 }
             }
 
@@ -2671,6 +2700,7 @@ module android.view {
             private _bottomMarginOrig:any = 0;
 
             static DEFAULT_MARGIN_RELATIVE:number = Integer.MIN_VALUE;
+            private static MarginLayoutParamsClassAttrBind:AttrBinder.ClassBinderMap;
 
             public get leftMargin():number{
                 if(typeof this._leftMargin === 'number') return this._leftMargin;
@@ -2768,50 +2798,68 @@ module android.view {
                     }
                 }
 
-                this._attrBinder.addAttr('marginLeft', (value)=>{
-                    if(value==null) value = 0;
-                    this.leftMargin = value;
-                }, ()=>{
-                    return this._leftMarginOrig;
-                });
-                this._attrBinder.addAttr('marginStart', (value)=>{
-                    if(value==null) value = 0;
-                    this.leftMargin = value;
-                }, ()=>{
-                    return this._leftMarginOrig;
-                });
-                this._attrBinder.addAttr('marginTop', (value)=>{
-                    if(value==null) value = 0;
-                    this.topMargin = value;
-                }, ()=>{
-                    return this._topMarginOrig;
-                });
-                this._attrBinder.addAttr('marginRight', (value)=>{
-                    if(value==null) value = 0;
-                    this.rightMargin = value;
-                }, ()=>{
-                    return this._rightMarginOrig;
-                });
-                this._attrBinder.addAttr('marginEnd', (value)=>{
-                    if(value==null) value = 0;
-                    this.rightMargin = value;
-                }, ()=>{
-                    return this._rightMarginOrig;
-                });
-                this._attrBinder.addAttr('marginBottom', (value)=>{
-                    if(value==null) value = 0;
-                    this.bottomMargin = value;
-                }, ()=>{
-                    return this._bottomMargin;
-                });
-                this._attrBinder.addAttr('margin', (value)=>{
-                    if(value==null) value = 0;
-                    let [left, top, right, bottom] = this._attrBinder.parsePaddingMarginLTRB(value);
-                    this.leftMargin = <any>left;
-                    this.topMargin = <any>top;
-                    this.rightMargin = <any>right;
-                    this.bottomMargin = <any>bottom;
-                });
+                if (!MarginLayoutParams.MarginLayoutParamsClassAttrBind) {
+                    MarginLayoutParams.MarginLayoutParamsClassAttrBind = new AttrBinder.ClassBinderMap();
+                    MarginLayoutParams.MarginLayoutParamsClassAttrBind.set('marginLeft', {
+                        setter(host:MarginLayoutParams, value:any) {
+                            if(value==null) value = 0;
+                            host.leftMargin = value;
+                        },
+                        getter(host:MarginLayoutParams) {
+                            return host._leftMarginOrig;
+                        }
+                    }).set('marginStart', {
+                        setter(host:MarginLayoutParams, value:any) {
+                            if(value==null) value = 0;
+                            host.leftMargin = value;
+                        },
+                        getter(host:MarginLayoutParams) {
+                            return host._leftMarginOrig;
+                        }
+                    }).set('marginTop', {
+                        setter(host:MarginLayoutParams, value:any) {
+                            if(value==null) value = 0;
+                            host.topMargin = value;
+                        },
+                        getter(host:MarginLayoutParams) {
+                            return host._topMarginOrig;
+                        }
+                    }).set('marginRight', {
+                        setter(host:MarginLayoutParams, value:any) {
+                            if(value==null) value = 0;
+                            host.rightMargin = value;
+                        },
+                        getter(host:MarginLayoutParams) {
+                            return host._rightMarginOrig;
+                        }
+                    }).set('marginEnd', {
+                        setter(host:MarginLayoutParams, value:any) {
+                            if(value==null) value = 0;
+                            host.rightMargin = value;
+                        },
+                        getter(host:MarginLayoutParams) {
+                            return host._rightMarginOrig;
+                        }
+                    }).set('marginBottom', {
+                        setter(host:MarginLayoutParams, value:any) {
+                            if(value==null) value = 0;
+                            host.bottomMargin = value;
+                        },
+                        getter(host:MarginLayoutParams) {
+                            return host._bottomMargin;
+                        }
+                    }).set('margin', {
+                        setter(host:MarginLayoutParams, value:any) {
+                            if(value==null) value = 0;
+                            let [left, top, right, bottom] = host._attrBinder.parsePaddingMarginLTRB(value);
+                            host.leftMargin = <any>left;
+                            host.topMargin = <any>top;
+                            host.rightMargin = <any>right;
+                            host.bottomMargin = <any>bottom;
+                        }
+                    })
+                }
+                this._attrBinder.addClassAttrBind(MarginLayoutParams.MarginLayoutParamsClassAttrBind);
             }
 
             setMargins(left:number, top:number, right:number, bottom:number) {

@@ -39,6 +39,7 @@ import Integer = java.lang.Integer;
 import System = java.lang.System;
 import NetDrawable = androidui.image.NetDrawable;
 import LayoutParams = android.view.ViewGroup.LayoutParams;
+    import AttrBinder = androidui.attr.AttrBinder;
     
 /**
  * Displays an arbitrary image, such as an icon.  The ImageView class
@@ -117,83 +118,77 @@ export class ImageView extends View {
     //    ImageView.ScaleType.FIT_START, ImageView.ScaleType.FIT_CENTER, ImageView.ScaleType.FIT_END, ImageView.ScaleType.CENTER,
     //    ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE ];
 
+    private static ImageViewClassAttrBind:AttrBinder.ClassBinderMap;
 
     constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
         super(context, bindElement, defStyle);
         this.initImageView();
 
-        const a = this._attrBinder;
-        a.addAttr('src', (value)=>{
-            let d = a.parseDrawable(value);
-            if(d) this.setImageDrawable(d);
-            else this.setImageURI(value);
-        }, ()=>{
-            return this.mDrawable;
-        });
-        a.addAttr('baselineAlignBottom', (value)=>{
-            this.setBaselineAlignBottom(a.parseBoolean(value, this.mBaselineAlignBottom));
-        });
-        a.addAttr('baseline', (value)=>{
-            this.setBaseline(a.parseNumberPixelSize(value, this.mBaseline));
-        }, ()=>{
-            return this.mBaseline;
-        });
-        a.addAttr('adjustViewBounds', (value)=>{
-            this.setAdjustViewBounds(a.parseBoolean(value, false));
-        });
-        a.addAttr('maxWidth', (value)=>{
-            let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getWidth() : 0;
-            this.setMaxWidth(a.parseNumberPixelSize(value, this.mMaxWidth, baseValue));
-        }, ()=>{
-            return this.mMaxWidth;
-        });
-        a.addAttr('maxHeight', (value)=>{
-            let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getHeight() : 0;
-            this.setMaxHeight(a.parseNumberPixelSize(value, this.mMaxHeight, baseValue));
-        }, ()=>{
-            return this.mMaxHeight;
-        });
-        a.addAttr('scaleType', (value)=>{
-            this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
-        }, ()=>{
-            return this.mScaleType.toString();
-        });
-        a.addAttr('drawableAlpha', (value)=>{
-            this.setImageAlpha(a.parseInt(value, this.mAlpha));
-        }, ()=>{
-            return this.mAlpha;
-        });
-        a.addAttr('cropToPadding', (value)=>{
-            this.setCropToPadding(a.parseBoolean(value, false));
-        });
+    }
 
-        //let a:TypedArray = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.ImageView, defStyle, 0);
-        //let d:Drawable = a.getDrawable(com.android.internal.R.styleable.ImageView_src);
-        //if (d != null) {
-        //    this.setImageDrawable(d);
-        //}
-        //this.mBaselineAlignBottom = a.getBoolean(com.android.internal.R.styleable.ImageView_baselineAlignBottom, false);
-        //this.mBaseline = a.getDimensionPixelSize(com.android.internal.R.styleable.ImageView_baseline, -1);
-        //this.setAdjustViewBounds(a.getBoolean(com.android.internal.R.styleable.ImageView_adjustViewBounds, false));
-        //this.setMaxWidth(a.getDimensionPixelSize(com.android.internal.R.styleable.ImageView_maxWidth, Integer.MAX_VALUE));
-        //this.setMaxHeight(a.getDimensionPixelSize(com.android.internal.R.styleable.ImageView_maxHeight, Integer.MAX_VALUE));
-        //let index:number = a.getInt(com.android.internal.R.styleable.ImageView_scaleType, -1);
-        //if (index >= 0) {
-        //    this.setScaleType(ImageView.sScaleTypeArray[index]);
-        //}
-        ////let tint:number = a.getInt(com.android.internal.R.styleable.ImageView_tint, 0);
-        ////if (tint != 0) {
-        ////    this.setColorFilter(tint);
-        ////}
-        //let alpha:number = a.getInt(com.android.internal.R.styleable.ImageView_drawableAlpha, 255);
-        //if (alpha != 255) {
-        //    this.setAlpha(alpha);
-        //}
-        //this.mCropToPadding = a.getBoolean(com.android.internal.R.styleable.ImageView_cropToPadding, false);
-        //a.recycle();
-    //need inflate syntax/reader for matrix
-
-
+    protected initBindAttr():void {
+        super.initBindAttr();
+        if (!ImageView.ImageViewClassAttrBind) {
+            ImageView.ImageViewClassAttrBind = new AttrBinder.ClassBinderMap();
+            ImageView.ImageViewClassAttrBind.set('src', {
+                setter(v:ImageView, value:any) {
+                    let d = v._attrBinder.parseDrawable(value);
+                    if (d) v.setImageDrawable(d);
+                    else v.setImageURI(value);
+                }, getter(v:ImageView) {
+                    return v.mDrawable;
+                }
+            }).set('baselineAlignBottom', {
+                setter(v:ImageView, value:any) {
+                    v.setBaselineAlignBottom(v._attrBinder.parseBoolean(value, v.mBaselineAlignBottom));
+                }
+            }).set('baseline', {
+                setter(v:ImageView, value:any) {
+                    v.setBaseline(v._attrBinder.parseNumberPixelSize(value, v.mBaseline));
+                }, getter(v:ImageView) {
+                    return v.mBaseline;
+                }
+            }).set('adjustViewBounds', {
+                setter(v:ImageView, value:any) {
+                    v.setAdjustViewBounds(v._attrBinder.parseBoolean(value, false));
+                }
+            }).set('maxWidth', {
+                setter(v:ImageView, value:any) {
+                    let baseValue = v.getParent() instanceof View ? (<View><any>v.getParent()).getWidth() : 0;
+                    v.setMaxWidth(v._attrBinder.parseNumberPixelSize(value, v.mMaxWidth, baseValue));
+                }, getter(v:ImageView) {
+                    return v.mMaxWidth;
+                }
+            }).set('maxHeight', {
+                setter(v:ImageView, value:any) {
+                    let baseValue = v.getParent() instanceof View ? (<View><any>v.getParent()).getHeight() : 0;
+                    v.setMaxHeight(v._attrBinder.parseNumberPixelSize(value, v.mMaxHeight, baseValue));
+                }, getter(v:ImageView) {
+                    return v.mMaxHeight;
+                }
+            }).set('scaleType', {
+                setter(v:ImageView, value:any) {
+                    if (typeof value === 'number') {
+                        v.setScaleType(value);
+                    } else {
+                        v.setScaleType(ImageView.parseScaleType(value, v.mScaleType));
+                    }
+                }, getter(v:ImageView) {
+                    return v.mScaleType;
+                }
+            }).set('drawableAlpha', {
+                setter(v:ImageView, value:any) {
+                    v.setImageAlpha(v._attrBinder.parseInt(value, v.mAlpha));
+                }, getter(v:ImageView) {
+                    return v.mAlpha;
+                }
+            }).set('cropToPadding', {
+                setter(v:ImageView, value:any) {
+                    v.setCropToPadding(v._attrBinder.parseBoolean(value, false));
+                }
+            });
+        }
+        this._attrBinder.addClassAttrBind(ImageView.ImageViewClassAttrBind);
     }
 
     private initImageView():void  {

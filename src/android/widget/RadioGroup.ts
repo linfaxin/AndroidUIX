@@ -28,6 +28,7 @@ import Button = android.widget.Button;
 import CompoundButton = android.widget.CompoundButton;
 import LinearLayout = android.widget.LinearLayout;
 import RadioButton = android.widget.RadioButton;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * <p>This class is used to create a multiple-exclusion scope for a set of radio
  * buttons. Checking one radio button that belongs to a radio group unchecks
@@ -67,14 +68,25 @@ export class RadioGroup extends LinearLayout {
 
     private mPassThroughListener:RadioGroup.PassThroughHierarchyChangeListener;
 
+    private static RadioGroupClassAttrBind:AttrBinder.ClassBinderMap;
 
     constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
         super(context, bindElement, defStyle);
         this.setOrientation(RadioGroup.VERTICAL);
         this.init();
-        this._attrBinder.addAttr('checkedButton', (value)=>{
-            this.setCheckedId(value);
-        });
+    }
+
+    protected initBindAttr():void {
+        super.initBindAttr();
+        if (!RadioGroup.RadioGroupClassAttrBind) {
+            RadioGroup.RadioGroupClassAttrBind = new AttrBinder.ClassBinderMap();
+            RadioGroup.RadioGroupClassAttrBind.set('checkedButton', {
+                setter(v:RadioGroup, value:any) {
+                    v.setCheckedId(value);
+                }
+            })
+        }
+        this._attrBinder.addClassAttrBind(RadioGroup.RadioGroupClassAttrBind);
     }
 
     private init():void  {
