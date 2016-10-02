@@ -1540,8 +1540,9 @@ declare module androidui.attr {
         parseStringArray(value: any): string[];
     }
     module AttrBinder {
-        class ClassBinderMap extends Map<string, ClassBinderValue> {
-            set(key: string, value?: androidui.attr.AttrBinder.ClassBinderValue): Map<string, androidui.attr.AttrBinder.ClassBinderValue>;
+        class ClassBinderMap {
+            binderMap: Map<string, ClassBinderValue>;
+            set(key: string, value?: androidui.attr.AttrBinder.ClassBinderValue): ClassBinderMap;
             get(key: string): androidui.attr.AttrBinder.ClassBinderValue;
             private callSetter(attrName, host, attrValue);
             private callGetter(attrName, host);
