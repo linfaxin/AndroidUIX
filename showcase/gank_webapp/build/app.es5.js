@@ -47,6 +47,7 @@ var R;
     var Resources = android.content.res.Resources;
     var NetDrawable = androidui.image.NetDrawable;
     var NinePatchDrawable = androidui.image.NinePatchDrawable;
+    var NetImage = androidui.image.NetImage;
     R.id = {
         drawerLayout: 'drawerLayout',
         btn_menu: 'btn_menu',
@@ -121,6 +122,7 @@ var R;
     R.bool = bool;
     var res_data = R._res_data;
     function resDirSpecMatch(spec) {
+        spec = spec.toLocaleLowerCase();
         var ratio = window.devicePixelRatio;
         if (ratio === 0.75 && spec === 'ldpi') return true;
         if (ratio === 1 && spec === 'mdpi') return true;
@@ -226,6 +228,7 @@ var R;
         matchDirNamesCache[baseDirName] = matchDirNames;
         return matchDirNames;
     }
+    var imageFileCache = new Map();
     function findImageFile(fileName) {
         var _iteratorNormalCompletion3 = true;
         var _didIteratorError3 = false;
@@ -238,39 +241,71 @@ var R;
                 var dir = res_data[dirName];
                 if (dirName === 'drawable') {
                     var findImageWithRatioName = function findImageWithRatioName(ratio) {
-                        var fileStr = dir[fileName + '@' + ratio + 'x'];
-                        if (fileStr && fileStr.startsWith('data:image')) {
-                            return new NetDrawable(fileStr, null, ratio);
+                        var fileNameWithRatio = fileName + '@' + ratio + 'x';
+                        var key = dirName + '/' + fileNameWithRatio;
+                        var netImage = imageFileCache.get(key);
+                        if (!netImage) {
+                            var fileStr = dir[fileNameWithRatio];
+                            if (fileStr && fileStr.startsWith('data:image')) {
+                                netImage = new NetImage(fileStr, ratio);
+                                imageFileCache.set(key, netImage);
+                            }
                         }
+                        if (netImage) return new NetDrawable(netImage);
                         var fileNameWithNinePatch = fileName + '@' + ratio + 'x' + '.9';
-                        fileStr = dir[fileNameWithNinePatch];
-                        if (fileStr && fileStr.startsWith('data:image')) {
-                            return new NinePatchDrawable(fileStr, null, ratio);
+                        key = dirName + '/' + fileNameWithNinePatch;
+                        netImage = imageFileCache.get(key);
+                        if (!netImage) {
+                            var fileStr = dir[fileNameWithNinePatch];
+                            if (fileStr && fileStr.startsWith('data:image')) {
+                                netImage = new NetImage(fileStr, ratio);
+                                imageFileCache.set(key, netImage);
+                            }
                         }
+                        if (netImage) return new NinePatchDrawable(netImage);
+                        return null;
                     };
 
-                    var ratioDrawable = findImageWithRatioName(window.devicePixelRatio) || findImageWithRatioName(6) || findImageWithRatioName(5) || findImageWithRatioName(4) || findImageWithRatioName(3) || findImageWithRatioName(2) || findImageWithRatioName(1);
-                    if (ratioDrawable) return {
-                            v: ratioDrawable
-                        };
+                    var ratioDrawable = findImageWithRatioName(window.devicePixelRatio);
+                    if (!ratioDrawable && window.devicePixelRatio !== 3) ratioDrawable = findImageWithRatioName(3);
+                    if (!ratioDrawable && window.devicePixelRatio !== 2) ratioDrawable = findImageWithRatioName(2);
+                    if (!ratioDrawable && window.devicePixelRatio !== 4) ratioDrawable = findImageWithRatioName(4);
+                    if (!ratioDrawable && window.devicePixelRatio !== 1) ratioDrawable = findImageWithRatioName(1);
+                    if (!ratioDrawable && window.devicePixelRatio !== 5) ratioDrawable = findImageWithRatioName(5);
+                    if (!ratioDrawable && window.devicePixelRatio !== 6) ratioDrawable = findImageWithRatioName(6);
+                    return {
+                        v: ratioDrawable
+                    };
                 }
                 var ratio = 1;
                 if (dirName.includes('-')) {
                     if (dirName.includes('-ldpi')) ratio = 0.75;else if (dirName.includes('-mdpi')) ratio = 1;else if (dirName.includes('-hdpi')) ratio = 1.5;else if (dirName.includes('-xhdpi')) ratio = 2;else if (dirName.includes('-xxhdpi')) ratio = 3;else if (dirName.includes('-xxxhdpi')) ratio = 4;
                 }
-                var fileStr = dir[fileName];
-                if (fileStr && fileStr.startsWith('data:image')) {
-                    return {
-                        v: new NetDrawable(fileStr, null, ratio)
-                    };
+                var key = dirName + '/' + fileName;
+                var netImage = imageFileCache.get(key);
+                if (!netImage) {
+                    var fileStr = dir[fileName];
+                    if (fileStr && fileStr.startsWith('data:image')) {
+                        netImage = new NetImage(fileStr, ratio);
+                        imageFileCache.set(key, netImage);
+                    }
                 }
+                if (netImage) return {
+                        v: new NetDrawable(netImage)
+                    };
                 var fileNameWithNinePatch = fileName + '.9';
-                fileStr = dir[fileNameWithNinePatch];
-                if (fileStr && fileStr.startsWith('data:image')) {
-                    return {
-                        v: new NinePatchDrawable(fileStr, null, ratio)
-                    };
+                key = dirName + '/' + fileNameWithNinePatch;
+                netImage = imageFileCache.get(key);
+                if (!netImage) {
+                    var fileStr = dir[fileNameWithNinePatch];
+                    if (fileStr && fileStr.startsWith('data:image')) {
+                        netImage = new NetImage(fileStr, ratio);
+                        imageFileCache.set(key, netImage);
+                    }
                 }
+                if (netImage) return {
+                        v: new NinePatchDrawable(netImage)
+                    };
             };
 
             for (var _iterator3 = findMatchDirNames('drawable')[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
@@ -462,6 +497,16 @@ var com;
                                     }
                                 });
                                 list.addHeaderView(imageView);
+                                var onScrollChanged = list.onScrollChanged;
+                                list.onScrollChanged = function (l, t, oldl, oldt) {
+                                    if (t < 0) {
+                                        imageView.setPivotX(imageView.getWidth() / 2);
+                                        imageView.setPivotY(imageView.getHeight());
+                                        imageView.setScaleX(1 - t / imageView.getHeight());
+                                        imageView.setScaleY(1 - t / imageView.getHeight());
+                                    }
+                                    onScrollChanged.call(list, l, t, oldl, oldt);
+                                };
                             })();
                         }
                         list.setExpandableAdapter(adapter);
@@ -487,8 +532,8 @@ var com;
                     var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(DetailAdapter).call(this));
 
                     _this4.data = new Map();
-                    for (var key in mapData) {
-                        _this4.data.set(key, mapData[key]);
+                    for (var _key in mapData) {
+                        _this4.data.set(_key, mapData[_key]);
                     }
                     return _this4;
                 }
@@ -619,8 +664,8 @@ var com;
                             fetch("http://faxnode.duapp.com/gank_history").then(function (response) {
                                 return response.json();
                             }).then(function (json) {
-                                for (var key in json) {
-                                    MainActivity.AllDataTitle.set(key, json[key]);
+                                for (var _key2 in json) {
+                                    MainActivity.AllDataTitle.set(_key2, json[_key2]);
                                 }
                                 resolve();
                             }).catch(function (ex) {
@@ -823,8 +868,8 @@ var com;
                     _createClass(BorderBottomPagerIndicator, [{
                         key: "addRadioBtns",
                         value: function addRadioBtns() {
-                            for (var _len = arguments.length, btns = Array(_len), _key = 0; _key < _len; _key++) {
-                                btns[_key] = arguments[_key];
+                            for (var _len = arguments.length, btns = Array(_len), _key3 = 0; _key3 < _len; _key3++) {
+                                btns[_key3] = arguments[_key3];
                             }
 
                             var _iteratorNormalCompletion6 = true;
@@ -1011,8 +1056,8 @@ var com;
 
                         _classCallCheck(this, GankCategoryAdapter);
 
-                        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                            args[_key2] = arguments[_key2];
+                        for (var _len2 = arguments.length, args = Array(_len2), _key4 = 0; _key4 < _len2; _key4++) {
+                            args[_key4] = arguments[_key4];
                         }
 
                         var _this11 = _possibleConstructorReturn(this, (_Object$getPrototypeO = Object.getPrototypeOf(GankCategoryAdapter)).call.apply(_Object$getPrototypeO, [this].concat(args)));
@@ -1083,8 +1128,8 @@ var com;
 
                         _classCallCheck(this, GankFuliListAdapter);
 
-                        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                            args[_key3] = arguments[_key3];
+                        for (var _len3 = arguments.length, args = Array(_len3), _key5 = 0; _key5 < _len3; _key5++) {
+                            args[_key5] = arguments[_key5];
                         }
 
                         var _this12 = _possibleConstructorReturn(this, (_Object$getPrototypeO2 = Object.getPrototypeOf(GankFuliListAdapter)).call.apply(_Object$getPrototypeO2, [this].concat(args)));

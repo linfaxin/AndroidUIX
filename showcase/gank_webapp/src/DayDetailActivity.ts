@@ -73,6 +73,16 @@ module com.linfaxin.gankwebapp {
                     }
                 });
                 list.addHeaderView(imageView);
+                let onScrollChanged = list.onScrollChanged;
+                list.onScrollChanged = (l:number, t:number, oldl:number, oldt:number) => {
+                    if (t < 0) {
+                        imageView.setPivotX(imageView.getWidth() / 2);
+                        imageView.setPivotY(imageView.getHeight());
+                        imageView.setScaleX(1-t/imageView.getHeight());
+                        imageView.setScaleY(1-t/imageView.getHeight());
+                    }
+                    onScrollChanged.call(list, l, t, oldl, oldt);
+                }
             }
             
             list.setExpandableAdapter(adapter);

@@ -1,5 +1,5 @@
 /**
- * AndroidUIX v0.6.6
+ * AndroidUIX v0.6.7
  * https://github.com/linfaxin/AndroidUIX
  */
 var java;
@@ -6628,7 +6628,9 @@ var androidui;
                 }
                 else {
                     for (let classAttrBind of this.classAttrBindList) {
-                        classAttrBind.callGetter(attrName, this.host);
+                        value = classAttrBind.callGetter(attrName, this.host);
+                        if (value)
+                            break;
                     }
                 }
                 if (value == null)
@@ -25689,6 +25691,9 @@ var androidui;
             }
             this.androidUIElement.setAttribute('tabindex', '0');
             this.androidUIElement.focus();
+            this.androidUIElement.onblur = (e) => {
+                this._viewRootImpl.ensureTouchMode(true);
+            };
         }
         initEvent() {
             this.initTouchEvent();

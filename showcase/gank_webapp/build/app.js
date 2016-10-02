@@ -31,6 +31,7 @@ var R;
     var Resources = android.content.res.Resources;
     var NetDrawable = androidui.image.NetDrawable;
     var NinePatchDrawable = androidui.image.NinePatchDrawable;
+    var NetImage = androidui.image.NetImage;
     R.id = {
         drawerLayout: 'drawerLayout',
         btn_menu: 'btn_menu',
@@ -68,6 +69,7 @@ var R;
     R.bool = bool;
     const res_data = R._res_data;
     function resDirSpecMatch(spec) {
+        spec = spec.toLocaleLowerCase();
         let ratio = window.devicePixelRatio;
         if (ratio === 0.75 && spec === 'ldpi')
             return true;
@@ -151,26 +153,52 @@ var R;
         matchDirNamesCache[baseDirName] = matchDirNames;
         return matchDirNames;
     }
+    const imageFileCache = new Map();
     function findImageFile(fileName) {
         for (let dirName of findMatchDirNames('drawable')) {
             let dir = res_data[dirName];
             if (dirName === 'drawable') {
                 function findImageWithRatioName(ratio) {
-                    let fileStr = dir[fileName + '@' + ratio + 'x'];
-                    if (fileStr && fileStr.startsWith('data:image')) {
-                        return new NetDrawable(fileStr, null, ratio);
+                    let fileNameWithRatio = fileName + '@' + ratio + 'x';
+                    let key = dirName + '/' + fileNameWithRatio;
+                    let netImage = imageFileCache.get(key);
+                    if (!netImage) {
+                        let fileStr = dir[fileNameWithRatio];
+                        if (fileStr && fileStr.startsWith('data:image')) {
+                            netImage = new NetImage(fileStr, ratio);
+                            imageFileCache.set(key, netImage);
+                        }
                     }
+                    if (netImage)
+                        return new NetDrawable(netImage);
                     let fileNameWithNinePatch = fileName + '@' + ratio + 'x' + '.9';
-                    fileStr = dir[fileNameWithNinePatch];
-                    if (fileStr && fileStr.startsWith('data:image')) {
-                        return new NinePatchDrawable(fileStr, null, ratio);
+                    key = dirName + '/' + fileNameWithNinePatch;
+                    netImage = imageFileCache.get(key);
+                    if (!netImage) {
+                        let fileStr = dir[fileNameWithNinePatch];
+                        if (fileStr && fileStr.startsWith('data:image')) {
+                            netImage = new NetImage(fileStr, ratio);
+                            imageFileCache.set(key, netImage);
+                        }
                     }
+                    if (netImage)
+                        return new NinePatchDrawable(netImage);
+                    return null;
                 }
-                let ratioDrawable = findImageWithRatioName(window.devicePixelRatio) || findImageWithRatioName(6)
-                    || findImageWithRatioName(5) || findImageWithRatioName(4) || findImageWithRatioName(3)
-                    || findImageWithRatioName(2) || findImageWithRatioName(1);
-                if (ratioDrawable)
-                    return ratioDrawable;
+                let ratioDrawable = findImageWithRatioName(window.devicePixelRatio);
+                if (!ratioDrawable && window.devicePixelRatio !== 3)
+                    ratioDrawable = findImageWithRatioName(3);
+                if (!ratioDrawable && window.devicePixelRatio !== 2)
+                    ratioDrawable = findImageWithRatioName(2);
+                if (!ratioDrawable && window.devicePixelRatio !== 4)
+                    ratioDrawable = findImageWithRatioName(4);
+                if (!ratioDrawable && window.devicePixelRatio !== 1)
+                    ratioDrawable = findImageWithRatioName(1);
+                if (!ratioDrawable && window.devicePixelRatio !== 5)
+                    ratioDrawable = findImageWithRatioName(5);
+                if (!ratioDrawable && window.devicePixelRatio !== 6)
+                    ratioDrawable = findImageWithRatioName(6);
+                return ratioDrawable;
             }
             let ratio = 1;
             if (dirName.includes('-')) {
@@ -187,15 +215,29 @@ var R;
                 else if (dirName.includes('-xxxhdpi'))
                     ratio = 4;
             }
-            let fileStr = dir[fileName];
-            if (fileStr && fileStr.startsWith('data:image')) {
-                return new NetDrawable(fileStr, null, ratio);
+            let key = dirName + '/' + fileName;
+            let netImage = imageFileCache.get(key);
+            if (!netImage) {
+                let fileStr = dir[fileName];
+                if (fileStr && fileStr.startsWith('data:image')) {
+                    netImage = new NetImage(fileStr, ratio);
+                    imageFileCache.set(key, netImage);
+                }
             }
+            if (netImage)
+                return new NetDrawable(netImage);
             let fileNameWithNinePatch = fileName + '.9';
-            fileStr = dir[fileNameWithNinePatch];
-            if (fileStr && fileStr.startsWith('data:image')) {
-                return new NinePatchDrawable(fileStr, null, ratio);
+            key = dirName + '/' + fileNameWithNinePatch;
+            netImage = imageFileCache.get(key);
+            if (!netImage) {
+                let fileStr = dir[fileNameWithNinePatch];
+                if (fileStr && fileStr.startsWith('data:image')) {
+                    netImage = new NetImage(fileStr, ratio);
+                    imageFileCache.set(key, netImage);
+                }
             }
+            if (netImage)
+                return new NinePatchDrawable(netImage);
         }
     }
     const _tempDiv = document.createElement('div');
@@ -312,6 +354,16 @@ var com;
                             }
                         });
                         list.addHeaderView(imageView);
+                        let onScrollChanged = list.onScrollChanged;
+                        list.onScrollChanged = (l, t, oldl, oldt) => {
+                            if (t < 0) {
+                                imageView.setPivotX(imageView.getWidth() / 2);
+                                imageView.setPivotY(imageView.getHeight());
+                                imageView.setScaleX(1 - t / imageView.getHeight());
+                                imageView.setScaleY(1 - t / imageView.getHeight());
+                            }
+                            onScrollChanged.call(list, l, t, oldl, oldt);
+                        };
                     }
                     list.setExpandableAdapter(adapter);
                     for (let i = 0, count = adapter.getGroupCount(); i < count; i++) {

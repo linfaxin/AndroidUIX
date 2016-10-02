@@ -2,7 +2,7 @@
   "repository": {},
   "license": "UNLICENSED",
   "devDependencies": {
-    "androiduix": "^0.6.6",
+    "androiduix": "^0.6.7",
     "babel-cli": "^6.4.5",
     "babel-preset-es2015": "^6.3.13",
     "jsdom": "^7.2.2",
