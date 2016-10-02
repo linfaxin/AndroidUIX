@@ -220,6 +220,9 @@ declare module java.lang {
     interface Runnable {
         run(): any;
     }
+    module Runnable {
+        function of(func: () => any): Runnable;
+    }
 }
 declare module java.lang {
     class System {
@@ -583,7 +586,7 @@ declare module android.graphics {
         private static obtainRect(copy?);
         private static recycleRect(rect);
         constructor(width: number, height: number);
-        protected initImpl(): void;
+        protected initCanvasImpl(): void;
         recycle(): void;
         protected recycleImpl(): void;
         getHeight(): number;
@@ -872,14 +875,15 @@ declare module java.lang {
     class JavaObject {
         static class: Class;
         private hash;
-        private _class;
         hashCode(): number;
         getClass(): Class;
         equals(o: any): boolean;
     }
     class Class {
-        name: string;
-        constructor(name: string);
+        private static classCache;
+        private static getClass(clazz);
+        clazz: Function;
+        constructor(clazz: Function);
         getName(): string;
         getSimpleName(): string;
     }
@@ -1012,6 +1016,8 @@ declare module android.content {
 declare module androidui.util {
     class ClassFinder {
         static findClass(classFullName: string, findInRoot?: any): any;
+        static _findViewClassCache: {};
+        static findViewClass(className: string): any;
     }
 }
 declare module androidui.widget {
@@ -1068,9 +1074,9 @@ declare module androidui.attr {
         static parseFloat(r: android.content.res.Resources, value: string, defValue: number): number;
         static parseColor(r: android.content.res.Resources, value: string, defValue: number): number;
         static parseColorStateList(r: android.content.res.Resources, value: string): android.content.res.ColorStateList;
-        static parseDimension(r: android.content.res.Resources, value: string, defValue: number): number;
-        static parseDimensionPixelOffset(r: android.content.res.Resources, value: string, defValue: number): number;
-        static parseDimensionPixelSize(r: android.content.res.Resources, value: string, defValue: number): number;
+        static parseDimension(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
+        static parseDimensionPixelOffset(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
+        static parseDimensionPixelSize(r: android.content.res.Resources, value: string, defValue: number, baseValue?: number): number;
         static parseDrawable(r: android.content.res.Resources, value: string): android.graphics.drawable.Drawable;
         static parseTextArray(r: android.content.res.Resources, value: string): string[];
     }
@@ -1470,6 +1476,7 @@ declare module androidui.attr {
         private stateSpec;
         private attributes;
         constructor(state: number[]);
+        clone(): StateAttr;
         setAttr(name: string, value: string): void;
         hasAttr(name: string): boolean;
         getAttrMap(): Map<string, string>;
@@ -1483,6 +1490,7 @@ declare module androidui.attr {
 declare module androidui.attr {
     import View = android.view.View;
     class StateAttrList {
+        private static CacheMap;
         private list;
         private matchedAttrCache;
         private mView;
@@ -1506,9 +1514,11 @@ declare module androidui.attr {
         private host;
         private attrChangeMap;
         private attrStashMap;
+        private classAttrBindList;
         private objectRefs;
         private mContext;
         constructor(host: View | ViewGroup.LayoutParams);
+        addClassAttrBind(classAttrBind: AttrBinder.ClassBinderMap): void;
         addAttr(attrName: string, onAttrChange: (newValue: any) => void, stashAttrValueWhenStateChange?: () => any): void;
         onAttrChange(attrName: string, attrValue: any, context: Context): void;
         getAttrValue(attrName: string): string;
@@ -1528,6 +1538,18 @@ declare module androidui.attr {
         parseNumberPixelSize(value: any, defaultValue?: number, baseValue?: number): number;
         parseString(value: any, defaultValue?: string): string;
         parseStringArray(value: any): string[];
+    }
+    module AttrBinder {
+        class ClassBinderMap extends Map<string, ClassBinderValue> {
+            set(key: string, value?: androidui.attr.AttrBinder.ClassBinderValue): Map<string, androidui.attr.AttrBinder.ClassBinderValue>;
+            get(key: string): androidui.attr.AttrBinder.ClassBinderValue;
+            private callSetter(attrName, host, attrValue);
+            private callGetter(attrName, host);
+        }
+        interface ClassBinderValue {
+            setter: (host: android.view.View | android.view.ViewGroup.LayoutParams, attrValue: any) => void;
+            getter?: (host: android.view.View | android.view.ViewGroup.LayoutParams) => any;
+        }
     }
 }
 declare module androidui.util {
@@ -1723,6 +1745,7 @@ declare module android.view {
             ctrl: {};
             alt: {};
         };
+        private static FIX_MAP_KEYCODE;
         static ACTION_DOWN: number;
         static ACTION_UP: number;
         static META_MASK_SHIFT: number;
@@ -3043,7 +3066,7 @@ declare module android.view {
         static TEXT_ALIGNMENT_RESOLVED_DEFAULT: number;
         protected mID: string;
         protected mTag: any;
-        mPrivateFlags: number;
+        protected mPrivateFlags: number;
         private mPrivateFlags2;
         private mPrivateFlags3;
         private mContext;
@@ -3066,6 +3089,7 @@ declare module android.view {
         private mPendingCheckForLongPress;
         private mPendingCheckForTap;
         private mPerformClick;
+        private mPerformClickAfterPressDraw;
         private mUnsetPressedState;
         private mHasPerformedLongPress;
         mMinWidth: number;
@@ -3116,7 +3140,7 @@ declare module android.view {
         private mShadowPaint;
         private mShadowDrawable;
         constructor(context?: Context, bindElement?: HTMLElement, defStyle?: any);
-        protected initBindAttr(a: AttrBinder): void;
+        protected initBindAttr(): void;
         getContext(): Context;
         getWidth(): number;
         getHeight(): number;
@@ -3507,10 +3531,10 @@ declare module android.view {
         getResources(): Resources;
         static inflate(context: Context, xml: HTMLElement | string, root?: ViewGroup): View;
         bindElement: HTMLElement;
-        private bindElementOnClickAttr;
         private _AttrObserver;
         private _stateAttrList;
         protected _attrBinder: AttrBinder;
+        private static ViewClassAttrBinder;
         static AndroidViewProperty: string;
         private _AttrObserverCallBack(arr, observer);
         protected initBindElement(bindElement?: HTMLElement): void;
@@ -3531,13 +3555,10 @@ declare module android.view {
         syncVisibleToElement(): void;
         protected dependOnDebugLayout(): boolean;
         private _initAttrObserver();
-        private _parseInitedAttribute();
         private _fireInitedAttributeChange();
         private _fireStateChangeToAttribute(oldState, newState);
         private _getBinderAttrValue(key);
         private onBindElementAttributeChanged(attributeName, oldVal, newVal);
-        hasAttributeIgnoreCase(name: string): boolean;
-        getAttributeIgnoreCase(name: string): string;
         applyDefaultAttributes(attrs: any): void;
         tagName(): string;
     }
@@ -3939,7 +3960,9 @@ declare module android.view {
         mSuppressLayout: boolean;
         private mLayoutCalledWhileSuppressed;
         private mChildCountWithTransientState;
+        private static ViewGroupClassAttrBind;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        protected initBindAttr(): void;
         private initViewGroup();
         getDescendantFocusability(): number;
         setDescendantFocusability(focusability: number): void;
@@ -4104,6 +4127,7 @@ declare module android.view {
             _measuringParentHeightMeasureSpec: number;
             _measuringMeasureSpec: android.util.DisplayMetrics;
             _attrBinder: androidui.attr.AttrBinder;
+            private static ViewGroupParamClassAttrBind;
             constructor();
             constructor(src: LayoutParams);
             constructor(width: number, height: number);
@@ -4120,6 +4144,7 @@ declare module android.view {
             private _rightMarginOrig;
             private _bottomMarginOrig;
             static DEFAULT_MARGIN_RELATIVE: number;
+            private static MarginLayoutParamsClassAttrBind;
             leftMargin: number;
             topMargin: number;
             rightMargin: number;
@@ -5168,10 +5193,11 @@ declare module android.app {
         getOverrideExitAnimation(): Animation;
         getOverrideResumeAnimation(): Animation;
         getOverrideHideAnimation(): Animation;
+        private scheduleApplicationHideTimeout;
         scheduleApplicationHide(): void;
         scheduleApplicationShow(): void;
         execStartActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
-        activityResumeTimeout: any;
+        private activityResumeTimeout;
         scheduleActivityResume(): void;
         scheduleLaunchActivity(callActivity: Activity, intent: Intent, options?: android.os.Bundle): void;
         scheduleDestroyActivityByRequestCode(requestCode: number): void;
@@ -5242,7 +5268,6 @@ declare module androidui {
         private tempRect;
         windowBound: android.graphics.Rect;
         private touchEvent;
-        private touchAvailable;
         private ketEvent;
         constructor(androidUIElement: AndroidUIElement);
         private init();
@@ -5306,6 +5331,8 @@ declare module android.app {
         private mVisibleFromClient;
         private mResultCode;
         private mResultData;
+        private mMenu;
+        private mMenuPopuoHelper;
         getIntent(): Intent;
         setIntent(newIntent: Intent): void;
         getApplication(): android.app.Application;
@@ -5349,6 +5376,14 @@ declare module android.app {
         dispatchTouchEvent(ev: MotionEvent): boolean;
         dispatchGenericMotionEvent(ev: MotionEvent): boolean;
         takeKeyEvents(_get: boolean): void;
+        private invalidateOptionsMenu();
+        protected invalidateOptionsMenuPopupHelper(menu: android.view.Menu): android.view.menu.MenuPopupHelper;
+        onCreateOptionsMenu(menu: android.view.Menu): boolean;
+        onPrepareOptionsMenu(menu: android.view.Menu): boolean;
+        onOptionsItemSelected(item: android.view.MenuItem): boolean;
+        onOptionsMenuClosed(menu: android.view.Menu): void;
+        openOptionsMenu(): void;
+        closeOptionsMenu(): void;
         startActivityForResult(intent: Intent | string, requestCode: number, options?: Bundle): void;
         startActivities(intents: Intent[], options?: Bundle): void;
         startActivity(intent: Intent | string, options?: Bundle): void;
@@ -5944,27 +5979,50 @@ declare module android.os {
     }
 }
 declare module android.text {
-    enum InputType {
-        TYPE_NULL = 0,
-        TYPE_CLASS_TEXT = 1,
-        TYPE_CLASS_URI = 2,
-        TYPE_CLASS_EMAIL_ADDRESS = 3,
-        TYPE_CLASS_NUMBER = 4,
-        TYPE_CLASS_PHONE = 5,
-        TYPE_PASSWORD = 6,
-        TYPE_TEXT_PASSWORD = 7,
-        TYPE_TEXT_VISIBLE_PASSWORD = 8,
-        TYPE_NUMBER_PASSWORD = 9,
-        TYPE_NUMBER_SIGNED = 10,
-        TYPE_NUMBER_DECIMAL = 11,
+    class InputType {
+        static TYPE_MASK_CLASS: number;
+        static TYPE_MASK_VARIATION: number;
+        static TYPE_MASK_FLAGS: number;
+        static TYPE_NULL: number;
+        static TYPE_CLASS_TEXT: number;
+        static TYPE_TEXT_FLAG_CAP_CHARACTERS: number;
+        static TYPE_TEXT_FLAG_CAP_WORDS: number;
+        static TYPE_TEXT_FLAG_CAP_SENTENCES: number;
+        static TYPE_TEXT_FLAG_AUTO_CORRECT: number;
+        static TYPE_TEXT_FLAG_AUTO_COMPLETE: number;
+        static TYPE_TEXT_FLAG_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_IME_MULTI_LINE: number;
+        static TYPE_TEXT_FLAG_NO_SUGGESTIONS: number;
+        static TYPE_TEXT_VARIATION_NORMAL: number;
+        static TYPE_TEXT_VARIATION_URI: number;
+        static TYPE_TEXT_VARIATION_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_EMAIL_SUBJECT: number;
+        static TYPE_TEXT_VARIATION_SHORT_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_LONG_MESSAGE: number;
+        static TYPE_TEXT_VARIATION_PERSON_NAME: number;
+        static TYPE_TEXT_VARIATION_POSTAL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_VISIBLE_PASSWORD: number;
+        static TYPE_TEXT_VARIATION_WEB_EDIT_TEXT: number;
+        static TYPE_TEXT_VARIATION_FILTER: number;
+        static TYPE_TEXT_VARIATION_PHONETIC: number;
+        static TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS: number;
+        static TYPE_TEXT_VARIATION_WEB_PASSWORD: number;
+        static TYPE_CLASS_NUMBER: number;
+        static TYPE_NUMBER_FLAG_SIGNED: number;
+        static TYPE_NUMBER_FLAG_DECIMAL: number;
+        static TYPE_NUMBER_VARIATION_NORMAL: number;
+        static TYPE_NUMBER_VARIATION_PASSWORD: number;
+        static TYPE_CLASS_PHONE: number;
+        static TYPE_CLASS_DATETIME: number;
+        static TYPE_DATETIME_VARIATION_NORMAL: number;
+        static TYPE_DATETIME_VARIATION_DATE: number;
+        static TYPE_DATETIME_VARIATION_TIME: number;
     }
     module InputType {
         class LimitCode {
             static TYPE_CLASS_NUMBER: number[];
             static TYPE_CLASS_PHONE: number[];
-            static TYPE_NUMBER_PASSWORD: number[];
-            static TYPE_NUMBER_SIGNED: number[];
-            static TYPE_NUMBER_DECIMAL: number[];
         }
     }
 }
@@ -6574,7 +6632,9 @@ declare module android.widget {
         mTextEditSuggestionItemLayout: number;
         private mEditor;
         protected mSkipDrawText: boolean;
+        private static TextViewClassAttrBind;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        protected initBindAttr(): void;
         private setTypefaceFromAttrs(familyName, typefaceIndex, styleIndex);
         private setRelativeDrawablesIfNeeded(start, end);
         setEnabled(enabled: boolean): void;
@@ -7857,15 +7917,17 @@ declare module android.widget {
     class EditText extends TextView {
         private inputElement;
         private mSingleLineInputElement;
-        private mMultilineInputElement;
+        private mMultiLineInputElement;
         private mInputType;
         private mForceDisableDraw;
         private mMaxLength;
         constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
         protected initBindElement(bindElement: HTMLElement): void;
-        protected onInputValueChange(): void;
+        protected onInputValueChange(e: any): void;
+        private onDomTextInput(e);
+        private switchToInputElement(inputElement);
         private switchToSingleLineInputElement();
-        protected switchToMultilineInputElement(): void;
+        protected switchToMultiLineInputElement(): void;
         protected tryShowInputElement(): void;
         protected tryDismissInputElement(): void;
         protected onInputElementFocusChanged(focused: boolean): void;
@@ -7876,7 +7938,8 @@ declare module android.widget {
         protected updateTextColors(): void;
         onTouchEvent(event: android.view.MotionEvent): boolean;
         private filterKeyEvent(event);
-        private filterKeyCode(keyCode);
+        protected filterKeyCodeByInputType(keyCode: number): boolean;
+        protected filterKeyCodeOnInput(keyCode: number): boolean;
         private checkFilterKeyEventToDom(event);
         onKeyDown(keyCode: number, event: android.view.KeyEvent): boolean;
         onKeyUp(keyCode: number, event: android.view.KeyEvent): boolean;
@@ -7885,6 +7948,7 @@ declare module android.widget {
         protected onTextChanged(text: String, start: number, lengthBefore: number, lengthAfter: number): void;
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         setGravity(gravity: number): void;
+        setSingleLine(singleLine?: boolean): void;
         setInputType(type: number): void;
         getInputType(): number;
         private syncTextBoundInfoToInputElement();
@@ -7921,7 +7985,9 @@ declare module android.widget {
         private mBaseline;
         private mBaselineAlignBottom;
         private mAdjustViewBoundsCompat;
+        private static ImageViewClassAttrBind;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        protected initBindAttr(): void;
         private initImageView();
         protected verifyDrawable(dr: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
@@ -8523,7 +8589,9 @@ declare module android.widget {
         private mProtectFromCheckedChange;
         private mOnCheckedChangeListener;
         private mPassThroughListener;
+        private static RadioGroupClassAttrBind;
         constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        protected initBindAttr(): void;
         private init();
         setOnHierarchyChangeListener(listener: ViewGroup.OnHierarchyChangeListener): void;
         protected onFinishInflate(): void;
@@ -10931,6 +10999,7 @@ declare module android.app {
         private initActionBar();
         private initDefaultBackFinish();
         setActionBar(actionBar: ActionBar): void;
+        protected invalidateOptionsMenuPopupHelper(menu: android.view.Menu): android.view.menu.MenuPopupHelper;
         getActionBar(): ActionBar;
         protected onTitleChanged(title: string, color: number): void;
     }
@@ -11124,7 +11193,7 @@ declare module androidui.native {
     import Rect = android.graphics.Rect;
     class NativeCanvas extends Canvas {
         private canvasId;
-        protected initImpl(): void;
+        protected initCanvasImpl(): void;
         protected createCanvasImpl(): void;
         protected recycleImpl(): void;
         isNativeAccelerated(): boolean;

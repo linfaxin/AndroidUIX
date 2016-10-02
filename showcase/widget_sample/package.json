@@ -3,7 +3,7 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "androidui-webapp": "^0.6.2",
-    "androiduix": "^0.6.4",
+    "androiduix": "^0.6.5",
     "babel-cli": "^6.4.5",
     "babel-preset-es2015": "^6.3.13",
     "jsdom": "^7.2.2",
