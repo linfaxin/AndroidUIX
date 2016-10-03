@@ -78,8 +78,9 @@ module com.linfaxin.gankwebapp {
                     if (t < 0) {
                         imageView.setPivotX(imageView.getWidth() / 2);
                         imageView.setPivotY(imageView.getHeight());
-                        imageView.setScaleX(1-t/imageView.getHeight());
-                        imageView.setScaleY(1-t/imageView.getHeight());
+                        let scale = 1 - (t - 1) / imageView.getHeight();
+                        imageView.setScaleX(scale);
+                        imageView.setScaleY(scale);
                     }
                     onScrollChanged.call(list, l, t, oldl, oldt);
                 }
