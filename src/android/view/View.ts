@@ -56,7 +56,6 @@
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
 ///<reference path="../../androidui/attr/StateAttr.ts"/>
 ///<reference path="../../androidui/attr/AttrBinder.ts"/>
-///<reference path="../../androidui/util/PerformanceAdjuster.ts"/>
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
 ///<reference path="KeyEvent.ts"/>
 ///<reference path="../R/attr.ts"/>
@@ -102,7 +101,6 @@ module android.view {
     import StateAttrList = androidui.attr.StateAttrList;
     import StateAttr = androidui.attr.StateAttr;
     import AttrBinder = androidui.attr.AttrBinder;
-    import PerformanceAdjuster = androidui.util.PerformanceAdjuster;
     import NetDrawable = androidui.image.NetDrawable;
     import KeyEvent = android.view.KeyEvent;
     import Animation = animation.Animation;
@@ -1429,10 +1427,10 @@ module android.view {
             this.requestSyncBoundToElement();
         }
 
-        private mPaddingLeft = 0;
-        private mPaddingRight = 0;
-        private mPaddingTop = 0;
-        private mPaddingBottom = 0;
+        protected mPaddingLeft = 0;
+        protected mPaddingRight = 0;
+        protected mPaddingTop = 0;
+        protected mPaddingBottom = 0;
 
         //androidui add:
         //clip with the cornerRadius:
@@ -1633,9 +1631,11 @@ module android.view {
                         } else if (value === 'horizontal') {
                             v.setHorizontalScrollBarEnabled(true);
                             v.setVerticalScrollBarEnabled(false);
+                            v.initializeScrollbars();
                         } else if (value === 'vertical') {
                             v.setHorizontalScrollBarEnabled(false);
                             v.setVerticalScrollBarEnabled(true);
+                            v.initializeScrollbars();
                         }
                     },
                 }).set('isScrollContainer', {
@@ -4425,7 +4425,7 @@ module android.view {
         getLayoutParams():ViewGroup.LayoutParams {
             return this.mLayoutParams;
         }
-        setLayoutParams(params:ViewGroup.LayoutParams) {
+        setLayoutParams(params:ViewGroup.LayoutParams):void {
             if (params == null) {
                 throw new Error("Layout parameters cannot be null");
             }

@@ -1501,7 +1501,7 @@ module android.widget {
             }
         }
 
-        private requestLayoutIfNecessary():void {
+        protected requestLayoutIfNecessary():void {
             if (this.getChildCount() > 0) {
                 this.resetList();
                 this.requestLayout();
@@ -4869,7 +4869,7 @@ module android.widget {
                 if(this._AbsListView_this.mScrollY < 0) minY = 0;
                 else if(this._AbsListView_this.mScrollY > 0) maxY = 0;
 
-                this.mScroller.fling(0, this._AbsListView_this.mScrollY, 0, initialVelocity, 0, 0, minY, maxY, 0, this._AbsListView_this.getHeight());
+                this.mScroller.fling(0, this._AbsListView_this.mScrollY, 0, initialVelocity, 0, 0, minY, maxY, 0, this._AbsListView_this.getHeight() / 2);
                 this._AbsListView_this.mTouchMode = AbsListView.TOUCH_MODE_OVERFLING;
                 this._AbsListView_this.invalidate();
                 this._AbsListView_this.postOnAnimation(this);

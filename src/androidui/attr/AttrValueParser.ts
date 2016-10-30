@@ -17,7 +17,7 @@ module androidui.attr {
                     console.warn(e);
                 }
             }
-            return defValue;
+            return value || defValue;
         }
 
 

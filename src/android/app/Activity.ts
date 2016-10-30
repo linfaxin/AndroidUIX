@@ -93,7 +93,6 @@ module android.app{
         private mResultData:Intent = null;
 
         private mMenu:android.view.Menu;
-        private mMenuPopuoHelper:android.view.menu.MenuPopupHelper;
 
         //mHandler:Handler = new Handler();
 
@@ -998,7 +997,7 @@ module android.app{
          * The {@link #onCreateOptionsMenu(Menu)} method will be called the next
          * time it needs to be displayed.
          */
-        private invalidateOptionsMenu():void {
+        protected invalidateOptionsMenu():void {
             let menu = new android.view.Menu(this);
             if(this.onCreateOptionsMenu(menu)){
                 menu.setCallback({
@@ -1009,14 +1008,7 @@ module android.app{
                     }
                 });
                 this.mMenu = menu;
-                this.mMenuPopuoHelper = this.invalidateOptionsMenuPopupHelper(menu);
             }
-        }
-
-        protected invalidateOptionsMenuPopupHelper(menu:android.view.Menu):android.view.menu.MenuPopupHelper {
-            //TODO support menu for fullscreen activity
-            return null;
-            // this.mMenuPopuoHelper = new android.view.menu.MenuPopupHelper(this, menu, this.getActionBar().mActionRight);
         }
 
         /**
@@ -1110,7 +1102,6 @@ module android.app{
          * open, this method does nothing.
          */
         openOptionsMenu():void {
-            if(this.mMenuPopuoHelper) this.mMenuPopuoHelper.show();
         }
 
         /**
@@ -1118,7 +1109,6 @@ module android.app{
          * closed, this method does nothing.
          */
         closeOptionsMenu():void  {
-            if(this.mMenuPopuoHelper) this.mMenuPopuoHelper.dismiss();
         }
 
         /**

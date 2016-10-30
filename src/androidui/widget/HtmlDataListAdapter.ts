@@ -7,7 +7,6 @@
 ///<reference path="../../android/widget/ListAdapter.ts"/>
 ///<reference path="../../android/widget/BaseAdapter.ts"/>
 ///<reference path="../../android/widget/AdapterView.ts"/>
-///<reference path="../../android/widget/SpinnerAdapter.ts"/>
 ///<reference path="../../android/database/DataSetObservable.ts"/>
 ///<reference path="../../android/database/DataSetObserver.ts"/>
 ///<reference path="../../android/content/Context.ts"/>
@@ -19,7 +18,6 @@ module androidui.widget{
     import ListAdapter = android.widget.ListAdapter;
     import BaseAdapter = android.widget.BaseAdapter;
     import AdapterView = android.widget.AdapterView;
-    import SpinnerAdapter = android.widget.SpinnerAdapter;
     import DataSetObservable = android.database.DataSetObservable;
     import DataSetObserver = android.database.DataSetObserver;
     import Context = android.content.Context;

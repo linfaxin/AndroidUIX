@@ -134,7 +134,7 @@ module androidui {
 
         private initGlobalCrashHandle(){
             window.onerror = (sMsg,sUrl,sLine)=>{
-                if(window.confirm(android.R.string_.crash_catch_alert+'\n'+sMsg)){
+                if(window.confirm(android.R.string.crash_catch_alert+'\n'+sMsg)){
                     //reload will clear console's log.
                     window.location.reload();
                 }
@@ -194,7 +194,12 @@ module androidui {
                     this.androidUIElement.focus();
                 }
 
-                this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this._windowBound);
+                try {
+                    this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_DOWN, this._windowBound);
+                } catch (e) {
+                    console.warn(e);
+                    return;
+                }
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
                     e.preventDefault();
@@ -204,7 +209,12 @@ module androidui {
             }, true);
 
             this.androidUIElement.addEventListener('touchmove', (e)=> {
-                this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_MOVE, this._windowBound);
+                try {
+                    this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_MOVE, this._windowBound);
+                } catch (e) {
+                    console.warn(e);
+                    return;
+                }
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
                     e.preventDefault();
@@ -212,7 +222,12 @@ module androidui {
                 }
             }, true);
             this.androidUIElement.addEventListener('touchend', (e)=> {
-                this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_UP, this._windowBound);
+                try {
+                    this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_UP, this._windowBound);
+                } catch (e) {
+                    console.warn(e);
+                    return;
+                }
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
                     e.preventDefault();
@@ -220,7 +235,12 @@ module androidui {
                 }
             }, true);
             this.androidUIElement.addEventListener('touchcancel', (e)=> {
-                this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_CANCEL, this._windowBound);
+                try {
+                    this.touchEvent.initWithTouch(<any>e, MotionEvent.ACTION_CANCEL, this._windowBound);
+                } catch (e) {
+                    console.warn(e);
+                    return;
+                }
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
                     e.preventDefault();
@@ -258,7 +278,12 @@ module androidui {
                     this.androidUIElement.focus();
                 }
 
-                this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
+                try {
+                    this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_DOWN, this._windowBound);
+                } catch (e) {
+                    console.warn(e);
+                    return;
+                }
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
                     e.preventDefault();
@@ -268,7 +293,12 @@ module androidui {
 
             this.androidUIElement.addEventListener('mousemove', (e)=> {
                 if(!isMouseDown) return;
-                this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
+                try {
+                    this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_MOVE, this._windowBound);
+                } catch (e) {
+                    console.warn(e);
+                    return;
+                }
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
                     e.preventDefault();
@@ -278,7 +308,12 @@ module androidui {
 
             this.androidUIElement.addEventListener('mouseup', (e)=> {
                 isMouseDown = false;
-                this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
+                try {
+                    this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_UP, this._windowBound);
+                } catch (e) {
+                    console.warn(e);
+                    return;
+                }
                 if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                     e.stopPropagation();
                     e.preventDefault();
@@ -289,7 +324,12 @@ module androidui {
             this.androidUIElement.addEventListener('mouseleave', (e)=> {
                 if(e.fromElement === this.androidUIElement){
                     isMouseDown = false;
-                    this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
+                    try {
+                        this.touchEvent.initWithTouch(<any>mouseToTouchEvent(e), MotionEvent.ACTION_CANCEL, this._windowBound);
+                    } catch (e) {
+                        console.warn(e);
+                        return;
+                    }
                     if(this._viewRootImpl.dispatchInputEvent(this.touchEvent)){
                         e.stopPropagation();
                         e.preventDefault();
@@ -431,7 +471,7 @@ module androidui {
             AndroidUI.showAppClosed(this);
         }
         
-        private static showAppClosed(androidUI:AndroidUI) {
+        static showAppClosed(androidUI:AndroidUI) {
             //NOTE: will override by NativeApi
             androidUI.androidUIElement.parentNode.removeChild(androidUI.androidUIElement);
             if(androidUI.uiClient && androidUI.uiClient.shouldShowAppClosed){

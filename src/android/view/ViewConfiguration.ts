@@ -171,7 +171,7 @@ module android.view{
         /**
          * Max distance in dips to overfling for edge effects
          */
-        private static OVERFLING_DISTANCE = 100;//default 6
+        private static OVERFLING_DISTANCE = 80;//default 6
 
         static instance : ViewConfiguration;
 

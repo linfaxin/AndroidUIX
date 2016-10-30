@@ -52,20 +52,13 @@ import Arrays = java.util.Arrays;
 import Float = java.lang.Float;
 import System = java.lang.System;
 import StringBuilder = java.lang.StringBuilder;
-import MeasuredText = android.text.MeasuredText;
 import Spanned = android.text.Spanned;
 import SpanSet = android.text.SpanSet;
 import TextDirectionHeuristic = android.text.TextDirectionHeuristic;
 import TextDirectionHeuristics = android.text.TextDirectionHeuristics;
 import TextLine = android.text.TextLine;
 import TextPaint = android.text.TextPaint;
-import TextUtils = android.text.TextUtils;
 import TextWatcher = android.text.TextWatcher;
-    window.addEventListener('AndroidUILoadFinish', ()=>{//real import now
-        eval(`TextUtils = android.text.TextUtils;
-              MeasuredText = android.text.MeasuredText;
-              `);
-    });
 
 /**
  * A base class that manages text layout in visual elements on
@@ -101,7 +94,7 @@ export abstract class Layout {
         let need:number = 0;
         let next:number;
         for (let i:number = start; i <= end; i = next) {
-            next = source.substring(0, end).indexOf('\n', i);//TextUtils.indexOf(source, '\n', i, end);
+            next = source.substring(0, end).indexOf('\n', i);//android.text.TextUtils.indexOf(source, '\n', i, end);
             if (next < 0) next = end;
             // note, omits trailing paragraph char
             let w:number = Layout.measurePara(paint, source, i, next);
@@ -179,8 +172,8 @@ export abstract class Layout {
      */
     draw(canvas:Canvas, highlight:Path=null, highlightPaint:Paint=null, cursorOffsetVertical:number=0):void  {
         const lineRange:number[] = this.getLineRangeForDraw(canvas);
-        let firstLine:number = TextUtils.unpackRangeStartFromLong(lineRange);
-        let lastLine:number = TextUtils.unpackRangeEndFromLong(lineRange);
+        let firstLine:number = android.text.TextUtils.unpackRangeStartFromLong(lineRange);
+        let lastLine:number = android.text.TextUtils.unpackRangeEndFromLong(lineRange);
         if (lastLine < 0)
             return;
         this.drawBackground(canvas, highlight, highlightPaint, cursorOffsetVertical, firstLine, lastLine);
@@ -382,7 +375,7 @@ export abstract class Layout {
         {
             if (!canvas.getClipBounds(Layout.sTempRect)) {
                 // Negative range end used as a special flag
-                return TextUtils.packRangeInLong(0, -1);
+                return android.text.TextUtils.packRangeInLong(0, -1);
             }
             dtop = Layout.sTempRect.top;
             dbottom = Layout.sTempRect.bottom;
@@ -390,8 +383,8 @@ export abstract class Layout {
         const top:number = Math.max(dtop, 0);
         const bottom:number = Math.min(this.getLineTop(this.getLineCount()), dbottom);
         if (top >= bottom)
-            return TextUtils.packRangeInLong(0, -1);
-        return TextUtils.packRangeInLong(this.getLineForVertical(top), this.getLineForVertical(bottom));
+            return android.text.TextUtils.packRangeInLong(0, -1);
+        return android.text.TextUtils.packRangeInLong(this.getLineForVertical(top), this.getLineForVertical(bottom));
     }
 
     /**
@@ -978,7 +971,7 @@ export abstract class Layout {
             if (low < there) {
                 low = this.getOffsetAtStartOf(low);
                 let dist:number = Math.abs(this.getPrimaryHorizontal(low) - horiz);
-                let aft:number = TextUtils.getOffsetAfter(this.mText, low);
+                let aft:number = android.text.TextUtils.getOffsetAfter(this.mText, low);
                 if (aft < there) {
                     let other:number = Math.abs(this.getPrimaryHorizontal(aft) - horiz);
                     if (other < dist) {
@@ -1372,7 +1365,7 @@ export abstract class Layout {
 
     /* package */
     static measurePara(paint:TextPaint, text:String, start:number, end:number):number  {
-        let mt:MeasuredText = MeasuredText.obtain();
+        let mt:android.text.MeasuredText = android.text.MeasuredText.obtain();
         let tl:TextLine = TextLine.obtain();
         try {
             mt.setPara(text, start, end, TextDirectionHeuristics.LTR);
@@ -1407,7 +1400,7 @@ export abstract class Layout {
             return tl.metrics(null);
         } finally {
             TextLine.recycle(tl);
-            MeasuredText.recycle(mt);
+            android.text.MeasuredText.recycle(mt);
         }
     }
 
@@ -1485,11 +1478,11 @@ export abstract class Layout {
         return text.getSpans<T>(start, end, type);
     }
 
-    private getEllipsisChar(method:TextUtils.TruncateAt):string  {
-        return (method == TextUtils.TruncateAt.END_SMALL) ? Layout.ELLIPSIS_TWO_DOTS[0] : Layout.ELLIPSIS_NORMAL[0];
+    private getEllipsisChar(method:android.text.TextUtils.TruncateAt):string  {
+        return (method == android.text.TextUtils.TruncateAt.END_SMALL) ? Layout.ELLIPSIS_TWO_DOTS[0] : Layout.ELLIPSIS_NORMAL[0];
     }
 
-    private ellipsize(start:number, end:number, line:number, dest:string[], destoff:number, method:TextUtils.TruncateAt):void  {
+    private ellipsize(start:number, end:number, line:number, dest:string[], destoff:number, method:android.text.TextUtils.TruncateAt):void  {
         let ellipsisCount:number = this.getEllipsisCount(line);
         if (ellipsisCount == 0) {
             return;
@@ -1697,7 +1690,7 @@ export class Ellipsizer extends String {
     mWidth:number = 0;
 
     /* package */
-    mMethod:TextUtils.TruncateAt;
+    mMethod:android.text.TextUtils.TruncateAt;
 
     constructor(s:String) {
         super(s);

@@ -104,8 +104,8 @@ module android.graphics.drawable {
         inflate(r:Resources, parser:HTMLElement):void {
             super.inflate(r, parser);
             let a:TypedArray = r.obtainAttributes(parser);
-            let sw:number = a.getFloat("android:scaleWidth", 1);
-            let sh:number = a.getFloat("android:scaleHeight", 1);
+            let sw:number = a.getFloat("android:scaleWidth", 0);
+            let sh:number = a.getFloat("android:scaleHeight", 0);
             let gStr:string = a.getString("android:scaleGravity");
             let g = Gravity.parseGravity(gStr, Gravity.LEFT);
             let min:boolean = a.getBoolean("android:useIntrinsicSizeAsMinimum", false);

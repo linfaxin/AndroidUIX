@@ -51,6 +51,7 @@ import TranslateAnimation = android.view.animation.TranslateAnimation;
 import FrameLayout = android.widget.FrameLayout;
 import Context = android.content.Context;
 import SystemClock = android.os.SystemClock;
+    import Runnable = java.lang.Runnable;
 /**
  * Abstract base class for a top-level window look and behavior policy.  An
  * instance of this class should be used as the top-level view added to the
@@ -1489,6 +1490,15 @@ export interface Callback {
         private _pendingRequestLayoutOnAnimationEnd = false;
         private _ignoreInvalidateInAnimation = true;
         private _pendingInvalidateOnAnimationEnd = false;
+        private _reDrawOnceDelay = Runnable.of(() => {
+            if (this._pendingRequestLayoutOnAnimationEnd) {
+                super.requestLayout();
+            }
+            if (this._pendingInvalidateOnAnimationEnd) {
+                this.destroyDrawingCache();
+            }
+            this._reDrawOnceDelay = null; // do reDraw delay one time
+        });
 
         constructor(window:android.view.Window) {
             super(window.mContext);
@@ -1534,14 +1544,25 @@ export interface Callback {
             super.requestLayout();
         }
 
+        setLayoutParams(params: android.view.ViewGroup.LayoutParams):void {
+            super.setLayoutParams(params);
+            super.requestLayout();
+        }
+
         protected onAnimationStart():void {
             super.onAnimationStart();
             this.setDrawingCacheEnabled(true);
             this.buildDrawingCache(true);
+            if (this._reDrawOnceDelay) {
+                this.postDelayed(this._reDrawOnceDelay, 38); // reLayout & reDraw after 2 frame when init animation
+            }
         }
 
         protected onAnimationEnd():void {
             super.onAnimationEnd();
+            if (this._reDrawOnceDelay) {
+                this.removeCallbacks(this._reDrawOnceDelay);
+            }
             this.setDrawingCacheEnabled(false);
             if (this._pendingInvalidateOnAnimationEnd) {
                 this._pendingInvalidateOnAnimationEnd = false;
@@ -1554,7 +1575,9 @@ export interface Callback {
         }
 
         buildDrawingCache(autoScale:boolean = false):void {
-            if (this.getAnimation() && this.mUnscaledDrawingCache) return; // force keep cache when animation
+            if (this.getAnimation() && this.mUnscaledDrawingCache) { // force keep cache when animation
+                return;
+            }
             super.buildDrawingCache(autoScale);
         }
 

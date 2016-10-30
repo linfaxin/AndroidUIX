@@ -8,14 +8,13 @@
 ///<reference path="../../R/layout.ts"/>
 ///<reference path="TypedArray.ts"/>
 
-module android.content.res{
+module android.content.res {
     import DisplayMetrics = android.util.DisplayMetrics;
     import Drawable = android.graphics.drawable.Drawable;
     import Color = android.graphics.Color;
     import SynchronizedPool = android.util.Pools.SynchronizedPool;
-    import ColorDrawable = android.graphics.drawable.ColorDrawable;
 
-    export class Resources{
+    export class Resources {
         private static instance = new Resources();
         // Pool of TypedArrays targeted to this Resources object.
         private mTypedArrayPool:SynchronizedPool<TypedArray> = new SynchronizedPool<TypedArray>(5);
@@ -24,7 +23,7 @@ module android.content.res{
         private context:Context;
 
         //value set in app's R.ts
-        static _AppBuildImageFileFinder: (refString:string)=>Drawable = null;
+        static _AppBuildDrawableFinder: (refString:string)=>Drawable = null;
         static _AppBuildXmlFinder: (refString:string)=>HTMLElement = null;
         static _AppBuildValueFinder: (refString:string)=>HTMLElement = null;
 
@@ -81,39 +80,26 @@ module android.content.res{
          * @param refString @drawable/xxx, @android:drawable/xxx
          */
         getDrawable(refString:string):Drawable {
-            if(refString.startsWith('@android:drawable/')){
-                refString = refString.substring('@android:drawable/'.length);
-                return android.R.drawable[refString] || android.R.image[refString];
+            if (refString.startsWith('@android:drawable/')) {
+                const imageName = refString.substring('@android:drawable/'.length);
+                const d = android.R.drawable[imageName] || android.R.image[imageName];
+                if (d) return d;
             }
-            if(refString.startsWith('@android:color/')){
+            if (refString.startsWith('@android:color/')) {
                 refString = refString.substring('@android:color/'.length);
                 let color = android.R.color[refString];
-                if(color instanceof ColorStateList){
+                if (color instanceof ColorStateList) {
                     color = (<ColorStateList>color).getDefaultColor();
                 }
-                return new ColorDrawable(color);
-            }
-
-            if(Resources._AppBuildImageFileFinder){
-                let drawable = Resources._AppBuildImageFileFinder(refString);
-                if(drawable) return drawable;
+                return new android.graphics.drawable.ColorDrawable(color);
             }
 
             if(!refString.startsWith('@')){
                 refString = '@drawable/' + refString;
             }
-            let ele = this.getXml(refString);
-            if(ele){
-                return Drawable.createFromXml(this, ele);
-            }
-            ele = this.getValue(refString);
-            if(ele){
-                let text = ele.innerText;
-                if(text.startsWith('@android:drawable/') || text.startsWith('@drawable/')
-                    || text.startsWith('@android:color/') || text.startsWith('@color/')){
-                    return this.getDrawable(text);
-                }
-                return Drawable.createFromXml(this, ele);
+            if(Resources._AppBuildDrawableFinder){
+                let drawable = Resources._AppBuildDrawableFinder(refString);
+                if(drawable) return drawable;
             }
 
             throw new Error("NotFoundException: Resource " + refString + " is not found");
@@ -125,30 +111,31 @@ module android.content.res{
          */
         getColor(refString:string):number {
             if(refString.startsWith('@android:color/')){
-                refString = refString.substring('@android:color/'.length);
-                let color = android.R.color[refString];
+                let color = android.R.color[refString.substring('@android:color/'.length)];
                 if(color instanceof ColorStateList){
                     color = (<ColorStateList>color).getDefaultColor();
                 }
-                return color;
+                if (color != null) {
+                    return color;
+                }
 
-            }else{
-                if(!refString.startsWith('@color/')){
-                    refString = '@color/' + refString;
+            }
+
+            if(!refString.startsWith('@')){
+                refString = '@color/' + refString;
+            }
+            let ele = this.getValue(refString);
+            if(ele){
+                let text = ele.innerText;
+                if(text.startsWith('@android:color/') || text.startsWith('@color/')){
+                    return this.getColor(text);
                 }
-                let ele = this.getValue(refString);
-                if(ele){
-                    let text = ele.innerText;
-                    if(text.startsWith('@android:color/') || text.startsWith('@color/')){
-                        return this.getColor(text);
-                    }
-                    return Color.parseColor(text);
-                }
-                ele = this.getXml(refString);
-                if(ele){
-                    let colorList = ColorStateList.createFromXml(this, ele);
-                    if(colorList) return colorList.getDefaultColor();
-                }
+                return Color.parseColor(text);
+            }
+            ele = this.getXml(refString);
+            if(ele){
+                let colorList = ColorStateList.createFromXml(this, ele);
+                if(colorList) return colorList.getDefaultColor();
             }
 
             throw new Error("NotFoundException: Resource " + refString + " is not found");
@@ -159,29 +146,27 @@ module android.content.res{
          */
         getColorStateList(refString:string):ColorStateList {
             if(refString.startsWith('@android:color/')){
-                refString = refString.substring('@android:color/'.length);
-                let color = android.R.color[refString];
+                let color = android.R.color[refString.substring('@android:color/'.length)];
                 if(typeof color === "number"){
                     color = ColorStateList.valueOf(color);
                 }
-                return color;
+                if (color) return color;
+            }
 
-            } else {
-                if(!refString.startsWith('@color/')){
-                    refString = '@color/' + refString;
+            if(!refString.startsWith('@')){
+                refString = '@color/' + refString;
+            }
+            let ele = this.getXml(refString);
+            if(ele){
+                return ColorStateList.createFromXml(this, ele);
+            }
+            ele = this.getValue(refString);
+            if(ele){
+                let text = ele.innerText;
+                if(text.startsWith('@android:color/') || text.startsWith('@color/')){
+                    return this.getColorStateList(text);
                 }
-                let ele = this.getXml(refString);
-                if(ele){
-                    return ColorStateList.createFromXml(this, ele);
-                }
-                ele = this.getValue(refString);
-                if(ele){
-                    let text = ele.innerText;
-                    if(text.startsWith('@android:color/') || text.startsWith('@color/')){
-                        return this.getColorStateList(text);
-                    }
-                    return ColorStateList.valueOf(Color.parseColor(text));
-                }
+                return ColorStateList.valueOf(Color.parseColor(text));
             }
 
             throw new Error("NotFoundException: Resource " + refString + " is not found");
@@ -201,7 +186,7 @@ module android.content.res{
          * @see #getDimensionPixelSize
          */
         getDimension(refString:string, baseValue=0): number {
-            if(!refString.startsWith('@dimen/')) refString = '@dimen/' + refString;
+            if(!refString.startsWith('@')) refString = '@dimen/' + refString;
             let ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
@@ -226,7 +211,7 @@ module android.content.res{
          * @see #getDimensionPixelSize
          */
         getDimensionPixelOffset(refString:string, baseValue=0): number {
-            if(!refString.startsWith('@dimen/')) refString = '@dimen/' + refString;
+            if(!refString.startsWith('@')) refString = '@dimen/' + refString;
             let ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
@@ -236,7 +221,7 @@ module android.content.res{
         }
 
         getDimensionPixelSize(refString:string, baseValue=0): number {
-            if(!refString.startsWith('@dimen/')) refString = '@dimen/' + refString;
+            if(!refString.startsWith('@')) refString = '@dimen/' + refString;
             let ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
@@ -246,7 +231,7 @@ module android.content.res{
         }
 
         getBoolean(refString:string):boolean {
-            if(!refString.startsWith('@bool/')) refString = '@bool/' + refString;
+            if(!refString.startsWith('@')) refString = '@bool/' + refString;
             let ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
@@ -256,7 +241,7 @@ module android.content.res{
         }
 
         getInteger(refString:string):number {
-            if(!refString.startsWith('@integer/')) refString = '@integer/' + refString;
+            if(!refString.startsWith('@')) refString = '@integer/' + refString;
             let ele = this.getValue(refString);
             if(ele){
                 return parseInt(ele.innerText);
@@ -265,7 +250,7 @@ module android.content.res{
         }
 
         getIntArray(refString:string):number[] {
-            if(!refString.startsWith('@array/')) refString = '@array/' + refString;
+            if(!refString.startsWith('@')) refString = '@array/' + refString;
             let ele = this.getValue(refString);
             if(ele){
                 let intArray:number[] = [];
@@ -285,12 +270,12 @@ module android.content.res{
          * @param refString @string/xxx @android:string/xxx
          */
         getString(refString:string):string {
-            if(refString.startsWith('@android:string/')){
-                refString = refString.substring('@android:string/'.length);
-                return android.R.string_[refString];
+            if(refString.startsWith('@android:string/')) {
+                let s = android.R.string[refString.substring('@android:string/'.length)];
+                if(s) return s;
             }
 
-            if(!refString.startsWith('@string/')) refString = '@string/' + refString;
+            if(!refString.startsWith('@')) refString = '@string/' + refString;
             let ele = this.getValue(refString);
             if(ele){
                 return ele.innerText;
@@ -302,7 +287,7 @@ module android.content.res{
          * @param refString @array/xxx @android:array/xxx
          */
         getStringArray(refString:string):string[] {
-            if(!refString.startsWith('@array/')) refString = '@array/' + refString;
+            if(!refString.startsWith('@')) refString = '@array/' + refString;
             let ele = this.getValue(refString);
             if(ele){
                 let stringArray:string[] = [];
@@ -321,19 +306,18 @@ module android.content.res{
             if(!refString || !refString.trim().startsWith('@')) return null;
 
             if(refString.startsWith('@android:layout/')){
-                refString = refString.substring('@android:layout/'.length);
-                return android.R.layout.getLayoutData(refString);
-
+                let layout = android.R.layout.getLayoutData(refString.substring('@android:layout/'.length));
+                if (layout) return layout;
             }
 
-            if(!refString.startsWith('@layout/')) refString = '@layout/' + refString;
+            if(!refString.startsWith('@')) refString = '@layout/' + refString;
             let ele = this.getXml(refString);
             if(ele) return ele;
             throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
 
         private getStyleAsMap(refString:string):Map<string, string>{
-            if(!refString.startsWith('@style/')){
+            if(!refString.startsWith('@')){
                 refString = '@style/' + refString;
             }
             let styleMap = new Map<string, string>();
@@ -344,7 +328,7 @@ module android.content.res{
                 //merge attr 'parent'
                 let parent = styleXml.getAttribute('parent');
                 if(parent){
-                    if(!parent.startsWith('@style/')){
+                    if(!parent.startsWith('@')){
                         parent = '@style/' + parent;
                     }
                     parseStyle(parent);

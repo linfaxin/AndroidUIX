@@ -39,7 +39,8 @@ module android.widget{
         private mScrollerX:SplineOverScroller;
         private mScrollerY:SplineOverScroller;
         private mInterpolator:Interpolator;
-        private mFlywheel = true;
+        private mFlywheel:boolean;
+        protected mSpringOverScrollEnable = true;
 
         static DEFAULT_DURATION = 250;
         static SCROLL_MODE = 0;
@@ -212,16 +213,28 @@ module android.widget{
 
                 case OverScroller.FLING_MODE:
                     if (!this.mScrollerX.mFinished) {
-                        if (!this.mScrollerX.update()) {
-                            if (!this.mScrollerX.continueWhenFinished()) {
+                        // MIUI MODIFY
+                        // Original:
+                        // if (!mScrollerX.update())
+                        if (!this.mScrollerX.update(false)) {
+                            // MIUI MODIFY
+                            // Original:
+                            // if (!mScrollerX.continueWhenFinished())
+                            if (!this.mScrollerX.continueWhenFinished(this.mSpringOverScrollEnable)) {
                                 this.mScrollerX.finish();
                             }
                         }
                     }
 
                     if (!this.mScrollerY.mFinished) {
-                        if (!this.mScrollerY.update()) {
-                            if (!this.mScrollerY.continueWhenFinished()) {
+                        // MIUI MODIFY
+                        // Original:
+                        // if (!mScrollerY.update())
+                        if (!this.mScrollerY.update(false)) {
+                            // MIUI MODIFY
+                            // Original:
+                            // if (!mScrollerY.continueWhenFinished())
+                            if (!this.mScrollerY.continueWhenFinished(this.mSpringOverScrollEnable)) {
                                 this.mScrollerY.finish();
                             }
                         }
@@ -418,6 +431,9 @@ module android.widget{
         static CUBIC = 1;
         static BALLISTIC = 2;
 
+        mDecelerationScale = 1;
+        mTotalOverDistance = 1000;
+
         // Initial position
         mStart = 0;
 
@@ -519,6 +535,7 @@ module android.widget{
                 * 39.37 // inch/meter
                 * ppi
                 * 0.84; // look and feel tuning
+            this.mTotalOverDistance = Resources.getDisplayMetrics().density * 400;
         }
 
         updateScroll(q:number) {
@@ -600,7 +617,10 @@ module android.widget{
             this.mStart = start;
             this.mFinal = end;
             const delta = start - end;
-            this.mDeceleration = SplineOverScroller.getDeceleration(delta);
+            // MIUI MODIFY
+            // Original
+            // mDeceleration = getDeceleration(delta);
+            this.mDeceleration = SplineOverScroller.getDeceleration(delta) * this.mDecelerationScale;
             // TODO take velocity into account
             this.mVelocity = -delta; // only sign is used
             this.mOver = Math.abs(delta);
@@ -673,6 +693,10 @@ module android.widget{
         startBounceAfterEdge(start:number, end:number, velocity:number) {
             this.mDeceleration = SplineOverScroller.getDeceleration(velocity == 0 ? start - end : velocity);
             this.fitOnBounceCurve(start, end, velocity);
+            // MIUI ADD:START
+            // add for spring over scroll
+            this.mDeceleration = this.mDeceleration * this.mDecelerationScale;
+            // END
             this.onEdgeReached();
         }
         startAfterEdge(start:number, min:number, max:number, velocity:number) {
@@ -726,7 +750,8 @@ module android.widget{
             this.mDuration = - (1000 * this.mVelocity / this.mDeceleration);
         }
 
-        continueWhenFinished():boolean {
+        continueWhenFinished(springOverScrollEnable:boolean):boolean {
+            let force = false;
             switch (this.mState) {
                 case SplineOverScroller.SPLINE:
                     // Duration from start to null velocity
@@ -734,7 +759,7 @@ module android.widget{
                         // If the animation was clamped, we reached the edge
                         this.mStart = this.mFinal;
                         // TODO Better compute speed when edge was reached
-                        this.mVelocity = this.mCurrVelocity;
+                        this.mVelocity = Math.floor(this.mCurrVelocity);
                         this.mDeceleration = SplineOverScroller.getDeceleration(this.mVelocity);
                         this.mStartTime += this.mDuration;
                         this.onEdgeReached();
@@ -744,6 +769,12 @@ module android.widget{
                     }
                     break;
                 case SplineOverScroller.BALLISTIC:
+                    if (springOverScrollEnable) {
+                        let t = Math.abs(this.mOver) / this.mTotalOverDistance;
+                        const scale = (Math.pow(t, 3) * 20.0) + 1.0;
+                        this.mDecelerationScale = scale;
+                        force = true;
+                    }
                     this.mStartTime += this.mDuration;
                     this.startSpringback(this.mFinal, this.mStart, 0);
                     break;
@@ -751,16 +782,18 @@ module android.widget{
                     return false;
             }
 
-            this.update();
+            this.update(force);
             return true;
         }
 
-        update():boolean {
-            const time = SystemClock.uptimeMillis();
+        update(force:boolean):boolean {
+            const time = android.view.animation.AnimationUtils.currentAnimationTimeMillis();
             const currentTime = time - this.mStartTime;
 
-            if (currentTime > this.mDuration) {
-                return false;
+            if (!force) {
+                if (currentTime > this.mDuration) {
+                    return false;
+                }
             }
 
             let distance = 0;

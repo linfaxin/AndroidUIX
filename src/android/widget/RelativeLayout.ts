@@ -26,7 +26,6 @@
 ///<reference path="../../android/view/ViewGroup.ts"/>
 ///<reference path="../../java/lang/Integer.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
-///<reference path="../../android/widget/HorizontalScrollView.ts"/>
 ///<reference path="../../android/widget/ScrollView.ts"/>
 
 module android.widget {
@@ -42,7 +41,6 @@ import View = android.view.View;
 import ViewGroup = android.view.ViewGroup;
 import Integer = java.lang.Integer;
 import System = java.lang.System;
-import HorizontalScrollView = android.widget.HorizontalScrollView;
 import ScrollView = android.widget.ScrollView;
 /**
  * A Layout where the positions of the children can be described in relation to each other or to the

@@ -161,7 +161,7 @@ module android.view{
             }
 
             let rootView:View;
-            if(styleAttrValue) rootView = new rootViewClass(this.mContext, domtree, defStyle);
+            if(defStyle) rootView = new rootViewClass(this.mContext, domtree, defStyle);
             else rootView = new rootViewClass(this.mContext, domtree);
 
             // androidui add: support for HtmlDataAdapter

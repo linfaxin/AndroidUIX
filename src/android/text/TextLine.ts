@@ -40,10 +40,6 @@ import Spanned = android.text.Spanned;
 import SpanSet = android.text.SpanSet;
 import TextPaint = android.text.TextPaint;
 import TextUtils = android.text.TextUtils;
-import Layout = android.text.Layout;
-window.addEventListener('AndroidUILoadFinish', ()=>{
-    eval('Layout = android.text.Layout;');//real import now
-});
 
 /**
  * Represents a line of styled text, for measuring in visual order and
@@ -71,11 +67,11 @@ export class TextLine {
 
     private mDir:number = 0;
 
-    private mDirections:Layout.Directions;
+    private mDirections:android.text.Layout.Directions;
 
     private mHasTabs:boolean;
 
-    private mTabs:Layout.TabStops;
+    private mTabs:android.text.Layout.TabStops;
 
     private mChars:String;
 
@@ -153,7 +149,7 @@ export class TextLine {
      * @param hasTabs true if the line might contain tabs or emoji
      * @param tabStops the tabStops. Can be null.
      */
-    set(paint:TextPaint, text:String, start:number, limit:number, dir:number, directions:Layout.Directions, hasTabs:boolean, tabStops:Layout.TabStops):void  {
+    set(paint:TextPaint, text:String, start:number, limit:number, dir:number, directions:android.text.Layout.Directions, hasTabs:boolean, tabStops:android.text.Layout.TabStops):void  {
         this.mPaint = paint;
         this.mText = text;
         this.mStart = start;
@@ -171,7 +167,7 @@ export class TextLine {
             this.mReplacementSpanSpanSet.init(this.mSpanned, start, limit);
             hasReplacement = this.mReplacementSpanSpanSet.numberOfSpans > 0;
         }
-        this.mCharsValid = hasReplacement || hasTabs || directions != Layout.DIRS_ALL_LEFT_TO_RIGHT;
+        this.mCharsValid = hasReplacement || hasTabs || directions != android.text.Layout.DIRS_ALL_LEFT_TO_RIGHT;
         if (this.mCharsValid) {
             //if (this.mChars == null || this.mChars.length < this.mLen) {
             //    this.mChars = new Array<char>(ArrayUtils.idealCharArraySize(this.mLen));
@@ -212,11 +208,11 @@ export class TextLine {
      */
     draw(c:Canvas, x:number, top:number, y:number, bottom:number):void  {
         if (!this.mHasTabs) {
-            if (this.mDirections == Layout.DIRS_ALL_LEFT_TO_RIGHT) {
+            if (this.mDirections == android.text.Layout.DIRS_ALL_LEFT_TO_RIGHT) {
                 this.drawRun(c, 0, this.mLen, false, x, top, y, bottom, false);
                 return;
             }
-            if (this.mDirections == Layout.DIRS_ALL_RIGHT_TO_LEFT) {
+            if (this.mDirections == android.text.Layout.DIRS_ALL_RIGHT_TO_LEFT) {
                 this.drawRun(c, 0, this.mLen, true, x, top, y, bottom, false);
                 return;
             }
@@ -227,11 +223,11 @@ export class TextLine {
         let lastRunIndex:number = runs.length - 2;
         for (let i:number = 0; i < runs.length; i += 2) {
             let runStart:number = runs[i];
-            let runLimit:number = runStart + (runs[i + 1] & Layout.RUN_LENGTH_MASK);
+            let runLimit:number = runStart + (runs[i + 1] & android.text.Layout.RUN_LENGTH_MASK);
             if (runLimit > this.mLen) {
                 runLimit = this.mLen;
             }
-            let runIsRtl:boolean = (runs[i + 1] & Layout.RUN_RTL_FLAG) != 0;
+            let runIsRtl:boolean = (runs[i + 1] & android.text.Layout.RUN_RTL_FLAG) != 0;
             let segstart:number = runStart;
             for (let j:number = this.mHasTabs ? runStart : runLimit; j <= runLimit; j++) {
                 let codept:number = 0;
@@ -240,8 +236,8 @@ export class TextLine {
                     codept = this.mChars.codePointAt(j);
                     if (codept >= 0xd800 && codept < 0xdc00 && j + 1 < runLimit) {
                         codept = this.mChars.codePointAt(j);
-                        //if (codept >= Layout.MIN_EMOJI && codept <= Layout.MAX_EMOJI) {
-                        //    bm = Layout.EMOJI_FACTORY.getBitmapFromAndroidPua(codept);
+                        //if (codept >= android.text.Layout.MIN_EMOJI && codept <= android.text.Layout.MAX_EMOJI) {
+                        //    bm = android.text.Layout.EMOJI_FACTORY.getBitmapFromAndroidPua(codept);
                         //} else
                         if (codept > 0xffff) {
                             ++j;
@@ -305,10 +301,10 @@ export class TextLine {
         }
         let h:number = 0;
         if (!this.mHasTabs) {
-            if (this.mDirections == Layout.DIRS_ALL_LEFT_TO_RIGHT) {
+            if (this.mDirections == android.text.Layout.DIRS_ALL_LEFT_TO_RIGHT) {
                 return this.measureRun(0, offset, this.mLen, false, fmi);
             }
-            if (this.mDirections == Layout.DIRS_ALL_RIGHT_TO_LEFT) {
+            if (this.mDirections == android.text.Layout.DIRS_ALL_RIGHT_TO_LEFT) {
                 return this.measureRun(0, offset, this.mLen, true, fmi);
             }
         }
@@ -316,11 +312,11 @@ export class TextLine {
         let runs:number[] = this.mDirections.mDirections;
         for (let i:number = 0; i < runs.length; i += 2) {
             let runStart:number = runs[i];
-            let runLimit:number = runStart + (runs[i + 1] & Layout.RUN_LENGTH_MASK);
+            let runLimit:number = runStart + (runs[i + 1] & android.text.Layout.RUN_LENGTH_MASK);
             if (runLimit > this.mLen) {
                 runLimit = this.mLen;
             }
-            let runIsRtl:boolean = (runs[i + 1] & Layout.RUN_RTL_FLAG) != 0;
+            let runIsRtl:boolean = (runs[i + 1] & android.text.Layout.RUN_RTL_FLAG) != 0;
             let segstart:number = runStart;
             for (let j:number = this.mHasTabs ? runStart : runLimit; j <= runLimit; j++) {
                 let codept:number = 0;
@@ -329,8 +325,8 @@ export class TextLine {
                     codept = chars.codePointAt(j);
                     if (codept >= 0xd800 && codept < 0xdc00 && j + 1 < runLimit) {
                         codept = chars.codePointAt(j);
-                        //if (codept >= Layout.MIN_EMOJI && codept <= Layout.MAX_EMOJI) {
-                        //    bm = Layout.EMOJI_FACTORY.getBitmapFromAndroidPua(codept);
+                        //if (codept >= android.text.Layout.MIN_EMOJI && codept <= android.text.Layout.MAX_EMOJI) {
+                        //    bm = android.text.Layout.EMOJI_FACTORY.getBitmapFromAndroidPua(codept);
                         //} else
                         if (codept > 0xffff) {
                             ++j;
@@ -342,7 +338,7 @@ export class TextLine {
                     //|| bm != null
                 ) {
                     let inSegment:boolean = target >= segstart && target < j;
-                    let advance:boolean = (this.mDir == Layout.DIR_RIGHT_TO_LEFT) == runIsRtl;
+                    let advance:boolean = (this.mDir == android.text.Layout.DIR_RIGHT_TO_LEFT) == runIsRtl;
                     if (inSegment && advance) {
                         return h += this.measureRun(segstart, offset, j, runIsRtl, fmi);
                     }
@@ -390,7 +386,7 @@ export class TextLine {
      * Only valid if needWidth is true.
      */
     private drawRun(c:Canvas, start:number, limit:number, runIsRtl:boolean, x:number, top:number, y:number, bottom:number, needWidth:boolean):number  {
-        if ((this.mDir == Layout.DIR_LEFT_TO_RIGHT) == runIsRtl) {
+        if ((this.mDir == android.text.Layout.DIR_LEFT_TO_RIGHT) == runIsRtl) {
             let w:number = -this.measureRun(start, limit, limit, runIsRtl, null);
             this.handleRun(start, limit, limit, runIsRtl, c, x + w, top, y, bottom, null, false);
             return w;
@@ -459,12 +455,12 @@ export class TextLine {
             for (runIndex = 0; runIndex < runs.length; runIndex += 2) {
                 runStart = lineStart + runs[runIndex];
                 if (cursor >= runStart) {
-                    runLimit = runStart + (runs[runIndex + 1] & Layout.RUN_LENGTH_MASK);
+                    runLimit = runStart + (runs[runIndex + 1] & android.text.Layout.RUN_LENGTH_MASK);
                     if (runLimit > lineEnd) {
                         runLimit = lineEnd;
                     }
                     if (cursor < runLimit) {
-                        runLevel = (runs[runIndex + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                        runLevel = (runs[runIndex + 1] >>> android.text.Layout.RUN_LEVEL_SHIFT) & android.text.Layout.RUN_LEVEL_MASK;
                         if (cursor == runStart) {
                             // The caret is on a run boundary, see if we should
                             // use the position on the trailing edge of the previous
@@ -474,12 +470,12 @@ export class TextLine {
                             for (prevRunIndex = 0; prevRunIndex < runs.length; prevRunIndex += 2) {
                                 prevRunStart = lineStart + runs[prevRunIndex];
                                 if (pos >= prevRunStart) {
-                                    prevRunLimit = prevRunStart + (runs[prevRunIndex + 1] & Layout.RUN_LENGTH_MASK);
+                                    prevRunLimit = prevRunStart + (runs[prevRunIndex + 1] & android.text.Layout.RUN_LENGTH_MASK);
                                     if (prevRunLimit > lineEnd) {
                                         prevRunLimit = lineEnd;
                                     }
                                     if (pos < prevRunLimit) {
-                                        prevRunLevel = (runs[prevRunIndex + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                                        prevRunLevel = (runs[prevRunIndex + 1] >>> android.text.Layout.RUN_LEVEL_SHIFT) & android.text.Layout.RUN_LEVEL_MASK;
                                         if (prevRunLevel < runLevel) {
                                             // Start from logically previous character.
                                             runIndex = prevRunIndex;
@@ -517,11 +513,11 @@ export class TextLine {
             let otherRunIndex:number = runIndex + (advance ? 2 : -2);
             if (otherRunIndex >= 0 && otherRunIndex < runs.length) {
                 let otherRunStart:number = lineStart + runs[otherRunIndex];
-                let otherRunLimit:number = otherRunStart + (runs[otherRunIndex + 1] & Layout.RUN_LENGTH_MASK);
+                let otherRunLimit:number = otherRunStart + (runs[otherRunIndex + 1] & android.text.Layout.RUN_LENGTH_MASK);
                 if (otherRunLimit > lineEnd) {
                     otherRunLimit = lineEnd;
                 }
-                let otherRunLevel:number = (runs[otherRunIndex + 1] >>> Layout.RUN_LEVEL_SHIFT) & Layout.RUN_LEVEL_MASK;
+                let otherRunLevel:number = (runs[otherRunIndex + 1] >>> android.text.Layout.RUN_LEVEL_SHIFT) & android.text.Layout.RUN_LEVEL_MASK;
                 let otherRunIsRtl:boolean = (otherRunLevel & 1) != 0;
                 advance = toLeft == otherRunIsRtl;
                 if (newCaret == -1) {
@@ -910,7 +906,7 @@ export class TextLine {
         if (this.mTabs != null) {
             return this.mTabs.nextTab(h);
         }
-        return Layout.TabStops.nextDefaultStop(h, TextLine.TAB_INCREMENT);
+        return android.text.Layout.TabStops.nextDefaultStop(h, TextLine.TAB_INCREMENT);
     }
 
     private static TAB_INCREMENT:number = 20;

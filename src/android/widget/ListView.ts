@@ -40,7 +40,6 @@
 ///<reference path="../../android/widget/HeaderViewListAdapter.ts"/>
 ///<reference path="../../android/widget/ListAdapter.ts"/>
 ///<reference path="../../android/widget/WrapperListAdapter.ts"/>
-///<reference path="../../android/widget/BaseAdapter.ts"/>
 ///<reference path="../../android/R/attr.ts"/>
 
 module android.widget {

@@ -31,6 +31,7 @@ module android.graphics.drawable {
     import Canvas = android.graphics.Canvas;
     import Resources = android.content.res.Resources;
     import NetDrawable = androidui.image.NetDrawable;
+    import ClassFinder = androidui.util.ClassFinder;
 
     /**
      * A Drawable is a general abstraction for "something that can be drawn."  Most
@@ -714,9 +715,22 @@ module android.graphics.drawable {
                 //         ((NinePatchDrawable) drawable).setTargetDensity(r.getDisplayMetrics());
                 //     }
                 //     break;
+                case "net-drawable": // androidui add
+                    drawable = new NetDrawable(null);
+                    break;
                 default:
-                    throw Error("XmlPullParserException: invalid drawable tag " + name);
+                    // androidui add: parse with full class name
+                    let clazz = ClassFinder.findClass(name);
+                    if (clazz) {
+                        try {
+                            drawable = new clazz();
+                        } catch (e) {
+                        }
+                    }
 
+                    if (!drawable) {
+                        throw Error("XmlPullParserException: invalid drawable tag " + name);
+                    }
             }
             drawable.inflate(r, parser);
             return drawable;

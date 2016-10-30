@@ -19,25 +19,31 @@ module androidui.image{
         private mLoadListener:NetDrawable.LoadListener;
         private mImageWidth = 0;
         private mImageHeight = 0;
-        private mTileModeX:NetDrawable.TileMode;
-        private mTileModeY:NetDrawable.TileMode;
         private mTmpTileBound:Rect;
         
 
         constructor(src:string|NetImage, paint?:Paint, overrideImageRatio?:number){
             super();
+            if (src) {
+                this.initWithImage(src, paint, overrideImageRatio);
+            }
+        }
+
+        private initWithImage(src:string|NetImage, paint?:Paint, overrideImageRatio?:number):void {
             let image:NetImage;
             if(src instanceof NetImage){
                 image = src;
                 if(overrideImageRatio) image.mOverrideImageRatio = overrideImageRatio;
-            }else{
+            }else if(src) {
                 image = new NetImage(<string>src, overrideImageRatio);
             }
-            image.addLoadListener(()=>this.onLoad(), ()=>this.onError());
 
             this.mState = new State(image, paint);
 
-            if(image.isImageLoaded()) this.initBoundWithLoadedImage(image);
+            if (image) {
+                image.addLoadListener(()=>this.onLoad(), ()=>this.onError());
+                if(image.isImageLoaded()) this.initBoundWithLoadedImage(image);
+            }
         }
 
         protected initBoundWithLoadedImage(image:NetImage){
@@ -55,8 +61,8 @@ module androidui.image{
 
         draw(canvas:Canvas):void {
             if(!this.isImageSizeEmpty()){
-                let emptyTileX = this.mTileModeX == null || this.mTileModeX == NetDrawable.TileMode.DEFAULT;
-                let emptyTileY = this.mTileModeY == null || this.mTileModeY == NetDrawable.TileMode.DEFAULT;
+                let emptyTileX = this.mState.mTileModeX == null || this.mState.mTileModeX == NetDrawable.TileMode.DEFAULT;
+                let emptyTileY = this.mState.mTileModeY == null || this.mState.mTileModeY == NetDrawable.TileMode.DEFAULT;
 
                 if(emptyTileX && emptyTileY){
                     canvas.drawImage(this.mState.mImage, null, this.getBounds(), this.mState.paint);
@@ -70,8 +76,8 @@ module androidui.image{
             let imageWidth = this.mImageWidth;
             let imageHeight = this.mImageHeight;
             if(imageHeight<=0 || imageWidth<=0) return;
-            let tileX = this.mTileModeX;
-            let tileY = this.mTileModeY;
+            let tileX = this.mState.mTileModeX;
+            let tileY = this.mState.mTileModeY;
             let bound = this.getBounds();
 
             if(this.mTmpTileBound==null) this.mTmpTileBound = new Rect();
@@ -120,6 +126,10 @@ module androidui.image{
             return this.mImageHeight;
         }
 
+        unscheduleSelf(what):any {
+            return super.unscheduleSelf(what);
+        }
+
         protected onLoad(){
             this.initBoundWithLoadedImage(this.mState.mImage);
             if(this.mLoadListener) this.mLoadListener.onLoad(this);
@@ -147,8 +157,8 @@ module androidui.image{
         }
 
         setTileMode(tileX:NetDrawable.TileMode, tileY:NetDrawable.TileMode){
-            this.mTileModeX = tileX;
-            this.mTileModeY = tileY;
+            this.mState.mTileModeX = tileX;
+            this.mState.mTileModeY = tileY;
             this.invalidateSelf();
         }
 
@@ -156,6 +166,14 @@ module androidui.image{
             return this.mState;
         }
 
+
+        inflate(r: android.content.res.Resources, parser: HTMLElement): void {
+            super.inflate(r, parser);
+
+            let a = r.obtainAttributes(parser);
+            let src = a.getString("android:src");
+            this.initWithImage(src);
+        }
     }
 
     export module NetDrawable{
@@ -174,13 +192,17 @@ module androidui.image{
     class State implements Drawable.ConstantState{
         mImage:NetImage;
         paint:Paint;
+        mTileModeX:NetDrawable.TileMode;
+        mTileModeY:NetDrawable.TileMode;
         constructor(image:NetImage, paint=new Paint()) {
             this.mImage = image;
             this.paint = new Paint();
             if(paint!=null) this.paint.set(paint);
         }
         newDrawable():Drawable {
-            return new NetDrawable(this.mImage.src, this.paint);
+            let d = new NetDrawable(this.mImage, this.paint);
+            d.setTileMode(this.mTileModeX, this.mTileModeY);
+            return d;
         }
     }
 }

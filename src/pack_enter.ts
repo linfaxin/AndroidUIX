@@ -13,21 +13,10 @@
 ///<reference path="android/widget/ImageView.ts"/>
 ///<reference path="android/widget/ImageButton.ts"/>
 ///<reference path="android/widget/ListView.ts"/>
-///<reference path="android/widget/GridView.ts"/>
-///<reference path="android/widget/HorizontalScrollView.ts"/>
-///<reference path="android/widget/NumberPicker.ts"/>
-///<reference path="android/widget/ProgressBar.ts"/>
-///<reference path="android/widget/CheckBox.ts"/>
-///<reference path="android/widget/RadioButton.ts"/>
-///<reference path="android/widget/RadioGroup.ts"/>
-///<reference path="android/widget/CheckedTextView.ts"/>
-///<reference path="android/widget/SeekBar.ts"/>
-///<reference path="android/widget/RatingBar.ts"/>
-///<reference path="android/widget/ExpandableListView.ts"/>
-///<reference path="android/widget/BaseExpandableListAdapter.ts"/>
 ///<reference path="android/widget/Toast.ts"/>
-///<reference path="android/widget/Spinner.ts"/>
-///<reference path="android/widget/ListPopupWindow.ts"/>
+///<reference path="android/widget/CompoundButton.ts"/>
+
+///<reference path="android/graphics/drawable/ClipDrawable.ts"/>
 
 ///<reference path="android/webkit/WebView.ts"/>
 
@@ -41,37 +30,13 @@
 ///<reference path="android/view/animation/AnimationSet.ts"/>
 
 ///<reference path="android/view/Menu.ts"/>
-///<reference path="android/view/menu/MenuPopupHelper.ts"/>
-
-
-///<reference path="android/support/v4/view/ViewPager.ts"/>
-///<reference path="android/support/v4/widget/ViewDragHelper.ts"/>
-///<reference path="android/support/v4/widget/DrawerLayout.ts"/>
-
-///<reference path="lib/com/jakewharton/salvage/RecyclingPagerAdapter.ts"/>
-///<reference path="lib/uk/co/senab/photoview/PhotoView.ts"/>
-
-
 
 ///<reference path="android/app/Activity.ts"/>
-///<reference path="android/app/ActionBarActivity.ts"/>
 ///<reference path="androidui/AndroidUI.ts"/>
 ///<reference path="androidui/image/NetDrawable.ts"/>
 ///<reference path="androidui/widget/HtmlView.ts"/>
-///<reference path="androidui/widget/HtmlImageView.ts"/>
 ///<reference path="androidui/widget/HtmlDataListAdapter.ts"/>
-///<reference path="androidui/widget/HtmlDataPagerAdapter.ts"/>
-///<reference path="androidui/widget/HtmlDataPickerAdapter.ts"/>
-///<reference path="androidui/widget/PullRefreshLoadLayout.ts"/>
-
-///<reference path="androidui/util/PerformanceAdjuster.ts"/>
-///<reference path="androidui/native/NativeApi.ts"/>
 
 window[`android`] = android;
 window[`java`] = java;
 window[`AndroidUI`] = androidui.AndroidUI;
-(function() {
-	var event = document.createEvent("CustomEvent");
-	event.initCustomEvent("AndroidUILoadFinish", true, true, null);
-	document.dispatchEvent(event);
-})();
