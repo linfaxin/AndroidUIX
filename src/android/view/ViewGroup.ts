@@ -217,7 +217,7 @@ module android.view {
             this.mGroupFlags |= ViewGroup.FLAG_CLIP_CHILDREN;
             this.mGroupFlags |= ViewGroup.FLAG_CLIP_TO_PADDING;
             this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_DONE;
-            // this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_CACHE;
+            this.mGroupFlags |= ViewGroup.FLAG_ANIMATION_CACHE;
             this.mGroupFlags |= ViewGroup.FLAG_ALWAYS_DRAWN_WITH_CACHE;
 
             this.mGroupFlags |= ViewGroup.FLAG_SPLIT_MOTION_EVENTS;
