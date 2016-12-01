@@ -333,7 +333,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
      */
     private mSavedMarqueeModeLayout:Layout;
 
-    private mText:String;
+    private mText:String = '';
 
     private mTransformed:String;
 
@@ -354,7 +354,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     private mListeners:ArrayList<TextWatcher>;
 
     // display attributes
-    private mTextPaint:TextPaint;
+    private mTextPaint:TextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
 
     private mUserSetTextScaleX:boolean;
 
@@ -425,7 +425,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
 
     private mHighlightPath:Path;
 
-    private mHighlightPaint:Paint;
+    private mHighlightPaint:Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private mHighlightPathBogus:boolean = true;
 
@@ -468,27 +468,17 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
 
     private static TextViewClassAttrBind:AttrBinder.ClassBinderMap;
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.textViewStyle){
-        super(context, bindElement, null);
-
-        this.mText = "";
-        const res:Resources = this.getResources();
-        this.mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        //this.mTextPaint.density = res.getDisplayMetrics().density;
-        //this.mTextPaint.setCompatibilityScaling(compat.applicationScale);
-        this.mHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        //this.mHighlightPaint.setCompatibilityScaling(compat.applicationScale);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.textViewStyle){
+        super(context, bindElement, defStyle);
         this.mMovement = this.getDefaultMovementMethod();
         this.mTransformation = null;
 
-        this.setTextSize(14);//init size
-        if(defStyle) this.applyDefaultAttributes(defStyle);
-
-        let text = this.mText || this.bindElement.innerText.trim();
-        this.bindElement.innerHTML = '';
-        this.setText(text, this.mBufferType);//ensure setText called
+        const htmlText = this.bindElement.innerText.trim();
+        if (htmlText) {
+            this.bindElement.innerHTML = '';
+            this.setText(this.mText || htmlText);
+        }
     }
-
 
     protected initBindAttr():void {
         super.initBindAttr();
@@ -6519,32 +6509,6 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     //    }
     //}
 
-
-
-    /**
-     * Returns the TextView_textColor attribute from the
-     * TypedArray, if set, or the TextAppearance_textColor
-     * from the TextView_textAppearance attribute, if TextView_textColor
-     * was not set directly.
-     */
-    static getTextColors():ColorStateList  {
-        return android.R.attr.textViewStyle.textColor;
-    }
-
-    /**
-     * Returns the default color from the TextView_textColor attribute
-     * from the AttributeSet, if set, or the default color from the
-     * TextAppearance_textColor from the TextView_textAppearance attribute,
-     * if TextView_textColor was not set directly.
-     */
-    static getTextColor(def:number):number  {
-        let colors:ColorStateList = this.getTextColors();
-        if (colors == null) {
-            return def;
-        } else {
-            return colors.getDefaultColor();
-        }
-    }
 
     //onKeyShortcut(keyCode:number, event:KeyEvent):boolean  {
     //    const filteredMetaState:number = event.getMetaState() & ~KeyEvent.META_CTRL_MASK;

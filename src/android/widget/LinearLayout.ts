@@ -102,8 +102,12 @@ module android.widget{
         private mDividerPadding:number = 0;
 
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:string) {
             super(context, bindElement, defStyle);
+        }
+
+        protected initBindAttr(): void {
+            super.initBindAttr();
             this._attrBinder.addAttr('orientation', (value)=>{
                 if((value+"").toUpperCase() === 'VERTICAL' || LinearLayout.VERTICAL == value){
                     this.setOrientation(LinearLayout.VERTICAL);

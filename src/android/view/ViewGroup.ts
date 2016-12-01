@@ -148,7 +148,7 @@ module android.view {
         private mChildCountWithTransientState = 0;
         private static ViewGroupClassAttrBind:AttrBinder.ClassBinderMap;
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:string) {
             super(context, bindElement, defStyle);
             this.initViewGroup();
         }

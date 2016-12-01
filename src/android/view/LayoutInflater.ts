@@ -156,12 +156,9 @@ module android.view{
             //parse default style
             let defStyle;
             let styleAttrValue = domtree.getAttribute('style');//@android:attr/textView
-            if(styleAttrValue){
-                defStyle = this.mContext.getResources().getDefStyle(styleAttrValue);
-            }
 
             let rootView:View;
-            if(defStyle) rootView = new rootViewClass(this.mContext, domtree, defStyle);
+            if(styleAttrValue) rootView = new rootViewClass(this.mContext, domtree, styleAttrValue);
             else rootView = new rootViewClass(this.mContext, domtree);
 
             // androidui add: support for HtmlDataAdapter
@@ -179,9 +176,6 @@ module android.view{
                 params.parseAttributeFrom(domtree, this.mContext);
                 rootView.setLayoutParams(params);
             }
-
-            //fire init attr change
-            rootView._fireInitedAttributeChange();
 
             //parse children
             if(rootView instanceof ViewGroup){

@@ -120,10 +120,9 @@ export class ImageView extends View {
 
     private static ImageViewClassAttrBind:AttrBinder.ClassBinderMap;
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:string) {
         super(context, bindElement, defStyle);
         this.initImageView();
-
     }
 
     protected initBindAttr():void {

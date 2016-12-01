@@ -65,8 +65,12 @@ module android.widget {
         mForegroundBoundsChanged = false;
         private mMatchParentChildren = new Array<View>(1);
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:string) {
             super(context, bindElement, defStyle);
+        }
+
+        protected initBindAttr(): void {
+            super.initBindAttr();
             this._attrBinder.addAttr('foregroundGravity', (value)=>{
                 this.mForegroundGravity = this._attrBinder.parseGravity(value, this.mForegroundGravity);
             }, ()=>{

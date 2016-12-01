@@ -177,7 +177,7 @@ module android.widget {
 
         // private mSavedState:ScrollView.SavedState;
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle:any=R.attr.scrollViewStyle){
+        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=R.attr.scrollViewStyle){
             super(context, bindElement, defStyle);
             this.initScrollView();
         }

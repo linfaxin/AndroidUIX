@@ -24,69 +24,69 @@ module android.R {
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
 
 
+    const attrData = {
+        textViewStyle: {
+            textSize: '14sp',
+            layerType: 'software',
+            textColor: '@android:color/textColorPrimary',
+            textColorHint: '#ff808080',
+        },
+        buttonStyle: {
+            background: '@android:drawable/btn_default',
+            focusable: 'true',
+            clickable: 'true',
+            minHeight: '48dp',
+            minWidth: '64dp',
+            textSize: '18sp',
+            layerType: 'software',
+            textColor: '@android:color/textColorPrimary',
+            textColorHint: '#ff808080',
+            gravity: 'center',
+        },
+        editTextStyle: {
+            background: '@android:drawable/editbox_background',
+            focusable: 'true',
+            focusableInTouchMode: 'true',
+            clickable: 'true',
+            gravity: 'center',
+            textSize: '18sp',
+            textColor: '@android:color/textColorPrimary',
+            textColorHint: '#ff808080',
+        },
+        imageButtonStyle: {
+            background: '#android:drawable/btn_default',
+            focusable: 'true',
+            clickable: 'true',
+            gravity: 'center',
+        },
+        listViewStyle: {
+            divider: '@android:drawable/list_divider',
+            listSelector: '@android:drawable/list_selector_background',
+            dividerHeight: '1px',
+        },
+        scrollViewStyle: {
+            scrollbars: 'vertical',
+            fadingEdge: 'vertical',
+        },
+    };
     export class attr {
-
-        static _viewStyle:any = {};
-        static get viewStyle(){
-            return attr._viewStyle;
+        static getAttrMap(attrName:string): Map<string, string> {
+            let style = attrData[attrName];
+            if (style) {
+                let map = new Map<string, string>();
+                for(let key in style) {
+                    map.set(key, style[key]);
+                }
+                return map;
+            }
+            return null;
         }
 
-
-        static get textViewStyle() {
-            return {
-                textSize: '14sp',
-                layerType: 'software',
-                textColor: color.textView_textColor,
-                textColorHint: 0xff808080
-            };
-        }
-
-        static get buttonStyle() {
-            return Object.assign(attr.textViewStyle, {
-                background: drawable.btn_default,
-                focusable: true,
-                clickable: true,
-                minHeight: '48dp',
-                minWidth: '64dp',
-                textSize: '18sp',
-                gravity: Gravity.CENTER
-            });
-        }
-
-
-        static get editTextStyle() {
-            return Object.assign(attr.textViewStyle, {
-                background: drawable.editbox_background,
-                focusable: true,
-                focusableInTouchMode: true,
-                clickable: true,
-                textSize: '18sp',
-                gravity: Gravity.CENTER_VERTICAL
-            });
-        }
-
-        static get imageButtonStyle() {
-            return {
-                background: drawable.btn_default,
-                focusable: true,
-                clickable: true,
-                gravity: Gravity.CENTER
-            };
-        }
-
-        static get listViewStyle() {
-            return {
-                divider: android.R.drawable.list_divider,
-                listSelector: android.R.drawable.list_selector_background,
-                dividerHeight: 1
-            };
-        }
-
-        static get scrollViewStyle() {
-            return {
-                scrollbars: 'vertical',
-                fadingEdge: 'vertical',
-            };
-        }
+        static textViewStyle = '@android:attr/textViewStyle';
+        static buttonStyle = '@android:attr/buttonStyle';
+        static editTextStyle = '@android:attr/editTextStyle';
+        static imageButtonStyle = '@android:attr/imageButtonStyle';
+        static listViewStyle = '@android:attr/listViewStyle';
+        static scrollViewStyle = '@android:attr/scrollViewStyle';
     }
 }

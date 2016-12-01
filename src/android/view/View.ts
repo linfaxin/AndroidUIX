@@ -1442,17 +1442,16 @@ module android.view {
         private mShadowPaint:Paint;
         private mShadowDrawable:Drawable;
 
-        constructor(context?:Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.viewStyle) {
+        constructor(context?:Context, bindElement?:HTMLElement, defStyle?:string) {
             super();
             this.mContext = context;
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
             this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
 
+            this._stateAttrList = new StateAttrList(this, bindElement, defStyle);
             this.initBindAttr();
-
             this.initBindElement(bindElement);
-
-            if(defStyle) this.applyDefaultAttributes(defStyle);
+            this._parseInitedAttribute();
         }
 
         protected initBindAttr():void {
@@ -6979,7 +6978,6 @@ module android.view {
             }
             this.bindElement[View.AndroidViewProperty]=this;
 
-            this._stateAttrList = new StateAttrList(this);
             this._initAttrObserver();
         }
 
@@ -7111,7 +7109,7 @@ module android.view {
             this._AttrObserver.observe(this.bindElement, {attributes : true, attributeOldValue : true});
         }
 
-        private _fireInitedAttributeChange(){
+        private _parseInitedAttribute(){
             for(let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()){
                 this.onBindElementAttributeChanged(key, null, value);
             }
@@ -7170,15 +7168,6 @@ module android.view {
             }
 
             this._attrBinder.onAttrChange(attrName, newVal, this.getContext());
-        }
-
-        applyDefaultAttributes(attrs:any) {
-            let initAttrMap = this._stateAttrList.getDefaultStateAttr().getAttrMap();
-            for(let key in attrs){
-                if(!initAttrMap.has(key.toLowerCase())){ // filter defined attr in xml.
-                    this._attrBinder.onAttrChange(key, attrs[key], this.getContext());
-                }
-            }
         }
 
 

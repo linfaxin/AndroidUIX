@@ -9,40 +9,23 @@ module androidui.attr{
     import View = android.view.View;
 
     export class StateAttrList {
-        private static CacheMap = new Map<string, Array<StateAttr>>(); // <attr json, clone state attr>
-        private list:Array<StateAttr> = [];
+        private list:Array<StateAttr> = [new StateAttr([])];
         private matchedAttrCache:Array<StateAttr> = [];
         private mView:View;
 
-        constructor(view:View){
+        constructor(view:View, bindElement?:HTMLElement, defStyle?:string) {
             this.mView = view;
 
-            let attrMap = new Map<string, string>();
-            let attributes = Array.from(view.bindElement.attributes);
-            for(let attr of attributes){
-                attrMap.set(attr.name, attr.value);
-            }
-            let attrMapJSON = JSON.stringify(attrMap);
-
-            // find in cache first
-            let cachedAttrArray = StateAttrList.CacheMap.get(attrMapJSON);
-            if (cachedAttrArray) {
-                for(let stateAttr of cachedAttrArray) {
-                    this.list.push(stateAttr.clone());
+            let attrMap = defStyle ? view.getResources().getStyleAsMap(defStyle) : new Map<string, string>();
+            if (bindElement) {
+                for(let attr of Array.from(bindElement.attributes)) {
+                    attrMap.set(attr.name, attr.value);
                 }
-            } else {
-                this.optStateAttr([]);//ensure default stateAttr
-                this._initStyleAttributes(attrMap, []);
-                // save to cache
-                let cachedAttrArray:Array<StateAttr> = [];
-                for(let stateAttr of this.list) {
-                    cachedAttrArray.push(stateAttr.clone());
-                }
-                StateAttrList.CacheMap.set(attrMapJSON, cachedAttrArray);
             }
+            this._initStyleAttributes(attrMap, []);
         }
 
-        private _initStyleAttributes(attrMap:Map<string,string>, inParseState:number[]){
+        private _initStyleAttributes(attrMap:Map<string,string>, inParseState:number[]) {
 
             //parse ref style first
             let refStyleValue = attrMap.get('android:style');
@@ -67,7 +50,7 @@ module androidui.attr{
             }
         }
 
-        private _initStyleAttr(attrName:string, attrValue:string, inParseState:number[]){
+        private _initStyleAttr(attrName:string, attrValue:string, inParseState:number[]) {
             if(attrName.startsWith('android:')) {
                 attrName = attrName.substring('android:'.length);
             }
@@ -83,7 +66,7 @@ module androidui.attr{
             let _stateAttr = this.optStateAttr(inParseState);
 
             //parse style or stated style
-            if(attrName.startsWith('state_') || attrName==='style'){
+            if(attrName.startsWith('state_') || attrName==='style') {
                 //attr with state
                 if(attrValue.startsWith('@style/')){
                     //support: android:state_pressed="@style/myStyle"
@@ -104,19 +87,19 @@ module androidui.attr{
             }
         }
 
-        getDefaultStateAttr():StateAttr{
+        getDefaultStateAttr():StateAttr {
             for(let stateAttr of this.list){
                 if(stateAttr.isDefaultState()) return stateAttr;
             }
         }
 
-        private getStateAttr(state:number[]):StateAttr{
+        private getStateAttr(state:number[]):StateAttr {
             for(let stateAttr of this.list){
                 if(stateAttr.isStateEquals(state)) return stateAttr;
             }
         }
 
-        private optStateAttr(state:number[]):StateAttr{
+        private optStateAttr(state:number[]):StateAttr {
             let stateAttr = this.getStateAttr(state);
             if(!stateAttr){
                 stateAttr = new StateAttr(state);

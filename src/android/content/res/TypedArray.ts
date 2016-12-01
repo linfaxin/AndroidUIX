@@ -24,6 +24,7 @@ module android.content.res {
     import Drawable = android.graphics.drawable.Drawable;
     import ColorDrawable = android.graphics.drawable.ColorDrawable;
     import AttrValueParser = androidui.attr.AttrValueParser;
+    import SynchronizedPool = android.util.Pools.SynchronizedPool;
 
     /**
      * Container for an array of values that were retrieved with
@@ -35,12 +36,15 @@ module android.content.res {
      * the positions of the attributes given to obtainStyledAttributes.
      */
     export class TypedArray {
+        // Pool of TypedArrays targeted to this Resources object.
+        private static TypedArrayPool:SynchronizedPool<TypedArray> = new SynchronizedPool<TypedArray>(10);
 
         static obtain(res:android.content.res.Resources, xml:HTMLElement):TypedArray {
-            const attrs = res.mTypedArrayPool.acquire();
+            const attrs = TypedArray.TypedArrayPool.acquire();
             if (attrs != null) {
                 attrs.mRecycled = false;
                 attrs.mXml = xml;
+                attrs.mResources = res;
                 return attrs;
             }
             return new TypedArray(res, xml);
@@ -331,7 +335,8 @@ module android.content.res {
         public recycle():void {
             this.mRecycled = true;
             this.mXml = null;
-            this.mResources.mTypedArrayPool.release(this);
+            this.mResources = null;
+            TypedArray.TypedArrayPool.release(this);
         }
 
     }

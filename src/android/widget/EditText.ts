@@ -61,9 +61,12 @@ export class EditText extends TextView {
     private mForceDisableDraw = false;
     private mMaxLength = Integer.MAX_VALUE;
 
-    constructor(context:Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.editTextStyle) {
-        super(context, bindElement, null);
+    constructor(context:Context, bindElement?:HTMLElement, defStyle=android.R.attr.editTextStyle) {
+        super(context, bindElement, defStyle);
+    }
 
+    protected initBindAttr(): void {
+        super.initBindAttr();
         let a = this._attrBinder;
         a.addAttr('inputType', (value)=>{
             switch (value + ''){
@@ -114,10 +117,7 @@ export class EditText extends TextView {
         a.addAttr('maxLength', (value)=>{
             this.mMaxLength = a.parseInt(value, this.mMaxLength);
         });
-
-        if(defStyle) this.applyDefaultAttributes(defStyle);
     }
-
 
     protected initBindElement(bindElement:HTMLElement):void {
         super.initBindElement(bindElement);

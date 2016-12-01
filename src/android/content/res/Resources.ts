@@ -1,6 +1,6 @@
 /**
  * Created by linfaxin on 15/10/5.
- * Androidui's impl
+ * This is AndroidUI's impl
  */
 ///<reference path="../../util/DisplayMetrics.ts"/>
 ///<reference path="../../content/Context.ts"/>
@@ -16,8 +16,6 @@ module android.content.res {
 
     export class Resources {
         private static instance = new Resources();
-        // Pool of TypedArrays targeted to this Resources object.
-        private mTypedArrayPool:SynchronizedPool<TypedArray> = new SynchronizedPool<TypedArray>(5);
 
         private displayMetrics:DisplayMetrics;
         private context:Context;
@@ -69,13 +67,6 @@ module android.content.res {
             displayMetrics.heightPixels = contentEle.offsetHeight * density;
         }
 
-        private getDefStyle(refString:string):any{
-            if(refString.startsWith('@android:attr/')){
-                refString = refString.substring('@android:attr/'.length);
-                return android.R.attr[refString];
-            }
-        }
-
         /**
          * @param refString @drawable/xxx, @android:drawable/xxx
          */
@@ -124,18 +115,28 @@ module android.content.res {
             if(!refString.startsWith('@')){
                 refString = '@color/' + refString;
             }
+            let color = ResourcesCache.getColor(refString);
+            if (color != null) return color;
+
             let ele = this.getValue(refString);
-            if(ele){
+            if(ele) {
                 let text = ele.innerText;
                 if(text.startsWith('@android:color/') || text.startsWith('@color/')){
-                    return this.getColor(text);
+                    color = this.getColor(text);
+                } else {
+                    color = Color.parseColor(text);
                 }
-                return Color.parseColor(text);
+                ResourcesCache.setColor(refString, color);
+                return color;
             }
             ele = this.getXml(refString);
             if(ele){
                 let colorList = ColorStateList.createFromXml(this, ele);
-                if(colorList) return colorList.getDefaultColor();
+                if(colorList) {
+                    color = colorList.getDefaultColor();
+                    ResourcesCache.setColor(refString, color);
+                    return color;
+                }
             }
 
             throw new Error("NotFoundException: Resource " + refString + " is not found");
@@ -156,17 +157,25 @@ module android.content.res {
             if(!refString.startsWith('@')){
                 refString = '@color/' + refString;
             }
+            let colorList = ResourcesCache.getColorStateList(refString);
+            if (colorList) return colorList;
+
             let ele = this.getXml(refString);
             if(ele){
-                return ColorStateList.createFromXml(this, ele);
+                colorList = ColorStateList.createFromXml(this, ele);
+                ResourcesCache.setColorStateList(refString, colorList);
+                return colorList;
             }
             ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
                 if(text.startsWith('@android:color/') || text.startsWith('@color/')){
-                    return this.getColorStateList(text);
+                    colorList = this.getColorStateList(text);
+                } else {
+                    colorList = ColorStateList.valueOf(Color.parseColor(text));
                 }
-                return ColorStateList.valueOf(Color.parseColor(text));
+                ResourcesCache.setColorStateList(refString, colorList);
+                return colorList;
             }
 
             throw new Error("NotFoundException: Resource " + refString + " is not found");
@@ -276,9 +285,12 @@ module android.content.res {
             }
 
             if(!refString.startsWith('@')) refString = '@string/' + refString;
+            let value = ResourcesCache.getString(refString);
+            if (value) return value;
             let ele = this.getValue(refString);
             if(ele){
-                return ele.innerText;
+                value = ele.innerText;
+                ResourcesCache.setString(refString, value);
             }
             throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
@@ -316,31 +328,39 @@ module android.content.res {
             throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
 
-        private getStyleAsMap(refString:string):Map<string, string>{
+        getStyleAsMap(refString:string):Map<string, string> {
+            if (!refString) return null;
+            if(refString.startsWith('@android:attr/')){
+                let map = android.R.attr.getAttrMap(refString.substring('@android:attr/'.length));
+                if (map) return map;
+            }
+
             if(!refString.startsWith('@')){
                 refString = '@style/' + refString;
             }
-            let styleMap = new Map<string, string>();
+            let styleMap = ResourcesCache.getStyleMap(refString);
+            if (styleMap) return styleMap;
+            styleMap = new Map<string, string>();
 
             const parseStyle = (refString:string)=>{
                 let styleXml = this.getValue(refString);
                 if(!styleXml) return;
+                let [stylePrefix, styleName] = refString.split('/');
                 //merge attr 'parent'
                 let parent = styleXml.getAttribute('parent');
                 if(parent){
                     if(!parent.startsWith('@')){
-                        parent = '@style/' + parent;
+                        parent = stylePrefix + parent;
                     }
                     parseStyle(parent);
                 }
 
                 //merge attr name's parent
-                let styleName = refString.substring('@style/'.length);
                 if(styleName.includes('.')){
                     let parts = styleName.split('.');
                     parts.shift();
                     let nameParent = parts.join('.');
-                    parseStyle('@style/' + nameParent);
+                    parseStyle(stylePrefix + nameParent);
                 }
 
                 for(let item of Array.from(styleXml.children)){
@@ -352,6 +372,8 @@ module android.content.res {
             };
 
             parseStyle(refString);
+
+            ResourcesCache.setStyleMap(refString, styleMap);
             return styleMap;
         }
 
@@ -376,9 +398,9 @@ module android.content.res {
             if(Resources._AppBuildValueFinder){
                 let ele = Resources._AppBuildValueFinder(refString);
                 if(!ele) return null;
-                if(resolveRefs && ele.children.length==0){
+                if(resolveRefs && ele.children.length === 0) {
                     let str = ele.innerText;
-                    if(str.startsWith('@')){
+                    if(str.startsWith('@')) {
                         return this.getValue(refString, true) || ele;
                     }
                 }
@@ -406,14 +428,60 @@ module android.content.res {
 
 
         static set buildDrawableFinder(value){
-            throw Error('Error: old build tool not support. Please update your build_res.js file.');
+            throw Error('Error: old build tool not support. Please update your build-tool.');
         }
         static set buildLayoutFinder(value){
-            throw Error('Error: old build tool not support. Please update your build_res.js file.');
+            throw Error('Error: old build tool not support. Please update your build-tool.');
         }
         static get buildResourcesElement(){
-            throw Error('Error: old build tool not support. Please update your build_res.js file.');
+            throw Error('Error: old build tool not support. Please update your build-tool.');
         }
 
     }
+
+    class ResourcesCache {
+        private static styleMapCache = new Map<string, Map<string, string>>();
+        static getStyleMap(refString:string):Map<string, string> {
+            const map = ResourcesCache.styleMapCache.get(refString);
+            return map ? new Map(map) : null;
+        }
+        static setStyleMap(refString:string, value:Map<string, string>):void {
+            ResourcesCache.styleMapCache.set(refString, new Map(value));
+        }
+
+        private static stringCache = new Map<string, string>();
+        static getString(refString:string):string {
+            const v = ResourcesCache.stringCache.get(refString);
+            return v ? v : null;
+        }
+        static setString(refString:string, value:string):void {
+            ResourcesCache.stringCache.set(refString, value);
+        }
+
+        private static colorCache = new Map<string, number>();
+        static getColor(refString:string):number {
+            const v = ResourcesCache.colorCache.get(refString);
+            return v ? v : null;
+        }
+        static setColor(refString:string, value:number):void {
+            ResourcesCache.colorCache.set(refString, value);
+        }
+
+        private static colorStateListCache = new Map<string, ColorStateList>();
+        static getColorStateList(refString:string):ColorStateList {
+            const v = ResourcesCache.colorStateListCache.get(refString);
+            return v ? v : null;
+        }
+        static setColorStateList(refString:string, value:ColorStateList):void {
+            ResourcesCache.colorStateListCache.set(refString, value);
+        }
+
+        static clearCache():void {
+            ResourcesCache.styleMapCache.clear();
+        }
+    }
+
+    window.addEventListener('resize', ()=>{
+        ResourcesCache.clearCache();
+    });
 }

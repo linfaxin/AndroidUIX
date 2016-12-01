@@ -140,34 +140,36 @@ export class ListView extends AbsListView {
     // Keeps focused children visible through resizes
     private mFocusSelector:ListView.FocusSelector;
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.listViewStyle){
-        super(context, bindElement, null);
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.listViewStyle){
+        super(context, bindElement, defStyle);
+    }
+
+    protected initBindAttr(): void {
+        super.initBindAttr();
         this._attrBinder.addAttr('divider', (value)=>{
             let divider = this._attrBinder.parseDrawable(value);
             if(divider) this.setDivider(divider);
-        })
+        });
         this._attrBinder.addAttr('overScrollHeader', (value)=>{
             let header = this._attrBinder.parseDrawable(value);
             if(header) this.setOverscrollHeader(header);
-        })
+        });
         this._attrBinder.addAttr('overScrollFooter', (value)=>{
             let footer = this._attrBinder.parseDrawable(value);
             if(footer) this.setOverscrollFooter(footer);
-        })
+        });
         this._attrBinder.addAttr('dividerHeight', (value)=>{
             let dividerHeight = this._attrBinder.parseNumberPixelSize(value, -1);
             if(dividerHeight >= 0 ){
                 this.setDividerHeight(dividerHeight);
             }
-        })
+        });
         this._attrBinder.addAttr('headerDividersEnabled', (value)=>{
             this.setHeaderDividersEnabled(this._attrBinder.parseBoolean(value, true));
-        })
+        });
         this._attrBinder.addAttr('footerDividersEnabled', (value)=>{
             this.setFooterDividersEnabled(this._attrBinder.parseBoolean(value, true));
-        })
-
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+        });
     }
 
 // constructor(context:Context, attrs:AttributeSet, defStyle:number) {

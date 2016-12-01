@@ -19,38 +19,11 @@ module android.R{
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     import Gravity = android.view.Gravity;
 
-    export class color{
-        static get textView_textColor():ColorStateList {
+    export class color {
+        static get textColorPrimary():ColorStateList {
             let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
             let _defaultColors = [0xffc0c0c0, 0xff333333];
-            class DefaultStyleTextColor extends ColorStateList{
-                constructor() {
-                    super(_defaultStates, _defaultColors);
-                }
-            }
-            return new DefaultStyleTextColor();
-        }
-
-        static get primary_text_light_disable_only():ColorStateList {
-            let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
-            let _defaultColors = [0x80000000, 0xff000000];
-            class DefaultStyleTextColor extends ColorStateList{
-                constructor() {
-                    super(_defaultStates, _defaultColors);
-                }
-            }
-            return new DefaultStyleTextColor();
-        }
-
-        static get primary_text_dark_disable_only():ColorStateList {
-            let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
-            let _defaultColors = [0x80000000, 0xffffffff];
-            class DefaultStyleTextColor extends ColorStateList{
-                constructor() {
-                    super(_defaultStates, _defaultColors);
-                }
-            }
-            return new DefaultStyleTextColor();
+            return new ColorStateList(_defaultStates, _defaultColors);
         }
 
         static white = Color.WHITE;

@@ -249,18 +249,20 @@ export class RelativeLayout extends ViewGroup {
     private static DEFAULT_WIDTH:number = 0x00010000;
 
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:string) {
         super(context, bindElement, defStyle);
+        this.queryCompatibilityModes();
+    }
 
+    protected initBindAttr(): void {
+        super.initBindAttr();
         this._attrBinder.addAttr('ignoreGravity', (value)=>{
             this.setIgnoreGravity(value);
         });
         this._attrBinder.addAttr('gravity', (value)=>{
             this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
         });
-        this.queryCompatibilityModes();
     }
-
 
     private queryCompatibilityModes():void  {
         this.mAllowBrokenMeasureSpecs = false; //version <= Build.VERSION_CODES.JELLY_BEAN_MR1;
